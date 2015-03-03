@@ -1,0 +1,90 @@
+======================================================================
+=                        Joystick Gremlin                            =
+======================================================================
+
+
+Introduction
+======================================================================
+
+This software uses vjoy to allow users to combine arbitrary joystick
+like devices into a single or multiple vjoy devices. The mapping can
+be a simple pass through or more complex mappings. In addition to this
+mapping various other configurations can be performed. Essentially it
+provides functionality that custom device configuration software
+allows on a per device basis to all connected devices at once.
+
+There are two ways to use this program.
+1. Simple UI based configuration
+2. Advanced Python script based configuration
+
+The first method allows typical tasks to be performed via a graphical
+user interface. While this has some limitations it is a quick an easy
+way to get started. The advanced method allows custom configurations
+to be written using the Python scripting language while still having
+access to an API that exposes the functionality provided by the user
+interface.
+
+In addition to configuring and mapping joystick inputs to vjoy the
+program also features a keyboard macro system which can trigger any
+action based on a keyboard or joystick button pressed. The action can
+be interacting with the vjoy devices or triggering custom keyboard
+macros or even changing the currently used configuration mode.
+
+
+Used Software
+======================================================================
+- cx_freeze [1]
+- PyHook [3]
+- PyQT5 [2]
+- PyWin32 [5]
+- SDL2 [6]
+- VJoy [7]
+- Python 3.4 [8]
+- PySDL2 [10]
+- Mako [11]
+- Qt5 [12]
+
+To obtain current version which work with Python 3.4 you have to
+download the following ones from this alternative page [4].
+- cx_freeze
+- PyHook
+- PyWin32
+
+
+Other Sources
+======================================================================
+The icons used in the application are Modern UI Icons [9].
+
+
+Generating the MSI Installer
+======================================================================
+
+The job of turning the Python code in a windows executable and
+packaging everything up into an installable MSI file is performed
+by cx_freeze [1] which you can obtain a more recent version of
+here [4]. Everything else should work using the default setup.py
+script by executing the following:
+  
+  python setup.py bdist_msi
+
+To simply generate the executable code without the MSI installer the
+following command is used:
+
+  python setup.py build
+
+
+References
+======================================================================
+
+[ 1] https://bitbucket.org/anthony_tuininga/cx_freeze
+[ 2] http://www.riverbankcomputing.co.uk/software/pyqt/intro
+[ 3] http://sourceforge.net/projects/pyhook
+[ 4] http://www.lfd.uci.edu/~gohlke/pythonlibs
+[ 5] http://sourceforge.net/projects/pywin32
+[ 6] https://www.libsdl.org/index.php
+[ 7] http://vjoystick.sourceforge.net
+[ 8] https://www.python.org
+[ 9} http://modernuiicons.com/
+[10] https://bitbucket.org/marcusva/py-sdl2/overview
+[11] http://www.makotemplates.org/
+[12] http://qt-project.org/
