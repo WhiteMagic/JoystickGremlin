@@ -38,14 +38,10 @@ sniper_curve = CubicSpline([
     ( 0.50,  0.175),
     ( 1.00,  0.50)
 ])
-one_to_one_curve = CubicSpline([
-    (-1.0, -1.0),
-    ( 0.0,  0.0),
-    ( 1.0,  1.0)
-])
 
 left_pedal = 0
 right_pedal = 0
+is_firing = False
 
 # Build macros so we don't construct them each time the callback is run
 shield_macros = {
@@ -79,7 +75,6 @@ cm_chaff.tap(macro.Keys.M)
 
 active_weapon_groups = {}
 active_curve = default_curve
-#active_curve = one_to_one_curve
 
 
 def set_weapon_group(gid, is_pressed):
@@ -114,7 +109,6 @@ def shield_management(event):
         shield_macros["left"].run()
 
 
-is_firing = False
 @chfs.button(1)
 def fire_group1(event):
     set_weapon_group(1, event.is_pressed)
@@ -152,17 +146,18 @@ def axis2(event, vjoy):
     vjoy[1].axis[AxisName.RX].value = event.value
 
 
-#@chpp.axis(1)
-#def left_pedal(event, vjoy):
-#    global left_pedal
-#    left_pedal = event.value
-#    vjoy[1].axis[AxisName.RZ].value = pedal_position()
+@chpp.axis(1)
+def left_pedal(event, vjoy):
+    global left_pedal
+    left_pedal = event.value
+    vjoy[1].axis[AxisName.RZ].value = pedal_position()
 
-#@chpp.axis(2)
-#def right_pedal(event, vjoy):
-#    global right_pedal
-#    right_pedal = event.value
-#    vjoy[1].axis[AxisName.RZ].value = pedal_position()
+
+@chpp.axis(2)
+def right_pedal(event, vjoy):
+    global right_pedal
+    right_pedal = event.value
+    vjoy[1].axis[AxisName.RZ].value = pedal_position()
 
 
 @keyboard("LAlt", "roll")
