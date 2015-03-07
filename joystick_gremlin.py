@@ -161,9 +161,11 @@ class Repeater(QtCore.QObject):
         self._start_timer.start()
 
     def stop(self):
+        """Stops the event dispatch thread."""
         self.is_running = False
 
     def run(self):
+        """Starts the event dispatch thread."""
         if self._thread.is_alive():
             return
         self.is_running = True
@@ -173,6 +175,7 @@ class Repeater(QtCore.QObject):
         self._thread.start()
 
     def emit_events(self):
+        """Emits events until stopped."""
         index = 0
         el = EventListener()
         while self.is_running:
