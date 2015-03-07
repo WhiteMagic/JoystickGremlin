@@ -319,6 +319,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.tabs = {}
+        self.config = util.Configuration()
         self.devices = util.joystick_devices()
         self.runner = CodeRunner()
         self.repeater = Repeater([])
@@ -336,8 +337,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._profile = profile.Profile()
         self._profile_fname = None
         self.new_profile()
-        # self._profile_fname = "demo_profiles/p1/profile.xml"
-        # self._profile.from_xml(self._profile_fname)
+        if self.config.default_profile:
+            self._do_load_profile(self.config.default_profile)
 
         self._setup_icons()
         self._connect_actions()
@@ -354,19 +355,27 @@ class GremlinUi(QtWidgets.QMainWindow):
             "XML files (*.xml)"
         )
         if fname != "":
-            new_profile = profile.Profile()
-            new_profile.from_xml(fname)
+            self._do_load_profile(fname)
+            self.config.default_profile = fname
 
-            profile_folder = os.path.dirname(fname)
-            if profile_folder not in sys.path:
-                sys.path.insert(0, profile_folder)
+    def _do_load_profile(self, fname):
+        """Load the profile with the given filename.
 
-            self._sanitize_profile(new_profile)
-            self._profile = new_profile
-            self._profile_fname = fname
+        :param fname the name of the profile file to load
+        """
+        new_profile = profile.Profile()
+        new_profile.from_xml(fname)
 
-            # Update device profiles
-            self._create_tabs()
+        profile_folder = os.path.dirname(fname)
+        if profile_folder not in sys.path:
+            sys.path.insert(0, profile_folder)
+
+        self._sanitize_profile(new_profile)
+        self._profile = new_profile
+        self._profile_fname = fname
+
+        # Update device profiles
+        self._create_tabs()
 
     def new_profile(self):
         """Creates a new empty profile."""
