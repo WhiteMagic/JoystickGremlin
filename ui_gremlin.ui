@@ -59,6 +59,7 @@
     </property>
     <addaction name="actionDeviceInformation"/>
     <addaction name="actionManageCustomModules"/>
+    <addaction name="actionInputRepeater"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -136,6 +137,14 @@
   <action name="actionManageCustomModules">
    <property name="text">
     <string>&amp;Manage Custom Modules</string>
+   </property>
+  </action>
+  <action name="actionInputRepeater">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Input Repeater</string>
    </property>
   </action>
  </widget>

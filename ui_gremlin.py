@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_gremlin.ui'
 #
-# Created: Sat Jan 24 23:30:56 2015
+# Created: Sat Mar  7 16:58:10 2015
 #      by: PyQt5 UI code generator 5.3.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,12 +66,16 @@ class Ui_Gremlin(object):
         self.actionAbout.setObjectName("actionAbout")
         self.actionManageCustomModules = QtWidgets.QAction(Gremlin)
         self.actionManageCustomModules.setObjectName("actionManageCustomModules")
+        self.actionInputRepeater = QtWidgets.QAction(Gremlin)
+        self.actionInputRepeater.setCheckable(True)
+        self.actionInputRepeater.setObjectName("actionInputRepeater")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
         self.menu_File.addAction(self.actionSaveProfileAs)
         self.menuTools.addAction(self.actionDeviceInformation)
         self.menuTools.addAction(self.actionManageCustomModules)
+        self.menuTools.addAction(self.actionInputRepeater)
         self.menu_Help.addAction(self.actionAbout)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
@@ -103,4 +107,5 @@ class Ui_Gremlin(object):
         self.actionDeviceInformation.setText(_translate("Gremlin", "Device Information"))
         self.actionAbout.setText(_translate("Gremlin", "&About"))
         self.actionManageCustomModules.setText(_translate("Gremlin", "&Manage Custom Modules"))
+        self.actionInputRepeater.setText(_translate("Gremlin", "Input Repeater"))
 

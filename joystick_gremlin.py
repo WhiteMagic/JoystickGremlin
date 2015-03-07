@@ -24,6 +24,8 @@ import importlib
 import logging
 import os
 import sys
+import threading
+import time
 
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
 import sdl2
@@ -109,6 +111,77 @@ class CodeRunner(object):
         """Resets all states to their default values."""
         self.event_handler._active_mode = "global"
         self.event_handler._previous_mode = "global"
+
+
+class Repeater(QtCore.QObject):
+
+    """Responsible to repeatedly emit a set of given events.
+
+    The class receives a list of events that are to be emitted in
+    sequence. The events are emitted in a separate thread and the
+    emission cannot be aborted once it started. While events are
+    being emitted a change of events is not performed to prevent
+    continuous emitting of events.
+    """
+
+    def __init__(self, events):
+        """Creates a new instance.
+
+        :param events the list of events to emit
+        """
+        QtCore.QObject.__init__(self)
+        self.is_running = False
+        self._events = events
+        self._thread = threading.Thread(target=self.emit_events)
+        self._start_timer = threading.Timer(1.0, self.run)
+        self._stop_timer = threading.Timer(5.0, self.stop)
+
+    @property
+    def events(self):
+        return self._events
+
+    @events.setter
+    def events(self, events):
+        """Sets the list of events to execute and queues execution.
+
+        Starts emitting the list of events after a short delay. If a
+        new list of events is received before the timeout, the old timer
+        is destroyed and replaced with a new one for the new list of
+        events. Once events are being emitted all change requests will
+        be ignored.
+
+        :param events the list of events to emit
+        """
+        if self.is_running or len(events) == 0:
+            return
+        self._events = events
+        if self._start_timer:
+            self._start_timer.cancel()
+        self._start_timer = threading.Timer(1.0, self.run)
+        self._start_timer.start()
+
+    def stop(self):
+        self.is_running = False
+
+    def run(self):
+        if self._thread.is_alive():
+            return
+        self.is_running = True
+        self._stop_timer = threading.Timer(5.0, self.stop)
+        self._stop_timer.start()
+        self._thread = threading.Thread(target=self.emit_events)
+        self._thread.start()
+
+    def emit_events(self):
+        index = 0
+        el = EventListener()
+        while self.is_running:
+            if self.events[0].event_type == InputType.Keyboard:
+                el.keyboard_event.emit(self._events[index])
+            else:
+                el.joystick_event.emit(self._events[index])
+            index = (index + 1) % len(self._events)
+            time.sleep(0.5)
 
 
 class GremlinAboutUi(QtWidgets.QWidget):
@@ -245,6 +318,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.tabs = {}
         self.devices = util.joystick_devices()
         self.runner = CodeRunner()
+        self.repeater = Repeater([])
         self.runner.event_handler.mode_changed.connect(
             self._update_statusbar_mode
         )
@@ -376,10 +450,58 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.module_manager = ModuleManagerUi(self._profile)
         self.module_manager.show()
 
+    def input_repeater(self):
+        """Enables or disables the forwarding of events to the repeater."""
+        el = EventListener()
+        if self.ui.actionInputRepeater.isChecked():
+            el.keyboard_event.connect(self._handle_input_repeat)
+            el.joystick_event.connect(self._handle_input_repeat)
+        else:
+            el.keyboard_event.disconnect(self._handle_input_repeat)
+            el.joystick_event.disconnect(self._handle_input_repeat)
+
     def about(self):
         """Opens the about window."""
         self.about_window = GremlinAboutUi()
         self.about_window.show()
+
+    def _handle_input_repeat(self, event):
+        """Performs setup for event repetition.
+
+        :param event the event to repeat
+        """
+        vjoy_device_id = [dev.device_id for dev in self.devices if dev.is_virtual][0]
+        # Ignore VJoy events
+        if self.repeater.is_running or event.device_id == vjoy_device_id:
+            return
+        # Ignore small joystick movements
+        elif event.event_type == InputType.JoystickAxis and abs(event.value) < 0.25:
+            return
+        # Ignore neutral hat positions
+        if event.event_type == InputType.JoystickHat and event.value == (0, 0):
+            return
+
+        event_list = []
+        if event.event_type in [InputType.Keyboard, InputType.JoystickButton]:
+            event_list = [event.clone(), event.clone()]
+            event_list[0].is_pressed = False
+            event_list[1].is_pressed = True
+        elif event.event_type == InputType.JoystickAxis:
+            event_list = [
+                event.clone(),
+                event.clone(),
+                event.clone(),
+                event.clone()
+            ]
+            event_list[0].value = -0.75
+            event_list[1].value = 0.0
+            event_list[2].value = 0.75
+            event_list[3].value = 0.0
+        elif event.event_type == InputType.JoystickHat:
+            event_list = [event.clone(), event.clone()]
+            event_list[0].value = (0, 0)
+
+        self.repeater.events = event_list
 
     def _sanitize_profile(self, profile_data):
         """Validates a profile file before actually loading it.
@@ -485,6 +607,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
         self.ui.actionDeviceInformation.triggered.connect(self.device_information)
         self.ui.actionManageCustomModules.triggered.connect(self.manage_custom_modules)
+        self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionAbout.triggered.connect(self.about)
 
         # Toolbar actions

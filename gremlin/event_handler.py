@@ -84,6 +84,20 @@ class Event(object):
         self.is_pressed = is_pressed
         self.value = value
 
+    def clone(self):
+        """Returns a clone of the event.
+
+        :return cloned copy of this event
+        """
+        return Event(
+            self.event_type,
+            self.identifier,
+            self.device_id,
+            self.system_id,
+            self.value,
+            self.is_pressed
+        )
+
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
 
