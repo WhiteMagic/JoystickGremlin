@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import configparser
 import os
 from PyQt5 import QtWidgets
 import re
@@ -88,6 +89,47 @@ class JoystickDeviceData(object):
     @property
     def hats(self):
         return self._hats
+
+
+class Configuration(object):
+
+    def __init__(self):
+        self._parser = configparser.ConfigParser()
+        self._parser.read_file(
+            open(os.path.join(appdata_path(), "config.ini"))
+        )
+
+    def save(self):
+        """Writes the configuration file to disk."""
+        self._parser.write(
+            open(os.path.join(appdata_path(), "config.ini"), "w")
+        )
+
+    @property
+    def default_profile(self):
+        return self._get("profile", "default", None)
+
+    @default_profile.setter
+    def default_profile(self, value):
+        self._parser["profile"]["default"] = value
+        self.save()
+
+    def _get(self, section, option, default):
+        """Returns the value of the option in the provided section.
+
+        If the option does not exist in the specified section the
+        default value is returned.
+
+        :param section the section of the configuration
+        :param option the option within the section
+        :param default the default value to return if the entry does
+            not exist
+        :return the value of the option within the given section
+        """
+        if section in self._parser and option in self._parser[section]:
+            return self._parser[section][option]
+        else:
+            return default
 
 
 def joystick_devices():
