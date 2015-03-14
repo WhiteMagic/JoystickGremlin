@@ -640,7 +640,7 @@ class DeviceWidget(QtWidgets.QWidget):
         :param vjoy_devices list of vjoy devices
         :param device_data information about the physical device
             represented by this widget
-        :param device_profile the profile data associatged with this
+        :param device_profile the profile data associated with this
             device
         :param parent the parent widget of this object
         """

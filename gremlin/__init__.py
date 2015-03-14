@@ -1,6 +1,6 @@
 import gremlin.code_generator
 import gremlin.control_action
-import gremlin.cubic_spline
+import gremlin.spline
 import gremlin.error
 import gremlin.event_handler
 import gremlin.fsm

@@ -185,7 +185,7 @@ class ControlPointModel(QtCore.QObject):
         self._points = {}
         self._active_point = None
         self._next_id = 0
-        self.curve_model = gremlin.cubic_spline.CubicSpline
+        self.curve_model = gremlin.spline.CubicSpline
 
     def get_control_points(self):
         """Returns the sorted list of all control points.

@@ -80,3 +80,44 @@ class CubicSpline(object):
         tmp = -(h/6.0) * (self.z[i+1] + 2 * self.z[i]) + (self.y[i+1] - self.y[i]) / h + (x - self.x[i]) * tmp
 
         return self.y[i] + (x - self.x[i]) * tmp
+
+
+class CubicBezierSpline(object):
+
+    """Implementation of cubic Bezier splines."""
+
+    def __init__(self, points):
+        """Creates a new CubicBezierSpline object.
+
+        :param points the set of (x, y) knots and control points
+        """
+        self.x = [v[0] for v in points]
+        self.y = [v[1] for v in points]
+
+        self.knots = [pt for pt in points[::3]]
+
+    def __call__(self, x):
+        """Returns the function value at the desired position.
+
+        :param x the location at which to evaluate the function
+        :return function value at the provided position
+        """
+        if self.knots[0][0] > x:
+            index = 0
+            t = 0
+        elif self.knots[-1][0] <= x:
+            index = len(self.knots)-2
+            t = 1
+        else:
+            index = len(self.knots)-1
+            for i, pt in enumerate(self.knots[::-1]):
+                if x >= pt[0]:
+                    break
+                index -= 1
+            t = (x - self.knots[index][0]) / (self.knots[index+1][0] - self.knots[index][0])
+
+        offset = index * 3
+        return (1-t)**3 * self.y[offset] \
+            + 3*(1-t)**2 * t * self.y[offset+1] \
+            + 3*(1-t) * t**2 * self.y[offset+2] \
+            + t**3 * self.y[offset+3]

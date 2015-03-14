@@ -1,6 +1,6 @@
 import logging
 import gremlin
-from gremlin.cubic_spline import CubicSpline
+from gremlin.spline import CubicSpline
 from gremlin.input_devices import keyboard, macro
 from vjoy.vjoy import AxisName
 
