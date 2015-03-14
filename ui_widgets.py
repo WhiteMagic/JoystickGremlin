@@ -112,6 +112,71 @@ class DeviceInformationWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(self.close_button, len(devices)+1, 3)
 
 
+class AxisCalibrationWidget(QtWidgets.QWidget):
+
+    """Widget displaying calibration information about a single axis."""
+
+    def __init__(self, parent=None):
+        """Creates a new object.
+
+        :param parent the parent widget of this one
+        """
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.main_layout = QtWidgets.QGridLayout(self)
+        self.limits = [0, 0, 0]
+
+        # Create slider showing the axis position graphically
+        self.slider = QtWidgets.QProgressBar()
+        self.slider.setMinimum(-32768)
+        self.slider.setMaximum(32767)
+        self.slider.setValue(self.limits[1])
+        self.slider.setMinimumWidth(200)
+        self.slider.setMaximumWidth(200)
+
+        # Create the labels
+        self.current = QtWidgets.QLabel("0")
+        self.current.setAlignment(QtCore.Qt.AlignRight)
+        self.minimum = QtWidgets.QLabel("0")
+        self.minimum.setAlignment(QtCore.Qt.AlignRight)
+        self.center = QtWidgets.QLabel("0")
+        self.center.setAlignment(QtCore.Qt.AlignRight)
+        self.maximum = QtWidgets.QLabel("0")
+        self.maximum.setAlignment(QtCore.Qt.AlignRight)
+        self._update_labels()
+
+        # Populate the layout
+        self.main_layout.addWidget(self.slider, 0, 0, 0, 3)
+        self.main_layout.addWidget(self.current, 0, 3)
+        self.main_layout.addWidget(self.minimum, 0, 4)
+        self.main_layout.addWidget(self.center, 0, 5)
+        self.main_layout.addWidget(self.maximum, 0, 6)
+
+    def set_current(self, value):
+        """Updates the limits of the axis.
+
+        :param value the new value
+        """
+        self.slider.setValue(value)
+        if value > self.limits[2]:
+            self.limits[2] = value
+        if value < self.limits[0]:
+            self.limits[0] = value
+        self._update_labels()
+
+    def centered(self):
+        """Records the value of the center or neutral position."""
+        self.limits[1] = self.slider.value()
+        self._update_labels()
+
+    def _update_labels(self):
+        """Updates the axis limit values."""
+        self.current.setText("{: 5d}".format(self.slider.value()))
+        self.minimum.setText("{: 5d}".format(self.limits[0]))
+        self.center.setText("{: 5d}".format(self.limits[1]))
+        self.maximum.setText("{: 5d}".format(self.limits[2]))
+
+
 class InputItemButton(QtWidgets.QFrame):
 
     """Creates a button like widget which emits an event when pressed.

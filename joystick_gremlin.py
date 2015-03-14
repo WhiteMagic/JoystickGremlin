@@ -36,6 +36,7 @@ from gremlin.code_generator import CodeGenerator
 from gremlin import event_handler, input_devices, util
 from ui_about import Ui_About
 from ui_gremlin import Ui_Gremlin
+import ui_widgets
 from ui_widgets import *
 
 
@@ -185,6 +186,119 @@ class Repeater(QtCore.QObject):
                 el.joystick_event.emit(self._events[index])
             index = (index + 1) % len(self._events)
             time.sleep(0.5)
+
+
+class CalibrationUi(QtWidgets.QWidget):
+
+    """Dialog to calibrate joystick axes."""
+
+    def __init__(self, parent=None):
+        """Creates the calibration UI.
+
+        :param parent the parent widget of this object
+        """
+        QtWidgets.QWidget.__init__(self, parent)
+        self.devices = [dev for dev in util.joystick_devices() if not dev.is_virtual]
+        self.current_device_id = 0
+
+        # Create the required layouts
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.axes_layout = QtWidgets.QVBoxLayout()
+        self.button_layout = QtWidgets.QHBoxLayout()
+
+        # Device selection drop down
+        self.device_dropdown = QtWidgets.QComboBox()
+        self.device_dropdown.currentIndexChanged.connect(self._create_axes)
+        for device in self.devices:
+            self.device_dropdown.addItem(device.name)
+
+        # Various buttons
+        self.button_close = QtWidgets.QPushButton("Close")
+        self.button_close.pressed.connect(self.close)
+        self.buton_save = QtWidgets.QPushButton("Save")
+        self.buton_save.pressed.connect(self._save_calibration)
+        self.button_centered = QtWidgets.QPushButton("Centered")
+        self.button_centered.pressed.connect(self._calibrate_centers)
+        self.button_layout.addWidget(self.buton_save)
+        self.button_layout.addWidget(self.button_close)
+        self.button_layout.addStretch(0)
+        self.button_layout.addWidget(self.button_centered)
+
+        # Axis widget readout headers
+        self.label_layout = QtWidgets.QGridLayout()
+        label_spacer = QtWidgets.QLabel()
+        label_spacer.setMinimumWidth(200)
+        label_spacer.setMaximumWidth(200)
+        self.label_layout.addWidget(label_spacer, 0, 0, 0, 3)
+        label_current = QtWidgets.QLabel("<b>Current</b>")
+        label_current.setAlignment(QtCore.Qt.AlignRight)
+        self.label_layout.addWidget(label_current, 0, 3)
+        label_minimum = QtWidgets.QLabel("<b>Minimum</b>")
+        label_minimum.setAlignment(QtCore.Qt.AlignRight)
+        self.label_layout.addWidget(label_minimum, 0, 4)
+        label_center = QtWidgets.QLabel("<b>Center</b>")
+        label_center.setAlignment(QtCore.Qt.AlignRight)
+        self.label_layout.addWidget(label_center, 0, 5)
+        label_maximum = QtWidgets.QLabel("<b>Maximum</b>")
+        label_maximum.setAlignment(QtCore.Qt.AlignRight)
+        self.label_layout.addWidget(label_maximum, 0, 6)
+
+        # Organizing everything into the various layouts
+        self.main_layout.addWidget(self.device_dropdown)
+        self.main_layout.addLayout(self.label_layout)
+        self.main_layout.addLayout(self.axes_layout)
+        self.main_layout.addStretch(0)
+        self.main_layout.addLayout(self.button_layout)
+
+        # Create the axis calibration widgets
+        self.axes = []
+        self._create_axes(self.current_device_id)
+
+        # Connect to the joystick events
+        el = EventListener()
+        el.joystick_event.connect(self._handle_event)
+
+    def _calibrate_centers(self):
+        """Records the centered or neutral position of the current device."""
+        for widget in self.axes:
+            widget.centered()
+
+    def _save_calibration(self):
+        """Saves the current calibration data to the harddrive."""
+        cfg = util.Configuration()
+        dev_id = self.devices[self.current_device_id].device_id
+        cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
+
+    def _create_axes(self, device_id):
+        """Creates the axis calibration widget sfor the current device.
+
+        :param device_id the index of the currently selected device
+            in the dropdown menu
+        """
+        ui_widgets._clear_layout(self.axes_layout)
+        self.axes = []
+        self.current_device_id = device_id
+        config = util.Configuration()
+        for i in range(self.devices[device_id].axes):
+            self.axes.append(AxisCalibrationWidget())
+            self.axes_layout.addWidget(self.axes[-1])
+
+    def _handle_event(self, event):
+        """Process a single joystick event.
+
+        :param event the event to process
+        """
+        if event.device_id == self.devices[self.current_device_id].device_id \
+                and event.event_type == InputType.JoystickAxis:
+            self.axes[event.identifier-1].set_current(event.raw_value)
+
+    def closeEvent(self, event):
+        """Closes the calibration window.
+
+        :param event the close event
+        """
+        el = EventListener()
+        el.joystick_event.disconnect(self._handle_event)
 
 
 class GremlinAboutUi(QtWidgets.QWidget):
@@ -472,6 +586,11 @@ class GremlinUi(QtWidgets.QMainWindow):
             el.keyboard_event.disconnect(self._handle_input_repeat)
             el.joystick_event.disconnect(self._handle_input_repeat)
 
+    def calibration(self):
+        """Opens the calibration window."""
+        self.calibration_window = CalibrationUi()
+        self.calibration_window.show()
+
     def about(self):
         """Opens the about window."""
         self.about_window = GremlinAboutUi()
@@ -620,6 +739,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionDeviceInformation.triggered.connect(self.device_information)
         self.ui.actionManageCustomModules.triggered.connect(self.manage_custom_modules)
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
+        self.ui.actionCalibration.triggered.connect(self.calibration)
         self.ui.actionAbout.triggered.connect(self.about)
 
         # Toolbar actions

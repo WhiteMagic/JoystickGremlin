@@ -93,7 +93,10 @@ class JoystickDeviceData(object):
 
 class Configuration(object):
 
+    """Responsible for loading and saving configuration data."""
+
     def __init__(self):
+        """Creates a new instance, loading the current configuration."""
         self._parser = configparser.ConfigParser()
         self._parser.read_file(
             open(os.path.join(appdata_path(), "config.ini"))
@@ -104,6 +107,43 @@ class Configuration(object):
         self._parser.write(
             open(os.path.join(appdata_path(), "config.ini"), "w")
         )
+
+    def set_calibration(self, device_id, limits):
+        """Sets the calibration data for all axes of a device.
+
+        :param device_id the hardware id of the device
+        :param limits the calibration data for each of the axes
+        """
+        device_id = str(device_id)
+        if device_id in self._parser:
+            del self._parser[device_id]
+        self._parser.add_section(device_id)
+
+        for i, limit in enumerate(limits):
+            self._parser[device_id]["axis_{}_min".format(i+1)] = str(limit[0])
+            self._parser[device_id]["axis_{}_center".format(i+1)] = str(limit[1])
+            self._parser[device_id]["axis_{}_max".format(i+1)] = str(limit[2])
+        self.save()
+
+    def get_calibration(self, device_id, axis_id):
+        """Returns the calibration data for the desired axis.
+
+        :param device_id the hardware id of the device
+        :param axis_id the id of the desired axis
+        :return the calibration data for the desired axis
+        """
+        device_id = str(device_id)
+        if device_id not in self._parser:
+            return [-32768, 0, 32767]
+        if "axis_{}_min".format(axis_id) not in self._parser[device_id]:
+            return [-32768, 0, 32767]
+
+        return [
+            int(self._parser[device_id]["axis_{}_min".format(axis_id)]),
+            int(self._parser[device_id]["axis_{}_center".format(axis_id)]),
+            int(self._parser[device_id]["axis_{}_max".format(axis_id)])
+
+        ]
 
     @property
     def default_profile(self):
@@ -152,6 +192,48 @@ def joystick_devices():
         g_duplicate_devices = True
 
     return devices
+
+
+def axis_calibration(value, minimum, center, maximum):
+    """Returns the calibrated value for a normal style axis.
+
+    :param value the raw value to process
+    :param minimum the minimum value of the axis
+    :param maximum the maximum value of the axis
+    :return the calibrated value in [-1, 1] corresponding to the
+        provided raw value
+    """
+    if value < center:
+        return (value - center) / float(center - minimum)
+    else:
+        return (value - center) / float(maximum - center)
+
+
+def slider_calibration(value, minimum, maximum):
+    """Returns the calibrated value for a slider type axis.
+
+    :param value the raw value to process
+    :param minimum the minimum value of the axis
+    :param maximum the maximum value of the axis
+    :return the calibrated value in [-1, 1] corresponding to the
+        provided raw value
+    """
+    return (value - minimum) / float(maximum - minimum) * 2.0 - 1.0
+
+
+def create_calibration_function(minimum, center, maximum):
+    """Returns a calibration function appropriate for the provided data.
+
+    :param mininum the minimal value ever reported
+    :param center the value in the neutral position
+    :param maximum the maximal value ever reported
+    :return function which returns a value in [-1, 1] corresponding
+        to the provided raw input value
+    """
+    if minimum == center or maximum == center:
+        return lambda x: slider_calibration(x, minimum, maximum)
+    else:
+        return lambda x: axis_calibration(x, minimum, center, maximum)
 
 
 def script_path():

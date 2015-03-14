@@ -66,7 +66,7 @@ class Event(object):
     ShiftSystemId = 32
     ShiftIdentifier = 40
 
-    def __init__(self, event_type, identifier, device_id, system_id, value=None, is_pressed=None):
+    def __init__(self, event_type, identifier, device_id, system_id, value=None, is_pressed=None, raw_value=None):
         """Creates a new Event object.
 
         :param event_type the type of the event, one of the EventType values
@@ -75,6 +75,7 @@ class Event(object):
         :param system_id the index of the device in the system
         :param value the value of a joystick axis or hat
         :param is_pressed boolean flag indicating if a button or key
+        :param raw_value the raw SDL value of the axis
             is pressed
         """
         self.event_type = event_type
@@ -83,6 +84,7 @@ class Event(object):
         self.system_id = system_id
         self.is_pressed = is_pressed
         self.value = value
+        self.raw_value = raw_value
 
     def clone(self):
         """Returns a clone of the event.
@@ -95,7 +97,8 @@ class Event(object):
             self.device_id,
             self.system_id,
             self.value,
-            self.is_pressed
+            self.is_pressed,
+            self.raw_value
         )
 
     def __eq__(self, other):
@@ -161,6 +164,7 @@ class EventListener(QtCore.QObject):
         self._hook_manager.HookKeyboard()
         self._joysticks = {}
         self._joystick_guid_map = {}
+        self._calibrations = {}
         self._running = True
         self._keyboard_state = {}
 
@@ -222,7 +226,8 @@ class EventListener(QtCore.QObject):
                 device_id=self._joystick_guid_map[event.jaxis.which],
                 system_id=event.jaxis.which,
                 identifier=event.jaxis.axis + 1,
-                value=event.jaxis.value / float(32768)
+                value=self._calibrations[(self._joystick_guid_map[event.jaxis.which], event.jaxis.axis + 1)](event.jaxis.value),
+                raw_value=event.jaxis.value
             ))
         elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:
             self.joystick_event.emit(Event(
@@ -248,6 +253,23 @@ class EventListener(QtCore.QObject):
             guid = util.guid_to_number(sdl2.SDL_JoystickGetGUID(joy).data)
             self._joysticks[guid] = joy
             self._joystick_guid_map[sdl2.SDL_JoystickInstanceID(joy)] = guid
+            self._load_calibrations(guid)
+
+    def _load_calibrations(self, guid):
+        """Loads the calibration data for the given joystick.
+
+        :param guid the id of the joystick to load the calibration
+            data for
+        """
+        config = util.Configuration()
+        for i in range(sdl2.SDL_JoystickNumAxes(self._joysticks[guid])):
+            limits = config.get_calibration(guid, i+1)
+            self._calibrations[(guid, i+1)] = util.create_calibration_function(
+                limits[0],
+                limits[1],
+                limits[2]
+            )
+
 
 
 @SingletonDecorator

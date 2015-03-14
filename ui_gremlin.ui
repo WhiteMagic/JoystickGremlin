@@ -60,6 +60,7 @@
     <addaction name="actionDeviceInformation"/>
     <addaction name="actionManageCustomModules"/>
     <addaction name="actionInputRepeater"/>
+    <addaction name="actionCalibration"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -145,6 +146,11 @@
    </property>
    <property name="text">
     <string>Input Repeater</string>
+   </property>
+  </action>
+  <action name="actionCalibration">
+   <property name="text">
+    <string>&amp;Calibration</string>
    </property>
   </action>
  </widget>
