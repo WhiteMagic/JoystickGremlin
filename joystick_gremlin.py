@@ -65,12 +65,12 @@ class CodeRunner(object):
 
             # Create callbacks
             callback_count = 0
-            for device_id, modes in input_devices.callback_registry.items():
+            for hardware_id, modes in input_devices.callback_registry.items():
                 for mode, callbacks in modes.items():
                     for event, callback_list in callbacks.items():
                         for callback in callback_list:
                             self.event_handler.add_callback(
-                                device_id,
+                                hardware_id,
                                 mode,
                                 event,
                                 callback[0],
@@ -199,7 +199,7 @@ class CalibrationUi(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self, parent)
         self.devices = [dev for dev in util.joystick_devices() if not dev.is_virtual]
-        self.current_device_id = 0
+        self.current_hardware_id = 0
 
         # Create the required layouts
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -252,7 +252,7 @@ class CalibrationUi(QtWidgets.QWidget):
 
         # Create the axis calibration widgets
         self.axes = []
-        self._create_axes(self.current_device_id)
+        self._create_axes(self.current_hardware_id)
 
         # Connect to the joystick events
         el = EventListener()
@@ -266,20 +266,20 @@ class CalibrationUi(QtWidgets.QWidget):
     def _save_calibration(self):
         """Saves the current calibration data to the harddrive."""
         cfg = util.Configuration()
-        dev_id = self.devices[self.current_device_id].device_id
+        dev_id = self.devices[self.current_hardware_id].hardware_id
         cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
 
-    def _create_axes(self, device_id):
+    def _create_axes(self, hardware_id):
         """Creates the axis calibration widget sfor the current device.
 
-        :param device_id the index of the currently selected device
+        :param hardware_id the index of the currently selected device
             in the dropdown menu
         """
         ui_widgets._clear_layout(self.axes_layout)
         self.axes = []
-        self.current_device_id = device_id
+        self.current_hardware_id = hardware_id
         config = util.Configuration()
-        for i in range(self.devices[device_id].axes):
+        for i in range(self.devices[hardware_id].axes):
             self.axes.append(AxisCalibrationWidget())
             self.axes_layout.addWidget(self.axes[-1])
 
@@ -288,7 +288,7 @@ class CalibrationUi(QtWidgets.QWidget):
 
         :param event the event to process
         """
-        if event.device_id == self.devices[self.current_device_id].device_id \
+        if event.hardware_id == self.devices[self.current_hardware_id].hardware_id \
                 and event.event_type == InputType.JoystickAxis:
             self.axes[event.identifier-1].set_current(event.raw_value)
 
@@ -499,14 +499,14 @@ class GremlinUi(QtWidgets.QMainWindow):
         for device in [entry for entry in self.devices if not entry.is_virtual]:
             new_device = profile.Device(self._profile)
             new_device.name = device.name
-            new_device.index = device.device_id
+            new_device.hardware_id = device.hardware_id
             new_device.type = profile.DeviceType.Joystick
-            self._profile.devices[new_device.index] = new_device
+            self._profile.devices[new_device.hardware_id] = new_device
         keyboard_device = profile.Device(self._profile)
         keyboard_device.name = "keyboard"
-        keyboard_device.index = 0
+        keyboard_device.hardware_id = 0
         keyboard_device.type = profile.DeviceType.Keyboard
-        self._profile.devices[keyboard_device.index] = keyboard_device
+        self._profile.devices[keyboard_device.hardware_id] = keyboard_device
 
         self._create_tabs()
 
@@ -601,9 +601,9 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param event the event to repeat
         """
-        vjoy_device_id = [dev.device_id for dev in self.devices if dev.is_virtual][0]
+        vjoy_device_id = [dev.hardware_id for dev in self.devices if dev.is_virtual][0]
         # Ignore VJoy events
-        if self.repeater.is_running or event.device_id == vjoy_device_id:
+        if self.repeater.is_running or event.hardware_id == vjoy_device_id:
             return
         # Ignore small joystick movements
         elif event.event_type == InputType.JoystickAxis and abs(event.value) < 0.25:
@@ -640,8 +640,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param profile_data the profile to verify
         """
         profile_devices = {}
-        for dev_id, device in profile_data.devices.items():
-            if dev_id == 0:
+        for device in profile_data.devices.values():
+            # Ignore the keyboard
+            if device.hardware_id == 0:
                 continue
             profile_devices[device.index] = device.name
 
@@ -722,8 +723,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param device the device for which to return the profile
         :return profile for the provided device
         """
-        if device.device_id in self._profile.devices:
-            device_profile = self._profile.devices[device.device_id]
+        if device.hardware_id in self._profile.devices:
+            device_profile = self._profile.devices[device.hardware_id]
         else:
             device_profile = {}
 

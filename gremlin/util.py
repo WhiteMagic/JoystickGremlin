@@ -63,7 +63,7 @@ class JoystickDeviceData(object):
         self._hats = sdl2.SDL_JoystickNumHats(device)
 
     @property
-    def device_id(self):
+    def hardware_id(self):
         return self._hardware_id
 
     @property
@@ -108,40 +108,40 @@ class Configuration(object):
             open(os.path.join(appdata_path(), "config.ini"), "w")
         )
 
-    def set_calibration(self, device_id, limits):
+    def set_calibration(self, hardware_id, limits):
         """Sets the calibration data for all axes of a device.
 
-        :param device_id the hardware id of the device
+        :param hardware_id the hardware id of the device
         :param limits the calibration data for each of the axes
         """
-        device_id = str(device_id)
-        if device_id in self._parser:
-            del self._parser[device_id]
-        self._parser.add_section(device_id)
+        hardware_id = str(hardware_id)
+        if hardware_id in self._parser:
+            del self._parser[hardware_id]
+        self._parser.add_section(hardware_id)
 
         for i, limit in enumerate(limits):
-            self._parser[device_id]["axis_{}_min".format(i+1)] = str(limit[0])
-            self._parser[device_id]["axis_{}_center".format(i+1)] = str(limit[1])
-            self._parser[device_id]["axis_{}_max".format(i+1)] = str(limit[2])
+            self._parser[hardware_id]["axis_{}_min".format(i+1)] = str(limit[0])
+            self._parser[hardware_id]["axis_{}_center".format(i+1)] = str(limit[1])
+            self._parser[hardware_id]["axis_{}_max".format(i+1)] = str(limit[2])
         self.save()
 
-    def get_calibration(self, device_id, axis_id):
+    def get_calibration(self, hardware_id, axis_id):
         """Returns the calibration data for the desired axis.
 
-        :param device_id the hardware id of the device
+        :param hardware_id the hardware id of the device
         :param axis_id the id of the desired axis
         :return the calibration data for the desired axis
         """
-        device_id = str(device_id)
-        if device_id not in self._parser:
+        hardware_id = str(hardware_id)
+        if hardware_id not in self._parser:
             return [-32768, 0, 32767]
-        if "axis_{}_min".format(axis_id) not in self._parser[device_id]:
+        if "axis_{}_min".format(axis_id) not in self._parser[hardware_id]:
             return [-32768, 0, 32767]
 
         return [
-            int(self._parser[device_id]["axis_{}_min".format(axis_id)]),
-            int(self._parser[device_id]["axis_{}_center".format(axis_id)]),
-            int(self._parser[device_id]["axis_{}_max".format(axis_id)])
+            int(self._parser[hardware_id]["axis_{}_min".format(axis_id)]),
+            int(self._parser[hardware_id]["axis_{}_center".format(axis_id)]),
+            int(self._parser[hardware_id]["axis_{}_max".format(axis_id)])
 
         ]
 

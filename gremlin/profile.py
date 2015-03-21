@@ -128,7 +128,8 @@ class Profile(object):
             if not dev.is_virtual and dev.device_id not in self.devices:
                 new_device = Device(self)
                 new_device.name = dev.name
-                new_device.index = dev.device_id
+                new_device.hardware_id = dev.hardware_id
+                new_device.windows_id = dev.windows_id
                 new_device.type = DeviceType.Joystick
                 self.devices[dev.device_id] = new_device
 
@@ -167,22 +168,26 @@ class Profile(object):
         with open(fname, "w") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
-    def get_device_modes(self, device_id, device_name=None):
+    def get_device_modes(self, hardware_id, device_name=None):
         """Returns the modes associated with the given device.
 
         If no entry for the device exists a device entry with an empty
         "global" mode will be generated.
 
-        :param device_id the id of the device
+        :param hardware_id the id of the device
         :param device_name the name of the device
         :return all modes for the specified device
         """
-        if device_id not in self.devices:
+        if hardware_id not in self.devices:
             device = Device(self)
             device.name = device_name
-            device.index = device_id
-            self.devices[device_id] = device
-        return self.devices[device_id]
+            device.hardware_id = hardware_id
+            # Ensure we have a valid device type set
+            device.type = DeviceType.Joystick
+            if device_name == "keyboard":
+                device.type = DeviceType.Keyboard
+            self.devices[hardware_id] = device
+        return self.devices[hardware_id]
 
 
 class Device(object):
@@ -196,7 +201,7 @@ class Device(object):
         """
         self.parent = parent
         self.name = None
-        self.index = None
+        self.hardware_id = None
         self.windows_id = None
         self.modes = {}
         self.type = None
@@ -211,7 +216,7 @@ class Device(object):
         :param node the xml node to parse to populate this device
         """
         self.name = node.get("name")
-        self.index = int(node.get("id"))
+        self.hardware_id = int(node.get("id"))
         self.windows_id = int(node.get("windows_id"))
         if self.name == "keyboard" and self.index == 0:
             self.type = DeviceType.Keyboard
@@ -230,7 +235,7 @@ class Device(object):
         """
         node = ElementTree.Element("device")
         node.set("name", self.name)
-        node.set("id", str(self.index))
+        node.set("id", str(self.hardware_id))
         node.set("windows_id", str(self.windows_id))
         for mode in self.modes.values():
             node.append(mode.to_xml())

@@ -391,12 +391,12 @@ class EventHandler(QtCore.QObject):
         """
         callback_list = []
         # Obtain callbacks matching the event
-        if event.device_id in self.callbacks:
-            callback_list = self.callbacks[event.device_id].get(
+        if event.hardware_id in self.callbacks:
+            callback_list = self.callbacks[event.hardware_id].get(
                 self._active_mode, {}
             ).get(event, [])
             if len(callback_list) == 0:
-                callback_list = self.callbacks[event.device_id].get(
+                callback_list = self.callbacks[event.hardware_id].get(
                     "global", {}
                 ).get(event, [])
         # Filter events when the system is paused
