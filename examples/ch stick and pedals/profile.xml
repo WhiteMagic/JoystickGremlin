@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <devices version="1">
-    <device id="0" name="keyboard">
+    <device id="0" name="keyboard" windows_id="0">
         <mode name="global">
             <key extended="False" id="56">
                 <switch-mode name="roll" on-press="True" on-release="False"/>
@@ -9,7 +9,7 @@
         </mode>
         <mode name="roll"/>
     </device>
-    <device id="2382820288" name="CH Fighterstick USB">
+    <device id="2382820288" windows_id="2" name="CH Fighterstick USB">
         <mode name="global">
             <hat id="1">
                 <remap hat="1" vjoy="1"/>
@@ -89,7 +89,7 @@
             <axis id="3"/>
         </mode>
     </device>
-    <device id="2382820032" name="CH Pro Pedals USB">
+    <device id="2382820032" windows_id="1" name="CH Pro Pedals USB">
         <mode name="global">
             <axis id="1"/>
             <axis id="2"/>
