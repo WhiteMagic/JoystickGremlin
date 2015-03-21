@@ -366,3 +366,17 @@ def setup_appdata():
             )
     elif not os.path.isdir(folder):
         raise error.GremlinError("Data folder exists but is not a folder")
+
+
+def clear_layout(layout):
+    """Removes all items from the given layout.
+
+    :param layout the layout from which to remove all items
+    """
+    while layout.count() > 0:
+        child = layout.takeAt(0)
+        if child.layout():
+            clear_layout(child.layout())
+        elif child.widget():
+            child.widget().deleteLater()
+        layout.removeItem(child)
