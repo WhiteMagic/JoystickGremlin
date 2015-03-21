@@ -644,13 +644,13 @@ class GremlinUi(QtWidgets.QMainWindow):
             # Ignore the keyboard
             if device.hardware_id == 0:
                 continue
-            profile_devices[device.index] = device.name
+            profile_devices[device.key()] = device.name
 
         physical_devices = {}
         for device in self.devices:
             if device.is_virtual:
                 continue
-            physical_devices[device.device_id] = device.name
+            physical_devices[(device.hardware_id, device.windows_id)] = device.name
 
         for dev_id, dev_name in profile_devices.items():
             if dev_id not in physical_devices:
@@ -680,7 +680,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         phys_devices = [dev for dev in self.devices if not dev.is_virtual]
         for device in phys_devices:
             device_profile = self._profile.get_device_modes(
-                device.device_id, device.name
+                (device.hardware_id, device.windows_id), device.name
             )
 
             widget = DeviceWidget(
@@ -690,7 +690,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self
             )
             self.mode_selector.mode_changed.connect(widget._mode_changed_cb)
-            self.tabs[device.name] = widget
+            self.tabs[(device.name, device.windows_id)] = widget
             self.ui.devices.addTab(widget, device.name)
 
         # Create keyboard tab
@@ -702,7 +702,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self
         )
         self.mode_selector.mode_changed.connect(widget._mode_changed_cb)
-        self.tabs["Keyboard"] = widget
+        self.tabs[("Keyboard", 0)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
     def _create_statusbar(self):

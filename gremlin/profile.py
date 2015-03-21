@@ -118,20 +118,20 @@ class Profile(object):
         for child in root.iter("device"):
             device = Device(self)
             device.from_xml(child)
-            self.devices[device.index] = device
+            self.devices[device.key()] = device
 
         # Ensure that the profile contains an entry for every existing
         # device even if it was not part of the loaded XML and
         # replicate the modes present in the profile.
         devices = gremlin.util.joystick_devices()
         for dev in devices:
-            if not dev.is_virtual and dev.device_id not in self.devices:
+            if not dev.is_virtual and dev.hardware_id not in self.devices:
                 new_device = Device(self)
                 new_device.name = dev.name
                 new_device.hardware_id = dev.hardware_id
                 new_device.windows_id = dev.windows_id
                 new_device.type = DeviceType.Joystick
-                self.devices[dev.device_id] = new_device
+                self.devices[new_device.key()] = new_device
 
                 # Create required modes
                 mode_list = gremlin.util.mode_list(new_device)
@@ -210,6 +210,10 @@ class Device(object):
         self.modes["global"] = Mode(self)
         self.modes["global"].name = "global"
 
+    def key(self):
+        """Returns the identifier key of this device."""
+        return (self.hardware_id, self.windows_id)
+
     def from_xml(self, node):
         """Populates this device based on the xml data.
 
@@ -218,7 +222,7 @@ class Device(object):
         self.name = node.get("name")
         self.hardware_id = int(node.get("id"))
         self.windows_id = int(node.get("windows_id"))
-        if self.name == "keyboard" and self.index == 0:
+        if self.name == "keyboard" and self.hardware_id == 0:
             self.type = DeviceType.Keyboard
         else:
             self.type = DeviceType.Joystick
