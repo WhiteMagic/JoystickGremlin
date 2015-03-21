@@ -101,7 +101,7 @@ class DeviceInformationWidget(QtWidgets.QWidget):
                 QtWidgets.QLabel(str(entry.hats)), +i+1, 3
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.system_id)), i+1, 4
+                QtWidgets.QLabel(str(entry.windows_id)), i+1, 4
             )
             self.main_layout.addWidget(
                 QtWidgets.QLabel(str(entry.device_id)), i+1, 5

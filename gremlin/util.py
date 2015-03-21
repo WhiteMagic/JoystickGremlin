@@ -55,7 +55,7 @@ class JoystickDeviceData(object):
         :param device pyGame joystick object
         """
         self._hardware_id = guid_to_number(sdl2.SDL_JoystickGetGUID(device))
-        self._system_id = sdl2.SDL_JoystickInstanceID(device)
+        self._windows_id = sdl2.SDL_JoystickInstanceID(device)
         self._name = sdl2.SDL_JoystickName(device).decode("utf-8")
         self._is_virtual = self._name == "vJoy Device"
         self._axes = sdl2.SDL_JoystickNumAxes(device)
@@ -67,8 +67,8 @@ class JoystickDeviceData(object):
         return self._hardware_id
 
     @property
-    def system_id(self):
-        return self._system_id
+    def windows_id(self):
+        return self.windows_id
 
     @property
     def name(self):

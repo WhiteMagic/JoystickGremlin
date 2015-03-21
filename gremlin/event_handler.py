@@ -66,13 +66,13 @@ class Event(object):
     ShiftSystemId = 32
     ShiftIdentifier = 40
 
-    def __init__(self, event_type, identifier, device_id, system_id, value=None, is_pressed=None, raw_value=None):
+    def __init__(self, event_type, identifier, device_id, windows_id, value=None, is_pressed=None, raw_value=None):
         """Creates a new Event object.
 
         :param event_type the type of the event, one of the EventType values
         :param identifier the identifier of the event source
         :param device_id the identifier of the device which created the event
-        :param system_id the index of the device in the system
+        :param windows_id the index of the device as assigned by windows
         :param value the value of a joystick axis or hat
         :param is_pressed boolean flag indicating if a button or key
         :param raw_value the raw SDL value of the axis
@@ -81,7 +81,7 @@ class Event(object):
         self.event_type = event_type
         self.identifier = identifier
         self.device_id = device_id
-        self.system_id = system_id
+        self.windows_id = windows_id
         self.is_pressed = is_pressed
         self.value = value
         self.raw_value = raw_value
@@ -95,7 +95,7 @@ class Event(object):
             self.event_type,
             self.identifier,
             self.device_id,
-            self.system_id,
+            self.windows_id,
             self.value,
             self.is_pressed,
             self.raw_value
@@ -123,7 +123,7 @@ class Event(object):
             hash_val += self.identifier << Event.ShiftIdentifier
         hash_val += self.event_type.value << Event.ShiftEventId
         if util.g_duplicate_devices:
-            hash_val += self.system_id << Event.ShiftSystemId
+            hash_val += self.windows_id << Event.ShiftSystemId
         hash_val += self.device_id << Event.ShiftDeviceId
 
         return hash_val
@@ -140,7 +140,7 @@ class Event(object):
             event_type=InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
             device_id=0,
-            system_id=0
+            windows_id=0
         )
 
 
@@ -205,7 +205,7 @@ class EventListener(QtCore.QObject):
                 self.keyboard_event.emit(Event(
                     event_type=InputType.Keyboard,
                     device_id=0,
-                    system_id=0,
+                    windows_id=0,
                     identifier=key_id,
                     is_pressed=is_pressed,
                 ))
@@ -224,7 +224,7 @@ class EventListener(QtCore.QObject):
             self.joystick_event.emit(Event(
                 event_type=InputType.JoystickAxis,
                 device_id=self._joystick_guid_map[event.jaxis.which],
-                system_id=event.jaxis.which,
+                windows_id=event.jaxis.which,
                 identifier=event.jaxis.axis + 1,
                 value=self._calibrations[(self._joystick_guid_map[event.jaxis.which], event.jaxis.axis + 1)](event.jaxis.value),
                 raw_value=event.jaxis.value
@@ -233,7 +233,7 @@ class EventListener(QtCore.QObject):
             self.joystick_event.emit(Event(
                 event_type=InputType.JoystickButton,
                 device_id=self._joystick_guid_map[event.jbutton.which],
-                system_id=event.jbutton.which,
+                windows_id=event.jbutton.which,
                 identifier=event.jbutton.button + 1,
                 is_pressed=event.jbutton.state == 1
             ))
@@ -241,7 +241,7 @@ class EventListener(QtCore.QObject):
             self.joystick_event.emit(Event(
                 event_type=InputType.JoystickHat,
                 device_id=self._joystick_guid_map[event.jhat.which],
-                system_id=event.jhat.which,
+                windows_id=event.jhat.which,
                 identifier=event.jhat.hat + 1,
                 value=util.convert_sdl_hat(event.jhat.value)
             ))
