@@ -197,6 +197,7 @@ class Device(object):
         self.parent = parent
         self.name = None
         self.index = None
+        self.windows_id = None
         self.modes = {}
         self.type = None
 
@@ -211,6 +212,7 @@ class Device(object):
         """
         self.name = node.get("name")
         self.index = int(node.get("id"))
+        self.windows_id = int(node.get("windows_id"))
         if self.name == "keyboard" and self.index == 0:
             self.type = DeviceType.Keyboard
         else:
@@ -229,6 +231,7 @@ class Device(object):
         node = ElementTree.Element("device")
         node.set("name", self.name)
         node.set("id", str(self.index))
+        node.set("windows_id", str(self.windows_id))
         for mode in self.modes.values():
             node.append(mode.to_xml())
         return node
