@@ -68,7 +68,7 @@ class JoystickDeviceData(object):
 
     @property
     def windows_id(self):
-        return self.windows_id
+        return self._windows_id
 
     @property
     def name(self):
