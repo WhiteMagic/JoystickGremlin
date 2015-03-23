@@ -478,7 +478,11 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param fname the name of the profile file to load
         """
         new_profile = profile.Profile()
-        new_profile.from_xml(fname)
+        try:
+            new_profile.from_xml(fname)
+        except TypeError as e:
+            logging.exception("Invalid profile content:\n{}".format(e))
+            new_profile = profile.Profile()
 
         profile_folder = os.path.dirname(fname)
         if profile_folder not in sys.path:
