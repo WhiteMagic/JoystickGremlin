@@ -125,7 +125,7 @@ class Profile(object):
         # replicate the modes present in the profile.
         devices = gremlin.util.joystick_devices()
         for dev in devices:
-            if not dev.is_virtual and dev.hardware_id not in self.devices:
+            if not dev.is_virtual and gremlin.util.device_id(dev) not in self.devices:
                 new_device = Device(self)
                 new_device.name = dev.name
                 new_device.hardware_id = dev.hardware_id
