@@ -168,26 +168,27 @@ class Profile(object):
         with open(fname, "w") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
-    def get_device_modes(self, hardware_id, device_name=None):
+    def get_device_modes(self, device_key, device_name=None):
         """Returns the modes associated with the given device.
 
         If no entry for the device exists a device entry with an empty
         "global" mode will be generated.
 
-        :param hardware_id the id of the device
+        :param device_key the key composed of hardware and windows id
         :param device_name the name of the device
         :return all modes for the specified device
         """
-        if hardware_id not in self.devices:
+        if device_key not in self.devices:
             device = Device(self)
             device.name = device_name
-            device.hardware_id = hardware_id
+            device.hardware_id = device_key[0]
+            device.windows_id = device_key[1]
             # Ensure we have a valid device type set
             device.type = DeviceType.Joystick
             if device_name == "keyboard":
                 device.type = DeviceType.Keyboard
-            self.devices[hardware_id] = device
-        return self.devices[hardware_id]
+            self.devices[device_key] = device
+        return self.devices[device_key]
 
 
 class Device(object):
