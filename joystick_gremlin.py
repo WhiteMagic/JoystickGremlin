@@ -698,7 +698,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.ui.devices.addTab(widget, device.name)
 
         # Create keyboard tab
-        device_profile = self._profile.get_device_modes(0, "keyboard")
+        device_profile = self._profile.get_device_modes((0, 0), "keyboard")
         widget = DeviceWidget(
             vjoy_devices,
             None,
