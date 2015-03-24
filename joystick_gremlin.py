@@ -450,9 +450,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = "global"
         self._profile = profile.Profile()
         self._profile_fname = None
-        self.new_profile()
         if self.config.default_profile:
             self._do_load_profile(self.config.default_profile)
+        else:
+            self.new_profile()
 
         self._setup_icons()
         self._connect_actions()
@@ -504,11 +505,13 @@ class GremlinUi(QtWidgets.QMainWindow):
             new_device = profile.Device(self._profile)
             new_device.name = device.name
             new_device.hardware_id = device.hardware_id
+            new_device.windows_id = device.windows_id
             new_device.type = profile.DeviceType.Joystick
             self._profile.devices[new_device.hardware_id] = new_device
         keyboard_device = profile.Device(self._profile)
         keyboard_device.name = "keyboard"
         keyboard_device.hardware_id = 0
+        keyboard_device.windows_id = 0
         keyboard_device.type = profile.DeviceType.Keyboard
         self._profile.devices[keyboard_device.hardware_id] = keyboard_device
 
