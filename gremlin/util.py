@@ -380,3 +380,16 @@ def clear_layout(layout):
         elif child.widget():
             child.widget().deleteLater()
         layout.removeItem(child)
+
+
+def device_id(device):
+    """Returns the id for the given device.
+
+    If there is more then one device of the same type the device_id is
+    made up of the hardware_id and the windows_id. If only one device
+    of each type exists, only the hardware_id is used.
+
+    :param device the object representing a device to turn into an id
+    :return device identifier
+    """
+    return (device.hardware_id, device.windows_id)
