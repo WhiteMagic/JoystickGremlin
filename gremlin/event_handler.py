@@ -221,30 +221,33 @@ class EventListener(QtCore.QObject):
         :param event the joystick event
         """
         if event.type == sdl2.SDL_JOYAXISMOTION:
-            self.joystick_event.emit(Event(
-                event_type=InputType.JoystickAxis,
-                device_id=self._joystick_guid_map[event.jaxis.which],
-                windows_id=event.jaxis.which,
-                identifier=event.jaxis.axis + 1,
-                value=self._calibrations[(self._joystick_guid_map[event.jaxis.which], event.jaxis.axis + 1)](event.jaxis.value),
-                raw_value=event.jaxis.value
-            ))
+            if self._joystick_guid_map[event.jaxis.which] != 873639358:
+                self.joystick_event.emit(Event(
+                    event_type=InputType.JoystickAxis,
+                    hardware_id=self._joystick_guid_map[event.jaxis.which],
+                    windows_id=event.jaxis.which,
+                    identifier=event.jaxis.axis + 1,
+                    value=self._calibrations[(self._joystick_guid_map[event.jaxis.which], event.jaxis.axis + 1)](event.jaxis.value),
+                    raw_value=event.jaxis.value
+                ))
         elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:
-            self.joystick_event.emit(Event(
-                event_type=InputType.JoystickButton,
-                device_id=self._joystick_guid_map[event.jbutton.which],
-                windows_id=event.jbutton.which,
-                identifier=event.jbutton.button + 1,
-                is_pressed=event.jbutton.state == 1
-            ))
+            if self._joystick_guid_map[event.jbutton.which] != 873639358:
+                self.joystick_event.emit(Event(
+                    event_type=InputType.JoystickButton,
+                    hardware_id=self._joystick_guid_map[event.jbutton.which],
+                    windows_id=event.jbutton.which,
+                    identifier=event.jbutton.button + 1,
+                    is_pressed=event.jbutton.state == 1
+                ))
         elif event.type == sdl2.SDL_JOYHATMOTION:
-            self.joystick_event.emit(Event(
-                event_type=InputType.JoystickHat,
-                device_id=self._joystick_guid_map[event.jhat.which],
-                windows_id=event.jhat.which,
-                identifier=event.jhat.hat + 1,
-                value=util.convert_sdl_hat(event.jhat.value)
-            ))
+            if self._joystick_guid_map[event.jhat.which] != 873639358:
+                self.joystick_event.emit(Event(
+                    event_type=InputType.JoystickHat,
+                    hardware_id=self._joystick_guid_map[event.jhat.which],
+                    windows_id=event.jhat.which,
+                    identifier=event.jhat.hat + 1,
+                    value=util.convert_sdl_hat(event.jhat.value)
+                ))
 
     def _init_joysticks(self):
         """Initializes joystick devices."""
