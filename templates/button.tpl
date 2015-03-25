@@ -1,4 +1,5 @@
 <%!
+    import gremlin.util
     def list2python(params):
         if len(params) == 0:
             return ""
@@ -16,9 +17,16 @@
             return "if not is_pressed:"
         else:
             return "if False:"
+
+    def wid(input_item):
+        hid, wid = gremlin.util.extract_ids(gremlin.util.device_id(input_item.parent.parent))
+        if wid != -1:
+            return "_{}".format(wid)
+        else:
+            return ""
 %>\
 @${decorator}.button(${input_item.input_id}, always_execute=${input_item.always_execute})
-def ${device_name}_${mode}_button_${input_item.input_id}(${param_list}):
+def ${device_name}${wid(input_item)}_${mode}_button_${input_item.input_id}(${param_list}):
     is_pressed = event.is_pressed
 ${"\n".join(code["body"])}
 

@@ -1,6 +1,8 @@
 <%
 from gremlin.event_handler import InputType
+from gremlin.profile import DeviceType
+import gremlin
 %>
-% if len(mode._config[InputType.Keyboard]) == 0:
-${decorator} = gremlin.input_devices.JoystickDecorator("${mode.parent.name}", ${mode.parent.index}, "${mode.name}")
+% if mode.parent.type != DeviceType.Keyboard:
+${decorator} = gremlin.input_devices.JoystickDecorator(name="${mode.parent.name}", device_id=${gremlin.util.device_id(mode.parent)}, mode="${mode.name}")
 % endif

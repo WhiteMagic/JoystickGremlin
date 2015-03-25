@@ -30,10 +30,18 @@ def decorator_name(mode):
     :return name of the decorator matching the provided mode
     """
     assert(isinstance(mode, profile.Mode))
-    return "{}_{}".format(
-        util.format_name(mode.parent.name),
-        util.format_name(mode.name)
-    )
+    hid, wid = util.extract_ids(util.device_id(mode.parent))
+    if wid != -1:
+        return "{}_{}_{}".format(
+            util.format_name(mode.parent.name),
+            wid,
+            util.format_name(mode.name)
+        )
+    else:
+        return "{}_{}".format(
+            util.format_name(mode.parent.name),
+            util.format_name(mode.name)
+        )
 
 
 def generate_parameter_list(input_item):
