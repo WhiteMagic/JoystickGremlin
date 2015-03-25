@@ -115,10 +115,11 @@ class Profile(object):
         root = tree.getroot()
 
         # Parse each device into separate DeviceConfiguration objects
+        print(gremlin.util.device_id)
         for child in root.iter("device"):
             device = Device(self)
             device.from_xml(child)
-            self.devices[device.key()] = device
+            self.devices[gremlin.util.device_id(device)] = device
 
         # Ensure that the profile contains an entry for every existing
         # device even if it was not part of the loaded XML and
@@ -131,7 +132,7 @@ class Profile(object):
                 new_device.hardware_id = dev.hardware_id
                 new_device.windows_id = dev.windows_id
                 new_device.type = DeviceType.Joystick
-                self.devices[new_device.key()] = new_device
+                self.devices[gremlin.util.device_id(new_device)] = new_device
 
                 # Create required modes
                 mode_list = gremlin.util.mode_list(new_device)
@@ -168,27 +169,28 @@ class Profile(object):
         with open(fname, "w") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
-    def get_device_modes(self, device_key, device_name=None):
+    def get_device_modes(self, device_id, device_name=None):
         """Returns the modes associated with the given device.
 
         If no entry for the device exists a device entry with an empty
         "global" mode will be generated.
 
-        :param device_key the key composed of hardware and windows id
+        :param device_id the key composed of hardware and windows id
         :param device_name the name of the device
         :return all modes for the specified device
         """
-        if device_key not in self.devices:
+        if device_id not in self.devices:
+            hid, wid = gremlin.util.extract_ids(device_id)
             device = Device(self)
             device.name = device_name
-            device.hardware_id = device_key[0]
-            device.windows_id = device_key[1]
+            device.hardware_id = hid
+            device.windows_id = wid
             # Ensure we have a valid device type set
             device.type = DeviceType.Joystick
             if device_name == "keyboard":
                 device.type = DeviceType.Keyboard
-            self.devices[device_key] = device
-        return self.devices[device_key]
+            self.devices[device_id] = device
+        return self.devices[device_id]
 
 
 class Device(object):
@@ -210,10 +212,6 @@ class Device(object):
         # Ensure each device has at least an empty "global" mode
         self.modes["global"] = Mode(self)
         self.modes["global"].name = "global"
-
-    def key(self):
-        """Returns the identifier key of this device."""
-        return (self.hardware_id, self.windows_id)
 
     def from_xml(self, node):
         """Populates this device based on the xml data.

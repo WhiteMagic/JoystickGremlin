@@ -66,12 +66,14 @@ class Event(object):
     ShiftSystemId = 32
     ShiftIdentifier = 40
 
-    def __init__(self, event_type, identifier, device_id, windows_id, value=None, is_pressed=None, raw_value=None):
+    def __init__(self, event_type, identifier, hardware_id, windows_id, value=None, is_pressed=None, raw_value=None):
         """Creates a new Event object.
 
-        :param event_type the type of the event, one of the EventType values
+        :param event_type the type of the event, one of the EventType
+            values
         :param identifier the identifier of the event source
-        :param device_id the identifier of the device which created the event
+        :param hardware_id the hardware identifier of the device which
+            created the event
         :param windows_id the index of the device as assigned by windows
         :param value the value of a joystick axis or hat
         :param is_pressed boolean flag indicating if a button or key
@@ -80,7 +82,7 @@ class Event(object):
         """
         self.event_type = event_type
         self.identifier = identifier
-        self.device_id = device_id
+        self.hardware_id = hardware_id
         self.windows_id = windows_id
         self.is_pressed = is_pressed
         self.value = value
@@ -94,7 +96,7 @@ class Event(object):
         return Event(
             self.event_type,
             self.identifier,
-            self.device_id,
+            self.hardware_id,
             self.windows_id,
             self.value,
             self.is_pressed,
@@ -124,7 +126,7 @@ class Event(object):
         hash_val += self.event_type.value << Event.ShiftEventId
         if util.g_duplicate_devices:
             hash_val += self.windows_id << Event.ShiftSystemId
-        hash_val += self.device_id << Event.ShiftDeviceId
+        hash_val += self.hardware_id << Event.ShiftDeviceId
 
         return hash_val
 
@@ -139,7 +141,7 @@ class Event(object):
         return Event(
             event_type=InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
-            device_id=0,
+            hardware_id=0,
             windows_id=0
         )
 
@@ -204,7 +206,7 @@ class EventListener(QtCore.QObject):
                 self._keyboard_state[key_id] = is_pressed
                 self.keyboard_event.emit(Event(
                     event_type=InputType.Keyboard,
-                    device_id=0,
+                    hardware_id=0,
                     windows_id=0,
                     identifier=key_id,
                     is_pressed=is_pressed,
@@ -394,12 +396,13 @@ class EventHandler(QtCore.QObject):
         """
         callback_list = []
         # Obtain callbacks matching the event
-        if event.hardware_id in self.callbacks:
-            callback_list = self.callbacks[event.hardware_id].get(
+        dev_id = util.device_id(event)
+        if dev_id in self.callbacks:
+            callback_list = self.callbacks[dev_id].get(
                 self._active_mode, {}
             ).get(event, [])
             if len(callback_list) == 0:
-                callback_list = self.callbacks[event.hardware_id].get(
+                callback_list = self.callbacks[dev_id].get(
                     "global", {}
                 ).get(event, [])
         # Filter events when the system is paused

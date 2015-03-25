@@ -65,12 +65,13 @@ class CodeRunner(object):
 
             # Create callbacks
             callback_count = 0
-            for hardware_id, modes in input_devices.callback_registry.items():
+            for dev_id, modes in input_devices.callback_registry.items():
                 for mode, callbacks in modes.items():
                     for event, callback_list in callbacks.items():
                         for callback in callback_list:
+                            print(dev_id, callback[0])
                             self.event_handler.add_callback(
-                                hardware_id,
+                                dev_id,
                                 mode,
                                 event,
                                 callback[0],
@@ -651,7 +652,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             # Ignore the keyboard
             if device.hardware_id == 0:
                 continue
-            profile_devices[device.key()] = device.name
+            profile_devices[util.device_id(device)] = device.name
 
         physical_devices = {}
         for device in self.devices:
@@ -687,7 +688,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         phys_devices = [dev for dev in self.devices if not dev.is_virtual]
         for device in phys_devices:
             device_profile = self._profile.get_device_modes(
-                (device.hardware_id, device.windows_id), device.name
+                util.device_id(device),
+                device.name
             )
 
             widget = DeviceWidget(
@@ -697,7 +699,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self
             )
             self.mode_selector.mode_changed.connect(widget._mode_changed_cb)
-            self.tabs[(device.name, device.windows_id)] = widget
+            self.tabs[util.device_id(device)] = widget
             self.ui.devices.addTab(widget, device.name)
 
         # Create keyboard tab
@@ -709,7 +711,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self
         )
         self.mode_selector.mode_changed.connect(widget._mode_changed_cb)
-        self.tabs[("Keyboard", 0)] = widget
+        self.tabs[util.device_id(device_profile)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
     def _create_statusbar(self):
@@ -825,6 +827,11 @@ if __name__ == "__main__":
                 ctypes.c_char_p(b"1")
     )
     sdl2.ext.init()
+
+    # Setup device key generator based on whether or not we have
+    # duplicate devices connected.
+    util.setup_duplicate_joysticks()
+    print(util.device_id)
 
     # Create user interface
     app_id = u"joystick.gremlin.r1"

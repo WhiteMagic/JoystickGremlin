@@ -31,6 +31,12 @@ from gremlin import error
 g_duplicate_devices = False
 
 
+# Symbol used for the function that will compute the device id. This
+# will change based on whether or not multiple devices of the same
+# type are connected
+device_id = None
+
+
 class SingletonDecorator:
 
     """Decorator turning a class into a singleton."""
@@ -181,15 +187,6 @@ def joystick_devices():
     for i in range(sdl2.SDL_NumJoysticks()):
         joy = sdl2.SDL_JoystickOpen(i)
         devices.append(JoystickDeviceData(joy))
-
-    # Check if we have duplicate physical joysticks
-    names = []
-    for dev in [v for v in devices if not v.is_virtual]:
-        names.append(dev.name)
-
-    global g_duplicate_devices
-    if len(names) != len(set(names)):
-        g_duplicate_devices = True
 
     return devices
 
@@ -368,6 +365,65 @@ def setup_appdata():
         raise error.GremlinError("Data folder exists but is not a folder")
 
 
+def device_id_duplicates(device):
+    """Returns a unique id for the provided device.
+
+    This function is intended to be used when device of identical type
+    are present.
+
+    :param device the object with device related information
+    :return unique identifier of this device
+    """
+    return (device.hardware_id, device.windows_id)
+
+
+def device_id_unique(device):
+    """Returns a unique id for the provided device.
+
+    This function is intended to be used when all devices are
+    distinguishable by their hardware id.
+
+    :param device the object with device related information
+    :return unique identifier of this device
+    """
+    return device.hardware_id
+
+
+def setup_duplicate_joysticks():
+    """Detects if multiple identical devices are connected and performs
+    appropriate setup.
+    """
+    global g_duplicate_devices
+    global device_id
+    devices = joystick_devices()
+
+    # Check if we have duplicate items
+    entries = [dev.hardware_id for dev in devices]
+    g_duplicate_devices = len(entries) != len(set(entries))
+
+    # Create appropriate device_id generator
+    if g_duplicate_devices:
+        device_id = device_id_duplicates
+    else:
+        device_id = device_id_unique
+
+
+def extract_ids(dev_id):
+    """Returns hardware and windows id of a device_id.
+
+    Only if g_duplicate_devices is true will there be a windows id
+    present. If it is not present -1 will be returned
+
+    :param dev_id the device_id from which to extract the individual
+        ids
+    :return hardware_id and windows_id
+    """
+    if g_duplicate_devices:
+        return dev_id[0], dev_id[1]
+    else:
+        return dev_id, -1
+
+
 def clear_layout(layout):
     """Removes all items from the given layout.
 
@@ -380,16 +436,3 @@ def clear_layout(layout):
         elif child.widget():
             child.widget().deleteLater()
         layout.removeItem(child)
-
-
-def device_id(device):
-    """Returns the id for the given device.
-
-    If there is more then one device of the same type the device_id is
-    made up of the hardware_id and the windows_id. If only one device
-    of each type exists, only the hardware_id is used.
-
-    :param device the object representing a device to turn into an id
-    :return device identifier
-    """
-    return (device.hardware_id, device.windows_id)
