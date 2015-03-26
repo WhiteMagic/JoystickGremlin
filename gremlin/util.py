@@ -114,40 +114,44 @@ class Configuration(object):
             open(os.path.join(appdata_path(), "config.ini"), "w")
         )
 
-    def set_calibration(self, hardware_id, limits):
+    def set_calibration(self, device_id, limits):
         """Sets the calibration data for all axes of a device.
 
-        :param hardware_id the hardware id of the device
+        :param device_id the id of the device
         :param limits the calibration data for each of the axes
         """
-        hardware_id = str(hardware_id)
-        if hardware_id in self._parser:
-            del self._parser[hardware_id]
-        self._parser.add_section(hardware_id)
+        hid, wid = gremlin.util.extract_ids(device_id)
+        identifer = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
+        if identifer in self._parser:
+            del self._parser[identifer]
+        self._parser.add_section(identifer)
 
         for i, limit in enumerate(limits):
-            self._parser[hardware_id]["axis_{}_min".format(i+1)] = str(limit[0])
-            self._parser[hardware_id]["axis_{}_center".format(i+1)] = str(limit[1])
-            self._parser[hardware_id]["axis_{}_max".format(i+1)] = str(limit[2])
+            if limit[2] - limit[0] == 0:
+                continue
+            self._parser[identifer]["axis_{}_min".format(i+1)] = str(limit[0])
+            self._parser[identifer]["axis_{}_center".format(i+1)] = str(limit[1])
+            self._parser[identifer]["axis_{}_max".format(i+1)] = str(limit[2])
         self.save()
 
-    def get_calibration(self, hardware_id, axis_id):
+    def get_calibration(self, device_id, axis_id):
         """Returns the calibration data for the desired axis.
 
-        :param hardware_id the hardware id of the device
+        :param device_id the id of the device
         :param axis_id the id of the desired axis
         :return the calibration data for the desired axis
         """
-        hardware_id = str(hardware_id)
-        if hardware_id not in self._parser:
+        hid, wid = gremlin.util.extract_ids(device_id)
+        identifer = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
+        if identifer not in self._parser:
             return [-32768, 0, 32767]
-        if "axis_{}_min".format(axis_id) not in self._parser[hardware_id]:
+        if "axis_{}_min".format(axis_id) not in self._parser[identifer]:
             return [-32768, 0, 32767]
 
         return [
-            int(self._parser[hardware_id]["axis_{}_min".format(axis_id)]),
-            int(self._parser[hardware_id]["axis_{}_center".format(axis_id)]),
-            int(self._parser[hardware_id]["axis_{}_max".format(axis_id)])
+            int(self._parser[identifer]["axis_{}_min".format(axis_id)]),
+            int(self._parser[identifer]["axis_{}_center".format(axis_id)]),
+            int(self._parser[identifer]["axis_{}_max".format(axis_id)])
 
         ]
 

@@ -200,13 +200,17 @@ class CalibrationUi(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self, parent)
         self.devices = [dev for dev in util.joystick_devices() if not dev.is_virtual]
-        self.current_hardware_id = 0
+        self.current_selection_id = 0
 
         # Create the required layouts
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.axes_layout = QtWidgets.QVBoxLayout()
         self.button_layout = QtWidgets.QHBoxLayout()
 
+        self._create_ui()
+
+    def _create_ui(self):
+        """Creates all widgets required for the user interface."""
         # Device selection drop down
         self.device_dropdown = QtWidgets.QComboBox()
         self.device_dropdown.currentIndexChanged.connect(self._create_axes)
@@ -253,7 +257,7 @@ class CalibrationUi(QtWidgets.QWidget):
 
         # Create the axis calibration widgets
         self.axes = []
-        self._create_axes(self.current_hardware_id)
+        self._create_axes(self.current_selection_id)
 
         # Connect to the joystick events
         el = EventListener()
@@ -265,22 +269,21 @@ class CalibrationUi(QtWidgets.QWidget):
             widget.centered()
 
     def _save_calibration(self):
-        """Saves the current calibration data to the harddrive."""
+        """Saves the current calibration data to the hard drive."""
         cfg = util.Configuration()
-        dev_id = self.devices[self.current_hardware_id].hardware_id
+        dev_id = util.device_id(self.devices[self.current_selection_id])
         cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
 
-    def _create_axes(self, hardware_id):
-        """Creates the axis calibration widget sfor the current device.
+    def _create_axes(self, index):
+        """Creates the axis calibration widget for the current device.
 
-        :param hardware_id the index of the currently selected device
+        :param index the index of the currently selected device
             in the dropdown menu
         """
         ui_widgets._clear_layout(self.axes_layout)
         self.axes = []
-        self.current_hardware_id = hardware_id
-        config = util.Configuration()
-        for i in range(self.devices[hardware_id].axes):
+        self.current_selection_id = index
+        for i in range(self.devices[index].axes):
             self.axes.append(AxisCalibrationWidget())
             self.axes_layout.addWidget(self.axes[-1])
 
@@ -289,7 +292,7 @@ class CalibrationUi(QtWidgets.QWidget):
 
         :param event the event to process
         """
-        if event.hardware_id == self.devices[self.current_hardware_id].hardware_id \
+        if util.device_id(event) == util.device_id(self.devices[self.current_selection_id]) \
                 and event.event_type == InputType.JoystickAxis:
             self.axes[event.identifier-1].set_current(event.raw_value)
 

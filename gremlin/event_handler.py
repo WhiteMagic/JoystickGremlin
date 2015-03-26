@@ -268,13 +268,13 @@ class EventListener(QtCore.QObject):
         """
         config = util.Configuration()
         for i in range(sdl2.SDL_JoystickNumAxes(self._joysticks[guid])):
-            limits = config.get_calibration(guid, i+1)
+            device = util.JoystickDeviceData(self._joysticks[guid])
+            limits = config.get_calibration(util.device_id(device), i+1)
             self._calibrations[(guid, i+1)] = util.create_calibration_function(
                 limits[0],
                 limits[1],
                 limits[2]
             )
-
 
 
 @SingletonDecorator
