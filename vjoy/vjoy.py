@@ -66,9 +66,9 @@ class Axis(object):
 
         :param value the position of the axis in the range [-1, 1]
         """
-        if value > 1 or value < -1:
+        if 1.0 - abs(value) < -0.001:
             raise VJoyError(
-                "Wrong data type provided, has to be float in [-1, 1]"
+                "Wrong data type provided, has to be float in [-1, 1], provided value was {:.2f}".format(value)
             )
         self._value = min(1.0, max(-1.0, value))
 
