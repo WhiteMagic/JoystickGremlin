@@ -324,7 +324,6 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             self.condition.press.setChecked(condition.on_press)
             self.condition.release.setChecked(condition.on_release)
 
-
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
 
@@ -807,7 +806,7 @@ class DeviceWidget(QtWidgets.QWidget):
             self.current_selection[1]
         )
 
-        self.input_items[self.current_selection[0]]\
+        self.input_items[self.current_selection[0]] \
             [self.current_selection[1]].set_labels(item)
 
     def _create_input_item_scroll(self):

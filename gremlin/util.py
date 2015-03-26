@@ -114,44 +114,44 @@ class Configuration(object):
             open(os.path.join(appdata_path(), "config.ini"), "w")
         )
 
-    def set_calibration(self, device_id, limits):
+    def set_calibration(self, dev_id, limits):
         """Sets the calibration data for all axes of a device.
 
-        :param device_id the id of the device
+        :param dev_id the id of the device
         :param limits the calibration data for each of the axes
         """
-        hid, wid = gremlin.util.extract_ids(device_id)
-        identifer = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
-        if identifer in self._parser:
-            del self._parser[identifer]
-        self._parser.add_section(identifer)
+        hid, wid = gremlin.util.extract_ids(dev_id)
+        identifier = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
+        if identifier in self._parser:
+            del self._parser[identifier]
+        self._parser.add_section(identifier)
 
         for i, limit in enumerate(limits):
             if limit[2] - limit[0] == 0:
                 continue
-            self._parser[identifer]["axis_{}_min".format(i+1)] = str(limit[0])
-            self._parser[identifer]["axis_{}_center".format(i+1)] = str(limit[1])
-            self._parser[identifer]["axis_{}_max".format(i+1)] = str(limit[2])
+            self._parser[identifier]["axis_{}_min".format(i+1)] = str(limit[0])
+            self._parser[identifier]["axis_{}_center".format(i+1)] = str(limit[1])
+            self._parser[identifier]["axis_{}_max".format(i+1)] = str(limit[2])
         self.save()
 
-    def get_calibration(self, device_id, axis_id):
+    def get_calibration(self, dev_id, axis_id):
         """Returns the calibration data for the desired axis.
 
-        :param device_id the id of the device
+        :param dev_id the id of the device
         :param axis_id the id of the desired axis
         :return the calibration data for the desired axis
         """
-        hid, wid = gremlin.util.extract_ids(device_id)
-        identifer = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
-        if identifer not in self._parser:
+        hid, wid = gremlin.util.extract_ids(dev_id)
+        identifier = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
+        if identifier not in self._parser:
             return [-32768, 0, 32767]
-        if "axis_{}_min".format(axis_id) not in self._parser[identifer]:
+        if "axis_{}_min".format(axis_id) not in self._parser[identifier]:
             return [-32768, 0, 32767]
 
         return [
-            int(self._parser[identifer]["axis_{}_min".format(axis_id)]),
-            int(self._parser[identifer]["axis_{}_center".format(axis_id)]),
-            int(self._parser[identifer]["axis_{}_max".format(axis_id)])
+            int(self._parser[identifier]["axis_{}_min".format(axis_id)]),
+            int(self._parser[identifier]["axis_{}_center".format(axis_id)]),
+            int(self._parser[identifier]["axis_{}_max".format(axis_id)])
 
         ]
 
@@ -225,7 +225,7 @@ def slider_calibration(value, minimum, maximum):
 def create_calibration_function(minimum, center, maximum):
     """Returns a calibration function appropriate for the provided data.
 
-    :param mininum the minimal value ever reported
+    :param minimum the minimal value ever reported
     :param center the value in the neutral position
     :param maximum the maximal value ever reported
     :return function which returns a value in [-1, 1] corresponding

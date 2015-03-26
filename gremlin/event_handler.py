@@ -66,7 +66,16 @@ class Event(object):
     ShiftSystemId = 32
     ShiftIdentifier = 40
 
-    def __init__(self, event_type, identifier, hardware_id, windows_id, value=None, is_pressed=None, raw_value=None):
+    def __init__(
+            self,
+            event_type,
+            identifier,
+            hardware_id,
+            windows_id,
+            value=None,
+            is_pressed=None,
+            raw_value=None
+    ):
         """Creates a new Event object.
 
         :param event_type the type of the event, one of the EventType

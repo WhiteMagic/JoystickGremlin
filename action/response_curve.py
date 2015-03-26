@@ -55,7 +55,6 @@ class BaseStorage(object):
         :param cpid id of the entry to change
         :param value the new value for the given entry
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         self._points[cpid] = value
 
     def __getitem__(self, cpid):
@@ -64,7 +63,6 @@ class BaseStorage(object):
         :param cpid id of the entry to return
         :return value of the given entry
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         return self._points[cpid]
 
 
@@ -86,7 +84,6 @@ class PointStorage(BaseStorage):
         :param x the x coordinate of the point
         :param y the y coordinate of the point
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         self._points[cpid] = Point2D(x, y)
 
     def remove(self, cpid):
@@ -94,7 +91,6 @@ class PointStorage(BaseStorage):
 
         :param cpid the id of the point to remove
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         del self._points[cpid]
 
 
@@ -111,7 +107,6 @@ class KnotStorage(BaseStorage):
         :param x the x coordinate of the point
         :param y the y coordinate of the point
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         self._points[cpid] = Point2D(x, y)
         self._points[ControlPointIdentifier(cpid.primary, 1)] = Point2D(x-0.05, y)
         self._points[ControlPointIdentifier(cpid.primary, 2)] = Point2D(x+0.05, y)
@@ -121,7 +116,6 @@ class KnotStorage(BaseStorage):
 
         :param cpid the id of the point to remove
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         del self._points[cpid]
         del self._points[ControlPointIdentifier(cpid.primary, 1)]
         del self._points[ControlPointIdentifier(cpid.primary, 2)]
@@ -186,7 +180,6 @@ class ResponseCurveScene(QtWidgets.QGraphicsScene):
         :param cpid the id of the point in the model
         :param point the coordinates of the point
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         if self._model.curve_model == gremlin.spline.CubicSpline:
             self._points[cpid] = ControlPointShapeItem(cpid, point)
         elif self._model.curve_model == gremlin.spline.CubicBezierSpline:
@@ -238,8 +231,6 @@ class ResponseCurveScene(QtWidgets.QGraphicsScene):
         :param old_point old coordinates of the item
         :param new_point new coordinates of the item
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
-
         self._update_control_handle_locations(cpid, old_point, new_point)
         self._points[cpid].setPos(new_point.x * 200.0, new_point.y * -200.0)
         self._draw_response_curve()
@@ -250,7 +241,6 @@ class ResponseCurveScene(QtWidgets.QGraphicsScene):
 
         :param cpid the id of the newly selected point
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         print("BBB")
         # Remove highlight from all nodes
         for node in self._points.values():
@@ -396,8 +386,6 @@ class ControlPointIdentifier(object):
         :param primary the primary id
         :param secondary the secondary id
         """
-        assert(isinstance(primary, int))
-        assert(isinstance(secondary, int))
         self._primary = primary
         self._secondary = secondary
 
@@ -506,7 +494,6 @@ class ControlPointModel(QtCore.QObject):
         :param cpid the id of the control point to move
         :param point the new coordinates of the control point
         """
-        assert(isinstance(cpid, ControlPointIdentifier))
         # Ensure points are in [-1, 1]
         x = gremlin.util.clamp(point.x, -1, 1)
         y = gremlin.util.clamp(point.y, -1, 1)
@@ -946,7 +933,6 @@ class AxisResponseCurveWidget(AbstractActionWidget):
             change_cb,
             parent
         )
-        assert(isinstance(action_data, ResponseCurve))
 
     def _setup_ui(self):
         """Creates the required UI elements."""

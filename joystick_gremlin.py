@@ -179,12 +179,12 @@ class Repeater(QtCore.QObject):
     def emit_events(self):
         """Emits events until stopped."""
         index = 0
-        el = EventListener()
+        event_listener = EventListener()
         while self.is_running:
             if self.events[0].event_type == InputType.Keyboard:
-                el.keyboard_event.emit(self._events[index])
+                event_listener.keyboard_event.emit(self._events[index])
             else:
-                el.joystick_event.emit(self._events[index])
+                event_listener.joystick_event.emit(self._events[index])
             index = (index + 1) % len(self._events)
             time.sleep(0.5)
 
@@ -220,11 +220,11 @@ class CalibrationUi(QtWidgets.QWidget):
         # Various buttons
         self.button_close = QtWidgets.QPushButton("Close")
         self.button_close.pressed.connect(self.close)
-        self.buton_save = QtWidgets.QPushButton("Save")
-        self.buton_save.pressed.connect(self._save_calibration)
+        self.button_save = QtWidgets.QPushButton("Save")
+        self.button_save.pressed.connect(self._save_calibration)
         self.button_centered = QtWidgets.QPushButton("Centered")
         self.button_centered.pressed.connect(self._calibrate_centers)
-        self.button_layout.addWidget(self.buton_save)
+        self.button_layout.addWidget(self.button_save)
         self.button_layout.addWidget(self.button_close)
         self.button_layout.addStretch(0)
         self.button_layout.addWidget(self.button_centered)
@@ -301,8 +301,8 @@ class CalibrationUi(QtWidgets.QWidget):
 
         :param event the close event
         """
-        el = EventListener()
-        el.joystick_event.disconnect(self._handle_event)
+        event_listener = EventListener()
+        event_listener.joystick_event.disconnect(self._handle_event)
 
 
 class GremlinAboutUi(QtWidgets.QWidget):

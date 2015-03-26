@@ -76,8 +76,10 @@ class CubicSpline(object):
                 break
 
         h = self.x[i+1] - self.x[i]
-        tmp = (self.z[i] / 2.0) + (x - self.x[i]) * (self.z[i+1] - self.z[i]) / (6 * h)
-        tmp = -(h/6.0) * (self.z[i+1] + 2 * self.z[i]) + (self.y[i+1] - self.y[i]) / h + (x - self.x[i]) * tmp
+        tmp = (self.z[i] / 2.0) + (x - self.x[i]) * \
+            (self.z[i+1] - self.z[i]) / (6 * h)
+        tmp = -(h/6.0) * (self.z[i+1] + 2 * self.z[i]) + \
+            (self.y[i+1] - self.y[i]) / h + (x - self.x[i]) * tmp
 
         return self.y[i] + (x - self.x[i]) * tmp
 
@@ -114,7 +116,8 @@ class CubicBezierSpline(object):
                 if x >= pt[0]:
                     break
                 index -= 1
-            t = (x - self.knots[index][0]) / (self.knots[index+1][0] - self.knots[index][0])
+            t = (x - self.knots[index][0]) / \
+                (self.knots[index+1][0] - self.knots[index][0])
 
         offset = index * 3
         return (1-t)**3 * self.y[offset] \
