@@ -91,7 +91,7 @@ executables = [
 
 setup(
     name="Joystick Gremlin",
-    version="1.0",
+    version="2.0",
     description="Joystick Gremlin application",
     options=options,
     executables=executables
