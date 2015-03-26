@@ -658,7 +658,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         for device in self.devices:
             if device.is_virtual:
                 continue
-            physical_devices[(device.hardware_id, device.windows_id)] = device.name
+            physical_devices[util.device_id(device)] = device.name
 
         for dev_id, dev_name in profile_devices.items():
             if dev_id not in physical_devices:
