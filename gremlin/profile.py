@@ -115,7 +115,6 @@ class Profile(object):
         root = tree.getroot()
 
         # Parse each device into separate DeviceConfiguration objects
-        print(gremlin.util.device_id)
         for child in root.iter("device"):
             device = Device(self)
             device.from_xml(child)

@@ -68,7 +68,8 @@ class Axis(object):
         """
         if 1.0 - abs(value) < -0.001:
             raise VJoyError(
-                "Wrong data type provided, has to be float in [-1, 1], provided value was {:.2f}".format(value)
+                "Wrong data type provided, has to be float in [-1, 1],"
+                " provided value was {:.2f}".format(value)
             )
         self._value = min(1.0, max(-1.0, value))
 

@@ -69,7 +69,6 @@ class CodeRunner(object):
                 for mode, callbacks in modes.items():
                     for event, callback_list in callbacks.items():
                         for callback in callback_list:
-                            print(dev_id, callback[0])
                             self.event_handler.add_callback(
                                 dev_id,
                                 mode,
@@ -832,7 +831,6 @@ if __name__ == "__main__":
     # Setup device key generator based on whether or not we have
     # duplicate devices connected.
     util.setup_duplicate_joysticks()
-    print(util.device_id)
 
     # Create user interface
     app_id = u"joystick.gremlin.r1"
