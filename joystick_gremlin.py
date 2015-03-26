@@ -515,6 +515,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         keyboard_device.windows_id = 0
         keyboard_device.type = profile.DeviceType.Keyboard
         self._profile.devices[keyboard_device.hardware_id] = keyboard_device
+        self._profile_fname = None
 
         self._create_tabs()
 
