@@ -80,6 +80,7 @@ class CodeRunner(object):
 
             # Connect signals
             el = event_handler.EventListener()
+            el._init_joysticks()
             kb = input_devices.Keyboard()
             el.keyboard_event.connect(self.event_handler.process_event)
             el.joystick_event.connect(self.event_handler.process_event)
