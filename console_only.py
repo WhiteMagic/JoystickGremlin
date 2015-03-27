@@ -52,6 +52,10 @@ def main():
     )
     sdl2.ext.init()
 
+    # Setup device key generator based on whether or not we have
+    # duplicate devices connected.
+    gremlin.util.setup_duplicate_joysticks()
+
     # Add user provided module path to the system path and load the
     # provided modules
     sys.path.insert(0, args.folder)
