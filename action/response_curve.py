@@ -241,7 +241,6 @@ class ResponseCurveScene(QtWidgets.QGraphicsScene):
 
         :param cpid the id of the newly selected point
         """
-        print("BBB")
         # Remove highlight from all nodes
         for node in self._points.values():
             node.set_selected(node.identifier == cpid)
