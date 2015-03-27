@@ -1,5 +1,5 @@
 import gremlin
-from gremlin.cubic_spline import CubicSpline
+from gremlin.spline import CubicSpline
 from vjoy.vjoy import AxisName
 
 chfs = gremlin.input_devices.JoystickDecorator(

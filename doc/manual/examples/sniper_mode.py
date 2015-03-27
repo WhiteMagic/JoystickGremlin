@@ -1,5 +1,5 @@
 import gremlin
-from gremlin.cubic_spline import CubicSpline
+from gremlin.spline import CubicSpline
 from vjoy.vjoy import AxisName
 
 tm16000 = gremlin.input_devices.JoystickDecorator(
@@ -33,12 +33,12 @@ def weapon_group_1(event, vjoy):
     vjoy[1].button[1].is_pressed = event.is_pressed
 
 @tm16000.button(2)
-def weapon_group_1(event, vjoy):
+def weapon_group_2(event, vjoy):
     set_weapon_group(2, event.is_pressed)
     vjoy[1].button[2].is_pressed = event.is_pressed
 
 @tm16000.button(3)
-def weapon_group_1(event, vjoy):
+def weapon_group_3(event, vjoy):
     set_weapon_group(3, event.is_pressed)
     vjoy[1].button[3].is_pressed = event.is_pressed
 
