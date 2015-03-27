@@ -204,6 +204,7 @@ def axis_calibration(value, minimum, center, maximum):
     :return the calibrated value in [-1, 1] corresponding to the
         provided raw value
     """
+    value = clamp(value, minimum, maximum)
     if value < center:
         return (value - center) / float(center - minimum)
     else:
@@ -219,6 +220,7 @@ def slider_calibration(value, minimum, maximum):
     :return the calibrated value in [-1, 1] corresponding to the
         provided raw value
     """
+    value = clamp(value, minimum, maximum)
     return (value - minimum) / float(maximum - minimum) * 2.0 - 1.0
 
 
