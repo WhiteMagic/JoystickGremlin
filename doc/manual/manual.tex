@@ -364,6 +364,17 @@ input fields at the bottom of the dialogue. The fields and sliders
 control the full deflection dead zone, left and right inputs, as well as
 the centre deflection dead zones, two centre inputs.
 
+Currently there are two types of response curve types available:
+\begin{description}
+    \item[Cubic Spline] A simple spline with only control points dictating
+        locations the curve has to pass through. No control over the
+        shape is provided.
+    \item[Cubic B\'{e}zier Spline] A more complex spline with control
+        points and ``handles'' that can modify the shape of the overall
+        curve. Importantly this curve allows the control of how the
+        curve approaches the end points of the curve.
+\end{description}
+
 \begin{bclogo}[
     couleur=yellow!40,
     couleurBord=orange!80,
@@ -374,22 +385,6 @@ the centre deflection dead zones, two centre inputs.
     A response curve mapping action always needs to be paired with a
     remap action, as otherwise the transformation will not have any
     effect.
-\end{bclogo}
-
-\vspace{1em}
-
-\begin{bclogo}[
-    couleur=yellow!40,
-    couleurBord=orange!80,
-    couleurBarre=orange!80,
-    arrondi=0.1,
-    logo=\bcinfo
-]{Note}
-    The curve is computed using cubic splines, which differ from the
-    cubic B\'{e}zier splines used by the CryEngine. Furthermore, it is
-    possible to generate splines with invalid outputs and it is the
-    users' responsibility to ensure that the configured spline is valid,
-    i.e.\ all output values are between $-1$ and $1$.
 \end{bclogo}
 
 \vspace{1em}
@@ -588,6 +583,25 @@ identifier that is unique to each device.
 \end{bclogo}
 
 
+\subsection{Input Repeater}
+
+By enabling the \emph{Input Repeater} option via \emph{Tools
+$\rightarrow$ Input Repeater}, \JG{} will repeat the last remapped input
+after a short wait period. This allows button presses and axes movements
+to be mapped in-game when the game picks up the physical device over the
+virtual one.
+
+
+\subsection{Calibration}
+
+The axes calibration screen can be accessed via \emph{Tools
+$\rightarrow$ Calibration}. This screen allows the selection of the
+device to calibrate. To calibrate the axes simply move them through
+their full range and press the \emph{Center} button when all axes are
+centered. Once done press \emph{Save} to save the calibration to the
+configuration file.
+
+
 
 % +-----------------------------------------------------------------------------
 % | Using the Console Program
@@ -656,14 +670,16 @@ triggered the execution of the function. Each event is of type
         the decorator function that was used to decorate the function
     \item \verb+identifier+, the identifier of the input, specified by the
         input name used in the decorator
-    \item \verb+device_id+, the hardware id of the device, predetermined by the
+    \item \verb+hardware_id+, the hardware id of the device, predetermined by the
         decorator function that was used to decorate the function
-    \item \verb+system_id+, the sequence id of the device, predetermined by the
+    \item \verb+windows_id+, the windows id of the device, predetermined by the
         decorator function that was used to decorate the function
     \item \verb+is_pressed+, indicates if a button or key is pressed or
         released, only valid for joystick buttons or keyboard keeys
     \item \verb+value+, value of an axis or hat, only valid fro joystick axes
         or hats
+    \item \verb+raw_value+, the raw axis value, if the \verb+event_type+
+        represents an axis
 \end{itemize}
 
 From this list the only values that are typically of interest are the
@@ -790,18 +806,19 @@ specific devices using the\\
 \begin{minted}{python}
     joystick_decorator = gremlin.input_devices.JoystickDecorator(
         <device name>,
-        <hardware id>,
+        <device id>,
         <mode>
-        <system id>
     )
 \end{minted}
 
-Only the \verb+<device name>+ and \verb+<hardware id>+ parameters are
-mandatory. If \verb+<mode>+ is omitted it defaults to ``global'' and
-\verb+<system id>+ is only required if multiple devices with the same
-device name are present. An object created in this way has three
-decorators customised for the given joystick which can be used as
-follows:
+Only the \verb+<device name>+ and \verb+<device id>+ parameters are
+mandatory. If \verb+<mode>+ is omitted it defaults to ``global''. The
+value of \verb+<device id>+ depends on whether or not multiple devices
+of the same type are being used. In the case that this is true the
+\verb+device_id+ consists of the tuple of the \verb+hardware_id+ and
+\verb+windows_id+, otherwise, the \verb+hardware_id+ is sufficient. An
+object created in this way has three decorators customised for the given
+joystick which can be used as follows:
 \begin{minted}{python}
     @joystick_decorator.axis(AxisName.Y)
     def axis_callback(event):
@@ -972,6 +989,29 @@ Each profile is stored in a single XML file. The contents of the XML
 file are used to populate the UI as well as generate Python code
 representing the profile. The file is parsed by the \verb+Profile+ class
 in the \verb+gremlin.profile+ module.
+
+
+
+\section{Changelog}
+
+\subsection{Release 2}
+
+\textbf{New features}
+\begin{itemize}
+    \item Input repeating for binding actions in games
+    \item Storing of last used profile to auto load on next start
+    \item Calibration of joystick axes
+    \item Cubic Bezier splines added for response curve configuration
+    \item Properly support multiple identical devices
+\end{itemize}
+
+\noindent \textbf{Fixes}
+\begin{itemize}
+    \item XML profile parsing error handling improved
+    \item Accidental overwriting of an existing profile after creating a
+        new one
+    \item Some error handling improvements
+\end{itemize}
 
 
 
