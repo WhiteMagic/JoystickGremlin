@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import configparser
+import logging
 import os
 from PyQt5 import QtWidgets
 import re
@@ -62,11 +63,17 @@ class JoystickDeviceData(object):
         """
         self._hardware_id = guid_to_number(sdl2.SDL_JoystickGetGUID(device))
         self._windows_id = sdl2.SDL_JoystickInstanceID(device)
-        self._name = sdl2.SDL_JoystickName(device).decode("utf-8")
+        name_object = sdl2.SDL_JoystickName(device)
+        if name_object is None:
+            logging.error("Encountered an invalid device name")
+            self.name = "Unknown device"
+        else:
+            self._name = name_object.decode("utf-8")
         self._is_virtual = self._name == "vJoy Device"
         self._axes = sdl2.SDL_JoystickNumAxes(device)
         self._buttons = sdl2.SDL_JoystickNumButtons(device)
         self._hats = sdl2.SDL_JoystickNumHats(device)
+
 
     @property
     def hardware_id(self):
@@ -190,7 +197,10 @@ def joystick_devices():
     devices = []
     for i in range(sdl2.SDL_NumJoysticks()):
         joy = sdl2.SDL_JoystickOpen(i)
-        devices.append(JoystickDeviceData(joy))
+        if joy is None:
+            logging.error("Invalid joystick device at id {}".format(i))
+        else:
+            devices.append(JoystickDeviceData(joy))
 
     return devices
 

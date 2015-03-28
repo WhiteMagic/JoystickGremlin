@@ -264,10 +264,13 @@ class EventListener(QtCore.QObject):
         """Initializes joystick devices."""
         for i in range(sdl2.joystick.SDL_NumJoysticks()):
             joy = sdl2.SDL_JoystickOpen(i)
-            guid = util.guid_to_number(sdl2.SDL_JoystickGetGUID(joy).data)
-            self._joysticks[guid] = joy
-            self._joystick_guid_map[sdl2.SDL_JoystickInstanceID(joy)] = guid
-            self._load_calibrations(guid)
+            if joy is None:
+                logging.error("Invalid joystick device at id {}".format(i))
+            else:
+                guid = util.guid_to_number(sdl2.SDL_JoystickGetGUID(joy).data)
+                self._joysticks[guid] = joy
+                self._joystick_guid_map[sdl2.SDL_JoystickInstanceID(joy)] = guid
+                self._load_calibrations(guid)
 
     def _load_calibrations(self, guid):
         """Loads the calibration data for the given joystick.
