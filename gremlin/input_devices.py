@@ -16,17 +16,52 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import functools
+import logging
 
 from PyQt5 import QtCore
 import sdl2
 
-from gremlin import event_handler, macro
+from gremlin import event_handler, macro, util
 from gremlin.util import SingletonDecorator, convert_sdl_hat, extract_ids
 from gremlin.error import GremlinError
 from vjoy.vjoy import VJoy
 
 
-callback_registry = {}
+class CallbackRegistry(object):
+
+    """Registry of all callbacks known to the system."""
+
+    def __init__(self):
+        self._registry = {}
+
+    def add(self, callback, event, mode="global", always_execute=False):
+        device_id = util.device_id(event)
+        function_name = callback.__name__
+
+        if device_id not in self._registry:
+            self._registry[device_id] = {}
+        if mode not in self._registry[device_id]:
+            self._registry[device_id][mode] = {}
+
+        if event not in self._registry[device_id][mode]:
+            self._registry[device_id][mode][event] = {}
+        if function_name not in self._registry[device_id][mode][event]:
+            self._registry[device_id][mode][event][function_name] = \
+                (callback, always_execute)
+        else:
+            logging.warning("Function with name {} exists multiple"
+                            " times".format(function_name))
+
+    @property
+    def registry(self):
+        return self._registry
+
+    def clear(self):
+        self._registry = {}
+
+
+# Global registry of all registered callbacks
+callback_registry = CallbackRegistry()
 
 
 class VJoyProxy(object):
@@ -294,11 +329,6 @@ class JoystickDecorator(object):
         :param mode the mode in which the decorated functions
             should be active
         """
-        if device_id not in callback_registry:
-            callback_registry[device_id] = {}
-        if mode not in callback_registry[device_id]:
-            callback_registry[device_id][mode] = {}
-
         self.name = name
         self.mode = mode
         self.axis = functools.partial(
@@ -335,12 +365,8 @@ def button(button_id, device_id, mode, always_execute=False):
             windows_id=wid,
             identifier=button_id
         )
-        if event not in callback_registry[device_id][mode]:
-            callback_registry[device_id][mode][event] = []
-        if callback not in callback_registry[device_id][mode][event]:
-            callback_registry[device_id][mode][event].append(
-                (wrapper_fn, always_execute)
-            )
+        callback_registry.add(wrapper_fn, event, mode, always_execute)
+
         return wrapper_fn
 
     return wrap
@@ -369,12 +395,7 @@ def hat(hat_id, device_id, mode, always_execute=False):
             windows_id=wid,
             identifier=hat_id
         )
-        if event not in callback_registry[device_id][mode]:
-            callback_registry[device_id][mode][event] = []
-        if callback not in callback_registry[device_id][mode][event]:
-            callback_registry[device_id][mode][event].append(
-                (wrapper_fn, always_execute)
-            )
+        callback_registry.add(wrapper_fn, event, mode, always_execute)
 
         return wrapper_fn
 
@@ -404,12 +425,8 @@ def axis(axis_id, device_id, mode, always_execute=False):
             windows_id=wid,
             identifier=axis_id
         )
-        if event not in callback_registry[device_id][mode]:
-            callback_registry[device_id][mode][event] = []
-        if callback not in callback_registry[device_id][mode][event]:
-            callback_registry[device_id][mode][event].append(
-                (wrapper_fn, always_execute)
-            )
+        callback_registry.add(wrapper_fn, event, mode, always_execute)
+
         return wrapper_fn
 
     return wrap
@@ -431,23 +448,8 @@ def keyboard(key_name, mode="global", always_execute=False):
             callback(*args, **kwargs)
 
         key = macro.key_from_name(key_name)
-        event = event_handler.Event(
-            event_type=event_handler.InputType.Keyboard,
-            hardware_id=0,
-            windows_id=0,
-            identifier=(key.scan_code, key.is_extended)
-        )
-        if 0 not in callback_registry:
-            callback_registry[0] = {}
-        if mode not in callback_registry[0]:
-            callback_registry[0][mode] = {}
-
-        if event not in callback_registry[0][mode]:
-            callback_registry[0][mode][event] = []
-        if callback not in callback_registry[0][mode][event]:
-            callback_registry[0][mode][event].append(
-                (wrapper_fn, always_execute)
-            )
+        event = event_handler.Event.from_key(key)
+        callback_registry.add(wrapper_fn, event, mode, always_execute)
 
         return wrapper_fn
 

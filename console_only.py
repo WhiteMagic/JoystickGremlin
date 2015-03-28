@@ -78,7 +78,7 @@ def main():
 
     # Go through all callbacks and install them
     callback_count = 0
-    for device_id, modes in gremlin.input_devices.callback_registry.items():
+    for device_id, modes in gremlin.input_devices.callback_registry.registry.items():
         for mode, callbacks in modes.items():
             for event, callback_list in callbacks.items():
                 for callback in callback_list:

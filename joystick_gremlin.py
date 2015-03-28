@@ -65,10 +65,10 @@ class CodeRunner(object):
 
             # Create callbacks
             callback_count = 0
-            for dev_id, modes in input_devices.callback_registry.items():
+            for dev_id, modes in input_devices.callback_registry.registry.items():
                 for mode, callbacks in modes.items():
                     for event, callback_list in callbacks.items():
-                        for callback in callback_list:
+                        for callback in callback_list.values():
                             self.event_handler.add_callback(
                                 dev_id,
                                 mode,
@@ -77,6 +77,7 @@ class CodeRunner(object):
                                 callback[1]
                             )
                             callback_count += 1
+                            print(dev_id, event, callback)
 
             # Connect signals
             el = event_handler.EventListener()
@@ -106,7 +107,7 @@ class CodeRunner(object):
             el.keyboard_event.disconnect(kb.keyboard_event)
 
         # Empty callback registry
-        input_devices.callback_registry = {}
+        input_devices.callback_registry.clear()
         self.event_handler.clear()
 
     def _reset_state(self):
@@ -511,13 +512,13 @@ class GremlinUi(QtWidgets.QMainWindow):
             new_device.hardware_id = device.hardware_id
             new_device.windows_id = device.windows_id
             new_device.type = profile.DeviceType.Joystick
-            self._profile.devices[new_device.hardware_id] = new_device
+            self._profile.devices[util.device_id(new_device)] = new_device
         keyboard_device = profile.Device(self._profile)
         keyboard_device.name = "keyboard"
         keyboard_device.hardware_id = 0
         keyboard_device.windows_id = 0
         keyboard_device.type = profile.DeviceType.Keyboard
-        self._profile.devices[keyboard_device.hardware_id] = keyboard_device
+        self._profile.devices[util.device_id(keyboard_device)] = keyboard_device
         self._profile_fname = None
 
         self._create_tabs()
@@ -707,7 +708,10 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.ui.devices.addTab(widget, device.name)
 
         # Create keyboard tab
-        device_profile = self._profile.get_device_modes((0, 0), "keyboard")
+        device_profile = self._profile.get_device_modes(
+            util.device_id(event_handler.Event.from_key(macro.Keys.A)),
+            "keyboard"
+        )
         widget = DeviceWidget(
             vjoy_devices,
             None,
@@ -822,7 +826,7 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M",
         level=logging.DEBUG
     )
-    logging.debug("Starting Joystick Gremlin R1")
+    logging.debug("Starting Joystick Gremlin R2")
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
