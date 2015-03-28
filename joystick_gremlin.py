@@ -77,7 +77,6 @@ class CodeRunner(object):
                                 callback[1]
                             )
                             callback_count += 1
-                            print(dev_id, event, callback)
 
             # Connect signals
             el = event_handler.EventListener()
