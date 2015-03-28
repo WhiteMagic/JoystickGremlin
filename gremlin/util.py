@@ -104,8 +104,8 @@ class Configuration(object):
     def __init__(self):
         """Creates a new instance, loading the current configuration."""
         self._parser = configparser.ConfigParser()
-        self._parser.read_file(
-            open(os.path.join(appdata_path(), "config.ini"))
+        self._parser.read(
+            os.path.join(appdata_path(), "config.ini")
         )
 
     def save(self):
