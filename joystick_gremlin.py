@@ -53,6 +53,13 @@ class CodeRunner(object):
 
         self._running = False
 
+    def is_running(self):
+        """Returns whether or not the code runner is executing code.
+
+        :return True if code is being executed, False otherwise
+        """
+        return self._running
+
     def start(self):
         """Starts listening to events and loads all existing callbacks."""
         # Reset states to their default values
@@ -104,6 +111,7 @@ class CodeRunner(object):
             el.keyboard_event.disconnect(self.event_handler.process_event)
             el.joystick_event.disconnect(self.event_handler.process_event)
             el.keyboard_event.disconnect(kb.keyboard_event)
+        self._running = False
 
         # Empty callback registry
         input_devices.callback_registry.clear()
@@ -465,6 +473,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._create_statusbar()
         self._update_statusbar_active(False)
 
+        event_listener = EventListener()
+        event_listener.joystick_event.connect(self._joystick_input_selection)
+
     def load_profile(self):
         """Prompts the user to select a profile file to load."""
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -645,6 +656,39 @@ class GremlinUi(QtWidgets.QMainWindow):
             event_list[0].value = (0, 0)
 
         self.repeater.events = event_list
+
+    def _joystick_input_selection(self, event):
+        """Handles joystick events to select the appropriate input item.
+
+        :param event the event to process
+        """
+        if event.event_type == event_handler.InputType.Keyboard:
+            return
+        if self.runner.is_running():
+            return
+
+        # Only handle events for the currently active device
+        widget = self.ui.devices.currentWidget()
+        if util.device_id(event) == util.device_id(widget.device_profile):
+            if self._should_process_input(event):
+                btn = widget.input_items[event.event_type][event.identifier]
+                btn.mousePressEvent(None)
+
+    def _should_process_input(self, event):
+        """Returns True when to process and input, False otherwise.
+
+        :param event the event to make the decision about
+        :return True if the event is to be processed, False otherwise
+        """
+        if event.event_type == InputType.JoystickButton:
+            return event.is_pressed
+        elif event.event_type == InputType.JoystickAxis:
+            return abs(event.value) > 0.25
+        elif event.event_type == InputType.JoystickHat:
+            return event.value != (0, 0)
+        else:
+            logging.warning("Event with bad content received")
+            return False
 
     def _sanitize_profile(self, profile_data):
         """Validates a profile file before actually loading it.
