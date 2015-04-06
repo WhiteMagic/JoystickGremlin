@@ -30,6 +30,7 @@ class TextToSpeech(object):
     def __init__(self):
         """Creates a new instance."""
         self._speaker = win32com.client.Dispatch("SAPI.SpVoice")
+        self.speak("")
 
     def speak(self, text):
         """Queues the given text to be spoken by SAPI using the async flag.
