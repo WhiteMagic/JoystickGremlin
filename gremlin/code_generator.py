@@ -23,10 +23,11 @@ from gremlin.event_handler import InputType
 from gremlin import error, profile, util
 
 
-def decorator_name(mode):
+def decorator_name(mode, index):
     """Returns the decorator name corresponding to the provided data.
 
     :param mode the profile.Mode object for which to generate the name
+    :param index the index to use in the decorator name
     :return name of the decorator matching the provided mode
     """
     assert(isinstance(mode, profile.Mode))
@@ -35,12 +36,12 @@ def decorator_name(mode):
         return "{}_{}_{}".format(
             util.format_name(mode.parent.name),
             wid,
-            util.format_name(mode.name)
+            index
         )
     else:
         return "{}_{}".format(
             util.format_name(mode.parent.name),
-            util.format_name(mode.name)
+            index
         )
 
 
@@ -149,32 +150,34 @@ class CodeGenerator(object):
         ))
 
         for device in config_profile.devices.values():
-            for mode in device.modes.values():
-                self.process_device_mode(mode)
+            for i, mode in enumerate(device.modes.values()):
+                self.process_device_mode(mode, i)
 
-    def process_device_mode(self, mode):
+    def process_device_mode(self, mode, index):
         """Processes a single Mode object and turns it's contents to
         code.
 
         :param mode the profile.Mode object to process
+        :param index the index to use in the decorator name
         """
         assert(isinstance(mode, profile.Mode))
         tpl = Template(filename="templates/mode.tpl")
         self.code["decorator"].append(tpl.render(
-            decorator=decorator_name(mode),
+            decorator=decorator_name(mode, index),
             mode=mode
         ))
 
         for input_type, input_items in mode._config.items():
             for entry in input_items.values():
-                self.generate_input_item(entry, mode)
+                self.generate_input_item(entry, mode, index)
 
-    def generate_input_item(self, input_item, mode):
+    def generate_input_item(self, input_item, mode, index):
         """Generates code for the provided profile.InputItem object.
 
-        :param input_item profile.InpuItem object to processs into code
+        :param input_item profile.InputItem object to process into code
         :param mode the profile.Mode object corresponding to
             this input_item
+        :param index the index to use for the decorator name
         """
         assert(isinstance(input_item, profile.InputItem))
         assert(isinstance(mode, profile.Mode))
@@ -199,7 +202,7 @@ class CodeGenerator(object):
         tpl = Template(filename=input_type_templates[input_item.input_type])
         self.code["callback"].append(tpl.render(
             device_name=util.format_name(mode.parent.name),
-            decorator=decorator_name(mode),
+            decorator=decorator_name(mode, index),
             mode=util.format_name(mode.name),
             input_item=input_item,
             code=code,
