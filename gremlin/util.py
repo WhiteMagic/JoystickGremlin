@@ -17,6 +17,7 @@
 
 import configparser
 import logging
+from mako.template import Template
 import os
 from PyQt5 import QtWidgets
 import re
@@ -451,3 +452,11 @@ def clear_layout(layout):
         elif child.widget():
             child.widget().deleteLater()
         layout.removeItem(child)
+
+
+def text_substitution(text):
+    eh = gremlin.event_handler.EventHandler()
+    tpl = Template(text)
+    return tpl.render(
+        current_mode=eh.active_mode
+    )

@@ -19,3 +19,4 @@ hat_direction_map = {
     (-1,  1) : 315,
 }
 
+tts = gremlin.tts.TextToSpeech()

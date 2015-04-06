@@ -82,6 +82,8 @@ action_lookup = {
     "resume-action": action.pause_resume.ResumeAction,
     "switch-mode": action.mode_control.SwitchMode,
     "switch-to-previous-mode": action.mode_control.SwitchPreviousMode,
+    # Other actions
+    "text-to-speech": action.text_to_speech.TextToSpeech,
 }
 
 
