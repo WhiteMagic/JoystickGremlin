@@ -543,7 +543,7 @@ class ModeWidget(QtWidgets.QWidget):
 
         :param idx id of the now selected entry
         """
-        self.mode_changed.emit(self.selector.itemText(idx).lower())
+        self.mode_changed.emit(self.selector.itemText(idx))
 
     def _mode_add_cb(self):
         """Asks the user for a new mode to add.
@@ -552,25 +552,19 @@ class ModeWidget(QtWidgets.QWidget):
         added.
         """
         name, user_input = QtWidgets.QInputDialog.getText(None, "Mode name", "")
-        key_name = name.lower()
         if user_input:
-            if key_name in util.mode_list(self.profile):
+            if name in util.mode_list(self.profile):
                 util.display_error(
                     "A mode with the name \"{}\" already exists".format(name)
-                )
-            elif not util.valid_identifier(key_name):
-                util.display_error(
-                    "Invalid mode name used, only letters and"
-                    " numbers supported, \"{}\"".format(name)
                 )
             else:
                 for device in self.profile.devices.values():
                     new_mode = profile.Mode(device)
                     new_mode.name = name
-                    device.modes[key_name] = new_mode
+                    device.modes[name] = new_mode
 
             self.populate_selector(self.profile, name)
-            self.mode_changed.emit(key_name)
+            self.mode_changed.emit(name)
 
     def _mode_del_cb(self):
         """Deletes the currently selected mode.

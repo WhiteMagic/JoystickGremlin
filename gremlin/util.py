@@ -74,7 +74,6 @@ class JoystickDeviceData(object):
         self._buttons = sdl2.SDL_JoystickNumButtons(device)
         self._hats = sdl2.SDL_JoystickNumHats(device)
 
-
     @property
     def hardware_id(self):
         return self._hardware_id
@@ -338,7 +337,7 @@ def mode_list(node):
     for device in parent.devices.values():
         mode_names.extend(device.modes.keys())
 
-    return sorted(list(set(mode_names)))
+    return sorted(list(set(mode_names)), key=lambda x: x.lower())
 
 
 def convert_sdl_hat(value):

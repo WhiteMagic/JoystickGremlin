@@ -203,7 +203,8 @@ class CodeGenerator(object):
         self.code["callback"].append(tpl.render(
             device_name=util.format_name(mode.parent.name),
             decorator=decorator_name(mode, index),
-            mode=util.format_name(mode.name),
+            mode=mode.name,
+            mode_index=index,
             input_item=input_item,
             code=code,
             param_list=generate_parameter_list(input_item)

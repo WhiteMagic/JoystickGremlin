@@ -11,6 +11,6 @@
             return ""
 %>\
 @${decorator}.axis(${input_item.input_id})
-def ${device_name}${wid(input_item)}_${mode}_axis_${input_item.input_id}(${param_list}):
+def ${device_name}${wid(input_item)}_${mode_index}_axis_${input_item.input_id}(${param_list}):
     value = event.value
 ${"\n".join(code["body"])}
