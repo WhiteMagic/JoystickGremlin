@@ -305,8 +305,8 @@ class EventHandler(QtCore.QObject):
         self.process_callbacks = True
         self.plugins = []
         self.callbacks = {}
-        self._active_mode = "global"
-        self._previous_mode = "global"
+        self._active_mode = "Global"
+        self._previous_mode = "Global"
 
     @property
     def active_mode(self):
@@ -415,7 +415,7 @@ class EventHandler(QtCore.QObject):
             ).get(event, [])
             if len(callback_list) == 0:
                 callback_list = self.callbacks[dev_id].get(
-                    "global", {}
+                    "Global", {}
                 ).get(event, [])
         # Filter events when the system is paused
         if not self.process_callbacks:

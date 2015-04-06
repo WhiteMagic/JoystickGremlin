@@ -172,7 +172,7 @@ class Profile(object):
         """Returns the modes associated with the given device.
 
         If no entry for the device exists a device entry with an empty
-        "global" mode will be generated.
+        "Global" mode will be generated.
 
         :param device_id the key composed of hardware and windows id
         :param device_name the name of the device
@@ -209,8 +209,8 @@ class Device(object):
         self.type = None
 
         # Ensure each device has at least an empty "global" mode
-        self.modes["global"] = Mode(self)
-        self.modes["global"].name = "global"
+        self.modes["Global"] = Mode(self)
+        self.modes["Global"].name = "Global"
 
     def from_xml(self, node):
         """Populates this device based on the xml data.

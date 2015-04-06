@@ -8,7 +8,7 @@ from vjoy.vjoy import AxisName
 chfs = gremlin.input_devices.JoystickDecorator(
     "CH Fighterstick USB",
     2382820288,
-    "global"
+    "Global"
 )
 chfs_roll = gremlin.input_devices.JoystickDecorator(
     "CH Fighterstick USB",
@@ -18,7 +18,7 @@ chfs_roll = gremlin.input_devices.JoystickDecorator(
 chpp = gremlin.input_devices.JoystickDecorator(
     "CH Pro Pedals USB",
     2382820032,
-    "global"
+    "Global"
 )
 
 # Sensitivity curve setup
@@ -164,7 +164,7 @@ def right_pedal(event, vjoy):
 def reset_roll(event, vjoy):
     if not event.is_pressed:
         vjoy[1].axis[AxisName.RX].value = 0.0
-        gremlin.control_action.switch_mode("global")
+        gremlin.control_action.switch_mode("Global")
 
 
 @keyboard("1")

@@ -44,7 +44,7 @@ def cycle_modes(mode_list):
     """
     eh = EventHandler()
     if len(mode_list) == 0:
-        mode_list = ["global"]
+        mode_list = ["Global"]
 
     mode = eh.active_mode
     if mode not in mode_list:

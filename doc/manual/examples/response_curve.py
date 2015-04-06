@@ -5,7 +5,7 @@ from vjoy.vjoy import AxisName
 chfs = gremlin.input_devices.JoystickDecorator(
     "CH Fighterstick USB",
     2382820288,
-    "global"
+    "Global"
 )
 
 curve = CubicSpline([

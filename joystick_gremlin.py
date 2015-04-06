@@ -93,7 +93,7 @@ class CodeRunner(object):
             el.joystick_event.connect(self.event_handler.process_event)
             el.keyboard_event.connect(kb.keyboard_event)
 
-            self.event_handler.change_mode("global")
+            self.event_handler.change_mode("Global")
             self.event_handler.resume()
             self._running = True
         except ImportError as e:
@@ -119,8 +119,8 @@ class CodeRunner(object):
 
     def _reset_state(self):
         """Resets all states to their default values."""
-        self.event_handler._active_mode = "global"
-        self.event_handler._previous_mode = "global"
+        self.event_handler._active_mode = "Global"
+        self.event_handler._previous_mode = "Global"
 
 
 class Repeater(QtCore.QObject):
@@ -459,7 +459,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.mode_selector = ModeWidget()
         self.ui.toolBar.addWidget(self.mode_selector)
 
-        self._current_mode = "global"
+        self._current_mode = "Global"
         self._profile = profile.Profile()
         self._profile_fname = None
         if self.config.default_profile:

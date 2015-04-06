@@ -534,7 +534,7 @@ class ModeWidget(QtWidgets.QWidget):
 
         # Select currently active mode
         if current_mode is None:
-            current_mode = "global"
+            current_mode = "Global"
         self.selector.setCurrentIndex(self.selector.findText(current_mode))
 
     @QtCore.pyqtSlot(int)
@@ -573,14 +573,14 @@ class ModeWidget(QtWidgets.QWidget):
 
         All modes except for the global one can be deleted.
         """
-        mode_name = self.selector.currentText().lower()
-        if mode_name == "global":
-            util.display_error("Cannot delete \"global\" mode")
+        mode_name = self.selector.currentText()
+        if mode_name == "Global":
+            util.display_error("Cannot delete \"Global\" mode")
         else:
             for device in self.profile.devices.values():
                 del device.modes[mode_name]
             self.populate_selector(self.profile)
-            self.mode_changed.emit("global")
+            self.mode_changed.emit("Global")
 
     def _create_widget(self):
         """Creates the mode selection and management dialog."""
@@ -650,7 +650,7 @@ class DeviceWidget(QtWidgets.QWidget):
             InputType.Keyboard: {}
         }
 
-        self.current_mode = "global"
+        self.current_mode = "Global"
         self.current_selection = None
         self.current_configuration_dialog = None
 
