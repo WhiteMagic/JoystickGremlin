@@ -29,7 +29,7 @@ def abort_handler(app, signal, frame):
 
 
 def main():
-    """Main applicaiton."""
+    """Main application."""
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Joystick Gremlin")
     parser.add_argument("folder")
