@@ -201,6 +201,9 @@ class CalibrationUi(QtWidgets.QWidget):
 
     """Dialog to calibrate joystick axes."""
 
+    # Signal emitted when the dialog is being closed
+    closed = QtCore.pyqtSignal()
+
     def __init__(self, parent=None):
         """Creates the calibration UI.
 
@@ -311,6 +314,7 @@ class CalibrationUi(QtWidgets.QWidget):
         """
         event_listener = EventListener()
         event_listener.joystick_event.disconnect(self._handle_event)
+        self.closed.emit()
 
 
 class GremlinAboutUi(QtWidgets.QWidget):
@@ -473,8 +477,13 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._create_statusbar()
         self._update_statusbar_active(False)
 
-        event_listener = EventListener()
-        event_listener.joystick_event.connect(self._joystick_input_selection)
+        # Modal windows
+        self.about_window = None
+        self.calibration_window = None
+        self.device_information = None
+        self.module_manager = None
+
+        self._enable_joystick_input_highlighting()
 
     def load_profile(self):
         """Prompts the user to select a profile file to load."""
@@ -613,6 +622,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Opens the calibration window."""
         self.calibration_window = CalibrationUi()
         self.calibration_window.show()
+        self._disable_joystick_input_highlighting()
+        self.calibration_window.closed.connect(
+            self._enable_joystick_input_highlighting
+        )
 
     def about(self):
         """Opens the about window."""
@@ -656,6 +669,18 @@ class GremlinUi(QtWidgets.QMainWindow):
             event_list[0].value = (0, 0)
 
         self.repeater.events = event_list
+
+    def _enable_joystick_input_highlighting(self):
+        event_listener = EventListener()
+        event_listener.joystick_event.connect(
+            self._joystick_input_selection
+        )
+
+    def _disable_joystick_input_highlighting(self):
+        event_listener = EventListener()
+        event_listener.joystick_event.disconnect(
+            self._joystick_input_selection
+        )
 
     def _joystick_input_selection(self, event):
         """Handles joystick events to select the appropriate input item.
