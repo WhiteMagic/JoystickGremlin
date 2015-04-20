@@ -671,12 +671,14 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.repeater.events = event_list
 
     def _enable_joystick_input_highlighting(self):
+        """Enables the highlighting of the current input when used."""
         event_listener = EventListener()
         event_listener.joystick_event.connect(
             self._joystick_input_selection
         )
 
     def _disable_joystick_input_highlighting(self):
+        """Disables the highlighting of the current input when used."""
         event_listener = EventListener()
         event_listener.joystick_event.disconnect(
             self._joystick_input_selection

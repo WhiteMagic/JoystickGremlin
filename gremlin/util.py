@@ -455,6 +455,11 @@ def clear_layout(layout):
 
 
 def text_substitution(text):
+    """Returns the provided text after running text substitution on it.
+
+    :param text the text to substitute parts of
+    :return original text with parts substituted
+    """
     eh = gremlin.event_handler.EventHandler()
     tpl = Template(text)
     return tpl.render(
