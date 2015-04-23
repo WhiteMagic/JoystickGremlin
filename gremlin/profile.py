@@ -80,6 +80,7 @@ action_lookup = {
     "cycle-modes": action.mode_control.CycleModes,
     "pause-action": action.pause_resume.PauseAction,
     "resume-action": action.pause_resume.ResumeAction,
+    "toggle-pause-resume-action": action.pause_resume.TogglePauseResumeAction,
     "switch-mode": action.mode_control.SwitchMode,
     "switch-to-previous-mode": action.mode_control.SwitchPreviousMode,
     # Other actions

@@ -66,3 +66,8 @@ def pause():
 def resume():
     """Resumes the execution of callbacks."""
     EventHandler().resume()
+
+
+def toggle_pause_resume():
+    """Toggles between executing and not executing callbacks."""
+    EventHandler().toggle_active()

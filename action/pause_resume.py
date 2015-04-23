@@ -119,3 +119,52 @@ class ResumeAction(AbstractAction):
                 entry=self
             )
         }
+
+
+class TogglePauseResumeActionWidget(AbstractActionWidget):
+
+    """Widget for the resume action."""
+
+    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
+        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        assert(isinstance(action_data, TogglePauseResumeAction))
+
+    def _setup_ui(self):
+        self.label = QtWidgets.QLabel("Toggles the execution state")
+        self.main_layout.addWidget(self.label)
+
+    def to_profile(self):
+        self.action_data.is_valid = True
+
+    def initialize_from_profile(self, action_data):
+        pass
+
+
+class TogglePauseResumeAction(AbstractAction):
+
+    """Action to resume callback execution."""
+
+    icon = "gfx/icon_action.svg"
+    name = "Toggle Pause & Resume"
+    widget = TogglePauseResumeActionWidget
+    input_types = [
+        gremlin.event_handler.InputType.JoystickButton,
+        gremlin.event_handler.InputType.Keyboard
+    ]
+
+    def __init__(self, parent):
+        AbstractAction.__init__(self, parent)
+
+    def _parse_xml(self, node):
+        pass
+
+    def _generate_xml(self):
+        return ElementTree.Element("toggle-pause-resume-action")
+
+    def _generate_code(self):
+        tpl = Template(filename="templates/toggle_pause_resume_body.tpl")
+        return {
+            "body": tpl.render(
+                entry=self
+            )
+        }
