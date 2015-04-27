@@ -340,6 +340,7 @@ class InputItem(object):
         self.input_type = None
         self.input_id = None
         self.always_execute = False
+        self.description = ""
         self.actions = []
 
     def from_xml(self, node):
@@ -349,6 +350,7 @@ class InputItem(object):
         """
         self.input_type = tag_to_input_type(node.tag)
         self.input_id = int(node.get("id"))
+        self.description = node.get("description")
         self.always_execute = _parse_bool(node.get("always-execute", "False"))
         if self.input_type == InputType.Keyboard:
             self.input_id = (self.input_id, _parse_bool(node.get("extended")))
@@ -375,6 +377,10 @@ class InputItem(object):
             node.set("id", str(self.input_id))
         if self.always_execute:
             node.set("always-execute", "True")
+        if self.description:
+            node.set("description", self.description)
+        else:
+            node.set("description", "")
         for entry in self.actions:
             node.append(entry.to_xml())
         return node

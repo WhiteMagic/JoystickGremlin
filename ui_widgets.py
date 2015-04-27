@@ -362,6 +362,7 @@ class InputItemWidget(QtWidgets.QFrame):
         self.button_layout = QtWidgets.QHBoxLayout()
         self.widget_layout = QtWidgets.QVBoxLayout()
 
+        self._create_description()
         self._create_action_dropdown()
         self.main_layout.addLayout(self.widget_layout)
 
@@ -456,12 +457,24 @@ class InputItemWidget(QtWidgets.QFrame):
                 logging.exception(str(err))
                 raise err
         self.always_execute.setChecked(self.item_profile.always_execute)
+        self._description_field.setText(self.item_profile.description)
 
     def to_profile(self):
         """Updates all action items associated with this input item."""
         for widget in self.action_widgets:
             widget.to_profile()
         self.item_profile.always_execute = self.always_execute.isChecked()
+        self.item_profile.description = self._description_field.text()
+
+    def _create_description(self):
+        """Creates the description input for the input item."""
+        self._description_layout = QtWidgets.QHBoxLayout()
+        self._description_layout.addWidget(QtWidgets.QLabel("<b>Description</b>"))
+        self._description_field = QtWidgets.QLineEdit()
+        self._description_field.textChanged.connect(self.to_profile)
+        self._description_layout.addWidget(self._description_field)
+
+        self.main_layout.addLayout(self._description_layout)
 
     def _create_action_dropdown(self):
         """Creates a drop down selection with actions that can be
