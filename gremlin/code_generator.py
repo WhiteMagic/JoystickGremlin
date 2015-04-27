@@ -19,6 +19,8 @@ import re
 
 import action
 from mako.template import Template
+from mako.lookup import TemplateLookup
+import gremlin
 from gremlin.event_handler import InputType
 from gremlin import error, profile, util
 
@@ -95,6 +97,19 @@ def actions_to_code(actions, code):
             for key, value in entry.to_code().items():
                 assert(key in code)
                 code[key].append(value)
+
+
+def input_item_identifier_string(input_item):
+    """Returns the identifier string for a given InputItem.
+
+    :param input_item the item for which to generate the identifier
+    :return identifier for this InputItem
+    """
+    hid, wid = util.extract_ids(util.device_id(input_item.parent.parent))
+    if wid != -1:
+        return "_{}".format(wid)
+    else:
+        return ""
 
 
 class CodeGenerator(object):
@@ -200,6 +215,9 @@ class CodeGenerator(object):
         self.code["global"].extend(code["global"])
 
         tpl = Template(filename=input_type_templates[input_item.input_type])
+        helpers = {
+            "wid": input_item_identifier_string,
+        }
         self.code["callback"].append(tpl.render(
             device_name=util.format_name(mode.parent.name),
             decorator=decorator_name(mode, index),
@@ -207,5 +225,7 @@ class CodeGenerator(object):
             mode_index=index,
             input_item=input_item,
             code=code,
-            param_list=generate_parameter_list(input_item)
+            param_list=generate_parameter_list(input_item),
+            helpers=helpers,
+            gremlin=gremlin
         ))

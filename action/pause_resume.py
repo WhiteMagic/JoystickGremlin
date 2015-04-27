@@ -19,7 +19,7 @@ from mako.template import Template
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget
+from action.common import AbstractAction, AbstractActionWidget, template_helpers
 import gremlin.event_handler
 
 
@@ -67,7 +67,8 @@ class PauseAction(AbstractAction):
         tpl = Template(filename="templates/pause_body.tpl")
         return {
             "body": tpl.render(
-                entry=self
+                entry=self,
+                helpers=template_helpers
             )
         }
 
@@ -93,7 +94,7 @@ class ResumeActionWidget(AbstractActionWidget):
 
 class ResumeAction(AbstractAction):
 
-    """Action to resume callbac kexecution."""
+    """Action to resume callback execution."""
 
     icon = "gfx/icon_action.svg"
     name = "Resume"
@@ -116,7 +117,8 @@ class ResumeAction(AbstractAction):
         tpl = Template(filename="templates/resume_body.tpl")
         return {
             "body": tpl.render(
-                entry=self
+                entry=self,
+                helpers=template_helpers
             )
         }
 
@@ -165,6 +167,7 @@ class TogglePauseResumeAction(AbstractAction):
         tpl = Template(filename="templates/toggle_pause_resume_body.tpl")
         return {
             "body": tpl.render(
-                entry=self
+                entry=self,
+                helpers=template_helpers
             )
         }

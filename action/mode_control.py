@@ -19,7 +19,7 @@ from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget
+from action.common import AbstractAction, AbstractActionWidget, template_helpers
 import gremlin.event_handler
 
 
@@ -75,7 +75,7 @@ class SwitchMode(AbstractAction):
     def _generate_code(self):
         tpl = Template(filename="templates/switch_mode_body.tpl")
         return {
-            "body": tpl.render(entry=self)
+            "body": tpl.render(entry=self, helpers=template_helpers)
         }
 
 
@@ -122,7 +122,7 @@ class SwitchPreviousMode(AbstractAction):
     def _generate_code(self):
         tpl = Template(filename="templates/switch_previous_mode_body.tpl")
         return {
-            "body": tpl.render(entry=self)
+            "body": tpl.render(entry=self, helpers=template_helpers)
         }
 
 
@@ -252,7 +252,10 @@ class CycleModes(AbstractAction):
 
     def _generate_code(self):
         return {
-            "body": Template(filename="templates/cycle_modes_body.tpl").render(
-                entry=self
+            "body": Template(
+                filename="templates/cycle_modes_body.tpl"
+            ).render(
+                entry=self,
+                helpers=template_helpers
             )
         }

@@ -19,7 +19,7 @@ from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, parse_bool
+from action.common import AbstractAction, AbstractActionWidget, parse_bool, template_helpers
 import gremlin.event_handler
 import gremlin.macro
 
@@ -377,12 +377,14 @@ class Macro(AbstractAction):
         """
         body_code = Template(filename="templates/macro_body.tpl").render(
             entry=self,
-            macro_name="macro_{:04d}".format(Macro.next_code_id)
+            macro_name="macro_{:04d}".format(Macro.next_code_id),
+            helpers=template_helpers
         )
         global_code = Template(filename="templates/macro_global.tpl").render(
             entry=self,
             macro_name="macro_{:04d}".format(Macro.next_code_id),
-            gremlin=gremlin
+            gremlin=gremlin,
+            helpers=template_helpers
         )
         return {
             "body": body_code,

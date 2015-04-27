@@ -19,7 +19,7 @@ from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, DualSlider
+from action.common import AbstractAction, AbstractActionWidget, DualSlider, template_helpers
 import gremlin
 
 
@@ -1163,14 +1163,20 @@ class ResponseCurve(AbstractAction):
 
     def _generate_code(self):
         """Generates python code corresponding to this object."""
-        body_code = Template(filename="templates/response_curve_body.tpl").render(
-            entry=self,
-            curve_name="curve_{:04d}".format(ResponseCurve.next_code_id)
-        )
-        global_code = Template(filename="templates/response_curve_global.tpl").render(
+        body_code = Template(
+            filename="templates/response_curve_body.tpl"
+        ).render(
             entry=self,
             curve_name="curve_{:04d}".format(ResponseCurve.next_code_id),
-            gremlin=gremlin
+            helpers=template_helpers
+        )
+        global_code = Template(
+            filename="templates/response_curve_global.tpl"
+        ).render(
+            entry=self,
+            curve_name="curve_{:04d}".format(ResponseCurve.next_code_id),
+            gremlin=gremlin,
+            helpers=template_helpers
         )
 
         return {

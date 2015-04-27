@@ -19,7 +19,7 @@ from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget
+from action.common import AbstractAction, AbstractActionWidget, template_helpers
 import gremlin.event_handler
 
 
@@ -72,5 +72,5 @@ class TextToSpeech(AbstractAction):
     def _generate_code(self):
         tpl = Template(filename="templates/text_to_speech.tpl")
         return {
-            "body": tpl.render(entry=self)
+            "body": tpl.render(entry=self, helpers=template_helpers)
         }

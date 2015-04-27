@@ -15,10 +15,72 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from mako.lookup import TemplateLookup
 from PyQt5 import QtCore, QtWidgets
 
 import gremlin
 from gremlin.event_handler import InputType
+
+
+def format_condition(condition):
+    """Returns code representing the button condition.
+
+    :param condition the condition to turn into textual python code
+    :return python code representing the condition
+    """
+    if isinstance(condition, ButtonCondition):
+        if condition.on_press and condition.on_release:
+            return "    if True:"
+        elif condition.on_press:
+            return "    if is_pressed:"
+        elif condition.on_release:
+            return "    if not is_pressed:"
+        else:
+            return "    if False:"
+    else:
+        return "    if True:"
+
+
+def list_to_string(params):
+    """Returns a textual representing of a list.
+
+    :param params the parameters to turn into a lists
+    :return textual representation of the parameters
+    """
+    if len(params) == 0:
+        return ""
+    elif len(params) == 1:
+        return "\"{0}\"".format(params[0])
+    else:
+        return "[" + ", ".join(["\"{0}\"".format(v) for v in params]) + "]"
+
+
+def string_to_bool(text):
+    """Returns text into a boolean variable.
+
+    :param text the text to convert
+    :return bool representing the text
+    """
+    return text.lower() in ["true", "yes", "t", "1"]
+
+
+def coords_to_string(container):
+    """Returns a textual representation of a sequence of coordinates.
+
+    :param container container holding the coordinates
+    :return textual representing of the coordinates
+    """
+    return "[{}]".format(", ".join(
+        ["({:.4f}, {:.4f})".format(e[0], e[1]) for e in container])
+    )
+
+
+template_helpers = {
+    "format_condition": format_condition,
+    "list_tostring": list_to_string,
+    "string_to_bool": string_to_bool,
+    "coords_to_string": coords_to_string,
+}
 
 
 class DualSlider(QtWidgets.QWidget):

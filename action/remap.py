@@ -210,6 +210,7 @@ class Remap(AbstractAction):
         return {
             "body": tpl.render(
                 entry=self,
-                InputType=InputType
+                InputType=InputType,
+                helpers=action.common.template_helpers
             )
         }
