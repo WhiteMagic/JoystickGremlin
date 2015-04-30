@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
@@ -1053,7 +1054,7 @@ class AxisResponseCurveWidget(AbstractActionWidget):
             for point in action_data.control_points:
                 self.model.add_point(Point2D(point[0], point[1]))
         elif action_data.mapping_type == "cubic-bezier-spline":
-            points = action_data.control_points
+            points = copy.deepcopy(action_data.control_points)
             points.insert(0, (-1.05, points[0][1]))
             points.append((1.05, points[-1][1]))
 

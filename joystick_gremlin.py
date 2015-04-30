@@ -483,6 +483,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.device_information = None
         self.module_manager = None
 
+        self._last_input_timestamp = time.time()
+        self._last_input_event = None
         self._enable_joystick_input_highlighting()
 
     def load_profile(self):
@@ -704,18 +706,39 @@ class GremlinUi(QtWidgets.QMainWindow):
     def _should_process_input(self, event):
         """Returns True when to process and input, False otherwise.
 
+        This enforces a certain downtime between subsequent inputs
+        triggering an update of the UI as well as preventing inputs
+        from the same, currently active input to trigger another
+        update.
+
         :param event the event to make the decision about
         :return True if the event is to be processed, False otherwise
         """
+        # Check if the input in general is something we want to process
+        process_input = False
         if event.event_type == InputType.JoystickButton:
-            return event.is_pressed
+            process_input = event.is_pressed
         elif event.event_type == InputType.JoystickAxis:
-            return abs(event.value) > 0.25
+            process_input = abs(event.value) > 0.25
         elif event.event_type == InputType.JoystickHat:
-            return event.value != (0, 0)
+            process_input = event.value != (0, 0)
         else:
             logging.warning("Event with bad content received")
+            process_input = False
+
+        # Check if we should actually react to the event
+        if event == self._last_input_event:
             return False
+        elif self._last_input_timestamp + 0.25 > time.time():
+            return False
+        elif not process_input:
+            return False
+        else:
+            self._last_input_event = event
+            self._last_input_timestamp = time.time()
+            return True
+
+
 
     def _sanitize_profile(self, profile_data):
         """Validates a profile file before actually loading it.
