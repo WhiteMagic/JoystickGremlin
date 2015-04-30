@@ -117,6 +117,9 @@ class CodeRunner(object):
         input_devices.callback_registry.clear()
         self.event_handler.clear()
 
+        # Remove all claims on VJoy devices
+        input_devices.VJoyProxy.reset()
+
     def _reset_state(self):
         """Resets all states to their default values."""
         self.event_handler._active_mode = "Global"
@@ -947,5 +950,11 @@ if __name__ == "__main__":
     # Terminate potentially running EventListener loop
     el = event_handler.EventListener()
     el.terminate()
+
+    # Properly terminate the runner instance should it be running
+    ui.runner.stop()
+
+    # Relinquish control over all VJoy devices used
+    input_devices.VJoyProxy.reset()
 
     sys.exit(0)

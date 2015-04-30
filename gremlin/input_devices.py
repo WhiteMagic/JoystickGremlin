@@ -87,6 +87,14 @@ class VJoyProxy(object):
             VJoyProxy.vjoy_devices[key] = device
             return device
 
+    @classmethod
+    def reset(klass):
+        """Relinquishes control over all held VJoy devices."""
+        for device in VJoyProxy.vjoy_devices.values():
+            del device
+        VJoyProxy.vjoy_devices = {}
+        print("reset")
+
 
 class JoystickWrapper(object):
 
