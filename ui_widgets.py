@@ -449,8 +449,7 @@ class InputItemWidget(QtWidgets.QFrame):
         # Create UI widgets and populate them based on the type of
         # action stored in the profile.
         self.item_profile = data
-        item_count = len(self.item_profile.actions)
-        for i in range(item_count):
+        for i in range(len(self.item_profile.actions)):
             try:
                 self._add_widget(self.item_profile.actions[i], False)
             except error.GremlinError as err:

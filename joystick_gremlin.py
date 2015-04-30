@@ -33,7 +33,7 @@ import sdl2.ext
 import sdl2.hints
 
 from gremlin.code_generator import CodeGenerator
-from gremlin import event_handler, input_devices, util
+from gremlin import event_handler, input_devices
 from ui_about import Ui_About
 from ui_gremlin import Ui_Gremlin
 import ui_widgets
@@ -937,7 +937,7 @@ if __name__ == "__main__":
     util.setup_duplicate_joysticks()
 
     # Create user interface
-    app_id = u"joystick.gremlin.r1"
+    app_id = u"joystick.gremlin"
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
