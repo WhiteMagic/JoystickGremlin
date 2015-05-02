@@ -269,7 +269,7 @@ class ResponseCurveScene(QtWidgets.QGraphicsScene):
             path = QtGui.QPainterPath(QtCore.QPointF(-200, -200*curve(-1)))
             for x in range(-200, 201, 2):
                 path.lineTo(x, -200 * curve(x / 200.0))
-            self.addPath(path)
+            self.addPath(path, QtGui.QPen(QtGui.QColor(0, 200, 0)))
 
     def _update_control_handle_locations(self, cpid, old_point, new_point):
         """Updates the location of control handles for bezier splines.
@@ -300,17 +300,20 @@ class ResponseCurveScene(QtWidgets.QGraphicsScene):
             return
 
         # Update handle lines
+        line_color = QtGui.QPen(QtGui.QColor(100, 100, 100))
         for cpid, point in self._model._storage.items():
             if cpid.secondary == 0:
                 cpid_1 = ControlPointIdentifier(cpid.primary, 1)
                 pt_1 = self._model.get_coords(cpid_1)
                 self.addLine(
-                    200*pt_1.x, -200*pt_1.y, 200*point.x, -200*point.y
+                    200*pt_1.x, -200*pt_1.y, 200*point.x, -200*point.y,
+                    line_color
                 )
                 cpid_2 = ControlPointIdentifier(cpid.primary, 2)
                 pt_2 = self._model.get_coords(cpid_2)
                 self.addLine(
-                    200*pt_2.x, -200*pt_2.y, 200*point.x, -200*point.y
+                    200*pt_2.x, -200*pt_2.y, 200*point.x, -200*point.y,
+                    line_color
                 )
 
     def mousePressEvent(self, evt):
