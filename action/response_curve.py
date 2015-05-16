@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy
 from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
@@ -24,109 +23,544 @@ from action.common import AbstractAction, AbstractActionWidget, DualSlider, temp
 import gremlin
 
 
-class BaseStorage(object):
+g_scene_size = 200.0
 
-    """Base class of all storage classes."""
+
+class AbstractCurveModel(object):
+
+    """Abstract base class for all  curve models."""
+
+    def __init__(self):
+        """Initializes an empty model."""
+        self.control_points = []
+
+    def get_curve_function(self):
+        """Returns the curve function corresponding to the model.
+
+        :return curve function corresponding to the model
+        """
+        raise gremlin.error.NotImplementedError()
+
+    def get_control_points(self):
+        """Returns the list of control points.
+
+        :return list of control points
+        """
+        return self.control_points
+
+    def add_control_point(self, point, handles=()):
+        """Adds a new control point to the model.
+
+        :param point the center of the control point
+        :param handles list of potential handles
+        :return the newly created control point
+        """
+        raise gremlin.error.NotImplementedError()
+
+    def remove_control_point(self, control_point):
+        """Removes the specified control point if it exists in the model.
+
+        :param control_point the control point to remove
+        """
+        idx = self.control_points.index(control_point)
+        if idx:
+            del self.control_points[idx]
+
+    def is_valid_point(self, point, identifier=None):
+        """Checks is a point is valid in the model.
+
+        :param point the point to check for validity
+        :param identifier the identifier of a control point to ignore
+        :return True if valid, False otherwise
+        """
+        raise gremlin.error.NotImplementedError()
+
+
+class CubicSplineModel(AbstractCurveModel):
+
+    """Represents a simple cubic cpline model."""
 
     def __init__(self):
         """Creates a new instance."""
-        self._points = {}
+        AbstractCurveModel.__init__(self)
 
-    def clear(self):
-        """Empties the data storage."""
-        self._points = {}
+    def get_curve_function(self):
+        """Returns the curve function corresponding to the model.
 
-    def values(self):
-        """Returns all stored data.
-
-        :return list of all the stored data
+        :return curve function corresponding to the model
         """
-        return self._points.values()
+        points = []
+        for pt in sorted(self.control_points, key=lambda e: e.center.x):
+            points.append((pt.center.x, pt.center.y))
+        if len(points) < 2:
+            return None
+        else:
+            return gremlin.spline.CubicSpline(points)
 
-    def items(self):
-        """Returns the item representation of the stored data.
+    def add_control_point(self, point, handles=()):
+        """Adds a new control point to the model.
 
-        :return item representation of the data
+        :param point the center of the control point
+        :param handles list of potential handles
+        :return the newly created control point
         """
-        return self._points.items()
+        cp = ControlPoint(self, point)
+        self.control_points.append(cp)
+        return cp
 
-    def __setitem__(self, cpid, value):
-        """Sets the value of the give id.
+    def is_valid_point(self, point, identifier=None):
+        """Checks is a point is valid in the model.
 
-        :param cpid id of the entry to change
-        :param value the new value for the given entry
+        :param point the point to check for validity
+        :param identifier the identifier of a control point to ignore
+        :return True if valid, False otherwise
         """
-        self._points[cpid] = value
+        is_valid = True
+        for other in self.control_points:
+            if other.identifier == identifier:
+                continue
+            elif other.center.x == point.x:
+                is_valid = False
+        return is_valid
 
-    def __getitem__(self, cpid):
-        """Returns the value of the given entry.
 
-        :param cpid id of the entry to return
-        :return value of the given entry
+class CubicBezierSplineModel(AbstractCurveModel):
+
+    """Represents a cubic bezier spline model."""
+
+    def __init__(self):
+        """Creates a new model."""
+        AbstractCurveModel.__init__(self)
+
+    def get_curve_function(self):
+        """Returns the curve function corresponding to the model.
+
+        :return curve function corresponding to the model
         """
-        return self._points[cpid]
+        points = []
+        for i, pt in enumerate(sorted(self.control_points, key=lambda e: e.center.x)):
+            if i == 0:
+                points.append((pt.center.x, pt.center.y))
+                points.append((pt.handles[0].x, pt.handles[0].y))
+            elif i == len(self.control_points) - 1:
+                points.append((pt.handles[0].x, pt.handles[0].y))
+                points.append((pt.center.x, pt.center.y))
+            else:
+                points.append((pt.handles[0].x, pt.handles[0].y))
+                points.append((pt.center.x, pt.center.y))
+                points.append((pt.handles[1].x, pt.handles[1].y))
+        if len(points) < 4:
+            return None
+        else:
+            return gremlin.spline.CubicBezierSpline(points)
+
+    def add_control_point(self, point, handles=()):
+        """Adds a new control point to the model.
+
+        :param point the center of the control point
+        :param handles list of potential handles
+        :return the newly created control point
+        """
+        if len(handles) == 0:
+            handles = (
+                Point2D(point.x - 0.05, point.y),
+                Point2D(point.x + 0.05, point.y)
+            )
+        cp = ControlPoint(self, point, handles)
+        self.control_points.append(cp)
+        return cp
+
+    def is_valid_point(self, point, identifier=None):
+        """Checks is a point is valid in the model.
+
+        :param point the point to check for validity
+        :param identifier the identifier of a control point to ignore
+        :return True if valid, False otherwise
+        """
+        is_valid = True
+        for other in self.control_points:
+            if other.identifier == identifier:
+                continue
+            elif other.center.x == point.x:
+                is_valid = False
+        return is_valid
 
 
-class PointStorage(BaseStorage):
+class ControlPoint(object):
 
-    """Storage for a simple point.
+    """Represents a single control point in a response curve.
 
-    This storage is used in conjunction with the cubic spline class.
+    Each control point has at least a center point but can possibly have
+    multiple handles which are used to control the shape of a curve segment.
+    Each instance furthermore has a unique identifier used to distinguish
+    and track different instances.
     """
 
-    def __init__(self):
-        """Creates a new instance."""
-        BaseStorage.__init__(self)
+    # Identifier of the next ControlPoint instance being created
+    next_id = 0
 
-    def add(self, cpid, x, y):
-        """Adds a new point with given id and coordinates.
+    def __init__(self, model, center, handles=[]):
+        """Creates a new instance.
 
-        :param cpid the id of the new point
-        :param x the x coordinate of the point
-        :param y the y coordinate of the point
+        :param model the model the control point is associated with
+        :param center the center point of the control point
+        :param handles optional list of handles to control curvature
         """
-        self._points[cpid] = Point2D(x, y)
+        self._model = model
+        self._center = center
+        self.handles = [hdl for hdl in handles]
+        self.identifier = ControlPoint.next_id
+        ControlPoint.next_id += 1
 
-    def remove(self, cpid):
-        """Removes the specified point from the storage.
+    @property
+    def center(self):
+        """Returns the center point of the control point.
 
-        :param cpid the id of the point to remove
+        :return center point of the control point
         """
-        del self._points[cpid]
+        return self._center
 
+    def set_center(self, point):
+        """Sets the center of the control point, if it is a valid point.
 
-class KnotStorage(BaseStorage):
+        This method uses the provided model to check if the provided location
+        is valiid.
 
-    def __init__(self):
-        """Creates a new instance."""
-        BaseStorage.__init__(self)
-
-    def add(self, cpid, x, y):
-        """Adds a new point with given id and coordinates.
-
-        :param cpid the id of the new point
-        :param x the x coordinate of the point
-        :param y the y coordinate of the point
+        :param point the new center position of the control point
         """
-        self._points[cpid] = Point2D(x, y)
-        self._points[ControlPointIdentifier(cpid.primary, 1)] = Point2D(x-0.05, y)
-        self._points[ControlPointIdentifier(cpid.primary, 2)] = Point2D(x+0.05, y)
+        if self._model.is_valid_point(point, self.identifier):
+            # If there are handles update their relative positions
+            delta = self.center - point
+            for handle in self.handles:
+                handle.x -= delta.x
+                handle.y -= delta.y
+            # Update the actual center
+            self._center = point
 
-    def remove(self, cpid):
-        """Removes the specified point from the storage.
+    def set_handle(self, index, point):
+        """Sets the location of the specified handle.
 
-        :param cpid the id of the point to remove
+        :param index the id of the handle to modify
+        :param point the new location of the handle
         """
-        del self._points[cpid]
-        del self._points[ControlPointIdentifier(cpid.primary, 1)]
-        del self._points[ControlPointIdentifier(cpid.primary, 2)]
+        if len(self.handles) > index:
+            self.handles[index] = point
+
+    def __eq__(self, other):
+        """Compares two control points for identity.
+
+        The unique identifier is used for thje comparison.
+
+        :param other the control point to compare with for identity
+        :return True of the control points are the same, False otherwise
+        """
+        return self.identifier == other.identifier
+
+
+class ControlPointGraphicsItem(QtWidgets.QGraphicsEllipseItem):
+
+    """UI Item representing the center of a control point."""
+
+    def __init__(self, control_point, parent=None):
+        """Creates a new instance.
+
+        :param control_point the control point this element visualizes
+        :param parent the parent of this widget
+        """
+        QtWidgets.QGraphicsEllipseItem.__init__(self, -4, -4, 8, 8, parent)
+        assert(isinstance(control_point, ControlPoint))
+
+        self.control_point = control_point
+
+        self.setPos(
+            g_scene_size * self.control_point.center.x,
+            -g_scene_size * self.control_point.center.y
+        )
+        self.setZValue(2)
+        self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
+        self.handles = []
+
+        if len(self.control_point.handles) > 0:
+            for i, handle in enumerate(self.control_point.handles):
+                dx = -(self.control_point.center.x - handle.x) * g_scene_size
+                dy = -(self.control_point.center.y - handle.y) * g_scene_size
+                item = CurveHandleGraphicsItem(i, Point2D(dx, dy), self)
+                self.handles.append(item)
+
+    def redraw(self):
+        """Forces a position update of the ui element."""
+        self.setPos(
+            g_scene_size * self.control_point.center.x,
+            -g_scene_size * self.control_point.center.y
+        )
+
+    def set_active(self, is_active):
+        """Handles changing the selected state of an item
+
+        :param is_active flag indicating if an item is selected or not
+        """
+        if is_active:
+            self.setBrush(QtGui.QBrush(QtCore.Qt.red))
+            if self.scene().mouseGrabberItem() != self:
+                self.grabMouse()
+        else:
+            self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
+            if self.scene().mouseGrabberItem() == self:
+                self.ungrabMouse()
+
+    def mouseReleaseEvent(self, evt):
+        """Releases the mouse grab when the mouse is released.
+
+        :param evt the mouse even to process
+        """
+        self.ungrabMouse()
+
+    def mouseMoveEvent(self, evt):
+        """Updates the position of the control point based on mouse
+        movements.
+
+        :param evt the mouse event to process
+        """
+        # Create desired point
+        new_point = Point2D(
+            gremlin.util.clamp(evt.scenePos().x() / g_scene_size, -1.0, 1.0),
+            gremlin.util.clamp(-evt.scenePos().y() / g_scene_size, -1.0, 1.0)
+        )
+
+        # Only allow movement along the y axis if the point is on either
+        # end of the area
+        if abs(self.control_point.center.x) == 1.0:
+            new_point.x = self.control_point.center.x
+
+        self.control_point.set_center(new_point)
+        self.scene().redraw_scene()
+
+
+class CurveHandleGraphicsItem(QtWidgets.QGraphicsRectItem):
+
+    """UI Item representing a handle of a control point."""
+
+    def __init__(self, index, point, parent):
+        """Creates a new control point handle UI element.
+
+        :param index the id of the handle
+        :param point the location of the handle
+        :param parent the parent of this widget
+        """
+        QtWidgets.QGraphicsRectItem.__init__(self, -4, -4, 8, 8, parent)
+        self.setPos(point.x, point.y)
+        self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
+        self.parent = parent
+        self.index = index
+        self.line = QtWidgets.QGraphicsLineItem(point.x, point.y, 0, 0, parent)
+        self.line.setZValue(0)
+        self.setZValue(1)
+
+    def redraw(self):
+        """Forces a position update of the ui element."""
+        center = self.parent.control_point.center
+        point = self.parent.control_point.handles[self.index]
+        delta = point - center
+
+        self.setPos(delta.x*g_scene_size, -delta.y*g_scene_size)
+        self.line.setLine(delta.x*g_scene_size, -delta.y*g_scene_size, 0, 0)
+
+    def set_active(self, is_active):
+        """Handles changing the selected state of an item
+
+        :param is_active flag indicating if an item is selected or not
+        """
+        if is_active:
+            self.setBrush(QtGui.QBrush(QtCore.Qt.red))
+            if self.scene().mouseGrabberItem() != self:
+                self.grabMouse()
+        else:
+            self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
+            if self.scene().mouseGrabberItem() == self:
+                self.ungrabMouse()
+
+    def mouseReleaseEvent(self, evt):
+        """Releases the mouse grab when the mouse is released.
+
+        :param evt the mouse event to process
+        """
+        self.ungrabMouse()
+
+    def mouseMoveEvent(self, evt):
+        """Updates the position of the control point based on mouse
+        movements.
+
+        :param evt the mouse event to process
+        """
+        # Create desired point
+        new_point = Point2D(
+            gremlin.util.clamp(evt.scenePos().x() / g_scene_size, -1.0, 1.0),
+            gremlin.util.clamp(-evt.scenePos().y() / g_scene_size, -1.0, 1.0)
+        )
+
+        self.parent.control_point.set_handle(self.index, new_point)
+        self.parent.scene().redraw_scene()
+
+
+class CurveScene(QtWidgets.QGraphicsScene):
+
+    """Visualization of the entire curve editor UI element."""
+
+    def __init__(self, curve_model, point_editor, callback_fn, parent=None):
+        """Creates a new instance.
+
+        :param curve_model the model to visualize
+        :param point_editor the point editor to use
+        :param callback_fn function to call upon changes to the model
+        :param parent parent of this widget
+        """
+        QtWidgets.QGraphicsScene.__init__(self, parent)
+        self.model = curve_model
+        self.point_editor = point_editor
+        self.callback_fn = callback_fn
+        self.background_image = QtGui.QImage("gfx/grid.svg")
+
+        # Connect editor widget signals
+        self.point_editor.x_input.valueChanged.connect(self._editor_update)
+        self.point_editor.y_input.valueChanged.connect(self._editor_update)
+
+        self.current_item = None
+
+    def reset(self):
+        """Resets the model, ensuring no data is contained within."""
+        self.model.control_points = []
+        for item in self.items():
+            self.removeItem(item)
+
+    def add_control_point(self, point, handles=()):
+        """Adds a new control point to the model and scene.
+
+        :param point the center of the control point
+        :param handles list of potential handles
+        """
+        control_point = self.model.add_control_point(point, handles)
+        self.addItem(ControlPointGraphicsItem(control_point))
+        self.redraw_scene()
+
+    def _editor_update(self, value):
+        """Callback for changes in the point editor UI.
+
+        :param value the new value entered using the editor UI
+        """
+        if self.current_item:
+            new_point = Point2D(
+                self.point_editor.x_input.value(),
+                self.point_editor.y_input.value()
+            )
+            if abs(self.current_item.control_point.center.x) == 1.0:
+                new_point.x = self.current_item.control_point.center.x
+            self.current_item.control_point.set_center(new_point)
+            self.redraw_scene()
+
+    def _select_item(self, item):
+        """Handles drawing of an item being selected.
+
+        :param item the item being selected
+        """
+        # Ensure we want / can select the provided item
+        if isinstance(item, ControlPointGraphicsItem) or \
+                isinstance(item, CurveHandleGraphicsItem):
+            if self.current_item and item != self.current_item:
+                self.current_item.set_active(False)
+            self.current_item = item
+            self.current_item.set_active(True)
+        self.redraw_scene()
+
+    def redraw_scene(self):
+        """Updates the scene
+
+        Need to update positions rather then recreating everything, as
+        otherwise the state gets lost.
+        """
+        # Remove old curve path and update control points
+        for item in self.items():
+            if isinstance(item, QtWidgets.QGraphicsPathItem):
+                self.removeItem(item)
+            elif type(item) in [ControlPointGraphicsItem, CurveHandleGraphicsItem]:
+                item.redraw()
+
+        # Redraw response curve
+        curve_fn = self.model.get_curve_function()
+        if curve_fn:
+            path = QtGui.QPainterPath(
+                QtCore.QPointF(-g_scene_size, -g_scene_size*curve_fn(-1))
+            )
+            for x in range(-int(g_scene_size), int(g_scene_size+1), 2):
+                path.lineTo(x, -g_scene_size * curve_fn(x / g_scene_size))
+            self.addPath(path, QtGui.QPen(QtGui.QColor(0, 200, 0)))
+
+        # Update editor widget fields
+        if self.current_item:
+            if isinstance(self.current_item, ControlPointGraphicsItem):
+                self.point_editor.set_values(
+                    self.current_item.control_point.center
+                )
+
+        self.callback_fn()
+
+    def mousePressEvent(self, evt):
+        """Informs the model about point selection if a point is clicked.
+
+        :param evt the mouse event to process
+        """
+        if evt.button() == QtCore.Qt.LeftButton:
+            self._select_item(self.itemAt(evt.scenePos(), QtGui.QTransform()))
+
+    def mouseDoubleClickEvent(self, evt):
+        """Adds or removes a control point.
+
+        A left double click on empty space creates a new control point.
+
+        :param evt the mouse event to process
+        """
+        if evt.button() == QtCore.Qt.LeftButton:
+            item = self.itemAt(evt.scenePos(), QtGui.QTransform())
+            if not isinstance(item, ControlPointGraphicsItem):
+                self.add_control_point(Point2D(
+                    evt.scenePos().x() / g_scene_size,
+                    evt.scenePos().y() / -g_scene_size
+                ))
+
+    def keyPressEvent(self, evt):
+        """Removes the currently selected control point if the Del key is pressed.
+
+        :param evt the keyboard event to process.
+        """
+        if evt.key() == QtCore.Qt.Key_Delete and \
+                isinstance(self.current_item, ControlPointGraphicsItem):
+            # Disallow removing edge points
+            if abs(self.current_item.control_point.center.x) == 1.0:
+                return
+            # Otherwise remove the currently active control point
+            self.model.remove_control_point(self.current_item.control_point)
+            self.removeItem(self.current_item)
+            del self.current_item
+            self.current_item = None
+
+            self.redraw_scene()
+
+    def drawBackground(self, painter, rect):
+        """Draws the grid background image.
+
+        :param painter the painter object
+        :param rect the drawing rectangle
+        """
+        painter.drawImage(
+            QtCore.QPoint(-g_scene_size, -g_scene_size),
+            self.background_image
+        )
 
 
 class Point2D(object):
 
     """Represents a 2D point."""
 
-    def __init__(self, x=0, y=0):
+    def __init__(self, x=0.0, y=0.0):
         """Creates a new instance.
 
         :param x the x coordinate
@@ -145,535 +579,17 @@ class Point2D(object):
         return "[{:.2f}, {:.2f}]".format(self.x, self.y)
 
 
-class ResponseCurveScene(QtWidgets.QGraphicsScene):
-
-    """Visualization of a response curve configuration."""
-
-    def __init__(self, model, parent=None):
-        """Creates a new instance.
-
-        :param model the ControlPointModel this scene visualizes
-        :param parent parent widget
-        """
-        QtWidgets.QGraphicsScene.__init__(self, parent)
-        self._bg_image = QtGui.QImage("gfx/grid.svg")
-        self._model = model
-
-        # Storage for ControlPointShapeItem instances with
-        # corresponding model ids
-        self._points = {}
-
-        # Connect to model signals
-        self._model.pointAdded.connect(self._point_added_cb)
-        self._model.pointRemoved.connect(self._point_removed_cb)
-        self._model.pointMoved.connect(self._point_moved_cb)
-        self._model.pointSelected.connect(self._point_selected_cb)
-
-    def clear_points(self):
-        """Removes all points from the scene."""
-        for cpid, node in self._points.items():
-            self.removeItem(node)
-        self._points = {}
-
-    def _point_added_cb(self, cpid, point):
-        """Adds a new point to the scene.
-
-        :param cpid the id of the point in the model
-        :param point the coordinates of the point
-        """
-        if self._model.curve_model == gremlin.spline.CubicSpline:
-            self._points[cpid] = ControlPointShapeItem(cpid, point)
-        elif self._model.curve_model == gremlin.spline.CubicBezierSpline:
-            self._points[cpid] = ControlPointShapeItem(
-                cpid,
-                self._model.get_coords(cpid)
-            )
-            tmp = ControlPointIdentifier(cpid.primary, 1)
-            self._points[tmp] = CurvaturePointShapeItem(
-                tmp,
-                self._model.get_coords(tmp)
-            )
-            tmp = ControlPointIdentifier(cpid.primary, 2)
-            self._points[tmp] = CurvaturePointShapeItem(
-                tmp,
-                self._model.get_coords(tmp)
-            )
-        for i in range(3):
-            tmp = ControlPointIdentifier(cpid.primary, i)
-            if tmp in self._points:
-                self.addItem(self._points[tmp])
-        self._draw_control_points()
-        self._draw_response_curve()
-        self._draw_handles()
-
-    def _point_removed_cb(self, cpid):
-        """Removes the given point from the scene.
-
-        :param cpid the model if of the point being removed
-        """
-        self.removeItem(self._points[cpid])
-        del self._points[cpid]
-        if self._model.curve_model == gremlin.spline.CubicBezierSpline:
-            cpid_1 = ControlPointIdentifier(cpid.primary, 1)
-            cpid_2 = ControlPointIdentifier(cpid.primary, 2)
-            self.removeItem(self._points[cpid_1])
-            self.removeItem(self._points[cpid_2])
-            del self._points[cpid_1]
-            del self._points[cpid_2]
-        self._draw_control_points()
-        self._draw_response_curve()
-        self._draw_handles()
-
-    def _point_moved_cb(self, cpid, old_point, new_point):
-        """Updates the position of the point in the scene and redraws
-        the response curve.
-
-        :param cpid the id of the item being changes
-        :param old_point old coordinates of the item
-        :param new_point new coordinates of the item
-        """
-        self._update_control_handle_locations(cpid, old_point, new_point)
-        self._points[cpid].setPos(new_point.x * 200.0, new_point.y * -200.0)
-        self._draw_response_curve()
-        self._draw_handles()
-
-    def _point_selected_cb(self, cpid):
-        """Updates the point selection.
-
-        :param cpid the id of the newly selected point
-        """
-        # Remove highlight from all nodes
-        for node in self._points.values():
-            node.set_selected(node.identifier == cpid)
-
-    def _draw_control_points(self):
-        """Updates the locations of all control points."""
-        for cpid, node in self._points.items():
-            coord = self._model.get_coords(cpid)
-            node.setPos(coord.x * 200, coord.y * -200)
-
-    def _draw_response_curve(self):
-        """Redraws the entire response curve."""
-        # Generate new curve
-        curve = self._model.curve_model(self._model.get_control_points())
-
-        # Remove old path
-        for item in self.items():
-            if isinstance(item, QtWidgets.QGraphicsPathItem):
-                self.removeItem(item)
-            elif isinstance(item, QtWidgets.QGraphicsLineItem):
-                self.removeItem(item)
-
-        # Draw new curve
-        if len(curve.x) > 1:
-            path = QtGui.QPainterPath(QtCore.QPointF(-200, -200*curve(-1)))
-            for x in range(-200, 201, 2):
-                path.lineTo(x, -200 * curve(x / 200.0))
-            self.addPath(path, QtGui.QPen(QtGui.QColor(0, 200, 0)))
-
-    def _update_control_handle_locations(self, cpid, old_point, new_point):
-        """Updates the location of control handles for bezier splines.
-
-        :param cpid the identifier of the control point itself
-        :param old_point coordinates of the point before motion
-        :param new_point coordinates of the point after motion
-        """
-        if self._model.curve_model != gremlin.spline.CubicBezierSpline:
-            return
-
-        # Update handle location
-        if cpid and cpid.secondary == 0:
-            cpid_1 = ControlPointIdentifier(cpid.primary, 1)
-            cpid_2 = ControlPointIdentifier(cpid.primary, 2)
-
-            new_pt_1 = self._model.get_coords(cpid_1) + (new_point - old_point)
-            new_pt_2 = self._model.get_coords(cpid_2) + (new_point - old_point)
-            self._model.set_coords(cpid_1, new_pt_1)
-            self._points[cpid_1].setPos(200 * new_pt_1.x, -200 * new_pt_1.y)
-            self._model.set_coords(cpid_2, new_pt_2)
-            self._points[cpid_2].setPos(200 * new_pt_2.x, -200 * new_pt_2.y)
-
-
-    def _draw_handles(self):
-        """Draws handles of control points fo bezier splines."""
-        if self._model.curve_model != gremlin.spline.CubicBezierSpline:
-            return
-
-        # Update handle lines
-        line_color = QtGui.QPen(QtGui.QColor(100, 100, 100))
-        for cpid, point in self._model._storage.items():
-            if cpid.secondary == 0:
-                cpid_1 = ControlPointIdentifier(cpid.primary, 1)
-                pt_1 = self._model.get_coords(cpid_1)
-                self.addLine(
-                    200*pt_1.x, -200*pt_1.y, 200*point.x, -200*point.y,
-                    line_color
-                )
-                cpid_2 = ControlPointIdentifier(cpid.primary, 2)
-                pt_2 = self._model.get_coords(cpid_2)
-                self.addLine(
-                    200*pt_2.x, -200*pt_2.y, 200*point.x, -200*point.y,
-                    line_color
-                )
-
-    def mousePressEvent(self, evt):
-        """Informs the model about point selection if a point is clicked.
-
-        :param evt the mouse event
-        """
-        item = self.itemAt(evt.scenePos(), QtGui.QTransform())
-        is_control_point = isinstance(item, ControlPointShapeItem) or \
-            isinstance(item, CurvaturePointShapeItem)
-
-        if evt.button() == QtCore.Qt.LeftButton:
-            if is_control_point:
-                self._model.select_point(item.identifier)
-
-    def mouseDoubleClickEvent(self, evt):
-        """Adds or removes a control point.
-
-        A left double click on empty space creates a new control point,
-        while a right double click on an existing control point removes
-        the underlying control point.
-
-        :param evt the mouse event
-        """
-        item = self.itemAt(evt.scenePos(), QtGui.QTransform())
-        is_control_point = isinstance(item, QtWidgets.QGraphicsEllipseItem)
-
-        # Create a new control point
-        if evt.button() == QtCore.Qt.LeftButton:
-            if not is_control_point:
-                self._model.add_point(Point2D(
-                    evt.scenePos().x() / 200.0,
-                    evt.scenePos().y() / -200.0
-                ))
-        # Remove an existing control point
-        elif evt.button() == QtCore.Qt.RightButton:
-            if is_control_point:
-                self._model.remove_point(item.identifier)
-
-    def drawBackground(self, painter, rect):
-        """Draws the grid background image.
-
-        :param painter the painter object
-        :param rect the drawing rectangle
-        """
-        painter.drawImage(QtCore.QPoint(-200, -200), self._bg_image)
-
-    def update_model(self, control_point):
-        """Updates the model with the given control point's location.
-
-        :param control_point the point with which to update the model
-        """
-        self._model.move_point(
-            control_point.identifier,
-            Point2D(control_point.x() / 200.0, control_point.y() / -200.0)
-        )
-
-
-class ControlPointIdentifier(object):
-
-    """Identifies a single control point.
-
-    This can be the actual control point or a point that controls the
-    shape of the actual spline. If the point is the primary one then
-    the value of secondary is 0, otherwise it is a value > 0.
-    """
-
-    def __init__(self, primary,  secondary=0):
-        """Creates a new instance.
-
-        The secondary id is only used for Bezier splines.
-
-        :param primary the primary id
-        :param secondary the secondary id
-        """
-        self._primary = primary
-        self._secondary = secondary
-
-    @property
-    def primary(self):
-        return self._primary
-
-    @property
-    def secondary(self):
-        return self._secondary
-
-    def __hash__(self):
-        return hash((self.primary, self.secondary))
-
-    def __eq__(self, other):
-        return (self.primary, self.secondary) == (other.primary, other.secondary)
-
-
-class ControlPointModel(QtCore.QObject):
-
-    """Model representing the control points of a response curve."""
-
-    # Signals emitted by the model
-    pointAdded = QtCore.pyqtSignal(ControlPointIdentifier, Point2D)
-    pointRemoved = QtCore.pyqtSignal(ControlPointIdentifier)
-    # id of the point, old position, new position
-    pointMoved = QtCore.pyqtSignal(ControlPointIdentifier, Point2D, Point2D)
-    pointSelected = QtCore.pyqtSignal(ControlPointIdentifier)
-
-    def __init__(self, curve_model, parent=None):
-        """Creates a new instance.
-
-        :param curve_model the type of curve to use
-        :param parent the parent object
-        """
-        QtCore.QObject.__init__(self, parent)
-        self._active_point = None
-        self._next_id = 1
-        self.curve_model = curve_model
-
-        storage_map = {
-            gremlin.spline.CubicSpline: PointStorage,
-            gremlin.spline.CubicBezierSpline: KnotStorage,
-        }
-        self._storage = storage_map[curve_model]()
-
-    def get_control_points(self):
-        """Returns the sorted list of all control points.
-
-        :return sorted list of control points
-        """
-        if self.curve_model == gremlin.spline.CubicSpline:
-            return sorted(
-                [[pt.x, pt.y] for pt in self._storage.values()],
-                key=lambda pt: pt[0]
-            )
-        elif self.curve_model == gremlin.spline.CubicBezierSpline:
-            sequence = []
-            for cpid, point in self._storage.items():
-                if cpid.secondary == 0:
-                    sequence.append((cpid.primary, point.x))
-            sequence = sorted(sequence, key=lambda val: val[1])
-
-            point_list = []
-            for entry in sequence:
-                for i in [1, 0, 2]:
-                    point = self._storage[ControlPointIdentifier(entry[0], i)]
-                    point_list.append([point.x, point.y])
-            return point_list[1:-1]
-
-    def get_coords(self, cpid):
-        """Returns the coordinates of the specified control point.
-
-        :param cpid the id of the control point
-        :return coordinates of the corresponding control point
-        """
-        return self._storage[cpid]
-
-    def set_coords(self, cpid, point):
-        """Sets the coordinates of the specified control point.
-
-        :param cpid the id of the control point
-        :param point the new point location
-        """
-        self._storage[cpid] = point
-
-    def add_point(self, point):
-        """Adds a new control point with the provided coordinates.
-
-        :param point the 2d point at which to add a new control point
-        :return the index of the newly added point
-        """
-        if -1 <= point.x <= 1 and -1 <= point.y <= 1:
-            if not self._is_other_point_nearby(
-                    ControlPointIdentifier(-1, 0), point.x
-            ):
-                cpid = ControlPointIdentifier(self._next_id, 0)
-                self._storage.add(cpid, point.x, point.y)
-                self.pointAdded.emit(cpid, point)
-                self._next_id += 1
-            return cpid
-
-    def move_point(self, cpid, point):
-        """Moves the specified control point to the new coordinates.
-
-        :param cpid the id of the control point to move
-        :param point the new coordinates of the control point
-        """
-        # Ensure points are in [-1, 1]
-        x = gremlin.util.clamp(point.x, -1, 1)
-        y = gremlin.util.clamp(point.y, -1, 1)
-
-        new_point = Point2D(self._storage[cpid].x, self._storage[cpid].y)
-        # Disallow points from being too close to each other
-        if self._is_other_point_nearby(cpid, x):
-            pass
-        # Edge points cannot be moved away from the edge
-        elif new_point.x in [-1, 1]:
-            new_point.y = y
-        else:
-            new_point = Point2D(x, y)
-        old_point = Point2D(self._storage[cpid].x, self._storage[cpid].y)
-        self._storage[cpid] = new_point
-        self.pointMoved.emit(cpid, old_point, new_point)
-
-    def remove_point(self, cpid):
-        """Removes the specified control point.
-
-        :param cpid the id of the control point to remove
-        """
-        point = self._storage[cpid]
-        # Only allow removal of non edge points
-        if -1 < point.x < 1:
-            self._storage.remove(cpid)
-            self.pointRemoved.emit(cpid)
-
-    def select_point(self, cpid):
-        """Sets the specified control point as selected.
-
-        :param cpid the id of the point to be marked as selected
-        """
-        self._active_point = cpid
-        self.pointSelected.emit(cpid)
-
-    def clear_storage(self):
-        """Removes all points from the storage object."""
-        self._next_id = 1
-        self._storage.clear()
-
-    def _is_other_point_nearby(self, cpid, x):
-        """Returns whether or not another point is nearby to the given one.
-
-        :param cpid the id of the point for which the check is performed
-        :param x the new x coordinate for the specified point
-        :return True if another point is nearby, False otherwise
-        """
-        for pid, point in self._storage.items():
-            if pid == cpid or pid.secondary != 0:
-                continue
-            if abs(point.x - x) < 0.01:
-                return True
-        return False
-
-
-class ControlPointShapeItem(QtWidgets.QGraphicsEllipseItem):
-
-    """Represents a single control point within a GraphicsScene."""
-
-    def __init__(self, identifier, point, parent=None):
-        """Creates a new instance.
-
-        :param identifier the id of this control point
-        :param point the coordinates of the control point
-        :param parent the parent widget
-        """
-        QtWidgets.QGraphicsEllipseItem.__init__(self, -4, -4, 8, 8, parent)
-        self.setPos(point.x, point.y)
-        self.setZValue(1)
-        self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
-        self.identifier = identifier
-
-    def set_selected(self, is_selected):
-        """Sets the selected state of the point.
-
-        Renders the point accordingly and grabs or releases the mouse
-        as needed.
-
-        :param is_selected the flag of whether or not the point is
-            selected
-        """
-        if is_selected:
-            self.setBrush(QtGui.QBrush(QtCore.Qt.red))
-            if self.scene().mouseGrabberItem() != self:
-                self.grabMouse()
-        else:
-            self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
-            if self.scene().mouseGrabberItem() == self:
-                self.ungrabMouse()
-
-    def mouseReleaseEvent(self, evt):
-        """Releases the mouse grab when the mouse is released."""
-        self.ungrabMouse()
-
-    def mouseMoveEvent(self, evt):
-        """Updates the position of the control point based on mouse
-        movements.
-
-        :param evt the mouse event
-        """
-        self.setPos(evt.scenePos().x(), evt.scenePos().y())
-        self.scene().update_model(self)
-
-
-class CurvaturePointShapeItem(QtWidgets.QGraphicsRectItem):
-
-    """Represents a single curvature control point within a GraphicsScene."""
-
-    def __init__(self, identifier, point, parent=None):
-        """Creates a new instance.
-
-        :param identifier the id of this control point
-        :param point the coordinates of the control point
-        :param parent the parent widget
-        """
-        QtWidgets.QGraphicsRectItem.__init__(self, -4, -4, 8, 8, parent)
-        self.setPos(point.x, point.y)
-        self.setZValue(1)
-        self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
-        self.identifier = identifier
-
-    def set_selected(self, is_selected):
-        """Sets the selected state of the point.
-
-        Renders the point accordingly and grabs or releases the mouse
-        as needed.
-
-        :param is_selected the flag of whether or not the point is
-            selected
-        """
-        if is_selected:
-            self.setBrush(QtGui.QBrush(QtCore.Qt.red))
-            if self.scene().mouseGrabberItem() != self:
-                self.grabMouse()
-        else:
-            self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
-            if self.scene().mouseGrabberItem() == self:
-                self.ungrabMouse()
-
-    def mouseReleaseEvent(self, evt):
-        """Releases the mouse grab when the mouse is released."""
-        self.ungrabMouse()
-
-    def mouseMoveEvent(self, evt):
-        """Updates the position of the control point based on mouse
-        movements.
-
-        :param evt the mouse event
-        """
-        self.setPos(evt.scenePos().x(), evt.scenePos().y())
-        self.scene().update_model(self)
-
-
 class ControlPointEditorWidget(QtWidgets.QWidget):
 
     """Widgets allowing the control point coordinates to be changed
     via text fields."""
 
-    def __init__(self, model, parent=None):
+    def __init__(self, parent=None):
         """Creates a new instance.
 
-        :param model the model this instance visualizes
         :param parent the parent widget
         """
         QtWidgets.QWidget.__init__(self, parent)
-        self._model = model
-        self._current_selection = None
-
-        # Connect to model signals
-        self._model.pointRemoved.connect(self._point_removed_cb)
-        self._model.pointMoved.connect(self._point_moved_cb)
-        self._model.pointSelected.connect(self._point_selected_cb)
-
-        # Create input field callbacks
-        self._update_x_value = lambda val: self._value_changed_cb(0, val)
-        self._update_y_value = lambda val: self._value_changed_cb(1, val)
 
         # Generate controls
         self.main_layout = QtWidgets.QHBoxLayout(self)
@@ -691,82 +607,19 @@ class ControlPointEditorWidget(QtWidgets.QWidget):
         self.y_input.setSingleStep(0.1)
         self.y_input.setDecimals(3)
 
-        self._connect_input_fields()
-
         self.main_layout.addWidget(self.label)
         self.main_layout.addWidget(self.x_label)
         self.main_layout.addWidget(self.x_input)
         self.main_layout.addWidget(self.y_label)
         self.main_layout.addWidget(self.y_input)
 
-    def set_model(self, model):
-        """Changes the model of the widget.
+    def set_values(self, point):
+        """Sets the values in the input fields to those of the provided point.
 
-        :param model the new model to use
+        :param point the point containing the new field values
         """
-        self._model = model
-        self._model.pointRemoved.connect(self._point_removed_cb)
-        self._model.pointMoved.connect(self._point_moved_cb)
-        self._model.pointSelected.connect(self._point_selected_cb)
-
-    def _point_removed_cb(self, cpid):
-        """Invalidates the current selection if it matches the
-        removed point.
-
-        :param cpid the id of the removed point
-        """
-        if self._current_selection and cpid == self._current_selection:
-            self._current_selection = None
-
-    def _point_moved_cb(self, cpid, old_point, new_point):
-        """Updates the values of the input fields.
-
-        :param cpid the id of the moved point
-        :param old_point old coordinates of the point
-        :param new_point new coordinates of the point
-        """
-        self._disconnect_input_fields()
-        self._current_selection = cpid
-        self.x_input.setValue(new_point.x)
-        self.y_input.setValue(new_point.y)
-        self._connect_input_fields()
-
-    def _point_selected_cb(self, cpid):
-        """Updates the input field values with those of the selected point.
-
-        :param cpid the id of the newly selected point
-        """
-        self._disconnect_input_fields()
-        self._current_selection = cpid
-        point = self._model.get_coords(cpid)
         self.x_input.setValue(point.x)
         self.y_input.setValue(point.y)
-        self._connect_input_fields()
-
-    def _connect_input_fields(self):
-        """Connects the handlers for the input fields."""
-        self.x_input.valueChanged.connect(self._update_x_value)
-        self.y_input.valueChanged.connect(self._update_y_value)
-
-    def _disconnect_input_fields(self):
-        """Disconnects the handlers of the input fields."""
-        self.x_input.valueChanged.disconnect(self._update_x_value)
-        self.y_input.valueChanged.disconnect(self._update_y_value)
-
-    def _value_changed_cb(self, index, value):
-        """Updates the value of a control point due to input field changes.
-
-        :param index the index of the value, i.e. 0 for x, 1 for y
-        :param value the new value
-        """
-        if self._current_selection is not None and \
-                self._current_selection.secondary == 0:
-            x = value if index == 0 else self.x_input.value()
-            y = value if index == 1 else self.y_input.value()
-            self._model.move_point(
-                self._current_selection,
-                Point2D(x, y)
-            )
 
 
 class DeadzoneWidget(QtWidgets.QWidget):
@@ -943,23 +796,28 @@ class AxisResponseCurveWidget(AbstractActionWidget):
         self.deadzone = [-1, 0, 0, 1]
         self.is_inverted = False
 
-        self.curve_selection = QtWidgets.QComboBox()
-        self.curve_selection.addItem("Cubic Spline")
-        self.curve_selection.addItem("Cubic Bezier Spline")
-        self.curve_selection.currentTextChanged.connect(self._change_model)
+        # Dropdown menu for the different curve types
+        self.curve_type_selection = QtWidgets.QComboBox()
+        self.curve_type_selection.addItem("Cubic Spline")
+        self.curve_type_selection.addItem("Cubic Bezier Spline")
+        self.curve_type_selection.currentTextChanged.connect(self._change_model)
 
-        self.model = ControlPointModel(gremlin.spline.CubicSpline)
-        self.model.pointAdded.connect(self._point_added_cb)
-        self.model.pointMoved.connect(self._point_added_cb)
-        self.model.pointRemoved.connect(self._point_removed_cb)
-
-        # Create widgets to edit the response curve
-        # Graphical editor
-        self.response_curve = ResponseCurveScene(self.model)
-        self.view_layout = QtWidgets.QHBoxLayout()
-        self._create_response_curve_view()
-        # Text input field editor
-        self.control_point_editor = ControlPointEditorWidget(self.model)
+        # Create all objects required for the response curve UI
+        self.control_point_editor = ControlPointEditorWidget()
+        # Response curve model used
+        self.curve_model = CubicSplineModel()
+        # Graphical curve editor
+        self.curve_scene = CurveScene(
+            self.curve_model,
+            self.control_point_editor,
+            self.change_cb
+        )
+        self.curve_scene.add_control_point(Point2D(-1.0, -1.0))
+        self.curve_scene.add_control_point(Point2D(1.0, 1.0))
+        # Create view displaying the curve scene
+        self.curve_view_layout = QtWidgets.QHBoxLayout()
+        self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
+        self._initialize_response_curve_view()
 
         # Deadzone configuration
         self.deadzone_label = QtWidgets.QLabel("Deadzone")
@@ -969,8 +827,8 @@ class AxisResponseCurveWidget(AbstractActionWidget):
         )
 
         # Add all widgets to the layout
-        self.main_layout.addWidget(self.curve_selection)
-        self.main_layout.addLayout(self.view_layout)
+        self.main_layout.addWidget(self.curve_type_selection)
+        self.main_layout.addLayout(self.curve_view_layout)
         self.main_layout.addWidget(self.control_point_editor)
         self.main_layout.addWidget(self.deadzone_label)
         self.main_layout.addWidget(self.deadzone)
@@ -981,56 +839,48 @@ class AxisResponseCurveWidget(AbstractActionWidget):
         :param name the name of the new curve type
         """
         model_map = {
-            "Cubic Spline": gremlin.spline.CubicSpline,
-            "Cubic Bezier Spline": gremlin.spline.CubicBezierSpline
+            "Cubic Spline": CubicSplineModel,
+            "Cubic Bezier Spline": CubicBezierSplineModel
         }
         # Create new model
-        self.model.pointAdded.disconnect(self._point_added_cb)
-        self.model.pointMoved.disconnect(self._point_added_cb)
-        self.model.pointRemoved.disconnect(self._point_removed_cb)
-        self.model = ControlPointModel(model_map[name])
-        self.model.pointAdded.connect(self._point_added_cb)
-        self.model.pointMoved.connect(self._point_added_cb)
-        self.model.pointRemoved.connect(self._point_removed_cb)
-        # Setup graph view and text fields
-        self.response_curve = ResponseCurveScene(self.model)
-        self._create_response_curve_view()
-        self.control_point_editor.set_model(self.model)
+        self.curve_model = model_map[name]()
+        # Recreate the UI components
+        self.curve_scene = CurveScene(
+            self.curve_model,
+            self.control_point_editor,
+            self.change_cb
+        )
+        self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
+        self._initialize_response_curve_view()
 
-        self.model.add_point(Point2D(-1.0, -1.0))
-        self.model.add_point(Point2D(1.0, 1.0))
+        if name == "Cubic Spline":
+            self.curve_scene.add_control_point(Point2D(-1.0, -1.0))
+            self.curve_scene.add_control_point(Point2D(1.0, 1.0))
+        elif name == "Cubic Bezier Spline":
+            self.curve_scene.add_control_point(
+                Point2D(-1.0, -1.0),
+                (Point2D(-0.95, -1.0),)
+            )
+            self.curve_scene.add_control_point(
+                Point2D(1.0, 1.0),
+                (Point2D(0.95, 1.0),)
+            )
 
-    def _create_response_curve_view(self):
-        self.view = QtWidgets.QGraphicsView(self.response_curve)
-        self.view.setFixedSize(QtCore.QSize(410, 410))
-        self.view.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.view.setSceneRect(QtCore.QRectF(-200, -200, 400, 400))
-        gremlin.util.clear_layout(self.view_layout)
-        self.view_layout.addStretch()
-        self.view_layout.addWidget(self.view)
-        self.view_layout.addStretch()
-
-    def _invert_cb(self, state):
-        """Callback for invert checkbox events.
-
-        :param state the state of the checkbox
-        """
-        self.is_inverted = state != 0
-
-    def _point_added_cb(self, cpid, point):
-        """Notifies the DeviceWidget about the addition of a point.
-
-        :param cpid id of the added or moved point
-        :param point the new coordinates
-        """
-        self.change_cb()
-
-    def _point_removed_cb(self, cpid):
-        """Notifies the DeviceWidget about the removal of a point.
-
-        :param cpid the id of the removed point
-        """
-        self.change_cb()
+    def _initialize_response_curve_view(self):
+        """Initializes the response curve view components."""
+        self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
+        self.curve_view.setFixedSize(QtCore.QSize(410, 410))
+        self.curve_view.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.curve_view.setSceneRect(QtCore.QRectF(
+            -g_scene_size,
+            -g_scene_size,
+            2*g_scene_size,
+            2*g_scene_size
+        ))
+        gremlin.util.clear_layout(self.curve_view_layout)
+        self.curve_view_layout.addStretch()
+        self.curve_view_layout.addWidget(self.curve_view)
+        self.curve_view_layout.addStretch()
 
     def initialize_from_profile(self, action_data):
         # Create mapping from XML name to ui name
@@ -1039,53 +889,81 @@ class AxisResponseCurveWidget(AbstractActionWidget):
             name_map[value] = key
 
         # Setup correct response curve object
-        self.curve_selection.setCurrentText(
+        self.curve_type_selection.setCurrentText(
             name_map[action_data.mapping_type]
         )
-
-        # Disconnect all signals while adding points
-        self.model.pointAdded.disconnect(self._point_added_cb)
-        self.model.pointMoved.disconnect(self._point_added_cb)
-        self.model.pointRemoved.disconnect(self._point_removed_cb)
-
-        # Remove any existing points from the model
-        self.model.clear_storage()
-        self.response_curve.clear_points()
+        self.curve_scene.reset()
 
         # Add points to the curve
         if action_data.mapping_type == "cubic-spline":
             for point in action_data.control_points:
-                self.model.add_point(Point2D(point[0], point[1]))
+                self.curve_scene.add_control_point(Point2D(point[0], point[1]))
         elif action_data.mapping_type == "cubic-bezier-spline":
-            points = copy.deepcopy(action_data.control_points)
-            points.insert(0, (-1.05, points[0][1]))
-            points.append((1.05, points[-1][1]))
-
-            for i in range(1, len(points)-1, 3):
-                cpid = self.model.add_point(
-                    Point2D(points[i][0], points[i][1])
+            self.curve_scene.add_control_point(
+                Point2D(
+                    action_data.control_points[0][0],
+                    action_data.control_points[0][1]
+                ),
+                [Point2D(
+                    action_data.control_points[1][0],
+                    action_data.control_points[1][1]
+                )]
+            )
+            for i in range(3, len(action_data.control_points)-2, 3):
+                self.curve_scene.add_control_point(
+                    Point2D(
+                        action_data.control_points[i][0],
+                        action_data.control_points[i][1]
+                    ),
+                    [Point2D(
+                        action_data.control_points[i-1][0],
+                        action_data.control_points[i-1][1]
+                    ),
+                    Point2D(
+                        action_data.control_points[i+1][0],
+                        action_data.control_points[i+1][1]
+                    )]
                 )
-                self.model.move_point(
-                    ControlPointIdentifier(cpid.primary, 1),
-                    Point2D(points[i-1][0], points[i-1][1])
-                )
-                self.model.move_point(
-                    ControlPointIdentifier(cpid.primary, 2),
-                    Point2D(points[i+1][0], points[i+1][1])
-                )
+            self.curve_scene.add_control_point(
+                Point2D(
+                    action_data.control_points[-1][0],
+                    action_data.control_points[-1][1]
+                ),
+                [Point2D(
+                    action_data.control_points[-2][0],
+                    action_data.control_points[-2][1]
+                )]
+            )
+        self.curve_scene.redraw_scene()
 
-        # Reconnect all signals
-        self.model.pointAdded.connect(self._point_added_cb)
-        self.model.pointMoved.connect(self._point_added_cb)
-        self.model.pointRemoved.connect(self._point_removed_cb)
-
+        # Set deadzone values
         self.deadzone.set_values(action_data.deadzone)
 
     def to_profile(self):
         self.action_data.mapping_type = \
-            ResponseCurve.curve_name_map[self.curve_selection.currentText()]
+            ResponseCurve.curve_name_map[self.curve_type_selection.currentText()]
         self.action_data.deadzone = self.deadzone.get_values()
-        self.action_data.control_points = self.model.get_control_points()
+        self.action_data.control_points = []
+        if self.action_data.mapping_type == "cubic-spline":
+            for cp in self.curve_model.get_control_points():
+                self.action_data.control_points.append([cp.center.x, cp.center.y])
+        elif self.action_data.mapping_type == "cubic-bezier-spline":
+            control_points = sorted(
+                self.curve_model.get_control_points(),
+                key=lambda entry: entry.center.x
+            )
+            for cp in control_points:
+                if cp.center.x == -1:
+                    self.action_data.control_points.append([cp.center.x, cp.center.y])
+                    self.action_data.control_points.append([cp.handles[0].x, cp.handles[0].y])
+                elif cp.center.x == 1:
+                    self.action_data.control_points.append([cp.handles[0].x, cp.handles[0].y])
+                    self.action_data.control_points.append([cp.center.x, cp.center.y])
+                else:
+                    self.action_data.control_points.append([cp.handles[0].x, cp.handles[0].y])
+                    self.action_data.control_points.append([cp.center.x, cp.center.y])
+                    self.action_data.control_points.append([cp.handles[1].x, cp.handles[1].y])
+
         self.action_data.is_valid = True
 
 
