@@ -7,5 +7,6 @@ import gremlin.fsm
 import gremlin.input_devices
 import gremlin.macro
 import gremlin.profile
+import gremlin.script_helpers
 import gremlin.tts
 import gremlin.util
