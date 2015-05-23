@@ -378,6 +378,11 @@ class EventHandler(QtCore.QObject):
         self.process_callbacks = False
         self.is_active.emit(self.process_callbacks)
 
+    def toggle_active(self):
+        """Toggles the processing of callbacks on or off."""
+        self.process_callbacks = not self.process_callbacks
+        self.is_active.emit(self.process_callbacks)
+
     def clear(self):
         """Removes all attached callbacks."""
         self.callbacks = {}

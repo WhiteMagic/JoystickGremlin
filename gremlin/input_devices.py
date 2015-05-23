@@ -147,6 +147,13 @@ class JoystickWrapper(object):
             self._joystick, index-1)
         )
 
+    def axis_count(self):
+        """Returns the number of axis of the joystick.
+
+        :return number of axes
+        """
+        return sdl2.SDL_JoystickNumAxes(self._joystick)
+
 
 class JoystickProxy(object):
 
