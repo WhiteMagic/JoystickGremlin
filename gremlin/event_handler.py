@@ -305,6 +305,7 @@ class EventHandler(QtCore.QObject):
         self.process_callbacks = True
         self.plugins = []
         self.callbacks = {}
+        self._event_lookup = {}
         self._active_mode = "Global"
         self._previous_mode = "Global"
 
@@ -349,6 +350,36 @@ class EventHandler(QtCore.QObject):
             self._install_plugins(callback),
             permanent
         ))
+
+    def build_event_lookup(self, inheritance_tree):
+        """Builds the lookup table linking event to callback.
+
+        This takes mode inheritance into account.
+
+        :param inheritance_tree the tree of parent and children in the
+            inheritance structure
+        """
+        # Propagate events from parent to children if the children lack
+        # handlers for the available events
+        for parent, children in inheritance_tree.items():
+            # Each device is treated separately
+            for device_id in self.callbacks:
+                # Only attempt to copy handlers if we have any available in
+                # the parent mode
+                if parent in self.callbacks[device_id]:
+                    device_cb = self.callbacks[device_id]
+                    parent_cb = device_cb[parent]
+                    # Copy the handlers into each child mode, unless they
+                    # have their own handlers already defined
+                    for child in children:
+                        if child not in device_cb:
+                            device_cb[child] = {}
+                        for event, callbacks in parent_cb.items():
+                            if event not in device_cb[child]:
+                                device_cb[child][event] = callbacks
+
+            # Recurse until we've dealt with all modes
+            self.build_event_lookup(children)
 
     def change_mode(self, new_mode):
         """Changes the currently active mode.
@@ -413,15 +444,11 @@ class EventHandler(QtCore.QObject):
         """
         callback_list = []
         # Obtain callbacks matching the event
-        dev_id = util.device_id(event)
-        if dev_id in self.callbacks:
-            callback_list = self.callbacks[dev_id].get(
+        device_id = util.device_id(event)
+        if device_id in self.callbacks:
+            callback_list = self.callbacks[device_id].get(
                 self._active_mode, {}
             ).get(event, [])
-            if len(callback_list) == 0:
-                callback_list = self.callbacks[dev_id].get(
-                    "Global", {}
-                ).get(event, [])
         # Filter events when the system is paused
         if not self.process_callbacks:
             return [c[0] for c in callback_list if c[1]]

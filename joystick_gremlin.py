@@ -60,8 +60,12 @@ class CodeRunner(object):
         """
         return self._running
 
-    def start(self):
-        """Starts listening to events and loads all existing callbacks."""
+    def start(self, inheritance_tree):
+        """Starts listening to events and loads all existing callbacks.
+
+        :param inheritance_tree tree encoding inheritance between the
+            different modes
+        """
         # Reset states to their default values
         self._reset_state()
 
@@ -84,6 +88,7 @@ class CodeRunner(object):
                                 callback[1]
                             )
                             callback_count += 1
+            self.event_handler.build_event_lookup(inheritance_tree)
 
             # Connect signals
             el = event_handler.EventListener()
@@ -578,7 +583,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         """
         if checked:
             self.generate()
-            self.runner.start()
+            self.runner.start(self._profile.build_inheritance_tree())
             self._update_statusbar_active(True)
         else:
             self.runner.stop()

@@ -109,6 +109,34 @@ class Profile(object):
         self.imports = []
         self.parent = None
 
+    def build_inheritance_tree(self):
+        """Returns a tree structure encoding the inheritance between the
+        various modes.
+
+        :return tree encoding mode inheritance
+        """
+        tree = {}
+        for dev_id, device in self.devices.items():
+            for mode_name, mode in device.modes.items():
+                if mode.inherit is None and mode_name not in tree:
+                    tree[mode_name] = {}
+                elif mode.inherit:
+                    stack = [mode_name,]
+                    parent = device.modes[mode.inherit]
+                    stack.append(parent.name)
+                    while parent.inherit is not None:
+                        parent = device.modes[parent.inherit]
+                        stack.append(parent.name)
+
+                    stack = list(reversed(stack))
+                    branch = tree
+                    for entry in stack:
+                        if entry not in branch:
+                            branch[entry] = {}
+                        branch = branch[entry]
+
+        return tree
+
     def from_xml(self, fname):
         """Parses the global XML document into the profile data structure.
 
@@ -257,6 +285,7 @@ class Mode(object):
         :param parent the parent device of this mode
         """
         self.parent = parent
+        self.inherit = None
         self.name = None
 
         self._config = {
@@ -272,6 +301,7 @@ class Mode(object):
         :param node XML node to parse
         """
         self.name = node.get("name")
+        self.inherit = node.get("inherit", None)
         for child in node:
             item = InputItem(self)
             item.from_xml(child)
@@ -284,6 +314,8 @@ class Mode(object):
         """
         node = ElementTree.Element("mode")
         node.set("name", self.name)
+        if self.inherit is not None:
+            node.set("inherit", self.inherit)
         for input_items in self._config.values():
             for item in input_items.values():
                 node.append(item.to_xml())
