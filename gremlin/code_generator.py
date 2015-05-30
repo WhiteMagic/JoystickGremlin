@@ -19,7 +19,6 @@ import re
 
 import action
 from mako.template import Template
-from mako.lookup import TemplateLookup
 import gremlin
 from gremlin.event_handler import InputType
 from gremlin import error, profile, util
