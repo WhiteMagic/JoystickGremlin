@@ -365,6 +365,168 @@ class GremlinAboutUi(QtWidgets.QWidget):
         self.ui.third_party_licenses.setHtml(third_party_licenses)
 
 
+class ModeManagerUi(QtWidgets.QWidget):
+
+    """Enables the creation of modes and configuring their inheritance."""
+
+    # Signal emitted when mode configuration changes
+    modes_changed = QtCore.pyqtSignal()
+
+    def __init__(self, profile_data, parent=None):
+        """Creates a new instance.
+
+        :param profile_data the data being profile whose modes are being
+            configured
+        :param parent the parent of this wideget
+        """
+        QtWidgets.QWidget.__init__(self, parent)
+        self._profile = profile_data
+        self.setWindowTitle("Mode Manager")
+
+        self.mode_dropdowns = {}
+        self.mode_delete = {}
+        self.mode_callbacks = {}
+
+        self._create_ui()
+
+    def _create_ui(self):
+        """Creates the required UII elements."""
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.mode_layout = QtWidgets.QGridLayout()
+
+        self.main_layout.addLayout(self.mode_layout)
+        self.add_button = QtWidgets.QPushButton("Add Mode")
+        self.add_button.clicked.connect(self._add_mode_cb)
+        self.main_layout.addWidget(self.add_button)
+
+        self._populate_mode_layout()
+
+    def _populate_mode_layout(self):
+        """Generates the mode layout UI displaying the different modes."""
+        # Clear potentially existing content
+        util.clear_layout(self.mode_layout)
+        self.mode_dropdowns = {}
+        self.mode_delete = {}
+        self.mode_callbacks = {}
+
+        # Obtain mode names and the mode they inherit from
+        mode_list = {}
+        for device in self._profile.devices.values():
+            for mode in device.modes.values():
+                if mode.name not in mode_list:
+                    mode_list[mode.name] = mode.inherit
+
+        # Create UI elements
+        row = 0
+        for mode, inherit in sorted(mode_list.items()):
+            self.mode_layout.addWidget(QtWidgets.QLabel(mode), row, 0)
+            self.mode_dropdowns[mode] = QtWidgets.QComboBox()
+            self.mode_dropdowns[mode].addItem("None")
+            for name in sorted(mode_list.keys()):
+                if name != mode:
+                    self.mode_dropdowns[mode].addItem(name)
+
+            self.mode_callbacks[mode] = self._create_inheritance_change_cb(mode)
+            self.mode_dropdowns[mode].currentTextChanged.connect(
+                self.mode_callbacks[mode]
+            )
+            self.mode_dropdowns[mode].setCurrentText(inherit)
+
+            self.mode_delete[mode] = QtWidgets.QPushButton(
+                QtGui.QIcon("gfx/mode_delete"), ""
+            )
+            self.mode_layout.addWidget(self.mode_delete[mode], row, 2)
+            self.mode_delete[mode].clicked.connect(
+                self._create_delete_mode_cb(mode)
+            )
+
+            self.mode_layout.addWidget(self.mode_dropdowns[mode], row, 1)
+            row += 1
+
+    def _create_inheritance_change_cb(self, mode):
+        """Returns a lambda function callback to change the inheritance of
+        a mode.
+
+        This is required as otherwise lambda functions created within a
+        function do not behave as desired.
+
+        :param mode the mode for which the callback is being created
+        :return customized lambda function
+        """
+        return lambda x: self._change_mode_inheritance(mode, x)
+
+    def _create_delete_mode_cb(self, mode):
+        """Returns a lambda function callback to delete the given mode.
+
+        This is required as otherwise lambda functions created within a
+        function do not behave as desired.
+
+        :param mode the mode to remove
+        :return lambda function to perform the removal
+        """
+        return lambda: self._delete_mode(mode)
+
+    def _delete_mode(self, mode_name):
+        """Removes the specified mode.
+
+        Performs an update of the inheritance of all modes that inherited
+        from the deleted mode.
+
+        :param mode_name the name of the mode to delete
+        """
+        # Obtain mode from which the mode we want to delete inherits
+        parent_of_deleted = None
+        for mode in list(self._profile.devices.values())[0].modes.values():
+            if mode.name == mode_name:
+                parent_of_deleted = mode.inherit
+
+        # Assign the inherited mode of the the deleted one to all modes that
+        # inherit from the mode to be deleted
+        for device in self._profile.devices.values():
+            for mode in device.modes.values():
+                if mode.inherit == mode_name:
+                    mode.inherit = parent_of_deleted
+
+        # Remove the mode from the profile
+        for device in self._profile.devices.values():
+            del device.modes[mode_name]
+
+        # Update the ui
+        self._populate_mode_layout()
+        self.modes_changed.emit()
+
+    def _change_mode_inheritance(self, mode, inherit):
+        """Updates the inheritance information of a given mode.
+
+        :param mode the mode to update
+        :param inherit the name of the mode this mode inherits from
+        """
+        for name, device in self._profile.devices.items():
+            device.modes[mode].inherit = inherit
+        self.modes_changed.emit()
+
+    def _add_mode_cb(self, checked):
+        """Asks the user for a new mode to add.
+
+        If the user provided name for the mode is invalid no mode is
+        added.
+        """
+        name, user_input = QtWidgets.QInputDialog.getText(None, "Mode name", "")
+        if user_input:
+            if name in util.mode_list(self._profile):
+                util.display_error(
+                    "A mode with the name \"{}\" already exists".format(name)
+                )
+            else:
+                for device in self._profile.devices.values():
+                    new_mode = profile.Mode(device)
+                    new_mode.name = name
+                    device.modes[name] = new_mode
+                    self.modes_changed.emit()
+
+            self._populate_mode_layout()
+
+
 class ModuleManagerUi(QtWidgets.QWidget):
 
     """UI which allows the user to manage custom python modules to
@@ -490,6 +652,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.calibration_window = None
         self.device_information = None
         self.module_manager = None
+        self.mode_manager = None
 
         self._last_input_timestamp = time.time()
         self._last_input_event = None
@@ -612,6 +775,16 @@ class GremlinUi(QtWidgets.QMainWindow):
             150
         )
         self.device_information.show()
+
+    def manage_modes(self):
+        """Opens the mode management window."""
+        self.mode_manager = ModeManagerUi(self._profile)
+        self.mode_manager.modes_changed.connect(self.mode_configuration_changed)
+        self.mode_manager.show()
+
+    def mode_configuration_changed(self):
+        """Updates the mode configuration of the selector and profile."""
+        self.mode_selector.populate_selector(self._profile, self._current_mode)
 
     def manage_custom_modules(self):
         """Opens the custom module management window."""
@@ -746,8 +919,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._last_input_timestamp = time.time()
             return True
 
-
-
     def _sanitize_profile(self, profile_data):
         """Validates a profile file before actually loading it.
 
@@ -856,6 +1027,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionSaveProfile.triggered.connect(self.save_profile)
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
         self.ui.actionDeviceInformation.triggered.connect(self.device_information)
+        self.ui.actionManageModes.triggered.connect(self.manage_modes)
         self.ui.actionManageCustomModules.triggered.connect(self.manage_custom_modules)
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionCalibration.triggered.connect(self.calibration)

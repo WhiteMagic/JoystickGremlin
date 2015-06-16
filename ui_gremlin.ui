@@ -57,9 +57,10 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
-    <addaction name="actionDeviceInformation"/>
+    <addaction name="actionManageModes"/>
     <addaction name="actionManageCustomModules"/>
     <addaction name="actionInputRepeater"/>
+    <addaction name="actionDeviceInformation"/>
     <addaction name="actionCalibration"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -151,6 +152,11 @@
   <action name="actionCalibration">
    <property name="text">
     <string>&amp;Calibration</string>
+   </property>
+  </action>
+  <action name="actionManageModes">
+   <property name="text">
+    <string>Manage Modes</string>
    </property>
   </action>
  </widget>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_gremlin.ui'
 #
-# Created: Sat Mar  7 21:07:19 2015
+# Created: Sat May 30 19:55:27 2015
 #      by: PyQt5 UI code generator 5.3.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -71,13 +71,16 @@ class Ui_Gremlin(object):
         self.actionInputRepeater.setObjectName("actionInputRepeater")
         self.actionCalibration = QtWidgets.QAction(Gremlin)
         self.actionCalibration.setObjectName("actionCalibration")
+        self.actionManageModes = QtWidgets.QAction(Gremlin)
+        self.actionManageModes.setObjectName("actionManageModes")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
         self.menu_File.addAction(self.actionSaveProfileAs)
-        self.menuTools.addAction(self.actionDeviceInformation)
+        self.menuTools.addAction(self.actionManageModes)
         self.menuTools.addAction(self.actionManageCustomModules)
         self.menuTools.addAction(self.actionInputRepeater)
+        self.menuTools.addAction(self.actionDeviceInformation)
         self.menuTools.addAction(self.actionCalibration)
         self.menu_Help.addAction(self.actionAbout)
         self.menubar.addAction(self.menu_File.menuAction())
@@ -112,4 +115,5 @@ class Ui_Gremlin(object):
         self.actionManageCustomModules.setText(_translate("Gremlin", "&Manage Custom Modules"))
         self.actionInputRepeater.setText(_translate("Gremlin", "Input Repeater"))
         self.actionCalibration.setText(_translate("Gremlin", "&Calibration"))
+        self.actionManageModes.setText(_translate("Gremlin", "Manage Modes"))
 
