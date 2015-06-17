@@ -422,6 +422,7 @@ class ModeManagerUi(QtWidgets.QWidget):
             self.mode_layout.addWidget(QtWidgets.QLabel(mode), row, 0)
             self.mode_dropdowns[mode] = QtWidgets.QComboBox()
             self.mode_dropdowns[mode].addItem("None")
+            self.mode_dropdowns[mode].setMinimumContentsLength(20)
             for name in sorted(mode_list.keys()):
                 if name != mode:
                     self.mode_dropdowns[mode].addItem(name)
