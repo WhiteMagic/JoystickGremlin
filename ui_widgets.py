@@ -519,6 +519,8 @@ class ModeWidget(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self, parent)
 
+        self.mode_list = []
+
         self.profile = None
         self.main_layout = QtWidgets.QHBoxLayout(self)
         self._create_widget()
@@ -538,16 +540,23 @@ class ModeWidget(QtWidgets.QWidget):
         while self.selector.count() > 0:
             self.selector.removeItem(0)
 
+        # Create a tree visualization for the drop down and record
+        # id to mode name mapping for callback handling
+        inheritance_tree = self.profile.build_inheritance_tree()
+        labels = []
+        self._inheritance_tree_to_labels(labels, inheritance_tree, 0)
+
         # Add current set of modes
-        for entry in util.mode_list(self.profile):
-            self.selector.addItem(entry)
+        for entry in labels:
+            self.selector.addItem(entry[1])
+            self.mode_list.append(entry[0])
 
         self.selector.currentIndexChanged.connect(self._mode_changed_cb)
 
         # Select currently active mode
         if current_mode is None:
-            current_mode = "Global"
-        self.selector.setCurrentIndex(self.selector.findText(current_mode))
+            current_mode = labels[0][1]
+        self.selector.setCurrentIndex(self.mode_list.index(current_mode))
 
     @QtCore.pyqtSlot(int)
     def _mode_changed_cb(self, idx):
@@ -555,44 +564,22 @@ class ModeWidget(QtWidgets.QWidget):
 
         :param idx id of the now selected entry
         """
-        self.mode_changed.emit(self.selector.itemText(idx))
+        self.mode_changed.emit(self.mode_list[idx])
 
-    def _mode_add_cb(self):
-        """Asks the user for a new mode to add.
+    def _inheritance_tree_to_labels(self, labels, tree, level):
+        """Generates labels to use in the dropdown menu indicating inheritance.
 
-        If the user provided name for the mode is invalid no mode is
-        added.
+        :param labels the list containing all the labels
+        :param tree the part of the tree to be processed
+        :param level the indentation level of this tree
         """
-        name, user_input = QtWidgets.QInputDialog.getText(None, "Mode name", "")
-        if user_input:
-            if name in util.mode_list(self.profile):
-                util.display_error(
-                    "A mode with the name \"{}\" already exists".format(name)
-                )
-            else:
-                for device in self.profile.devices.values():
-                    new_mode = profile.Mode(device)
-                    new_mode.name = name
-                    device.modes[name] = new_mode
-
-            self.populate_selector(self.profile, name)
-            self.mode_changed.emit(name)
-
-    def _mode_del_cb(self):
-        """Deletes the currently selected mode.
-
-        This removes the mode from the UI as well as the profile data.
-
-        All modes except for the global one can be deleted.
-        """
-        mode_name = self.selector.currentText()
-        if mode_name == "Global":
-            util.display_error("Cannot delete \"Global\" mode")
-        else:
-            for device in self.profile.devices.values():
-                del device.modes[mode_name]
-            self.populate_selector(self.profile)
-            self.mode_changed.emit("Global")
+        for mode, children in sorted(tree.items()):
+            labels.append((mode, "{}{}{}".format(
+                "  " * level,
+                "" if level == 0 else " ",
+                mode
+            )))
+            self._inheritance_tree_to_labels(labels, children, level+1)
 
     def _create_widget(self):
         """Creates the mode selection and management dialog."""
@@ -612,24 +599,14 @@ class ModeWidget(QtWidgets.QWidget):
         self.selector = QtWidgets.QComboBox()
         self.selector.setSizePolicy(exp_min_sp)
         self.selector.setMinimumContentsLength(20)
-        self.mode_add = QtWidgets.QPushButton()
-        self.mode_add.setIcon(QtGui.QIcon("gfx/macro_add.svg"))
-        self.mode_add.setSizePolicy(min_min_sp)
-        self.mode_del = QtWidgets.QPushButton()
-        self.mode_del.setIcon(QtGui.QIcon("gfx/macro_delete.svg"))
-        self.mode_del.setSizePolicy(min_min_sp)
 
-        # Connect signals
+        # Connect signal
         self.selector.currentIndexChanged.connect(self._mode_changed_cb)
-        self.mode_add.clicked.connect(self._mode_add_cb)
-        self.mode_del.clicked.connect(self._mode_del_cb)
 
         # Add widgets to the layout
         self.main_layout.addStretch(10)
         self.main_layout.addWidget(self.label)
         self.main_layout.addWidget(self.selector)
-        self.main_layout.addWidget(self.mode_add)
-        self.main_layout.addWidget(self.mode_del)
 
 
 class DeviceWidget(QtWidgets.QWidget):
