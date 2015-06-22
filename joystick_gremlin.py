@@ -637,7 +637,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = "Global"
         self._profile = profile.Profile()
         self._profile_fname = None
-        if self.config.default_profile:
+        if self.config.default_profile and os.path.isfile(self.config.default_profile):
             self._do_load_profile(self.config.default_profile)
         else:
             self.new_profile()
