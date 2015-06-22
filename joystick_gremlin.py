@@ -33,7 +33,7 @@ import sdl2.ext
 import sdl2.hints
 
 from gremlin.code_generator import CodeGenerator
-from gremlin import event_handler, input_devices
+from gremlin import documenter, event_handler, input_devices
 from ui_about import Ui_About
 from ui_gremlin import Ui_Gremlin
 import ui_widgets
@@ -1020,6 +1020,19 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         return device_profile
 
+    def _create_cheatsheet(self, format):
+        """Creates the cheatsheet and stores it in the desired place.
+
+        :param format the format of the cheatsheet, html or pdf
+        """
+        fname, _ = QtWidgets.QFileDialog.getSaveFileName(
+            None,
+            "Save cheatsheet",
+            None,
+            "{} files (*.{})".format(format.upper(), format)
+        )
+        documenter.generate_cheatsheet(format, fname, self._profile)
+
     def _connect_actions(self):
         """Connects all QAction items to their corresponding callbacks."""
         # Menu actions
@@ -1032,6 +1045,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionManageCustomModules.triggered.connect(self.manage_custom_modules)
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionCalibration.triggered.connect(self.calibration)
+
+        self.ui.actionHTMLCheatsheet.triggered.connect(lambda: self._create_cheatsheet("html"))
+        self.ui.actionPDFCheatsheet.triggered.connect(lambda: self._create_cheatsheet("pdf"))
+
         self.ui.actionAbout.triggered.connect(self.about)
 
         # Toolbar actions

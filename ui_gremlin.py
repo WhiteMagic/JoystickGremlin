@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_gremlin.ui'
 #
-# Created: Sat May 30 19:55:27 2015
+# Created: Mon Jun 22 20:14:52 2015
 #      by: PyQt5 UI code generator 5.3.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -73,6 +73,10 @@ class Ui_Gremlin(object):
         self.actionCalibration.setObjectName("actionCalibration")
         self.actionManageModes = QtWidgets.QAction(Gremlin)
         self.actionManageModes.setObjectName("actionManageModes")
+        self.actionHTMLCheatsheet = QtWidgets.QAction(Gremlin)
+        self.actionHTMLCheatsheet.setObjectName("actionHTMLCheatsheet")
+        self.actionPDFCheatsheet = QtWidgets.QAction(Gremlin)
+        self.actionPDFCheatsheet.setObjectName("actionPDFCheatsheet")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
@@ -82,6 +86,9 @@ class Ui_Gremlin(object):
         self.menuTools.addAction(self.actionInputRepeater)
         self.menuTools.addAction(self.actionDeviceInformation)
         self.menuTools.addAction(self.actionCalibration)
+        self.menuTools.addSeparator()
+        self.menuTools.addAction(self.actionHTMLCheatsheet)
+        self.menuTools.addAction(self.actionPDFCheatsheet)
         self.menu_Help.addAction(self.actionAbout)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
@@ -116,4 +123,6 @@ class Ui_Gremlin(object):
         self.actionInputRepeater.setText(_translate("Gremlin", "Input Repeater"))
         self.actionCalibration.setText(_translate("Gremlin", "&Calibration"))
         self.actionManageModes.setText(_translate("Gremlin", "Manage Modes"))
+        self.actionHTMLCheatsheet.setText(_translate("Gremlin", "HTML Cheatsheet"))
+        self.actionPDFCheatsheet.setText(_translate("Gremlin", "PDF Cheatsheet"))
 

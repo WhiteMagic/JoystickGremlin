@@ -62,6 +62,9 @@
     <addaction name="actionInputRepeater"/>
     <addaction name="actionDeviceInformation"/>
     <addaction name="actionCalibration"/>
+    <addaction name="separator"/>
+    <addaction name="actionHTMLCheatsheet"/>
+    <addaction name="actionPDFCheatsheet"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -157,6 +160,16 @@
   <action name="actionManageModes">
    <property name="text">
     <string>Manage Modes</string>
+   </property>
+  </action>
+  <action name="actionHTMLCheatsheet">
+   <property name="text">
+    <string>HTML Cheatsheet</string>
+   </property>
+  </action>
+  <action name="actionPDFCheatsheet">
+   <property name="text">
+    <string>PDF Cheatsheet</string>
    </property>
   </action>
  </widget>
