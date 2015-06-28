@@ -27,6 +27,7 @@ import pythoncom
 import sdl2
 import sdl2.ext
 
+from gremlin.common import UiInputType
 from gremlin.util import SingletonDecorator
 from gremlin import error, macro, util
 
@@ -40,6 +41,16 @@ class InputType(enum.Enum):
     JoystickButton = 3
     JoystickHat = 4
     Count = 5
+
+
+def system_event_to_input_event(event_type):
+    lookup = {
+        InputType.Keyboard: UiInputType.Keyboard,
+        InputType.JoystickAxis: UiInputType.JoystickAxis,
+        InputType.JoystickButton: UiInputType.JoystickButton,
+        InputType.JoystickHat: UiInputType.JoystickHat
+    }
+    return lookup[event_type]
 
 
 class Event(object):
@@ -233,12 +244,16 @@ class EventListener(QtCore.QObject):
         """
         if event.type == sdl2.SDL_JOYAXISMOTION:
             if self._joystick_guid_map[event.jaxis.which] != 873639358:
+                calib_id = (
+                    self._joystick_guid_map[event.jaxis.which],
+                    event.jaxis.axis + 1
+                )
                 self.joystick_event.emit(Event(
                     event_type=InputType.JoystickAxis,
                     hardware_id=self._joystick_guid_map[event.jaxis.which],
                     windows_id=event.jaxis.which,
                     identifier=event.jaxis.axis + 1,
-                    value=self._calibrations[(self._joystick_guid_map[event.jaxis.which], event.jaxis.axis + 1)](event.jaxis.value),
+                    value=self._calibrations[calib_id](event.jaxis.value),
                     raw_value=event.jaxis.value
                 ))
         elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:

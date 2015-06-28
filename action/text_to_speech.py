@@ -20,7 +20,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
 from action.common import AbstractAction, AbstractActionWidget, template_helpers
-import gremlin.event_handler
+from gremlin.common import UiInputType
 
 
 class TextToSpeechWidget(AbstractActionWidget):
@@ -53,8 +53,9 @@ class TextToSpeech(AbstractAction):
     name = "Text to Speech"
     widget = TextToSpeechWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):

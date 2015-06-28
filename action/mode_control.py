@@ -20,7 +20,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
 from action.common import AbstractAction, AbstractActionWidget, template_helpers
-import gremlin.event_handler
+from gremlin.common import UiInputType
+import gremlin.util
 
 
 class SwitchModeWidget(AbstractActionWidget):
@@ -56,8 +57,9 @@ class SwitchMode(AbstractAction):
     name = "Switch Mode"
     widget = SwitchModeWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):
@@ -106,8 +108,9 @@ class SwitchPreviousMode(AbstractAction):
     name = "Switch to previous Mode"
     widget = SwitchPreviousModeWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):
@@ -230,8 +233,9 @@ class CycleModes(AbstractAction):
     name = "Cycle Modes"
     widget = CycleModesWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):

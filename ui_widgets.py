@@ -2,12 +2,14 @@
 Collection of widgets used in the configuration UI.
 """
 
+
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import action.common
-from gremlin import error, macro, profile, util
-from gremlin.event_handler import InputType, EventListener
+from gremlin import common, error, event_handler, macro, profile, util
+from gremlin.event_handler import EventListener
+from gremlin.common import UiInputType
 
 
 class KeystrokeListenerWidget(QtWidgets.QFrame):
@@ -186,7 +188,7 @@ class InputItemButton(QtWidgets.QFrame):
     """
 
     # Signal emitted whenever this button is pressed
-    input_item_changed = QtCore.pyqtSignal(InputType, str)
+    input_item_changed = QtCore.pyqtSignal(UiInputType, str)
 
     def __init__(self, item_label, item_type, parent=None):
         """Creates a new instance.
@@ -202,12 +204,7 @@ class InputItemButton(QtWidgets.QFrame):
 
         self.setFrameShape(QtWidgets.QFrame.Box)
         self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.addWidget(
-            QtWidgets.QLabel("{} {}".format(
-                self.item_type.name,
-                self.item_label)
-            )
-        )
+        self.main_layout.addWidget(QtWidgets.QLabel(self._create_label()))
         self.main_layout.addStretch(0)
         self.setMinimumSize(100, 40)
 
@@ -237,6 +234,22 @@ class InputItemButton(QtWidgets.QFrame):
         :param event the mouse event
         """
         self.input_item_changed.emit(self.item_type, self.item_label)
+
+    def _create_label(self):
+        """Creates the label to display on this button.
+
+        :return label to use for this button
+        """
+        type_name = common.ui_input_type_to_name(self.item_type)
+        label = self.item_label
+        if self.item_type == UiInputType.JoystickHatDirection:
+            input_id = int(int(self.item_label) / 10)
+            direction = int(int(self.item_label) % 10)
+            label = "{} {}".format(
+                input_id,
+                common.index_to_direction(direction)
+            )
+        return "{} {}".format(type_name, label)
 
 
 class ConditionWidget(QtWidgets.QWidget):
@@ -340,7 +353,10 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             like input type, False otherwise
         """
         input_type = self.action_widget.action_data.parent.input_type
-        return input_type in [InputType.JoystickButton, InputType.Keyboard]
+        return input_type in [
+            UiInputType.JoystickButton,
+            UiInputType.Keyboard
+        ]
 
 
 class InputItemWidget(QtWidgets.QFrame):
@@ -380,7 +396,9 @@ class InputItemWidget(QtWidgets.QFrame):
         # fill some of the fields.
         if not action_profile.is_valid:
             action_profile.input_type = self.item_profile.input_type
-            if self.item_profile.input_type in [InputType.JoystickButton, InputType.Keyboard]:
+            if self.item_profile.input_type in [
+                UiInputType.JoystickButton, UiInputType.Keyboard
+            ]:
                 action_profile.condition = action.common.ButtonCondition()
                 # Remap actions should typically trigger both on press
                 # and release
@@ -633,10 +651,11 @@ class DeviceWidget(QtWidgets.QWidget):
         self.vjoy_devices = vjoy_devices
 
         self.input_items = {
-            InputType.JoystickAxis: {},
-            InputType.JoystickButton: {},
-            InputType.JoystickHat: {},
-            InputType.Keyboard: {}
+            UiInputType.JoystickAxis: {},
+            UiInputType.JoystickButton: {},
+            UiInputType.JoystickHat: {},
+            UiInputType.JoystickHatDirection: {},
+            UiInputType.Keyboard: {}
         }
 
         self.current_mode = "Global"
@@ -659,7 +678,7 @@ class DeviceWidget(QtWidgets.QWidget):
         :param input_label the id of the input item
         """
         # Convert the input_label to an id usable as a lookup key
-        if input_type == InputType.Keyboard:
+        if input_type == UiInputType.Keyboard:
             assert(isinstance(input_label, str))
             key = macro.key_from_name(input_label)
             input_id = (key.scan_code, key.is_extended)
@@ -691,13 +710,15 @@ class DeviceWidget(QtWidgets.QWidget):
         self.current_selection = (input_type, input_id)
 
         # Deselect all input item entries
-        for axis_id, axis in self.input_items[InputType.JoystickAxis].items():
+        for axis_id, axis in self.input_items[UiInputType.JoystickAxis].items():
             axis.setPalette(self.palette())
-        for btn_id, button in self.input_items[InputType.JoystickButton].items():
+        for btn_id, button in self.input_items[UiInputType.JoystickButton].items():
             button.setPalette(self.palette())
-        for hat_id, hat in self.input_items[InputType.JoystickHat].items():
+        for hat_id, hat in self.input_items[UiInputType.JoystickHat].items():
             hat.setPalette(self.palette())
-        for key_id, key in self.input_items[InputType.Keyboard].items():
+        for hat_dir_id, hat_dir in self.input_items[UiInputType.JoystickHatDirection].items():
+            hat_dir.setPalette(self.palette())
+        for key_id, key in self.input_items[UiInputType.Keyboard].items():
             key.setPalette(self.palette())
 
         # Load the correct detail content for the newly selected
@@ -716,10 +737,11 @@ class DeviceWidget(QtWidgets.QWidget):
         self.current_mode = name
         self.current_selection = None
         self.input_items = {
-            InputType.JoystickAxis: {},
-            InputType.JoystickButton: {},
-            InputType.JoystickHat: {},
-            InputType.Keyboard: {}
+            UiInputType.JoystickAxis: {},
+            UiInputType.JoystickButton: {},
+            UiInputType.JoystickHat: {},
+            UiInputType.JoystickHatDirection: {},
+            UiInputType.Keyboard: {}
         }
         self._create_ui()
 
@@ -739,7 +761,7 @@ class DeviceWidget(QtWidgets.QWidget):
         :param input_label the id of the specific input item
         """
         # Convert the input_label to an id usable as a lookup key
-        if input_type == InputType.Keyboard:
+        if input_type == UiInputType.Keyboard:
             assert(isinstance(input_label, tuple))
             key = macro.key_from_code(input_label[0], input_label[1])
             input_id = (key.scan_code, key.is_extended)
@@ -802,9 +824,9 @@ class DeviceWidget(QtWidgets.QWidget):
         # Populate with all joystick inputs available
         if self.device_profile.type == profile.DeviceType.Joystick:
             input_counts = [
-                (InputType.JoystickAxis, self.device_data.axes),
-                (InputType.JoystickButton, self.device_data.buttons),
-                (InputType.JoystickHat, self.device_data.hats)
+                (UiInputType.JoystickAxis, self.device_data.axes),
+                (UiInputType.JoystickButton, self.device_data.buttons),
+                (UiInputType.JoystickHat, self.device_data.hats)
             ]
 
             for input_type, count in input_counts:
@@ -820,21 +842,40 @@ class DeviceWidget(QtWidgets.QWidget):
                     self.input_items[input_type][i] = item
                     self.input_item_layout.addWidget(item)
 
+                    # Add hat direction specific items
+                    if input_type == UiInputType.JoystickHat:
+                        for j in range(1, 9):
+                            input_id = i*10 + j
+                            item = InputItemButton(
+                                input_id,
+                                UiInputType.JoystickHatDirection,
+                                self
+                            )
+                            item.set_labels(
+                                self.device_profile.modes[self.current_mode].get_data(
+                                    UiInputType.JoystickHatDirection,
+                                    input_id
+                                )
+                            )
+                            item.input_item_changed.connect(self._input_item_selection)
+                            self.input_items[UiInputType.JoystickHatDirection][input_id] = item
+                            self.input_item_layout.addWidget(item)
+
         # Populate with configured keyboard inputs
         elif self.device_profile.type == profile.DeviceType.Keyboard:
             # Add existing keys to the scroll
             mode = self.device_profile.modes[self.current_mode]
             key_dict = {}
-            for key, entry in mode._config[InputType.Keyboard].items():
+            for key, entry in mode._config[UiInputType.Keyboard].items():
                 key_dict[macro.key_from_code(key[0], key[1]).name] = entry
             for key in sorted(key_dict.keys()):
                 entry = key_dict[key]
                 key_code = (entry.input_id[0], entry.input_id[1])
                 key = macro.key_from_code(key_code[0], key_code[1])
-                item = InputItemButton(key.name, InputType.Keyboard, self)
+                item = InputItemButton(key.name, UiInputType.Keyboard, self)
                 item.set_labels(entry)
                 item.input_item_changed.connect(self._input_item_selection)
-                self.input_items[InputType.Keyboard][key_code] = item
+                self.input_items[UiInputType.Keyboard][key_code] = item
                 self.input_item_layout.addWidget(item)
 
         # Encountered some other type which should never occur
@@ -917,17 +958,17 @@ class DeviceWidget(QtWidgets.QWidget):
         input_item = profile.InputItem(
             self.device_profile.modes[self.current_mode]
         )
-        input_item.input_type = InputType.Keyboard
+        input_item.input_type = UiInputType.Keyboard
         input_item.input_id = key_pair
         self.device_profile.modes[self.current_mode].get_data(
-            InputType.Keyboard,
+            UiInputType.Keyboard,
             key_pair
         )
 
         self._create_ui()
-        self.current_selection = (InputType.Keyboard, key_pair)
+        self.current_selection = (UiInputType.Keyboard, key_pair)
         self._prepare_configuration_panel(
-            InputType.Keyboard, key_pair
+            UiInputType.Keyboard, key_pair
         )
 
     def _remove_keyboard_input_item_button(self, item_profile):
@@ -937,7 +978,7 @@ class DeviceWidget(QtWidgets.QWidget):
         :param item_profile the profile of the key to remove
         """
         self.device_profile.modes[self.current_mode].delete_data(
-            InputType.Keyboard,
+            UiInputType.Keyboard,
             item_profile.input_id
         )
 

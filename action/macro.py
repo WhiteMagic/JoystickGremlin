@@ -20,7 +20,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
 from action.common import AbstractAction, AbstractActionWidget, parse_bool, template_helpers
-import gremlin.event_handler
+from gremlin.common import UiInputType
 import gremlin.macro
 
 
@@ -318,8 +318,9 @@ class Macro(AbstractAction):
     name = "Macro"
     widget = MacroWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):

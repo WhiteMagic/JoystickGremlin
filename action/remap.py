@@ -21,7 +21,7 @@ from xml.etree import ElementTree
 
 import action
 from action.common import AbstractAction, AbstractActionWidget
-from gremlin.event_handler import InputType
+from gremlin.common import UiInputType
 import gremlin.error
 
 
@@ -33,10 +33,11 @@ class RemapWidget(AbstractActionWidget):
 
     # Mapping from types to display names
     name_map = {
-        InputType.JoystickAxis: "Axis",
-        InputType.JoystickButton: "Button",
-        InputType.JoystickHat: "Hat",
-        InputType.Keyboard: "Button",
+        UiInputType.JoystickAxis: "Axis",
+        UiInputType.JoystickButton: "Button",
+        UiInputType.JoystickHat: "Hat",
+        UiInputType.JoystickHatDirection: "Button",
+        UiInputType.Keyboard: "Button",
     }
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
@@ -69,13 +70,15 @@ class RemapWidget(AbstractActionWidget):
     def _create_input_item_dropdown(self):
         """Creates the vJoy input item selection drop downs."""
         count_map = {
-            InputType.JoystickAxis: lambda x: x.axes,
-            InputType.JoystickButton: lambda x: x.buttons,
-            InputType.JoystickHat: lambda x: x.hats
+            UiInputType.JoystickAxis: lambda x: x.axes,
+            UiInputType.JoystickButton: lambda x: x.buttons,
+            UiInputType.JoystickHat: lambda x: x.hats
         }
         input_type = self.action_data.input_type
-        if input_type == InputType.Keyboard:
-            input_type = InputType.JoystickButton
+        if input_type == UiInputType.Keyboard:
+            input_type = UiInputType.JoystickButton
+        elif input_type == UiInputType.JoystickHatDirection:
+            input_type = UiInputType.JoystickButton
 
         self.input_item_dropdowns = []
 
@@ -153,10 +156,11 @@ class Remap(AbstractAction):
     name = "Remap"
     widget = RemapWidget
     input_types = [
-        InputType.JoystickAxis,
-        InputType.JoystickButton,
-        InputType.JoystickHat,
-        InputType.Keyboard
+        UiInputType.JoystickAxis,
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHat,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):
@@ -168,19 +172,19 @@ class Remap(AbstractAction):
 
     def _parse_xml(self, node):
         if "axis" in node.attrib:
-            self.input_type = InputType.JoystickAxis
+            self.input_type = UiInputType.JoystickAxis
             self.vjoy_input_id = int(node.get("axis"))
             self.condition = action.common.parse_axis_condition(node)
         elif "button" in node.attrib:
-            self.input_type = InputType.JoystickButton
+            self.input_type = UiInputType.JoystickButton
             self.vjoy_input_id = int(node.get("button"))
             self.condition = action.common.parse_button_condition(node)
         elif "hat" in node.attrib:
-            self.input_type = InputType.JoystickHat
+            self.input_type = UiInputType.JoystickHat
             self.vjoy_input_id = int(node.get("hat"))
             self.condition = action.common.parse_hat_condition(node)
         elif "keyboard" in node.attrib:
-            self.input_type = InputType.Keyboard
+            self.input_type = UiInputType.Keyboard
             self.vjoy_input_id = int(node.get("button"))
             self.condition = action.common.parse_button_condition(node)
         else:
@@ -193,9 +197,9 @@ class Remap(AbstractAction):
     def _generate_xml(self):
         node = ElementTree.Element("remap")
         node.set("vjoy", str(self.vjoy_device_id))
-        if self.input_type == InputType.Keyboard:
+        if self.input_type in [UiInputType.Keyboard, UiInputType.JoystickHatDirection]:
             node.set(
-                action.common.input_type_to_tag(InputType.JoystickButton),
+                action.common.input_type_to_tag(UiInputType.JoystickButton),
                 str(self.vjoy_input_id)
             )
         else:
@@ -210,7 +214,7 @@ class Remap(AbstractAction):
         return {
             "body": tpl.render(
                 entry=self,
-                InputType=InputType,
+                InputType=UiInputType,
                 helpers=action.common.template_helpers
             )
         }

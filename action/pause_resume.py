@@ -20,7 +20,7 @@ from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
 from action.common import AbstractAction, AbstractActionWidget, template_helpers
-import gremlin.event_handler
+from gremlin.common import UiInputType
 
 
 class PauseActionWidget(AbstractActionWidget):
@@ -50,8 +50,9 @@ class PauseAction(AbstractAction):
     name = "Pause"
     widget = PauseActionWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):
@@ -100,8 +101,9 @@ class ResumeAction(AbstractAction):
     name = "Resume"
     widget = ResumeActionWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):
@@ -150,8 +152,9 @@ class TogglePauseResumeAction(AbstractAction):
     name = "Toggle Pause & Resume"
     widget = TogglePauseResumeActionWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickButton,
-        gremlin.event_handler.InputType.Keyboard
+        UiInputType.JoystickButton,
+        UiInputType.JoystickHatDirection,
+        UiInputType.Keyboard
     ]
 
     def __init__(self, parent):

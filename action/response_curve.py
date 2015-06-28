@@ -21,6 +21,7 @@ from xml.etree import ElementTree
 
 from action.common import AbstractAction, AbstractActionWidget, DualSlider, template_helpers
 import gremlin
+from gremlin.common import UiInputType
 
 
 g_scene_size = 200.0
@@ -975,7 +976,7 @@ class ResponseCurve(AbstractAction):
     name = "Response Curve"
     widget = AxisResponseCurveWidget
     input_types = [
-        gremlin.event_handler.InputType.JoystickAxis,
+        UiInputType.JoystickAxis,
     ]
 
     curve_name_map = {

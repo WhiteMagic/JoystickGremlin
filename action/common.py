@@ -19,7 +19,7 @@ from mako.lookup import TemplateLookup
 from PyQt5 import QtCore, QtWidgets
 
 import gremlin
-from gremlin.event_handler import InputType
+from gremlin.common import UiInputType
 
 
 def format_condition(condition):
@@ -439,16 +439,17 @@ class AbstractAction(object):
 
     def _parse_condition(self, node):
         parser_map = {
-            InputType.JoystickAxis: parse_axis_condition,
-            InputType.JoystickButton: parse_button_condition,
-            InputType.JoystickHat: parse_hat_condition,
-            InputType.Keyboard: parse_button_condition
+            UiInputType.JoystickAxis: parse_axis_condition,
+            UiInputType.JoystickButton: parse_button_condition,
+            UiInputType.JoystickHat: parse_hat_condition,
+            UiInputType.JoystickHatDirection: parse_hat_direction_condition,
+            UiInputType.Keyboard: parse_button_condition
         }
         assert(self.parent.input_type in parser_map)
         self.condition = parser_map[self.parent.input_type](node)
 
     def _generate_condition(self, node):
-        if self.parent.input_type in [InputType.JoystickButton, InputType.Keyboard]:
+        if self.parent.input_type in [UiInputType.JoystickButton, UiInputType.Keyboard]:
             node.set("on-press", str(self.condition.on_press))
             node.set("on-release", str(self.condition.on_release))
 
@@ -536,10 +537,11 @@ def input_type_to_tag(input_type):
     :return XML tag corresponding to the provided InputType enum
     """
     lookup = {
-        gremlin.event_handler.InputType.JoystickAxis: "axis",
-        gremlin.event_handler.InputType.JoystickButton: "button",
-        gremlin.event_handler.InputType.JoystickHat: "hat",
-        gremlin.event_handler.InputType.Keyboard: "key",
+        UiInputType.JoystickAxis: "axis",
+        UiInputType.JoystickButton: "button",
+        UiInputType.JoystickHat: "hat",
+        UiInputType.JoystickHatDirection: "hat-direction",
+        UiInputType.Keyboard: "key",
     }
     if input_type in lookup:
         return lookup[input_type]
@@ -591,6 +593,14 @@ def parse_hat_condition(node):
     # FIXME: implement
     return ""
 
+def parse_hat_direction_condition(node):
+    """Returns a HatDirectionCondition corresponding to the node's content.
+
+    :param node the xml node to parse
+    :return HatDiirectionCondition corresponding to the node's content
+    """
+    # FIXME: implement
+    return ""
 
 def parse_bool(value):
     """Returns the boolean representation of the provided value.

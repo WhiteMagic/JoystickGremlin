@@ -21,7 +21,7 @@ from xml.dom import minidom
 
 import action
 import gremlin
-from gremlin.event_handler import InputType
+from gremlin.common import UiInputType
 
 
 def tag_to_input_type(tag):
@@ -31,10 +31,11 @@ def tag_to_input_type(tag):
     :return InputType enum corresponding to the given XML tag
     """
     lookup = {
-        "axis": InputType.JoystickAxis,
-        "button": InputType.JoystickButton,
-        "hat": InputType.JoystickHat,
-        "key": InputType.Keyboard,
+        "axis": UiInputType.JoystickAxis,
+        "button": UiInputType.JoystickButton,
+        "hat": UiInputType.JoystickHat,
+        "hat-direction": UiInputType.JoystickHatDirection,
+        "key": UiInputType.Keyboard,
     }
     if tag.lower() in lookup:
         return lookup[tag.lower()]
@@ -121,7 +122,7 @@ class Profile(object):
                 if mode.inherit is None and mode_name not in tree:
                     tree[mode_name] = {}
                 elif mode.inherit:
-                    stack = [mode_name,]
+                    stack = [mode_name, ]
                     parent = device.modes[mode.inherit]
                     stack.append(parent.name)
                     while parent.inherit is not None:
@@ -289,10 +290,11 @@ class Mode(object):
         self.name = None
 
         self._config = {
-            InputType.JoystickAxis: {},
-            InputType.JoystickButton: {},
-            InputType.JoystickHat: {},
-            InputType.Keyboard: {}
+            UiInputType.JoystickAxis: {},
+            UiInputType.JoystickButton: {},
+            UiInputType.JoystickHat: {},
+            UiInputType.JoystickHatDirection: {},
+            UiInputType.Keyboard: {}
         }
 
     def from_xml(self, node):
@@ -384,7 +386,7 @@ class InputItem(object):
         self.input_id = int(node.get("id"))
         self.description = node.get("description")
         self.always_execute = _parse_bool(node.get("always-execute", "False"))
-        if self.input_type == InputType.Keyboard:
+        if self.input_type == UiInputType.Keyboard:
             self.input_id = (self.input_id, _parse_bool(node.get("extended")))
         for child in node:
             if child.tag not in action_lookup:
@@ -402,17 +404,21 @@ class InputItem(object):
         node = ElementTree.Element(
             action.common.input_type_to_tag(self.input_type)
         )
-        if self.input_type == InputType.Keyboard:
+        if self.input_type == UiInputType.Keyboard:
             node.set("id", str(self.input_id[0]))
             node.set("extended", str(self.input_id[1]))
         else:
             node.set("id", str(self.input_id))
+
         if self.always_execute:
             node.set("always-execute", "True")
+
         if self.description:
             node.set("description", self.description)
         else:
             node.set("description", "")
+
         for entry in self.actions:
             node.append(entry.to_xml())
+
         return node

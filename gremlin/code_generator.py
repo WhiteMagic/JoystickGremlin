@@ -20,7 +20,7 @@ import re
 import action
 from mako.template import Template
 import gremlin
-from gremlin.event_handler import InputType
+from gremlin.common import UiInputType
 from gremlin import error, profile, util
 
 
@@ -200,12 +200,14 @@ class CodeGenerator(object):
             return {}
 
         input_type_templates = {
-            InputType.JoystickAxis: "templates/axis.tpl",
-            InputType.JoystickButton: "templates/button.tpl",
-            InputType.JoystickHat: "templates/hat.tpl",
-            InputType.Keyboard: "templates/key.tpl",
+            UiInputType.JoystickAxis: "templates/axis.tpl",
+            UiInputType.JoystickButton: "templates/button.tpl",
+            UiInputType.JoystickHat: "templates/hat.tpl",
+            UiInputType.JoystickHatDirection: "templates/hat_direction.tpl",
+            UiInputType.Keyboard: "templates/key.tpl",
         }
 
+        # Generate code for the actions associated with the item
         code = {
             "body": [],
             "global": [],
@@ -217,6 +219,7 @@ class CodeGenerator(object):
         helpers = {
             "wid": input_item_identifier_string,
         }
+
         self.code["callback"].append(tpl.render(
             device_name=util.format_name(mode.parent.name),
             decorator=decorator_name(mode, index),

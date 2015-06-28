@@ -884,7 +884,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         widget = self.ui.devices.currentWidget()
         if util.device_id(event) == util.device_id(widget.device_profile):
             if self._should_process_input(event):
-                btn = widget.input_items[event.event_type][event.identifier]
+                ui_event_type = event_handler.system_event_to_input_event(event.event_type)
+                btn = widget.input_items[ui_event_type][event.identifier]
                 btn.mousePressEvent(None)
 
     def _should_process_input(self, event):
