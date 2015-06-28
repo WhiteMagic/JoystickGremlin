@@ -32,8 +32,10 @@ import sdl2
 import sdl2.ext
 import sdl2.hints
 
+import gremlin
 from gremlin.code_generator import CodeGenerator
-from gremlin import documenter, event_handler, input_devices
+from gremlin import documenter, input_devices
+from gremlin.event_handler import InputType
 from ui_about import Ui_About
 from ui_gremlin import Ui_Gremlin
 import ui_widgets
@@ -46,7 +48,7 @@ class CodeRunner(object):
 
     def __init__(self):
         """Creates a new code runner instance."""
-        self.event_handler = event_handler.EventHandler()
+        self.event_handler = gremlin.event_handler.EventHandler()
         self.event_handler.add_plugin(input_devices.JoystickPlugin())
         self.event_handler.add_plugin(input_devices.VJoyPlugin())
         self.event_handler.add_plugin(input_devices.KeyboardPlugin())
@@ -91,7 +93,7 @@ class CodeRunner(object):
             self.event_handler.build_event_lookup(inheritance_tree)
 
             # Connect signals
-            el = event_handler.EventListener()
+            el = gremlin.event_handler.EventListener()
             el._init_joysticks()
             kb = input_devices.Keyboard()
             el.keyboard_event.connect(self.event_handler.process_event)
@@ -111,7 +113,7 @@ class CodeRunner(object):
         """Stops listening to events and unloads all callbacks."""
         # Disconnect all signals
         if self._running:
-            el = event_handler.EventListener()
+            el = gremlin.event_handler.EventListener()
             kb = input_devices.Keyboard()
             el.keyboard_event.disconnect(self.event_handler.process_event)
             el.joystick_event.disconnect(self.event_handler.process_event)
@@ -873,7 +875,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param event the event to process
         """
-        if event.event_type == event_handler.InputType.Keyboard:
+        if event.event_type == gremlin.event_handler.InputType.Keyboard:
             return
         if self.runner.is_running():
             return
@@ -982,7 +984,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Create keyboard tab
         device_profile = self._profile.get_device_modes(
-            util.device_id(event_handler.Event.from_key(macro.Keys.A)),
+            util.device_id(gremlin.event_handler.Event.from_key(macro.Keys.A)),
             "keyboard"
         )
         widget = DeviceWidget(
@@ -1146,7 +1148,7 @@ if __name__ == "__main__":
     app.exec_()
 
     # Terminate potentially running EventListener loop
-    el = event_handler.EventListener()
+    el = gremlin.event_handler.EventListener()
     el.terminate()
 
     # Properly terminate the runner instance should it be running
