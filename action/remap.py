@@ -48,7 +48,13 @@ class RemapWidget(AbstractActionWidget):
         :param change_cb callback to execute when the widget changes
         :param parent of this widget
         """
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, Remap))
 
     def _setup_ui(self):

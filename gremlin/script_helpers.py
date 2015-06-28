@@ -30,6 +30,7 @@ def save_axis_state(vjoy):
         state[key] = axis.value
     return state
 
+
 def load_axis_state(vjoy, state):
     """Sets the provided state in the vJoy instance.
 

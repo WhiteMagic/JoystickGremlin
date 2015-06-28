@@ -29,7 +29,13 @@ class SwitchModeWidget(AbstractActionWidget):
     """Widget which allows the configuration of a mode to switch to."""
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, SwitchMode))
 
     def _setup_ui(self):
@@ -86,7 +92,13 @@ class SwitchPreviousModeWidget(AbstractActionWidget):
     """Widget associated with the action of switching to the previous mode."""
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, SwitchPreviousMode))
 
     def _setup_ui(self):
@@ -134,7 +146,13 @@ class CycleModesWidget(AbstractActionWidget):
     """Widget allowing the configuration of a list of modes to cycle."""
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, CycleModes))
 
     def _setup_ui(self):

@@ -19,7 +19,8 @@ from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, parse_bool, template_helpers
+from action.common import AbstractAction, AbstractActionWidget,\
+    parse_bool, template_helpers
 from gremlin.common import UiInputType
 import gremlin.macro
 
@@ -145,7 +146,13 @@ class MacroWidget(AbstractActionWidget):
     """Widget which allows creating and editing of macros."""
 
     def __init__(self, profile_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, profile_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            profile_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(profile_data, Macro))
 
         self._recording = False
@@ -199,7 +206,7 @@ class MacroWidget(AbstractActionWidget):
         self.main_layout.addLayout(self.button_layout)
 
     def keyPressEvent(self, event):
-        if self._recording  and not event.isAutoRepeat():
+        if self._recording and not event.isAutoRepeat():
             action = gremlin.macro.Macro.KeyAction(
                 gremlin.macro.key_from_code(
                     event.nativeScanCode() & 255,

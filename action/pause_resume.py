@@ -28,7 +28,13 @@ class PauseActionWidget(AbstractActionWidget):
     """Widget for the pause action."""
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, PauseAction))
 
     def _setup_ui(self):
@@ -79,7 +85,13 @@ class ResumeActionWidget(AbstractActionWidget):
     """Widget for the resume action."""
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, ResumeAction))
 
     def _setup_ui(self):
@@ -130,7 +142,13 @@ class TogglePauseResumeActionWidget(AbstractActionWidget):
     """Widget for the resume action."""
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, TogglePauseResumeAction))
 
     def _setup_ui(self):

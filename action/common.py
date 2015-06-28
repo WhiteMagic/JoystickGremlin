@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mako.lookup import TemplateLookup
 from PyQt5 import QtCore, QtWidgets
 
 import gremlin
@@ -334,10 +333,12 @@ class DualSlider(QtWidgets.QWidget):
         if self._active_handle:
             value = self._position_to_logical(evt.pos().x())
             if self._active_handle == self.LowerHandle:
-                self._lower_position = self._constrain_value(self.LowerHandle, value)
+                self._lower_position =\
+                    self._constrain_value(self.LowerHandle, value)
                 value = self._lower_position
             elif self._active_handle == self.UpperHandle:
-                self._upper_position = self._constrain_value(self.UpperHandle, value)
+                self._upper_position =\
+                    self._constrain_value(self.UpperHandle, value)
                 value = self._upper_position
             self.valueChanged.emit(self._active_handle, value)
             self.sliderMoved.emit(self._active_handle, value)
@@ -370,7 +371,10 @@ class DualSlider(QtWidgets.QWidget):
         option_upper.subControls = QtWidgets.QStyle.SC_SliderHandle
 
         if self._active_handle:
-            option = option_lower if self._active_handle == self.LowerHandle else option_upper
+            if self._active_handle == self.LowerHandle:
+                option = option_lower
+            else:
+                option = option_upper
             option.activeSubControls = QtWidgets.QStyle.SC_SliderHandle
             option.state |= QtWidgets.QStyle.State_Sunken
 
@@ -593,14 +597,16 @@ def parse_hat_condition(node):
     # FIXME: implement
     return ""
 
+
 def parse_hat_direction_condition(node):
     """Returns a HatDirectionCondition corresponding to the node's content.
 
     :param node the xml node to parse
-    :return HatDiirectionCondition corresponding to the node's content
+    :return HatDirectionCondition corresponding to the node's content
     """
     # FIXME: implement
     return ""
+
 
 def parse_bool(value):
     """Returns the boolean representation of the provided value.

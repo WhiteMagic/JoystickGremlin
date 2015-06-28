@@ -19,7 +19,8 @@ from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, DualSlider, template_helpers
+from action.common import AbstractAction, AbstractActionWidget, DualSlider,\
+    template_helpers
 import gremlin
 from gremlin.common import UiInputType
 
@@ -40,7 +41,7 @@ class AbstractCurveModel(object):
 
         :return curve function corresponding to the model
         """
-        raise gremlin.error.NotImplementedError()
+        raise gremlin.error.NotImplementedError("Implementation missing")
 
     def get_control_points(self):
         """Returns the list of control points.
@@ -56,7 +57,7 @@ class AbstractCurveModel(object):
         :param handles list of potential handles
         :return the newly created control point
         """
-        raise gremlin.error.NotImplementedError()
+        raise gremlin.error.NotImplementedError("Implementation missing")
 
     def remove_control_point(self, control_point):
         """Removes the specified control point if it exists in the model.
@@ -74,7 +75,7 @@ class AbstractCurveModel(object):
         :param identifier the identifier of a control point to ignore
         :return True if valid, False otherwise
         """
-        raise gremlin.error.NotImplementedError()
+        raise gremlin.error.NotImplementedError("Implementation missing")
 
 
 class CubicSplineModel(AbstractCurveModel):
@@ -225,7 +226,7 @@ class ControlPoint(object):
         """Sets the center of the control point, if it is a valid point.
 
         This method uses the provided model to check if the provided location
-        is valiid.
+        is valid.
 
         :param point the new center position of the control point
         """
@@ -250,7 +251,7 @@ class ControlPoint(object):
     def __eq__(self, other):
         """Compares two control points for identity.
 
-        The unique identifier is used for thje comparison.
+        The unique identifier is used for the comparison.
 
         :param other the control point to compare with for identity
         :return True of the control points are the same, False otherwise
@@ -666,7 +667,8 @@ class DeadzoneWidget(QtWidgets.QWidget):
         self.right_upper.setMinimum(0.0)
         self.right_upper.setMaximum(1.0)
 
-        self._normalizer = self.left_slider.range()[1] - self.left_slider.range()[0]
+        self._normalizer =\
+            self.left_slider.range()[1] - self.left_slider.range()[0]
 
         # Hook up all the required callbacks
         self.left_slider.valueChanged.connect(self._update_left)
@@ -752,7 +754,7 @@ class DeadzoneWidget(QtWidgets.QWidget):
         :param value the new value
         """
         if handle == DualSlider.LowerHandle:
-            self.right_lower.setValue(value /  self._normalizer)
+            self.right_lower.setValue(value / self._normalizer)
         elif handle == DualSlider.UpperHandle:
             self.right_upper.setValue(value / self._normalizer)
         self.change_cb()

@@ -117,7 +117,11 @@ class Button(object):
         """
         assert(isinstance(is_pressed, bool))
         self._is_pressed = is_pressed
-        if not VJoyInterface.SetBtn(self._is_pressed, self.vjoy_id, self.button_id):
+        if not VJoyInterface.SetBtn(
+                self._is_pressed,
+                self.vjoy_id,
+                self.button_id
+        ):
             raise VJoyError("Failed updating button state")
         self.vjoy_dev.used()
 
@@ -180,9 +184,15 @@ class Hat(object):
         :param direction the direction of the hat
         """
         if direction not in self.discrete_directions:
-            raise VJoyError("Invalid direction specified: {}".format(str(direction)))
+            raise VJoyError(
+                "Invalid direction specified: {}".format(str(direction))
+            )
         self._direction = self.discrete_directions[direction]
-        if not VJoyInterface.SetDiscPov(self._direction, self.vjoy_id, self.hat_id):
+        if not VJoyInterface.SetDiscPov(
+                self._direction,
+                self.vjoy_id,
+                self.hat_id
+        ):
             raise VJoyError("Failed to set hat direction")
 
     def _set_continuous_direction(self, direction):
@@ -198,7 +208,11 @@ class Hat(object):
 
         assert(0 <= self._direction <= 35999 or self._direction == -1)
 
-        if not VJoyInterface.SetContPov(self._direction, self.vjoy_id, self.hat_id):
+        if not VJoyInterface.SetContPov(
+                self._direction,
+                self.vjoy_id,
+                self.hat_id
+        ):
             raise VJoyError("Failed to set hat direction")
 
 

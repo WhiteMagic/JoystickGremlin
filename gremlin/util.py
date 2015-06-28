@@ -66,8 +66,8 @@ class JoystickDeviceData(object):
         self._windows_id = sdl2.SDL_JoystickInstanceID(device)
         name_object = sdl2.SDL_JoystickName(device)
         if name_object is None:
+            self._name = "Unknown device"
             logging.error("Encountered an invalid device name")
-            self.name = "Unknown device"
         else:
             self._name = name_object.decode("utf-8")
         self._is_virtual = self._name == "vJoy Device"

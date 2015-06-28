@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from mako.template import Template
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
 from action.common import AbstractAction, AbstractActionWidget, template_helpers
@@ -28,7 +28,13 @@ class TextToSpeechWidget(AbstractActionWidget):
     """Widget which allows the configuration of TTS actions."""
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(self, action_data, vjoy_devices, change_cb, parent)
+        AbstractActionWidget.__init__(
+            self,
+            action_data,
+            vjoy_devices,
+            change_cb,
+            parent
+        )
         assert(isinstance(action_data, TextToSpeech))
 
     def _setup_ui(self):

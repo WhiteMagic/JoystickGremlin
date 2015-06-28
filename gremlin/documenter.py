@@ -217,6 +217,7 @@ def recursive(device, tree, storage):
         # Recursively process the remainder of the inheritance tree
         recursive(device,  children, storage)
 
+
 def sort_data(data):
     """Returns a new list sorted by input type.
 
@@ -234,10 +235,11 @@ def sort_data(data):
 
     return sorted_data
 
-def generate_cheatsheet(format, fname, profile):
+
+def generate_cheatsheet(file_format, fname, profile):
     """Generates HTML documentation of the provided profile.
 
-    :param format the output format
+    :param file_format the output format
     :param fname the file to store the cheathseet in
     :param profile the profile to process
     """
@@ -261,9 +263,10 @@ def generate_cheatsheet(format, fname, profile):
         device_content[mode] = {}
         for i, dev in enumerate(device_keys):
             if len(device_storage[dev][mode]) > 0:
-                device_content[mode][dev] = templates[format]["tpl_device"].render(
-                    data=sort_data(device_storage[dev][mode]),
-                    device=device_names[i]
+                device_content[mode][dev] =\
+                    templates[file_format]["tpl_device"].render(
+                        data=sort_data(device_storage[dev][mode]),
+                        device=device_names[i]
                 )
 
     # Put HTML segments together into a single document
@@ -275,20 +278,22 @@ def generate_cheatsheet(format, fname, profile):
                 if device_name_to_key[name] in device_content[mode]:
                     devices.append(device_content[mode][device_name_to_key[name]])
 
-            mode_content.append(templates[format]["tpl_mode"].render(
+            mode_content.append(templates[file_format]["tpl_mode"].render(
                 mode=mode,
                 devices=devices,
                 mode_id=len(mode_content)
             ))
 
-    if format == "html":
+    if file_format == "html":
         # Create a single HTML file
         with open(fname, "w") as out:
-            out.write(templates[format]["tpl_main"].render(modes=mode_content))
-    elif format == "pdf":
+            out.write(templates[file_format]["tpl_main"]
+                      .render(modes=mode_content))
+    elif file_format == "pdf":
         doc = QtGui.QTextDocument()
         doc.setDefaultFont(QtGui.QFont("Courier", 10, QtGui.QFont.Normal))
-        doc.setHtml(templates[format]["tpl_main"].render(modes=mode_content))
+        doc.setHtml(templates[file_format]["tpl_main"]
+                    .render(modes=mode_content))
         printer = QtPrintSupport.QPrinter()
         printer.setOutputFileName(fname)
         printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)

@@ -88,7 +88,7 @@ class VJoyProxy(object):
             return device
 
     @classmethod
-    def reset(klass):
+    def reset(cls):
         """Relinquishes control over all held VJoy devices."""
         for device in VJoyProxy.vjoy_devices.values():
             device.invalidate()

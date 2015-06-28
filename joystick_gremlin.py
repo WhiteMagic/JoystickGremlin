@@ -34,7 +34,7 @@ import sdl2.hints
 
 import gremlin
 from gremlin.code_generator import CodeGenerator
-from gremlin import documenter, input_devices
+from gremlin import documenter, input_devices, util
 from gremlin.event_handler import InputType
 from ui_about import Ui_About
 from ui_gremlin import Ui_Gremlin
@@ -93,12 +93,12 @@ class CodeRunner(object):
             self.event_handler.build_event_lookup(inheritance_tree)
 
             # Connect signals
-            el = gremlin.event_handler.EventListener()
-            el._init_joysticks()
+            evt_listener = gremlin.event_handler.EventListener()
+            evt_listener._init_joysticks()
             kb = input_devices.Keyboard()
-            el.keyboard_event.connect(self.event_handler.process_event)
-            el.joystick_event.connect(self.event_handler.process_event)
-            el.keyboard_event.connect(kb.keyboard_event)
+            evt_listener.keyboard_event.connect(self.event_handler.process_event)
+            evt_listener.joystick_event.connect(self.event_handler.process_event)
+            evt_listener.keyboard_event.connect(kb.keyboard_event)
 
             self.event_handler.change_mode("Global")
             self.event_handler.resume()
@@ -113,11 +113,11 @@ class CodeRunner(object):
         """Stops listening to events and unloads all callbacks."""
         # Disconnect all signals
         if self._running:
-            el = gremlin.event_handler.EventListener()
+            evt_lst = gremlin.event_handler.EventListener()
             kb = input_devices.Keyboard()
-            el.keyboard_event.disconnect(self.event_handler.process_event)
-            el.joystick_event.disconnect(self.event_handler.process_event)
-            el.keyboard_event.disconnect(kb.keyboard_event)
+            evt_lst.keyboard_event.disconnect(self.event_handler.process_event)
+            evt_lst.joystick_event.disconnect(self.event_handler.process_event)
+            evt_lst.keyboard_event.disconnect(kb.keyboard_event)
         self._running = False
 
         # Empty callback registry
@@ -884,7 +884,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         widget = self.ui.devices.currentWidget()
         if util.device_id(event) == util.device_id(widget.device_profile):
             if self._should_process_input(event):
-                ui_event_type = event_handler.system_event_to_input_event(event.event_type)
+                ui_event_type = gremlin.event_handler.\
+                    system_event_to_input_event(event.event_type)
                 btn = widget.input_items[ui_event_type][event.identifier]
                 btn.mousePressEvent(None)
 
@@ -1023,18 +1024,18 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         return device_profile
 
-    def _create_cheatsheet(self, format):
+    def _create_cheatsheet(self, file_format):
         """Creates the cheatsheet and stores it in the desired place.
 
-        :param format the format of the cheatsheet, html or pdf
+        :param file_format the format of the cheatsheet, html or pdf
         """
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(
             None,
             "Save cheatsheet",
             None,
-            "{} files (*.{})".format(format.upper(), format)
+            "{} files (*.{})".format(file_format.upper(), file_format)
         )
-        documenter.generate_cheatsheet(format, fname, self._profile)
+        documenter.generate_cheatsheet(file_format, fname, self._profile)
 
     def _connect_actions(self):
         """Connects all QAction items to their corresponding callbacks."""
@@ -1043,14 +1044,22 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionNewProfile.triggered.connect(self.new_profile)
         self.ui.actionSaveProfile.triggered.connect(self.save_profile)
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
-        self.ui.actionDeviceInformation.triggered.connect(self.device_information)
+        self.ui.actionDeviceInformation.triggered.connect(
+            self.device_information
+        )
         self.ui.actionManageModes.triggered.connect(self.manage_modes)
-        self.ui.actionManageCustomModules.triggered.connect(self.manage_custom_modules)
+        self.ui.actionManageCustomModules.triggered.connect(
+            self.manage_custom_modules
+        )
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionCalibration.triggered.connect(self.calibration)
 
-        self.ui.actionHTMLCheatsheet.triggered.connect(lambda: self._create_cheatsheet("html"))
-        self.ui.actionPDFCheatsheet.triggered.connect(lambda: self._create_cheatsheet("pdf"))
+        self.ui.actionHTMLCheatsheet.triggered.connect(
+            lambda: self._create_cheatsheet("html")
+        )
+        self.ui.actionPDFCheatsheet.triggered.connect(
+            lambda: self._create_cheatsheet("pdf")
+        )
 
         self.ui.actionAbout.triggered.connect(self.about)
 
@@ -1065,11 +1074,19 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionLoadProfile.setIcon(QtGui.QIcon("gfx/profile_open.svg"))
         self.ui.actionNewProfile.setIcon(QtGui.QIcon("gfx/profile_new.svg"))
         self.ui.actionSaveProfile.setIcon(QtGui.QIcon("gfx/profile_save.svg"))
-        self.ui.actionSaveProfileAs.setIcon(QtGui.QIcon("gfx/profile_save_as.svg"))
-        self.ui.actionDeviceInformation.setIcon(QtGui.QIcon("gfx/device_information.svg"))
-        self.ui.actionManageCustomModules.setIcon(QtGui.QIcon("gfx/manage_modules.svg"))
+        self.ui.actionSaveProfileAs.setIcon(
+            QtGui.QIcon("gfx/profile_save_as.svg")
+        )
+        self.ui.actionDeviceInformation.setIcon(
+            QtGui.QIcon("gfx/device_information.svg")
+        )
+        self.ui.actionManageCustomModules.setIcon(
+            QtGui.QIcon("gfx/manage_modules.svg")
+        )
         self.ui.actionManageModes.setIcon(QtGui.QIcon("gfx/manage_modes.svg"))
-        self.ui.actionInputRepeater.setIcon(QtGui.QIcon("gfx/input_repeater.svg"))
+        self.ui.actionInputRepeater.setIcon(
+            QtGui.QIcon("gfx/input_repeater.svg")
+        )
         self.ui.actionCalibration.setIcon(QtGui.QIcon("gfx/calibration.svg"))
         self.ui.actionAbout.setIcon(QtGui.QIcon("gfx/about.svg"))
 

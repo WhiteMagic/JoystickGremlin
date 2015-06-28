@@ -7,7 +7,7 @@ import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import action.common
-from gremlin import common, error, event_handler, macro, profile, util
+from gremlin import common, error, macro, profile
 from gremlin.event_handler import EventListener
 from gremlin.common import UiInputType
 
@@ -486,7 +486,9 @@ class InputItemWidget(QtWidgets.QFrame):
     def _create_description(self):
         """Creates the description input for the input item."""
         self._description_layout = QtWidgets.QHBoxLayout()
-        self._description_layout.addWidget(QtWidgets.QLabel("<b>Description</b>"))
+        self._description_layout.addWidget(
+            QtWidgets.QLabel("<b>Description</b>")
+        )
         self._description_field = QtWidgets.QLineEdit()
         self._description_field.textChanged.connect(self.to_profile)
         self._description_layout.addWidget(self._description_field)
@@ -811,7 +813,7 @@ class DeviceWidget(QtWidgets.QWidget):
             self.current_selection[1]
         )
 
-        self.input_items[self.current_selection[0]] \
+        self.input_items[self.current_selection[0]]\
             [self.current_selection[1]].set_labels(item)
 
     def _create_input_item_scroll(self):
@@ -857,7 +859,9 @@ class DeviceWidget(QtWidgets.QWidget):
                                     input_id
                                 )
                             )
-                            item.input_item_changed.connect(self._input_item_selection)
+                            item.input_item_changed.connect(
+                                self._input_item_selection
+                            )
                             self.input_items[UiInputType.JoystickHatDirection][input_id] = item
                             self.input_item_layout.addWidget(item)
 

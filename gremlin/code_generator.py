@@ -196,6 +196,7 @@ class CodeGenerator(object):
         assert(isinstance(input_item, profile.InputItem))
         assert(isinstance(mode, profile.Mode))
         assert(input_item.parent == mode)
+
         if len(input_item.actions) == 0:
             return {}
 

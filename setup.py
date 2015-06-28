@@ -94,5 +94,6 @@ setup(
     version="2.0",
     description="Joystick Gremlin application",
     options=options,
-    executables=executables
+    executables=executables,
+    requires=['PyQt5']
 )
