@@ -341,22 +341,24 @@ def mode_list(node):
     return sorted(list(set(mode_names)), key=lambda x: x.lower())
 
 
-def convert_sdl_hat(value):
-    """Converts the SDL hat representation to the Gremlin one.
+def hat_tuple_to_index(direction):
+    """Returns the numerical representation of the hat direction tuple.
 
-    :param value the hat state representation as used by SDL
-    :return the hat representation corresponding to the SDL one
+    :param direction the direction represented via a tuple
+    :return integer representing the direction
     """
-    direction = [0, 0]
-    if value & sdl2.SDL_HAT_UP:
-        direction[1] = 1
-    elif value & sdl2.SDL_HAT_DOWN:
-        direction[1] = -1
-    if value & sdl2.SDL_HAT_RIGHT:
-        direction[0] = 1
-    elif value & sdl2.SDL_HAT_LEFT:
-        direction[0] = -1
-    return tuple(direction)
+    lookup = {
+        ( 0,  0): 0,
+        ( 0,  1): 1,
+        ( 1,  1): 2,
+        ( 1,  0): 3,
+        ( 1, -1): 4,
+        ( 0, -1): 5,
+        (-1, -1): 6,
+        (-1,  0): 7,
+        (-1,  1): 8,
+    }
+    return lookup[direction]
 
 
 def appdata_path():
@@ -465,3 +467,21 @@ def text_substitution(text):
     return tpl.render(
         current_mode=eh.active_mode
     )
+
+
+def convert_sdl_hat(value):
+    """Converts the SDL hat representation to the Gremlin one.
+
+    :param value the hat state representation as used by SDL
+    :return the hat representation corresponding to the SDL one
+    """
+    direction = [0, 0]
+    if value & sdl2.SDL_HAT_UP:
+        direction[1] = 1
+    elif value & sdl2.SDL_HAT_DOWN:
+        direction[1] = -1
+    if value & sdl2.SDL_HAT_RIGHT:
+        direction[0] = 1
+    elif value & sdl2.SDL_HAT_LEFT:
+        direction[0] = -1
+    return tuple(direction)
