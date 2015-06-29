@@ -165,7 +165,6 @@ class Remap(AbstractAction):
         UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
-        UiInputType.JoystickHatDirection,
         UiInputType.Keyboard
     ]
 
