@@ -559,23 +559,40 @@ class ModeWidget(QtWidgets.QWidget):
         # Remove all existing items
         while self.selector.count() > 0:
             self.selector.removeItem(0)
+        self.mode_list = []
 
-        # Create a tree visualization for the drop down and record
-        # id to mode name mapping for callback handling
+        # Create mode name labels visualizing the tree structure
         inheritance_tree = self.profile.build_inheritance_tree()
         labels = []
         self._inheritance_tree_to_labels(labels, inheritance_tree, 0)
 
-        # Add current set of modes
+        # Filter the mode names such that they only occur once below their
+        # correct parent
+        mode_names = []
+        display_names = []
         for entry in labels:
-            self.selector.addItem(entry[1])
-            self.mode_list.append(entry[0])
+            if entry[0] in mode_names:
+                idx = mode_names.index(entry[0])
+                if len(entry[1]) > len(display_names[idx]):
+                    del mode_names[idx]
+                    del display_names[idx]
+                    mode_names.append(entry[0])
+                    display_names.append(entry[1])
+            else:
+                mode_names.append(entry[0])
+                display_names.append(entry[1])
 
+        # Add properly arranged mode names to the drop down list
+        for display_name, mode_name in zip(display_names, mode_names):
+            self.selector.addItem(display_name)
+            self.mode_list.append(mode_name)
+
+        # Reconnect change signal
         self.selector.currentIndexChanged.connect(self._mode_changed_cb)
 
         # Select currently active mode
         if current_mode is None:
-            current_mode = labels[0][1]
+            current_mode = mode_names[0]
         self.selector.setCurrentIndex(self.mode_list.index(current_mode))
 
     @QtCore.pyqtSlot(int)
@@ -636,7 +653,7 @@ class DeviceWidget(QtWidgets.QWidget):
     cur_palette = QtGui.QPalette()
     cur_palette.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
 
-    def __init__(self, vjoy_devices, device_data, device_profile, parent=None):
+    def __init__(self, vjoy_devices, device_data, device_profile, current_mode, parent=None):
         """Creates a new DeviceWidget object.
 
         :param vjoy_devices list of vjoy devices
@@ -644,6 +661,7 @@ class DeviceWidget(QtWidgets.QWidget):
             represented by this widget
         :param device_profile the profile data associated with this
             device
+        :param current_mode the currently active mode
         :param parent the parent widget of this object
         """
         QtWidgets.QWidget.__init__(self, parent)
@@ -660,7 +678,7 @@ class DeviceWidget(QtWidgets.QWidget):
             UiInputType.Keyboard: {}
         }
 
-        self.current_mode = "Global"
+        self.current_mode = current_mode
         self.current_selection = None
         self.current_configuration_dialog = None
 
