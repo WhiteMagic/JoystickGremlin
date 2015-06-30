@@ -273,11 +273,18 @@ class CycleModes(AbstractAction):
         return node
 
     def _generate_code(self):
+        global_code = Template(filename="templates/cycle_modes_global.tpl").render(
+            entry=self,
+            mode_list_name="mode_list_{:04d}".format(CycleModes.next_code_id),
+            gremlin=gremlin,
+            helpers=template_helpers
+        )
+        body_code = Template(filename="templates/cycle_modes_body.tpl").render(
+            entry=self,
+            mode_list_name="mode_list_{:04d}".format(CycleModes.next_code_id),
+            helpers=template_helpers
+        )
         return {
-            "body": Template(
-                filename="templates/cycle_modes_body.tpl"
-            ).render(
-                entry=self,
-                helpers=template_helpers
-            )
+            "body": body_code,
+            "global": global_code
         }

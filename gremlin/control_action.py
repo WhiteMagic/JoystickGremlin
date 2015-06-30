@@ -20,6 +20,27 @@
 from gremlin.event_handler import EventHandler
 
 
+class ModeList(object):
+
+    """Represents a list of modes to cycle through."""
+
+    def __init__(self, modes):
+        """Creates a new instance with the provided modes.
+
+        :param modes list of mode names to cycle through
+        """
+        self._modes = modes
+        self._current_index = 0
+
+    def next(self):
+        """Returns the next mode in the sequence.
+
+        :return name of the next mode in sequence
+        """
+        self._current_index = (self._current_index + 1) % len(self._modes)
+        return self._modes[self._current_index]
+
+
 def switch_mode(mode):
     """Switches the currently active mode to the one provided.
 
@@ -43,15 +64,7 @@ def cycle_modes(mode_list):
     :param mode_list list of mode names to cycle through
     """
     eh = EventHandler()
-    if len(mode_list) == 0:
-        mode_list = ["Global"]
-
-    mode = eh.active_mode
-    if mode not in mode_list:
-        eh.change_mode(mode_list[0])
-    else:
-        idx = (mode_list.index(mode)+1) % len(mode_list)
-        eh.change_mode(mode_list[idx])
+    eh.change_mode(mode_list.next())
 
 
 def pause():
