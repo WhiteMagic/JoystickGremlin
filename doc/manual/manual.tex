@@ -96,17 +96,17 @@ Python as its scripting. The major features of Joystick Gremlin are:
 \begin{itemize}
     \item Merging of multiple devices into a single device
     \item Axis response curve and dead zone configuration
-    \item Arbitrary number of modes with customisable mode switching
+    \item Arbitrary number of modes with customisable mode switching and
+        inheritance
     \item Keyboard macros
     \item Python scripting support
 \end{itemize}
 
-\JG{} can be used via a graphical user interface or a simple console
-script. The UI allows commonly performed tasks, such as input remapping,
-axis response curve setups, and macro recording to be performed using a
-graphical interface. Functionality that is not accessible via the UI can
-be implemented through custom modules, see \secref{custom_modules}. The
-console program uses these custom modules exclusively.
+\JG{} provides a graphical user interface which allows commonly
+performed tasks, such as input remapping, axis response curve setups,
+and macro recording to be performed easily. Functionality that is not
+accessible via the UI can be implemented through custom modules,
+explained in \secref{custom_modules} in detail.
 
 
 \subsection{Installation}
@@ -123,7 +123,7 @@ listed below:
 
 vJoy creates virtual joysticks which show up as a device in Windows and
 \JG{} uses these to forward inputs to them. The VC2010 package is
-required by Python but is likely to already be installed.
+required by Python but is likely to already installed.
 
 \subsubsection{vJoy Configuration}
 
@@ -163,20 +163,19 @@ can change between the different modes.
 
 \subsubsection{Action}
 An action is something \JG{} executes when an input is used. Examples
-are running a macro, sending button presses to vJoy, or changing to a
+include running a macro, sending button presses to vJoy, or changing to a
 different mode. Each action has a condition attached to it which
 dictates when it is executed. For buttons this is the state, i.e.\
 pressed or released.
 
 \subsubsection{Mode}
-A mode is a collection of actions associated with the various inputs.
-Each mode is independent of all other modes, i.e.\ their settings do
-never conflict as only a single mode is active at any point in time.
-
-An exception to this is the \emph{global} mode. This mode always exists
-and allows for settings to be shared between all modes. However, global
-actions will only be used if a mode has no actions associated with a
-given input.
+A mode is a collection of actions associated with different inputs.
+Each mode can inherit from one other mode, his parent. If a mode and its
+parent both define actions for the same input only the actions of the
+mode and not its parent are used. Similarly, if the mode defines no
+actions for an input but the parent does the parent's actions are used.
+This allows having a common set of base commands that more specialised
+modes add to or change.
 
 
 
@@ -256,8 +255,8 @@ up the main user interface, shown in \figref{main-ui}.
         associated with the currently selected input. This panel allows
         the customisation of existing actions and the addition of new
         ones.
-    \item The mode management section allows changing the mode currently
-        being configured as well as adding and removing existing modes.
+    \item The mode section allows changing the mode currently being
+        configured.
     \item The status bar shows whether or not the program is currently
         running a profile and if so the currently active mode is shown
         as well as whether or not code execution is paused.
@@ -282,8 +281,8 @@ up the main user interface, shown in \figref{main-ui}.
 As described in \secref{concepts}, each input, such as axis, button,
 hat, or keyboard key, can have multiple actions associated with them.
 However, not all inputs have access to the same types of actions as they
-are not applicable to them. The following section describes all the
-available actions.
+are not applicable to them. In the following all available actions are
+described.
 
 Each action has an activation condition associated with it which can be
 used for fine grained control over them. Additionally, each input can
@@ -525,6 +524,31 @@ list and pressing the \emph{Add} button. The currently selected mode can
 be deleted by pressing the \emph{Delete} button and moved up or down
 with the \emph{Up} and \emph{Down} button respectively.
 
+
+\subsubsection{Text to Speech}
+
+This action allows arbitrary text to be spoken by \JG{}. The system
+knows how to replace some values with current information. The currently
+known replacements are:
+
+\begin{table}[h]
+    \centering
+
+    \begin{tabular}{ll}
+        \toprule
+        Expression & Replacement \\
+        \midrule
+        \verb+${current_mode}+ & The name of the currently active mode \\
+        \bottomrule
+    \end{tabular}
+
+    \caption{List of replacements known to the text-to-speech system.}
+\end{table}
+
+The text segments are spoken in the order they are requested and as such
+queueing multiple long segments can lead to significant delays between
+them being triggered and played.
+
 \FloatBarrier
 
 
@@ -608,29 +632,6 @@ their full range and press the \emph{Center} button when all axes are
 centered. Once done press \emph{Save} to save the calibration to the
 configuration file.
 
-
-
-% +-----------------------------------------------------------------------------
-% | Using the Console Program
-% +-----------------------------------------------------------------------------
-\section{Using the Console Program}
-\label{sec:console}
-
-As mentioned there is also a command line version of \JG{}. This
-version does not allow any configuration of settings but simply uses
-user provided modules, covered in \secref{custom_modules}. This is
-intended for users that wish to write completely customised
-configurations making use of Python scripting without the UI ever being
-shown.
-
-An example usage of the console program is as follows:
-\begin{minted}{bash}
-    ./console_only profile_folder global hornet hull_c
-\end{minted}
-
-This starts the program and adds the folder \verb+profile_folder+ to
-Python's module path and then loads the contents of the \verb+global+,
-\verb+hornet+, and \verb+hull_c+ modules.
 
 
 % +-----------------------------------------------------------------------------
