@@ -693,7 +693,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._profile = new_profile
         self._profile_fname = fname
 
-        self._current_mode = util.mode_list(self._profile)[0]
+        # Make the first root node the default active mode
+        self._current_mode = list(self._profile.build_inheritance_tree().keys())[0]
 
         # Update device profiles
         self._create_tabs()
