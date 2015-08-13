@@ -721,6 +721,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = None
 
         self._create_tabs()
+        self._create_help_screen()
 
     def save_profile(self):
         """Saves the current profile to the hard drive.
@@ -888,6 +889,9 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Only handle events for the currently active device
         widget = self.ui.devices.currentWidget()
+        if isinstance(widget, QtWidgets.QTextEdit):
+            return
+
         if util.device_id(event) == util.device_id(widget.device_profile):
             if self._should_process_input(event):
                 ui_event_type = gremlin.event_handler.\
@@ -967,6 +971,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Create actual tabs
         self.ui.devices.clear()
         self.tabs = {}
+
         # Create joystick devices
         vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
         phys_devices = [dev for dev in self.devices if not dev.is_virtual]
@@ -1003,11 +1008,48 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.tabs[util.device_id(device_profile)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
+        # Add the getting started tab
+        widget = QtWidgets.QTextEdit()
+        widget.setReadOnly(True)
+        widget.setHtml("""
+
+<h2>Welcome to Joystick Gremlin</h2>
+
+Creating a new profile involves the following steps:
+<ol>
+    <li>Create a new empty profile</li>
+    <li>Create at least one mode</li>
+    <li>Add actions to different inputs</li>
+    <li>Save the profile</li>
+    <li>Run the profile</li>
+</ol>
+
+<p>Before you can start adding actions to various inputs you need to create a
+new mode. This is achieved via <i>Tools > Manage Modes</i>. This opens a new
+window, clicking on the <b>Add Mode</b> button allows you to name the new
+mode.</p>
+
+<p>Once you have added a new mode you can assign actions to the various inputs
+by clicking on the appropriate button in the UI or pressing the desired button,
+moving the desired axis on the joystick. Once the input for which you want to
+add an action is selected you can select the type of action to add from the
+dropdown list and then press the <b>Add</b> button. Depending on what type of
+action was added different settings can be changed.</p>
+
+        """)
+        self.ui.devices.addTab(widget, "Getting Started")
+
         # Update mode selector
         self.mode_selector.populate_selector(
             self._profile,
             self._current_mode
         )
+
+    def _create_help_screen(self):
+        """Creates a UI element displayed in the details pane helping new
+        users to get started.
+        """
+        pass
 
     def _create_statusbar(self):
         """Creates the ui widgets used in the status bar."""
