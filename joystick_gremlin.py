@@ -53,6 +53,7 @@ class CodeRunner(object):
         self.event_handler.add_plugin(input_devices.VJoyPlugin())
         self.event_handler.add_plugin(input_devices.KeyboardPlugin())
 
+        self._inheritance_tree = None
         self._running = False
 
     def is_running(self):
@@ -69,6 +70,7 @@ class CodeRunner(object):
             different modes
         """
         # Reset states to their default values
+        self._inheritance_tree = inheritance_tree
         self._reset_state()
 
         # Load the generated code
@@ -100,7 +102,7 @@ class CodeRunner(object):
             evt_listener.joystick_event.connect(self.event_handler.process_event)
             evt_listener.keyboard_event.connect(kb.keyboard_event)
 
-            self.event_handler.change_mode("Global")
+            self.event_handler.change_mode(list(self._inheritance_tree.keys())[0])
             self.event_handler.resume()
             self._running = True
         except ImportError as e:
@@ -129,8 +131,8 @@ class CodeRunner(object):
 
     def _reset_state(self):
         """Resets all states to their default values."""
-        self.event_handler._active_mode = "Global"
-        self.event_handler._previous_mode = "Global"
+        self.event_handler._active_mode = list(self._inheritance_tree.keys())[0]
+        self.event_handler._previous_mode = list(self._inheritance_tree.keys())[0]
 
 
 class Repeater(QtCore.QObject):
@@ -636,7 +638,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.mode_selector = ModeWidget()
         self.ui.toolBar.addWidget(self.mode_selector)
 
-        self._current_mode = "Global"
+        self._current_mode = None
         self._profile = profile.Profile()
         self._profile_fname = None
         if self.config.default_profile and os.path.isfile(self.config.default_profile):
@@ -671,6 +673,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         if fname != "":
             self._do_load_profile(fname)
+            self._create_tabs()
             self.config.default_profile = fname
 
     def _do_load_profile(self, fname):
@@ -696,9 +699,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Make the first root node the default active mode
         self._current_mode = list(self._profile.build_inheritance_tree().keys())[0]
 
-        # Update device profiles
-        self._create_tabs()
-
     def new_profile(self):
         """Creates a new empty profile."""
         self._profile = profile.Profile()
@@ -718,6 +718,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         keyboard_device.type = profile.DeviceType.Keyboard
         self._profile.devices[util.device_id(keyboard_device)] = keyboard_device
         self._profile_fname = None
+        self._current_mode = None
 
         self._create_tabs()
 
@@ -881,6 +882,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         if event.event_type == gremlin.event_handler.InputType.Keyboard:
             return
         if self.runner.is_running():
+            return
+        if self._current_mode is None:
             return
 
         # Only handle events for the currently active device

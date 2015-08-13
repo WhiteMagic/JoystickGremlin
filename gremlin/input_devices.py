@@ -34,7 +34,7 @@ class CallbackRegistry(object):
     def __init__(self):
         self._registry = {}
 
-    def add(self, callback, event, mode="Global", always_execute=False):
+    def add(self, callback, event, mode, always_execute=False):
         device_id = util.device_id(event)
         function_name = callback.__name__
 
@@ -335,7 +335,7 @@ class JoystickDecorator(object):
 
     """Creates customized decorators for physical joystick devices."""
 
-    def __init__(self, name, device_id, mode="Global"):
+    def __init__(self, name, device_id, mode):
         """Creates a new instance with customized decorators.
 
         :param name the name of the device
@@ -446,7 +446,7 @@ def _axis(axis_id, device_id, mode, always_execute=False):
     return wrap
 
 
-def keyboard(key_name, mode="Global", always_execute=False):
+def keyboard(key_name, mode, always_execute=False):
     """Decorator for keyboard key callbacks.
 
     :param key_name name of the key of this callback

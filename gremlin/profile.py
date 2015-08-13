@@ -203,20 +203,19 @@ class Profile(object):
     def get_device_modes(self, device_id, device_name=None):
         """Returns the modes associated with the given device.
 
-        If no entry for the device exists a device entry with an empty
-        "Global" mode will be generated.
-
         :param device_id the key composed of hardware and windows id
         :param device_name the name of the device
         :return all modes for the specified device
         """
         if device_id not in self.devices:
+            # Create the device
             hid, wid = gremlin.util.extract_ids(device_id)
             device = Device(self)
             device.name = device_name
             device.hardware_id = hid
             device.windows_id = wid
-            # Ensure we have a valid device type set
+
+            # Set the correct device type
             device.type = DeviceType.Joystick
             if device_name == "keyboard":
                 device.type = DeviceType.Keyboard
@@ -240,9 +239,12 @@ class Device(object):
         self.modes = {}
         self.type = None
 
-        # Ensure each device has at least an empty "global" mode
-        self.modes["Global"] = Mode(self)
-        self.modes["Global"].name = "Global"
+    def ensure_mode_exists(self, mode_name):
+        if mode_name in self.modes:
+            return
+        mode = Mode(self)
+
+        self.modes[mode.name] = mode
 
     def from_xml(self, node):
         """Populates this device based on the xml data.

@@ -217,11 +217,13 @@ class InputItemButton(QtWidgets.QFrame):
         :param profile_data the profile.InputItem object associated
             with this instance
         """
+        # Clear any potentially existing labels before adding labels
         while self.main_layout.count() > 2:
             item = self.main_layout.takeAt(2)
             item.widget().deleteLater()
             self.main_layout.removeItem(item)
 
+        # Create the actual icons
         for entry in profile_data.actions:
             icon = QtWidgets.QLabel()
             icon.setPixmap(QtGui.QPixmap(entry.icon))
@@ -591,9 +593,11 @@ class ModeWidget(QtWidgets.QWidget):
         self.selector.currentIndexChanged.connect(self._mode_changed_cb)
 
         # Select currently active mode
-        if current_mode is None:
-            current_mode = mode_names[0]
-        self.selector.setCurrentIndex(self.mode_list.index(current_mode))
+        if len(mode_names) > 0:
+            if current_mode is None:
+                current_mode = mode_names[0]
+            self.selector.setCurrentIndex(self.mode_list.index(current_mode))
+            self._mode_changed_cb(self.mode_list.index(current_mode))
 
     @QtCore.pyqtSlot(int)
     def _mode_changed_cb(self, idx):
@@ -697,6 +701,10 @@ class DeviceWidget(QtWidgets.QWidget):
         :param input_type the type of the input item
         :param input_label the id of the input item
         """
+        # If the current mode is not specified don't do anything
+        if self.current_mode is None:
+            return
+
         # Convert the input_label to an id usable as a lookup key
         if input_type == UiInputType.Keyboard:
             assert(isinstance(input_label, str))
@@ -852,12 +860,13 @@ class DeviceWidget(QtWidgets.QWidget):
             for input_type, count in input_counts:
                 for i in range(1, count+1):
                     item = InputItemButton(i, input_type, self)
-                    item.set_labels(
-                        self.device_profile.modes[self.current_mode].get_data(
-                            input_type,
-                            i
+                    if self.current_mode is not None:
+                        item.set_labels(
+                            self.device_profile.modes[self.current_mode].get_data(
+                                input_type,
+                                i
+                            )
                         )
-                    )
                     item.input_item_changed.connect(self._input_item_selection)
                     self.input_items[input_type][i] = item
                     self.input_item_layout.addWidget(item)
@@ -871,12 +880,13 @@ class DeviceWidget(QtWidgets.QWidget):
                                 UiInputType.JoystickHatDirection,
                                 self
                             )
-                            item.set_labels(
-                                self.device_profile.modes[self.current_mode].get_data(
-                                    UiInputType.JoystickHatDirection,
-                                    input_id
+                            if self.current_mode is not None:
+                                item.set_labels(
+                                    self.device_profile.modes[self.current_mode].get_data(
+                                        UiInputType.JoystickHatDirection,
+                                        input_id
+                                    )
                                 )
-                            )
                             item.input_item_changed.connect(
                                 self._input_item_selection
                             )
@@ -885,20 +895,21 @@ class DeviceWidget(QtWidgets.QWidget):
 
         # Populate with configured keyboard inputs
         elif self.device_profile.type == profile.DeviceType.Keyboard:
-            # Add existing keys to the scroll
-            mode = self.device_profile.modes[self.current_mode]
-            key_dict = {}
-            for key, entry in mode._config[UiInputType.Keyboard].items():
-                key_dict[macro.key_from_code(key[0], key[1]).name] = entry
-            for key in sorted(key_dict.keys()):
-                entry = key_dict[key]
-                key_code = (entry.input_id[0], entry.input_id[1])
-                key = macro.key_from_code(key_code[0], key_code[1])
-                item = InputItemButton(key.name, UiInputType.Keyboard, self)
-                item.set_labels(entry)
-                item.input_item_changed.connect(self._input_item_selection)
-                self.input_items[UiInputType.Keyboard][key_code] = item
-                self.input_item_layout.addWidget(item)
+            if self.current_mode is not None:
+                # Add existing keys to the scroll
+                mode = self.device_profile.modes[self.current_mode]
+                key_dict = {}
+                for key, entry in mode._config[UiInputType.Keyboard].items():
+                    key_dict[macro.key_from_code(key[0], key[1]).name] = entry
+                for key in sorted(key_dict.keys()):
+                    entry = key_dict[key]
+                    key_code = (entry.input_id[0], entry.input_id[1])
+                    key = macro.key_from_code(key_code[0], key_code[1])
+                    item = InputItemButton(key.name, UiInputType.Keyboard, self)
+                    item.set_labels(entry)
+                    item.input_item_changed.connect(self._input_item_selection)
+                    self.input_items[UiInputType.Keyboard][key_code] = item
+                    self.input_item_layout.addWidget(item)
 
         # Encountered some other type which should never occur
         else:

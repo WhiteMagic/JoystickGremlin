@@ -321,8 +321,8 @@ class EventHandler(QtCore.QObject):
         self.plugins = []
         self.callbacks = {}
         self._event_lookup = {}
-        self._active_mode = "Global"
-        self._previous_mode = "Global"
+        self._active_mode = None
+        self._previous_mode = None
 
     @property
     def active_mode(self):
