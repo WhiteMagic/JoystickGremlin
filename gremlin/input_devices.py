@@ -346,17 +346,17 @@ class JoystickDecorator(object):
         self.name = name
         self.mode = mode
         self.axis = functools.partial(
-            axis, device_id=device_id, mode=mode
+            _axis, device_id=device_id, mode=mode
         )
         self.button = functools.partial(
-            button, device_id=device_id, mode=mode
+            _button, device_id=device_id, mode=mode
         )
         self.hat = functools.partial(
-            hat, device_id=device_id, mode=mode
+            _hat, device_id=device_id, mode=mode
         )
 
 
-def button(button_id, device_id, mode, always_execute=False):
+def _button(button_id, device_id, mode, always_execute=False):
     """Decorator for button callbacks.
 
     :param button_id the id of the button on the physical joystick
@@ -386,7 +386,7 @@ def button(button_id, device_id, mode, always_execute=False):
     return wrap
 
 
-def hat(hat_id, device_id, mode, always_execute=False):
+def _hat(hat_id, device_id, mode, always_execute=False):
     """Decorator for hat callbacks.
 
     :param hat_id the id of the button on the physical joystick
@@ -416,7 +416,7 @@ def hat(hat_id, device_id, mode, always_execute=False):
     return wrap
 
 
-def axis(axis_id, device_id, mode, always_execute=False):
+def _axis(axis_id, device_id, mode, always_execute=False):
     """Decorator for axis callbacks.
 
     :param axis_id the id of the axis on the physical joystick
