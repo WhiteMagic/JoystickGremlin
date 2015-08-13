@@ -439,7 +439,7 @@ to be moved up and down using the \emph{Up} and \emph{Down} buttons.
 \end{bclogo}
 
 
-\subsubsection{Pause \& Resume}
+\subsubsection{Pause, Resume \& Toggle}
 
 \begin{figure}[bt]
     \centering
@@ -451,11 +451,10 @@ to be moved up and down using the \emph{Up} and \emph{Down} buttons.
     \label{fig:action_pause_resume}
 \end{figure}
 
-The pause and resume actions, shown in \figref{action_pause_resume},
+The pause, resume, and toggle actions, shown in \figref{action_pause_resume},
 control whether or not \JG{} executes callbacks when inputs are used.
 When the application is paused only inputs that were configured to
-\emph{always trigger} will be executed.  The resume action instructs
-\JG{} to process all inputs.
+\emph{always execute} will be executed.
 
 \vspace{1em}
 \begin{bclogo}[
@@ -465,9 +464,9 @@ When the application is paused only inputs that were configured to
     arrondi=0.1,
     logo=\bcinfo
 ]{Note}
-    In order for the \emph{resume} action to be useful it has to be
-    defined as \emph{Always Execute}, as otherwise it will be impossible
-    to resume from the paused state.
+    In order for the \emph{resume} and \emph{toggle} actions to be
+    useful they have to be defined as \emph{always execute}, as
+    otherwise it will be impossible to resume from the paused state.
 \end{bclogo}
 
 
@@ -483,7 +482,7 @@ When the application is paused only inputs that were configured to
 \end{figure}
 
 This action will change the currently active mode of \JG{} to the
-specified one. The dialogue,  shown in \figref{action_change_mode}, has
+specified one. The dialogue, shown in \figref{action_change_mode}, has
 a simple drop down list which contains all the available modes.
 
 
@@ -545,9 +544,18 @@ known replacements are:
     \caption{List of replacements known to the text-to-speech system.}
 \end{table}
 
-The text segments are spoken in the order they are requested and as such
-queueing multiple long segments can lead to significant delays between
-them being triggered and played.
+\vspace{1em}
+\begin{bclogo}[
+    couleur=yellow!40,
+    couleurBord=orange!80,
+    couleurBarre=orange!80,
+    arrondi=0.1,
+    logo=\bcinfo
+]{Note}
+    The text segments are spoken in the order they are requested and as
+    such queueing multiple long segments can lead to significant delays
+    between them being triggered and played.
+\end{bclogo}
 
 \FloatBarrier
 
@@ -555,8 +563,7 @@ them being triggered and played.
 \subsection{Tools}
 
 In the following section the various tools provided by \JG{} are
-described. They can be accessed via the \emph{Tools} menu in the menu
-bar.
+described. They can be accessed via the \emph{Tools} menu.
 
 \subsubsection{Custom Module Management}
 
@@ -573,7 +580,7 @@ functionality that is not present. However, by using custom modules,
 described in \secref{custom_modules}, the limitations of the UI can
 easily be overcome. The module configuration dialogue,
 \figref{custom_module}, can be opened via \emph{Tools $\rightarrow$
-Manage Custom Modules}. The modules listed here will be loaded in
+Manage Custom Modules}. The modules listed there will be loaded in
 conjunction with the UI based configuration, allowing the use of the UI
 for common tasks and implementing specialised functionality in a custom
 module. Modules are added via the \emph{Add} button and likewise removed
@@ -594,7 +601,7 @@ by selecting the desired module and pressing the \emph{Delete} button.
 Information about connected devices can be accessed via \emph{Tools
 $\rightarrow$ Device Information}. This window, shown in
 \figref{device_information}, provides an overview of the devices known
-to \JG{}, listing the name as well as some basic information of each
+to \JG{}, listing the name as well as some basic information about each
 device. The \emph{System ID} represents the order in which the devices
 are seen by the operating system, while the \emph{Hardware ID} is an
 identifier that is unique to each device.
@@ -642,12 +649,12 @@ configuration file.
 
 While common configuration tasks can be performed directly via the UI,
 more advanced and specialised configurations require writing custom
-modules. Each module is a simple Python script which defines callbacks
-triggered in reaction to inputs being used. Since the callbacks are
-written in Python there is no limit to what can be expressed. In the
-following \secref{cm_principles} provides a general overview of the
-layout of a custom module, followed by an overview of the API in
-\secref{cm_api}, before a few examples are shown in
+modules. Each module is a simple Python script which defines the
+functions (callbacks) triggered in reaction to inputs being used. Since
+the functions are written in Python there is no limit to what can be
+expressed. In the following \secref{cm_principles} provides a general
+overview of the layout of a custom module, followed by an overview of
+the API in \secref{cm_api}, before a few examples are shown in
 \secref{cm_examples}.
 
 
@@ -657,7 +664,7 @@ layout of a custom module, followed by an overview of the API in
 Joystick Gremlin uses callbacks, i.e.\ functions that are executed in
 reaction to user inputs such as key presses or axis motions. These
 callbacks have access to some convenience functions which allow
-accessing and controlling often used parts of the system, such as
+accessing and controlling commonly used parts of the system, such as
 setting the value of vJoy devices or retrieving keyboard and joystick
 states. Combining these readily available functions with custom code
 allows the implementation of varied functionality.
@@ -674,8 +681,9 @@ triggered the execution of the function. Each event is of type
 \verb+gremlin.event_handler.Event+ and contains the following data:
 
 \begin{itemize}
-    \item \verb+event_type+, the type of the event, which is predetermined by
-        the decorator function that was used to decorate the function
+    \item \verb+event_type+, the type of the event, which matches the
+        one of the decorator function that was used to decorate the
+        function
     \item \verb+identifier+, the identifier of the input, specified by the
         input name used in the decorator
     \item \verb+hardware_id+, the hardware id of the device, predetermined by the
@@ -683,8 +691,8 @@ triggered the execution of the function. Each event is of type
     \item \verb+windows_id+, the windows id of the device, predetermined by the
         decorator function that was used to decorate the function
     \item \verb+is_pressed+, indicates if a button or key is pressed or
-        released, only valid for joystick buttons or keyboard keeys
-    \item \verb+value+, value of an axis or hat, only valid fro joystick axes
+        released, only valid for joystick buttons or keyboard keys
+    \item \verb+value+, value of an axis or hat, only valid for joystick axes
         or hats
     \item \verb+raw_value+, the raw axis value, if the \verb+event_type+
         represents an axis
@@ -780,28 +788,11 @@ parameter list will have access to the state of all keyboard keys.
 
 \noindent To read the key state the string representation of the key or
 the \texttt{gremlin.macro.\allowbreak Key} instance corresponding to the
-key is needed. Both  can be found in the \texttt{gremlin.macro} module.
+key is needed. Both can be found in the \texttt{gremlin.macro} module.
 Reading the state is then done as follows:
 \begin{minted}{python}
     is_pressed = keyboard.is_pressed(key)
 \end{minted}
-
-
-\subsubsection{Controlling \JG{}}
-
-There is a small number of functions available which control certain
-aspects of \JG{}. The available actions are located in the
-\verb+gremlin.control_action+ module which contains the following
-functions:
-\begin{itemize}
-    \item \verb+switch_mode(<mode name>)+, switch to the specified mode
-    \item \verb+switch_to_previous_mode()+, switch to the mode active
-        previously
-    \item \verb+cycle_modes(<python list of mode names>)+, switch to the
-        next mode in the list
-    \item \verb+pause()+, pause running callbacks due to input events
-    \item \verb+resume()+, resume running callbacks due to input events
-\end{itemize}
 
 
 \subsection{Decorator Based Callback Generation}
@@ -819,14 +810,13 @@ specific devices using the\\
     )
 \end{minted}
 
-Only the \verb+<device name>+ and \verb+<device id>+ parameters are
-mandatory. If \verb+<mode>+ is omitted it defaults to ``global''. The
-value of \verb+<device id>+ depends on whether or not multiple devices
-of the same type are being used. In the case that this is true the
-\verb+device_id+ consists of the tuple of the \verb+hardware_id+ and
-\verb+windows_id+, otherwise, the \verb+hardware_id+ is sufficient. An
-object created in this way has three decorators customised for the given
-joystick which can be used as follows:
+The value of \verb+<device id>+ depends on whether or not multiple
+devices of the same type are being used. In the case of multiple
+identical devices \verb+device_id+ consists of the tuple of the
+\verb+hardware_id+ and \verb+windows_id+, otherwise, the
+\verb+hardware_id+ is sufficient. An object created in this way has
+three decorators customised for the given joystick and mode, which can be
+used as follows:
 \begin{minted}{python}
     @joystick_decorator.axis(AxisName.Y)
     def axis_callback(event):
@@ -848,10 +838,8 @@ The keyboard decorator can be used directly as follows:
         pass
 \end{minted}
 
-Where \verb+<key name>+ is always required and can be either a string
-representation of the key's name as defined in
-\verb+gremlin.macro.Keys+. The \verb+<mode>+ parameter is optional and
-defaults to ``global'' if omitted.
+Where \verb+<key name>+ can be either a string representation of the
+key's name as defined in \verb+gremlin.macro.Keys+.
 
 The \verb+event+ parameter of the decorated function is always required
 and contains the state of the input used in the decoration, as described
