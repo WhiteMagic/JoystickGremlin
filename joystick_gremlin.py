@@ -525,7 +525,7 @@ class ModeManagerUi(QtWidgets.QWidget):
                     new_mode = profile.Mode(device)
                     new_mode.name = name
                     device.modes[name] = new_mode
-                    self.modes_changed.emit()
+                self.modes_changed.emit()
 
             self._populate_mode_layout()
 
