@@ -663,6 +663,13 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._last_input_event = None
         self._enable_joystick_input_highlighting()
 
+    def closeEvent(self, evt):
+        """Terminate the entire application if the main window is closed.
+
+        :param evt the closure event
+        """
+        QtCore.QCoreApplication.quit()
+
     def load_profile(self):
         """Prompts the user to select a profile file to load."""
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
