@@ -755,7 +755,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         if checked:
             self.generate()
             self.runner.start(self._profile.build_inheritance_tree())
-            self._update_statusbar_active(True)
         else:
             self.runner.stop()
             self._update_statusbar_active(False)
