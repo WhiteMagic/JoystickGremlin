@@ -52,7 +52,7 @@ class PauseAction(AbstractAction):
 
     """Action for pausing the execution of callbacks."""
 
-    icon = "gfx/icon_action.svg"
+    icon = "gfx/icon_action.png"
     name = "Pause"
     widget = PauseActionWidget
     input_types = [
@@ -109,7 +109,7 @@ class ResumeAction(AbstractAction):
 
     """Action to resume callback execution."""
 
-    icon = "gfx/icon_action.svg"
+    icon = "gfx/icon_action.png"
     name = "Resume"
     widget = ResumeActionWidget
     input_types = [
@@ -166,7 +166,7 @@ class TogglePauseResumeAction(AbstractAction):
 
     """Action to resume callback execution."""
 
-    icon = "gfx/icon_action.svg"
+    icon = "gfx/icon_action.png"
     name = "Toggle Pause & Resume"
     widget = TogglePauseResumeActionWidget
     input_types = [

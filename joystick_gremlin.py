@@ -728,7 +728,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = None
 
         self._create_tabs()
-        self._create_help_screen()
 
     def save_profile(self):
         """Saves the current profile to the hard drive.
@@ -888,9 +887,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         """
         if event.event_type == gremlin.event_handler.InputType.Keyboard:
             return
-        if self.runner.is_running():
-            return
-        if self._current_mode is None:
+        if self.runner.is_running() or self._current_mode is None:
             return
 
         # Only handle events for the currently active device
@@ -1025,12 +1022,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile,
             self._current_mode
         )
-
-    def _create_help_screen(self):
-        """Creates a UI element displayed in the details pane helping new
-        users to get started.
-        """
-        pass
 
     def _create_statusbar(self):
         """Creates the ui widgets used in the status bar."""
