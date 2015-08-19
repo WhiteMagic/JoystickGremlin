@@ -652,9 +652,10 @@ more advanced and specialised configurations require writing custom
 modules. Each module is a simple Python script which defines the
 functions (callbacks) triggered in reaction to inputs being used. Since
 the functions are written in Python there is no limit to what can be
-expressed. In the following \secref{cm_principles} provides a general
-overview of the layout of a custom module, followed by an overview of
-the API in \secref{cm_api}, before a few examples are shown in
+expressed. The following section assumes some basic familiarity with
+Python. \secref{cm_principles} provides a general overview of the layout
+of a custom module, followed by an overview of the API in
+\secref{cm_api}, before a few examples are shown in
 \secref{cm_examples}.
 
 
@@ -670,7 +671,7 @@ states. Combining these readily available functions with custom code
 allows the implementation of varied functionality.
 
 The general structure of a callback is as follows:
-\begin{minted}{python}
+\begin{minted}{text}
     @decorator_function(<input name>)
     def callback_function(event, <optional parameter list>):
         <callback implementation>
@@ -818,7 +819,7 @@ identical devices \verb+device_id+ consists of the tuple of the
 three decorators customised for the given joystick and mode, which can be
 used as follows:
 \begin{minted}{python}
-    @joystick_decorator.axis(AxisName.Y)
+    @joystick_decorator.axis(1)
     def axis_callback(event):
         pass
 
@@ -839,7 +840,8 @@ The keyboard decorator can be used directly as follows:
 \end{minted}
 
 Where \verb+<key name>+ can be either a string representation of the
-key's name as defined in \verb+gremlin.macro.Keys+.
+key's name as or an instance of \verb+gremlin.marco.Keys.Key+ which are
+both defined in\\\verb+gremlin.macro.Keys+.
 
 The \verb+event+ parameter of the decorated function is always required
 and contains the state of the input used in the decoration, as described
@@ -875,16 +877,16 @@ joystick.
 \subsubsection{Mode Switching}
 
 This script presents a few different ways of using mode switching
-functionalities. The first callback switches to the \emph{readio} mode
+functionalities. The first callback switches to the \emph{Radio} mode
 while the button is being held down and once the button is released the
 previous mode is restored. The next callback simply cycles through the
-\emph{global}, \emph{radio}, and \emph{landing} modes. The last callback
-switches directly to the \emph{global} mode.
+\emph{Global}, \emph{Radio}, and \emph{Landing} modes. The last callback
+switches directly to the \emph{Global} mode.
 
 \inputminted[xleftmargin=2em]{python}{examples/mode_switching.py}
 
 
-\subsubsection{Sniper Mode}
+\subsubsection{Precision Mode}
 
 This script switches to a lower sensitivity curve when any of the
 weapon groups are being fired and switches back to the default profile
