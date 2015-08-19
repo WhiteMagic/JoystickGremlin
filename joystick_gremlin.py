@@ -702,6 +702,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._sanitize_profile(new_profile)
         self._profile = new_profile
         self._profile_fname = fname
+        self._update_window_title()
 
         # Make the first root node the default active mode
         self._current_mode = list(self._profile.build_inheritance_tree().keys())[0]
@@ -726,6 +727,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._profile.devices[util.device_id(keyboard_device)] = keyboard_device
         self._profile_fname = None
         self._current_mode = None
+        self._update_window_title()
 
         self._create_tabs()
 
@@ -739,6 +741,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile.to_xml(self._profile_fname)
         else:
             self.save_profile_as()
+        self._update_window_title()
 
     def save_profile_as(self):
         """Prompts the user for a file to save to profile to."""
@@ -751,6 +754,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         if fname != "":
             self._profile.to_xml(fname)
             self._profile_fname = fname
+        self._update_window_title()
 
     def activate(self, checked):
         """Activates and deactivates the code runner.
@@ -936,6 +940,15 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._last_input_event = event
             self._last_input_timestamp = time.time()
             return True
+
+    def _update_window_title(self):
+        """Updates the window title to include the current profile."""
+        if self._profile_fname is not None:
+            self.setWindowTitle("Joystick Gremlin - {}".format(
+                os.path.basename(self._profile_fname))
+            )
+        else:
+            self.setWindowTitle("Joystick Gremlin")
 
     def _sanitize_profile(self, profile_data):
         """Validates a profile file before actually loading it.
