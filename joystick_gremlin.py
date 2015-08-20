@@ -509,9 +509,25 @@ class ModeManagerUi(QtWidgets.QWidget):
         :param mode the mode to update
         :param inherit the name of the mode this mode inherits from
         """
-        for name, device in self._profile.devices.items():
-            device.modes[mode].inherit = inherit
-        self.modes_changed.emit()
+        # Check if this inheritance would cause a cycle, turning the
+        # tree structure into a graph
+        has_inheritance_cycle = False
+        if inherit != "None":
+            all_modes = list(self._profile.devices.values())[0].modes
+            cur_mode = inherit
+            while all_modes[cur_mode].inherit is not None:
+                if all_modes[cur_mode].inherit == mode:
+                    has_inheritance_cycle = True
+                    break
+                cur_mode = all_modes[cur_mode].inherit
+
+        # Update the inheritance information in the profile
+        if not has_inheritance_cycle:
+            for name, device in self._profile.devices.items():
+                if inherit == "None":
+                    inherit = None
+                device.modes[mode].inherit = inherit
+            self.modes_changed.emit()
 
     def _add_mode_cb(self, checked):
         """Asks the user for a new mode to add.
