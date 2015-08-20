@@ -240,6 +240,9 @@ class CalibrationUi(QtWidgets.QWidget):
         for device in self.devices:
             self.device_dropdown.addItem(device.name)
 
+        # Set the title
+        self.setWindowTitle("Calibration")
+
         # Various buttons
         self.button_close = QtWidgets.QPushButton("Close")
         self.button_close.pressed.connect(self.close)

@@ -80,6 +80,7 @@ class DeviceInformationWidget(QtWidgets.QWidget):
 
         self.devices = devices
 
+        self.setWindowTitle("Device Information")
         self.main_layout = QtWidgets.QGridLayout(self)
 
         self.main_layout.addWidget(QtWidgets.QLabel("<b>Name</b>"), 0, 0)
