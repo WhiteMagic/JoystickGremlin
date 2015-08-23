@@ -21,7 +21,7 @@ from PyQt5 import QtGui, QtPrintSupport
 from mako.template import Template
 
 import gremlin
-from gremlin.event_handler import InputType
+from gremlin.common import UiInputType
 
 templates = {
     "pdf": {
@@ -226,7 +226,7 @@ def sort_data(data):
     """
     sorted_data = []
 
-    for input_type in gremlin.event_handler.InputType:
+    for input_type in gremlin.common.UiInputType:
         for key, value in sorted(data.items(), key=lambda x: x[0][1]):
             if input_type == key[0]:
                 sorted_data.append(
@@ -240,7 +240,7 @@ def generate_cheatsheet(file_format, fname, profile):
     """Generates HTML documentation of the provided profile.
 
     :param file_format the output format
-    :param fname the file to store the cheathseet in
+    :param fname the file to store the cheatsheet in
     :param profile the profile to process
     """
     mode_names = sorted(list(profile.devices.values())[0].modes.keys())
@@ -311,13 +311,21 @@ def format_input_name(input_type, identifier):
     :return formatted string of the provided input
     """
     type_map = {
-        InputType.JoystickAxis: "Axis",
-        InputType.JoystickButton: "Button",
-        InputType.JoystickHat: "Hat",
-        InputType.Keyboard: "Key",
+        UiInputType.JoystickAxis: "Axis",
+        UiInputType.JoystickButton: "Button",
+        UiInputType.JoystickHat: "Hat",
+        UiInputType.JoystickHatDirection: "Hat Direction",
+        UiInputType.Keyboard: "Key",
     }
 
-    if input_type == InputType.Keyboard:
+    if input_type == UiInputType.Keyboard:
         return gremlin.macro.key_from_code(identifier[0], identifier[1]).name
+    elif input_type == UiInputType.JoystickHatDirection:
+        input_id = int(identifier / 10)
+        direction = int(identifier % 10)
+        return "Hat {} {}".format(
+            input_id,
+            gremlin.common.index_to_direction(direction)
+        )
     else:
         return "{} {}".format(type_map[input_type], identifier)
