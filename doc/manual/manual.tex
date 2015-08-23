@@ -14,7 +14,7 @@
 
 % Figure related packages
 \usepackage{graphicx}
-\usepackage[font={footnotesize}]{subfig}
+\usepackage[font={footnotesize}]{subcaption}
 \usepackage{placeins}
 
 % Better tables
@@ -199,48 +199,7 @@ up the main user interface, shown in \figref{main-ui}.
 \begin{figure}[bt]
     \centering
 
-    \begin{tikzpicture}[
-        box/.style={
-            draw=red,
-        },
-        label/.style={
-            color=red,
-        }
-    ]
-        \node [anchor=south west, inner sep=0] (image) at (0, 0)
-            {\includegraphics[width=0.95\linewidth]{images/main_screen}};
-
-        \begin{scope}[x={(image.south east)},y={(image.north west)}]
-            % Input item scroll list
-            \draw [box] (0.02, 0.825) rectangle (0.42, 0.065);
-            \node [label] at (0.20, 0.10) {1};
-
-            % Input item configuration
-            \draw [box] (0.43, 0.825) rectangle (0.98, 0.065);
-            \node [label] at (0.70, 0.10) {2};
-
-            % Mode selector / editor
-            \draw [box] (0.72, 0.96) rectangle (0.99, 0.89);
-            \node [label] at (0.70, 0.93) {3};
-
-            % Status display
-            \draw [box] (0.005, 0.04) rectangle (0.26, -0.005);
-            \node [label] at (0.28, 0.02) {4};
-
-            % Toolbar icons
-            \draw [box] (0.01, 0.96) rectangle (0.12, 0.89);
-            \node [label] at (0.14, 0.93) {5};
-
-            % Device tabs
-            \draw [box] (0.01, 0.87) rectangle (0.21, 0.83);
-            \node [label] at (0.23, 0.85) {6};
-
-            %\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
-            %\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {0.\x}; }
-            %\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {0.\y}; }
-        \end{scope}
-    \end{tikzpicture}
-
+    \includegraphics[width=0.95\linewidth]{images/main_window}
     \caption{The main screen of the user interface.}
     \label{fig:main-ui}
 \end{figure}
@@ -258,15 +217,16 @@ up the main user interface, shown in \figref{main-ui}.
     \item The mode section allows changing the mode currently being
         configured.
     \item The status bar shows whether or not the program is currently
-        running a profile and if so the currently active mode is shown
-        as well as whether or not code execution is paused.
+        running a profile. If the program is running the currently
+        active mode is shown as well if code execution is paused.
     \item Tool bar with the main actions, from left to right
         \begin{itemize}
             \item Open an existing profile, discarding the current one
                 and any unsaved changes to it.
             \item Activate \JG{}, when active the button is pressed and
                 a green icon is shown. This also changes the status bar
-                display. Pressing it again disables \JG{}.
+                display. Pressing the button while \JG{} is running
+                will disabled it again.
             \item Generate code, this generates a configuration based on
                 the current settings. This is also done automatically
                 when \JG{} is activated.
@@ -286,10 +246,11 @@ described.
 
 Each action has an activation condition associated with it which can be
 used for fine grained control over them. Additionally, each input can
-also be configured to be always executed by checking the box near the
-\emph{Always Execute} text in the top right corner. If this is used then
-the associated actions will be performed even if execution is paused.
-This is mainly useful for resuming when execution has been pause.
+also be configured to be always executed by checking the \emph{Always
+Execute} box, see 2. in \figref{main-ui}. Enabling this option results
+in actions associated with that input to be performed even if execution
+of callbacks is paused. This is mainly useful for resuming when
+execution has been paused.
 
 \vspace{1em}
 \begin{bclogo}[
@@ -299,8 +260,8 @@ This is mainly useful for resuming when execution has been pause.
     arrondi=0.1,
     logo=\bcinfo
 ]{Note}
-    Conditions are currently only implemented for joystick buttons and
-    keyboard keys.
+    Activation conditions are currently only implemented for joystick
+    buttons and keyboard keys.
 \end{bclogo}
 
 
@@ -317,9 +278,8 @@ This is mainly useful for resuming when execution has been pause.
 
 The remapping action, shown in \figref{action_remap}, enables the user
 to propagate inputs from a physical joystick input to an equivalent vJoy
-input, i.e.\ axis to axis, button to button and hat to hat.  This for
-example allows the merging of multiple physical devices into a single
-device.
+input, i.e.\ axis to axis, button to button, and hat to hat. This allows
+the merging of multiple physical devices into a single device.
 
 \vspace{1em}
 \begin{bclogo}[
@@ -348,23 +308,23 @@ device.
 The response curve dialogue, shown in \figref{action_response_curve},
 allows the customisation of the response produced by the joystick using
 the curve editor. The shape of the curve is controlled using a set of
-control points which are used to define a cubic spline.
+control points.
 
 A new control point is added by a double left click in an empty area of
-the curve editor. Removing an existing control point is achieved by a
-double right click on the desired point. A single left click on a
-control point will mark the point as active. An active point can be
-dragged in the window to modify it's position. Alternatively, the text
-fields below the curve editor allow for precise numerical values to be
-entered.
+the curve editor. Removing an existing control point is achieved by
+selecting the desired point and pressing the ``Delete'' key on the keyboard.
+A single left click on a control point will mark the point as active. An
+active point can be dragged in the window to modify its position.
+Alternatively, the text fields below the curve editor allow for precise
+numerical values to be entered.
 
 Finally the dead zones for the axis can be defined using the sliders and
 input fields at the bottom of the dialogue. The fields and sliders
-control the full deflection dead zone, left and right inputs, as well as
-the centre deflection dead zones, two centre inputs.
+control the full deflection dead zone (1st and 4th field from the left) as well as
+the centre deflection dead zones (2nd and 3rd field).
 
 Currently there are two types of response curve types available which
-are selected from th drop down menu at the top of the widget:
+are selected from the drop down menu at the top of the widget:
 \begin{description}
     \item[Cubic Spline] A simple spline with only control points dictating
         locations the curve has to pass through. No control over the
@@ -444,8 +404,7 @@ to be moved up and down using the \emph{Up} and \emph{Down} buttons.
 \begin{figure}[bt]
     \centering
 
-    \includegraphics[width=0.75\linewidth]{images/action_pause}
-    \includegraphics[width=0.75\linewidth]{images/action_resume}
+    \includegraphics[width=0.95\linewidth]{images/action_pause_resume}
 
     \caption{Pause and resume action dialogues.}
     \label{fig:action_pause_resume}
@@ -523,6 +482,7 @@ list and pressing the \emph{Add} button. The currently selected mode can
 be deleted by pressing the \emph{Delete} button and moved up or down
 with the \emph{Up} and \emph{Down} button respectively.
 
+\FloatBarrier
 
 \subsubsection{Text to Speech}
 
@@ -554,7 +514,7 @@ known replacements are:
 ]{Note}
     The text segments are spoken in the order they are requested and as
     such queueing multiple long segments can lead to significant delays
-    between them being triggered and played.
+    between them being triggered and played back.
 \end{bclogo}
 
 \FloatBarrier
@@ -565,26 +525,54 @@ known replacements are:
 In the following section the various tools provided by \JG{} are
 described. They can be accessed via the \emph{Tools} menu.
 
-\subsubsection{Custom Module Management}
+\subsubsection{Mode Manager}
 
 \begin{figure}[bt]
     \centering
 
-    \includegraphics[width=0.3\linewidth]{images/module_manager}
-    \caption{Module manager window loading a single external module.}
-    \label{fig:custom_module}
+    \includegraphics[height=3cm]{images/mode_manager}
+    \quad
+    \includegraphics[height=3cm]{images/module_manager}
+
+    \caption{(Left) The mode manager allows the creation and deletion of
+    modes, as well as defining their relationship.  (Right) The user
+    module manager allows defining external modules to load}
+
+    \label{fig:mode_module_screens}
 \end{figure}
+
+The mode manager, accessed via \emph{Tools $\rightarrow$ Manage Modes}
+and shown in \figref{mode_module_screens} (left), allows users to create
+new modes, delete existing ones and define which mode inherits
+configurations from others. Pressing ``Add Mode'' adds a new mode, while
+pressing the button to the right of each mode with the \textbf{X} on it
+deletes it. Using the drop down menu each mode can be configured to
+inherit from one other mode by selecting its name or not inheriting from
+any mode by selecting the ``None'' entry.
+
+
+\subsubsection{User Module Managemer}
 
 While the UI exposes commonly performed customisations there is
 functionality that is not present. However, by using custom modules,
 described in \secref{custom_modules}, the limitations of the UI can
 easily be overcome. The module configuration dialogue,
-\figref{custom_module}, can be opened via \emph{Tools $\rightarrow$
-Manage Custom Modules}. The modules listed there will be loaded in
-conjunction with the UI based configuration, allowing the use of the UI
-for common tasks and implementing specialised functionality in a custom
-module. Modules are added via the \emph{Add} button and likewise removed
-by selecting the desired module and pressing the \emph{Delete} button.
+\figref{mode_module_screens} (right), can be opened via \emph{Tools
+$\rightarrow$ Manage Custom Modules}. The modules listed there will be
+loaded in conjunction with the UI based configuration, allowing the use
+of the UI for common tasks and implementing specialised functionality in
+a custom module. Modules are added via the \emph{Add} button and
+likewise removed by selecting the desired module and pressing the
+\emph{Delete} button.
+
+
+\subsubsection{Input Repeater}
+
+By enabling the \emph{Input Repeater} option via \emph{Tools
+$\rightarrow$ Input Repeater}, \JG{} will repeat the last remapped input
+after a short wait period. This allows button presses and axes movements
+to be mapped in-game when the game detects the physical device's inputs
+instead of the virtual ones.
 
 
 \subsubsection{Device Information}
@@ -621,24 +609,33 @@ identifier that is unique to each device.
 \end{bclogo}
 
 
-\subsubsection{Input Repeater}
-
-By enabling the \emph{Input Repeater} option via \emph{Tools
-$\rightarrow$ Input Repeater}, \JG{} will repeat the last remapped input
-after a short wait period. This allows button presses and axes movements
-to be mapped in-game when the game picks up the physical device over the
-virtual one.
-
-
 \subsubsection{Calibration}
 
-The axes calibration screen can be accessed via \emph{Tools
-$\rightarrow$ Calibration}. This screen allows the selection of the
-device to calibrate. To calibrate the axes simply move them through
-their full range and press the \emph{Center} button when all axes are
-centered. Once done press \emph{Save} to save the calibration to the
-configuration file.
+\begin{figure}[bt]
+    \centering
 
+    \includegraphics[width=0.6\linewidth]{images/calibration}
+    \caption{The calibration tool allows the calibration of all
+    connected devices independent of Windows.}
+    \label{fig:calibration}
+\end{figure}
+
+The axes calibration screen, \figref{calibration} accessed via
+\emph{Tools $\rightarrow$ Calibration}, allows the calibration of
+connected devices independent of Windows. The window shows the current,
+minimum, centre, and maximum value for each analogue axis of the
+selected device. To calibrate the axes simply move them through their
+full range and press the \emph{Centered} button when all axes are
+centred. Once done press \emph{Save} to save the calibration of the
+currently selected device to the configuration file.
+
+
+\subsubsection{Cheatsheet Generation}
+
+To help remember complex setups \JG{} has the ability to create PDF and
+HTML cheatsheets of the current profile. The output lists for each mode
+the actions of the available devices together with the user provided
+description.
 
 
 % +-----------------------------------------------------------------------------
@@ -651,12 +648,12 @@ While common configuration tasks can be performed directly via the UI,
 more advanced and specialised configurations require writing custom
 modules. Each module is a simple Python script which defines the
 functions (callbacks) triggered in reaction to inputs being used. Since
-the functions are written in Python there is no limit to what can be
+the functions are written in Python there is no limit as to what can be
 expressed. The following section assumes some basic familiarity with
-Python. \secref{cm_principles} provides a general overview of the layout
-of a custom module, followed by an overview of the API in
-\secref{cm_api}, before a few examples are shown in
-\secref{cm_examples}.
+Python. In \secref{cm_principles} a general overview of the layout of a
+custom module is given which is followed by an quick overview of the API
+in \secref{cm_api}. Finally, \secref{cm_examples} provides a few
+practical examples.
 
 
 \subsection{Principle \& Layout of Custom Modules}
@@ -682,21 +679,23 @@ triggered the execution of the function. Each event is of type
 \verb+gremlin.event_handler.Event+ and contains the following data:
 
 \begin{itemize}
-    \item \verb+event_type+, the type of the event, which matches the
-        one of the decorator function that was used to decorate the
-        function
-    \item \verb+identifier+, the identifier of the input, specified by the
-        input name used in the decorator
-    \item \verb+hardware_id+, the hardware id of the device, predetermined by the
-        decorator function that was used to decorate the function
-    \item \verb+windows_id+, the windows id of the device, predetermined by the
-        decorator function that was used to decorate the function
-    \item \verb+is_pressed+, indicates if a button or key is pressed or
-        released, only valid for joystick buttons or keyboard keys
-    \item \verb+value+, value of an axis or hat, only valid for joystick axes
-        or hats
-    \item \verb+raw_value+, the raw axis value, if the \verb+event_type+
-        represents an axis
+    \item \verb+event_type+ The type of the event, which matches that
+        of the decorator used to decorate the function.
+    \item \verb+identifier+ The identifier of the input, which matches
+        that of the decorator used to decorate the function.
+    \item \verb+hardware_id+ The hardware id of the device, which
+        matches that of the decorator used to decorate the function.
+    \item \verb+windows_id+ The windows id of the device, which matches
+        that of the decorator used to decorate the function.
+    \item \verb+is_pressed+ Boolean flag indicating if a button or key
+        is pressed. This field's value is only valid for joystick
+        buttons and keyboard keys.
+    \item \verb+value+ Value of an axis or hat. In case of an axis the
+        value is in the range $\left[-1, 1\right]$ and in the case of a
+        hat a tuple (x direction, y direction) is used. This field's
+        value is only valid for is only for joystick axes and hats.
+    \item \verb+raw_value+ The raw axis value. This field's value is
+        only valid if the \verb+event_type+ represents an axis.
 \end{itemize}
 
 From this list the only values that are typically of interest are the
@@ -706,8 +705,8 @@ From this list the only values that are typically of interest are the
 \subsection{API}
 \label{sec:cm_api}
 
-The following describes the API of the variables exposed via the
-decorator callback framework.
+The following describes the API of the optional variables exposed via
+the decorator callback framework.
 
 
 \subsubsection{vJoy}
@@ -716,9 +715,9 @@ Any decorated function that has a parameter named \verb+vjoy+ in its
 parameter list will have access to all vJoy devices.  Accessing a
 specific \verb+VJoy+ instance is done by indexing the \verb+vjoy+
 object. This object then allows setting the state of inputs by indexing
-the member variables \verb+axis+, \verb+button+, and \verb+hat+.
-All indices start with $1$. The following demonstrates the typical
-usage:
+the member variables \verb+axis+, \verb+button+, and \verb+hat+.  All
+indices start with $1$. The following demonstrates typical usage:
+
 \begin{minted}{python}
     # Access the first vJoy device and press the third button
     vjoy[1].button[3].is_pressed = True
@@ -814,10 +813,10 @@ specific devices using the\\
 The value of \verb+<device id>+ depends on whether or not multiple
 devices of the same type are being used. In the case of multiple
 identical devices \verb+device_id+ consists of the tuple of the
-\verb+hardware_id+ and \verb+windows_id+, otherwise, the
-\verb+hardware_id+ is sufficient. An object created in this way has
-three decorators customised for the given joystick and mode, which can be
-used as follows:
+\verb+hardware_id+ and \verb+windows_id+, otherwise, only the
+\verb+hardware_id+ is used. An object created in this way has three
+decorators customised for the given joystick and mode, which can be used
+as follows:
 \begin{minted}{python}
     @joystick_decorator.axis(1)
     def axis_callback(event):
@@ -841,7 +840,7 @@ The keyboard decorator can be used directly as follows:
 
 Where \verb+<key name>+ can be either a string representation of the
 key's name as or an instance of \verb+gremlin.marco.Keys.Key+ which are
-both defined in\\\verb+gremlin.macro.Keys+.
+both defined in\\\verb+gremlin.macro+ module.
 
 The \verb+event+ parameter of the decorated function is always required
 and contains the state of the input used in the decoration, as described
@@ -878,10 +877,11 @@ joystick.
 
 This script presents a few different ways of using mode switching
 functionalities. The first callback switches to the \emph{Radio} mode
-while the button is being held down and once the button is released the
-previous mode is restored. The next callback simply cycles through the
-\emph{Global}, \emph{Radio}, and \emph{Landing} modes. The last callback
-switches directly to the \emph{Global} mode.
+while the button is being held down and switches back to the previous
+mode once the button is released. The next callback cycles through the
+\emph{Global}, \emph{Radio}, and \emph{Landing} modes with each button
+press. The last callback switches directly to the \emph{Global} mode
+when the button is pressed.
 
 \inputminted[xleftmargin=2em]{python}{examples/mode_switching.py}
 
@@ -897,7 +897,7 @@ enables and disables this by switching the used response curve to one
 which halves the maximum response provided by the joystick at maximum
 deflection.
 
-\inputminted[xleftmargin=2em]{python}{examples/sniper_mode.py}
+\inputminted[xleftmargin=2em]{python}{examples/precision_mode.py}
 
 
 
@@ -907,27 +907,30 @@ deflection.
 \section{Technical Design}
 \label{sec:technical_design}
 
-This section contains information related to implementation details.
+This section contains information related to implementation details of
+\JG{}. This is mainly intended for those that want to get a deeper
+understanding of the internals or extend \JG{} in some way.
 
 
 \subsection{Qt Signal \& Slots for Input Event Communication}
 
-The inputs generated by the users are captured by the
+The inputs generated by the user are captured by the
 \verb+EventListener+ class in the \verb+gremlin.event_handler+ module,
-where they are turned into an \verb+Event+ object which is propagate
-using Qt's signal / slot mechanism. Joystick events are retrieved using
-SDL2 while keyboard events are capture by hooking directly into the
-Windows event queue.
+where they are turned into an \verb+Event+ object which is propagated
+using Qt's signal / slot
+mechanism\footnote{\url{http://doc.qt.io/qt-4.8/signalsandslots.html}}.
+Joystick events are retrieved using SDL2 while keyboard events are
+capture by hooking directly into the Windows event queue.
 
 
 \subsection{Threaded Macro System}
 
 Each macro consists of a sequence of actions which are executed one
-after the other. Each macro is run in a separate thread, in order to
-prevent \JG{} to become unresponsive. This allows multiple macros
-running at the same time and over long periods of time. However, a side
-effect of this is that if multiple long running macros are active at the
-same time they can interfere with each other.
+after the other. Each macro is run in a separate thread in order to
+prevent \JG{} to become unresponsive. This allows multiple macros to run
+at the same time and over long periods of time. However, a side effect
+of this is that if multiple long running macros are active at the same
+time they can interfere with each other.
 
 
 \subsection{Action Plugin System for UI Widgets}
@@ -963,14 +966,14 @@ following methods:
         containing the Python code for this action
 \end{itemize}
 
-The widget which used to display and configure the action has to
-be derived from the \verb+AbstractActionWidget+ class. Each derived
-class needs to provide implementations of the following methods:
+The widget which is used to display and configure the action has to be
+derived from the \verb+AbstractActionWidget+ class. Each derived class
+needs to provide implementations of the following methods:
 \begin{itemize}
     \item \verb+_setup_ui(self)+, which creates all the UI elements and
         other structures necessary for the proper working of the widget
-    \item \verb+to_profile(self)+, which updates the contents of derived
-        \verb+AbstractItem+ associated with this widget
+    \item \verb+to_profile(self)+, which updates the contents of the
+        derived \verb+AbstractItem+ associated with this widget
     \item \verb+initialize_from_profile(self, action_data)+, which
         initialises the data displayed by the widget with the data of
         the provided profile action
@@ -1005,6 +1008,7 @@ in the \verb+gremlin.profile+ module.
     \item Select input currently being used of the active device tab
     \item Modes can now have arbitrary names
     \item Action to toggle pause mode on and off
+    \item Getting started tab with a quick guide added
 \end{itemize}
 
 \textbf{Fixes}
