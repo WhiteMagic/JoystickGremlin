@@ -3,13 +3,13 @@ from gremlin.spline import CubicSpline
 from vjoy.vjoy import AxisName
 
 tm16000 = gremlin.input_devices.JoystickDecorator(
-        "Thrusmaster 16000M", 5314651233
+        "Thrustmaster T.16000M", 1325664945, "Global"
 )
 
 default_curve = CubicSpline(
         [(-1.0, -1.0), (0.0, 0.0), (1.0, 1.0)]
 )
-sniper_curve = CubicSpline(
+precision_curve = CubicSpline(
         [(-1.0, 0.5), (0.0, 0.0), (1.0, 0.5)]
 )
 
@@ -20,7 +20,7 @@ def set_weapon_group(gid, is_pressed):
     global active_curve
     global active_weapon_groups
     if is_pressed:
-        active_curve = sniper_curve
+        active_curve = precision_curve
         active_weapon_groups[gid] = True
     else:
         active_weapon_groups[gid] = False

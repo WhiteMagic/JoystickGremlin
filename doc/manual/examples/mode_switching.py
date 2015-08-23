@@ -6,6 +6,10 @@ chfs = gremlin.input_devices.JoystickDecorator(
     "Global"
 )
 
+mode_list = gremlin.control_action.ModeList(
+        ["Global", "Radio", "Landing"]
+)
+
 @chfs.button(10)
 def temporary_mode_switch(event):
     if event.is_pressed:
@@ -16,9 +20,7 @@ def temporary_mode_switch(event):
 @chfs.button(11)
 def cycle_modes(event):
     if event.is_pressed:
-        gremlin.control_action.cycle_modes(
-                ["Global", "Radio", "Landing"]
-        )
+        gremlin.control_action.cycle_modes(mode_list)
 
 @chfs.button(12)
 def switch_to_global(event):
