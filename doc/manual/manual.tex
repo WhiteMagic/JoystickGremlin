@@ -27,7 +27,7 @@
 % Source code formatting
 \usepackage{minted}
 \usemintedstyle{friendly}
- 
+
 % Tikz setup
 \usepackage{tikz}
 \usetikzlibrary{external}
@@ -92,7 +92,8 @@
 peripherals. It is similar to programs such as CH Products' CH Control
 Manager and Thrusmaster's T.A.R.G.E.T. However, it is manufacturer
 agnostic and thus works with devices from any manufacturer and uses
-Python as its scripting. The major features of Joystick Gremlin are:
+Python as its scripting language. The major features of Joystick Gremlin
+are:
 \begin{itemize}
     \item Merging of multiple devices into a single device
     \item Axis response curve and dead zone configuration
@@ -115,7 +116,10 @@ which \JG{} feeds with data. Download links to the programs needed are
 listed below:
 \begin{itemize}
     \item \href{https://github.com/WhiteMagic/JoystickGremlin}{\JG{}}
-    \item \href{http://vjoystick.sourceforge.net/site/}{vJoy}
+    \item \href{http://vjoystick.sourceforge.net/site/}{vJoy} (direct
+        download link
+        \href{http://sourceforge.net/projects/vjoystick/files/Beta%202.x/2.0.5-120515/vJoy_205_050515.exe/download}{2.0.5
+        2015-05-12})
     \item
         \href{http://www.microsoft.com/en-us/download/details.aspx?id=5555}{VC
         Redistributable 2010}
@@ -131,9 +135,10 @@ In order to properly use \JG{} vJoy has to be configured first. This is
 done via the \emph{Configure vJoy} program. This program allows setting
 the properties of all existing vJoy devices. Typically a single vJoy
 device is enough. In order to use 8-way POV hats with \JG{} the hats
-have the be configured as continuous in vJoy. Once everything is set as
-desired clicking \emph{Ok} configures the vJoy device and closes the
-program.
+have the be configured as continuous in vJoy. \figref{vjoy-config} shows
+what a properly configured vJoy device looks like. Once everything is
+set as desired clicking \emph{Ok} configures the vJoy device and closes
+the program.
 
 \begin{figure}[bt]
     \centering
@@ -142,6 +147,7 @@ program.
     \caption{vJoy Configuration program showing the correct setting for
         the POV hats as well as having all 8 axis and 64 buttons
         configured.}
+    \label{fig:vjoy-config}
 \end{figure}
 
 
@@ -1000,15 +1006,16 @@ in the \verb+gremlin.profile+ module.
 \textbf{New features}
 \begin{itemize}
     \item Added text-to-speech support
-    \item User definable inheritance between modes implemented
+    \item Modes now can form arbitrary, user defined inheritance trees
     \item Generation of HTML and PDF cheatsheets
-    \item Ability to assign actions to individual hat directions added
+    \item Ability to assign actions to individual hat directions
     \item Ability to add a description to each input
     \item Improved cubic Bezier spline interface
-    \item Select input currently being used of the active device tab
+    \item Select input currently being used on the physical device
     \item Modes can now have arbitrary names
     \item Action to toggle pause mode on and off
     \item Getting started tab with a quick guide added
+    \item Simple text-to-speech support
 \end{itemize}
 
 \textbf{Fixes}
