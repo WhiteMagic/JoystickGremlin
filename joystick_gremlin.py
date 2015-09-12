@@ -657,19 +657,23 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.mode_selector = ModeWidget()
         self.ui.toolBar.addWidget(self.mode_selector)
 
+        # Setup profile storage
         self._current_mode = None
         self._profile = profile.Profile()
         self._profile_fname = None
-        if self.config.default_profile and os.path.isfile(self.config.default_profile):
-            self._do_load_profile(self.config.default_profile)
-        else:
-            self.new_profile()
 
+        # Create all required UI elements
         self._setup_icons()
         self._connect_actions()
         self._create_tabs()
         self._create_statusbar()
         self._update_statusbar_active(False)
+
+        # Load existing configuration or create a new one otherwise
+        if self.config.default_profile and os.path.isfile(self.config.default_profile):
+            self._do_load_profile(self.config.default_profile)
+        else:
+            self.new_profile()
 
         # Modal windows
         self.about_window = None
@@ -729,6 +733,7 @@ class GremlinUi(QtWidgets.QMainWindow):
     def new_profile(self):
         """Creates a new empty profile."""
         self._profile = profile.Profile()
+
         # For each connected device create a new empty device entry
         # in the new profile
         for device in [entry for entry in self.devices if not entry.is_virtual]:
@@ -748,7 +753,18 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = None
         self._update_window_title()
 
+        # Create device tabs
         self._create_tabs()
+
+        # Create a default mode
+        for device in self._profile.devices.values():
+            new_mode = profile.Mode(device)
+            new_mode.name = "Default"
+            device.modes["Default"] = new_mode
+        self.mode_configuration_changed()
+
+        # Select the last tab which contains the Getting started guide
+        self.ui.devices.setCurrentIndex(len(self.tabs))
 
     def save_profile(self):
         """Saves the current profile to the hard drive.
