@@ -28,7 +28,7 @@ class VJoyInterface(object):
     elif os.path.isfile(dev_path):
         dll_path = dev_path
     else:
-        raise GremlinError("Unable to loca vjoy dll")
+        raise GremlinError("Unable to locate vjoy dll")
 
     vjoy_dll = ctypes.cdll.LoadLibrary(dll_path)
 
