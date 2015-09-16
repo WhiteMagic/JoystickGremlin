@@ -655,6 +655,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
 
         self.mode_selector = ModeWidget()
+        self.mode_selector.mode_changed.connect(self._update_mode)
+
         self.ui.toolBar.addWidget(self.mode_selector)
 
         # Setup profile storage
@@ -662,18 +664,18 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._profile = profile.Profile()
         self._profile_fname = None
 
+        # Load existing configuration or create a new one otherwise
+        if self.config.default_profile and os.path.isfile(self.config.default_profile):
+            self._do_load_profile(self.config.default_profile)
+        else:
+            self.new_profile()
+
         # Create all required UI elements
         self._setup_icons()
         self._connect_actions()
         self._create_tabs()
         self._create_statusbar()
         self._update_statusbar_active(False)
-
-        # Load existing configuration or create a new one otherwise
-        if self.config.default_profile and os.path.isfile(self.config.default_profile):
-            self._do_load_profile(self.config.default_profile)
-        else:
-            self.new_profile()
 
         # Modal windows
         self.about_window = None
@@ -728,6 +730,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._update_window_title()
 
         # Make the first root node the default active mode
+        self.mode_configuration_changed()
         self._current_mode = list(self._profile.build_inheritance_tree().keys())[0]
 
     def new_profile(self):
@@ -762,6 +765,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             new_mode.name = "Default"
             device.modes["Default"] = new_mode
         self.mode_configuration_changed()
+        self._current_mode = "Default"
 
         # Select the last tab which contains the Getting started guide
         self.ui.devices.setCurrentIndex(len(self.tabs))
@@ -1176,6 +1180,13 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionActivate.setIcon(activate_icon)
         self.ui.actionGenerate.setIcon(QtGui.QIcon("gfx/generate.svg"))
         self.ui.actionOpen.setIcon(QtGui.QIcon("gfx/profile_open.svg"))
+
+    def _update_mode(self, new_mode):
+        """Updates the current mode to the provided one.
+
+        :param new_mode the name of the new current mode
+        """
+        self._current_mode = new_mode
 
     def _update_statusbar_mode(self, mode):
         """Updates the status bar display of the current mode.
