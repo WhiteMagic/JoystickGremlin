@@ -658,7 +658,14 @@ class DeviceWidget(QtWidgets.QWidget):
     cur_palette = QtGui.QPalette()
     cur_palette.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
 
-    def __init__(self, vjoy_devices, device_data, device_profile, current_mode, parent=None):
+    def __init__(
+            self,
+            vjoy_devices,
+            device_data,
+            device_profile,
+            current_mode,
+            parent=None
+    ):
         """Creates a new DeviceWidget object.
 
         :param vjoy_devices list of vjoy devices

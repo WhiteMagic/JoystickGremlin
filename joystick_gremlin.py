@@ -663,6 +663,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = None
         self._profile = profile.Profile()
         self._profile_fname = None
+        # Input selection storage
+        self._last_input_timestamp = time.time()
+        self._last_input_event = None
 
         # Load existing configuration or create a new one otherwise
         if self.config.default_profile and os.path.isfile(self.config.default_profile):
@@ -746,12 +749,16 @@ class GremlinUi(QtWidgets.QMainWindow):
             new_device.windows_id = device.windows_id
             new_device.type = profile.DeviceType.Joystick
             self._profile.devices[util.device_id(new_device)] = new_device
+
+        # Create keyboard device entry
         keyboard_device = profile.Device(self._profile)
         keyboard_device.name = "keyboard"
         keyboard_device.hardware_id = 0
         keyboard_device.windows_id = 0
         keyboard_device.type = profile.DeviceType.Keyboard
         self._profile.devices[util.device_id(keyboard_device)] = keyboard_device
+
+        # Update profile information
         self._profile_fname = None
         self._current_mode = None
         self._update_window_title()
