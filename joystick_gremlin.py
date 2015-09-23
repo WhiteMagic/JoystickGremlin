@@ -684,9 +684,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.module_manager = None
         self.mode_manager = None
 
-        self._last_input_timestamp = time.time()
-        self._last_input_event = None
-        self._enable_joystick_input_highlighting()
+        self._set_joystick_input_highlighting(True)
 
     def closeEvent(self, evt):
         """Terminate the entire application if the main window is closed.
@@ -861,9 +859,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Opens the calibration window."""
         self.calibration_window = CalibrationUi()
         self.calibration_window.show()
-        self._disable_joystick_input_highlighting()
+        self._set_joystick_input_highlighting(False)
         self.calibration_window.closed.connect(
-            self._enable_joystick_input_highlighting
+            lambda: self._set_joystick_input_highlighting(True)
         )
 
     def about(self):
@@ -909,19 +907,18 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         self.repeater.events = event_list
 
-    def _enable_joystick_input_highlighting(self):
-        """Enables the highlighting of the current input when used."""
+    def _set_joystick_input_highlighting(self, is_enabled):
+        """Enables / disables the highlighting of the current input
+        when used."""
         event_listener = EventListener()
-        event_listener.joystick_event.connect(
-            self._joystick_input_selection
-        )
-
-    def _disable_joystick_input_highlighting(self):
-        """Disables the highlighting of the current input when used."""
-        event_listener = EventListener()
-        event_listener.joystick_event.disconnect(
-            self._joystick_input_selection
-        )
+        if is_enabled:
+            event_listener.joystick_event.connect(
+                self._joystick_input_selection
+            )
+        else:
+            event_listener.joystick_event.disconnect(
+                self._joystick_input_selection
+            )
 
     def _joystick_input_selection(self, event):
         """Handles joystick events to select the appropriate input item.
