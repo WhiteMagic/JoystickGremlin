@@ -138,6 +138,20 @@ class Profile(object):
 
         return tree
 
+    def get_root_modes(self):
+        """Returns a list of root modes.
+
+        :return list of root modes
+        """
+        root_modes = []
+        for device in self.devices.values():
+            if device.type != DeviceType.Keyboard:
+                continue
+            for mode_name, mode in device.modes.items():
+                if mode.inherit is None:
+                    root_modes.append(mode_name)
+        return list(set(root_modes))
+
     def from_xml(self, fname):
         """Parses the global XML document into the profile data structure.
 
