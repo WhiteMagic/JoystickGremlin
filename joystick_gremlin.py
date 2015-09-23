@@ -1019,10 +1019,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Creates the tabs of the configuration dialog representing
         the different connected devices.
         """
-        # Disconnect all existing signals
-        for tab in self.tabs.values():
-            self.mode_selector.mode_changed.disconnect(tab._mode_changed_cb)
-
         # Create actual tabs
         self.ui.devices.clear()
         self.tabs = {}
@@ -1043,7 +1039,6 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self._current_mode,
                 self
             )
-            self.mode_selector.mode_changed.connect(widget._mode_changed_cb)
             self.tabs[util.device_id(device)] = widget
             self.ui.devices.addTab(widget, device.name)
 
@@ -1059,7 +1054,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._current_mode,
             self
         )
-        self.mode_selector.mode_changed.connect(widget._mode_changed_cb)
         self.tabs[util.device_id(device_profile)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
@@ -1187,6 +1181,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param new_mode the name of the new current mode
         """
         self._current_mode = new_mode
+
+        # Update all device widgets
+        for widget in self.tabs.values():
+            widget.change_mode(new_mode)
 
     def _update_statusbar_mode(self, mode):
         """Updates the status bar display of the current mode.

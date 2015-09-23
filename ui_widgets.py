@@ -758,13 +758,12 @@ class DeviceWidget(QtWidgets.QWidget):
             self.current_selection = None
             self.current_configuration_dialog = None
 
-    def _mode_changed_cb(self, name):
+    def change_mode(self, name):
         """Update the currently selected mode when it is changed.
 
         :param name the name of the new mode
         """
         self.current_mode = name
-        self.current_selection = None
         self.input_items = {
             UiInputType.JoystickAxis: {},
             UiInputType.JoystickButton: {},
@@ -773,6 +772,13 @@ class DeviceWidget(QtWidgets.QWidget):
             UiInputType.Keyboard: {}
         }
         self._create_ui()
+
+        # Reselect the previous selection if there was one
+        if self.current_selection:
+            self._input_item_selection(
+                self.current_selection[0],
+                self.current_selection[1]
+            )
 
     def _create_ui(self):
         """Clears the main layout of existing contents and initializes
