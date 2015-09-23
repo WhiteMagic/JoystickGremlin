@@ -715,9 +715,10 @@ class DeviceWidget(QtWidgets.QWidget):
 
         # Convert the input_label to an id usable as a lookup key
         if input_type == UiInputType.Keyboard:
-            assert(isinstance(input_label, str))
-            key = macro.key_from_name(input_label)
-            input_id = (key.scan_code, key.is_extended)
+            input_id = input_label
+            if isinstance(input_label, str):
+                key = macro.key_from_name(input_label)
+                input_id = (key.scan_code, key.is_extended)
         else:
             input_id = int(input_label)
 
