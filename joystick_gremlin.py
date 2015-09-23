@@ -711,25 +711,27 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param fname the name of the profile file to load
         """
-        new_profile = profile.Profile()
         try:
-            new_profile.from_xml(fname)
-        except TypeError as e:
-            logging.exception("Invalid profile content:\n{}".format(e))
             new_profile = profile.Profile()
+            new_profile.from_xml(fname)
 
-        profile_folder = os.path.dirname(fname)
-        if profile_folder not in sys.path:
-            sys.path.insert(0, profile_folder)
+            profile_folder = os.path.dirname(fname)
+            if profile_folder not in sys.path:
+                sys.path.insert(0, profile_folder)
 
-        self._sanitize_profile(new_profile)
-        self._profile = new_profile
-        self._profile_fname = fname
-        self._update_window_title()
+            self._sanitize_profile(new_profile)
+            self._profile = new_profile
+            self._profile_fname = fname
+            self._update_window_title()
 
-        # Make the first root node the default active mode
-        self.mode_configuration_changed()
-        self._current_mode = list(self._profile.build_inheritance_tree().keys())[0]
+            # Make the first root node the default active mode
+            self._current_mode = self._profile.get_root_modes()[0]
+            self.mode_configuration_changed()
+        except TypeError as e:
+            # An error occurred while parsing an existing profile,
+            # creating an empty profile instead
+            logging.exception("Invalid profile content:\n{}".format(e))
+            self.new_profile()
 
     def new_profile(self):
         """Creates a new empty profile."""
