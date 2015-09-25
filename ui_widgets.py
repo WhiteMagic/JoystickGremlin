@@ -1087,6 +1087,9 @@ class DeviceWidget(QtWidgets.QWidget):
         keys."""
         # Add the new key to the profile
         key_pair = (key.scan_code, key.is_extended)
+        # Special handling of the right shift key
+        if key == macro.Keys.RShift2:
+            key_pair = (key.scan_code, False)
         input_item = profile.InputItem(
             self.device_profile.modes[self.current_mode]
         )

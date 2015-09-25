@@ -306,7 +306,10 @@ class Keys(object):
     LControl = Key("LControl", 0x1d, False, win32con.VK_LCONTROL)
     LWin = Key("LWin", 0x5b, True, win32con.VK_LWIN)
     LAlt = Key("LAlt", 0x38, False, win32con.VK_LMENU)
-    RShift = Key("RShift", 0x36, True, win32con.VK_RSHIFT)
+    # Right shift key appears to exist in both extended and
+    # non-extended version
+    RShift = Key("RShift", 0x36, False, win32con.VK_RSHIFT)
+    RShift2 = Key("RShift", 0x36, True, win32con.VK_RSHIFT)
     RControl = Key("RControl", 0x1d, True, win32con.VK_RCONTROL)
     RWin = Key("RWin", 0x5c, True, win32con.VK_RWIN)
     RAlt = Key("RAlt", 0x38, True, win32con.VK_RMENU)
