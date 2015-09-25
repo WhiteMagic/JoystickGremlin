@@ -948,7 +948,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             if self._should_process_input(event):
                 ui_event_type = gremlin.event_handler.\
                     system_event_to_input_event(event.event_type)
-                btn = widget.input_items[ui_event_type][event.identifier]
+                btn = widget.ui.input_items[ui_event_type][event.identifier]
                 btn.mousePressEvent(None)
 
     def _should_process_input(self, event):
