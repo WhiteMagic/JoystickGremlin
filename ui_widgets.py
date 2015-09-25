@@ -688,7 +688,20 @@ class UiDeviceWidget(object):
 
     def clear(self):
         """Empties all UI elements."""
+        # Clear layouts which contain the main elements
         _clear_layout(self.input_item_layout)
+        _clear_layout(self.configuration_layout)
+
+        # Delete all storage of input items
+        self.input_items = {
+            UiInputType.JoystickAxis: {},
+            UiInputType.JoystickButton: {},
+            UiInputType.JoystickHat: {},
+            UiInputType.JoystickHatDirection: {},
+            UiInputType.Keyboard: {}
+        }
+
+        # Remove potential button from the input item list
         if self.overview_layout.count() > 1:
             child = self.overview_layout.takeAt(1)
             child.widget().deleteLater()
