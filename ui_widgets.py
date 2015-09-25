@@ -651,6 +651,129 @@ class ModeWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(self.selector)
 
 
+class UiDeviceWidget(object):
+
+    """Creates and manages the UI elements used in a DeviceWidget."""
+
+    def __init__(self, parent=None):
+        """Creates a new instance.
+
+        :param parent the parent widget
+        """
+        self.main_layout = QtWidgets.QHBoxLayout(parent)
+
+        # Input item panel
+        self.overview_layout = QtWidgets.QVBoxLayout()
+        self.input_item_scroll = QtWidgets.QScrollArea()
+        self.scroll_widget = QtWidgets.QWidget()
+        self.input_item_layout = QtWidgets.QVBoxLayout()
+
+        # Configuration panel
+        self.configuration_scroll = QtWidgets.QScrollArea()
+        self.configuration_widget = QtWidgets.QWidget()
+        self.configuration_layout = QtWidgets.QVBoxLayout()
+
+        # Input item button storage
+        self.input_items = {
+            UiInputType.JoystickAxis: {},
+            UiInputType.JoystickButton: {},
+            UiInputType.JoystickHat: {},
+            UiInputType.JoystickHatDirection: {},
+            UiInputType.Keyboard: {}
+        }
+
+        # Initialize the two panels
+        self._initialize_input_item_panel()
+        self._initialize_configuration_panel()
+
+    def clear(self):
+        """Empties all UI elements."""
+        _clear_layout(self.input_item_layout)
+        if self.overview_layout.count() > 1:
+            child = self.overview_layout.takeAt(1)
+            child.widget().deleteLater()
+            self.overview_layout.removeItem(child)
+
+    def set_configuration_dialog(self, dialog):
+        """Displays the provided dialog in the dialog panel.
+
+        :param dialog the dialog widget to display
+        """
+        # Remove existing content from the layout
+        _clear_layout(self.configuration_layout)
+
+        # Display the dialog
+        self.configuration_layout.addWidget(dialog)
+        self.configuration_layout.addStretch(0)
+
+    def update_input_item_panel_size(self):
+        """Updates the size of the widget used to show input items."""
+        self.scroll_widget.setMinimumHeight(
+            20 + (45 * self.input_item_layout.count())
+        )
+        self.input_item_layout.addStretch(0)
+        self.scroll_widget.updateGeometry()
+
+    def _initialize_input_item_panel(self):
+        """Initializes the widgets required to display the input item
+        buttons.
+
+        The widgets and layouts are arranged as follows:
+        main_layout
+        +- overview_layout
+           +- input_item_scroll
+           |  +- scroll_widget
+           |     +- input_item_layout
+           |- new_key_button (keyboard device only)
+        """
+        # Configure the widget
+        self.scroll_widget.setMinimumWidth(350)
+        self.scroll_widget.setLayout(self.input_item_layout)
+        self.scroll_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Expanding
+        )
+
+        # Configure the scroll area
+        self.input_item_scroll.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding,
+            QtWidgets.QSizePolicy.MinimumExpanding
+        ))
+        self.input_item_scroll.setMinimumWidth(375)
+        self.input_item_scroll.setWidget(self.scroll_widget)
+
+        # Put everything together and add to the main layout
+        self.overview_layout.addWidget(self.input_item_scroll)
+        self.main_layout.addLayout(self.overview_layout)
+
+    def _initialize_configuration_panel(self):
+        """Creates the panel which will show input item specific
+        configuration options.
+
+        The widgets and layouts are arranges as follows:
+        main_layout
+        +- configuration_scroll
+           +- configuration_widget
+              +- configuration_layout
+        """
+        # Main widget within the scroll area which contains the
+        # actual layout
+        self.configuration_widget.setMinimumWidth(500)
+        self.configuration_widget.setLayout(self.configuration_layout)
+
+        # Scroll area configuration
+        self.configuration_scroll.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Minimum
+        ))
+        self.configuration_scroll.setMinimumWidth(525)
+        self.configuration_scroll.setWidget(self.configuration_widget)
+        self.configuration_scroll.setWidgetResizable(True)
+
+        # Add scroll area to the main layout
+        self.main_layout.addWidget(self.configuration_scroll)
+
+
 class DeviceWidget(QtWidgets.QWidget):
 
     """Displays a single device configuration."""
@@ -682,20 +805,12 @@ class DeviceWidget(QtWidgets.QWidget):
         self.device_profile = device_profile
         self.vjoy_devices = vjoy_devices
 
-        self.input_items = {
-            UiInputType.JoystickAxis: {},
-            UiInputType.JoystickButton: {},
-            UiInputType.JoystickHat: {},
-            UiInputType.JoystickHatDirection: {},
-            UiInputType.Keyboard: {}
-        }
-
         self.current_mode = current_mode
         self.current_selection = None
         self.current_configuration_dialog = None
 
         # Create ui
-        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.ui = UiDeviceWidget(self)
         self._create_ui()
 
     def _input_item_selection(self, input_type, input_label):
@@ -722,10 +837,40 @@ class DeviceWidget(QtWidgets.QWidget):
         else:
             input_id = int(input_label)
 
-        # Perform maintenance on the previously selected item, i.e.
-        # removing invalid actions and deleting keys without any
-        # associated actions.
+        # Perform maintenance
+        self._remove_invalid_actions_and_inputs()
+
+        # Store the newly selected input item
+        self.current_selection = (input_type, input_id)
+
+        # Deselect all input item entries
+        for axis_id, axis in self.ui.input_items[UiInputType.JoystickAxis].items():
+            axis.setPalette(self.palette())
+        for btn_id, button in self.ui.input_items[UiInputType.JoystickButton].items():
+            button.setPalette(self.palette())
+        for hat_id, hat in self.ui.input_items[UiInputType.JoystickHat].items():
+            hat.setPalette(self.palette())
+        for hat_dir_id, hat_dir in self.ui.input_items[UiInputType.JoystickHatDirection].items():
+            hat_dir.setPalette(self.palette())
+        for key_id, key in self.ui.input_items[UiInputType.Keyboard].items():
+            key.setPalette(self.palette())
+
+        # Load the correct detail content for the newly selected
+        # input item
+        if input_id in self.ui.input_items[input_type]:
+            self._load_configuration_panel(input_type, input_id)
+        else:
+            self.current_selection = None
+            self.current_configuration_dialog = None
+
+    def _remove_invalid_actions_and_inputs(self):
+        """Perform maintenance on the previously selected item.
+
+        This removes invalid actions and deletes keys without any
+        associated actions.
+        """
         if self.current_configuration_dialog is not None:
+            # Remove actions that have not been properly configured
             item_profile = self.current_configuration_dialog.item_profile
             items_to_delete = []
             for entry in item_profile.actions:
@@ -733,9 +878,6 @@ class DeviceWidget(QtWidgets.QWidget):
                     items_to_delete.append(entry)
             for entry in items_to_delete:
                 item_profile.actions.remove(entry)
-            if self.current_selection is not None:
-                self.input_items[self.current_selection[0]]\
-                    [self.current_selection[1]].set_labels(item_profile)
 
             # Delete the previously selected item if it contains no
             # action and we're on the keyboard tab
@@ -743,42 +885,12 @@ class DeviceWidget(QtWidgets.QWidget):
                 if len(item_profile.actions) == 0:
                     self._remove_keyboard_input_item_button(item_profile)
 
-        # Store the newly selected input item
-        self.current_selection = (input_type, input_id)
-
-        # Deselect all input item entries
-        for axis_id, axis in self.input_items[UiInputType.JoystickAxis].items():
-            axis.setPalette(self.palette())
-        for btn_id, button in self.input_items[UiInputType.JoystickButton].items():
-            button.setPalette(self.palette())
-        for hat_id, hat in self.input_items[UiInputType.JoystickHat].items():
-            hat.setPalette(self.palette())
-        for hat_dir_id, hat_dir in self.input_items[UiInputType.JoystickHatDirection].items():
-            hat_dir.setPalette(self.palette())
-        for key_id, key in self.input_items[UiInputType.Keyboard].items():
-            key.setPalette(self.palette())
-
-        # Load the correct detail content for the newly selected
-        # input item
-        if input_id in self.input_items[input_type]:
-            self._prepare_configuration_panel(input_type, input_id)
-        else:
-            self.current_selection = None
-            self.current_configuration_dialog = None
-
     def change_mode(self, name):
         """Update the currently selected mode when it is changed.
 
         :param name the name of the new mode
         """
         self.current_mode = name
-        self.input_items = {
-            UiInputType.JoystickAxis: {},
-            UiInputType.JoystickButton: {},
-            UiInputType.JoystickHat: {},
-            UiInputType.JoystickHatDirection: {},
-            UiInputType.Keyboard: {}
-        }
         self._create_ui()
 
         # Reselect the previous selection if there was one
@@ -791,13 +903,10 @@ class DeviceWidget(QtWidgets.QWidget):
     def _create_ui(self):
         """Clears the main layout of existing contents and initializes
         the UI from scratch."""
-        _clear_layout(self.main_layout)
+        self.ui.clear()
+        self._populate_input_item_panel()
 
-        self.overview_layout = QtWidgets.QVBoxLayout()
-        self._create_input_item_scroll()
-        self._create_configuration_panel()
-
-    def _prepare_configuration_panel(self, input_type, input_label):
+    def _load_configuration_panel(self, input_type, input_label):
         """Prepares the configuration panel for the selected input type.
 
         :param input_type type of input that has been selected
@@ -812,15 +921,9 @@ class DeviceWidget(QtWidgets.QWidget):
             input_id = int(input_label)
 
         # Highlight selected button
-        item = self.input_items[input_type][input_id]
+        item = self.ui.input_items[input_type][input_id]
         item.setAutoFillBackground(True)
         item.setPalette(self.cur_palette)
-
-        # Remove all items from self.configuration_layout
-        self.configuration_layout = QtWidgets.QVBoxLayout()
-        self.configuration_widget = QtWidgets.QWidget()
-        self.configuration_widget.setLayout(self.configuration_layout)
-        self.configuration_scroll.setWidget(self.configuration_widget)
 
         # Create ButtonWidget object and hook it's signals up
         self.current_configuration_dialog = InputItemWidget(
@@ -830,20 +933,17 @@ class DeviceWidget(QtWidgets.QWidget):
                 input_id
             )
         )
-
-        # Connect callback for changes in input items
         self.current_configuration_dialog.changed.connect(
             self._input_item_content_changed_cb
         )
 
-        # Add ButtonWidget object to self.configuration_layout
-        self.configuration_layout.addWidget(
+        # Visualize the dialog
+        self.ui.set_configuration_dialog(
             self.current_configuration_dialog
         )
-        self.configuration_layout.addStretch(0)
 
     def _input_item_content_changed_cb(self):
-        """Updates the profile data of an input item when it's contents
+        """Updates the profile data of an input item when its contents
         change."""
         assert(self.current_selection is not None)
         assert(self.current_mode in self.device_profile.modes)
@@ -854,130 +954,100 @@ class DeviceWidget(QtWidgets.QWidget):
             self.current_selection[1]
         )
 
-        self.input_items[self.current_selection[0]]\
+        self.ui.input_items[self.current_selection[0]] \
             [self.current_selection[1]].set_labels(item)
 
-    def _create_input_item_scroll(self):
-        """Creates the panel showing all the inputs available on a
+    def _populate_input_item_panel(self):
+        """Populates the panel showing all the inputs available on a
         given device.
         """
-        # Populate with input items
-        self.input_item_layout = QtWidgets.QVBoxLayout()
-
-        # Populate with all joystick inputs available
+        # Populate with either joystick or keyboard related inputs
         if self.device_profile.type == profile.DeviceType.Joystick:
-            input_counts = [
-                (UiInputType.JoystickAxis, self.device_data.axes),
-                (UiInputType.JoystickButton, self.device_data.buttons),
-                (UiInputType.JoystickHat, self.device_data.hats)
-            ]
-
-            for input_type, count in input_counts:
-                for i in range(1, count+1):
-                    item = InputItemButton(i, input_type, self)
-                    if self.current_mode is not None:
-                        item.set_labels(
-                            self.device_profile.modes[self.current_mode].get_data(
-                                input_type,
-                                i
-                            )
-                        )
-                    item.input_item_changed.connect(self._input_item_selection)
-                    self.input_items[input_type][i] = item
-                    self.input_item_layout.addWidget(item)
-
-                    # Add hat direction specific items
-                    if input_type == UiInputType.JoystickHat:
-                        for j in range(1, 9):
-                            input_id = i*10 + j
-                            item = InputItemButton(
-                                input_id,
-                                UiInputType.JoystickHatDirection,
-                                self
-                            )
-                            if self.current_mode is not None:
-                                item.set_labels(
-                                    self.device_profile.modes[self.current_mode].get_data(
-                                        UiInputType.JoystickHatDirection,
-                                        input_id
-                                    )
-                                )
-                            item.input_item_changed.connect(
-                                self._input_item_selection
-                            )
-                            self.input_items[UiInputType.JoystickHatDirection][input_id] = item
-                            self.input_item_layout.addWidget(item)
-
-        # Populate with configured keyboard inputs
+            self._create_joystick_ui()
         elif self.device_profile.type == profile.DeviceType.Keyboard:
-            if self.current_mode is not None:
-                # Add existing keys to the scroll
-                mode = self.device_profile.modes[self.current_mode]
-                key_dict = {}
-                for key, entry in mode._config[UiInputType.Keyboard].items():
-                    key_dict[macro.key_from_code(key[0], key[1]).name] = entry
-                for key in sorted(key_dict.keys()):
-                    entry = key_dict[key]
-                    key_code = (entry.input_id[0], entry.input_id[1])
-                    key = macro.key_from_code(key_code[0], key_code[1])
-                    item = InputItemButton(key.name, UiInputType.Keyboard, self)
-                    item.set_labels(entry)
-                    item.input_item_changed.connect(self._input_item_selection)
-                    self.input_items[UiInputType.Keyboard][key_code] = item
-                    self.input_item_layout.addWidget(item)
-
+            self._create_keyboard_ui()
         # Encountered some other type which should never occur
         else:
-            raise error.GremlinError(" Invalid device type encountered")
+            raise error.GremlinError("Invalid device type encountered")
 
-        # Create widget to display input items in
-        self.scroll_widget = QtWidgets.QWidget()
-        self.scroll_widget.setMinimumWidth(350)
-        self.scroll_widget.setLayout(self.input_item_layout)
+        self.ui.update_input_item_panel_size()
 
-        # Display widget inside a scroll area
-        self.input_item_scroll = QtWidgets.QScrollArea()
-        self.input_item_scroll.setSizePolicy(QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.MinimumExpanding,
-            QtWidgets.QSizePolicy.MinimumExpanding
-        ))
-        self.input_item_scroll.setMinimumWidth(375)
-        self.input_item_scroll.setWidget(self.scroll_widget)
-
-        # Add scroll area to main layout
-        self.overview_layout.addWidget(self.input_item_scroll)
-        self.main_layout.addLayout(self.overview_layout)
-
+        # Add a button to add new keys if we're on the keyboard panel
         if self.device_profile.type == profile.DeviceType.Keyboard:
-            # Add a button that allows adding new keys
             new_key_button = QtWidgets.QPushButton("Add Key")
             new_key_button.clicked.connect(self._add_new_key)
-            self.overview_layout.addWidget(new_key_button)
+            self.ui.overview_layout.addWidget(new_key_button)
 
-    def _create_configuration_panel(self):
-        """Creates the panel which will show input item specific
-        configuration options.
-        """
-        # Layout which will contain all the actual widgets we want to display
-        self.configuration_layout = QtWidgets.QVBoxLayout()
+    def _create_keyboard_ui(self):
+        """Creates the UI elements for a keyboard device."""
+        if self.current_mode is None:
+            return
 
-        # Main widget within the scroll area which contains the actual layout
-        self.configuration_widget = QtWidgets.QWidget()
-        self.configuration_widget.setMinimumWidth(500)
-        self.configuration_widget.setLayout(self.configuration_layout)
+        # Add existing keys to the scroll
+        mode = self.device_profile.modes[self.current_mode]
+        key_dict = {}
+        for key, entry in mode._config[UiInputType.Keyboard].items():
+            key_dict[macro.key_from_code(key[0], key[1]).name] = entry
+        for key in sorted(key_dict.keys()):
+            # Create the input item
+            entry = key_dict[key]
+            key_code = (entry.input_id[0], entry.input_id[1])
+            key = macro.key_from_code(key_code[0], key_code[1])
+            item = InputItemButton(key.name, UiInputType.Keyboard, self)
+            item.set_labels(entry)
+            item.input_item_changed.connect(self._input_item_selection)
+            # Add the new item to the panel
+            self.ui.input_items[UiInputType.Keyboard][key_code] = item
+            self.ui.input_item_layout.addWidget(item)
 
-        # Scroll area configuration
-        self.configuration_scroll = QtWidgets.QScrollArea()
-        self.configuration_scroll.setSizePolicy(QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Minimum
-        ))
-        self.configuration_scroll.setMinimumWidth(525)
-        self.configuration_scroll.setWidget(self.configuration_widget)
-        self.configuration_scroll.setWidgetResizable(True)
+    def _create_joystick_ui(self):
+        """Creates the UI elements for a joystick device."""
+        input_counts = [
+            (UiInputType.JoystickAxis, self.device_data.axes),
+            (UiInputType.JoystickButton, self.device_data.buttons),
+            (UiInputType.JoystickHat, self.device_data.hats)
+        ]
 
-        # Add scroll area to the main layout
-        self.main_layout.addWidget(self.configuration_scroll)
+        # Create items for each of the inputs on the device
+        for input_type, count in input_counts:
+            for i in range(1, count + 1):
+                item = InputItemButton(i, input_type, self)
+                if self.current_mode is not None:
+                    item.set_labels(
+                        self.device_profile.modes[self.current_mode].get_data(
+                            input_type,
+                            i
+                        )
+                    )
+                item.input_item_changed.connect(
+                    self._input_item_selection
+                )
+                self.ui.input_items[input_type][i] = item
+                self.ui.input_item_layout.addWidget(item)
+
+                # Add hat direction specific items
+                if input_type == UiInputType.JoystickHat:
+                    for j in range(1, 9):
+                        input_id = i * 10 + j
+                        item = InputItemButton(
+                            input_id,
+                            UiInputType.JoystickHatDirection,
+                            self
+                        )
+                        if self.current_mode is not None:
+                            item.set_labels(
+                                self.device_profile.modes[
+                                    self.current_mode].get_data(
+                                    UiInputType.JoystickHatDirection,
+                                    input_id
+                                )
+                            )
+                        item.input_item_changed.connect(
+                            self._input_item_selection
+                        )
+                        self.ui.input_items[UiInputType.JoystickHatDirection][
+                            input_id] = item
+                        self.ui.input_item_layout.addWidget(item)
 
     def _add_new_key(self):
         """Displays the screen overlay prompting the user to press a
@@ -1002,6 +1072,7 @@ class DeviceWidget(QtWidgets.QWidget):
     def _add_key_to_scroll_list_cb(self, key):
         """Adds the key pressed by the user to the list of keyboard
         keys."""
+        # Add the new key to the profile
         key_pair = (key.scan_code, key.is_extended)
         input_item = profile.InputItem(
             self.device_profile.modes[self.current_mode]
@@ -1013,9 +1084,10 @@ class DeviceWidget(QtWidgets.QWidget):
             key_pair
         )
 
+        # Recreate the entire UI to have the button show up
         self._create_ui()
         self.current_selection = (UiInputType.Keyboard, key_pair)
-        self._prepare_configuration_panel(
+        self._load_configuration_panel(
             UiInputType.Keyboard, key_pair
         )
 
@@ -1030,14 +1102,14 @@ class DeviceWidget(QtWidgets.QWidget):
             item_profile.input_id
         )
 
-        layout_index = self.input_item_layout.indexOf(
-            self.input_items[item_profile.input_type][item_profile.input_id]
+        layout_index = self.ui.input_item_layout.indexOf(
+            self.ui.input_items[item_profile.input_type][item_profile.input_id]
         )
-        layout_item = self.input_item_layout.itemAt(layout_index)
+        layout_item = self.ui.input_item_layout.itemAt(layout_index)
         layout_item.widget().deleteLater()
-        self.input_item_layout.removeItem(layout_item)
-        del self.input_items[item_profile.input_type][item_profile.input_id]
-        self.input_item_layout.addStretch()
+        self.ui.input_item_layout.removeItem(layout_item)
+        del self.ui.input_items[item_profile.input_type][item_profile.input_id]
+        self.ui.input_item_layout.addStretch()
 
 
 def _clear_layout(layout):
