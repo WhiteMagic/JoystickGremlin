@@ -346,8 +346,8 @@ class Mode(object):
         :param input_type the type of the input
         :param input_id the index of the input
         """
-        assert(input_type in self._config)
-        del self._config[input_type][input_id]
+        if input_id in self._config[input_type]:
+            del self._config[input_type][input_id]
 
     def get_data(self, input_type, input_id):
         """Returns the configuration data associated with the provided
