@@ -655,7 +655,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
 
         self.mode_selector = ModeWidget()
-        self.mode_selector.mode_changed.connect(self._update_mode)
+        self.mode_selector.mode_changed.connect(self._mode_changed_cb)
 
         self.ui.toolBar.addWidget(self.mode_selector)
 
@@ -709,33 +709,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._create_tabs()
             self.config.default_profile = fname
 
-    def _do_load_profile(self, fname):
-        """Load the profile with the given filename.
-
-        :param fname the name of the profile file to load
-        """
-        try:
-            new_profile = profile.Profile()
-            new_profile.from_xml(fname)
-
-            profile_folder = os.path.dirname(fname)
-            if profile_folder not in sys.path:
-                sys.path.insert(0, profile_folder)
-
-            self._sanitize_profile(new_profile)
-            self._profile = new_profile
-            self._profile_fname = fname
-            self._update_window_title()
-
-            # Make the first root node the default active mode
-            self._current_mode = self._profile.get_root_modes()[0]
-            self.mode_configuration_changed()
-        except TypeError as e:
-            # An error occurred while parsing an existing profile,
-            # creating an empty profile instead
-            logging.exception("Invalid profile content:\n{}".format(e))
-            self.new_profile()
-
     def new_profile(self):
         """Creates a new empty profile."""
         self._profile = profile.Profile()
@@ -763,9 +736,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = None
         self._update_window_title()
 
-        # Create device tabs
-        self._create_tabs()
-
         # Create a default mode
         for device in self._profile.devices.values():
             new_mode = profile.Mode(device)
@@ -773,6 +743,9 @@ class GremlinUi(QtWidgets.QMainWindow):
             device.modes["Default"] = new_mode
         self.mode_configuration_changed()
         self._current_mode = "Default"
+
+        # Create device tabs
+        self._create_tabs()
 
         # Select the last tab which contains the Getting started guide
         self.ui.devices.setCurrentIndex(len(self.tabs))
@@ -878,6 +851,33 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.about_window = GremlinAboutUi()
         self.about_window.show()
 
+    def _do_load_profile(self, fname):
+        """Load the profile with the given filename.
+
+        :param fname the name of the profile file to load
+        """
+        try:
+            new_profile = profile.Profile()
+            new_profile.from_xml(fname)
+
+            profile_folder = os.path.dirname(fname)
+            if profile_folder not in sys.path:
+                sys.path.insert(0, profile_folder)
+
+            self._sanitize_profile(new_profile)
+            self._profile = new_profile
+            self._profile_fname = fname
+            self._update_window_title()
+
+            # Make the first root node the default active mode
+            self._current_mode = self._profile.get_root_modes()[0]
+            self.mode_configuration_changed()
+        except TypeError as e:
+            # An error occurred while parsing an existing profile,
+            # creating an empty profile instead
+            logging.exception("Invalid profile content:\n{}".format(e))
+            self.new_profile()
+
     def _handle_input_repeat(self, event):
         """Performs setup for event repetition.
 
@@ -944,11 +944,13 @@ class GremlinUi(QtWidgets.QMainWindow):
         if isinstance(widget, QtWidgets.QTextEdit):
             return
 
+        # If we want to act on the given even figure out which button
+        # needs to be pressed and press is
         if util.device_id(event) == util.device_id(widget.device_profile):
             if self._should_process_input(event):
                 ui_event_type = gremlin.event_handler.\
                     system_event_to_input_event(event.event_type)
-                btn = widget.ui.input_items[ui_event_type][event.identifier]
+                btn = widget.input_item_list.input_items[ui_event_type][event.identifier]
                 btn.mousePressEvent(None)
 
     def _should_process_input(self, event):
@@ -1038,7 +1040,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device.name
             )
 
-            widget = DeviceWidget(
+            widget = DeviceTabWidget(
                 vjoy_devices,
                 device,
                 device_profile,
@@ -1053,7 +1055,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             util.device_id(gremlin.event_handler.Event.from_key(macro.Keys.A)),
             "keyboard"
         )
-        widget = DeviceWidget(
+        widget = DeviceTabWidget(
             vjoy_devices,
             None,
             device_profile,
@@ -1063,17 +1065,20 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.tabs[util.device_id(device_profile)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
+        # Connect the mode changed event to all tabs
+        for widget in self.tabs.values():
+            self.mode_selector.mode_changed.connect(
+                widget.input_item_list.mode_changed_cb
+            )
+            self.mode_selector.mode_changed.connect(
+                widget.configuration_panel.mode_changed_cb
+            )
+
         # Add the getting started tab
         widget = QtWidgets.QTextEdit()
         widget.setReadOnly(True)
         widget.setHtml(open("doc/getting_started.html").read())
         self.ui.devices.addTab(widget, "Getting Started")
-
-        # Update mode selector
-        self.mode_selector.populate_selector(
-            self._profile,
-            self._current_mode
-        )
 
     def _create_statusbar(self):
         """Creates the ui widgets used in the status bar."""
@@ -1181,16 +1186,12 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionGenerate.setIcon(QtGui.QIcon("gfx/generate.svg"))
         self.ui.actionOpen.setIcon(QtGui.QIcon("gfx/profile_open.svg"))
 
-    def _update_mode(self, new_mode):
+    def _mode_changed_cb(self, new_mode):
         """Updates the current mode to the provided one.
 
         :param new_mode the name of the new current mode
         """
         self._current_mode = new_mode
-
-        # Update all device widgets
-        for widget in self.tabs.values():
-            widget.change_mode(new_mode)
 
     def _update_statusbar_mode(self, mode):
         """Updates the status bar display of the current mode.
