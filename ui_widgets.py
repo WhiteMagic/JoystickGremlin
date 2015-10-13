@@ -12,6 +12,34 @@ from gremlin.event_handler import EventListener
 from gremlin.common import UiInputType
 
 
+class InputIdentifier(object):
+
+    """Represents the identifier of a single input item."""
+
+    def __init__(self, input_type, input_id, device_type):
+        """Creates a new instance.
+
+        :param input_type the type of input
+        :param input_id the identifier of the input
+        :param device_type the type of device this input belongs to
+        """
+        self._input_type = input_type
+        self._input_id = input_id
+        self._device_type = device_type
+
+    @property
+    def device_type(self):
+        return self._device_type
+
+    @property
+    def input_type(self):
+        return self._input_type
+
+    @property
+    def input_id(self):
+        return self._input_id
+
+
 class KeystrokeListenerWidget(QtWidgets.QFrame):
 
     """Widget overlaying the main gui while waiting for the user
