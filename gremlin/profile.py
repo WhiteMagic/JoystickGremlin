@@ -376,6 +376,15 @@ class Mode(object):
         assert(input_type in self._config)
         self._config[input_type][input_id] = data
 
+    def has_data(self, input_type, input_id):
+        """Returns True if data for the given input exists, False otherwise.
+
+        :param input_type the type of the InputItem
+        :param input_id the id of the InputItem
+        :return True if data exists, False otherwise
+        """
+        return input_id in self._config[input_type]
+
 
 class InputItem(object):
 
