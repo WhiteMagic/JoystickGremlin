@@ -217,27 +217,27 @@ class InputItemButton(QtWidgets.QFrame):
     """
 
     # Signal emitted whenever this button is pressed
-    input_item_changed = QtCore.pyqtSignal(UiInputType, str)
+    input_item_clicked = QtCore.pyqtSignal(InputIdentifier)
 
-    def __init__(self, item_label, item_type, parent=None):
+    def __init__(self, label, identifier, parent=None):
         """Creates a new instance.
 
-        :param item_label the id of the input item
-        :param item_type the type of the input item, i.e. axis, button or hat
+        :param label the label / number of the input item
+        :param identifier identifying information about the button
         :param parent the parent widget
         """
         QtWidgets.QFrame.__init__(self, parent)
-        self.item_type = item_type
-        self.item_label = str(item_label)
+        self.identifier = identifier
+        self.label = str(label)
         self._icons = []
 
         self.setFrameShape(QtWidgets.QFrame.Box)
         self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.addWidget(QtWidgets.QLabel(self._create_label()))
+        self.main_layout.addWidget(QtWidgets.QLabel(self._create_button_label()))
         self.main_layout.addStretch(0)
         self.setMinimumSize(100, 40)
 
-    def set_labels(self, profile_data):
+    def create_action_icons(self, profile_data):
         """Creates the label of this instance.
 
         Renders the text representing the instance's name as well as
@@ -264,23 +264,17 @@ class InputItemButton(QtWidgets.QFrame):
 
         :param event the mouse event
         """
-        self.input_item_changed.emit(self.item_type, self.item_label)
+        self.input_item_clicked.emit(self.identifier)
 
-    def _create_label(self):
+    def _create_button_label(self):
         """Creates the label to display on this button.
 
         :return label to use for this button
         """
-        type_name = common.ui_input_type_to_name(self.item_type)
-        label = self.item_label
-        if self.item_type == UiInputType.JoystickHatDirection:
-            input_id = int(int(self.item_label) / 10)
-            direction = int(int(self.item_label) % 10)
-            label = "{} {}".format(
-                input_id,
-                common.index_to_direction(direction)
-            )
-        return "{} {}".format(type_name, label)
+        return "{} {}".format(
+            common.ui_input_type_to_name(self.identifier.input_type),
+            self.label
+        )
 
 
 class ConditionWidget(QtWidgets.QWidget):
@@ -390,7 +384,7 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         ]
 
 
-class InputItemWidget(QtWidgets.QFrame):
+class InputItemConfigurationPanel(QtWidgets.QFrame):
 
     """UI dialog responsible for the configuration of a single
     input item such as an axis, button, hat, or key.
@@ -679,27 +673,74 @@ class ModeWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(self.selector)
 
 
-class UiDeviceWidget(object):
+class DeviceTabWidget(QtWidgets.QWidget):
 
-    """Creates and manages the UI elements used in a DeviceWidget."""
+    """Represents the content of a tab representing a single device."""
 
-    def __init__(self, parent=None):
+    def __init__(
+            self,
+            vjoy_devices,
+            phys_device,
+            device_profile,
+            current_mode,
+            parent=None
+    ):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        # Store parameters
+        self.device_profile = device_profile
+
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.input_item_list = InputItemList(
+            phys_device,
+            device_profile,
+            current_mode
+        )
+        self.configuration_panel = ConfigurationPanel(
+            vjoy_devices,
+            phys_device,
+            device_profile,
+            current_mode
+        )
+        self.input_item_list.input_item_selected.connect(
+            self.configuration_panel.refresh
+        )
+        self.configuration_panel.input_item_changed.connect(
+            self.input_item_list.input_item_changed_cb
+        )
+
+        self.main_layout.addWidget(self.input_item_list)
+        self.main_layout.addWidget(self.configuration_panel)
+
+
+class InputItemList(QtWidgets.QWidget):
+
+    """Widget responsible for displaying a list of inputs with their
+    currently configured action types.
+    """
+
+    # Signal emitted when a button has been selected
+    input_item_selected = QtCore.pyqtSignal(InputIdentifier)
+
+    # Button background palettes
+    cur_palette = QtGui.QPalette()
+    cur_palette.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
+
+    def __init__(
+            self,
+            phys_device,
+            device_profile,
+            current_mode,
+            parent=None
+    ):
         """Creates a new instance.
 
-        :param parent the parent widget
+        :param phys_device the physical device the list represents
+        :param device_profile the profile used to describe the device
+        :param current_mode the currently active mode
+        :parent the parent of this widget
         """
-        self.main_layout = QtWidgets.QHBoxLayout(parent)
-
-        # Input item panel
-        self.overview_layout = QtWidgets.QVBoxLayout()
-        self.input_item_scroll = QtWidgets.QScrollArea()
-        self.scroll_widget = QtWidgets.QWidget()
-        self.input_item_layout = QtWidgets.QVBoxLayout()
-
-        # Configuration panel
-        self.configuration_scroll = QtWidgets.QScrollArea()
-        self.configuration_widget = QtWidgets.QWidget()
-        self.configuration_layout = QtWidgets.QVBoxLayout()
+        QtWidgets.QWidget.__init__(self, parent)
 
         # Input item button storage
         self.input_items = {
@@ -710,17 +751,93 @@ class UiDeviceWidget(object):
             UiInputType.Keyboard: {}
         }
 
-        # Initialize the two panels
-        self._initialize_input_item_panel()
-        self._initialize_configuration_panel()
+        # Store parameters
+        self.phys_device = phys_device
+        self.device_profile = device_profile
+        self.current_mode = current_mode
+        self.current_identifier = None
 
-    def clear(self):
-        """Empties all UI elements."""
-        # Clear layouts which contain the main elements
-        _clear_layout(self.input_item_layout)
-        _clear_layout(self.configuration_layout)
+        # Create required UI items
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_widget = QtWidgets.QWidget()
+        self.scroll_layout = QtWidgets.QVBoxLayout()
 
-        # Delete all storage of input items
+        # Configure the widget holding the layout with all the buttons
+        self.scroll_widget.setMaximumWidth(350)
+        self.scroll_widget.setLayout(self.scroll_layout)
+        self.scroll_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Expanding
+        )
+
+        # Configure the scroll area
+        self.scroll_area.setMinimumWidth(300)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_widget)
+
+        # Add the scroll area to the main layout
+        self.main_layout.addWidget(self.scroll_area)
+
+        # If this is the keyboard tab add the button needed to add
+        # new keys.
+        if self.device_profile.type == profile.DeviceType.Keyboard:
+            self.key_add_button = QtWidgets.QPushButton("Add Key")
+            self.key_add_button.clicked.connect(self._add_new_key)
+            self.main_layout.addWidget(self.key_add_button)
+
+        self._populate_item_list()
+
+    def mode_changed_cb(self, new_mode):
+        """Executed when the mode changes.
+
+        :param new_mode the name of the new mode
+        """
+        self.current_mode = new_mode
+
+        self._populate_item_list()
+        if self.current_identifier:
+            self._input_item_selection(self.current_identifier)
+
+    def input_item_changed_cb(self, identifier):
+        """Executed when the actions associated with an item change.
+
+        :param identifier identification for the item that changed
+        """
+        input_type = identifier.input_type
+        input_id = identifier.input_id
+
+        # If this is a keyboard check if we need to remove the key
+        if self.device_profile.type == profile.DeviceType.Keyboard:
+            assert(input_type == UiInputType.Keyboard)
+
+            self._populate_item_list()
+            if self.current_identifier and self.current_identifier.input_id in self.input_items[UiInputType.Keyboard]:
+                item = self.input_items[UiInputType.Keyboard][self.current_identifier.input_id]
+                item.setAutoFillBackground(True)
+                item.setPalette(self.cur_palette)
+
+            if input_id in self.input_items[input_type]:
+                self.input_items[input_type][input_id].create_action_icons(
+                    self.device_profile.modes[self.current_mode].get_data(
+                        input_type,
+                        input_id
+                    )
+                )
+
+        # Joystick input item entries are never removed
+        else:
+            self.input_items[input_type][input_id].create_action_icons(
+                self.device_profile.modes[self.current_mode].get_data(
+                    identifier.input_type,
+                    identifier.input_id
+                )
+            )
+
+    def _populate_item_list(self):
+        """Populates the widget with all required items."""
+        # Remove existing content
+        _clear_layout(self.scroll_layout)
         self.input_items = {
             UiInputType.JoystickAxis: {},
             UiInputType.JoystickButton: {},
@@ -729,366 +846,119 @@ class UiDeviceWidget(object):
             UiInputType.Keyboard: {}
         }
 
-        # Remove potential button from the input item list
-        if self.overview_layout.count() > 1:
-            child = self.overview_layout.takeAt(1)
-            child.widget().deleteLater()
-            self.overview_layout.removeItem(child)
-
-    def set_configuration_dialog(self, dialog):
-        """Displays the provided dialog in the dialog panel.
-
-        :param dialog the dialog widget to display
-        """
-        # Remove existing content from the layout
-        _clear_layout(self.configuration_layout)
-
-        # Display the dialog
-        self.configuration_layout.addWidget(dialog)
-        self.configuration_layout.addStretch(0)
-
-    def update_input_item_panel_size(self):
-        """Updates the size of the widget used to show input items."""
-        self.scroll_widget.setMinimumHeight(
-            20 + (45 * self.input_item_layout.count())
-        )
-        self.input_item_layout.addStretch(0)
-        self.scroll_widget.updateGeometry()
-
-    def _initialize_input_item_panel(self):
-        """Initializes the widgets required to display the input item
-        buttons.
-
-        The widgets and layouts are arranged as follows:
-        main_layout
-        +- overview_layout
-           +- input_item_scroll
-           |  +- scroll_widget
-           |     +- input_item_layout
-           |- new_key_button (keyboard device only)
-        """
-        # Configure the widget
-        self.scroll_widget.setMinimumWidth(350)
-        self.scroll_widget.setLayout(self.input_item_layout)
-        self.scroll_widget.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Expanding
-        )
-
-        # Configure the scroll area
-        self.input_item_scroll.setSizePolicy(QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.MinimumExpanding,
-            QtWidgets.QSizePolicy.MinimumExpanding
-        ))
-        self.input_item_scroll.setMinimumWidth(375)
-        self.input_item_scroll.setWidget(self.scroll_widget)
-
-        # Put everything together and add to the main layout
-        self.overview_layout.addWidget(self.input_item_scroll)
-        self.main_layout.addLayout(self.overview_layout)
-
-    def _initialize_configuration_panel(self):
-        """Creates the panel which will show input item specific
-        configuration options.
-
-        The widgets and layouts are arranges as follows:
-        main_layout
-        +- configuration_scroll
-           +- configuration_widget
-              +- configuration_layout
-        """
-        # Main widget within the scroll area which contains the
-        # actual layout
-        self.configuration_widget.setMinimumWidth(500)
-        self.configuration_widget.setLayout(self.configuration_layout)
-
-        # Scroll area configuration
-        self.configuration_scroll.setSizePolicy(QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Minimum
-        ))
-        self.configuration_scroll.setMinimumWidth(525)
-        self.configuration_scroll.setWidget(self.configuration_widget)
-        self.configuration_scroll.setWidgetResizable(True)
-
-        # Add scroll area to the main layout
-        self.main_layout.addWidget(self.configuration_scroll)
-
-
-class DeviceWidget(QtWidgets.QWidget):
-
-    """Displays a single device configuration."""
-
-    cur_palette = QtGui.QPalette()
-    cur_palette.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
-
-    def __init__(
-            self,
-            vjoy_devices,
-            device_data,
-            device_profile,
-            current_mode,
-            parent=None
-    ):
-        """Creates a new DeviceWidget object.
-
-        :param vjoy_devices list of vjoy devices
-        :param device_data information about the physical device
-            represented by this widget
-        :param device_profile the profile data associated with this
-            device
-        :param current_mode the currently active mode
-        :param parent the parent widget of this object
-        """
-        QtWidgets.QWidget.__init__(self, parent)
-
-        self.device_data = device_data
-        self.device_profile = device_profile
-        self.vjoy_devices = vjoy_devices
-
-        self.current_mode = current_mode
-        self.current_selection = None
-        self.current_configuration_dialog = None
-
-        # Create ui
-        self.ui = UiDeviceWidget(self)
-        self._create_ui()
-
-    def _input_item_selection(self, input_type, input_label):
-        """Selects the item specified by the input type and label..
-
-        This is a callback called when the user clicks on a different
-        input item in the ui.
-        Delegates the loading of the configuration dialog for the
-        selected input item.
-
-        :param input_type the type of the input item
-        :param input_label the id of the input item
-        """
-        # If the current mode is not specified don't do anything
+        # Bail if the current mode is invalid
         if self.current_mode is None:
             return
 
-        # Convert the input_label to an id usable as a lookup key
-        if input_type == UiInputType.Keyboard:
-            input_id = input_label
-            if isinstance(input_label, str):
-                key = macro.key_from_name(input_label)
-                input_id = (key.scan_code, key.is_extended)
-        else:
-            input_id = int(input_label)
-
-        # Perform maintenance
-        self._remove_invalid_actions_and_inputs()
-
-        # Store the newly selected input item
-        self.current_selection = (input_type, input_id)
-
-        # Deselect all input item entries
-        for axis_id, axis in self.ui.input_items[UiInputType.JoystickAxis].items():
-            axis.setPalette(self.palette())
-        for btn_id, button in self.ui.input_items[UiInputType.JoystickButton].items():
-            button.setPalette(self.palette())
-        for hat_id, hat in self.ui.input_items[UiInputType.JoystickHat].items():
-            hat.setPalette(self.palette())
-        for hat_dir_id, hat_dir in self.ui.input_items[UiInputType.JoystickHatDirection].items():
-            hat_dir.setPalette(self.palette())
-        for key_id, key in self.ui.input_items[UiInputType.Keyboard].items():
-            key.setPalette(self.palette())
-
-        # Load the correct detail content for the newly selected
-        # input item
-        if input_id in self.ui.input_items[input_type]:
-            self._load_configuration_panel(input_type, input_id)
-        else:
-            self.current_selection = None
-            self.current_configuration_dialog = None
-
-    def _remove_invalid_actions_and_inputs(self):
-        """Perform maintenance on the previously selected item.
-
-        This removes invalid actions and deletes keys without any
-        associated actions.
-        """
-        if self.current_configuration_dialog is not None:
-            # Remove actions that have not been properly configured
-            item_profile = self.current_configuration_dialog.item_profile
-            items_to_delete = []
-            for entry in item_profile.actions:
-                if not entry.is_valid:
-                    items_to_delete.append(entry)
-            for entry in items_to_delete:
-                item_profile.actions.remove(entry)
-
-            # Delete the previously selected item if it contains no
-            # action and we're on the keyboard tab
-            if self.device_profile.type == profile.DeviceType.Keyboard:
-                if len(item_profile.actions) == 0:
-                    self._remove_keyboard_input_item_button(item_profile)
-
-    def change_mode(self, name):
-        """Update the currently selected mode when it is changed.
-
-        :param name the name of the new mode
-        """
-        self.current_mode = name
-        self._create_ui()
-
-        # Reselect the previous selection if there was one
-        if self.current_selection:
-            self._input_item_selection(
-                self.current_selection[0],
-                self.current_selection[1]
-            )
-
-    def _create_ui(self):
-        """Clears the main layout of existing contents and initializes
-        the UI from scratch."""
-        self.ui.clear()
-        self._populate_input_item_panel()
-
-    def _load_configuration_panel(self, input_type, input_label):
-        """Prepares the configuration panel for the selected input type.
-
-        :param input_type type of input that has been selected
-        :param input_label the id of the specific input item
-        """
-        # Convert the input_label to an id usable as a lookup key
-        if input_type == UiInputType.Keyboard:
-            assert(isinstance(input_label, tuple))
-            key = macro.key_from_code(input_label[0], input_label[1])
-            input_id = (key.scan_code, key.is_extended)
-        else:
-            input_id = int(input_label)
-
-        # Highlight selected button
-        item = self.ui.input_items[input_type][input_id]
-        item.setAutoFillBackground(True)
-        item.setPalette(self.cur_palette)
-
-        # Create ButtonWidget object and hook it's signals up
-        self.current_configuration_dialog = InputItemWidget(
-            self.vjoy_devices,
-            self.device_profile.modes[self.current_mode].get_data(
-                input_type,
-                input_id
-            )
-        )
-        self.current_configuration_dialog.changed.connect(
-            self._input_item_content_changed_cb
-        )
-
-        # Visualize the dialog
-        self.ui.set_configuration_dialog(
-            self.current_configuration_dialog
-        )
-
-    def _input_item_content_changed_cb(self):
-        """Updates the profile data of an input item when its contents
-        change."""
-        assert(self.current_selection is not None)
-        assert(self.current_mode in self.device_profile.modes)
-
-        self.current_configuration_dialog.to_profile()
-        item = self.device_profile.modes[self.current_mode].get_data(
-            self.current_selection[0],
-            self.current_selection[1]
-        )
-
-        self.ui.input_items[self.current_selection[0]] \
-            [self.current_selection[1]].set_labels(item)
-
-    def _populate_input_item_panel(self):
-        """Populates the panel showing all the inputs available on a
-        given device.
-        """
-        # Populate with either joystick or keyboard related inputs
-        if self.device_profile.type == profile.DeviceType.Joystick:
-            self._create_joystick_ui()
-        elif self.device_profile.type == profile.DeviceType.Keyboard:
-            self._create_keyboard_ui()
-        # Encountered some other type which should never occur
-        else:
-            raise error.GremlinError("Invalid device type encountered")
-
-        self.ui.update_input_item_panel_size()
-
-        # Add a button to add new keys if we're on the keyboard panel
         if self.device_profile.type == profile.DeviceType.Keyboard:
-            new_key_button = QtWidgets.QPushButton("Add Key")
-            new_key_button.clicked.connect(self._add_new_key)
-            self.ui.overview_layout.addWidget(new_key_button)
+            self._populate_keyboard()
+        else:
+            self._populate_joystick()
 
-    def _create_keyboard_ui(self):
-        """Creates the UI elements for a keyboard device."""
-        if self.current_mode is None:
-            return
+        self.scroll_layout.addStretch()
 
-        # Add existing keys to the scroll
-        mode = self.device_profile.modes[self.current_mode]
-        key_dict = {}
-        for key, entry in mode._config[UiInputType.Keyboard].items():
-            key_dict[macro.key_from_code(key[0], key[1]).name] = entry
-        for key in sorted(key_dict.keys()):
-            # Create the input item
-            entry = key_dict[key]
-            key_code = (entry.input_id[0], entry.input_id[1])
-            key = macro.key_from_code(key_code[0], key_code[1])
-            item = InputItemButton(key.name, UiInputType.Keyboard, self)
-            item.set_labels(entry)
-            item.input_item_changed.connect(self._input_item_selection)
-            # Add the new item to the panel
-            self.ui.input_items[UiInputType.Keyboard][key_code] = item
-            self.ui.input_item_layout.addWidget(item)
-
-    def _create_joystick_ui(self):
-        """Creates the UI elements for a joystick device."""
+    def _populate_joystick(self):
+        """Handles generating the items for a joystick device."""
         input_counts = [
-            (UiInputType.JoystickAxis, self.device_data.axes),
-            (UiInputType.JoystickButton, self.device_data.buttons),
-            (UiInputType.JoystickHat, self.device_data.hats)
+            (UiInputType.JoystickAxis, self.phys_device.axes),
+            (UiInputType.JoystickButton, self.phys_device.buttons),
+            (UiInputType.JoystickHat, self.phys_device.hats)
         ]
 
         # Create items for each of the inputs on the device
         for input_type, count in input_counts:
             for i in range(1, count + 1):
-                item = InputItemButton(i, input_type, self)
-                if self.current_mode is not None:
-                    item.set_labels(
-                        self.device_profile.modes[self.current_mode].get_data(
-                            input_type,
-                            i
-                        )
+                item = InputItemButton(
+                    i,
+                    InputIdentifier(
+                        input_type,
+                        i,
+                        self.device_profile.type
+                    ),
+                    self
+                )
+
+                item.create_action_icons(
+                    self.device_profile.modes[self.current_mode].get_data(
+                        input_type,
+                        i
                     )
-                item.input_item_changed.connect(
+                )
+                item.input_item_clicked.connect(
                     self._input_item_selection
                 )
-                self.ui.input_items[input_type][i] = item
-                self.ui.input_item_layout.addWidget(item)
+                self.input_items[input_type][i] = item
+                self.scroll_layout.addWidget(item)
 
-                # Add hat direction specific items
-                if input_type == UiInputType.JoystickHat:
-                    for j in range(1, 9):
-                        input_id = i * 10 + j
-                        item = InputItemButton(
-                            input_id,
-                            UiInputType.JoystickHatDirection,
-                            self
-                        )
-                        if self.current_mode is not None:
-                            item.set_labels(
-                                self.device_profile.modes[
-                                    self.current_mode].get_data(
-                                    UiInputType.JoystickHatDirection,
-                                    input_id
-                                )
-                            )
-                        item.input_item_changed.connect(
-                            self._input_item_selection
-                        )
-                        self.ui.input_items[UiInputType.JoystickHatDirection][
-                            input_id] = item
-                        self.ui.input_item_layout.addWidget(item)
+    def _populate_keyboard(self):
+        """Handles generating the items for the keyboard."""
+        # Add existing keys to the scroll
+        mode = self.device_profile.modes[self.current_mode]
+        key_dict = {}
+        for key, entry in mode._config[UiInputType.Keyboard].items():
+            key_dict[macro.key_from_code(key[0], key[1]).name] = entry
+
+        for key_string in sorted(key_dict.keys()):
+            # Create the input item
+            entry = key_dict[key_string]
+            key_code = (entry.input_id[0], entry.input_id[1])
+            key = macro.key_from_code(key_code[0], key_code[1])
+            item = InputItemButton(
+                key.name,
+                InputIdentifier(
+                    UiInputType.Keyboard,
+                    key_code,
+                    self.device_profile.type
+                ),
+                self
+            )
+            item.create_action_icons(entry)
+            item.input_item_clicked.connect(self._input_item_selection)
+            # Add the new item to the panel
+            self.input_items[UiInputType.Keyboard][key_code] = item
+            self.scroll_layout.addWidget(item)
+
+    def _input_item_selection(self, identifier):
+        """Selects the item specified by the input type and label..
+
+        This is a callback called when the user clicks on a different
+        input item in the ui. Delegates the loading of the
+        configuration dialog for the selected input item.
+
+        :param identifier the input item identifier
+        """
+        # If the current mode is not specified don't do anything
+        if self.current_mode is None:
+            return
+
+        # Store the newly selected input item
+        self.current_identifier = identifier
+
+        # Deselect all input item entries
+        for axis_id, axis in self.input_items[UiInputType.JoystickAxis].items():
+            axis.setPalette(self.palette())
+        for btn_id, button in self.input_items[UiInputType.JoystickButton].items():
+            button.setPalette(self.palette())
+        for hat_id, hat in self.input_items[UiInputType.JoystickHat].items():
+            hat.setPalette(self.palette())
+        for key_id, key in self.input_items[UiInputType.Keyboard].items():
+            key.setPalette(self.palette())
+
+        # Highlight selected button
+        if identifier.input_id in self.input_items[identifier.input_type]:
+            item = self.input_items[identifier.input_type][identifier.input_id]
+            item.setAutoFillBackground(True)
+            item.setPalette(self.cur_palette)
+        else:
+            self.current_identifier = None
+
+        # Load the correct detail content for the newly selected
+        # input item
+        if identifier.input_id in self.input_items[identifier.input_type]:
+            self.input_item_selected.emit(identifier)
+        else:
+            self.current_identifier = None
+            self.current_configuration_dialog = None
 
     def _add_new_key(self):
         """Displays the screen overlay prompting the user to press a
@@ -1097,6 +967,8 @@ class DeviceWidget(QtWidgets.QWidget):
         self.keyboard_press_dialog = KeystrokeListenerWidget(
             self._add_key_to_scroll_list_cb
         )
+
+        # Display the dialog centered in the middle of the UI
         geom = self.geometry()
         point = self.mapToGlobal(QtCore.QPoint(
             geom.x() + geom.width() / 2 - 150,
@@ -1115,45 +987,169 @@ class DeviceWidget(QtWidgets.QWidget):
         keys."""
         # Add the new key to the profile
         key_pair = (key.scan_code, key.is_extended)
-        # Special handling of the right shift key
+        # Special handling of the right shift key due to Qt and windows
+        # discrepancies in key code representation
         if key == macro.Keys.RShift2:
             key_pair = (key.scan_code, False)
-        input_item = profile.InputItem(
-            self.device_profile.modes[self.current_mode]
-        )
-        input_item.input_type = UiInputType.Keyboard
-        input_item.input_id = key_pair
+
+        # Grab the profile entry which creates one if it doesn't exist
+        # yet
         self.device_profile.modes[self.current_mode].get_data(
             UiInputType.Keyboard,
             key_pair
         )
 
         # Recreate the entire UI to have the button show up
-        self._create_ui()
-        self.current_selection = (UiInputType.Keyboard, key_pair)
-        self._load_configuration_panel(
-            UiInputType.Keyboard, key_pair
-        )
-
-    def _remove_keyboard_input_item_button(self, item_profile):
-        """Removes an input item selection button from the keyboard
-        list.
-
-        :param item_profile the profile of the key to remove
-        """
-        self.device_profile.modes[self.current_mode].delete_data(
+        self._populate_item_list()
+        self._input_item_selection(InputIdentifier(
             UiInputType.Keyboard,
-            item_profile.input_id
-        )
+            key_pair,
+            profile.DeviceType.Keyboard
+        ))
 
-        layout_index = self.ui.input_item_layout.indexOf(
-            self.ui.input_items[item_profile.input_type][item_profile.input_id]
+
+class ConfigurationPanel(QtWidgets.QWidget):
+
+    """Widget which allows configuration of actions for input items."""
+
+    # Signal emitted when the configuration has changed
+    input_item_changed = QtCore.pyqtSignal(InputIdentifier)
+
+    def __init__(
+            self,
+            vjoy_devices,
+            phys_device,
+            device_profile,
+            current_mode,
+            parent=None
+    ):
+        """Creates a new instance.
+
+        :param vjoy_devices the vjoy devices present in the system
+        :param phys_device the physical device being configured
+        :param device_profile the profile of the device
+        :param current_mode the currently active mode
+        :param parent the parent of this widdget
+        """
+        QtWidgets.QWidget.__init__(self, parent)
+
+        # Store parameters
+        self.vjoy_devices = vjoy_devices
+        self.phys_device = phys_device
+        self.device_profile = device_profile
+        self.current_mode = current_mode
+
+        # Storage for the current configuration panel
+        self.current_configuration_dialog = None
+        self.current_identifier = None
+
+        # Create required UI items
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.configuration_scroll = QtWidgets.QScrollArea()
+        self.configuration_widget = QtWidgets.QWidget()
+        self.configuration_layout = QtWidgets.QVBoxLayout()
+
+        # Main widget within the scroll area which contains the
+        # layout with the actual content
+        self.configuration_widget.setMinimumWidth(500)
+        self.configuration_widget.setLayout(self.configuration_layout)
+
+        # Scroll area configuration
+        self.configuration_scroll.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Minimum
+        ))
+        self.configuration_scroll.setMinimumWidth(525)
+        self.configuration_scroll.setWidget(self.configuration_widget)
+        self.configuration_scroll.setWidgetResizable(True)
+
+        # Add scroll area to the main layout
+        self.main_layout.addWidget(self.configuration_scroll)
+
+    def refresh(self, identifier):
+        """Redraws the entire configuration dialog for the given item.
+
+        :param identifier the identifier of the item for which to
+                redraw the widget
+        """
+        self._remove_invalid_actions_and_inputs()
+
+        # Create InputItemConfigurationPanel object and hook
+        # it's signals up
+        self.current_configuration_dialog = InputItemConfigurationPanel(
+            self.vjoy_devices,
+            self.device_profile.modes[self.current_mode].get_data(
+                identifier.input_type,
+                identifier.input_id
+            )
         )
-        layout_item = self.ui.input_item_layout.itemAt(layout_index)
-        layout_item.widget().deleteLater()
-        self.ui.input_item_layout.removeItem(layout_item)
-        del self.ui.input_items[item_profile.input_type][item_profile.input_id]
-        self.ui.input_item_layout.addStretch()
+        self.current_configuration_dialog.changed.connect(
+            self._input_item_content_changed_cb
+        )
+        self.current_identifier = identifier
+
+        # Visualize the dialog
+        _clear_layout(self.configuration_layout)
+        self.configuration_layout.addWidget(
+            self.current_configuration_dialog
+        )
+        self.configuration_layout.addStretch(0)
+
+    def mode_changed_cb(self, new_mode):
+        """Executed when the mode changes.
+
+        :param new_mode the name of the new mode
+        """
+        # Cleanup the content of the previous mode before we switch
+        self._remove_invalid_actions_and_inputs()
+
+        # Save new mode
+        self.current_mode = new_mode
+
+        # Select previous selection if it exists
+        if self.current_identifier is not None:
+            self.refresh(self.current_identifier)
+
+    def _remove_invalid_actions_and_inputs(self):
+        """Perform maintenance on the previously selected item.
+
+        This removes invalid actions and deletes keys without any
+        associated actions.
+        """
+        if self.current_configuration_dialog is not None:
+            # Remove actions that have not been properly configured
+            item_profile = self.current_configuration_dialog.item_profile
+            items_to_delete = []
+            for entry in item_profile.actions:
+                if not entry.is_valid:
+                    items_to_delete.append(entry)
+            for entry in items_to_delete:
+                item_profile.actions.remove(entry)
+
+            if len(items_to_delete) > 0:
+                self.input_item_changed.emit(self.current_identifier)
+
+            # Delete the previously selected item if it contains no
+            # action and we're on the keyboard tab. However, only do
+            # this if the mode of the configuration dialog and the mode
+            # match.
+            if self.device_profile.type == profile.DeviceType.Keyboard:
+                if (item_profile.parent.name == self.current_mode) and \
+                    len(item_profile.actions) == 0:
+                    self.device_profile.modes[self.current_mode].delete_data(
+                        UiInputType.Keyboard,
+                        item_profile.input_id
+                    )
+                    self.input_item_changed.emit(self.current_identifier)
+
+    def _input_item_content_changed_cb(self):
+        """Updates the profile data of an input item when its contents
+        change."""
+        assert(self.current_identifier is not None)
+        assert(self.current_mode in self.device_profile.modes)
+
+        self.current_configuration_dialog.to_profile()
+        self.input_item_changed.emit(self.current_identifier)
 
 
 def _clear_layout(layout):
