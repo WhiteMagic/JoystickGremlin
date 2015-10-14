@@ -432,6 +432,10 @@ class AbstractAction(object):
         self.is_valid = True
 
     def _parse_xml(self, node):
+        """Parses a XML node for content to display.
+
+        :param node the XML node to parse
+        """
         raise gremlin.error.NotImplementedError(
             "AbstractAction.from_xml not implemented in subclass"
         )
@@ -446,6 +450,10 @@ class AbstractAction(object):
         return node
 
     def _generate_xml(self):
+        """Generates the XML node for this action.
+
+        :return XML node representing this action
+        """
         raise gremlin.error.NotImplementedError(
             "AbstractAction.to_xml not implemented in subclass"
         )
@@ -460,22 +468,34 @@ class AbstractAction(object):
         return code
 
     def _generate_code(self):
+        """Generates Python code for this action.
+
+        :return code fragments representing the action
+        """
         raise gremlin.error.NotImplementedError(
             "AbstractAction.to_code not implemented in subclass"
         )
 
     def _parse_condition(self, node):
+        """Parses condition information of the action's XML node.
+
+        :param node the XML from which to extract condition data
+        """
         parser_map = {
             UiInputType.JoystickAxis: parse_axis_condition,
             UiInputType.JoystickButton: parse_button_condition,
             UiInputType.JoystickHat: parse_hat_condition,
-            UiInputType.JoystickHatDirection: parse_hat_direction_condition,
             UiInputType.Keyboard: parse_button_condition
         }
         assert(self.parent.input_type in parser_map)
         self.condition = parser_map[self.parent.input_type](node)
 
     def _generate_condition(self, node):
+        """Reads condition data from the action and stores them in the
+        XML node.
+
+        :param node the XML node in which to store condition information
+        """
         if self.parent.input_type in [UiInputType.JoystickButton, UiInputType.Keyboard]:
             node.set("on-press", str(self.condition.on_press))
             node.set("on-release", str(self.condition.on_release))
@@ -517,6 +537,7 @@ class AbstractActionWidget(QtWidgets.QFrame):
         self.initialize_from_profile(self.action_data)
 
     def _setup_ui(self):
+        """Creates all the elements necessary for the widget."""
         raise gremlin.error.NotImplementedError(
             "AbstractActionWidget._setup_ui not implemented in subclass"
         )
@@ -542,8 +563,7 @@ class AbstractActionWidget(QtWidgets.QFrame):
 
 class AxisCondition(object):
 
-    """Indicates when an action associated with an axis is to
-    be executed."""
+    """Indicates when an action associated with an axis is to be run."""
 
     def __init__(self):
         # TODO: implement
@@ -552,8 +572,7 @@ class AxisCondition(object):
 
 class ButtonCondition(object):
 
-    """Indicates when an action associated with a button is to
-    be executed."""
+    """Indicates when an action associated with a button is to be run"""
 
     def __init__(self, on_press=True, on_release=False):
         """Creates a new instance.
