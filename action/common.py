@@ -36,6 +36,29 @@ def format_condition(condition):
             return "    if not is_pressed:"
         else:
             return "    if False:"
+    elif isinstance(condition, HatCondition):
+        positive_instances = []
+        if condition.on_n:
+            positive_instances.append((0, 1))
+        if condition.on_ne:
+            positive_instances.append((1, 1))
+        if condition.on_e:
+            positive_instances.append((1, 0))
+        if condition.on_se:
+            positive_instances.append((1, -1))
+        if condition.on_s:
+            positive_instances.append((0, -1))
+        if condition.on_sw:
+            positive_instances.append((-1, -1))
+        if condition.on_w:
+            positive_instances.append((-1, 0))
+        if condition.on_nw:
+            positive_instances.append((-1, 1))
+
+        condition_text = ", ".join(
+            ["({}, {})".format(v[0], v[1]) for v in positive_instances]
+        )
+        return "    if value in [{}]:".format(condition_text)
     else:
         return "    if True:"
 
@@ -456,6 +479,16 @@ class AbstractAction(object):
         if self.parent.input_type in [UiInputType.JoystickButton, UiInputType.Keyboard]:
             node.set("on-press", str(self.condition.on_press))
             node.set("on-release", str(self.condition.on_release))
+        if self.parent.input_type == UiInputType.JoystickHat and \
+            node.tag != "remap":
+            node.set("on-n", str(self.condition.on_n))
+            node.set("on-ne", str(self.condition.on_ne))
+            node.set("on-e", str(self.condition.on_e))
+            node.set("on-se", str(self.condition.on_se))
+            node.set("on-s", str(self.condition.on_s))
+            node.set("on-sw", str(self.condition.on_sw))
+            node.set("on-w", str(self.condition.on_w))
+            node.set("on-nw", str(self.condition.on_nw))
 
 
 class AbstractActionWidget(QtWidgets.QFrame):
@@ -534,6 +567,22 @@ class ButtonCondition(object):
         self.on_release = on_release
 
 
+class HatCondition(object):
+
+    """Indicates when an action associated with a hat is to be run."""
+
+    def __init__(self, on_n, on_ne, on_e, on_se, on_s, on_sw, on_w, on_nw):
+        """Creates a new instnace."""
+        self.on_n = on_n
+        self.on_ne = on_ne
+        self.on_e = on_e
+        self.on_se = on_se
+        self.on_s = on_s
+        self.on_sw = on_sw
+        self.on_w = on_w
+        self.on_nw = on_nw
+
+
 def input_type_to_tag(input_type):
     """Returns the XML tag corresponding to the given InputType enum.
 
@@ -594,18 +643,36 @@ def parse_hat_condition(node):
     :param node the xml node to parse
     :return HatCondition corresponding to the node's content
     """
-    # FIXME: implement
-    return ""
+    # Remap actions don't have associated conditions
+    if node.tag == "remap":
+        return None
+
+    on_n = read_bool(node, "on-n")
+    on_ne = read_bool(node, "on-ne")
+    on_e = read_bool(node, "on-e")
+    on_se = read_bool(node, "on-se")
+    on_s = read_bool(node, "on-s")
+    on_sw = read_bool(node, "on-sw")
+    on_w = read_bool(node, "on-w")
+    on_nw = read_bool(node, "on-nw")
+
+    return HatCondition(on_n, on_ne, on_e, on_se, on_s, on_sw, on_w, on_nw)
 
 
-def parse_hat_direction_condition(node):
-    """Returns a HatDirectionCondition corresponding to the node's content.
+def read_bool(node, key, default_value=False):
+    """Attempts to read a boolean value.
 
-    :param node the xml node to parse
-    :return HatDirectionCondition corresponding to the node's content
+    If there is an error when reading the given field from the node
+    the default value is returned instead.
+
+    :param node the node from which to read the value
+    :param key the key to read from the node
+    :param default_value the default value to return in case of errors
     """
-    # FIXME: implement
-    return ""
+    try:
+        return parse_bool(node.get(key))
+    except gremlin.error.ProfileError:
+        return default_value
 
 
 def parse_bool(value):

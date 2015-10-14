@@ -64,7 +64,7 @@ class SwitchMode(AbstractAction):
     widget = SwitchModeWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 
@@ -121,7 +121,7 @@ class SwitchPreviousMode(AbstractAction):
     widget = SwitchPreviousModeWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 
@@ -252,7 +252,7 @@ class CycleModes(AbstractAction):
     widget = CycleModesWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 

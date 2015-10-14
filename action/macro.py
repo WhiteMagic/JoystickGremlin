@@ -326,7 +326,7 @@ class Macro(AbstractAction):
     widget = MacroWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 

@@ -277,10 +277,10 @@ class InputItemButton(QtWidgets.QFrame):
         )
 
 
-class ConditionWidget(QtWidgets.QWidget):
+class ButtonConditionWidget(QtWidgets.QWidget):
 
     """Widget allowing the configuration of the activation condition
-    of actions."""
+    of button like actions."""
 
     def __init__(self, change_cb, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
@@ -294,6 +294,30 @@ class ConditionWidget(QtWidgets.QWidget):
         self.release.stateChanged.connect(self.change_cb)
         self.main_layout.addWidget(self.press)
         self.main_layout.addWidget(self.release)
+
+    def from_profile(self, action_data):
+        pass
+
+    def to_profile(self, action_data):
+        pass
+
+
+class HatConditionWidget(QtWidgets.QWidget):
+
+    """Widget allowing the configuration of the activation condition
+    of hat actions."""
+
+    def __init__(self, change_cb, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.change_cb = change_cb
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.main_layout.addWidget(QtWidgets.QLabel("Activate on"))
+        self.widgets = {}
+        for name in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]:
+            self.widgets[name] = QtWidgets.QCheckBox(name)
+            self.widgets[name].stateChanged.connect(self.change_cb)
+            self.main_layout.addWidget(self.widgets[name])
 
     def from_profile(self, action_data):
         pass
@@ -338,7 +362,11 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
         if self._is_button_like():
-            self.condition = ConditionWidget(self.to_profile)
+            self.condition = ButtonConditionWidget(self.to_profile)
+            self._set_conditions()
+            self.main_layout.addWidget(self.condition)
+        if self._is_hat():
+            self.condition = HatConditionWidget(self.to_profile)
             self._set_conditions()
             self.main_layout.addWidget(self.condition)
 
@@ -355,12 +383,33 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
                     self.condition.press.isChecked(),
                     self.condition.release.isChecked()
                 )
+        if self._is_hat():
+            self.action_widget.action_data.condition =\
+                action.common.HatCondition(
+                    self.condition.widgets["N"].isChecked(),
+                    self.condition.widgets["NE"].isChecked(),
+                    self.condition.widgets["E"].isChecked(),
+                    self.condition.widgets["SE"].isChecked(),
+                    self.condition.widgets["S"].isChecked(),
+                    self.condition.widgets["SW"].isChecked(),
+                    self.condition.widgets["W"].isChecked(),
+                    self.condition.widgets["NW"].isChecked()
+                )
 
     def _set_conditions(self):
         condition = self.action_widget.action_data.condition
         if self._is_button_like():
             self.condition.press.setChecked(condition.on_press)
             self.condition.release.setChecked(condition.on_release)
+        if self._is_hat():
+            self.condition.widgets["N"].setChecked(condition.on_n)
+            self.condition.widgets["NE"].setChecked(condition.on_ne)
+            self.condition.widgets["E"].setChecked(condition.on_e)
+            self.condition.widgets["SE"].setChecked(condition.on_se)
+            self.condition.widgets["S"].setChecked(condition.on_s)
+            self.condition.widgets["SW"].setChecked(condition.on_sw)
+            self.condition.widgets["W"].setChecked(condition.on_w)
+            self.condition.widgets["NW"].setChecked(condition.on_nw)
 
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
@@ -382,6 +431,17 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             UiInputType.JoystickButton,
             UiInputType.Keyboard
         ]
+
+    def _is_hat(self):
+        """Returns True if the action_widget is associated with a hat.
+
+        :return True if the action_widget is associated with a hat,
+            False otherwise
+        """
+        is_hat = self.action_widget.action_data.parent.input_type == \
+                 UiInputType.JoystickHat
+        is_remap = isinstance(self.action_widget.action_data, action.remap.Remap)
+        return is_hat and not is_remap
 
 
 class InputItemConfigurationPanel(QtWidgets.QFrame):
@@ -430,6 +490,10 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
                 if isinstance(action_profile, action.remap.Remap):
                     action_profile.condition =\
                         action.common.ButtonCondition(True, True)
+            elif self.item_profile.input_type == UiInputType.JoystickHat:
+                action_profile.condition = action.common.HatCondition(
+                    False, False, False, False, False, False, False, False
+                )
             self.item_profile.actions.append(action_profile)
 
         # Create the widget using the information from the action item

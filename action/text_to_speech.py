@@ -60,7 +60,7 @@ class TextToSpeech(AbstractAction):
     widget = TextToSpeechWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 

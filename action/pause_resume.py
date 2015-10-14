@@ -57,7 +57,7 @@ class PauseAction(AbstractAction):
     widget = PauseActionWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 
@@ -114,7 +114,7 @@ class ResumeAction(AbstractAction):
     widget = ResumeActionWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 
@@ -171,7 +171,7 @@ class TogglePauseResumeAction(AbstractAction):
     widget = TogglePauseResumeActionWidget
     input_types = [
         UiInputType.JoystickButton,
-        UiInputType.JoystickHatDirection,
+        UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
 
