@@ -207,6 +207,16 @@ class Repeater(QtCore.QObject):
                 event_listener.joystick_event.emit(self._events[index])
             index = (index + 1) % len(self._events)
             time.sleep(0.5)
+        # Ensure we leave the input in a neutral state when done
+        event_type = self.events[0].event_type
+        event = self._events[0]
+        if event_type == InputType.JoystickButton:
+            event.is_pressed = False
+        elif self.events[0].event_type == InputType.JoystickAxis:
+            event.value = 0.0
+        elif event_type == InputType.JoystickHat:
+            event.value = (0, 0)
+        event_listener.joystick_event.emit(event)
 
 
 class CalibrationUi(QtWidgets.QWidget):
