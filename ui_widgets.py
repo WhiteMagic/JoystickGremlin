@@ -645,6 +645,7 @@ class ModeWidget(QtWidgets.QWidget):
         self.selector.currentIndexChanged.disconnect(self._mode_changed_cb)
 
         self.profile = profile_data
+
         # Remove all existing items
         while self.selector.count() > 0:
             self.selector.removeItem(0)
@@ -655,8 +656,8 @@ class ModeWidget(QtWidgets.QWidget):
         labels = []
         self._inheritance_tree_to_labels(labels, inheritance_tree, 0)
 
-        # Filter the mode names such that they only occur once below their
-        # correct parent
+        # Filter the mode names such that they only occur once below
+        # their correct parent
         mode_names = []
         display_names = []
         for entry in labels:
