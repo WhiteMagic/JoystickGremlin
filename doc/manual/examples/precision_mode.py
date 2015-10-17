@@ -10,7 +10,7 @@ default_curve = CubicSpline(
         [(-1.0, -1.0), (0.0, 0.0), (1.0, 1.0)]
 )
 precision_curve = CubicSpline(
-        [(-1.0, 0.5), (0.0, 0.0), (1.0, 0.5)]
+        [(-1.0, -0.5), (0.0, 0.0), (1.0, 0.5)]
 )
 
 active_weapon_groups = {}

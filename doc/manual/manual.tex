@@ -122,12 +122,21 @@ listed below:
         2015-05-12})
     \item
         \href{http://www.microsoft.com/en-us/download/details.aspx?id=5555}{VC
-        Redistributable 2010}
+        Redistributable  2010 (x86)}
+    \item
+        \href{http://www.microsoft.com/en-us/download/details.aspx?id=40784}{VC
+        Redistributable 2013 (x86)}
 \end{itemize}
+
+It's important that the VC Redistributables are the x86 ones, even if
+you're running a x64 system, as vJoy and Python require the 32bit
+libraries.
 
 vJoy creates virtual joysticks which show up as a device in Windows and
 \JG{} uses these to forward inputs to them. The VC2010 package is
-required by Python but is likely to already installed.
+required by Python but is likely to already installed. The same goes for
+the VC2013 package which is required by vJoy but is most likely already
+installed on the machine.
 
 \subsubsection{vJoy Configuration}
 
@@ -258,19 +267,6 @@ in actions associated with that input to be performed even if execution
 of callbacks is paused. This is mainly useful for resuming when
 execution has been paused.
 
-\vspace{1em}
-\begin{bclogo}[
-    couleur=yellow!40,
-    couleurBord=orange!80,
-    couleurBarre=orange!80,
-    arrondi=0.1,
-    logo=\bcinfo
-]{Note}
-    Activation conditions are currently only implemented for joystick
-    buttons and keyboard keys.
-\end{bclogo}
-
-
 \subsubsection{Remapping}
 
 \begin{figure}[bt]
@@ -326,8 +322,8 @@ numerical values to be entered.
 
 Finally the dead zones for the axis can be defined using the sliders and
 input fields at the bottom of the dialogue. The fields and sliders
-control the full deflection dead zone (1st and 4th field from the left) as well as
-the centre deflection dead zones (2nd and 3rd field).
+control the full deflection dead zone (1st and 4th field from the left)
+as well as the centre deflection dead zones (2nd and 3rd field).
 
 Currently there are two types of response curve types available which
 are selected from the drop down menu at the top of the widget:
@@ -337,8 +333,8 @@ are selected from the drop down menu at the top of the widget:
         shape is provided.
     \item[Cubic B\'{e}zier Spline] A more complex spline with control
         points and ``handles'' that can modify the shape of the overall
-        curve. Importantly this curve allows the control of how the
-        curve approaches the end points of the curve.
+        curve. Importantly this allows to control the way how the curve
+        approaches the end points of the curve.
 \end{description}
 
 \begin{bclogo}[
@@ -574,11 +570,11 @@ likewise removed by selecting the desired module and pressing the
 
 \subsubsection{Input Repeater}
 
-By enabling the \emph{Input Repeater} option via \emph{Tools
-$\rightarrow$ Input Repeater}, \JG{} will repeat the last remapped input
-after a short wait period. This allows button presses and axes movements
-to be mapped in-game when the game detects the physical device's inputs
-instead of the virtual ones.
+By enabling the \emph{Input Repeater} option, while \JG{} is active, via
+\emph{Tools $\rightarrow$ Input Repeater}, \JG{} will repeat the last
+remapped input after a short wait period. This allows button presses and
+axes movements to be mapped in-game when the game detects the physical
+device's inputs instead of the virtual ones.
 
 
 \subsubsection{Device Information}
@@ -1020,7 +1016,7 @@ in the \verb+gremlin.profile+ module.
 
 \textbf{Fixes}
 \begin{itemize}
-    \item Timeout issues making vJoy fail fixed
+    \item Timeout issues making vJoy fail partially fixed
     \item More error handling and fixing of edge cases
 \end{itemize}
 
