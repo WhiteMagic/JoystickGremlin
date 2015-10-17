@@ -676,15 +676,15 @@ class ModeWidget(QtWidgets.QWidget):
             self.selector.addItem(display_name)
             self.mode_list.append(mode_name)
 
-        # Reconnect change signal
-        self.selector.currentIndexChanged.connect(self._mode_changed_cb)
-
         # Select currently active mode
         if len(mode_names) > 0:
             if current_mode is None:
                 current_mode = mode_names[0]
             self.selector.setCurrentIndex(self.mode_list.index(current_mode))
             self._mode_changed_cb(self.mode_list.index(current_mode))
+
+        # Reconnect change signal
+        self.selector.currentIndexChanged.connect(self._mode_changed_cb)
 
     @QtCore.pyqtSlot(int)
     def _mode_changed_cb(self, idx):

@@ -716,7 +716,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         if fname != "":
             self._do_load_profile(fname)
-            self._create_tabs()
             self.config.default_profile = fname
 
     def new_profile(self):
@@ -748,11 +747,13 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Create a default mode
         for device in self._profile.devices.values():
-            new_mode = profile.Mode(device)
-            new_mode.name = "Default"
-            device.modes["Default"] = new_mode
-        self.mode_configuration_changed()
+            device.ensure_mode_exists("Default")
+            # new_mode = profile.Mode(device)
+            # new_mode.name = "Default"
+            # device.modes["Default"] = new_mode
         self._current_mode = "Default"
+
+        self.mode_configuration_changed()
 
         # Create device tabs
         self._create_tabs()
@@ -872,6 +873,8 @@ class GremlinUi(QtWidgets.QMainWindow):
 
             profile_folder = os.path.dirname(fname)
             if profile_folder not in sys.path:
+                # FIXME: we need to store a clean version and the version
+                # which we pollute with the profile's folder
                 sys.path.insert(0, profile_folder)
 
             self._sanitize_profile(new_profile)
@@ -879,8 +882,13 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile_fname = fname
             self._update_window_title()
 
-            # Make the first root node the default active mode
             self._current_mode = self._profile.get_root_modes()[0]
+            self._create_tabs()
+
+            # Make the first root node the default active mode
+            self.mode_selector.populate_selector(
+                self._profile, self._current_mode
+            )
             self.mode_configuration_changed()
         except TypeError as e:
             # An error occurred while parsing an existing profile,
@@ -1037,7 +1045,14 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Creates the tabs of the configuration dialog representing
         the different connected devices.
         """
-        # Create actual tabs
+        # Disconnect the old tabs before deleting them (eventually)
+        for widget in self.tabs.values():
+            self.mode_selector.mode_changed.disconnect(
+                widget.input_item_list.mode_changed_cb
+            )
+            self.mode_selector.mode_changed.disconnect(
+                widget.configuration_panel.mode_changed_cb
+            )
         self.ui.devices.clear()
         self.tabs = {}
 

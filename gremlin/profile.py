@@ -257,7 +257,7 @@ class Device(object):
         if mode_name in self.modes:
             return
         mode = Mode(self)
-
+        mode.name = mode_name
         self.modes[mode.name] = mode
 
     def from_xml(self, node):
