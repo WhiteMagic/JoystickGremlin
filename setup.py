@@ -32,20 +32,20 @@ if sys.platform == 'win32':
 
 python_path = os.path.dirname(sys.executable) + "\\"
 
-# Shortcut creation directives for MSI installer
+# Shortcut table for desktop icon
 shortcut_table = [(
-    "StartMenuShortcut",
-    "StartMenuFolder",
-    "Joystick Gremlin",
-    "TARGETDIR",
-    "[TARGETDIR]joystick_gremlin.exe",
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    "TARGETDIR"
+    "DesktopShortcut",      # Shortcut
+    "DesktopFolder",        # Directory_
+    "Joystick Gremlin",     # Name
+    "TARGETDIR",             # Component_
+    "[TARGETDIR]\joystick_gremlin.exe",  # Target
+    None,                     # Arguments
+    None,                     # Description
+    None,                     # Hotkey
+    None,                     # Icon
+    None,                     # IconIndex
+    None,                     # ShowCmd
+    "TARGETDIR",             # WkDir
 )]
 msi_data = {"Shortcut": shortcut_table}
 
@@ -68,6 +68,7 @@ options = {
             "templates/",
             "gfx/",
             "about/",
+            ("doc/getting_started.html", "doc/getting_started.html"),
             python_path + "\Lib\site-packages\PyQt5\libEGL.dll",
             python_path + "\Lib\site-packages\PyQt5\Qt5Svg.dll",
             python_path + "\Lib\site-packages\pyHook\_cpyHook.pyd",
@@ -75,25 +76,23 @@ options = {
         "path": sys.path + ["."],
     },
     "bdist_msi": {
-        "upgrade_code": 1,
-        "data": {
-            "Shortcut": shortcut_table,
-        }
+        "upgrade_code": "{9089B45A-754D-11E5-A79D-C03496548060}",
+        "data": msi_data
     }
 }
 
 executables = [
     Executable(
         script="joystick_gremlin.py",
+        icon="gfx/icon.ico",
         base=base
     )
 ]
 
 setup(
     name="Joystick Gremlin",
-    version="2.0",
+    version="3.0",
     description="Joystick Gremlin application",
     options=options,
-    executables=executables,
-    requires=['PyQt5']
+    executables=executables
 )
