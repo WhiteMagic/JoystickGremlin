@@ -264,6 +264,7 @@ class VJoy(object):
         the keep alive timer.
         """
         if self.vjoy_id:
+            self.reset()
             VJoyInterface.RelinquishVJD(self.vjoy_id)
             self.vjoy_id = None
             self._keep_alive_timer.cancel()
