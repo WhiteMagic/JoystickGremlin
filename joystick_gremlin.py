@@ -1150,6 +1150,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionNewProfile.triggered.connect(self.new_profile)
         self.ui.actionSaveProfile.triggered.connect(self.save_profile)
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
+        self.ui.actionExit.triggered.connect(self.close)
         self.ui.actionDeviceInformation.triggered.connect(
             self.device_information
         )
@@ -1171,7 +1172,6 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Toolbar actions
         self.ui.actionActivate.triggered.connect(self.activate)
-        self.ui.actionGenerate.triggered.connect(self.generate)
         self.ui.actionOpen.triggered.connect(self.load_profile)
 
     def _setup_icons(self):
@@ -1208,7 +1208,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             QtGui.QIcon.On
         )
         self.ui.actionActivate.setIcon(activate_icon)
-        self.ui.actionGenerate.setIcon(QtGui.QIcon("gfx/generate.svg"))
         self.ui.actionOpen.setIcon(QtGui.QIcon("gfx/profile_open.svg"))
 
     def _mode_changed_cb(self, new_mode):
