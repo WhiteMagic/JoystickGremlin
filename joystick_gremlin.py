@@ -651,6 +651,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui = Ui_Gremlin()
         self.ui.setupUi(self)
 
+        # Default path variable before any runtime changes
+        self._base_path = list(sys.path)
+
         self.tabs = {}
         self.config = util.Configuration()
         self.devices = util.joystick_devices()
@@ -872,8 +875,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
             profile_folder = os.path.dirname(fname)
             if profile_folder not in sys.path:
-                # FIXME: we need to store a clean version and the version
-                # which we pollute with the profile's folder
+                sys.path = list(self._base_path)
                 sys.path.insert(0, profile_folder)
 
             self._sanitize_profile(new_profile)
