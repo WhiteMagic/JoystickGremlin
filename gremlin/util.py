@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import configparser
+import importlib
 import logging
 from mako.template import Template
 import os
@@ -37,6 +38,10 @@ g_duplicate_devices = False
 # will change based on whether or not multiple devices of the same
 # type are connected
 device_id = None
+
+
+# Table storing which modules have been imported already
+g_loaded_modules = {}
 
 
 class SingletonDecorator:
@@ -485,3 +490,17 @@ def convert_sdl_hat(value):
     elif value & sdl2.SDL_HAT_LEFT:
         direction[0] = -1
     return tuple(direction)
+
+
+def load_module(name):
+    """Imports  the given module.
+
+    :param name the name of the module
+    :return the loaded module
+    """
+    global g_loaded_modules
+    if name in g_loaded_modules:
+        importlib.reload(g_loaded_modules[name])
+    else:
+        g_loaded_modules[name] = importlib.import_module(name)
+    return g_loaded_modules[name]

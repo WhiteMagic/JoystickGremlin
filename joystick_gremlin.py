@@ -75,8 +75,7 @@ class CodeRunner(object):
 
         # Load the generated code
         try:
-            import gremlin_code
-            importlib.reload(gremlin_code)
+            gremlin_code = util.load_module("gremlin_code")
 
             # Create callbacks
             callback_count = 0

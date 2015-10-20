@@ -3,8 +3,7 @@ import gremlin
 from vjoy.vjoy import AxisName
 
 % for entry in user_imports:
-import ${entry}
-importlib.reload(${entry})
+${entry} = gremlin.util.load_module("${entry}")
 % endfor
 
 hat_direction_map = {
