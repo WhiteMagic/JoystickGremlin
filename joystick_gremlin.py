@@ -1252,7 +1252,7 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M",
         level=logging.DEBUG
     )
-    logging.debug("Starting Joystick Gremlin R2")
+    logging.debug("Starting Joystick Gremlin R3")
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
