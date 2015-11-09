@@ -218,6 +218,128 @@ class Repeater(QtCore.QObject):
         event_listener.joystick_event.emit(event)
 
 
+class OptionsUi(QtWidgets.QWidget):
+
+    """UI allowing the configuration of a variety of options."""
+
+    def __init__(self, parent=None):
+        """Creates a new opions UI instance.
+
+        :param parent the parent of this widget
+        """
+        QtWidgets.QWidget.__init__(self, parent)
+
+        # Actual configuration object being managed
+        self.config = gremlin.config.Configuration()
+
+        self.setWindowTitle("Options")
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        self.autoload_checkbox = QtWidgets.QCheckBox(
+            "Automatically load profile based on current application"
+        )
+
+        # Profile handling
+        self.executable_layout = QtWidgets.QHBoxLayout()
+        self.executable_label = QtWidgets.QLabel("Executable")
+        self.executable_selection = QtWidgets.QComboBox()
+        self.executable_selection.currentTextChanged.connect(
+            self._show_executable
+        )
+        self.executable_add = QtWidgets.QPushButton()
+        self.executable_add.setIcon(QtGui.QIcon("gfx/button_add.png"))
+        self.executable_add.clicked.connect(self._new_executable)
+        self.executable_remove = QtWidgets.QPushButton()
+        self.executable_remove.setIcon(QtGui.QIcon("gfx/button_delete.png"))
+        self.executable_remove.clicked.connect(self._remove_executable)
+
+        self.executable_layout.addWidget(self.executable_label)
+        self.executable_layout.addWidget(self.executable_selection)
+        self.executable_layout.addWidget(self.executable_add)
+        self.executable_layout.addWidget(self.executable_remove)
+        self.executable_layout.addStretch()
+
+        self.profile_layout = QtWidgets.QHBoxLayout()
+        self.profile_field = QtWidgets.QLineEdit()
+        self.profile_field.textChanged.connect(self._update_profile)
+        self.profile_field.editingFinished.connect(self._update_profile)
+        self.profile_select = QtWidgets.QPushButton()
+        self.profile_select.setIcon(QtGui.QIcon("gfx/button_edit.png"))
+        self.profile_select.clicked.connect(self._select_profile)
+
+        self.profile_layout.addWidget(self.profile_field)
+        self.profile_layout.addWidget(self.profile_select)
+
+        self.main_layout.addWidget(self.autoload_checkbox)
+        self.main_layout.addLayout(self.executable_layout)
+        self.main_layout.addLayout(self.profile_layout)
+        self.main_layout.addStretch()
+
+        self.populate_executables()
+
+    def populate_executables(self):
+        """Populates the profile drop down menu."""
+        self.profile_field.textChanged.disconnect(self._update_profile)
+        self.executable_selection.clear()
+        for path in self.config.get_executable_list():
+            self.executable_selection.addItem(path)
+        self.profile_field.textChanged.connect(self._update_profile)
+
+    def _new_executable(self):
+        """Prompts the user to select a new executable to add to the
+        profile.
+        """
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "Path to executable",
+            None,
+            "Executable (*.exe)"
+        )
+        if fname != "":
+            self.config.set_profile(fname, "")
+            self.populate_executables()
+            self._show_executable(fname)
+
+    def _remove_executable(self):
+        """Removes the current executable from the configuration."""
+        self.config.remove_profile(self.executable_selection.currentText())
+        self.populate_executables()
+
+    def _show_executable(self, exec_path):
+        """Displays the profile associated with the given executable.
+
+        :param exec_path path to the executable to shop
+        """
+        self.profile_field.setText(self.config.get_profile(exec_path))
+
+    def _update_profile(self):
+        """Updates the profile associated with the current executable."""
+        self.config.set_profile(
+            self.executable_selection.currentText(),
+            self.profile_field.text()
+        )
+
+    def _select_profile(self):
+        """Displays a file selection dialog for a profile.
+
+        If a valid file is selected the mapping from executable to
+        profile is updated.
+        """
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "Path to executable",
+            None,
+            "Profile (*.xml)"
+        )
+        if fname != "":
+            self.profile_field.setText(fname)
+            self.config.set_profile(
+                self.executable_selection.currentText(),
+                self.profile_field.text()
+            )
+
+
 class CalibrationUi(QtWidgets.QWidget):
 
     """Dialog to calibrate joystick axes."""
@@ -305,7 +427,7 @@ class CalibrationUi(QtWidgets.QWidget):
 
     def _save_calibration(self):
         """Saves the current calibration data to the hard drive."""
-        cfg = util.Configuration()
+        cfg = gremlin.config.Configuration()
         dev_id = util.device_id(self.devices[self.current_selection_id])
         cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
 
@@ -655,7 +777,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._base_path = list(sys.path)
 
         self.tabs = {}
-        self.config = util.Configuration()
+        self.config = gremlin.config.Configuration()
         self.devices = util.joystick_devices()
         self.runner = CodeRunner()
         self.repeater = Repeater([])
@@ -679,18 +801,20 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._last_input_timestamp = time.time()
         self._last_input_event = None
 
-        # Load existing configuration or create a new one otherwise
-        if self.config.default_profile and os.path.isfile(self.config.default_profile):
-            self._do_load_profile(self.config.default_profile)
-        else:
-            self.new_profile()
-
         # Create all required UI elements
         self._setup_icons()
         self._connect_actions()
-        self._create_tabs()
         self._create_statusbar()
         self._update_statusbar_active(False)
+
+        # Load existing configuration or create a new one otherwise
+        if self.config.last_profile and os.path.isfile(self.config.last_profile):
+            self._do_load_profile(self.config.last_profile)
+        else:
+            self.new_profile()
+
+        # Create device tabs
+        self._create_tabs()
 
         # Modal windows
         self.about_window = None
@@ -698,6 +822,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.device_information = None
         self.module_manager = None
         self.mode_manager = None
+        self.options_window = None
 
         self._set_joystick_input_highlighting(True)
 
@@ -718,7 +843,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         if fname != "":
             self._do_load_profile(fname)
-            self.config.default_profile = fname
+            self.config.last_profile = fname
 
     def new_profile(self):
         """Creates a new empty profile."""
@@ -869,6 +994,12 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param fname the name of the profile file to load
         """
+        # Disable the program if it is running when we're loading a
+        # new profile
+        self.ui.actionActivate.setChecked(False)
+        self.activate(False)
+
+        # Attempt to load the new profile
         try:
             new_profile = profile.Profile()
             new_profile.from_xml(fname)
@@ -1169,6 +1300,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             lambda: self._create_cheatsheet("pdf")
         )
 
+        self.ui.actionOptions.triggered.connect(self._options_dialog)
+
         self.ui.actionAbout.triggered.connect(self.about)
 
         # Toolbar actions
@@ -1242,6 +1375,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.status_bar_is_active.setText(
             "<b>Status: </b> {}".format(text_running)
         )
+
+    def _options_dialog(self):
+        self.options_window = OptionsUi()
+        self.options_window.show()
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_gremlin.ui'
 #
-# Created: Mon Oct 19 20:57:03 2015
+# Created: Sat Oct 24 16:26:34 2015
 #      by: PyQt5 UI code generator 5.3.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -79,6 +79,8 @@ class Ui_Gremlin(object):
         self.actionPDFCheatsheet.setObjectName("actionPDFCheatsheet")
         self.actionExit = QtWidgets.QAction(Gremlin)
         self.actionExit.setObjectName("actionExit")
+        self.actionOptions = QtWidgets.QAction(Gremlin)
+        self.actionOptions.setObjectName("actionOptions")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
@@ -93,6 +95,8 @@ class Ui_Gremlin(object):
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.actionHTMLCheatsheet)
         self.menuTools.addAction(self.actionPDFCheatsheet)
+        self.menuTools.addSeparator()
+        self.menuTools.addAction(self.actionOptions)
         self.menu_Help.addAction(self.actionAbout)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
@@ -129,4 +133,5 @@ class Ui_Gremlin(object):
         self.actionHTMLCheatsheet.setText(_translate("Gremlin", "HTML Cheatsheet"))
         self.actionPDFCheatsheet.setText(_translate("Gremlin", "PDF Cheatsheet"))
         self.actionExit.setText(_translate("Gremlin", "E&xit"))
+        self.actionOptions.setText(_translate("Gremlin", "&Options"))
 

@@ -67,6 +67,8 @@
     <addaction name="separator"/>
     <addaction name="actionHTMLCheatsheet"/>
     <addaction name="actionPDFCheatsheet"/>
+    <addaction name="separator"/>
+    <addaction name="actionOptions"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -176,6 +178,11 @@
   <action name="actionExit">
    <property name="text">
     <string>E&amp;xit</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>&amp;Options</string>
    </property>
   </action>
  </widget>

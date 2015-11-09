@@ -27,6 +27,7 @@ import pythoncom
 import sdl2
 import sdl2.ext
 
+import gremlin
 from gremlin.common import UiInputType
 from gremlin.util import SingletonDecorator
 from gremlin import error, macro, util
@@ -293,7 +294,7 @@ class EventListener(QtCore.QObject):
         :param guid the id of the joystick to load the calibration
             data for
         """
-        config = util.Configuration()
+        config = gremlin.config.Configuration()
         for i in range(sdl2.SDL_JoystickNumAxes(self._joysticks[guid])):
             device = util.JoystickDeviceData(self._joysticks[guid])
             limits = config.get_calibration(util.device_id(device), i+1)
