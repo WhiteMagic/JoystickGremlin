@@ -8,6 +8,7 @@ import gremlin.event_handler
 import gremlin.fsm
 import gremlin.input_devices
 import gremlin.macro
+import gremlin.process_monitor
 import gremlin.profile
 import gremlin.script_helpers
 import gremlin.tts
