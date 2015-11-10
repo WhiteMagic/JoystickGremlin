@@ -773,6 +773,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui = Ui_Gremlin()
         self.ui.setupUi(self)
 
+        # Process monitor
+        self.process_monitor = gremlin.process_monitor.ProcessMonitor()
+        self.process_monitor.process_changed.connect(self._process_changed_cb)
+
         # Default path variable before any runtime changes
         self._base_path = list(sys.path)
 
@@ -831,6 +835,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param evt the closure event
         """
+        self.process_monitor.running = False
         QtCore.QCoreApplication.quit()
 
     def load_profile(self):
@@ -1137,6 +1142,27 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._last_input_event = event
             self._last_input_timestamp = time.time()
             return True
+
+    def _process_changed_cb(self, path):
+        """Handles changes in the active process.
+
+        If the active process has a known associated profile it is
+        loaded and activated if none exists the application is
+        disabled.
+
+        :param path the path to the currently active process executable
+        """
+        profile_path = self.config.get_profile(path)
+        if profile_path:
+            if self._profile_fname != profile_path:
+                self.ui.actionActivate.setChecked(False)
+                self.activate(False)
+                self._do_load_profile(profile_path)
+            self.ui.actionActivate.setChecked(True)
+            self.activate(True)
+        else:
+            self.ui.actionActivate.setChecked(False)
+            self.activate(False)
 
     def _update_window_title(self):
         """Updates the window title to include the current profile."""
