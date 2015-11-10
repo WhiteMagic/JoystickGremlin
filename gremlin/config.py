@@ -1,6 +1,8 @@
 import json
 import os
 
+from PyQt5 import QtCore
+
 import gremlin.util
 
 
@@ -10,6 +12,15 @@ class Configuration(object):
 
     def __init__(self):
         """Creates a new instance, loading the current configuration."""
+        self.reload()
+
+        self.watcher = QtCore.QFileSystemWatcher([
+            os.path.join(gremlin.util.appdata_path(), "config.json")
+        ])
+        self.watcher.fileChanged.connect(self.reload)
+
+    def reload(self):
+        """Loads the configuration file's content."""
         fname = os.path.join(gremlin.util.appdata_path(), "config.json")
         if os.path.isfile(fname):
             with open(fname) as hdl:
