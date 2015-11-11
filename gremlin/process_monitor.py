@@ -1,3 +1,20 @@
+# -*- coding: utf-8; -*-
+
+# Copyright (C) 2015 Lionel Ott
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import ctypes
 import ctypes.wintypes
 import os
@@ -28,7 +45,7 @@ class ProcessMonitor(QtCore.QObject):
     kernel32 = ctypes.windll.kernel32
 
     def __init__(self):
-        """Creates a new instnace."""
+        """Creates a new instance."""
         QtCore.QObject.__init__(self)
         self._buffer = ctypes.create_string_buffer(1024)
         self._buffer_size = ctypes.wintypes.DWORD(1024)
