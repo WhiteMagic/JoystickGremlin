@@ -885,10 +885,11 @@ class GremlinUi(QtWidgets.QMainWindow):
             # device.modes["Default"] = new_mode
         self._current_mode = "Default"
 
-        self.mode_configuration_changed()
-
         # Create device tabs
         self._create_tabs()
+
+        # Update everything to the new mode
+        self.mode_configuration_changed()
 
         # Select the last tab which contains the Getting started guide
         self.ui.devices.setCurrentIndex(len(self.tabs))
