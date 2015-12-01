@@ -17,14 +17,18 @@
 
 from PyQt5 import QtCore, QtWidgets
 
+from mako.template import Template
+
+import action
 import gremlin
 from gremlin.common import UiInputType
 
 
-def format_condition(condition):
+def format_condition(condition, data=None):
     """Returns code representing the button condition.
 
     :param condition the condition to turn into textual python code
+    :param data additional data that may be used to pass information
     :return python code representing the condition
     """
     if isinstance(condition, ButtonCondition):
@@ -476,6 +480,27 @@ class AbstractAction(object):
             "AbstractAction.to_code not implemented in subclass"
         )
 
+    def _code_generation(self, template_name, params):
+        params["axis_button_name"] = "axis_button_{:04d}".format(AbstractAction.next_code_id)
+        params["axis_button_cb"] = "axis_button_callback_{:04d}".format(AbstractAction.next_code_id)
+        params["helpers"] = template_helpers
+        params["InputType"] = UiInputType
+
+        body_code = Template(
+            filename="templates/{}_body.tpl".format(template_name)
+        ).render(
+            **params
+        )
+        global_code = Template(
+            filename="templates/{}_global.tpl".format(template_name)
+        ).render(
+            **params
+        )
+        return {
+            "body": body_code,
+            "global": global_code
+        }
+
     def _parse_condition(self, node):
         """Parses condition information of the action's XML node.
 
@@ -496,11 +521,19 @@ class AbstractAction(object):
 
         :param node the XML node in which to store condition information
         """
-        if self.parent.input_type in [UiInputType.JoystickButton, UiInputType.Keyboard]:
+        input_type = self.parent.input_type
+        action_widget = action.action_to_widget[type(self)]
+        button_types = [
+            UiInputType.JoystickButton,
+            UiInputType.Keyboard
+        ]
+
+        if input_type in button_types and \
+                action_widget in action.condition_map[input_type]:
             node.set("on-press", str(self.condition.on_press))
             node.set("on-release", str(self.condition.on_release))
-        if self.parent.input_type == UiInputType.JoystickHat and \
-            node.tag != "remap":
+        elif input_type == UiInputType.JoystickHat and \
+                action_widget in action.condition_map[input_type]:
             node.set("on-n", str(self.condition.on_n))
             node.set("on-ne", str(self.condition.on_ne))
             node.set("on-e", str(self.condition.on_e))
@@ -509,6 +542,11 @@ class AbstractAction(object):
             node.set("on-sw", str(self.condition.on_sw))
             node.set("on-w", str(self.condition.on_w))
             node.set("on-nw", str(self.condition.on_nw))
+        elif input_type == UiInputType.JoystickAxis and \
+                action_widget in action.condition_map[input_type]:
+            node.set("is-active", str(self.condition.is_active))
+            node.set("lower-limit", str(self.condition.lower_limit))
+            node.set("upper-limit", str(self.condition.upper_limit))
 
 
 class AbstractActionWidget(QtWidgets.QFrame):
@@ -565,9 +603,15 @@ class AxisCondition(object):
 
     """Indicates when an action associated with an axis is to be run."""
 
-    def __init__(self):
-        # TODO: implement
-        pass
+    def __init__(self, is_active, lower_limit, upper_limit):
+        """Creates a new instance.
+
+        :param lower_limit lower axis limit of the activation range
+        :param upper_limit upper axis limit of the activation range
+        """
+        self.is_active = is_active
+        self.lower_limit = lower_limit
+        self.upper_limit = upper_limit
 
 
 class ButtonCondition(object):
@@ -591,7 +635,7 @@ class HatCondition(object):
     """Indicates when an action associated with a hat is to be run."""
 
     def __init__(self, on_n, on_ne, on_e, on_se, on_s, on_sw, on_w, on_nw):
-        """Creates a new instnace."""
+        """Creates a new instance."""
         self.on_n = on_n
         self.on_ne = on_ne
         self.on_e = on_e
@@ -612,7 +656,6 @@ def input_type_to_tag(input_type):
         UiInputType.JoystickAxis: "axis",
         UiInputType.JoystickButton: "button",
         UiInputType.JoystickHat: "hat",
-        UiInputType.JoystickHatDirection: "hat-direction",
         UiInputType.Keyboard: "key",
     }
     if input_type in lookup:
@@ -629,7 +672,14 @@ def parse_axis_condition(node):
     :param node the xml node to parse
     :return AxisCondition corresponding to the node's content
     """
-    return AxisCondition()
+    try:
+        is_active = parse_bool(node.get("is-active"))
+        lower_limit = parse_float(node.get("lower-limit"))
+        upper_limit = parse_float(node.get("upper-limit"))
+
+        return AxisCondition(is_active, lower_limit, upper_limit)
+    except gremlin.error.ProfileError:
+        return AxisCondition(False, 0, 0)
 
 
 def parse_button_condition(node):
@@ -715,6 +765,24 @@ def parse_bool(value):
             raise gremlin.error.ProfileError(
                 "Invalid bool value used: {}".format(value)
             )
+    except TypeError:
+        raise gremlin.error.ProfileError(
+            "Invalid type provided: {}".format(type(value))
+        )
+
+
+def parse_float(value):
+    """Returns the float representation of the provided value.
+
+    :param value the value as string to parse
+    :return representation of value as float
+    """
+    try:
+        return float(value)
+    except ValueError:
+        raise gremlin.error.ProfileError(
+            "Invalid float value used: {}".format(value)
+        )
     except TypeError:
         raise gremlin.error.ProfileError(
             "Invalid type provided: {}".format(type(value))

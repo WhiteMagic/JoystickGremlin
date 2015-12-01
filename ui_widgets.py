@@ -277,6 +277,46 @@ class InputItemButton(QtWidgets.QFrame):
         )
 
 
+class AxisConditionWidget(QtWidgets.QWidget):
+
+    """Widget allowing the configuration of the activation condition
+    of axis triggers."""
+
+    def __init__(self, change_cb, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.change_cb = change_cb
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+
+        self.checkbox = QtWidgets.QCheckBox("Trigger between")
+        self.checkbox.stateChanged.connect(self.change_cb)
+
+        self.main_layout.addWidget(self.checkbox)
+
+        self.lower_limit = QtWidgets.QDoubleSpinBox()
+        self.upper_limit = QtWidgets.QDoubleSpinBox()
+
+        self._configure_spinbbox(self.lower_limit)
+        self._configure_spinbbox(self.upper_limit)
+
+        self.main_layout.addWidget(self.lower_limit)
+        self.main_layout.addWidget(QtWidgets.QLabel(" and "))
+        self.main_layout.addWidget(self.upper_limit)
+
+        self.main_layout.addStretch()
+
+    def _configure_spinbbox(self, object):
+        object.setRange(-1.0, 1.0)
+        object.setSingleStep(0.05)
+        object.valueChanged.connect(self.change_cb)
+
+    def from_profile(self):
+        pass
+
+    def to_profile(self):
+        pass
+
+
 class ButtonConditionWidget(QtWidgets.QWidget):
 
     """Widget allowing the configuration of the activation condition
@@ -361,15 +401,7 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         self.main_widget.setPalette(self.palette)
 
         self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
-        if self._is_button_like():
-            self.condition = ButtonConditionWidget(self.to_profile)
-            self._set_conditions()
-            self.main_layout.addWidget(self.condition)
-        if self._is_hat():
-            self.condition = HatConditionWidget(self.to_profile)
-            self._set_conditions()
-            self.main_layout.addWidget(self.condition)
-
+        self._add_condition()
         self.main_layout.addWidget(self.action_widget)
         self.setWidget(self.main_widget)
 
@@ -377,13 +409,13 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         """Updates the profile data associated with the widget with
         the UI contents."""
         self.action_widget.to_profile()
-        if self._is_button_like():
+        if self._is_button_like() and self._has_condition():
             self.action_widget.action_data.condition =\
                 action.common.ButtonCondition(
                     self.condition.press.isChecked(),
                     self.condition.release.isChecked()
                 )
-        if self._is_hat():
+        elif self._is_hat() and self._has_condition():
             self.action_widget.action_data.condition =\
                 action.common.HatCondition(
                     self.condition.widgets["N"].isChecked(),
@@ -395,13 +427,28 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
                     self.condition.widgets["W"].isChecked(),
                     self.condition.widgets["NW"].isChecked()
                 )
+        elif self._is_axis() and self._has_condition():
+            self.action_widget.action_data.condition =\
+                action.common.AxisCondition(
+                    self.condition.checkbox.isChecked(),
+                    self.condition.lower_limit.value(),
+                    self.condition.upper_limit.value()
+                )
 
-    def _set_conditions(self):
+    def _populate_condition(self):
+        # Only run if we need a condition
+        if not self._has_condition():
+            return
+
+        # Get condition data and return if there is nothing
         condition = self.action_widget.action_data.condition
+        if condition is None:
+            return
+
         if self._is_button_like():
             self.condition.press.setChecked(condition.on_press)
             self.condition.release.setChecked(condition.on_release)
-        if self._is_hat():
+        elif self._is_hat():
             self.condition.widgets["N"].setChecked(condition.on_n)
             self.condition.widgets["NE"].setChecked(condition.on_ne)
             self.condition.widgets["E"].setChecked(condition.on_e)
@@ -410,6 +457,10 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             self.condition.widgets["SW"].setChecked(condition.on_sw)
             self.condition.widgets["W"].setChecked(condition.on_w)
             self.condition.widgets["NW"].setChecked(condition.on_nw)
+        elif self._is_axis():
+            self.condition.checkbox.setChecked(condition.is_active)
+            self.condition.lower_limit.setValue(condition.lower_limit)
+            self.condition.upper_limit.setValue(condition.upper_limit)
 
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
@@ -418,6 +469,46 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         """
         QtWidgets.QDockWidget.closeEvent(self, event)
         self.closed.emit(self)
+
+    def _has_condition(self):
+        """Returns whether or not the widget has a condition.
+
+        :return True if a condition is present, False otherwise
+        """
+        has_condition = False
+        input_type = self.action_widget.action_data.parent.input_type
+        widget_type = type(self.action_widget)
+        if self._is_button_like() and \
+                widget_type in action.condition_map[input_type]:
+            has_condition = True
+        elif self._is_hat() and \
+                widget_type in action.condition_map[input_type]:
+            has_condition = True
+        elif self._is_axis() and \
+                widget_type in action.condition_map[input_type]:
+            has_condition = True
+
+        return has_condition
+
+    def _add_condition(self):
+        """Adds a condition widget to the UI if necessary."""
+        input_type = self.action_widget.action_data.parent.input_type
+        widget_type = type(self.action_widget)
+        condition = None
+        if self._is_button_like() and \
+                widget_type in action.condition_map[input_type]:
+            condition = ButtonConditionWidget(self.to_profile)
+        elif self._is_hat() and \
+                widget_type in action.condition_map[input_type]:
+            condition = HatConditionWidget(self.to_profile)
+        elif self._is_axis() and \
+                widget_type in action.condition_map[input_type]:
+            condition = AxisConditionWidget(self.to_profile)
+
+        if condition is not None:
+            self.condition = condition
+            self._populate_condition()
+            self.main_layout.addWidget(self.condition)
 
     def _is_button_like(self):
         """Returns True if the action_widget is button like, i.e. a
@@ -442,6 +533,16 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
                  UiInputType.JoystickHat
         is_remap = isinstance(self.action_widget.action_data, action.remap.Remap)
         return is_hat and not is_remap
+
+    def _is_axis(self):
+        """Returns True if the action_widget is associated witha na axis.
+
+        :return True if the action_widget is associated with an axis,
+            False otherwise
+        """
+        is_axis = self.action_widget.action_data.parent.input_type == \
+                UiInputType.JoystickAxis
+        return is_axis
 
 
 class InputItemConfigurationPanel(QtWidgets.QFrame):
@@ -812,7 +913,6 @@ class InputItemList(QtWidgets.QWidget):
             UiInputType.JoystickAxis: {},
             UiInputType.JoystickButton: {},
             UiInputType.JoystickHat: {},
-            UiInputType.JoystickHatDirection: {},
             UiInputType.Keyboard: {}
         }
 
@@ -907,7 +1007,6 @@ class InputItemList(QtWidgets.QWidget):
             UiInputType.JoystickAxis: {},
             UiInputType.JoystickButton: {},
             UiInputType.JoystickHat: {},
-            UiInputType.JoystickHatDirection: {},
             UiInputType.Keyboard: {}
         }
 

@@ -34,7 +34,6 @@ def tag_to_input_type(tag):
         "axis": UiInputType.JoystickAxis,
         "button": UiInputType.JoystickButton,
         "hat": UiInputType.JoystickHat,
-        "hat-direction": UiInputType.JoystickHatDirection,
         "key": UiInputType.Keyboard,
     }
     if tag.lower() in lookup:
@@ -309,7 +308,6 @@ class Mode(object):
             UiInputType.JoystickAxis: {},
             UiInputType.JoystickButton: {},
             UiInputType.JoystickHat: {},
-            UiInputType.JoystickHatDirection: {},
             UiInputType.Keyboard: {}
         }
 
