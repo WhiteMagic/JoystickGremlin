@@ -314,18 +314,10 @@ def format_input_name(input_type, identifier):
         UiInputType.JoystickAxis: "Axis",
         UiInputType.JoystickButton: "Button",
         UiInputType.JoystickHat: "Hat",
-        UiInputType.JoystickHatDirection: "Hat Direction",
         UiInputType.Keyboard: "Key",
     }
 
     if input_type == UiInputType.Keyboard:
         return gremlin.macro.key_from_code(identifier[0], identifier[1]).name
-    elif input_type == UiInputType.JoystickHatDirection:
-        input_id = int(identifier / 10)
-        direction = int(identifier % 10)
-        return "Hat {} {}".format(
-            input_id,
-            gremlin.common.index_to_direction(direction)
-        )
     else:
         return "{} {}".format(type_map[input_type], identifier)
