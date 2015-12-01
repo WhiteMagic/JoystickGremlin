@@ -191,7 +191,7 @@ def format_name(name):
     :param name the name to format
     :return name formatted to be suitable as a python variable name
     """
-    new_name = re.sub("[ \.,:()]", "_", name.lower())
+    new_name = re.sub("[ \.,:()-]", "_", name.lower())
     if valid_identifier(new_name):
         return new_name
     else:
