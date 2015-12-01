@@ -56,6 +56,7 @@ class PauseAction(AbstractAction):
     name = "Pause"
     widget = PauseActionWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -71,13 +72,7 @@ class PauseAction(AbstractAction):
         return ElementTree.Element("pause-action")
 
     def _generate_code(self):
-        tpl = Template(filename="templates/pause_body.tpl")
-        return {
-            "body": tpl.render(
-                entry=self,
-                helpers=template_helpers
-            )
-        }
+        return self._code_generation("pause", {"entry": self})
 
 
 class ResumeActionWidget(AbstractActionWidget):
@@ -113,6 +108,7 @@ class ResumeAction(AbstractAction):
     name = "Resume"
     widget = ResumeActionWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -128,13 +124,7 @@ class ResumeAction(AbstractAction):
         return ElementTree.Element("resume-action")
 
     def _generate_code(self):
-        tpl = Template(filename="templates/resume_body.tpl")
-        return {
-            "body": tpl.render(
-                entry=self,
-                helpers=template_helpers
-            )
-        }
+        return self._code_generation("resume", {"entry": self})
 
 
 class TogglePauseResumeActionWidget(AbstractActionWidget):
@@ -170,6 +160,7 @@ class TogglePauseResumeAction(AbstractAction):
     name = "Toggle Pause & Resume"
     widget = TogglePauseResumeActionWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -185,10 +176,4 @@ class TogglePauseResumeAction(AbstractAction):
         return ElementTree.Element("toggle-pause-resume-action")
 
     def _generate_code(self):
-        tpl = Template(filename="templates/toggle_pause_resume_body.tpl")
-        return {
-            "body": tpl.render(
-                entry=self,
-                helpers=template_helpers
-            )
-        }
+        return self._code_generation("toggle_pause_resume", {"entry": self})

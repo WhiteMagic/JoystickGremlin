@@ -32,12 +32,16 @@ class RemapWidget(AbstractActionWidget):
     """
 
     # Mapping from types to display names
-    name_map = {
+    type_to_name_map = {
         UiInputType.JoystickAxis: "Axis",
         UiInputType.JoystickButton: "Button",
         UiInputType.JoystickHat: "Hat",
-        UiInputType.JoystickHatDirection: "Button",
         UiInputType.Keyboard: "Button",
+    }
+    name_to_type_map = {
+        "Axis": UiInputType.JoystickAxis,
+        "Button": UiInputType.JoystickButton,
+        "Hat": UiInputType.JoystickHat
     }
 
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
@@ -80,10 +84,8 @@ class RemapWidget(AbstractActionWidget):
             UiInputType.JoystickButton: lambda x: x.buttons,
             UiInputType.JoystickHat: lambda x: x.hats
         }
-        input_type = self.action_data.input_type
+        input_type = self.action_data.parent.input_type
         if input_type == UiInputType.Keyboard:
-            input_type = UiInputType.JoystickButton
-        elif input_type == UiInputType.JoystickHatDirection:
             input_type = UiInputType.JoystickButton
 
         self.input_item_dropdowns = []
@@ -96,19 +98,35 @@ class RemapWidget(AbstractActionWidget):
         selection.activated.connect(self.change_cb)
         self.input_item_dropdowns.append(selection)
 
-        # Create input item selections
+        # Create input item selections for the vjoy devices, each
+        # selection will be invisible unless it is selected as the
+        # active device
         for dev in self.vjoy_devices:
             selection = QtWidgets.QComboBox(self)
             selection.addItem("None")
+
+            # Add items based on the input type
             for i in range(1, count_map[input_type](dev)+1):
                 selection.addItem("{} {:d}".format(
-                    self.name_map[input_type],
+                    self.type_to_name_map[input_type],
                     i
                 ))
+            # If we are dealing with an axis add buttons as valid
+            # remap targets as well for usage with axis conditions
+            if input_type == UiInputType.JoystickAxis:
+                for i in range(1, count_map[UiInputType.JoystickButton](dev)+1):
+                    selection.addItem("{} {:d}".format(
+                        self.type_to_name_map[UiInputType.JoystickButton],
+                        i
+                    ))
+
+            # Add the selection and hide it
             selection.setVisible(False)
             selection.activated.connect(self.change_cb)
             self.main_layout.addWidget(selection)
             self.input_item_dropdowns.append(selection)
+
+        # Show the "None" selection entry
         self.input_item_dropdowns[0].setVisible(True)
 
     def _update_device(self, index):
@@ -124,10 +142,18 @@ class RemapWidget(AbstractActionWidget):
 
     def to_profile(self):
         vjoy_device_id = self.device_dropdown.currentIndex()
-        vjoy_item_id = self.input_item_dropdowns[vjoy_device_id].currentIndex()
+        input_selection = self.input_item_dropdowns[vjoy_device_id].currentText()
+
+        vjoy_input_type = self.action_data.input_type
+        vjoy_item_id = 0
+        if input_selection != "None":
+            arr = input_selection.split()
+            vjoy_input_type = self.name_to_type_map[arr[0]]
+            vjoy_item_id = int(arr[1])
 
         self.action_data.vjoy_device_id = vjoy_device_id
         self.action_data.vjoy_input_id = vjoy_item_id
+        self.action_data.input_type = vjoy_input_type
         self.action_data.is_valid = (vjoy_item_id != 0 and vjoy_item_id != 0)
 
     def initialize_from_profile(self, action_data):
@@ -141,7 +167,7 @@ class RemapWidget(AbstractActionWidget):
         input_name = "None"
         if action_data.vjoy_input_id not in [0, None]:
             input_name = "{} {:d}".format(
-                self.name_map[action_data.input_type],
+                self.type_to_name_map[action_data.input_type],
                 action_data.vjoy_input_id
             )
 
@@ -172,8 +198,8 @@ class Remap(AbstractAction):
         AbstractAction.__init__(self, parent)
 
         self.vjoy_device_id = None
-        self.input_type = None
         self.vjoy_input_id = None
+        self.input_type = None
 
     def _parse_xml(self, node):
         if "axis" in node.attrib:
@@ -202,7 +228,7 @@ class Remap(AbstractAction):
     def _generate_xml(self):
         node = ElementTree.Element("remap")
         node.set("vjoy", str(self.vjoy_device_id))
-        if self.input_type in [UiInputType.Keyboard, UiInputType.JoystickHatDirection]:
+        if self.input_type == UiInputType.Keyboard:
             node.set(
                 action.common.input_type_to_tag(UiInputType.JoystickButton),
                 str(self.vjoy_input_id)
@@ -215,11 +241,10 @@ class Remap(AbstractAction):
         return node
 
     def _generate_code(self):
-        tpl = Template(filename="templates/remap_body.tpl")
-        return {
-            "body": tpl.render(
-                entry=self,
-                InputType=UiInputType,
-                helpers=action.common.template_helpers
-            )
-        }
+        return self._code_generation(
+            "remap",
+            {
+                "entry": self,
+                "gremlin": gremlin
+            }
+        )

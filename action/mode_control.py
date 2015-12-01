@@ -63,6 +63,7 @@ class SwitchMode(AbstractAction):
     name = "Switch Mode"
     widget = SwitchModeWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -81,10 +82,10 @@ class SwitchMode(AbstractAction):
         return node
 
     def _generate_code(self):
-        tpl = Template(filename="templates/switch_mode_body.tpl")
-        return {
-            "body": tpl.render(entry=self, helpers=template_helpers)
-        }
+        return self._code_generation(
+            "switch_mode",
+            {"entry": self}
+        )
 
 
 class SwitchPreviousModeWidget(AbstractActionWidget):
@@ -120,6 +121,7 @@ class SwitchPreviousMode(AbstractAction):
     name = "Switch to previous Mode"
     widget = SwitchPreviousModeWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -135,10 +137,10 @@ class SwitchPreviousMode(AbstractAction):
         return ElementTree.Element("switch-to-previous-mode")
 
     def _generate_code(self):
-        tpl = Template(filename="templates/switch_previous_mode_body.tpl")
-        return {
-            "body": tpl.render(entry=self, helpers=template_helpers)
-        }
+        return self._code_generation(
+            "switch_previous_mode",
+            {"entry": self}
+        )
 
 
 class CycleModesWidget(AbstractActionWidget):
@@ -251,6 +253,7 @@ class CycleModes(AbstractAction):
     name = "Cycle Modes"
     widget = CycleModesWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -273,18 +276,11 @@ class CycleModes(AbstractAction):
         return node
 
     def _generate_code(self):
-        global_code = Template(filename="templates/cycle_modes_global.tpl").render(
-            entry=self,
-            mode_list_name="mode_list_{:04d}".format(CycleModes.next_code_id),
-            gremlin=gremlin,
-            helpers=template_helpers
+        return self._code_generation(
+            "cycle_modes",
+            {
+                "entry": self,
+                "mode_list_name": "mode_list_{:04d}".format(CycleModes.next_code_id),
+                "gremlin": gremlin
+            }
         )
-        body_code = Template(filename="templates/cycle_modes_body.tpl").render(
-            entry=self,
-            mode_list_name="mode_list_{:04d}".format(CycleModes.next_code_id),
-            helpers=template_helpers
-        )
-        return {
-            "body": body_code,
-            "global": global_code
-        }

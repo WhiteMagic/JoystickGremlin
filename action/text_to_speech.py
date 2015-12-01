@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mako.template import Template
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
@@ -59,6 +58,7 @@ class TextToSpeech(AbstractAction):
     name = "Text to Speech"
     widget = TextToSpeechWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -77,7 +77,4 @@ class TextToSpeech(AbstractAction):
         return node
 
     def _generate_code(self):
-        tpl = Template(filename="templates/text_to_speech.tpl")
-        return {
-            "body": tpl.render(entry=self, helpers=template_helpers)
-        }
+        return self._code_generation("text_to_speech", {"entry": self})

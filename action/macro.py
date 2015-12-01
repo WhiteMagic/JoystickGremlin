@@ -325,6 +325,7 @@ class Macro(AbstractAction):
     name = "Macro"
     widget = MacroWidget
     input_types = [
+        UiInputType.JoystickAxis,
         UiInputType.JoystickButton,
         UiInputType.JoystickHat,
         UiInputType.Keyboard
@@ -383,18 +384,11 @@ class Macro(AbstractAction):
 
         :return python code executing this object's contents.
         """
-        body_code = Template(filename="templates/macro_body.tpl").render(
-            entry=self,
-            macro_name="macro_{:04d}".format(Macro.next_code_id),
-            helpers=template_helpers
+        return self._code_generation(
+            "macro",
+            {
+                "entry": self,
+                "macro_name": "macro_{:04d}".format(Macro.next_code_id),
+                "gremlin": gremlin
+            }
         )
-        global_code = Template(filename="templates/macro_global.tpl").render(
-            entry=self,
-            macro_name="macro_{:04d}".format(Macro.next_code_id),
-            gremlin=gremlin,
-            helpers=template_helpers
-        )
-        return {
-            "body": body_code,
-            "global": global_code,
-        }

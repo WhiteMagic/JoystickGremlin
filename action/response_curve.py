@@ -1006,8 +1006,8 @@ class ResponseCurve(AbstractAction):
             if child.tag == "deadzone":
                 self.deadzone = [
                     float(child.get("low")),
-                    float(child.get("center_low")),
-                    float(child.get("center_high")),
+                    float(child.get("center-low")),
+                    float(child.get("center-high")),
                     float(child.get("high"))
                 ]
             elif child.tag == "mapping":
@@ -1039,8 +1039,8 @@ class ResponseCurve(AbstractAction):
         # Deadzone settings
         deadzone_node = ElementTree.Element("deadzone")
         deadzone_node.set("low", str(self.deadzone[0]))
-        deadzone_node.set("center_low", str(self.deadzone[1]))
-        deadzone_node.set("center_high", str(self.deadzone[2]))
+        deadzone_node.set("center-low", str(self.deadzone[1]))
+        deadzone_node.set("center-high", str(self.deadzone[2]))
         deadzone_node.set("high", str(self.deadzone[3]))
         node.append(deadzone_node)
 
@@ -1048,23 +1048,11 @@ class ResponseCurve(AbstractAction):
 
     def _generate_code(self):
         """Generates python code corresponding to this object."""
-        body_code = Template(
-            filename="templates/response_curve_body.tpl"
-        ).render(
-            entry=self,
-            curve_name="curve_{:04d}".format(ResponseCurve.next_code_id),
-            helpers=template_helpers
+        return self._code_generation(
+            "response_curve",
+            {
+                "entry": self,
+                "gremlin": gremlin,
+                "curve_name": "curve_{:04d}".format(ResponseCurve.next_code_id)
+            }
         )
-        global_code = Template(
-            filename="templates/response_curve_global.tpl"
-        ).render(
-            entry=self,
-            curve_name="curve_{:04d}".format(ResponseCurve.next_code_id),
-            gremlin=gremlin,
-            helpers=template_helpers
-        )
-
-        return {
-            "body": body_code,
-            "global": global_code,
-        }
