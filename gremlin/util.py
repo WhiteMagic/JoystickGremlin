@@ -27,7 +27,7 @@ import struct
 import sys
 
 import gremlin
-from gremlin import error
+from gremlin import error, fsm
 
 
 # Flag indicating that multiple physical devices with the same name exist
@@ -107,6 +107,46 @@ class JoystickDeviceData(object):
     @property
     def hats(self):
         return self._hats
+
+
+class AxisButton(object):
+
+    def __init__(self, lower_limit, upper_limit):
+        self._lower_limit = min(lower_limit, upper_limit)
+        self._upper_limit = max(lower_limit, upper_limit)
+        self.callback = None
+        self._fsm = self._initialize_fsm()
+
+    def _initialize_fsm(self):
+        states = ["up", "down"]
+        actions = ["press", "release"]
+        transitions = {
+            ("up", "press"): fsm.Transition(self._press, "down"),
+            ("up", "release"): fsm.Transition(self._noop, "up"),
+            ("down", "release"): fsm.Transition(self._release, "up"),
+            ("down", "press"): fsm.Transition(self._noop, "down")
+        }
+        return fsm.FiniteStateMachine("up", states, actions, transitions)
+
+    def process(self, value, callback):
+        self.callback = callback
+        if self._lower_limit <= value <= self._upper_limit:
+            self._fsm.perform("press")
+        else:
+            self._fsm.perform("release")
+
+    def _press(self):
+        self.callback(True)
+
+    def _release(self):
+        self.callback(False)
+
+    def _noop(self):
+        pass
+
+    @property
+    def is_pressed(self):
+        return self._fsm.current_state == "down"
 
 
 def joystick_devices():
