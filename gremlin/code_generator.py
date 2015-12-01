@@ -75,8 +75,11 @@ def sanitize_code(code):
     code = re.sub("\r", "", code)
     new_code = ""
     for line in code.split("\n"):
-        if len(line) > 0:
+        if line == "#newline":
+            new_code += "\n"
+        elif len(line) > 0:
             new_code += line + "\n"
+
     return new_code
 
 
@@ -204,7 +207,6 @@ class CodeGenerator(object):
             UiInputType.JoystickAxis: "templates/axis.tpl",
             UiInputType.JoystickButton: "templates/button.tpl",
             UiInputType.JoystickHat: "templates/hat.tpl",
-            UiInputType.JoystickHatDirection: "templates/hat_direction.tpl",
             UiInputType.Keyboard: "templates/key.tpl",
         }
 
