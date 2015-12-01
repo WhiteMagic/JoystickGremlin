@@ -5,5 +5,5 @@ ${helpers["format_condition"](entry.condition)}
     % endif
 % else:
 ${helpers["format_condition"](entry.condition)}
-        gremlin.control_action.switch_to_previous_mode()
+        tts.speak(gremlin.util.text_substitution("${entry.text}"))
 % endif

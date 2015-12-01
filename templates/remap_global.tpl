@@ -1,14 +1,9 @@
-${mode_list_name} = gremlin.control_action.ModeList([
-    ${", ".join("\"{}\"".format(mode) for mode in entry.mode_list)}
-])
-#newline
 % if entry.parent.input_type == InputType.JoystickAxis:
     % if entry.condition and entry.condition.is_active:
 
 ${axis_button_name} = gremlin.util.AxisButton(${entry.condition.lower_limit}, ${entry.condition.upper_limit})
-def ${axis_button_cb}(is_pressed):
-    if is_pressed:
-        gremlin.control_action.cycle_modes(${mode_list_name})
+def ${axis_button_cb}(is_pressed, vjoy):
+    vjoy[${entry.vjoy_device_id}].button[${entry.vjoy_input_id}].is_pressed = is_pressed
 
     % endif
 % endif
