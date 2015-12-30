@@ -1334,11 +1334,17 @@ class GremlinUi(QtWidgets.QMainWindow):
     def _connect_actions(self):
         """Connects all QAction items to their corresponding callbacks."""
         # Menu actions
+        # File
         self.ui.actionLoadProfile.triggered.connect(self.load_profile)
         self.ui.actionNewProfile.triggered.connect(self.new_profile)
         self.ui.actionSaveProfile.triggered.connect(self.save_profile)
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
         self.ui.actionExit.triggered.connect(self.close)
+        # Actions
+        self.ui.actionCreate1to1Mapping.triggered.connect(
+            self._create_1to1_mapping
+        )
+        # Tools
         self.ui.actionDeviceInformation.triggered.connect(
             self.device_information
         )
@@ -1445,6 +1451,34 @@ class GremlinUi(QtWidgets.QMainWindow):
     def _options_dialog(self):
         self.options_window = OptionsUi()
         self.options_window.show()
+
+    def _create_1to1_mapping(self):
+        """Creates a 1 to 1 mapping of the given device to the first
+        vJoy device.
+        """
+        device_profile = self.ui.devices.currentWidget().device_profile
+        if device_profile.type != profile.DeviceType.Joystick:
+            return
+
+        mode = device_profile.modes[self._current_mode]
+        input_types = [
+            UiInputType.JoystickAxis,
+            UiInputType.JoystickButton,
+            UiInputType.JoystickHat
+        ]
+        from action.common import ButtonCondition
+        for input_type in input_types:
+            for key, entry in mode._config[input_type].items():
+                action = profile.create_action("remap", entry)
+                action.input_type = input_type
+                action.vjoy_device_id = 1
+                action.vjoy_input_id = key
+                action.is_valid = True
+
+                if input_type == UiInputType.JoystickButton:
+                    action.condition = ButtonCondition(True, True)
+                entry.actions.append(action)
+        self._create_tabs()
 
 
 if __name__ == "__main__":

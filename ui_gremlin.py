@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_gremlin.ui'
 #
-# Created: Sat Oct 24 16:26:34 2015
-#      by: PyQt5 UI code generator 5.3.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -38,6 +37,8 @@ class Ui_Gremlin(object):
         self.menuTools.setObjectName("menuTools")
         self.menu_Help = QtWidgets.QMenu(self.menubar)
         self.menu_Help.setObjectName("menu_Help")
+        self.menu_Actions = QtWidgets.QMenu(self.menubar)
+        self.menu_Actions.setObjectName("menu_Actions")
         Gremlin.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(Gremlin)
         self.statusbar.setObjectName("statusbar")
@@ -81,6 +82,8 @@ class Ui_Gremlin(object):
         self.actionExit.setObjectName("actionExit")
         self.actionOptions = QtWidgets.QAction(Gremlin)
         self.actionOptions.setObjectName("actionOptions")
+        self.actionCreate1to1Mapping = QtWidgets.QAction(Gremlin)
+        self.actionCreate1to1Mapping.setObjectName("actionCreate1to1Mapping")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
@@ -98,7 +101,9 @@ class Ui_Gremlin(object):
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.actionOptions)
         self.menu_Help.addAction(self.actionAbout)
+        self.menu_Actions.addAction(self.actionCreate1to1Mapping)
         self.menubar.addAction(self.menu_File.menuAction())
+        self.menubar.addAction(self.menu_Actions.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
         self.menubar.addAction(self.menu_Help.menuAction())
         self.toolBar.addAction(self.actionOpen)
@@ -116,6 +121,7 @@ class Ui_Gremlin(object):
         self.menu_File.setTitle(_translate("Gremlin", "&File"))
         self.menuTools.setTitle(_translate("Gremlin", "&Tools"))
         self.menu_Help.setTitle(_translate("Gremlin", "&Help"))
+        self.menu_Actions.setTitle(_translate("Gremlin", "&Actions"))
         self.toolBar.setWindowTitle(_translate("Gremlin", "toolBar"))
         self.actionOpen.setText(_translate("Gremlin", "Load"))
         self.actionLoadProfile.setText(_translate("Gremlin", "&Load Profile"))
@@ -134,4 +140,5 @@ class Ui_Gremlin(object):
         self.actionPDFCheatsheet.setText(_translate("Gremlin", "PDF Cheatsheet"))
         self.actionExit.setText(_translate("Gremlin", "E&xit"))
         self.actionOptions.setText(_translate("Gremlin", "&Options"))
+        self.actionCreate1to1Mapping.setText(_translate("Gremlin", "Create 1:1 mapping"))
 

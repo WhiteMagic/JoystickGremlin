@@ -76,7 +76,14 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menu_Actions">
+    <property name="title">
+     <string>&amp;Actions</string>
+    </property>
+    <addaction name="actionCreate1to1Mapping"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menu_Actions"/>
    <addaction name="menuTools"/>
    <addaction name="menu_Help"/>
   </widget>
@@ -183,6 +190,11 @@
   <action name="actionOptions">
    <property name="text">
     <string>&amp;Options</string>
+   </property>
+  </action>
+  <action name="actionCreate1to1Mapping">
+   <property name="text">
+    <string>Create 1:1 mapping</string>
    </property>
   </action>
  </widget>

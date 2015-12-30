@@ -88,6 +88,16 @@ action_lookup = {
 }
 
 
+def create_action(type_name, input_item):
+    """Creates an action object of the requested type.
+
+    :param type_name name of the action to create
+    :param input_item the item with which to associated the action
+    :return the requested action
+    """
+    return action_lookup[type_name](input_item)
+
+
 class DeviceType(enum.Enum):
 
     """Enumeration of the different possible input types."""
