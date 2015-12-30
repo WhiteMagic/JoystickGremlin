@@ -6,6 +6,7 @@ Collection of widgets used in the configuration UI.
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import action
 import action.common
 from gremlin import common, error, macro, profile
 from gremlin.event_handler import EventListener
@@ -208,6 +209,34 @@ class AxisCalibrationWidget(QtWidgets.QWidget):
         self.maximum.setText("{: 5d}".format(self.limits[2]))
 
 
+class ActionLabel(QtWidgets.QLabel):
+
+    """Handles showing the correct icon for the given action."""
+
+    def __init__(self, action_entry, parent=None):
+        """Creates a new label for the given entry.
+
+        :param action_entry the entry to create the label for
+        :param parent the parent
+        """
+        QtWidgets.QLabel.__init__(self, parent)
+
+        if isinstance(action_entry, action.remap.Remap):
+            input_string = "axis"
+            if action_entry.input_type == UiInputType.JoystickButton:
+                input_string = "button"
+            elif action_entry.input_type == UiInputType.JoystickHat:
+                input_string = "hat"
+            self.setPixmap(QtGui.QPixmap(
+                "gfx/action/action_remap_{}_{:03d}.png".format(
+                        input_string,
+                        action_entry.vjoy_input_id
+                )
+            ))
+        else:
+            self.setPixmap(QtGui.QPixmap(action_entry.icon))
+
+
 class InputItemButton(QtWidgets.QFrame):
 
     """Creates a button like widget which emits an event when pressed.
@@ -254,9 +283,7 @@ class InputItemButton(QtWidgets.QFrame):
 
         # Create the actual icons
         for entry in profile_data.actions:
-            icon = QtWidgets.QLabel()
-            icon.setPixmap(QtGui.QPixmap(entry.icon))
-            self.main_layout.addWidget(icon)
+            self.main_layout.addWidget(ActionLabel(entry))
 
     def mousePressEvent(self, event):
         """Emits the input_item_changed event when this instance is

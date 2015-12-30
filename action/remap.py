@@ -185,7 +185,7 @@ class Remap(AbstractAction):
 
     """Action remapping physical joystick inputs to vJoy inputs."""
 
-    icon = "gfx/icon_remap.png"
+    icon = None
     name = "Remap"
     widget = RemapWidget
     input_types = [

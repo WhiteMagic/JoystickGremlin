@@ -54,7 +54,7 @@ class TextToSpeech(AbstractAction):
 
     """Action representing a single TTS entry."""
 
-    icon = "gfx/icon_tts.png"
+    icon = "gfx/action/action_text_to_speech.png"
     name = "Text to Speech"
     widget = TextToSpeechWidget
     input_types = [

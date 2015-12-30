@@ -974,7 +974,7 @@ class ResponseCurve(AbstractAction):
 
     """Represents axis response curve mapping."""
 
-    icon = "gfx/icon_curve.png"
+    icon = "gfx/action/action_response_curve.png"
     name = "Response Curve"
     widget = AxisResponseCurveWidget
     input_types = [

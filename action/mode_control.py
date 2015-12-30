@@ -59,7 +59,7 @@ class SwitchMode(AbstractAction):
 
     """Action representing the change of mode."""
 
-    icon = "gfx/icon_action.png"
+    icon = "gfx/action/action_switch_mode.png"
     name = "Switch Mode"
     widget = SwitchModeWidget
     input_types = [
@@ -117,7 +117,7 @@ class SwitchPreviousMode(AbstractAction):
 
     """Action that switches to the previously active mode."""
 
-    icon = "gfx/icon_action.png"
+    icon = "gfx/action/action_previous_mode.png"
     name = "Switch to previous Mode"
     widget = SwitchPreviousModeWidget
     input_types = [
@@ -249,7 +249,7 @@ class CycleModes(AbstractAction):
 
     """Action allowing the switching through a list of modes."""
 
-    icon = "gfx/icon_action.png"
+    icon = "gfx/action/action_cycle_modes.png"
     name = "Cycle Modes"
     widget = CycleModesWidget
     input_types = [

@@ -321,7 +321,7 @@ class Macro(AbstractAction):
 
     """Represents a macro action."""
 
-    icon = "gfx/icon_macro.png"
+    icon = "gfx/action/action_macro.png"
     name = "Macro"
     widget = MacroWidget
     input_types = [
