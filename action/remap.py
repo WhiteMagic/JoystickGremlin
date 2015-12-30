@@ -103,6 +103,7 @@ class RemapWidget(AbstractActionWidget):
         # active device
         for dev in self.vjoy_devices:
             selection = QtWidgets.QComboBox(self)
+            selection.setMaxVisibleItems(20)
             selection.addItem("None")
 
             # Add items based on the input type
