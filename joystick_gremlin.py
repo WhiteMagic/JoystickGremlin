@@ -35,7 +35,7 @@ import sdl2.hints
 import gremlin
 from gremlin.code_generator import CodeGenerator
 from gremlin import documenter, input_devices, util
-from gremlin.event_handler import InputType
+from gremlin.event_handler import InputType, input_type_to_name
 from ui_about import Ui_About
 from ui_gremlin import Ui_Gremlin
 import ui_widgets
@@ -145,7 +145,7 @@ class Repeater(QtCore.QObject):
     continuous emitting of events.
     """
 
-    def __init__(self, events):
+    def __init__(self, events, update_func):
         """Creates a new instance.
 
         :param events the list of events to emit
@@ -156,13 +156,15 @@ class Repeater(QtCore.QObject):
         self._thread = threading.Thread(target=self.emit_events)
         self._start_timer = threading.Timer(1.0, self.run)
         self._stop_timer = threading.Timer(5.0, self.stop)
+        self._update_func = update_func
+        self._timeout = time.time()
 
     @property
     def events(self):
         return self._events
 
     @events.setter
-    def events(self, events):
+    def events(self, event_list):
         """Sets the list of events to execute and queues execution.
 
         Starts emitting the list of events after a short delay. If a
@@ -171,19 +173,27 @@ class Repeater(QtCore.QObject):
         events. Once events are being emitted all change requests will
         be ignored.
 
-        :param events the list of events to emit
+        :param event_list the list of events to emit
         """
-        if self.is_running or len(events) == 0:
+        # Only proceed when waiting for input and valid input is provided
+        if self.is_running or len(event_list) == 0:
             return
-        self._events = events
+        # Discard inputs that arrive in too quick of a succession
+        if time.time() - self._timeout < 0.25:
+            return
+
+        self._events = event_list
         if self._start_timer:
             self._start_timer.cancel()
         self._start_timer = threading.Timer(1.0, self.run)
         self._start_timer.start()
+        self._update_func("Received input")
+        self._timeout = time.time()
 
     def stop(self):
         """Stops the event dispatch thread."""
         self.is_running = False
+        self._thread.join()
 
     def run(self):
         """Starts the event dispatch thread."""
@@ -199,23 +209,37 @@ class Repeater(QtCore.QObject):
         """Emits events until stopped."""
         index = 0
         event_listener = EventListener()
+
+        # Repeatedly send events until the thread is interrupted
         while self.is_running:
-            if self.events[0].event_type == InputType.Keyboard:
+            if self._events[0].event_type == InputType.Keyboard:
                 event_listener.keyboard_event.emit(self._events[index])
             else:
                 event_listener.joystick_event.emit(self._events[index])
+
+            self._update_func("{} {}".format(
+                input_type_to_name(self._events[index].event_type),
+                str(self._events[index].identifier)
+            ))
+
             index = (index + 1) % len(self._events)
-            time.sleep(0.5)
+            time.sleep(0.25)
+
+        # This timeout prevents the below state reset to cause the
+        # program to trigger another round of repeats with the same
+        # input
+        self._timeout = time.time()
+
         # Ensure we leave the input in a neutral state when done
-        event_type = self.events[0].event_type
-        event = self._events[0]
-        if event_type == InputType.JoystickButton:
+        event = self._events[0].clone()
+        if event.event_type == InputType.JoystickButton:
             event.is_pressed = False
-        elif self.events[0].event_type == InputType.JoystickAxis:
+        elif event.event_type == InputType.JoystickAxis:
             event.value = 0.0
-        elif event_type == InputType.JoystickHat:
+        elif event.event_type == InputType.JoystickHat:
             event.value = (0, 0)
         event_listener.joystick_event.emit(event)
+        self._update_func("Waiting for input")
 
 
 class OptionsUi(QtWidgets.QWidget):
@@ -784,7 +808,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.config = gremlin.config.Configuration()
         self.devices = util.joystick_devices()
         self.runner = CodeRunner()
-        self.repeater = Repeater([])
+        self.repeater = Repeater([], self._update_statusbar_repeater)
         self.runner.event_handler.mode_changed.connect(
             self._update_statusbar_mode
         )
@@ -977,9 +1001,11 @@ class GremlinUi(QtWidgets.QMainWindow):
         if self.ui.actionInputRepeater.isChecked():
             el.keyboard_event.connect(self._handle_input_repeat)
             el.joystick_event.connect(self._handle_input_repeat)
+            self._update_statusbar_repeater("Waiting for input")
         else:
             el.keyboard_event.disconnect(self._handle_input_repeat)
             el.joystick_event.disconnect(self._handle_input_repeat)
+            self.status_bar_repeater.setText("")
 
     def calibration(self):
         """Opens the calibration window."""
@@ -1270,8 +1296,11 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.status_bar_mode.setContentsMargins(5, 0, 5, 0)
         self.status_bar_is_active = QtWidgets.QLabel("")
         self.status_bar_is_active.setContentsMargins(5, 0, 5, 0)
-        self.ui.statusbar.addWidget(self.status_bar_is_active, )
-        self.ui.statusbar.addWidget(self.status_bar_mode, 1)
+        self.status_bar_repeater = QtWidgets.QLabel("")
+        self.status_bar_repeater.setContentsMargins(5, 0, 5, 0)
+        self.ui.statusbar.addWidget(self.status_bar_is_active, 0)
+        self.ui.statusbar.addWidget(self.status_bar_mode, 3)
+        self.ui.statusbar.addWidget(self.status_bar_repeater, 1)
 
     def _get_device_profile(self, device):
         """Returns a profile for the given device.
@@ -1401,6 +1430,16 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         self.status_bar_is_active.setText(
             "<b>Status: </b> {}".format(text_running)
+        )
+
+    def _update_statusbar_repeater(self, text):
+        """Updates the statusbar with information from the input
+        repeater module.
+
+        :param text the text to display
+        """
+        self.status_bar_repeater.setText(
+            "<b>Repeater: </b> {}".format(text)
         )
 
     def _options_dialog(self):
