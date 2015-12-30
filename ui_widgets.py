@@ -693,6 +693,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         self.action_dropdown = QtWidgets.QComboBox()
         for name in self._valid_action_list():
             self.action_dropdown.addItem(name)
+        self.action_dropdown.setCurrentText("Remap")
         self.action_layout.addWidget(self.action_dropdown)
         self.add_action_button = QtWidgets.QPushButton("Add")
         self.add_action_button.clicked.connect(self._add_action)
