@@ -32,13 +32,13 @@ class Configuration(object):
         self.reload()
 
         self.watcher = QtCore.QFileSystemWatcher([
-            os.path.join(gremlin.util.appdata_path(), "config.json")
+            os.path.join(gremlin.util.userprofile_path(), "config.json")
         ])
         self.watcher.fileChanged.connect(self.reload)
 
     def reload(self):
         """Loads the configuration file's content."""
-        fname = os.path.join(gremlin.util.appdata_path(), "config.json")
+        fname = os.path.join(gremlin.util.userprofile_path(), "config.json")
         if os.path.isfile(fname):
             with open(fname) as hdl:
                 try:
@@ -59,7 +59,7 @@ class Configuration(object):
 
     def save(self):
         """Writes the configuration file to disk."""
-        fname = os.path.join(gremlin.util.appdata_path(), "config.json")
+        fname = os.path.join(gremlin.util.userprofile_path(), "config.json")
         with open(fname, "w") as hdl:
             encoder = json.JSONEncoder(
                 sort_keys=True,

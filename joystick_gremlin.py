@@ -939,7 +939,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         generator = CodeGenerator(self._profile)
         generator.write_code(
             os.path.join(
-                util.appdata_path(),
+                util.userprofile_path(),
                 "gremlin_code.py"
             )
         )
@@ -1409,10 +1409,10 @@ class GremlinUi(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
-    sys.path.insert(0, util.appdata_path())
+    sys.path.insert(0, util.userprofile_path())
     util.setup_appdata()
     logging.basicConfig(
-        filename=os.path.join(util.appdata_path(), "debug.log"),
+        filename=os.path.join(util.userprofile_path(), "debug.log"),
         format="%(asctime)s %(levelname)10s %(message)s",
         datefmt="%Y-%m-%d %H:%M",
         level=logging.DEBUG

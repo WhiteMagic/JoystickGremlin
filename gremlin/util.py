@@ -321,17 +321,17 @@ def hat_tuple_to_index(direction):
     return lookup[direction]
 
 
-def appdata_path():
-    """Returns the path to the application data folder, %APPDATA%."""
+def userprofile_path():
+    """Returns the path to the user's profile folder, %userprofile%."""
     return os.path.abspath(os.path.join(
-        os.getenv("APPDATA"),
+        os.getenv("userprofile"),
         "Joystick Gremlin")
     )
 
 
 def setup_appdata():
-    """Initializes the data folder in the application data folder."""
-    folder = appdata_path()
+    """Initializes the data folder in the user's profile folder."""
+    folder = userprofile_path()
     if not os.path.exists(folder):
         try:
             os.mkdir(folder)
