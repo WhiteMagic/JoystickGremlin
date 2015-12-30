@@ -44,6 +44,20 @@ class InputType(enum.Enum):
     Count = 5
 
 
+def input_type_to_name(input_type):
+    """Returns the name corresponding to the given input type.
+
+    :param input_type the input type for which to return a name
+    :return textual name representing the input type
+    """
+    lookup = {
+        InputType.Keyboard: "Keyboard",
+        InputType.JoystickAxis: "Axis",
+        InputType.JoystickButton: "Button",
+        InputType.JoystickHat: "Hat"
+    }
+    return lookup.get(input_type, "Invalid type")
+
 def system_event_to_input_event(event_type):
     lookup = {
         InputType.Keyboard: UiInputType.Keyboard,
