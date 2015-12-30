@@ -293,7 +293,7 @@ class OptionsUi(QtWidgets.QWidget):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             "Path to executable",
-            None,
+            "C:\\",
             "Executable (*.exe)"
         )
         if fname != "":
@@ -329,7 +329,7 @@ class OptionsUi(QtWidgets.QWidget):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             "Path to executable",
-            None,
+            util.userprofile_path(),
             "Profile (*.xml)"
         )
         if fname != "":
@@ -843,7 +843,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             "Load Profile",
-            None,
+            util.userprofile_path(),
             "XML files (*.xml)"
         )
         if fname != "":
@@ -911,7 +911,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(
             None,
             "Save Profile",
-            None,
+            util.userprofile_path(),
             "XML files (*.xml)"
         )
         if fname != "":
@@ -1297,7 +1297,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(
             None,
             "Save cheatsheet",
-            None,
+            util.userprofile_path(),
             "{} files (*.{})".format(file_format.upper(), file_format)
         )
         documenter.generate_cheatsheet(file_format, fname, self._profile)
