@@ -71,7 +71,6 @@ class RemapWidget(AbstractActionWidget):
     def _create_device_dropdown(self):
         """Creates the vJoy device selection drop downs."""
         self.device_dropdown = QtWidgets.QComboBox(self)
-        self.device_dropdown.addItem("None")
         for i in range(1, len(self.vjoy_devices)+1):
             self.device_dropdown.addItem("vJoy Device {:d}".format(i))
         self.main_layout.addWidget(self.device_dropdown)
@@ -90,21 +89,12 @@ class RemapWidget(AbstractActionWidget):
 
         self.input_item_dropdowns = []
 
-        # Create "None" selection
-        selection = QtWidgets.QComboBox(self)
-        selection.addItem("None")
-        selection.setVisible(False)
-        self.main_layout.addWidget(selection)
-        selection.activated.connect(self.change_cb)
-        self.input_item_dropdowns.append(selection)
-
         # Create input item selections for the vjoy devices, each
         # selection will be invisible unless it is selected as the
         # active device
         for dev in self.vjoy_devices:
             selection = QtWidgets.QComboBox(self)
             selection.setMaxVisibleItems(20)
-            selection.addItem("None")
 
             # Add items based on the input type
             for i in range(1, count_map[input_type](dev)+1):
@@ -144,36 +134,54 @@ class RemapWidget(AbstractActionWidget):
     def to_profile(self):
         vjoy_device_id = self.device_dropdown.currentIndex()
         input_selection = self.input_item_dropdowns[vjoy_device_id].currentText()
+        # Count devices starting at 1 rather then 0
+        vjoy_device_id += 1
 
-        vjoy_input_type = self.action_data.input_type
-        vjoy_item_id = 0
-        if input_selection != "None":
-            arr = input_selection.split()
-            vjoy_input_type = self.name_to_type_map[arr[0]]
-            vjoy_item_id = int(arr[1])
+        arr = input_selection.split()
+        vjoy_input_type = self.name_to_type_map[arr[0]]
+        vjoy_item_id = int(arr[1])
 
         self.action_data.vjoy_device_id = vjoy_device_id
         self.action_data.vjoy_input_id = vjoy_item_id
         self.action_data.input_type = vjoy_input_type
-        self.action_data.is_valid = (vjoy_item_id != 0 and vjoy_item_id != 0)
+        self.action_data.is_valid = True
 
     def initialize_from_profile(self, action_data):
         # Store new profile data
         self.action_data = action_data
 
-        # Select correct drop down menu entries
-        device_name = "None"
+        # Get the appropriate vjoy device identifier
+        dev_id = 0
         if action_data.vjoy_device_id not in [0, None]:
-            device_name = "vJoy Device {:d}".format(action_data.vjoy_device_id)
-        input_name = "None"
-        if action_data.vjoy_input_id not in [0, None]:
-            input_name = "{} {:d}".format(
-                self.type_to_name_map[action_data.input_type],
-                action_data.vjoy_input_id
+            dev_id = self.device_dropdown.findText(
+                "vJoy Device {:d}".format(action_data.vjoy_device_id)
             )
 
-        dev_id = self.device_dropdown.findText(device_name)
+        # If no valid input item is selected get the next unused one
+        if action_data.vjoy_input_id in [0, None]:
+            main_profile = self.action_data.parent.parent.parent.parent
+            free_inputs = main_profile.list_unused_vjoy_inputs(
+                    self.vjoy_devices
+            )
+            type_name = self.type_to_name_map[action_data.input_type].lower()
+            input_list = free_inputs[dev_id+1][type_name]
+            # If we have an unused item use it, otherwise use the first one
+            if len(input_list) > 0:
+                input_id = input_list[0]
+            else:
+                input_id = 1
+        # If a valid input item is present use it
+        else:
+            input_id = action_data.vjoy_input_id
+
+        # Retrieve the index of the correct entry in the combobox
+        input_name = "{} {:d}".format(
+            self.type_to_name_map[action_data.input_type],
+            input_id
+        )
         btn_id = self.input_item_dropdowns[dev_id].findText(input_name)
+
+        # Select and display correct comboboxes and entries within
         self.device_dropdown.setCurrentIndex(dev_id)
         for entry in self.input_item_dropdowns:
             entry.setVisible(False)

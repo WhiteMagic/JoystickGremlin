@@ -44,6 +44,26 @@ def tag_to_input_type(tag):
         )
 
 
+def input_type_to_tag(input_type):
+    """Returns the tag corresponding to the given input tpye.
+
+    :param input_type the input type to convert
+    :return text representation of the input type
+    """
+    lookup = {
+        UiInputType.JoystickAxis: "axis",
+        UiInputType.JoystickButton: "button",
+        UiInputType.JoystickHat: "hat",
+        UiInputType.Keyboard: "key"
+    }
+    if input_type in lookup:
+        return lookup[input_type]
+    else:
+        raise gremlin.error.ProfileError(
+            "Invalid input type specified {}".format(input_type)
+        )
+
+
 def _parse_bool(value):
     """Returns the boolean representation of the provided value.
 
@@ -160,6 +180,52 @@ class Profile(object):
                 if mode.inherit is None:
                     root_modes.append(mode_name)
         return list(set(root_modes))
+
+    def list_unused_vjoy_inputs(self, vjoy_data):
+        """Returns a list of unused vjoy inputs for the given profile.
+
+        :param vjoy_data vjoy devices information
+        :return dictionary of unused inputs for each input type
+        """
+        # Create list of all inputs provided by the vjoy devices
+        vjoy = {}
+        for i, entry in enumerate(vjoy_data):
+            vjoy[i+1] = {"axis": [], "button": [], "hat": []}
+            for j in range(entry.axes):
+                vjoy[i+1]["axis"].append(j+1)
+            for j in range(entry.buttons):
+                vjoy[i+1]["button"].append(j+1)
+            for j in range(entry.hats):
+                vjoy[i+1]["hat"].append(j+1)
+
+        # Create a list of all used remap actions
+        remap_actions = []
+        for dev in self.devices.values():
+            for mode in dev.modes.values():
+                for item in mode._config[UiInputType.JoystickAxis].values():
+                    remap_actions.extend(
+                        [e for e in item.actions if isinstance(e, action.remap.Remap)]
+                    )
+                for item in mode._config[UiInputType.JoystickButton].values():
+                    remap_actions.extend(
+                        [e for e in item.actions if isinstance(e, action.remap.Remap)]
+                    )
+                for item in mode._config[UiInputType.JoystickHat].values():
+                    remap_actions.extend(
+                        [e for e in item.actions if isinstance(e, action.remap.Remap)]
+                    )
+
+        # Remove all remap actions from the list of available inputs
+        for act in remap_actions:
+            type_name = input_type_to_tag(act.input_type)
+            if act.vjoy_input_id in [0, None] \
+                    or act.vjoy_device_id in [0, None] \
+                    or act.vjoy_input_id not in vjoy[act.vjoy_device_id][type_name]:
+                continue
+            idx = vjoy[act.vjoy_device_id][type_name].index(act.vjoy_input_id)
+            del vjoy[act.vjoy_device_id][type_name][idx]
+
+        return vjoy
 
     def from_xml(self, fname):
         """Parses the global XML document into the profile data structure.
