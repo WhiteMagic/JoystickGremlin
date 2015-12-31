@@ -1354,16 +1354,14 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionCalibration.triggered.connect(self.calibration)
-
         self.ui.actionHTMLCheatsheet.triggered.connect(
             lambda: self._create_cheatsheet("html")
         )
         self.ui.actionPDFCheatsheet.triggered.connect(
             lambda: self._create_cheatsheet("pdf")
         )
-
         self.ui.actionOptions.triggered.connect(self._options_dialog)
-
+        # About
         self.ui.actionAbout.triggered.connect(self.about)
 
         # Toolbar actions
@@ -1449,6 +1447,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
 
     def _options_dialog(self):
+        """Opens the options dialog."""
         self.options_window = OptionsUi()
         self.options_window.show()
 
