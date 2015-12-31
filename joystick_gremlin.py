@@ -1460,24 +1460,37 @@ class GremlinUi(QtWidgets.QMainWindow):
         if device_profile.type != profile.DeviceType.Joystick:
             return
 
+        vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
         mode = device_profile.modes[self._current_mode]
         input_types = [
             UiInputType.JoystickAxis,
             UiInputType.JoystickButton,
             UiInputType.JoystickHat
         ]
+        type_name = {
+            UiInputType.JoystickAxis: "axis",
+            UiInputType.JoystickButton: "button",
+            UiInputType.JoystickHat: "hat",
+        }
+        main_profile = device_profile.parent
         from action.common import ButtonCondition
         for input_type in input_types:
-            for key, entry in mode._config[input_type].items():
-                action = profile.create_action("remap", entry)
-                action.input_type = input_type
-                action.vjoy_device_id = 1
-                action.vjoy_input_id = key
-                action.is_valid = True
+            for entry in mode._config[input_type].values():
+                item_list = main_profile.list_unused_vjoy_inputs(
+                    vjoy_devices
+                )
+                act = profile.create_action("remap", entry)
+                act.input_type = input_type
+                act.vjoy_device_id = 1
+                if len(item_list[1][type_name[input_type]]) > 0:
+                    act.vjoy_input_id = item_list[1][type_name[input_type]][0]
+                else:
+                    act.vjoy_input_id = 1
+                act.is_valid = True
 
                 if input_type == UiInputType.JoystickButton:
-                    action.condition = ButtonCondition(True, True)
-                entry.actions.append(action)
+                    act.condition = ButtonCondition(True, True)
+                entry.actions.append(act)
         self._create_tabs()
 
 
