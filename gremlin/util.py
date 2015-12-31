@@ -329,7 +329,7 @@ def userprofile_path():
     )
 
 
-def setup_appdata():
+def setup_userprofile():
     """Initializes the data folder in the user's profile folder."""
     folder = userprofile_path()
     if not os.path.exists(folder):

@@ -1496,7 +1496,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     sys.path.insert(0, util.userprofile_path())
-    util.setup_appdata()
+    util.setup_userprofile()
     logging.basicConfig(
         filename=os.path.join(util.userprofile_path(), "debug.log"),
         format="%(asctime)s %(levelname)10s %(message)s",
