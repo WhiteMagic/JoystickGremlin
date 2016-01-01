@@ -546,6 +546,7 @@ class ModeManagerUi(QtWidgets.QWidget):
         self.setWindowTitle("Mode Manager")
 
         self.mode_dropdowns = {}
+        self.mode_rename = {}
         self.mode_delete = {}
         self.mode_callbacks = {}
 
@@ -568,6 +569,7 @@ class ModeManagerUi(QtWidgets.QWidget):
         # Clear potentially existing content
         util.clear_layout(self.mode_layout)
         self.mode_dropdowns = {}
+        self.mode_rename = {}
         self.mode_delete = {}
         self.mode_callbacks = {}
 
@@ -578,7 +580,7 @@ class ModeManagerUi(QtWidgets.QWidget):
                 if mode.name not in mode_list:
                     mode_list[mode.name] = mode.inherit
 
-        # Create UI elements
+        # Create UI element for each mode
         row = 0
         for mode, inherit in sorted(mode_list.items()):
             self.mode_layout.addWidget(QtWidgets.QLabel(mode), row, 0)
@@ -595,10 +597,19 @@ class ModeManagerUi(QtWidgets.QWidget):
             )
             self.mode_dropdowns[mode].setCurrentText(inherit)
 
+            # Rename mode button
+            self.mode_rename[mode] = QtWidgets.QPushButton(
+                QtGui.QIcon("gfx/button_edit.png"), ""
+            )
+            self.mode_layout.addWidget(self.mode_rename[mode], row, 2)
+            self.mode_rename[mode].clicked.connect(
+                self._create_rename_mode_cb(mode)
+            )
+            # Delete mode button
             self.mode_delete[mode] = QtWidgets.QPushButton(
                 QtGui.QIcon("gfx/mode_delete"), ""
             )
-            self.mode_layout.addWidget(self.mode_delete[mode], row, 2)
+            self.mode_layout.addWidget(self.mode_delete[mode], row, 3)
             self.mode_delete[mode].clicked.connect(
                 self._create_delete_mode_cb(mode)
             )
@@ -618,6 +629,17 @@ class ModeManagerUi(QtWidgets.QWidget):
         """
         return lambda x: self._change_mode_inheritance(mode, x)
 
+    def _create_rename_mode_cb(self, mode):
+        """Returns a lambda function callback to rename a mode.
+
+        This is required as otherwise lambda functions created within a
+        function do not behave as desired.
+
+        :param mode the mode for which the callback is being created
+        :return customized lambda function
+        """
+        return lambda: self._rename_mode(mode)
+
     def _create_delete_mode_cb(self, mode):
         """Returns a lambda function callback to delete the given mode.
 
@@ -628,6 +650,67 @@ class ModeManagerUi(QtWidgets.QWidget):
         :return lambda function to perform the removal
         """
         return lambda: self._delete_mode(mode)
+
+    def _change_mode_inheritance(self, mode, inherit):
+        """Updates the inheritance information of a given mode.
+
+        :param mode the mode to update
+        :param inherit the name of the mode this mode inherits from
+        """
+        # Check if this inheritance would cause a cycle, turning the
+        # tree structure into a graph
+        has_inheritance_cycle = False
+        if inherit != "None":
+            all_modes = list(self._profile.devices.values())[0].modes
+            cur_mode = inherit
+            while all_modes[cur_mode].inherit is not None:
+                if all_modes[cur_mode].inherit == mode:
+                    has_inheritance_cycle = True
+                    break
+                cur_mode = all_modes[cur_mode].inherit
+
+        # Update the inheritance information in the profile
+        if not has_inheritance_cycle:
+            for name, device in self._profile.devices.items():
+                if inherit == "None":
+                    inherit = None
+                device.modes[mode].inherit = inherit
+            self.modes_changed.emit()
+
+    def _rename_mode(self, mode_name):
+        """Asks the user for the new name for the given mode.
+
+        If the user provided name for the mode is invalid the
+        renaming is aborted and no change made.
+        """
+        # Retrieve new name from the user
+        name, user_input = QtWidgets.QInputDialog.getText(
+                self,
+                "Mode name",
+                "",
+                QtWidgets.QLineEdit.Normal,
+                mode_name
+        )
+        if user_input:
+            if name in util.mode_list(self._profile):
+                util.display_error(
+                    "A mode with the name \"{}\" already exists".format(name)
+                )
+            else:
+                # Update the renamed mode in each device
+                for device in self._profile.devices.values():
+                    device.modes[name] = device.modes[mode_name]
+                    device.modes[name].name = name
+                    del device.modes[mode_name]
+
+                    # Update inheritance information
+                    for mode in device.modes.values():
+                        if mode.inherit == mode_name:
+                            mode.inherit = name
+
+                self.modes_changed.emit()
+
+            self._populate_mode_layout()
 
     def _delete_mode(self, mode_name):
         """Removes the specified mode.
@@ -657,32 +740,6 @@ class ModeManagerUi(QtWidgets.QWidget):
         # Update the ui
         self._populate_mode_layout()
         self.modes_changed.emit()
-
-    def _change_mode_inheritance(self, mode, inherit):
-        """Updates the inheritance information of a given mode.
-
-        :param mode the mode to update
-        :param inherit the name of the mode this mode inherits from
-        """
-        # Check if this inheritance would cause a cycle, turning the
-        # tree structure into a graph
-        has_inheritance_cycle = False
-        if inherit != "None":
-            all_modes = list(self._profile.devices.values())[0].modes
-            cur_mode = inherit
-            while all_modes[cur_mode].inherit is not None:
-                if all_modes[cur_mode].inherit == mode:
-                    has_inheritance_cycle = True
-                    break
-                cur_mode = all_modes[cur_mode].inherit
-
-        # Update the inheritance information in the profile
-        if not has_inheritance_cycle:
-            for name, device in self._profile.devices.items():
-                if inherit == "None":
-                    inherit = None
-                device.modes[mode].inherit = inherit
-            self.modes_changed.emit()
 
     def _add_mode_cb(self, checked):
         """Asks the user for a new mode to add.
