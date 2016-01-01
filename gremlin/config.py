@@ -154,3 +154,23 @@ class Configuration(object):
     def last_profile(self, value):
         self._data["last_profile"] = value
         self.save()
+
+    @property
+    def autoload_profiles(self):
+        return self._data.get("autoload_profiles", False)
+
+    @autoload_profiles.setter
+    def autoload_profiles(self, value):
+        if type(value) == bool:
+            self._data["autoload_profiles"] = value
+            self.save()
+
+    @property
+    def highlight_input(self):
+        return self._data.get("highlight_input", True)
+
+    @highlight_input.setter
+    def highlight_input(self, value):
+        if type(value) == bool:
+            self._data["highlight_input"] = value
+            self.save()

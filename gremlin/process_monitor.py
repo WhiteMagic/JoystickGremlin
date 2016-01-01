@@ -52,10 +52,21 @@ class ProcessMonitor(QtCore.QObject):
         self._current_path = ""
         self._current_pid = -1
         self.running = True
-        self._update_thread = threading.Thread(
-            target=self._update
-        )
-        self._update_thread.start()
+        self._update_thread = None
+
+    def start(self):
+        """Starts monitoring the current process."""
+        if self._update_thread is not None and not self._update_thread.is_alive():
+            self._update_thread = threading.Thread(
+                target=self._update
+            )
+            self._update_thread.start()
+
+    def stop(self):
+        """Stops monitorung the current process."""
+        self.running = False
+        if self._update_thread is not None:
+            self._update_thread.join()
 
     def _update(self):
         """Monitors the active process for changes."""

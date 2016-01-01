@@ -246,6 +246,9 @@ class OptionsUi(QtWidgets.QWidget):
 
     """UI allowing the configuration of a variety of options."""
 
+    # Signal emitted when the dialog is being closed
+    closed = QtCore.pyqtSignal()
+
     def __init__(self, parent=None):
         """Creates a new opions UI instance.
 
@@ -260,9 +263,16 @@ class OptionsUi(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
+        self.highlight_input = QtWidgets.QCheckBox(
+            "Highlight currently used input"
+        )
+        self.highlight_input.clicked.connect(self._highlight_input)
+        self.highlight_input.setChecked(self.config.highlight_input)
         self.autoload_checkbox = QtWidgets.QCheckBox(
             "Automatically load profile based on current application"
         )
+        self.autoload_checkbox.clicked.connect(self._autoload_profiles)
+        self.autoload_checkbox.setChecked(self.config.autoload_profiles)
 
         # Profile handling
         self.executable_layout = QtWidgets.QHBoxLayout()
@@ -295,12 +305,21 @@ class OptionsUi(QtWidgets.QWidget):
         self.profile_layout.addWidget(self.profile_field)
         self.profile_layout.addWidget(self.profile_select)
 
+        self.main_layout.addWidget(self.highlight_input)
         self.main_layout.addWidget(self.autoload_checkbox)
         self.main_layout.addLayout(self.executable_layout)
         self.main_layout.addLayout(self.profile_layout)
         self.main_layout.addStretch()
 
         self.populate_executables()
+
+    def closeEvent(self, event):
+        """Closes the calibration window.
+
+        :param event the close event
+        """
+        self.config.save()
+        self.closed.emit()
 
     def populate_executables(self):
         """Populates the profile drop down menu."""
@@ -309,6 +328,14 @@ class OptionsUi(QtWidgets.QWidget):
         for path in self.config.get_executable_list():
             self.executable_selection.addItem(path)
         self.profile_field.textChanged.connect(self._update_profile)
+
+    def _autoload_profiles(self, clicked):
+        self.config.autoload_profiles = clicked
+        self.config.save()
+
+    def _highlight_input(self, clicked):
+        self.config.highlight_input = clicked
+        self.config.save()
 
     def _new_executable(self):
         """Prompts the user to select a new executable to add to the
@@ -856,7 +883,9 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Process monitor
         self.process_monitor = gremlin.process_monitor.ProcessMonitor()
-        self.process_monitor.process_changed.connect(self._process_changed_cb)
+        self.process_monitor.process_changed.connect(
+            self._process_changed_cb
+        )
 
         # Default path variable before any runtime changes
         self._base_path = list(sys.path)
@@ -909,7 +938,17 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.mode_manager = None
         self.options_window = None
 
-        self._set_joystick_input_highlighting(True)
+        self.apply_user_settings()
+
+    def apply_user_settings(self):
+        """Configures the program based on user settings."""
+        self._set_joystick_input_highlighting(
+            self.config.highlight_input
+        )
+        if self.config.autoload_profiles:
+            self.process_monitor.start()
+        else:
+            self.process_monitor.stop()
 
     def closeEvent(self, evt):
         """Terminate the entire application if the main window is closed.
@@ -1070,7 +1109,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.calibration_window.show()
         self._set_joystick_input_highlighting(False)
         self.calibration_window.closed.connect(
-            lambda: self._set_joystick_input_highlighting(True)
+            lambda: self.apply_user_settings()
         )
 
     def about(self):
@@ -1507,6 +1546,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Opens the options dialog."""
         self.options_window = OptionsUi()
         self.options_window.show()
+        self.options_window.closed.connect(
+            lambda: self.apply_user_settings()
+        )
 
     def _create_1to1_mapping(self):
         """Creates a 1 to 1 mapping of the given device to the first
