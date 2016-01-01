@@ -808,7 +808,7 @@ class ModeWidget(QtWidgets.QWidget):
 
         # Select currently active mode
         if len(mode_names) > 0:
-            if current_mode is None:
+            if current_mode is None or current_mode not in self.mode_list:
                 current_mode = mode_names[0]
             self.selector.setCurrentIndex(self.mode_list.index(current_mode))
             self._mode_changed_cb(self.mode_list.index(current_mode))
