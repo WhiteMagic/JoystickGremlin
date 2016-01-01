@@ -192,6 +192,8 @@ class EventListener(QtCore.QObject):
     keyboard_event = QtCore.pyqtSignal(Event)
     # Signal emitted when joystick events are received
     joystick_event = QtCore.pyqtSignal(Event)
+    # Signal emitted when a joystick is attached or removed
+    device_change_event = QtCore.pyqtSignal()
 
     def __init__(self):
         """Creates a new instance."""
@@ -289,6 +291,9 @@ class EventListener(QtCore.QObject):
                     identifier=event.jhat.hat + 1,
                     value=util.convert_sdl_hat(event.jhat.value)
                 ))
+        elif event.type in [sdl2.SDL_JOYDEVICEADDED, sdl2.SDL_JOYDEVICEREMOVED]:
+            self._init_joysticks()
+            self.device_change_event.emit()
 
     def _init_joysticks(self):
         """Initializes joystick devices."""

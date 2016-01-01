@@ -939,6 +939,11 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.mode_manager = None
         self.options_window = None
 
+        # Enable reloading for when a user connects / disconnects a
+        # device
+        el = EventListener()
+        el.device_change_event.connect(self._device_change_cb)
+
         self.apply_user_settings()
 
     def apply_user_settings(self):
@@ -1516,6 +1521,11 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param new_mode the name of the new current mode
         """
         self._current_mode = new_mode
+
+    def _device_change_cb(self):
+        """Handles addition and removal of joystick devices."""
+        self.devices = util.joystick_devices()
+        self._create_tabs()
 
     def _update_statusbar_mode(self, mode):
         """Updates the status bar display of the current mode.
