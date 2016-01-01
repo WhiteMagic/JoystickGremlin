@@ -1319,13 +1319,18 @@ class GremlinUi(QtWidgets.QMainWindow):
                 continue
             physical_devices[util.device_id(device)] = device.name
 
-        for dev_id, dev_name in profile_devices.items():
-            if dev_id not in physical_devices:
-                logging.warning(
-                    "Removing missing device \"{}\" with id {} from profile"
-                    .format(dev_name, dev_id)
-                )
-                del profile_data.devices[dev_id]
+        # Find profile data that conflicts with currently connected
+        # hardware and warn the user
+        hardware_id_clash = False
+        for dev_id, dev_name in physical_devices.items():
+            if dev_id in profile_devices and profile_devices[dev_id] != dev_name:
+                hardware_id_clash = True
+
+        if hardware_id_clash:
+            util.display_error(
+                "The profile contains duplicate / wrong device ids. "
+                "The profile may no longer work as intended."
+            )
 
     def _create_tabs(self):
         """Creates the tabs of the configuration dialog representing
