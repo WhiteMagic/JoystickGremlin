@@ -911,6 +911,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._current_mode = None
         self._profile = profile.Profile()
         self._profile_fname = None
+        self._profile_auto_activated = False
         # Input selection storage
         self._last_input_timestamp = time.time()
         self._last_input_event = None
@@ -1046,11 +1047,13 @@ class GremlinUi(QtWidgets.QMainWindow):
             otherwise
         """
         if checked:
+            self._profile_auto_activated = False
             self.generate()
             self.runner.start(self._profile.build_inheritance_tree())
         else:
             self.runner.stop()
             self._update_statusbar_active(False)
+            self._profile_auto_activated = False
 
     def generate(self):
         """Generates python code for the code runner from the current
@@ -1283,9 +1286,11 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self._do_load_profile(profile_path)
             self.ui.actionActivate.setChecked(True)
             self.activate(True)
-        else:
+            self._profile_auto_activated = True
+        elif self._profile_auto_activated:
             self.ui.actionActivate.setChecked(False)
             self.activate(False)
+            self._profile_auto_activated = False
 
     def _update_window_title(self):
         """Updates the window title to include the current profile."""
