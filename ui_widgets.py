@@ -8,8 +8,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import action
 import action.common
-from gremlin import common, error, macro, profile
-from gremlin.event_handler import EventListener
+from gremlin import common, error, macro, profile, shared_state, util
+from gremlin.event_handler import Event, EventListener, InputType
 from gremlin.common import UiInputType
 
 
@@ -41,26 +41,32 @@ class InputIdentifier(object):
         return self._input_id
 
 
-class KeystrokeListenerWidget(QtWidgets.QFrame):
+class InputListenerWidget(QtWidgets.QFrame):
 
     """Widget overlaying the main gui while waiting for the user
     to press a key."""
 
-    def __init__(self, callback, parent=None):
+    def __init__(self, callback, listen_keyboard, listen_joystick, parent=None):
         """Creates a new instance.
 
         :param callback the function to pass the key pressed by the
             user to
+        :param listen_keyboard flag indicating whether or not to
+            listen to keyboard events
+        :parma listen_joystick flag indicating whether or not to
+            listen to joystick button events
         :param parent the parent widget of this widget
         """
         QtWidgets.QWidget.__init__(self, parent)
 
         self.callback = callback
+        self._listen_keyboard = listen_keyboard
+        self._listen_joystick = listen_joystick
 
         # Create and configure the ui overlay
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.main_layout.addWidget(QtWidgets.QLabel(
-            """<center>Please press the key you want to add.
+            """<center>Please press the key / button you want to add.
             <br/><br/>
             Pressing ESC aborts.</center>"""
         ))
@@ -74,7 +80,10 @@ class KeystrokeListenerWidget(QtWidgets.QFrame):
 
         # Start listening to user key presses
         event_listener = EventListener()
-        event_listener.keyboard_event.connect(self._kb_event_cb)
+        if listen_keyboard:
+            event_listener.keyboard_event.connect(self._kb_event_cb)
+        if listen_joystick:
+            event_listener.joystick_event.connect(self._joy_event_cb)
 
     def _kb_event_cb(self, event):
         """Passes the pressed key to the provided callback and closes
@@ -82,15 +91,34 @@ class KeystrokeListenerWidget(QtWidgets.QFrame):
 
         :param event the keypress event to be processed
         """
-        key = macro.key_from_code(event.identifier[0], event.identifier[1])
+        key = macro.key_from_code(
+                event.identifier[0],
+                event.identifier[1]
+        )
         if key != macro.Keys.Esc:
             self.callback(key)
         self._close_window()
 
+    def _joy_event_cb(self, event):
+        """Passes the pressed joystick event to the provided callback
+        and closes the overlay.
+
+        This only passes on joystick button presses.
+
+        :param event the keypress event to be processed
+        """
+        if event.event_type == InputType.JoystickButton and \
+                event.is_pressed == False:
+            self.callback(event)
+            self._close_window()
+
     def _close_window(self):
         """Closes the overlay window."""
         event_listener = EventListener()
-        event_listener.keyboard_event.disconnect(self._kb_event_cb)
+        if self._listen_keyboard:
+            event_listener.keyboard_event.disconnect(self._kb_event_cb)
+        if self._listen_joystick:
+            event_listener.joystick_event.disconnect(self._joy_event_cb)
         self.close()
 
 
@@ -316,26 +344,32 @@ class AxisConditionWidget(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QHBoxLayout(self)
 
         self.checkbox = QtWidgets.QCheckBox("Trigger between")
-        self.checkbox.stateChanged.connect(self.change_cb)
 
         self.main_layout.addWidget(self.checkbox)
 
         self.lower_limit = QtWidgets.QDoubleSpinBox()
+        self.lower_limit.setRange(-1.0, 1.0)
+        self.lower_limit.setSingleStep(0.05)
         self.upper_limit = QtWidgets.QDoubleSpinBox()
-
-        self._configure_spinbbox(self.lower_limit)
-        self._configure_spinbbox(self.upper_limit)
+        self.upper_limit.setRange(-1.0, 1.0)
+        self.upper_limit.setSingleStep(0.05)
 
         self.main_layout.addWidget(self.lower_limit)
         self.main_layout.addWidget(QtWidgets.QLabel(" and "))
         self.main_layout.addWidget(self.upper_limit)
 
         self.main_layout.addStretch()
+        self.connect_signals()
 
-    def _configure_spinbbox(self, object):
-        object.setRange(-1.0, 1.0)
-        object.setSingleStep(0.05)
-        object.valueChanged.connect(self.change_cb)
+    def connect_signals(self):
+        self.checkbox.stateChanged.connect(self.change_cb)
+        self.lower_limit.valueChanged.connect(self.change_cb)
+        self.upper_limit.valueChanged.connect(self.change_cb)
+
+    def disconnect_signals(self):
+        self.checkbox.stateChanged.disconnect(self.change_cb)
+        self.lower_limit.valueChanged.disconnect(self.change_cb)
+        self.upper_limit.valueChanged.disconnect(self.change_cb)
 
     def from_profile(self):
         pass
@@ -383,8 +417,16 @@ class HatConditionWidget(QtWidgets.QWidget):
         self.widgets = {}
         for name in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]:
             self.widgets[name] = QtWidgets.QCheckBox(name)
-            self.widgets[name].stateChanged.connect(self.change_cb)
             self.main_layout.addWidget(self.widgets[name])
+        self.connect_signals()
+
+    def connect_signals(self):
+        for name in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]:
+            self.widgets[name].stateChanged.connect(self.change_cb)
+
+    def disconnect_signals(self):
+        for name in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]:
+            self.widgets[name].stateChanged.disconnect(self.change_cb)
 
     def from_profile(self, action_data):
         pass

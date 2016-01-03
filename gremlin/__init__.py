@@ -11,5 +11,6 @@ import gremlin.macro
 import gremlin.process_monitor
 import gremlin.profile
 import gremlin.script_helpers
+import gremlin.shared_state
 import gremlin.tts
 import gremlin.util

@@ -1115,9 +1115,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Opens the calibration window."""
         self.calibration_window = CalibrationUi()
         self.calibration_window.show()
-        self._set_joystick_input_highlighting(False)
+        gremlin.shared_state.set_suspend_input_highlighting(True)
         self.calibration_window.closed.connect(
-            lambda: self.apply_user_settings()
+            lambda: gremlin.shared_state.set_suspend_input_highlighting(False)
         )
 
     def about(self):
@@ -1223,6 +1223,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         if event.event_type == gremlin.event_handler.InputType.Keyboard:
             return
         if self.runner.is_running() or self._current_mode is None:
+            return
+        if gremlin.shared_state.suspend_input_highlighting():
             return
 
         # Only handle events for the currently active device
