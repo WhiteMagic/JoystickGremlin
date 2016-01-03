@@ -404,7 +404,9 @@ class CalibrationUi(QtWidgets.QWidget):
         :param parent the parent widget of this object
         """
         QtWidgets.QWidget.__init__(self, parent)
-        self.devices = [dev for dev in util.joystick_devices() if not dev.is_virtual]
+        self.devices = [
+            dev for dev in util.joystick_devices() if not dev.is_virtual
+        ]
         self.current_selection_id = 0
 
         # Create the required layouts
@@ -418,7 +420,9 @@ class CalibrationUi(QtWidgets.QWidget):
         """Creates all widgets required for the user interface."""
         # Device selection drop down
         self.device_dropdown = QtWidgets.QComboBox()
-        self.device_dropdown.currentIndexChanged.connect(self._create_axes)
+        self.device_dropdown.currentIndexChanged.connect(
+            self._create_axes
+        )
         for device in self.devices:
             self.device_dropdown.addItem(device.name)
 

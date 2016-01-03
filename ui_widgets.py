@@ -390,17 +390,84 @@ class ButtonConditionWidget(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QHBoxLayout(self)
         self.main_layout.addWidget(QtWidgets.QLabel("Activate on"))
         self.press = QtWidgets.QCheckBox("press")
-        self.press.stateChanged.connect(self.change_cb)
         self.release = QtWidgets.QCheckBox("release")
-        self.release.stateChanged.connect(self.change_cb)
+        self.shift_button = QtWidgets.QPushButton("Assign shift button")
         self.main_layout.addWidget(self.press)
         self.main_layout.addWidget(self.release)
+        self.main_layout.addWidget(self.shift_button)
+
+        self.connect_signals()
+
+        self.shift_data = None
+
+    def connect_signals(self):
+        self.press.stateChanged.connect(self.change_cb)
+        self.release.stateChanged.connect(self.change_cb)
+        self.shift_button.clicked.connect(self._shift_button_cb)
+
+    def disconnect_signals(self):
+        self.press.stateChanged.disconnect(self.change_cb)
+        self.release.stateChanged.disconnect(self.change_cb)
+        self.shift_button.clicked.disconnect(self._shift_button_cb)
 
     def from_profile(self, action_data):
         pass
 
     def to_profile(self, action_data):
         pass
+
+    def _shift_button_cb(self):
+        """Queries the user for the shift button to use."""
+        self.button_press_dialog = InputListenerWidget(
+            self._assign_shift_button_cb,
+            True,
+            True
+        )
+
+        shared_state.set_suspend_input_highlighting(True)
+
+        # Display the dialog centered in the middle of the UI
+        geom = self.geometry()
+        point = self.mapToGlobal(QtCore.QPoint(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+        ))
+        self.button_press_dialog.setGeometry(
+            point.x(),
+            point.y(),
+            300,
+            150
+        )
+        self.button_press_dialog.show()
+
+    def _assign_shift_button_cb(self, value):
+        if isinstance(value, Event):
+            devices = util.joystick_devices()
+            for dev in devices:
+                if util.device_id(value) == util.device_id(dev):
+                    # Set the button label
+                    self.shift_button.setText("{} - Button {:d}".format(
+                        dev.name,
+                        value.identifier
+                    ))
+
+                    # Store the information inside the profile
+                    self.shift_data = {
+                        "id": value.identifier,
+                        "hardware_id": dev.hardware_id,
+                        "windows_id": dev.windows_id
+                    }
+                    break
+        elif isinstance(value, macro.Keys.Key):
+            self.shift_button.setText(value.name)
+            self.shift_data = {
+                "id": (value.scan_code, value.is_extended),
+                "hardware_id": 0,
+                "windows_id": 0
+            }
+
+        shared_state.set_suspend_input_highlighting(False)
+        self.change_cb()
 
 
 class HatConditionWidget(QtWidgets.QWidget):
@@ -479,10 +546,12 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         the UI contents."""
         self.action_widget.to_profile()
         if self._is_button_like() and self._has_condition():
+            # Extract activation condition data
             self.action_widget.action_data.condition =\
                 action.common.ButtonCondition(
                     self.condition.press.isChecked(),
-                    self.condition.release.isChecked()
+                    self.condition.release.isChecked(),
+                    self.condition.shift_data
                 )
         elif self._is_hat() and self._has_condition():
             self.action_widget.action_data.condition =\
@@ -515,9 +584,39 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             return
 
         if self._is_button_like():
+            self.condition.disconnect_signals()
+
             self.condition.press.setChecked(condition.on_press)
             self.condition.release.setChecked(condition.on_release)
+
+            # Shift action label
+            if condition.shift_button is not None:
+                self.condition.shift_data = condition.shift_button
+                if condition.shift_button["hardware_id"] == 0:
+                    key = macro.key_from_code(
+                        condition.shift_button["id"][0],
+                        condition.shift_button["id"][1]
+                    )
+                    self.condition.shift_button.setText(key.name)
+                else:
+                    devices = util.joystick_devices()
+                    dummy_event = Event(
+                        InputType.JoystickButton,
+                        condition.shift_button["id"],
+                        condition.shift_button["hardware_id"],
+                        condition.shift_button["windows_id"]
+                    )
+                    for dev in devices:
+                        if util.device_id(dummy_event) == util.device_id(dev):
+                            self.condition.shift_button.setText(
+                                "{} - Button {:d}".format(
+                                    dev.name,
+                                    condition.shift_button["id"]
+                                ))
+            self.condition.connect_signals()
+
         elif self._is_hat():
+            self.condition.disconnect_signals()
             self.condition.widgets["N"].setChecked(condition.on_n)
             self.condition.widgets["NE"].setChecked(condition.on_ne)
             self.condition.widgets["E"].setChecked(condition.on_e)
@@ -526,10 +625,13 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             self.condition.widgets["SW"].setChecked(condition.on_sw)
             self.condition.widgets["W"].setChecked(condition.on_w)
             self.condition.widgets["NW"].setChecked(condition.on_nw)
+            self.condition.connect_signals()
         elif self._is_axis():
+            self.condition.disconnect_signals()
             self.condition.checkbox.setChecked(condition.is_active)
             self.condition.lower_limit.setValue(condition.lower_limit)
             self.condition.upper_limit.setValue(condition.upper_limit)
+            self.condition.connect_signals()
 
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
@@ -599,7 +701,7 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             False otherwise
         """
         is_hat = self.action_widget.action_data.parent.input_type == \
-                 UiInputType.JoystickHat
+            UiInputType.JoystickHat
         is_remap = isinstance(self.action_widget.action_data, action.remap.Remap)
         return is_hat and not is_remap
 
@@ -610,7 +712,7 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
             False otherwise
         """
         is_axis = self.action_widget.action_data.parent.input_type == \
-                UiInputType.JoystickAxis
+            UiInputType.JoystickAxis
         return is_axis
 
 
@@ -1198,8 +1300,10 @@ class InputItemList(QtWidgets.QWidget):
         """Displays the screen overlay prompting the user to press a
         key which will then be added.
         """
-        self.keyboard_press_dialog = KeystrokeListenerWidget(
-            self._add_key_to_scroll_list_cb
+        self.keyboard_press_dialog = InputListenerWidget(
+            self._add_key_to_scroll_list_cb,
+            True,
+            False
         )
 
         # Display the dialog centered in the middle of the UI

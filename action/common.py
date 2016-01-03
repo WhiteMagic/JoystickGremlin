@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from xml.etree import ElementTree
 from PyQt5 import QtCore, QtWidgets
 
 from mako.template import Template
@@ -32,14 +33,35 @@ def format_condition(condition, data=None):
     :return python code representing the condition
     """
     if isinstance(condition, ButtonCondition):
+        shift_term = ""
+        if condition.shift_button is not None:
+            # Keyboard key is being used as a shift button
+            if condition.shift_button["hardware_id"] == 0:
+                shift_term = "keyboard.is_pressed(gremlin.macro." \
+                             "key_from_code({:d}, {}))".format \
+                (
+                    condition.shift_button["id"][0],
+                    condition.shift_button["id"][1]
+                )
+            # Joystick button is being used as a shift button
+            else:
+                shift_term = "joy[{:d}].button({:d})".format(
+                    condition.shift_button["windows_id"],
+                    condition.shift_button["id"]
+                )
+
+            shift_term = " and {}".format(shift_term)
+
         if condition.on_press and condition.on_release:
-            return "    if True:"
+            condition_term = "    if True"
         elif condition.on_press:
-            return "    if is_pressed:"
+            condition_term = "    if is_pressed"
         elif condition.on_release:
-            return "    if not is_pressed:"
+            condition_term = "    if not is_pressed"
         else:
-            return "    if False:"
+            condition_term = "    if False"
+
+        return "{}{}:".format(condition_term, shift_term)
     elif isinstance(condition, HatCondition):
         positive_instances = []
         if condition.on_n:
@@ -532,6 +554,18 @@ class AbstractAction(object):
                 action_widget in action.condition_map[input_type]:
             node.set("on-press", str(self.condition.on_press))
             node.set("on-release", str(self.condition.on_release))
+
+            if self.condition.shift_button is not None:
+                shift_node = ElementTree.Element("shift")
+                shift_node.set("hardware_id", str(self.condition.shift_button["hardware_id"]))
+                shift_node.set("windows_id", str(self.condition.shift_button["windows_id"]))
+                if self.condition.shift_button["hardware_id"] == 0:
+                    shift_node.set("id", str(self.condition.shift_button["id"][0]))
+                    shift_node.set("extended", str(self.condition.shift_button["id"][1]))
+                else:
+                    shift_node.set("id", str(self.condition.shift_button["id"]))
+                node.append(shift_node)
+
         elif input_type == UiInputType.JoystickHat and \
                 action_widget in action.condition_map[input_type]:
             node.set("on-n", str(self.condition.on_n))
@@ -618,7 +652,7 @@ class ButtonCondition(object):
 
     """Indicates when an action associated with a button is to be run"""
 
-    def __init__(self, on_press=True, on_release=False):
+    def __init__(self, on_press=True, on_release=False, shift_button=None):
         """Creates a new instance.
 
         :param on_press when True the action is executed when the button
@@ -628,6 +662,7 @@ class ButtonCondition(object):
         """
         self.on_press = on_press
         self.on_release = on_release
+        self.shift_button = shift_button
 
 
 class HatCondition(object):
@@ -688,6 +723,7 @@ def parse_button_condition(node):
     :param node the xml node to parse
     :return ButtonCondition corresponding to the node's content
     """
+    # Read normal button state condition data
     try:
         on_press = parse_bool(node.get("on-press"))
     except gremlin.error.ProfileError:
@@ -703,6 +739,30 @@ def parse_button_condition(node):
     else:
         on_press = False if on_press is None else on_press
         on_release = False if on_release is None else on_release
+
+    # Attempt to read shift button data
+    for entry in node.findall("shift"):
+        hardware_id = int(entry.get("hardware_id"))
+        windows_id = int(entry.get("windows_id"))
+
+        if hardware_id == 0:
+            id_data = (
+                int(entry.get("id")),
+                parse_bool(entry.get("extended"))
+            )
+        else:
+            id_data = int(entry.get("id"))
+
+        return ButtonCondition(
+            on_press,
+            on_release,
+            {
+                "hardware_id": hardware_id,
+                "windows_id": windows_id,
+                "id": id_data
+            }
+        )
+
     return ButtonCondition(on_press, on_release)
 
 

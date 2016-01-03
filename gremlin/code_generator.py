@@ -58,6 +58,12 @@ def generate_parameter_list(input_item):
     for entry in input_item.actions:
         if isinstance(entry, action.remap.Remap):
             params.append("vjoy")
+        if isinstance(entry.condition, action.common.ButtonCondition) \
+                and entry.condition.shift_button is not None:
+            if entry.condition.shift_button["hardware_id"] == 0:
+                params.append("keyboard")
+            else:
+                params.append("joy")
     params = list(set(params))
     params.insert(0, "event")
     return ", ".join(params)
