@@ -20,6 +20,11 @@ ${helpers["format_condition"](entry.condition)}
         ${axis_button_name}.process(value, lambda x: ${axis_button_cb}(x, vjoy))
     % endif
 % elif entry.parent.input_type in [InputType.JoystickButton, InputType.Keyboard]:
+    % if entry.condition.on_press and entry.condition.on_release:
+    if is_pressed:
+        tracker = gremlin.input_devices.AutomaticButtonRelease()
+        tracker.register((${entry.vjoy_device_id}, ${entry.vjoy_input_id}), event)
+    % endif
 ${helpers["format_condition"](entry.condition)}
         vjoy[${entry.vjoy_device_id}].button[${entry.vjoy_input_id}].is_pressed = is_pressed
 % elif entry.parent.input_type == InputType.JoystickHat:

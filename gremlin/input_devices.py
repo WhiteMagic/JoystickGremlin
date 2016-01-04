@@ -356,6 +356,54 @@ class JoystickDecorator(object):
         )
 
 
+@SingletonDecorator
+class AutomaticButtonRelease(QtCore.QObject):
+
+    """Ensures that vjoy buttons are reliably released.
+
+    The class ensures that vjoy buttons are released even if they
+    have been pressed in a different mode then the active one when
+    the physical button that pressed them is released.
+    """
+
+    def __init__(self):
+        """Initializes the instance."""
+        QtCore.QObject.__init__(self)
+
+        self._registry = {}
+        el = event_handler.EventListener()
+        el.joystick_event.connect(self._joystick_cb)
+
+    def register(self, vjoy_input, physical_event):
+        """Registers a physical and vjoy button pair for tracking.
+
+        :param vjoy_input the vjoy button to release, represented as
+            (vjoy_device_id, vjoy_button_id)
+        :param physical_event the button event when release should
+            trigger the release of the vjoy button
+        """
+        release_evt = physical_event.clone()
+        release_evt.is_pressed = False
+
+        if release_evt not in self._registry:
+            self._registry[release_evt] = []
+        self._registry[release_evt].append(vjoy_input)
+
+    def _joystick_cb(self, evt):
+        """Releases vjoy buttons if appropriate.
+
+        If any vjoy buttons are associated with the event they are
+        released
+
+        :param evt the joystick event to process
+        """
+        if evt in self._registry and not evt.is_pressed:
+            vjoy = VJoyProxy()
+            for entry in self._registry[evt]:
+                vjoy[entry[0]].button[entry[1]].is_pressed = False
+            self._registry[evt] = []
+
+
 def _button(button_id, device_id, mode, always_execute=False):
     """Decorator for button callbacks.
 
