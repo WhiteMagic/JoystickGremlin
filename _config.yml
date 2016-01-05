@@ -7,6 +7,9 @@
 
 # Site settings
 title: Joystick Gremlin
+baseurl: "/JoystickGremlin/"
+url: "http://whitemagic.github.io"
+
 
 # Build settings
 markdown: kramdown
