@@ -1,0 +1,29 @@
+html
+{
+  position: relative;
+  min-height: 100%;
+}
+
+body
+{
+    font-family: 'Raleway', sans-serif;
+    margin-bottom: 40px;
+}
+
+.bottom-gap
+{
+    margin-bottom: 5px;
+}
+
+.footer
+{
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 30px;
+}
+
+.subsection
+{
+    margin-top: 30px;
+}

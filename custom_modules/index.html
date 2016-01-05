@@ -1,0 +1,307 @@
+---
+area: manual
+chapter: custom_modules
+layout: default
+---
+
+<h2><a name="3">3. Custom Modules</a></h2>
+
+<p class="text-justify">
+    While common configuration tasks can be performed directly via the
+    UI, more advanced and specialised configurations require writing
+    custom modules. Each module is a simple Python script which defines
+    the functions (callbacks) triggered in reaction to inputs being
+    used. Since the functions are written in Python there is no limit as
+    to what can be expressed. The following section assumes some basic
+    familiarity with Python. We start with a general overview of the
+    layout of a custom module in <a href="#3_1">Section 3.1</a> which is
+    followed by an quick overview of the API in <a href="#3_2">Section
+    3.2</a> followed by the description of the decorator based callback
+    system in <a href="#3_3">Section 3.3</a>. Finally, <a href="#3_4">
+    Section 3.4</a> provides a few practical examples.
+</p>
+
+
+<h3><a name="3_1">3.1 Principle &amp; Layout of Custom Modules</a></h3>
+
+<p class="text-justify">
+    Joystick Gremlin uses callbacks, i.e. functions that are executed in
+    reaction to user inputs such as key presses or axis motion. These
+    callbacks have access to some convenience functions which allow
+    accessing and controlling commonly used parts of the system, such as
+    setting the value of vJoy devices or retrieving keyboard and
+    joystick states. Combining these readily available functions with
+    custom code allows the implementation of varied functionality.
+</p>
+
+<p class="text-justify">
+    The general structure of a callback is as follows:
+{% highlight python3 %}@decorator_function(<input name>)
+def callback_function(event, <optional parameter list>):
+    <callback implementation>{% endhighlight %}
+</p>
+
+<p class="text-justify">
+    The <code>event</code> parameter contains information about the
+    event that triggered the execution of the function. Each event is of
+    type <code>gremlin.event_handler.Event</code> and contains the
+    following data:
+
+    <dl class="dl-horizontal text-justify">
+        <dt><code>event_type</code></dt>
+        <dd>The type of the event, which matches that of the decorator
+            used to decorate the function.</dd>
+        <dt><code>identifier</code></dt>
+        <dd>The identifier of the input, which matches that of the
+            decorator used to decorate the function.</dd>
+        <dt><code>hardware_id</code></dt>
+        <dd>The hardware id of the device, which matches that of the
+            decorator used to decorate the function.</dd>
+        <dt><code>windows_id</code></dt>
+        <dd>The windows id of the device, which matches that of the
+            decorator used to decorate the function.</dd>
+        <dt><code>is_pressed</code></dt>
+        <dd>Boolean flag indicating if a button or key is pressed. This
+            field's value is only valid for joystick buttons and keyboard
+            keys.</dd>
+        <dt><code>value</code></dt>
+        <dd>Value of an axis or hat. In case of an axis the value is in
+            the range {% raw %}\(\left[-1, 1\right]\){% endraw %} and in the
+            case of a hat a tuple (x direction, y direction) is used. This
+            field's value is only valid for joystick axes and hats.</dd>
+        <dt><code>raw_value</code></dt>
+        <dd>The raw axis value, this field is only valid for joystick
+            axes.</dd>
+    </dl>
+</p>
+
+<p class="text-justify">
+    From this list the only values that are typically of interest are
+    the <code>is_pressed</code> and <code>value</code> entries depending
+    on the input type.
+</p>
+
+
+<h3><a name="3_2">3.2 API</a></h3>
+
+<p class="text-justify">
+    The following describes the API of the optional variables exposed
+    via the decorator callback framework.
+</p>
+
+
+<h4 class="subsection">vJoy</h4>
+
+<p class="text-justify">
+    Any decorated function that has a parameter named <code>vjoy</code>
+    in its parameter list will have access to all vJoy devices.
+    Accessing a specific <code>VJoy</code> instance is done by indexing
+    the <code>vjoy</code> object. This object then allows setting the
+    state of inputs by indexing the member variables <code>axis</code>,
+    <code>button</code>, and <code>hat</code>. All indices start with 1.
+    The following demonstrates typical usage:
+</p>
+
+{% highlight python3 %}# Access the first vJoy device and press the third button
+vjoy[1].button[3].is_pressed = True
+
+# Access the second vJoy device and move the Y axis to -0.25
+vjoy[2].axis[AxisName.Y].value = -0.25
+
+# Access the first vJoy device and move the first hat to
+# the top right position
+vjoy[1].hat[1].direction = 45{% endhighlight %}
+
+
+<h4 class="subsection">Joystick State</h4>
+
+<p class="text-justify">
+    Any decorated function that has a parameter named <code>joy</code>
+    in its parameter list will have access to all joystick devices via
+    that variable.
+</p>
+
+
+<p class="text-justify">
+    <b>Accessing a specific joystick</b></br>
+    In order to access a specific joystick its system id needs to be
+    known. Using the device's system id as index the joystick can be
+    accessed by:
+    {% highlight python3 %}joystick_device = joy[system_id]{% endhighlight %}
+</p>
+
+
+<p class="text-justify">
+    <b>Reading axis value</b></br>
+    To read the current value of a joystick axis both the index of the
+    axis as well as the system id of the joystick, starting with 1, are
+    needed, with these the axis value is obtained as:
+    {% highlight python3 %}axis_value = joy[system_id].axis(axis_index){% endhighlight %}
+</p>
+
+<p class="text-justify">
+    <b>Reading button state</b></br>
+    To read the current state of a button both the joystick's system id
+    as well as index of the button, starting at 1, are needed. The
+    following then reads the button state:
+    {% highlight python3 %}is_pressed = joy[system_id].button(button_id){% endhighlight %}
+</p>
+
+
+<p class="text-justify">
+    <b>Reading hat position</b></br>
+    To read the current position of a hat both the joystick's system id
+    and hat index, starting at 1, are needed. The position of the hat is
+    reported as a {% raw %}\((x, y)\){% endraw %} tuple {% raw %}\(x, y
+    \in \left\{-1, 0, 1\right\}\){% endraw %}. A \(x\) value of 1 is right
+    and -1 left while a value of 1 for \(y\) means up and -1 down. A
+    value of \(0\) represents a centred position. The value is read as follows:
+    {% highlight python3 %}position = joy[system_id].hat(hat_id){% endhighlight %}
+</p>
+
+
+<h4 class="subsection">Keyboard State</h4>
+
+<p class="text-justify">
+    Any decorated function that has a parameter named
+    <code>keyboard</code> in its parameter list will have access to the
+    state of all keyboard keys.
+</p>
+
+<p class="text-justify">
+    <b>Reading key state</b></br>
+    To read the key state the string representation of the key or the
+    <code>gremlin.macro.Key</code> instance corresponding to the key is
+    needed. Both can be found in the <code>gremlin.macro</code> module.
+    Reading the state is then done as follows:
+    {% highlight python3 %}is_pressed = keyboard.is_pressed(key){% endhighlight %}
+</p>
+
+
+<h3><a name="3_3">3.3 Decorator Based Callback Generation</a></h3>
+
+<p class="text-justify">
+    Callbacks reacting to user inputs are created by decorating
+    functions using specific decorators. There are two types of
+    decorators, one for joysticks and one for the keyboard. Joystick
+    decorators are created for specific devices using the
+    <code>gremlin.input_devices.JoystickDecorator</code> class as
+    follows:
+{% highlight python3 %}joystick_decorator = gremlin.input_devices.JoystickDecorator(
+    <device name>,
+    <device id>,
+    <mode>
+){% endhighlight %}
+</p>
+
+<p class="text-justify">
+    The value of <code>&lt;device id&gt;</code> depends on whether or not
+    multiple devices of the same type are being used. In the case of
+    multiple identical devices <code>device_id</code> consists of the
+    tuple of the <code>hardware_id</code> and <code>windows_id</code>,
+    otherwise, only the <code>hardware_id</code> is used. An object
+    created in this way has three decorators customised for the given
+    joystick and mode, which can be used as follows:
+{% highlight python3 %}@joystick_decorator.axis(1)
+def axis_callback(event):
+    pass
+
+@joystick_decorator.button(4)
+def button_callback(event):
+    pass
+
+@joytick_decorator.hat(2)
+def hat_callback(event):
+    pass{% endhighlight %}
+</p>
+
+<p class="text-justify">
+    The keyboard decorator can be used directly as follows:
+{% highlight python3 %}@gremlin.input_devices.keyboard(<key name>, <mode>)
+def keyboard_callback(event):
+    pass{% endhighlight %}
+</p>
+
+<p class="text-justify">
+    Where <code>&lt;key name&gt;</code> can be either a string representation
+    of the key's name as or an instance of
+    <code>gremlin.marco.Keys.Key</code> which are both defined in the
+    <code>gremlin.macro</code> module.
+</p>
+
+<p class="text-justify">
+    The <code>event</code> parameter of the decorated function is always
+    required and contains the state of the input used in the decoration,
+    as described in <a href="#3_1">Section 3.1</a>.
+</p>
+
+
+<h3><a name="3_4">3.4 Examples</a></h3>
+
+<p class="text-justify">
+    In the following a few examples of custom modules are shown. They
+    provide an illustration of some of the things that can be achieved
+    thanks to the combination of Joystick Gremlin provided functions and
+    custom Python code.
+</p>
+
+
+<h4 class="subsection">Keyboard Controlled Throttle</h4>
+
+<p class="text-justify">
+    This script allows the user to control an analogue throttle in 1/3rd
+    increments using the <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, and
+    <kbd>4</kbd> number keys.
+</p>
+
+{% highlight python3 %}
+{% include_relative keyboard_throttle.py %}
+{% endhighlight %}
+
+
+<h4 class="subsection">Joystick Response Curve</h4>
+
+<p class="text-justify">
+    This script configures a response curve which provides more control
+    around the centre position and uses it for the X and Y axis of the
+    joystick.
+</p>
+
+{% highlight python3 %}
+{% include_relative response_curve.py %}
+{% endhighlight %}
+
+
+<h4 class="subsection">Mode Switching</h4>
+
+<p class="text-justify">
+    This script presents a few different ways of using mode switching
+    functionalities. The first callback switches to the <em>Radio</em>
+    mode while the button is being held down and switches back to the
+    previous mode once the button is released. The next callback cycles
+    through the <em>Global</em>, <em>Radio</em>, and <em>Landing</em>
+    modes with each button press. The last callback switches directly to
+    the <em>Global</em> mode when the button is pressed.
+</p>
+
+{% highlight python3 %}
+{% include_relative mode_switching.py %}
+{% endhighlight %}
+
+
+<h4 class="subsection">Precision Mode</h4>
+
+<p class="text-justify">
+    This script switches to a lower sensitivity curve when any of the weapon
+    groups are being fired and switches back to the default profile once no
+    weapon is being fired any more. This is similar to the "sniper mode"
+    that some gaming mice have, which drops the DPI setting at the press of
+    a button. In this instance pressing the trigger automatically enables
+    and disables this by switching the used response curve to one which
+    halves the maximum response provided by the joystick at maximum
+    deflection.
+</p>
+
+{% highlight python3 %}
+{% include_relative precision_mode.py %}
+{% endhighlight %}

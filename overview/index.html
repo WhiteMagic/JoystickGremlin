@@ -1,0 +1,247 @@
+---
+area: manual
+chapter: overview
+layout: default
+---
+
+<h2><a name="1">1. Overview</a></h2>
+
+<p class="text-justify">
+    Joystick Gremlin is a program that allows the configuration of joystick
+    like devices, similar to what CH Control Manager and Thrustmaster's
+    T.A.R.G.E.T. do for their respectively supported joysticks. However,
+    Joystick Gremlin works with any device be it from different manufacturers
+    or custom devices that appear as a joystick to Windows. Joystick Gremlin
+    uses the virtual joysticks provided by vJoy to map physical to virtual
+    inputs and apply various other transformations such as response curves to
+    analogue axes. In addition to managing joysticks, Joystick Gremlin also
+    provides keyboard macros, a flexible mode system, scripting using Python,
+    and many other features.
+</p>
+
+<p class="text-justify">
+    The main features are:
+    <ul class="text-justify">
+        <li>Works with arbitrary joystick like devices</li>
+        <li>User interface for common configuration tasks</li>
+        <li>Merging of multiple physical devices into a single virtual device</li>
+        <li>Axis response curve and dead zone configuration</li>
+        <li>Arbitrary number of modes with inheritance and customizable mode switching</li>
+        <li>Keyboard macros for joystick buttons and keyboard keys</li>
+        <li>Python scripting support</li>
+    </ul>
+</p>
+
+<p class="text-justify">
+    Joystick Gremlin provides a graphical user interface, described in <a
+    href="/interface">Section 2</a>, which allows commonly performed tasks, such
+    as input remapping, axis response curve setups, and macro recording to be
+    performed easily. Functionality that is not accessible via the UI can be
+    implemented through custom modules, explained in <a
+    href="/custom_modules">Section 3</a> in detail.
+</p>
+
+
+<h3><a name="1_1">1.1 Installation</a></h3>
+
+<p class="text-justify">
+    Joystick Gremlin has one major dependency, vJoy which provides virtual
+    joysticks which Joystick Gremlin feeds with data. Download links to the
+    programs needed are listed below:
+
+    <ul>
+        <li><a href="https://github.com/WhiteMagic/JoystickGremlin">Joystick Gremlin</a></li>
+        <li><a href="http://vjoystick.sourceforge.net/site/">vJoy</a> (direct
+            download link <a href="http://sourceforge.net/projects/vjoystick/files/Beta%202.x/2.0.5-120515/vJoy_205_050515.exe/download">2.0.5
+                2015-05-12</a>)</li>
+        <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=5555">VC Redistributable  2010 (x86)</a></li>
+        <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=40784">VC Redistributable 2013 (x86)</a>
+    </ul>
+</p>
+
+<p class="text-justify">
+    It's important that the VC Redistributables are the x86 ones, even if
+    you're running a x64 system, as vJoy and Python require the 32bit
+    libraries.
+</p>
+
+<p class="text-justify">
+    vJoy creates virtual joysticks which show up as a device in Windows and
+    Joystick Gremlin uses these to forward inputs to them. The VC2010 package
+    is required by Python but is likely already installed. The same goes for
+    the VC2013 package which is required by vJoy but is most likely already
+    installed on the machine.
+</p>
+
+
+
+<h4 class="subsection">vJoy Configuration</h4>
+
+<p class="text-justify">
+    In order to properly use Joystick Gremlin vJoy has to be configured first.
+    This is done via the <i>Configure vJoy</i> program. This program allows
+    setting the properties of all existing vJoy devices. Typically a single
+    vJoy device is enough. In order to use 8-way POV hats with Joystick Gremlin
+    the hats have the be configured as continuous in vJoy.  The image below
+    shows what a properly configured vJoy device looks like. Once everything is
+    set as desired clicking <i>Ok</i> configures the vJoy device and closes the
+    program.
+
+    <div class="row bottom-gap">
+        <div class="col-md-7">
+            <img class="img-responsive center-block" src="/images/vjoy_configuration.png">
+        </div>
+        <div class="col-md-5">
+            <em>VJoy configuration dialog with settings required for proper
+                Joystick Gremlin operation.</em>
+        </div>
+    </div>
+</p>
+
+
+<h3><a name="1_2">1.2 Concepts</a></h3>
+
+<p class="text-justify">
+    The following section introduces the terminology used by Joystick Gremlin.
+</p>
+
+We'll explain the different concepts from the inner most going outwards, as the
+outer parts contain parts further in.
+
+<h4 class="subsection">Action</h4>
+<p class="text-justify">
+    An action is something Joystick Gremlin executes in response to the user
+    activating a physical input.  Examples include running a macro, sending
+    button presses to vJoy, or changing to a different mode. Each action has a
+    condition attached to it which can further dictate when an action is to be
+    executed. For buttons the conditions are the state, i.e.  pressed or
+    released as well as an optional shift modifier which has be be pressed in
+    order for the action to be run.
+</p>
+
+<h4 class="subsection">Input</h4>
+<p class="text-justify">
+    An input is an axis, button, hat, or keyboard key on a physical device.
+    Each input can have multiple actions assigned to it and these actions
+    can change between the different modes.
+</p>
+
+<h4 class="subsection">Device</h4>
+<p class="text-justify">
+    A device is a physical controller connected to the computer such as a
+    joystick, pedal, or throttle. Each device has multiple inputs with their
+    own associated actions.
+</p>
+
+<h4 class="subsection">Mode</h4>
+<p class="text-justify">
+    A mode is a collection of actions associated with the inputs for each
+    connected device. Each mode can inherit from one other mode, his parent.
+    If a mode and its parent both define actions for the same input only the
+    actions of the mode and not its parent are used. Similarly, if the mode
+    defines no actions for an input but the parent does the parent's actions
+    are used.  This allows having a common set of base commands that more
+    specialised modes add to or change.
+</p>
+
+<h4 class="subsection">Profile</h4>
+<p class="text-justify">
+    A profile is a folder which contains a XML configuration file together
+    with any custom modules used. The profile contains the settings made via
+    the user interface for each of the connected peripherals.
+</p>
+
+<h4 class="subsection">Example</h4>
+<p class="text-justify">
+    The following is a simple example showing how the above introduced concepts
+    work together. The profile contains two modes, <em>Default</em> and
+    <em>Landing</em> and two physical devices <em>Thrustmaster Warthog
+    Stick</em> and <em>CH Pro Pedals</em>. Both devices have varying actions
+    executed on the exemplary inputs used which change between the two modes. The
+    image on the right shows the conceptual nesting of the concepts as shown in the
+    explicit example.
+</p>
+
+<div class="row">
+    <div class="col-md-8">
+    <ul>
+        <li><strong>Profile:</strong> star_citizen.xml
+            <ul>
+                <li><strong>Mode:</strong>Default
+                    <ul>
+                        <li><strong>Device:</strong>Thrustmaster Warthog Stick
+                            <ul>
+                                <li><strong>Input:</strong>Axis X
+                                    <ul>
+                                        <li><strong>Action:</strong>Map to vJoy Axis X</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Input:</strong>Button 1
+                                    <ul>
+                                        <li><strong>Action:</strong>Map to vJoy Button 1</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>Device:</strong>CH Pro Throttle
+                            <ul>
+                                <li><strong>Input:</strong>Axis X
+                                    <ul>
+                                        <li><strong>Action:</strong>Map to vJoy Axis Z</li>
+                                        <li><strong>Action:</strong>Apply response curve</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Input:</strong>Button 1
+                                    <ul>
+                                        <li><strong>Action:</strong>Run chaff &amp; Flare macro</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>Mode:</strong>Landing
+                    <ul>
+                        <li><strong>Device:</strong>Thrustmaster Warthog Stick
+                            <ul>
+                                <li><strong>Input:</strong>Axis X
+                                    <ul>
+                                        <li><strong>Action:</strong>Map to vJoy Axis X</li>
+                                        <li><strong>Action:</strong>Apply response curve with deadzone</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Input:</strong>Button 1
+                                    <ul>
+                                        <li><strong>Action:</strong>Map to vJoy Button 10</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>Device:</strong>CH Pro Throttle
+                            <ul>
+                                <li><strong>Input:</strong>Axis X
+                                    <ul>
+                                        <li><strong>Action:</strong>Map to vJoy Axis Z</li>
+                                        <li><strong>Action:</strong>Apply response curve</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Input:</strong>Button 1
+                                    <ul>
+                                        <li><strong>Action:</strong>Map to vJoy Button 21</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    </div>
+
+    <div class="col-md-4">
+        <img class="img-responsive center-block" src="/images/concepts.png">
+        <em>The image shows how the various concepts explained below relate to
+            each other.</em>
+    </div>
+</div>

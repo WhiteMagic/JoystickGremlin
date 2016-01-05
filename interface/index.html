@@ -1,0 +1,658 @@
+---
+area: manual
+chapter: interface
+layout: default
+---
+
+<h2><a name="2">2. User Interface</a></h2>
+
+
+<p class="text-justify">
+    In the following the various components of the user interface are
+    introduced and their usage described. The UI should be sufficient for
+    most common use cases, however, if functionality is missing user created
+    modules can provide these.
+</p>
+
+
+<h3><a name="2_1">2.1 Overview</a></h3>
+
+<p class="text-justify">
+    The following is a short overview of the different components that make
+    up the main user interface, shown in the following image.
+
+    <div class="text-center">
+        <img class="img-responsive" src="/images/main_clean.png">
+        <em>Joystick Gremlin UI</em>
+    </div>
+    </br>
+
+    <ol class="text-justify">
+        <li>Overview of all the inputs available for a given device. The
+            small icons on the far right of each input indicate the type
+            of actions associated with the input. The icons and their
+            meaning are summarised in the table below.</li>
+        <li>The right hand portion of the UI shows the list of actions
+            associated with the currently selected input. This panel
+            allows the customisation of existing actions and the
+            addition of new ones.</li>
+        <li>The mode section allows changing the mode currently being
+            configured.</li>
+        <li>The status bar shows whether or not the program is currently
+            running a profile. If the program is running the currently
+            active mode is shown as well if code execution is
+            paused. If the input repeater is active it's status is also
+            shown in the far right.</li>
+        <li>Tool bar which holds the most commonly used actions, from
+            left to right:
+            <ul>
+                <li>Open an existing profile, discarding the current one and
+                    any unsaved changes to it.</li>
+                <li>Activate Joystick Gremlin, when active the button is
+                    pressed and a green icon is shown. This also changes the
+                    status bar display. Pressing the button while Joystick
+                    Gremlin is running will disabled it again.</li>
+            </ul>
+        </li>
+        <li>Each tab represents an individual device that is currently
+            connected to the computer.</li>
+    </ol>
+</p>
+
+<p class="text-justify">
+    The following table shows the different icons and the actions they represent.
+    <table class="table">
+        <tr>
+            <td width="50px"><img class="img-responsive" src="/images/action_cycle_modes.png"></td>
+            <td width="40%">Cycle modes</td>
+            <td width="50px"><img class="img-responsive" src="/images/action_response_curve.png"></td>
+            <td>Response curve</td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="/images/action_macro.png"></td>
+            <td>Macro</td>
+            <td><img class="img-responsive" src="/images/action_resume.png"></td>
+            <td>Resume</td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="/images/action_pause.png"></td>
+            <td>Pause</td>
+            <td><img class="img-responsive" src="/images/action_switch_mode.png"></td>
+            <td>Switch mode</td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="/images/action_remap_axis_001.png"></td>
+            <td>Remap axis</td>
+            <td><img class="img-responsive" src="/images/action_previous_mode.png"></td>
+            <td>Switch to previous mode</td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="/images/action_remap_button_001.png"></td>
+            <td>Remap button</td>
+            <td><img class="img-responsive" src="/images/action_text_to_speech.png"></td>
+            <td>Text-to-speech</td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="/images/action_remap_hat_001.png"></td>
+            <td>Remap hat</td>
+            <td><img class="img-responsive" src="/images/action_pause_resume.png"></td>
+            <td>Toggle pause &amp; resume</td>
+        </tr>
+    </table>
+</p>
+
+
+
+<h3><a name="2_2">2.2 Conditions</a></h3>
+
+<p class="text-justify">
+    Each action has a set of conditions, based on the input type, that
+    can be used to further restrict when the action is executed. These
+    constraints are explained next.
+</p>
+
+<h4 class="subsection">Button and Keyboard Key</h4>
+<p class="text-justify">
+    Actions associated with button like inputs have three constraints:
+    <dl class="dl-horizontal text-justify">
+        <dt>on_press</dt>
+        <dd>execute the action when the key or button is being
+        pressed</dd>
+        <dt>on_release</dt>
+        <dd>execute the action when the key or button is being
+        released</dd>
+        <dt>shift key</dt>
+        <dd>execute the action when the specified key or button is being
+        pressed</dd>
+    </dl>
+    These conditions work together, so for example if a <em>shift
+    key</em> is defined the <em>on_press</em> and <em>on_release</em>
+    conditions still have to be met in order for the action to be executed.
+</p>
+
+<h4 class="subsection">Axis</h4>
+<p class="text-justify">
+    Actions associated with axis inputs have a range based constraint
+    which allows to treat the axis as a button when it enters and leaves
+    the specified range. This works by considering a virtual button
+    being pressed when the axis enters the range and releasing the
+    virtual button when leaving the range.
+</p>
+
+<h4 class="subsection">Hat</h4>
+<p class="text-justify">
+    The eight directions of POV hats can be treated a simple activation
+    actions to trigger any action that typically would fire on a
+    <em>on_press</em> event. As such all actions available to buttons
+    with the exception of remapping are available using these
+    conditions.
+</p>
+
+
+<h3><a name="2_3">2.3 Actions</a></h3>
+
+<p class="text-justify">
+    As described in <a href="/overview/#1_2">Section 1.2</a>, each
+    input, such as axis, button, hat, or keyboard key, can have multiple
+    actions associated with it. However, not all inputs have access
+    to the same types of actions as they are not applicable to them. In
+    the following all available actions are described.
+</p>
+
+<p class="text-justify">
+    Each action has an activation condition associated with it, see <a
+    href="#2_2">Section 2.2</a>, which can be used for fine grained
+    control over them. Additionally, each input can also be configured to
+    be always executed by checking the <em>Always Execute</em> box, see
+    item 2 in the above image. Enabling this option results in actions
+    associated with that input to be performed even if execution of
+    callbacks is paused. This is mainly useful for resuming when
+    execution has been paused.
+</p>
+
+<h4 class="subsection">Remapping</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_remap_axis.png">
+    </div>
+    <div class="col-md-5">
+        <em>Axis remapping dialogue</em>
+    </div>
+</div>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_remap_button.png">
+    </div>
+    <div class="col-md-5">
+        <em>Button remapping dialogue</em>
+    </div>
+</div>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_remap_hat.png">
+    </div>
+    <div class="col-md-5">
+        <em>Hat remapping dialogue</em>
+    </div>
+</div>
+</br>
+
+<p class="text-justify">
+    The remapping actions enable the user to propagate inputs from a
+    physical joystick input to an equivalent vJoy input, i.e. axis to
+    axis, button to button, and hat to hat.  This allows the merging of
+    multiple physical devices into a single device.
+</p>
+
+<p class="text-justify">
+    In the case of axis remapping the condition can be used to press a
+    vJoy button while the axis in a certain range and release it once
+    the range is left. This could for example be used to engage
+    afterburners when a throttle is set to greater then 95%.
+</p>
+
+<p class="alert alert-warning text-justify">
+    In most cases button remap actions should always trigger, i.e. on
+    button press and release, as otherwise the forwarding to vJoy is
+    incomplete.
+</p>
+
+
+<h4 class="subsection">Response Curve</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_response_curve.png">
+    </div>
+    <div class="col-md-5">
+        <em>Response curve action dialogue which allows the customisation
+            of the joystick response as well as dead zones.</em>
+    </div>
+</div>
+</br>
+
+<p class="text-justify">
+    The response curve dialogue allows the customisation of
+    the response produced by the joystick using the curve editor. The
+    shape of the curve is controlled using a set of control points.
+</p>
+
+<p class="text-justify">
+    A new control point is added by a double left click in an empty area
+    of the curve editor. Removing an existing control point is achieved
+    by selecting the desired point and pressing the <kbd>Del</kbd> key
+    on the keyboard. A single left click on a control point will mark
+    the point as active. An active point can be dragged in the window to
+    modify its position. Alternatively, the text fields below the curve
+    editor allow for precise numerical control of the position.
+</p>
+
+<p class="text-justify">
+    Finally, the dead zones for the axis can be defined using the sliders
+    and input fields at the bottom of the dialogue. The fields and
+    sliders control the full deflection dead zone (1st and 4th field
+    from the left) as well as the centre deflection dead zones (2nd and
+    3rd field).
+</p>
+
+<p class="text-justify">
+    Currently there are two types of response curve types available which
+    are selected from the drop down menu at the top of the widget:
+    <dl class="dl-horizontal text-justify">
+        <dt>Cubic Spline</dt>
+        <dd>A simple spline with only control points dictating locations
+            the curve has to pass through. No control over the shape is
+            provided.</dd>
+        <dt>Cubic B&eacute;zier Spline</dt>
+        <dd>A more complex spline with control points and "handles" that
+            can modify the shape of the overall curve. Importantly this
+            allows to control how the curve approaches the end points of
+            the curve.</dd>
+    </dl>
+</p>
+
+<p class="alert alert-warning text-justify">
+    A response curve mapping action always needs to be paired with a
+    remap action, as otherwise the transformation will not have any
+    effect.
+</p>
+
+<p class="alert alert-warning text-justify">
+    In order for response curves to work properly the game has to be
+    configured to use a linear 1:1 curve, as otherwise the two curve
+    settings will interfere with each other producing undesirable
+    results.
+</p>
+
+
+<h4 class="subsection">Macro</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_macro.png">
+    </div>
+    <div class="col-md-5">
+        <em>Macro action dialogue allowing the recording of key press
+            sequences.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    The macro dialogue allows the creation of keyboard
+    macros. The macro can contain any combination of key presses and
+    releases, as well as pauses between individual actions.
+</p>
+
+<p class="text-justify">
+    Adding new keystrokes to a macro is done by pressing the
+    <em>Record</em> button, after which all keystrokes will be recorded
+    sequentially. To stop the recording simply press the <em>Record</em>
+    button again. A pause can be added by pressing the <em>Add
+    Pause</em> button, which will insert a pause after the currently
+    selected entry. The length of the pause can be modified by double
+    clicking the entry. Selecting an entry allows it to be moved up and down
+    using the <em>Up</em> and <em>Down</em> buttons.
+</p>
+
+<p class="alert alert-warning text-justify">
+    Each macro is executed independently, which means that multiple long
+    running macros can have their key presses interfere with each other.
+</p>
+
+
+<h4 class="subsection">Pause, Resume &amp; Toggle</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_pause.png">
+    </div>
+    <div class="col-md-5">
+        <em>Pause dialogue which allows to temporarily stop the execution of
+            callbacks.</em>
+    </div>
+</div>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_resume.png">
+    </div>
+    <div class="col-md-5">
+        <em>Resume dialogue which allows Joystick Gremlin to execute
+            callbacks again after enabling the pause state.</em>
+    </div>
+</div>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_toggle_pause_resume.png">
+    </div>
+    <div class="col-md-5">
+        <em>Toggle between pause and resume dialogue, which toggles
+            between the two states.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    The pause, resume, and toggle actions control whether or not
+    Joystick Gremlin executes callbacks when inputs are used. When the
+    application is paused only inputs that were configured to <em>always
+    execute</em> will be executed.
+</p>
+
+<p class="alert alert-warning text-justify">
+    In order for the <em>resume</em> and <em>toggle</em> actions to be
+    useful they have to be defined as <em>always execute</em>, as
+    otherwise it will be impossible to resume from the paused state.
+</p>
+
+
+<h4 class="subsection">Change Mode</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_switch_mode.png">
+    </div>
+    <div class="col-md-5">
+        <em>Change mode action dialogue which allows to select the mode
+            to switch to when the action is triggered.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    This action will change the currently active mode of Joystick
+    Gremlin to the one selected from the drop down list.
+</p>
+
+
+<h4 class="subsection">Switch to Previous Mode</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_switch_to_previous_mode.png">
+    </div>
+    <div class="col-md-5">
+        <em>Dialogue of the action that switches to the previously active
+            mode.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    This action changes the current mode to the previously active one.
+</p>
+
+
+<h4 class="subsection">Cycle Modes</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_cycle_modes.png">
+    </div>
+    <div class="col-md-5">
+        <em>The dialogue of the cycle modes action allows adding various
+            action which will be cycled through in order on each
+            subsequent activation.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    This action allows the configuration of a list of modes
+    that are cycled through consecutively with each activation. In case
+    that the currently active mode is not part of the list the first
+    mode in the list will be activated.
+</p>
+
+<p class="text-justify">
+    New modes can be added by selecting the desired mode in the drop
+    down list and pressing the <em>Add</em> button. The currently
+    selected mode can be deleted by pressing the <em>Delete</em> button
+    and moved up or down with the <em>Up</em> and <em>Down</em> button
+    respectively.
+</p>
+
+
+<h4 class="subsection">Text to Speech</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_text_to_speech.png">
+    </div>
+    <div class="col-md-5">
+        <em>Text to speech action dialogue which allows entering text to
+            be spoken by Joystick Gremlin</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    This action allows arbitrary text to be spoken by Joystick Gremlin. The
+    system knows how to replace some values with current information. The
+    currently known replacements are listed below.
+</p>
+
+<table class="table">
+    <tr>
+        <th>Expression</th>
+        <th>Replacement</th>
+    </tr>
+
+    <tr>
+        <td>${current_mode}</td>
+        <td>The name of the currently active mode</td>
+    </tr>
+</table>
+
+<p class="alert alert-warning text-justify">
+    The text segments are spoken in the order they are requested and as
+    such queueing multiple long segments can lead to significant delays
+    between them being triggered and played.
+</p>
+
+
+<h3><a name="2_5">2.5 Tools &amp; Actions</a></h3>
+
+<p class="text-justify">
+    In the following section the various tools provided by Joystick
+    Gremlin are described. They can be accessed via the <em>Tools</em>
+    and <em>Actions</em> menus.
+</p>
+
+
+<h4 class="subsection">Mode Manager</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_mode_manager.png">
+    </div>
+    <div class="col-md-5">
+        <em>The mode manager allows the creation, deletion, and renaming
+            of modes as well as defining their relationships.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    The mode manager, accessed via <em>Tools > Manage Modes</em>, allows
+    users to create new modes, delete existing ones and define which
+    mode inherits configurations from others. Pressing "Add Mode" adds a
+    new mode, while pressing the button to the right of each mode with
+    the <strong>x</strong> on it deletes it. Using the drop down menu
+    each mode can be configured to inherit from one other mode by
+    selecting its name or not inheriting from any mode by selecting the
+    "None" entry.
+</p>
+
+
+<h4 class="subsection">User Module Manager</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_user_module_manager.png">
+    </div>
+    <div class="col-md-5">
+        <em>The user module manager dialogue allows to list the custom
+            modules Joystick Gremlin should load.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    While the UI allows to perform common tasks there will be
+    functionality that is not present. However, by using custom modules,
+    described in <a href="/custom_modules">Section 33</a>, the
+    limitations of the UI can easily be overcome.  The module
+    configuration dialogue is accessed via <em>Tools > Manage Custom
+    Modules</em>. The modules listed there will be loaded in conjunction
+    with the UI based configuration, allowing the use of the UI for common
+    tasks and implementing specialised functionality in a custom module.
+    Modules are added via the <em>Add</em> button and likewise removed by
+    selecting the desired module and pressing the <em>Delete</em> button.
+</p>
+
+<div class="alert alert-warning">
+    In order for Joystick Gremlin to successfully load the additional
+    modules they have to be placed in the same folder as the profile
+    file itself.
+</div>
+
+
+<h4 class="subsection">Input Repeater</h4>
+
+<p class="text-justify">
+    By enabling the <em>Input Repeater</em> option, while Joystick
+    Gremlin is active, via <em>Tools > Input Repeater</em>, Joystick
+    Gremlin will repeat the last remapped input after a short wait
+    period. This allows button presses and axes movements to be mapped
+    in-game when the game detects the physical device's inputs instead
+    of the virtual ones. The status bar provides information about the
+    current action of the input repeater when activated.
+</p>
+
+
+<h4 class="subsection">Device Information</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_device_information.png">
+    </div>
+    <div class="col-md-5">
+        <em>The device information dialogue provides an overview of the
+            inputs and identification of the various joystick devices
+            present in the system.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    Information about connected devices can be accessed via <em>Tools >
+    Device Information</em>. This window provides an overview of the
+    devices known to Joystick Gremlin, listing the name as well as some
+    basic information about each device. The <em>System ID</em>
+    represents the order in which the devices are seen by the operating
+    system, while the <em>Hardware ID</em> is an identifier that is
+    unique to each device.
+</p>
+
+<p class="alert alert-warning text-justify">
+    The currently used hardware id is not device, but product specific.
+    As such it can not distinguish between two identical joysticks. To
+    distinguish those the system id is used. When there are no duplicate
+    devices present the system id is ignored.
+</p>
+
+
+<h4 class="subsection">Calibration</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_calibration.png">
+    </div>
+    <div class="col-md-5">
+        <em>The calibration tool allows the calibration of all connected
+            devices independent of Windows.</em>
+    </div>
+</div>
+</br>
+
+<p class="text-justify">
+    The axes calibration screen, accessed via <em>Tools >
+    Calibration</em>, allows the calibration of connected devices
+    independent of Windows. The window shows the current, minimum,
+    centre, and maximum value for each analogue axis of the selected
+    device. To calibrate the axes simply move them through their full
+    range of motions and press the <em>Centred</em> button when all axes
+    are centred. Once done press <em>Save</em> to save the calibration
+    of the currently selected device to the configuration file.
+</p>
+
+
+<h4 class="subsection">Cheatsheet Generation</h4>
+<p class="text-justify">
+    To help remember complex setups Joystick Gremlin has the ability to
+    create PDF and HTML cheatsheets of the current profile. The output lists
+    for each mode the actions of the available devices together with the
+    user provided description.
+</p>
+
+
+<h4 class="subsection">Create 1:1 Mapping</h4>
+<p class="text-justify">
+    In order to make the initial setup quicker Joystick Gremlin can
+    create a 1:1 mapping for the user. To do this select the entry from
+    the <em>Actions</em> menu. This will result in each input being
+    assigned the next free corresponding action, i.e. buttons are mapped
+    to buttons and axes to axes.
+</p>
+
+
+<h4 class="subsection">Options</h4>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/images/dialog_options.png">
+    </div>
+    <div class="col-md-5">
+        <em>The options dialogue which is used to set some default
+            settings and configure the profiles associated with
+            programs.</em>
+    </div>
+</div>
+<p class="text-justify">
+    There are several user controllable options in Joystick Gremlin
+    which can be controlled via the options dialogue, accessible via
+    <em>Tools > Options</em>. Currently the following options are
+    exposed:
+    
+    <dl class="text-justify">
+        <dt>Highlight currently used input</dt>
+        <dd>This option causes Joystick Gremlin to automatically select
+            the input configuration matching the physical input's being
+            used.</dd>
+        <dt>Automatically load profile based on current application</dt>
+        <dd>This option makes Joystick Gremlin to automatically load and
+            activate the profile assigned to the currently active
+            application.</dd>
+    </dl>
+</p>
+
+<p class="text-justify">
+    To configure the automatic profile loading an executable has to be
+    added by pressing on the "plus" symbol to the right of
+    the dropdown menu. Once the executable is added it can be selected
+    from the dropdown menu and then linked to a profile by selecting it
+    from the file selection dialogue opened by pressing the edit button
+    to the right of the text field.
+</p>
