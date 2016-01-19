@@ -14,7 +14,7 @@ added_binaries = [
 
 a = Analysis(
     ["joystick_gremlin.py"],
-    pathex=["C:\\Users\\Ivan\\PycharmProjects\\JoystickGremlin"],
+    pathex=['C:\\Users\\Ivan Dolvich\\PycharmProjects\\JoystickGremlin'],
     binaries=added_binaries,
     datas=added_files,
     hiddenimports=[],
@@ -35,12 +35,12 @@ pyz = PYZ(
 exe = EXE(
     pyz,
     a.scripts,
-    exclude_binaries=False,
+    exclude_binaries=True,
     name="joystick_gremlin",
     debug=False,
     strip=None,
     upx=True,
-    console=True,
+    console=False,
     icon="gfx\\icon.ico"
 )
 
