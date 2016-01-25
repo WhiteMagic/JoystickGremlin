@@ -33,8 +33,7 @@ macros or even changing the currently used configuration mode.
 
 Used Software
 ======================================================================
-- cx_freeze [1]
-- PyHook [3]
+- pyinstaller [1]
 - PyQT5 [2]
 - PyWin32 [5]
 - SDL2 [6]
@@ -46,8 +45,6 @@ Used Software
 
 To obtain current version which work with Python 3.4 you have to
 download the following ones from this alternative page [4].
-- cx_freeze
-- PyHook
 - PyWin32
 
 
@@ -61,24 +58,24 @@ Generating the MSI Installer
 
 The job of turning the Python code in a windows executable and
 packaging everything up into an installable MSI file is performed
-by cx_freeze [1] which you can obtain a more recent version of
-here [4]. Everything else should work using the default setup.py
-script by executing the following:
+by pyinstaller [1] and wix [3]. The steps needed to build the code
+and assemble it into the installer is automated using a batch
+script and can be run as:
   
-  python setup.py bdist_msi
+  deplpy.bat
 
 To simply generate the executable code without the MSI installer the
-following command is used:
+following command can be used:
 
-  python setup.py build
+  pyinstaller -y --clean joystick_gremlin.spec
 
 
 References
 ======================================================================
 
-[ 1] https://bitbucket.org/anthony_tuininga/cx_freeze
+[ 1] http://www.pyinstaller.org/
 [ 2] http://www.riverbankcomputing.co.uk/software/pyqt/intro
-[ 3] http://sourceforge.net/projects/pyhook
+[ 3] http://wixtoolset.org/
 [ 4] http://www.lfd.uci.edu/~gohlke/pythonlibs
 [ 5] http://sourceforge.net/projects/pywin32
 [ 6] https://www.libsdl.org/index.php
