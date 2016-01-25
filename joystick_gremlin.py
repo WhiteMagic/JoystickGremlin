@@ -543,7 +543,6 @@ class GremlinAboutUi(QtWidgets.QWidget):
         license_list = [
             "about/third_party_licenses.html",
             "about/modernuiicons.html",
-            "about/pyhook.html",
             "about/pyqt.html",
             "about/pysdl2.html",
             "about/pywin32.html",
