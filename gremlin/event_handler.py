@@ -21,14 +21,13 @@ import logging
 import time
 from threading import Thread
 
-import pyHook
 from PyQt5 import QtCore
-import pythoncom
 import sdl2
 import sdl2.ext
 
 import gremlin
 from gremlin.common import UiInputType
+from gremlin.keyboard_hook import KeyboardHook
 from gremlin.util import SingletonDecorator
 from gremlin import error, macro, util
 
@@ -58,7 +57,13 @@ def input_type_to_name(input_type):
     }
     return lookup.get(input_type, "Invalid type")
 
+
 def system_event_to_input_event(event_type):
+    """Translates a system event enum into an input enum event.
+
+    :param event_type the event type to translate
+    :return the translated event type
+    """
     lookup = {
         InputType.Keyboard: UiInputType.Keyboard,
         InputType.JoystickAxis: UiInputType.JoystickAxis,
@@ -198,9 +203,8 @@ class EventListener(QtCore.QObject):
     def __init__(self):
         """Creates a new instance."""
         QtCore.QObject.__init__(self)
-        self._hook_manager = pyHook.HookManager()
-        self._hook_manager.KeyAll = self._keyboard_handler
-        self._hook_manager.HookKeyboard()
+        self.keyboard_hook = KeyboardHook()
+        self.keyboard_hook.register(self._keyboard_handler)
         self._joysticks = {}
         self._joystick_guid_map = {}
         self._calibrations = {}
@@ -208,17 +212,17 @@ class EventListener(QtCore.QObject):
         self._keyboard_state = {}
 
         self._init_joysticks()
+        self.keyboard_hook.start()
         Thread(target=self._run).start()
 
     def terminate(self):
         """Stops the loop from running."""
         self._running = False
+        self.keyboard_hook.stop()
 
     def _run(self):
         """Starts the event loop."""
         while self._running:
-            # Process keyboard events
-            pythoncom.PumpWaitingMessages()
             # Process joystick events
             for event in sdl2.ext.get_events():
                 self._joystick_handler(event)
@@ -233,9 +237,9 @@ class EventListener(QtCore.QObject):
         :param event the keyboard event
         """
         # Ignore events we created via the macro system
-        if event.Injected == 0:
-            key_id = (event.ScanCode, event.Extended)
-            is_pressed = not (event.Message & 257) == 257
+        if not event.is_injected:
+            key_id = (event.scan_code, event.is_extended)
+            is_pressed = event.is_pressed
             is_repeat = self._keyboard_state.get(key_id, False) and is_pressed
             # Only emit an event if they key is pressed for the first
             # time or released but not when it's being held down
