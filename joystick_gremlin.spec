@@ -3,7 +3,7 @@
 block_cipher = None
 
 added_files = [
-    ("doc/getting_started.html", "doc"),
+    ("doc", "doc"),
     ("gfx", "gfx"),
     ("templates", "templates"),
 ]
