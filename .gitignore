@@ -6,19 +6,3 @@ __pycache__
 
 /build
 /dist
-/doc/vjoy
-
-# Latex generated stuff
-/doc/manual/*.aux
-/doc/manual/*.auxlock
-/doc/manual/*.bbl
-/doc/manual/*.blg
-/doc/manual/*.dvi
-/doc/manual/*.fdb_latexmk
-/doc/manual/*.fls
-/doc/manual/*.log
-/doc/manual/*.out
-/doc/manual/*.pyg
-/doc/manual/*.toc
-
-/doc/manual/tikz
