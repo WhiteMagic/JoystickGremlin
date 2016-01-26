@@ -1342,7 +1342,10 @@ class InputItemList(QtWidgets.QWidget):
     def _add_key_to_scroll_list_cb(self, key):
         """Adds the key pressed by the user to the list of keyboard
         keys."""
-        # Add the new key to the profile
+        # Add the new key to the profile if it is valid
+        if key is None:
+            return
+
         key_pair = (key.scan_code, key.is_extended)
         # Special handling of the right shift key due to Qt and windows
         # discrepancies in key code representation
