@@ -375,6 +375,12 @@ def main():
     for path in file_list:
         if path not in data:
             data[path] = create_data_for_file(path)
+    paths_to_delete = []
+    for path in data.keys():
+        if path not in file_list:
+            paths_to_delete.append(path)
+    for path in paths_to_delete:
+        del data[path]
     pickle.dump(data, open("wix_data.p", "wb"))
 
     # Create document and file structure
