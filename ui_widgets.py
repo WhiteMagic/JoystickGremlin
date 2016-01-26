@@ -1075,8 +1075,9 @@ class InputItemList(QtWidgets.QWidget):
     currently configured action types.
     """
 
-    # Signal emitted when a button has been selected
-    input_item_selected = QtCore.pyqtSignal(InputIdentifier)
+    # Signal emitted when a button has been selected, contains button
+    # identifier as well as the mode
+    input_item_selected = QtCore.pyqtSignal(InputIdentifier, str)
 
     # Button background palettes
     cur_palette = QtGui.QPalette()
@@ -1309,7 +1310,7 @@ class InputItemList(QtWidgets.QWidget):
         # Load the correct detail content for the newly selected
         # input item
         if identifier.input_id in self.input_items[identifier.input_type]:
-            self.input_item_selected.emit(identifier)
+            self.input_item_selected.emit(identifier, self.current_mode)
         else:
             self.current_identifier = None
             self.current_configuration_dialog = None
@@ -1422,12 +1423,13 @@ class ConfigurationPanel(QtWidgets.QWidget):
         # Add scroll area to the main layout
         self.main_layout.addWidget(self.configuration_scroll)
 
-    def refresh(self, identifier):
+    def refresh(self, identifier, mode_name):
         """Redraws the entire configuration dialog for the given item.
 
         :param identifier the identifier of the item for which to
                 redraw the widget
         """
+        self.current_mode = mode_name
         self._remove_invalid_actions_and_inputs()
 
         # Create InputItemConfigurationPanel object and hook
@@ -1464,7 +1466,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
 
         # Select previous selection if it exists
         if self.current_identifier is not None:
-            self.refresh(self.current_identifier)
+            self.refresh(self.current_identifier, new_mode)
 
     def _remove_invalid_actions_and_inputs(self):
         """Perform maintenance on the previously selected item.
