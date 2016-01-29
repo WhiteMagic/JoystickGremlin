@@ -3,6 +3,7 @@
 block_cipher = None
 
 added_files = [
+    ("about", "about"),
     ("doc", "doc"),
     ("gfx", "gfx"),
     ("templates", "templates"),
