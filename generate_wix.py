@@ -95,6 +95,17 @@ def create_folder_structure(folder_list):
     structure["pfiles"].append(structure["h2ik"])
     structure["h2ik"].append(structure["jg"])
 
+    # Component to remove the H2ik folder
+    node = create_node(
+        "Component",
+        {
+            "Guid": "cec7a9a7-d686-4355-8d9d-e1d211d3edb8",
+            "Id": "H2ikProgramFilesFolder"
+        }
+    )
+    node.append(create_node("RemoveFolder", {"Id": "RemoveH2iKFolder", "On": "uninstall"}))
+    structure["h2ik"].append(node)
+
     # Create the folder structure for the Joystick Gremlin install
     for folder in folder_list:
         dirs = folder.split("\\")
@@ -160,6 +171,9 @@ def create_feature(data):
             })
     node.append(create_node(
         "ComponentRef", {"Id": "ProgramMenuDir"}
+    ))
+    node.append(create_node(
+        "ComponentRef", {"Id": "H2ikProgramFilesFolder"}
     ))
     for entry in data.values():
         node.append(create_node(
