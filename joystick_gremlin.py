@@ -1579,7 +1579,13 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Creates a 1 to 1 mapping of the given device to the first
         vJoy device.
         """
+        # Don't attempt to create the mapping for the "Getting Started"
+        # widget
+        if isinstance(self.ui.devices.currentWidget(), QtWidgets.QTextEdit):
+            return
+
         device_profile = self.ui.devices.currentWidget().device_profile
+        # Don't create mappings for non joystick devices
         if device_profile.type != profile.DeviceType.Joystick:
             return
 
