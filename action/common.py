@@ -550,6 +550,10 @@ class AbstractAction(object):
             UiInputType.Keyboard
         ]
 
+        # If no condition is present simply return
+        if self.condition is None:
+            return
+
         if input_type in button_types and \
                 action_widget in action.condition_map[input_type]:
             node.set("on-press", str(self.condition.on_press))
