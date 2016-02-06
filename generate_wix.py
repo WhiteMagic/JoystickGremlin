@@ -196,12 +196,18 @@ def create_document():
         {
             "Name": "Joystick Gremlin",
             "Manufacturer": "H2IK",
-            "Id": "a0a7fc85-8651-4b57-b7ee-a7f718857939",
+            #"Id": "a0a7fc85-8651-4b57-b7ee-a7f718857939", # 4.0.0
+            "Id": "447529e9-4f78-4baf-b51c-21db602a5f7b", # 4.0.1
             "UpgradeCode": "0464914b-97da-4889-8699-bcde4e767517",
             "Language": "1033",
             "Codepage": "1252",
-            "Version": "4.0.0"
+            "Version": "4.0.1"
         })
+    mug = create_node("MajorUpgrade",
+        {
+            "DowngradeErrorMessage": "Cannot directly downgrade, uninstall current version first."
+        }
+    )
     pkg = create_node(
         "Package",
         {
@@ -218,6 +224,7 @@ def create_document():
 
     # Package needs to be added before media
     prod.append(pkg)
+    prod.append(mug)
     prod.append(create_node(
         "Media",
         {
