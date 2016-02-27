@@ -582,6 +582,15 @@ class ModeManagerUi(QtWidgets.QWidget):
 
         self._create_ui()
 
+        # Disable keyboard event handler
+        el = gremlin.event_handler.EventListener()
+        el.keyboard_hook.stop()
+
+    def closeEvent(self, QCloseEvent):
+        # Reenable keyboard event handler
+        el = gremlin.event_handler.EventListener()
+        el.keyboard_hook.start()
+
     def _create_ui(self):
         """Creates the required UII elements."""
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -809,6 +818,14 @@ class ModuleManagerUi(QtWidgets.QWidget):
         self.setWindowTitle("User Module Manager")
 
         self._create_ui()
+                # Disable keyboard event handler
+        el = gremlin.event_handler.EventListener()
+        el.keyboard_hook.stop()
+
+    def closeEvent(self, QCloseEvent):
+        # Reenable keyboard event handler
+        el = gremlin.event_handler.EventListener()
+        el.keyboard_hook.start()
 
     def _create_ui(self):
         """Creates all the UI elements."""
