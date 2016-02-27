@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import atexit
 import ctypes
 from ctypes import wintypes
@@ -70,7 +71,6 @@ class KeyEvent(object):
         return self._is_injected
 
 
-
 @SingletonDecorator
 class KeyboardHook(object):
 
@@ -111,6 +111,8 @@ class KeyboardHook(object):
         if self._running:
             self._running = False
             self._listen_thread.join()
+            # Recreate thread so we can launch it again
+            self._listen_thread = threading.Thread(target=self._listen)
 
     def _process_event(self, n_code, w_param, l_param):
         """Process a single event.
@@ -129,7 +131,7 @@ class KeyboardHook(object):
             scan_code = l_param[1]
             is_extended = l_param[2] is not None and bool(l_param[2] & 0x0001)
             is_pressed = w_param in key_press_types
-            is_injected = l_param[2] is not None and  bool(l_param[2] & 0x0010)
+            is_injected = l_param[2] is not None and bool(l_param[2] & 0x0010)
 
             # Create the event and pass it to all all registered callbacks
             evt = KeyEvent(scan_code, is_extended, is_pressed, is_injected)
