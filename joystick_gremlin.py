@@ -1072,10 +1072,15 @@ class GremlinUi(QtWidgets.QMainWindow):
             otherwise
         """
         if checked:
+            # Generate the code for the profile and run it
             self._profile_auto_activated = False
             self.generate()
             self.runner.start(self._profile.build_inheritance_tree())
+            # Retrieve last active profile and switch to it
+            eh = gremlin.event_handler.EventHandler()
+            eh.change_mode(self.config.get_last_mode(self._profile_fname))
         else:
+            # Stop running the code
             self.runner.stop()
             self._update_statusbar_active(False)
             self._profile_auto_activated = False

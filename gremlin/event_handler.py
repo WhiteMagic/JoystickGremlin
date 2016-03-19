@@ -439,6 +439,9 @@ class EventHandler(QtCore.QObject):
             self._active_mode = new_mode
             self.mode_changed.emit(self._active_mode)
 
+            config = gremlin.config.Configuration()
+            config.set_last_mode(config.last_profile, self._active_mode)
+
     def resume(self):
         """Resumes the processing of callbacks."""
         self.process_callbacks = True
