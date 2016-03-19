@@ -95,7 +95,6 @@ class CodeRunner(object):
 
             # Connect signals
             evt_listener = gremlin.event_handler.EventListener()
-            evt_listener._init_joysticks()
             kb = input_devices.Keyboard()
             evt_listener.keyboard_event.connect(self.event_handler.process_event)
             evt_listener.joystick_event.connect(self.event_handler.process_event)
@@ -492,7 +491,7 @@ class CalibrationUi(QtWidgets.QWidget):
         :param index the index of the currently selected device
             in the dropdown menu
         """
-        ui_widgets._clear_layout(self.axes_layout)
+        ui_widgets.clear_layout(self.axes_layout)
         self.axes = []
         self.current_selection_id = index
         for i in range(self.devices[index].axes):
@@ -818,7 +817,7 @@ class ModuleManagerUi(QtWidgets.QWidget):
         self.setWindowTitle("User Module Manager")
 
         self._create_ui()
-                # Disable keyboard event handler
+        # Disable keyboard event handler
         el = gremlin.event_handler.EventListener()
         el.keyboard_hook.stop()
 
@@ -1680,8 +1679,8 @@ if __name__ == "__main__":
     app.exec_()
 
     # Terminate potentially running EventListener loop
-    el = gremlin.event_handler.EventListener()
-    el.terminate()
+    event_listener = gremlin.event_handler.EventListener()
+    event_listener.terminate()
 
     # Properly terminate the runner instance should it be running
     ui.runner.stop()

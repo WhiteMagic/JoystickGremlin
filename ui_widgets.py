@@ -1193,7 +1193,7 @@ class InputItemList(QtWidgets.QWidget):
     def _populate_item_list(self):
         """Populates the widget with all required items."""
         # Remove existing content
-        _clear_layout(self.scroll_layout)
+        clear_layout(self.scroll_layout)
         self.input_items = {
             UiInputType.JoystickAxis: {},
             UiInputType.JoystickButton: {},
@@ -1431,6 +1431,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
 
         :param identifier the identifier of the item for which to
                 redraw the widget
+        :param mode_name name of the currently active mode
         """
         self.current_mode = mode_name
         self._remove_invalid_actions_and_inputs()
@@ -1450,7 +1451,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
         self.current_identifier = identifier
 
         # Visualize the dialog
-        _clear_layout(self.configuration_layout)
+        clear_layout(self.configuration_layout)
         self.configuration_layout.addWidget(
             self.current_configuration_dialog
         )
@@ -1513,7 +1514,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
         self.input_item_changed.emit(self.current_identifier)
 
 
-def _clear_layout(layout):
+def clear_layout(layout):
     """Removes all items from the given layout.
 
     :param layout the layout from which to remove all items
@@ -1521,7 +1522,7 @@ def _clear_layout(layout):
     while layout.count() > 0:
         child = layout.takeAt(0)
         if child.layout():
-            _clear_layout(child.layout())
+            clear_layout(child.layout())
         elif child.widget():
             child.widget().hide()
             child.widget().deleteLater()

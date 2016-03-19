@@ -38,8 +38,7 @@ def format_condition(condition, data=None):
             # Keyboard key is being used as a shift button
             if condition.shift_button["hardware_id"] == 0:
                 shift_term = "keyboard.is_pressed(gremlin.macro." \
-                             "key_from_code({:d}, {}))".format \
-                (
+                             "key_from_code({:d}, {}))".format(
                     condition.shift_button["id"][0],
                     condition.shift_button["id"][1]
                 )
@@ -462,7 +461,7 @@ class AbstractAction(object):
 
         :param node the XML node to parse
         """
-        raise gremlin.error.NotImplementedError(
+        raise gremlin.error.MissingImplementationError(
             "AbstractAction.from_xml not implemented in subclass"
         )
 
@@ -480,7 +479,7 @@ class AbstractAction(object):
 
         :return XML node representing this action
         """
-        raise gremlin.error.NotImplementedError(
+        raise gremlin.error.MissingImplementationError(
             "AbstractAction.to_xml not implemented in subclass"
         )
 
@@ -498,13 +497,17 @@ class AbstractAction(object):
 
         :return code fragments representing the action
         """
-        raise gremlin.error.NotImplementedError(
+        raise gremlin.error.MissingImplementationError(
             "AbstractAction.to_code not implemented in subclass"
         )
 
     def _code_generation(self, template_name, params):
-        params["axis_button_name"] = "axis_button_{:04d}".format(AbstractAction.next_code_id)
-        params["axis_button_cb"] = "axis_button_callback_{:04d}".format(AbstractAction.next_code_id)
+        params["axis_button_name"] = "axis_button_{:04d}".format(
+            AbstractAction.next_code_id
+        )
+        params["axis_button_cb"] = "axis_button_callback_{:04d}".format(
+            AbstractAction.next_code_id
+        )
         params["helpers"] = template_helpers
         params["InputType"] = UiInputType
 
@@ -561,13 +564,28 @@ class AbstractAction(object):
 
             if self.condition.shift_button is not None:
                 shift_node = ElementTree.Element("shift")
-                shift_node.set("hardware_id", str(self.condition.shift_button["hardware_id"]))
-                shift_node.set("windows_id", str(self.condition.shift_button["windows_id"]))
+                shift_node.set(
+                    "hardware_id",
+                    str(self.condition.shift_button["hardware_id"])
+                )
+                shift_node.set(
+                    "windows_id",
+                    str(self.condition.shift_button["windows_id"])
+                )
                 if self.condition.shift_button["hardware_id"] == 0:
-                    shift_node.set("id", str(self.condition.shift_button["id"][0]))
-                    shift_node.set("extended", str(self.condition.shift_button["id"][1]))
+                    shift_node.set(
+                        "id",
+                        str(self.condition.shift_button["id"][0])
+                    )
+                    shift_node.set(
+                        "extended",
+                        str(self.condition.shift_button["id"][1])
+                    )
                 else:
-                    shift_node.set("id", str(self.condition.shift_button["id"]))
+                    shift_node.set(
+                        "id",
+                        str(self.condition.shift_button["id"])
+                    )
                 node.append(shift_node)
 
         elif input_type == UiInputType.JoystickHat and \
@@ -614,7 +632,7 @@ class AbstractActionWidget(QtWidgets.QFrame):
 
     def _setup_ui(self):
         """Creates all the elements necessary for the widget."""
-        raise gremlin.error.NotImplementedError(
+        raise gremlin.error.MissingImplementationError(
             "AbstractActionWidget._setup_ui not implemented in subclass"
         )
 
@@ -622,7 +640,7 @@ class AbstractActionWidget(QtWidgets.QFrame):
         """Updates the action_data object of this instance with the
         current state of the widget.
         """
-        raise gremlin.error.NotImplementedError(
+        raise gremlin.error.MissingImplementationError(
             "ActionWidget.to_profile not implemented in subclass"
         )
 
@@ -632,7 +650,7 @@ class AbstractActionWidget(QtWidgets.QFrame):
 
         :param action_data the data with which to populate this action
         """
-        raise gremlin.error.NotImplementedError(
+        raise gremlin.error.MissingImplementationError(
             "ActionWidget.from_profile not implemented in subclass"
         )
 

@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import configparser
 import importlib
 import logging
 from mako.template import Template
@@ -170,6 +169,7 @@ def axis_calibration(value, minimum, center, maximum):
 
     :param value the raw value to process
     :param minimum the minimum value of the axis
+    :param center the center value of the axis
     :param maximum the maximum value of the axis
     :return the calibrated value in [-1, 1] corresponding to the
         provided raw value

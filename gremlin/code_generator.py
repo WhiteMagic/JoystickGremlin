@@ -93,6 +93,7 @@ def actions_to_code(actions, code):
     """Generates code corresponding to a list of actions.
 
     :param actions list of action instances from which to generate code
+    :param code output storage for the generated code
     :return code corresponding to the provided list of actions
     """
     for entry in actions:

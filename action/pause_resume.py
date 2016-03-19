@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mako.template import Template
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, template_helpers
+from action.common import AbstractAction, AbstractActionWidget
 from gremlin.common import UiInputType
 
 

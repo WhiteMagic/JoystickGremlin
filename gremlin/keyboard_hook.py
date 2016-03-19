@@ -158,8 +158,10 @@ class KeyboardHook(object):
         keyboard_hook = hook_factory(self._process_event)
 
         # Hook our callback into the system
-        ctypes.windll.kernel32.GetModuleHandleW.restype = ctypes.wintypes.HMODULE
-        ctypes.windll.kernel32.GetModuleHandleW.argtypes = [ctypes.wintypes.LPCWSTR]
+        ctypes.windll.kernel32.GetModuleHandleW.restype = \
+            ctypes.wintypes.HMODULE
+        ctypes.windll.kernel32.GetModuleHandleW.argtypes = \
+            [ctypes.wintypes.LPCWSTR]
         self.hook_id = ctypes.windll.user32.SetWindowsHookExA(
                 0x00D,
                 keyboard_hook,

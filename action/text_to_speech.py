@@ -18,7 +18,7 @@
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, template_helpers
+from action.common import AbstractAction, AbstractActionWidget
 from gremlin.common import UiInputType
 
 

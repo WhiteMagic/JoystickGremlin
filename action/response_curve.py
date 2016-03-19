@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, DualSlider,\
-    template_helpers
+from action.common import AbstractAction, AbstractActionWidget, DualSlider
 import gremlin
 from gremlin.common import UiInputType
 
@@ -41,7 +39,7 @@ class AbstractCurveModel(object):
 
         :return curve function corresponding to the model
         """
-        raise gremlin.error.NotImplementedError("Implementation missing")
+        raise gremlin.error.MissingImplementationError("Implementation missing")
 
     def get_control_points(self):
         """Returns the list of control points.
@@ -57,7 +55,7 @@ class AbstractCurveModel(object):
         :param handles list of potential handles
         :return the newly created control point
         """
-        raise gremlin.error.NotImplementedError("Implementation missing")
+        raise gremlin.error.MissingImplementationError("Implementation missing")
 
     def remove_control_point(self, control_point):
         """Removes the specified control point if it exists in the model.
@@ -75,7 +73,7 @@ class AbstractCurveModel(object):
         :param identifier the identifier of a control point to ignore
         :return True if valid, False otherwise
         """
-        raise gremlin.error.NotImplementedError("Implementation missing")
+        raise gremlin.error.MissingImplementationError("Implementation missing")
 
 
 class CubicSplineModel(AbstractCurveModel):
@@ -201,7 +199,7 @@ class ControlPoint(object):
     # Identifier of the next ControlPoint instance being created
     next_id = 0
 
-    def __init__(self, model, center, handles=[]):
+    def __init__(self, model, center, handles=()):
         """Creates a new instance.
 
         :param model the model the control point is associated with

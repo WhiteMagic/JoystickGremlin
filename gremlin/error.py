@@ -51,7 +51,7 @@ class KeyboardError(GremlinError):
         GremlinError.__init__(self, value)
 
 
-class NotImplementedError(GremlinError):
+class MissingImplementationError(GremlinError):
 
     """Exception raised when a method is not implemented."""
 

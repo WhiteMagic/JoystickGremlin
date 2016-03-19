@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget,\
-    parse_bool, template_helpers
+from action.common import AbstractAction, AbstractActionWidget, parse_bool
 from gremlin.common import UiInputType
 import gremlin.macro
 
@@ -155,6 +153,7 @@ class MacroWidget(AbstractActionWidget):
         )
         assert(isinstance(profile_data, Macro))
 
+        self.model = MacroListModel()
         self._recording = False
 
     def _setup_ui(self):

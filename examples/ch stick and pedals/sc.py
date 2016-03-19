@@ -1,4 +1,3 @@
-import logging
 import gremlin
 from gremlin.spline import CubicSpline
 from gremlin.input_devices import keyboard, macro
@@ -87,6 +86,7 @@ def set_weapon_group(gid, is_pressed):
         if sum(active_weapon_groups.values()) == 0:
             active_curve = default_curve
 
+
 def pedal_position():
     return right_pedal / 2 - left_pedal / 2
 
@@ -167,21 +167,21 @@ def reset_roll(event, vjoy):
         gremlin.control_action.switch_mode("Global")
 
 
-@keyboard("1")
+@keyboard("1", "Global")
 def throttle_0(event, vjoy):
     vjoy[1].axis[AxisName.Z].value = 1.0
 
 
-@keyboard("2")
+@keyboard("2", "Global")
 def throttle_33(event, vjoy):
     vjoy[1].axis[AxisName.Z].value = 0.33
 
 
-@keyboard("3")
+@keyboard("3", "Global")
 def throttle_66(event, vjoy):
     vjoy[1].axis[AxisName.Z].value = -0.33
 
 
-@keyboard("4")
+@keyboard("4", "Global")
 def throttle_100(event, vjoy):
     vjoy[1].axis[AxisName.Z].value = -1.0

@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mako.template import Template
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, template_helpers
+from action.common import AbstractAction, AbstractActionWidget
 from gremlin.common import UiInputType
 import gremlin.util
 
@@ -280,7 +279,8 @@ class CycleModes(AbstractAction):
             "cycle_modes",
             {
                 "entry": self,
-                "mode_list_name": "mode_list_{:04d}".format(CycleModes.next_code_id),
+                "mode_list_name":
+                    "mode_list_{:04d}".format(CycleModes.next_code_id),
                 "gremlin": gremlin
             }
         )
