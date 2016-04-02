@@ -34,8 +34,8 @@ import sdl2.hints
 
 import gremlin
 from gremlin.code_generator import CodeGenerator
-from gremlin import documenter, input_devices, util
-from gremlin.event_handler import InputType, input_type_to_name
+from gremlin import documenter, input_devices
+from gremlin.event_handler import input_type_to_name
 from ui_about import Ui_About
 from ui_gremlin import Ui_Gremlin
 import ui_widgets
@@ -207,14 +207,14 @@ class Repeater(QtCore.QObject):
     def emit_events(self):
         """Emits events until stopped."""
         index = 0
-        event_listener = EventListener()
+        el = EventListener()
 
         # Repeatedly send events until the thread is interrupted
         while self.is_running:
             if self._events[0].event_type == InputType.Keyboard:
-                event_listener.keyboard_event.emit(self._events[index])
+                el.keyboard_event.emit(self._events[index])
             else:
-                event_listener.joystick_event.emit(self._events[index])
+                el.joystick_event.emit(self._events[index])
 
             self._update_func("{} {}".format(
                 input_type_to_name(self._events[index].event_type),
@@ -237,7 +237,7 @@ class Repeater(QtCore.QObject):
             event.value = 0.0
         elif event.event_type == InputType.JoystickHat:
             event.value = (0, 0)
-        event_listener.joystick_event.emit(event)
+        el.joystick_event.emit(event)
         self._update_func("Waiting for input")
 
 
@@ -512,8 +512,8 @@ class CalibrationUi(QtWidgets.QWidget):
 
         :param event the close event
         """
-        event_listener = EventListener()
-        event_listener.joystick_event.disconnect(self._handle_event)
+        el = EventListener()
+        el.joystick_event.disconnect(self._handle_event)
         self.closed.emit()
 
 
@@ -585,8 +585,8 @@ class ModeManagerUi(QtWidgets.QWidget):
         el = gremlin.event_handler.EventListener()
         el.keyboard_hook.stop()
 
-    def closeEvent(self, QCloseEvent):
-        # Reenable keyboard event handler
+    def closeEvent(self, event):
+        # Re-enable keyboard event handler
         el = gremlin.event_handler.EventListener()
         el.keyboard_hook.start()
 
@@ -821,8 +821,8 @@ class ModuleManagerUi(QtWidgets.QWidget):
         el = gremlin.event_handler.EventListener()
         el.keyboard_hook.stop()
 
-    def closeEvent(self, QCloseEvent):
-        # Reenable keyboard event handler
+    def closeEvent(self, event):
+        # Re-enable keyboard event handler
         el = gremlin.event_handler.EventListener()
         el.keyboard_hook.start()
 
@@ -1193,7 +1193,8 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param event the event to repeat
         """
-        vjoy_device_id = [dev.hardware_id for dev in self.devices if dev.is_virtual][0]
+        vjoy_device_id = \
+            [dev.hardware_id for dev in self.devices if dev.is_virtual][0]
         # Ignore VJoy events
         if self.repeater.is_running or event.hardware_id == vjoy_device_id:
             return
@@ -1229,13 +1230,13 @@ class GremlinUi(QtWidgets.QMainWindow):
     def _set_joystick_input_highlighting(self, is_enabled):
         """Enables / disables the highlighting of the current input
         when used."""
-        event_listener = EventListener()
+        el = EventListener()
         if is_enabled:
-            event_listener.joystick_event.connect(
+            el.joystick_event.connect(
                 self._joystick_input_selection
             )
         else:
-            event_listener.joystick_event.disconnect(
+            el.joystick_event.disconnect(
                 self._joystick_input_selection
             )
 
@@ -1625,7 +1626,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         main_profile = device_profile.parent
         from action.common import ButtonCondition
         for input_type in input_types:
-            for entry in mode._config[input_type].values():
+            for entry in mode.config[input_type].values():
                 item_list = main_profile.list_unused_vjoy_inputs(
                     vjoy_devices
                 )

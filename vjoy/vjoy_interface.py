@@ -92,7 +92,6 @@ class VJoyInterface(object):
             "arguments": [ctypes.c_uint, ctypes.c_uint],
             "returns": ctypes.c_bool
         },
-        # FIXME: why void* instead of long* ?
         "GetVJDAxisMax": {
             "arguments": [ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p],
             "returns": ctypes.c_bool

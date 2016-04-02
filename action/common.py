@@ -37,8 +37,7 @@ def format_condition(condition, data=None):
         if condition.shift_button is not None:
             # Keyboard key is being used as a shift button
             if condition.shift_button["hardware_id"] == 0:
-                shift_term = "keyboard.is_pressed(gremlin.macro." \
-                             "key_from_code({:d}, {}))".format(
+                shift_term = "keyboard.is_pressed(gremlin.macro.key_from_code({:d}, {}))".format(
                     condition.shift_button["id"][0],
                     condition.shift_button["id"][1]
                 )
@@ -122,6 +121,7 @@ def coords_to_string(container):
     )
 
 
+# Dictionary containing template helper functions
 template_helpers = {
     "format_condition": format_condition,
     "list_tostring": list_to_string,

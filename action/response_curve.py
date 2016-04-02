@@ -947,7 +947,9 @@ class AxisResponseCurveWidget(AbstractActionWidget):
         self.action_data.control_points = []
         if self.action_data.mapping_type == "cubic-spline":
             for cp in self.curve_model.get_control_points():
-                self.action_data.control_points.append([cp.center.x, cp.center.y])
+                self.action_data.control_points.append(
+                    [cp.center.x, cp.center.y]
+                )
         elif self.action_data.mapping_type == "cubic-bezier-spline":
             control_points = sorted(
                 self.curve_model.get_control_points(),
@@ -955,15 +957,29 @@ class AxisResponseCurveWidget(AbstractActionWidget):
             )
             for cp in control_points:
                 if cp.center.x == -1:
-                    self.action_data.control_points.append([cp.center.x, cp.center.y])
-                    self.action_data.control_points.append([cp.handles[0].x, cp.handles[0].y])
+                    self.action_data.control_points.append(
+                        [cp.center.x, cp.center.y]
+                    )
+                    self.action_data.control_points.append(
+                        [cp.handles[0].x, cp.handles[0].y]
+                    )
                 elif cp.center.x == 1:
-                    self.action_data.control_points.append([cp.handles[0].x, cp.handles[0].y])
-                    self.action_data.control_points.append([cp.center.x, cp.center.y])
+                    self.action_data.control_points.append(
+                        [cp.handles[0].x, cp.handles[0].y]
+                    )
+                    self.action_data.control_points.append(
+                        [cp.center.x, cp.center.y]
+                    )
                 else:
-                    self.action_data.control_points.append([cp.handles[0].x, cp.handles[0].y])
-                    self.action_data.control_points.append([cp.center.x, cp.center.y])
-                    self.action_data.control_points.append([cp.handles[1].x, cp.handles[1].y])
+                    self.action_data.control_points.append(
+                        [cp.handles[0].x, cp.handles[0].y]
+                    )
+                    self.action_data.control_points.append(
+                        [cp.center.x, cp.center.y]
+                    )
+                    self.action_data.control_points.append(
+                        [cp.handles[1].x, cp.handles[1].y]
+                    )
 
         self.action_data.is_valid = True
 

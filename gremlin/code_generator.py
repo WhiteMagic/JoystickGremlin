@@ -191,7 +191,7 @@ class CodeGenerator(object):
             mode=mode
         ))
 
-        for input_type, input_items in mode._config.items():
+        for input_type, input_items in mode.config.items():
             for entry in input_items.values():
                 self.generate_input_item(entry, mode, index)
 

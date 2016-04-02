@@ -132,7 +132,8 @@ class RemapWidget(AbstractActionWidget):
 
     def to_profile(self):
         vjoy_device_id = self.device_dropdown.currentIndex()
-        input_selection = self.input_item_dropdowns[vjoy_device_id].currentText()
+        input_selection = \
+            self.input_item_dropdowns[vjoy_device_id].currentText()
         # Count devices starting at 1 rather then 0
         vjoy_device_id += 1
 

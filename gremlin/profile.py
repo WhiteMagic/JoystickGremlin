@@ -202,15 +202,15 @@ class Profile(object):
         remap_actions = []
         for dev in self.devices.values():
             for mode in dev.modes.values():
-                for item in mode._config[UiInputType.JoystickAxis].values():
+                for item in mode.config[UiInputType.JoystickAxis].values():
                     remap_actions.extend(
                         [e for e in item.actions if isinstance(e, action.remap.Remap)]
                     )
-                for item in mode._config[UiInputType.JoystickButton].values():
+                for item in mode.config[UiInputType.JoystickButton].values():
                     remap_actions.extend(
                         [e for e in item.actions if isinstance(e, action.remap.Remap)]
                     )
-                for item in mode._config[UiInputType.JoystickHat].values():
+                for item in mode.config[UiInputType.JoystickHat].values():
                     remap_actions.extend(
                         [e for e in item.actions if isinstance(e, action.remap.Remap)]
                     )
@@ -380,7 +380,7 @@ class Mode(object):
         self.inherit = None
         self.name = None
 
-        self._config = {
+        self.config = {
             UiInputType.JoystickAxis: {},
             UiInputType.JoystickButton: {},
             UiInputType.JoystickHat: {},
@@ -397,7 +397,7 @@ class Mode(object):
         for child in node:
             item = InputItem(self)
             item.from_xml(child)
-            self._config[item.input_type][item.input_id] = item
+            self.config[item.input_type][item.input_id] = item
 
     def to_xml(self):
         """Generates XML code for this DeviceConfiguration.
@@ -408,7 +408,7 @@ class Mode(object):
         node.set("name", self.name)
         if self.inherit is not None:
             node.set("inherit", self.inherit)
-        for input_items in self._config.values():
+        for input_items in self.config.values():
             for item in input_items.values():
                 node.append(item.to_xml())
         return node
@@ -420,8 +420,8 @@ class Mode(object):
         :param input_type the type of the input
         :param input_id the index of the input
         """
-        if input_id in self._config[input_type]:
-            del self._config[input_type][input_id]
+        if input_id in self.config[input_type]:
+            del self.config[input_type][input_id]
 
     def get_data(self, input_type, input_id):
         """Returns the configuration data associated with the provided
@@ -432,13 +432,13 @@ class Mode(object):
         :return InputItem corresponding to the provided combination of
             type and id
         """
-        assert(input_type in self._config)
-        if input_id not in self._config[input_type]:
+        assert(input_type in self.config)
+        if input_id not in self.config[input_type]:
             entry = InputItem(self)
             entry.input_type = input_type
             entry.input_id = input_id
-            self._config[input_type][input_id] = entry
-        return self._config[input_type][input_id]
+            self.config[input_type][input_id] = entry
+        return self.config[input_type][input_id]
 
     def set_data(self, input_type, input_id, data):
         """Sets the data of an InputItem.
@@ -447,8 +447,8 @@ class Mode(object):
         :param input_id the id of the InputItem
         :param data the data of the InputItem
         """
-        assert(input_type in self._config)
-        self._config[input_type][input_id] = data
+        assert(input_type in self.config)
+        self.config[input_type][input_id] = data
 
     def has_data(self, input_type, input_id):
         """Returns True if data for the given input exists, False otherwise.
@@ -457,7 +457,7 @@ class Mode(object):
         :param input_id the id of the InputItem
         :return True if data exists, False otherwise
         """
-        return input_id in self._config[input_type]
+        return input_id in self.config[input_type]
 
 
 class InputItem(object):

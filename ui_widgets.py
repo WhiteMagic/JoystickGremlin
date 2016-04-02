@@ -126,7 +126,7 @@ class InputListenerWidget(QtWidgets.QFrame):
         :param event the keypress event to be processed
         """
         if event.event_type == InputType.JoystickButton and \
-                event.is_pressed == False:
+                not event.is_pressed:
             self.callback(event)
             self._close_window()
 
@@ -308,7 +308,9 @@ class InputItemButton(QtWidgets.QFrame):
 
         self.setFrameShape(QtWidgets.QFrame.Box)
         self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.addWidget(QtWidgets.QLabel(self._create_button_label()))
+        self.main_layout.addWidget(
+            QtWidgets.QLabel(self._create_button_label())
+        )
         self.main_layout.addStretch(0)
         self.setMinimumSize(100, 40)
 
@@ -724,7 +726,7 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         return is_hat and not is_remap
 
     def _is_axis(self):
-        """Returns True if the action_widget is associated witha na axis.
+        """Returns True if the action_widget is associated with an axis.
 
         :return True if the action_widget is associated with an axis,
             False otherwise
@@ -1250,7 +1252,7 @@ class InputItemList(QtWidgets.QWidget):
         # Add existing keys to the scroll
         mode = self.device_profile.modes[self.current_mode]
         key_dict = {}
-        for key, entry in mode._config[UiInputType.Keyboard].items():
+        for key, entry in mode.config[UiInputType.Keyboard].items():
             key_dict[macro.key_from_code(key[0], key[1]).name] = entry
 
         for key_string in sorted(key_dict.keys()):
@@ -1497,7 +1499,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
             # match.
             if self.device_profile.type == profile.DeviceType.Keyboard:
                 if (item_profile.parent.name == self.current_mode) and \
-                    len(item_profile.actions) == 0:
+                        len(item_profile.actions) == 0:
                     self.device_profile.modes[self.current_mode].delete_data(
                         UiInputType.Keyboard,
                         item_profile.input_id

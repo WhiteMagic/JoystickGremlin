@@ -37,7 +37,7 @@ class MacroListModel(QtCore.QAbstractListModel):
         """
         QtCore.QAbstractListModel.__init__(self, parent)
 
-        self._entries = []
+        self.entries = []
 
     def rowCount(self, parent=None):
         """Returns the number of rows in the model.
@@ -45,7 +45,7 @@ class MacroListModel(QtCore.QAbstractListModel):
         :param parent the parent of the model
         :return number of rows in the model
         """
-        return len(self._entries)
+        return len(self.entries)
 
     def data(self, index, role):
         """Return the data of the index for the specified role.
@@ -55,8 +55,8 @@ class MacroListModel(QtCore.QAbstractListModel):
         :return data formatted for the given role at the given index
         """
         idx = index.row()
-        if role == QtCore.Qt.DisplayRole and idx < len(self._entries):
-            entry = self._entries[idx]
+        if role == QtCore.Qt.DisplayRole and idx < len(self.entries):
+            entry = self.entries[idx]
             if isinstance(entry, gremlin.macro.Macro.Pause):
                 return "Pause for {:.4f} s".format(entry.duration)
             elif isinstance(entry, gremlin.macro.Macro.KeyAction):
@@ -76,7 +76,7 @@ class MacroListModel(QtCore.QAbstractListModel):
         """
         if index.isValid and role == QtCore.Qt.EditRole:
             idx = index.row()
-            entry = self._entries[idx]
+            entry = self.entries[idx]
             if isinstance(entry, gremlin.macro.Macro.Pause):
                 try:
                     entry.duration = float(value)
@@ -97,7 +97,7 @@ class MacroListModel(QtCore.QAbstractListModel):
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
 
-        entry = self._entries[index.row()]
+        entry = self.entries[index.row()]
         if isinstance(entry, gremlin.macro.Macro.Pause):
             return QtCore.QAbstractItemModel.flags(self, index) | \
                 QtCore.Qt.ItemIsEditable
@@ -110,9 +110,9 @@ class MacroListModel(QtCore.QAbstractListModel):
 
         :param index the index of the entry to remove
         """
-        if 0 <= index < len(self._entries):
+        if 0 <= index < len(self.entries):
             self.beginRemoveRows(self.index(0, 0), index, index)
-            del self._entries[index]
+            del self.entries[index]
             self.endRemoveRows()
 
     def add_entry(self, index, entry):
@@ -122,7 +122,7 @@ class MacroListModel(QtCore.QAbstractListModel):
         :param entry the entry to insert
         """
         self.beginInsertRows(QtCore.QModelIndex(), index, index)
-        self._entries.insert(index+1, entry)
+        self.entries.insert(index + 1, entry)
         self.endInsertRows()
 
     def swap(self, id1, id2):
@@ -133,9 +133,9 @@ class MacroListModel(QtCore.QAbstractListModel):
         :param id1 first index
         :param id2 second index
         """
-        if -1 < id1 < len(self._entries) and -1 < id2 < len(self._entries):
-            self._entries[id1], self._entries[id2] = \
-                self._entries[id2], self._entries[id1]
+        if -1 < id1 < len(self.entries) and -1 < id2 < len(self.entries):
+            self.entries[id1], self.entries[id2] = \
+                self.entries[id2], self.entries[id1]
             self.dataChanged.emit(self.index(id1, 0), self.index(id2, 0))
 
 
@@ -227,7 +227,7 @@ class MacroWidget(AbstractActionWidget):
             self._append_entry(action)
 
     def to_profile(self):
-        self.action_data.sequence = self.model._entries
+        self.action_data.sequence = self.model.entries
         self.action_data.is_valid = self.model.rowCount() > 0
 
     def initialize_from_profile(self, action_data):
@@ -255,7 +255,7 @@ class MacroWidget(AbstractActionWidget):
     def _down_cb(self):
         """Moves the currently selected entry downwards."""
         idx = self.list_view.currentIndex().row()
-        if idx < len(self.model._entries)-1:
+        if idx < len(self.model.entries)-1:
             self._swap_entries(idx, idx+1)
 
     def _record_cb(self):
@@ -275,7 +275,7 @@ class MacroWidget(AbstractActionWidget):
         """Callback executed when the delete button is pressed."""
         idx = self.list_view.currentIndex().row()
         self.model.remove_entry(idx)
-        new_idx = min(len(self.model._entries), max(0, idx-1))
+        new_idx = min(len(self.model.entries), max(0, idx - 1))
         self.list_view.setCurrentIndex(self.model.index(new_idx, 0))
 
     def _swap_entries(self, id1, id2):

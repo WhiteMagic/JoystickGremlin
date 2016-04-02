@@ -205,7 +205,7 @@ def recursive(device, tree, storage):
 
         # Insert actions of parent into parent
         mode = device.modes[parent]
-        for input_type, items in mode._config.items():
+        for input_type, items in mode.config.items():
             for item in items.values():
                 if len(item.actions) > 0:
                     key = (input_type, item.input_id)
