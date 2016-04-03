@@ -211,3 +211,19 @@ class Configuration(object):
         if type(value) == bool:
             self._data["highlight_input"] = value
             self.save()
+
+    @property
+    def mode_change_message(self):
+        return self._data.get("mode_change_message", False)
+
+    @mode_change_message.setter
+    def mode_change_message(self, value):
+        self._data["mode_change_message"] = bool(value)
+
+    @property
+    def close_to_tray(self):
+        return self._data.get("close_to_tray", False)
+
+    @close_to_tray.setter
+    def close_to_tray(self, value):
+        self._data["close_to_tray"] = bool(value)
