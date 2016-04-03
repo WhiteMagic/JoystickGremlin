@@ -899,7 +899,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.ui = Ui_Gremlin()
         self.ui.setupUi(self)
-        self._create_system_tray()
 
         # Process monitor
         self.process_monitor = gremlin.process_monitor.ProcessMonitor()
@@ -937,6 +936,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._last_input_event = None
 
         # Create all required UI elements
+        self._create_system_tray()
         self._setup_icons()
         self._connect_actions()
         self._create_statusbar()
@@ -964,17 +964,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         el = EventListener()
         el.device_change_event.connect(self._device_change_cb)
 
-        self.apply_user_settings()
-
-    def apply_user_settings(self):
-        """Configures the program based on user settings."""
-        self._set_joystick_input_highlighting(
-            self.config.highlight_input
-        )
-        if self.config.autoload_profiles:
-            self.process_monitor.start()
-        else:
-            self.process_monitor.stop()
+        self._apply_user_settings()
 
     def closeEvent(self, evt):
         """Terminate the entire application if the main window is closed.
@@ -988,6 +978,151 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.process_monitor.running = False
             del self.ui.tray_icon
             QtCore.QCoreApplication.quit()
+
+    # +---------------------------------------------------------------
+    # | Modal window creation
+    # +---------------------------------------------------------------
+
+    def about(self):
+        """Opens the about window."""
+        self.about_window = GremlinAboutUi()
+        self.about_window.show()
+
+    def calibration(self):
+        """Opens the calibration window."""
+        self.calibration_window = CalibrationUi()
+        self.calibration_window.show()
+        gremlin.shared_state.set_suspend_input_highlighting(True)
+        self.calibration_window.closed.connect(
+            lambda: gremlin.shared_state.set_suspend_input_highlighting(False)
+        )
+
+    def device_information(self):
+        """Opens the device information window."""
+        self.device_information = DeviceInformationWidget(self.devices)
+        geom = self.geometry()
+        self.device_information.setGeometry(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+            300,
+            150
+        )
+        self.device_information.show()
+
+    def manage_custom_modules(self):
+        """Opens the custom module management window."""
+        self.module_manager = ModuleManagerUi(self._profile)
+        self.module_manager.show()
+
+    def manage_modes(self):
+        """Opens the mode management window."""
+        self.mode_manager = ModeManagerUi(self._profile)
+        self.mode_manager.modes_changed.connect(self._mode_configuration_changed)
+        self.mode_manager.show()
+
+    def options_dialog(self):
+        """Opens the options dialog."""
+        self.options_window = OptionsUi()
+        self.options_window.show()
+        self.options_window.closed.connect(
+            lambda: self._apply_user_settings()
+        )
+
+
+    # +---------------------------------------------------------------
+    # | Action implementations
+    # +---------------------------------------------------------------
+
+    def activate(self, checked):
+        """Activates and deactivates the code runner.
+
+        :param checked True when the runner is to be activated, False
+            otherwise
+        """
+        if checked:
+            # Generate the code for the profile and run it
+            self._profile_auto_activated = False
+            self.generate()
+            self.runner.start(self._profile.build_inheritance_tree())
+            # Retrieve last active profile and switch to it
+            eh = gremlin.event_handler.EventHandler()
+            eh.change_mode(self.config.get_last_mode(self._profile_fname))
+        else:
+            # Stop running the code
+            self.runner.stop()
+            self._update_statusbar_active(False)
+            self._profile_auto_activated = False
+
+    def create_1to1_mapping(self):
+        """Creates a 1 to 1 mapping of the given device to the first
+        vJoy device.
+        """
+        # Don't attempt to create the mapping for the "Getting Started"
+        # widget
+        if isinstance(self.ui.devices.currentWidget(), QtWidgets.QTextEdit):
+            return
+
+        device_profile = self.ui.devices.currentWidget().device_profile
+        # Don't create mappings for non joystick devices
+        if device_profile.type != profile.DeviceType.Joystick:
+            return
+
+        vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
+        mode = device_profile.modes[self._current_mode]
+        input_types = [
+            UiInputType.JoystickAxis,
+            UiInputType.JoystickButton,
+            UiInputType.JoystickHat
+        ]
+        type_name = {
+            UiInputType.JoystickAxis: "axis",
+            UiInputType.JoystickButton: "button",
+            UiInputType.JoystickHat: "hat",
+        }
+        main_profile = device_profile.parent
+        from action.common import ButtonCondition
+        for input_type in input_types:
+            for entry in mode.config[input_type].values():
+                item_list = main_profile.list_unused_vjoy_inputs(
+                    vjoy_devices
+                )
+                act = profile.create_action("remap", entry)
+                act.input_type = input_type
+                act.vjoy_device_id = 1
+                if len(item_list[1][type_name[input_type]]) > 0:
+                    act.vjoy_input_id = item_list[1][type_name[input_type]][0]
+                else:
+                    act.vjoy_input_id = 1
+                act.is_valid = True
+
+                if input_type == UiInputType.JoystickButton:
+                    act.condition = ButtonCondition(True, True)
+                entry.actions.append(act)
+        self._create_tabs()
+
+    def generate(self):
+        """Generates python code for the code runner from the current
+        profile.
+        """
+        generator = CodeGenerator(self._profile)
+        generator.write_code(
+            os.path.join(
+                util.userprofile_path(),
+                "gremlin_code.py"
+            )
+        )
+
+    def input_repeater(self):
+        """Enables or disables the forwarding of events to the repeater."""
+        el = EventListener()
+        if self.ui.actionInputRepeater.isChecked():
+            el.keyboard_event.connect(self._handle_input_repeat)
+            el.joystick_event.connect(self._handle_input_repeat)
+            self._update_statusbar_repeater("Waiting for input")
+        else:
+            el.keyboard_event.disconnect(self._handle_input_repeat)
+            el.joystick_event.disconnect(self._handle_input_repeat)
+            self.status_bar_repeater.setText("")
 
     def load_profile(self):
         """Prompts the user to select a profile file to load."""
@@ -1040,7 +1175,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._create_tabs()
 
         # Update everything to the new mode
-        self.mode_configuration_changed()
+        self._mode_configuration_changed()
 
         # Select the last tab which contains the Getting started guide
         self.ui.devices.setCurrentIndex(len(self.tabs))
@@ -1070,310 +1205,88 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile_fname = fname
         self._update_window_title()
 
-    def activate(self, checked):
-        """Activates and deactivates the code runner.
+    # +---------------------------------------------------------------
+    # | Create UI elements
+    # +---------------------------------------------------------------
 
-        :param checked True when the runner is to be activated, False
-            otherwise
-        """
-        if checked:
-            # Generate the code for the profile and run it
-            self._profile_auto_activated = False
-            self.generate()
-            self.runner.start(self._profile.build_inheritance_tree())
-            # Retrieve last active profile and switch to it
-            eh = gremlin.event_handler.EventHandler()
-            eh.change_mode(self.config.get_last_mode(self._profile_fname))
-        else:
-            # Stop running the code
-            self.runner.stop()
-            self._update_statusbar_active(False)
-            self._profile_auto_activated = False
+    def _connect_actions(self):
+        """Connects all QAction items to their corresponding callbacks."""
+        # Menu actions
+        # File
+        self.ui.actionLoadProfile.triggered.connect(self.load_profile)
+        self.ui.actionNewProfile.triggered.connect(self.new_profile)
+        self.ui.actionSaveProfile.triggered.connect(self.save_profile)
+        self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
+        self.ui.actionExit.triggered.connect(self._force_close)
+        # Actions
+        self.ui.actionCreate1to1Mapping.triggered.connect(
+            self.create_1to1_mapping
+        )
+        # Tools
+        self.ui.actionDeviceInformation.triggered.connect(
+            self.device_information
+        )
+        self.ui.actionManageModes.triggered.connect(self.manage_modes)
+        self.ui.actionManageCustomModules.triggered.connect(
+            self.manage_custom_modules
+        )
+        self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
+        self.ui.actionCalibration.triggered.connect(self.calibration)
+        self.ui.actionHTMLCheatsheet.triggered.connect(
+            lambda: self._create_cheatsheet("html")
+        )
+        self.ui.actionPDFCheatsheet.triggered.connect(
+            lambda: self._create_cheatsheet("pdf")
+        )
+        self.ui.actionOptions.triggered.connect(self.options_dialog)
+        # About
+        self.ui.actionAbout.triggered.connect(self.about)
 
-    def generate(self):
-        """Generates python code for the code runner from the current
-        profile.
-        """
-        generator = CodeGenerator(self._profile)
-        generator.write_code(
-            os.path.join(
-                util.userprofile_path(),
-                "gremlin_code.py"
-            )
+        # Toolbar actions
+        self.ui.actionActivate.triggered.connect(self.activate)
+        self.ui.actionOpen.triggered.connect(self.load_profile)
+
+        # Tray icon
+        self.ui.tray_icon.activated.connect(self._tray_icon_activated_cb)
+
+    def _create_statusbar(self):
+        """Creates the ui widgets used in the status bar."""
+        self.status_bar_mode = QtWidgets.QLabel("")
+        self.status_bar_mode.setContentsMargins(5, 0, 5, 0)
+        self.status_bar_is_active = QtWidgets.QLabel("")
+        self.status_bar_is_active.setContentsMargins(5, 0, 5, 0)
+        self.status_bar_repeater = QtWidgets.QLabel("")
+        self.status_bar_repeater.setContentsMargins(5, 0, 5, 0)
+        self.ui.statusbar.addWidget(self.status_bar_is_active, 0)
+        self.ui.statusbar.addWidget(self.status_bar_mode, 3)
+        self.ui.statusbar.addWidget(self.status_bar_repeater, 1)
+
+    def _create_system_tray(self):
+        """Creates the system tray icon and menu."""
+        self.ui.tray_menu = QtWidgets.QMenu("Menu")
+        self.ui.action_tray_show = \
+            QtWidgets.QAction("Show / Hide", self)
+        self.ui.action_tray_enable = \
+            QtWidgets.QAction("Enable / Disable", self)
+        self.ui.action_tray_quit = QtWidgets.QAction("Quit", self)
+        self.ui.tray_menu.addAction(self.ui.action_tray_show)
+        self.ui.tray_menu.addAction(self.ui.action_tray_enable)
+        self.ui.tray_menu.addAction(self.ui.action_tray_quit)
+
+        self.ui.action_tray_show.triggered.connect(
+            lambda: self.setHidden(not self.isHidden())
+        )
+        self.ui.action_tray_enable.triggered.connect(
+            self.ui.actionActivate.trigger
+        )
+        self.ui.action_tray_quit.triggered.connect(
+            self._force_close
         )
 
-    def device_information(self):
-        """Opens the device information window."""
-        self.device_information = DeviceInformationWidget(self.devices)
-        geom = self.geometry()
-        self.device_information.setGeometry(
-            geom.x() + geom.width() / 2 - 150,
-            geom.y() + geom.height() / 2 - 75,
-            300,
-            150
-        )
-        self.device_information.show()
-
-    def manage_modes(self):
-        """Opens the mode management window."""
-        self.mode_manager = ModeManagerUi(self._profile)
-        self.mode_manager.modes_changed.connect(self.mode_configuration_changed)
-        self.mode_manager.show()
-
-    def mode_configuration_changed(self):
-        """Updates the mode configuration of the selector and profile."""
-        self.mode_selector.populate_selector(self._profile, self._current_mode)
-
-    def manage_custom_modules(self):
-        """Opens the custom module management window."""
-        self.module_manager = ModuleManagerUi(self._profile)
-        self.module_manager.show()
-
-    def input_repeater(self):
-        """Enables or disables the forwarding of events to the repeater."""
-        el = EventListener()
-        if self.ui.actionInputRepeater.isChecked():
-            el.keyboard_event.connect(self._handle_input_repeat)
-            el.joystick_event.connect(self._handle_input_repeat)
-            self._update_statusbar_repeater("Waiting for input")
-        else:
-            el.keyboard_event.disconnect(self._handle_input_repeat)
-            el.joystick_event.disconnect(self._handle_input_repeat)
-            self.status_bar_repeater.setText("")
-
-    def calibration(self):
-        """Opens the calibration window."""
-        self.calibration_window = CalibrationUi()
-        self.calibration_window.show()
-        gremlin.shared_state.set_suspend_input_highlighting(True)
-        self.calibration_window.closed.connect(
-            lambda: gremlin.shared_state.set_suspend_input_highlighting(False)
-        )
-
-    def about(self):
-        """Opens the about window."""
-        self.about_window = GremlinAboutUi()
-        self.about_window.show()
-
-    def _force_close(self):
-        """Forces the closure of the program."""
-        self.ui.tray_icon.hide()
-        self.close()
-
-    def _do_load_profile(self, fname):
-        """Load the profile with the given filename.
-
-        :param fname the name of the profile file to load
-        """
-        # Disable the program if it is running when we're loading a
-        # new profile
-        self.ui.actionActivate.setChecked(False)
-        self.activate(False)
-
-        # Attempt to load the new profile
-        try:
-            new_profile = profile.Profile()
-            new_profile.from_xml(fname)
-
-            profile_folder = os.path.dirname(fname)
-            if profile_folder not in sys.path:
-                sys.path = list(self._base_path)
-                sys.path.insert(0, profile_folder)
-
-            self._sanitize_profile(new_profile)
-            self._profile = new_profile
-            self._profile_fname = fname
-            self._update_window_title()
-
-            self._current_mode = self._profile.get_root_modes()[0]
-            self._create_tabs()
-
-            # Make the first root node the default active mode
-            self.mode_selector.populate_selector(
-                self._profile, self._current_mode
-            )
-            self.mode_configuration_changed()
-        except TypeError as e:
-            # An error occurred while parsing an existing profile,
-            # creating an empty profile instead
-            logging.exception("Invalid profile content:\n{}".format(e))
-            self.new_profile()
-
-    def _handle_input_repeat(self, event):
-        """Performs setup for event repetition.
-
-        :param event the event to repeat
-        """
-        vjoy_device_id = \
-            [dev.hardware_id for dev in self.devices if dev.is_virtual][0]
-        # Ignore VJoy events
-        if self.repeater.is_running or event.hardware_id == vjoy_device_id:
-            return
-        # Ignore small joystick movements
-        elif event.event_type == InputType.JoystickAxis and abs(event.value) < 0.25:
-            return
-        # Ignore neutral hat positions
-        if event.event_type == InputType.JoystickHat and event.value == (0, 0):
-            return
-
-        event_list = []
-        if event.event_type in [InputType.Keyboard, InputType.JoystickButton]:
-            event_list = [event.clone(), event.clone()]
-            event_list[0].is_pressed = False
-            event_list[1].is_pressed = True
-        elif event.event_type == InputType.JoystickAxis:
-            event_list = [
-                event.clone(),
-                event.clone(),
-                event.clone(),
-                event.clone()
-            ]
-            event_list[0].value = -0.75
-            event_list[1].value = 0.0
-            event_list[2].value = 0.75
-            event_list[3].value = 0.0
-        elif event.event_type == InputType.JoystickHat:
-            event_list = [event.clone(), event.clone()]
-            event_list[0].value = (0, 0)
-
-        self.repeater.events = event_list
-
-    def _set_joystick_input_highlighting(self, is_enabled):
-        """Enables / disables the highlighting of the current input
-        when used."""
-        el = EventListener()
-        if is_enabled:
-            el.joystick_event.connect(
-                self._joystick_input_selection
-            )
-        else:
-            el.joystick_event.disconnect(
-                self._joystick_input_selection
-            )
-
-    def _joystick_input_selection(self, event):
-        """Handles joystick events to select the appropriate input item.
-
-        :param event the event to process
-        """
-        if event.event_type == gremlin.event_handler.InputType.Keyboard:
-            return
-        if self.runner.is_running() or self._current_mode is None:
-            return
-        if gremlin.shared_state.suspend_input_highlighting():
-            return
-
-        # Only handle events for the currently active device
-        widget = self.ui.devices.currentWidget()
-        if isinstance(widget, QtWidgets.QTextEdit):
-            return
-
-        # If we want to act on the given even figure out which button
-        # needs to be pressed and press is
-        if util.device_id(event) == util.device_id(widget.device_profile):
-            if self._should_process_input(event):
-                ui_event_type = gremlin.event_handler.\
-                    system_event_to_input_event(event.event_type)
-                btn = widget.input_item_list.input_items[ui_event_type][event.identifier]
-                btn.mousePressEvent(None)
-
-    def _should_process_input(self, event):
-        """Returns True when to process and input, False otherwise.
-
-        This enforces a certain downtime between subsequent inputs
-        triggering an update of the UI as well as preventing inputs
-        from the same, currently active input to trigger another
-        update.
-
-        :param event the event to make the decision about
-        :return True if the event is to be processed, False otherwise
-        """
-        # Check if the input in general is something we want to process
-        process_input = False
-        if event.event_type == InputType.JoystickButton:
-            process_input = event.is_pressed
-        elif event.event_type == InputType.JoystickAxis:
-            process_input = abs(event.value) > 0.25
-        elif event.event_type == InputType.JoystickHat:
-            process_input = event.value != (0, 0)
-        else:
-            logging.warning("Event with bad content received")
-            process_input = False
-
-        # Check if we should actually react to the event
-        if event == self._last_input_event:
-            return False
-        elif self._last_input_timestamp + 0.25 > time.time():
-            return False
-        elif not process_input:
-            return False
-        else:
-            self._last_input_event = event
-            self._last_input_timestamp = time.time()
-            return True
-
-    def _process_changed_cb(self, path):
-        """Handles changes in the active process.
-
-        If the active process has a known associated profile it is
-        loaded and activated if none exists the application is
-        disabled.
-
-        :param path the path to the currently active process executable
-        """
-        profile_path = self.config.get_profile(path)
-        if profile_path:
-            if self._profile_fname != profile_path:
-                self.ui.actionActivate.setChecked(False)
-                self.activate(False)
-                self._do_load_profile(profile_path)
-            self.ui.actionActivate.setChecked(True)
-            self.activate(True)
-            self._profile_auto_activated = True
-        elif self._profile_auto_activated:
-            self.ui.actionActivate.setChecked(False)
-            self.activate(False)
-            self._profile_auto_activated = False
-
-    def _update_window_title(self):
-        """Updates the window title to include the current profile."""
-        if self._profile_fname is not None:
-            self.setWindowTitle("Joystick Gremlin - {}".format(
-                os.path.basename(self._profile_fname))
-            )
-        else:
-            self.setWindowTitle("Joystick Gremlin")
-
-    def _sanitize_profile(self, profile_data):
-        """Validates a profile file before actually loading it.
-
-        :param profile_data the profile to verify
-        """
-        profile_devices = {}
-        for device in profile_data.devices.values():
-            # Ignore the keyboard
-            if device.hardware_id == 0:
-                continue
-            profile_devices[util.device_id(device)] = device.name
-
-        physical_devices = {}
-        for device in self.devices:
-            if device.is_virtual:
-                continue
-            physical_devices[util.device_id(device)] = device.name
-
-        # Find profile data that conflicts with currently connected
-        # hardware and warn the user
-        hardware_id_clash = False
-        for dev_id, dev_name in physical_devices.items():
-            if dev_id in profile_devices and profile_devices[dev_id] != dev_name:
-                hardware_id_clash = True
-
-        if hardware_id_clash:
-            util.display_error(
-                "The profile contains duplicate / wrong device ids. "
-                "The profile may no longer work as intended."
-            )
+        self.ui.tray_icon = QtWidgets.QSystemTrayIcon()
+        self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon.ico"))
+        self.ui.tray_icon.setContextMenu(self.ui.tray_menu)
+        self.ui.tray_icon.show()
 
     def _create_tabs(self):
         """Creates the tabs of the configuration dialog representing
@@ -1439,114 +1352,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         widget.setHtml(open("doc/getting_started.html").read())
         self.ui.devices.addTab(widget, "Getting Started")
 
-    def _create_statusbar(self):
-        """Creates the ui widgets used in the status bar."""
-        self.status_bar_mode = QtWidgets.QLabel("")
-        self.status_bar_mode.setContentsMargins(5, 0, 5, 0)
-        self.status_bar_is_active = QtWidgets.QLabel("")
-        self.status_bar_is_active.setContentsMargins(5, 0, 5, 0)
-        self.status_bar_repeater = QtWidgets.QLabel("")
-        self.status_bar_repeater.setContentsMargins(5, 0, 5, 0)
-        self.ui.statusbar.addWidget(self.status_bar_is_active, 0)
-        self.ui.statusbar.addWidget(self.status_bar_mode, 3)
-        self.ui.statusbar.addWidget(self.status_bar_repeater, 1)
-
-    def _create_system_tray(self):
-        """Creates the system tray icon and menu."""
-        self.ui.tray_menu = QtWidgets.QMenu("Menu")
-        self.ui.action_tray_show = \
-            QtWidgets.QAction("Show / Hide", self)
-        self.ui.action_tray_enable = \
-            QtWidgets.QAction("Enable / Disable", self)
-        self.ui.action_tray_quit = QtWidgets.QAction("Quit", self)
-        self.ui.tray_menu.addAction(self.ui.action_tray_show)
-        self.ui.tray_menu.addAction(self.ui.action_tray_enable)
-        self.ui.tray_menu.addAction(self.ui.action_tray_quit)
-
-        self.ui.action_tray_show.triggered.connect(
-            lambda: self.setHidden(not self.isHidden())
-        )
-        self.ui.action_tray_enable.triggered.connect(
-            self.ui.actionActivate.trigger
-        )
-        self.ui.action_tray_quit.triggered.connect(
-            self._force_close
-        )
-
-        self.ui.tray_icon = QtWidgets.QSystemTrayIcon()
-        self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon.ico"))
-        self.ui.tray_icon.setContextMenu(self.ui.tray_menu)
-        self.ui.tray_icon.show()
-
-    def _get_device_profile(self, device):
-        """Returns a profile for the given device.
-
-        If no profile exists for the given device a new empty one is
-        created.
-
-        :param device the device for which to return the profile
-        :return profile for the provided device
-        """
-        if device.hardware_id in self._profile.devices:
-            device_profile = self._profile.devices[device.hardware_id]
-        else:
-            device_profile = {}
-
-        return device_profile
-
-    def _create_cheatsheet(self, file_format):
-        """Creates the cheatsheet and stores it in the desired place.
-
-        :param file_format the format of the cheatsheet, html or pdf
-        """
-        fname, _ = QtWidgets.QFileDialog.getSaveFileName(
-            None,
-            "Save cheatsheet",
-            util.userprofile_path(),
-            "{} files (*.{})".format(file_format.upper(), file_format)
-        )
-        documenter.generate_cheatsheet(file_format, fname, self._profile)
-
-    def _connect_actions(self):
-        """Connects all QAction items to their corresponding callbacks."""
-        # Menu actions
-        # File
-        self.ui.actionLoadProfile.triggered.connect(self.load_profile)
-        self.ui.actionNewProfile.triggered.connect(self.new_profile)
-        self.ui.actionSaveProfile.triggered.connect(self.save_profile)
-        self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
-        self.ui.actionExit.triggered.connect(self._force_close)
-        # Actions
-        self.ui.actionCreate1to1Mapping.triggered.connect(
-            self._create_1to1_mapping
-        )
-        # Tools
-        self.ui.actionDeviceInformation.triggered.connect(
-            self.device_information
-        )
-        self.ui.actionManageModes.triggered.connect(self.manage_modes)
-        self.ui.actionManageCustomModules.triggered.connect(
-            self.manage_custom_modules
-        )
-        self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
-        self.ui.actionCalibration.triggered.connect(self.calibration)
-        self.ui.actionHTMLCheatsheet.triggered.connect(
-            lambda: self._create_cheatsheet("html")
-        )
-        self.ui.actionPDFCheatsheet.triggered.connect(
-            lambda: self._create_cheatsheet("pdf")
-        )
-        self.ui.actionOptions.triggered.connect(self._options_dialog)
-        # About
-        self.ui.actionAbout.triggered.connect(self.about)
-
-        # Toolbar actions
-        self.ui.actionActivate.triggered.connect(self.activate)
-        self.ui.actionOpen.triggered.connect(self.load_profile)
-
-        # Tray icon
-        self.ui.tray_icon.activated.connect(self._tray_icon_activated_cb)
-
     def _setup_icons(self):
         """Sets the icons of all QAction items."""
         # Menu actions
@@ -1595,13 +1400,40 @@ class GremlinUi(QtWidgets.QMainWindow):
             QtGui.QIcon("gfx/profile_open.svg")
         )
 
-    def _tray_icon_activated_cb(self, reason):
-        """Callback triggered by clicking on the system tray icon.
+    # +---------------------------------------------------------------
+    # | Signal handlers
+    # +---------------------------------------------------------------
 
-        :param reason the type of click performed on the icon
+    def _device_change_cb(self):
+        """Handles addition and removal of joystick devices."""
+        self.devices = util.joystick_devices()
+        self._create_tabs()
+
+    def _joystick_input_selection(self, event):
+        """Handles joystick events to select the appropriate input item.
+
+        :param event the event to process
         """
-        if reason == QtWidgets.QSystemTrayIcon.Trigger:
-            self.setHidden(not self.isHidden())
+        if event.event_type == gremlin.event_handler.InputType.Keyboard:
+            return
+        if self.runner.is_running() or self._current_mode is None:
+            return
+        if gremlin.shared_state.suspend_input_highlighting():
+            return
+
+        # Only handle events for the currently active device
+        widget = self.ui.devices.currentWidget()
+        if isinstance(widget, QtWidgets.QTextEdit):
+            return
+
+        # If we want to act on the given even figure out which button
+        # needs to be pressed and press is
+        if util.device_id(event) == util.device_id(widget.device_profile):
+            if self._should_process_input(event):
+                ui_event_type = gremlin.event_handler.\
+                    system_event_to_input_event(event.event_type)
+                btn = widget.input_item_list.input_items[ui_event_type][event.identifier]
+                btn.mousePressEvent(None)
 
     def _mode_changed_cb(self, new_mode):
         """Updates the current mode to the provided one.
@@ -1610,24 +1442,36 @@ class GremlinUi(QtWidgets.QMainWindow):
         """
         self._current_mode = new_mode
 
-    def _device_change_cb(self):
-        """Handles addition and removal of joystick devices."""
-        self.devices = util.joystick_devices()
-        self._create_tabs()
+    def _process_changed_cb(self, path):
+        """Handles changes in the active process.
 
-    def _update_statusbar_mode(self, mode):
-        """Updates the status bar display of the current mode.
+        If the active process has a known associated profile it is
+        loaded and activated if none exists the application is
+        disabled.
 
-        :param mode the now current mode
+        :param path the path to the currently active process executable
         """
-        self.status_bar_mode.setText("<b>Mode:</b> {}".format(mode))
-        if self.config.mode_change_message:
-            self.ui.tray_icon.showMessage(
-                "Mode: {}".format(mode),
-                "",
-                0,
-                250
-            )
+        profile_path = self.config.get_profile(path)
+        if profile_path:
+            if self._profile_fname != profile_path:
+                self.ui.actionActivate.setChecked(False)
+                self.activate(False)
+                self._do_load_profile(profile_path)
+            self.ui.actionActivate.setChecked(True)
+            self.activate(True)
+            self._profile_auto_activated = True
+        elif self._profile_auto_activated:
+            self.ui.actionActivate.setChecked(False)
+            self.activate(False)
+            self._profile_auto_activated = False
+
+    def _tray_icon_activated_cb(self, reason):
+        """Callback triggered by clicking on the system tray icon.
+
+        :param reason the type of click performed on the icon
+        """
+        if reason == QtWidgets.QSystemTrayIcon.Trigger:
+            self.setHidden(not self.isHidden())
 
     def _update_statusbar_active(self, is_active):
         """Updates the status bar with the current state of the system.
@@ -1647,6 +1491,232 @@ class GremlinUi(QtWidgets.QMainWindow):
             "<b>Status: </b> {}".format(text_running)
         )
 
+    def _update_statusbar_mode(self, mode):
+        """Updates the status bar display of the current mode.
+
+        :param mode the now current mode
+        """
+        self.status_bar_mode.setText("<b>Mode:</b> {}".format(mode))
+        if self.config.mode_change_message:
+            self.ui.tray_icon.showMessage(
+                "Mode: {}".format(mode),
+                "",
+                0,
+                250
+            )
+
+    # +---------------------------------------------------------------
+    # | Utilities
+    # +---------------------------------------------------------------
+
+    def _apply_user_settings(self):
+        """Configures the program based on user settings."""
+        self._set_joystick_input_highlighting(
+            self.config.highlight_input
+        )
+        if self.config.autoload_profiles:
+            self.process_monitor.start()
+        else:
+            self.process_monitor.stop()
+
+    def _create_cheatsheet(self, file_format):
+        """Creates the cheatsheet and stores it in the desired place.
+
+        :param file_format the format of the cheatsheet, html or pdf
+        """
+        fname, _ = QtWidgets.QFileDialog.getSaveFileName(
+            None,
+            "Save cheatsheet",
+            util.userprofile_path(),
+            "{} files (*.{})".format(file_format.upper(), file_format)
+        )
+        documenter.generate_cheatsheet(file_format, fname, self._profile)
+
+    def _do_load_profile(self, fname):
+        """Load the profile with the given filename.
+
+        :param fname the name of the profile file to load
+        """
+        # Disable the program if it is running when we're loading a
+        # new profile
+        self.ui.actionActivate.setChecked(False)
+        self.activate(False)
+
+        # Attempt to load the new profile
+        try:
+            new_profile = profile.Profile()
+            new_profile.from_xml(fname)
+
+            profile_folder = os.path.dirname(fname)
+            if profile_folder not in sys.path:
+                sys.path = list(self._base_path)
+                sys.path.insert(0, profile_folder)
+
+            self._sanitize_profile(new_profile)
+            self._profile = new_profile
+            self._profile_fname = fname
+            self._update_window_title()
+
+            self._current_mode = self._profile.get_root_modes()[0]
+            self._create_tabs()
+
+            # Make the first root node the default active mode
+            self.mode_selector.populate_selector(
+                self._profile, self._current_mode
+            )
+            self._mode_configuration_changed()
+        except TypeError as e:
+            # An error occurred while parsing an existing profile,
+            # creating an empty profile instead
+            logging.exception("Invalid profile content:\n{}".format(e))
+            self.new_profile()
+
+    def _force_close(self):
+        """Forces the closure of the program."""
+        self.ui.tray_icon.hide()
+        self.close()
+
+    def _get_device_profile(self, device):
+        """Returns a profile for the given device.
+
+        If no profile exists for the given device a new empty one is
+        created.
+
+        :param device the device for which to return the profile
+        :return profile for the provided device
+        """
+        if device.hardware_id in self._profile.devices:
+            device_profile = self._profile.devices[device.hardware_id]
+        else:
+            device_profile = {}
+
+        return device_profile
+
+    def _handle_input_repeat(self, event):
+        """Performs setup for event repetition.
+
+        :param event the event to repeat
+        """
+        vjoy_device_id = \
+            [dev.hardware_id for dev in self.devices if dev.is_virtual][0]
+        # Ignore VJoy events
+        if self.repeater.is_running or event.hardware_id == vjoy_device_id:
+            return
+        # Ignore small joystick movements
+        elif event.event_type == InputType.JoystickAxis and abs(event.value) < 0.25:
+            return
+        # Ignore neutral hat positions
+        if event.event_type == InputType.JoystickHat and event.value == (0, 0):
+            return
+
+        event_list = []
+        if event.event_type in [InputType.Keyboard, InputType.JoystickButton]:
+            event_list = [event.clone(), event.clone()]
+            event_list[0].is_pressed = False
+            event_list[1].is_pressed = True
+        elif event.event_type == InputType.JoystickAxis:
+            event_list = [
+                event.clone(),
+                event.clone(),
+                event.clone(),
+                event.clone()
+            ]
+            event_list[0].value = -0.75
+            event_list[1].value = 0.0
+            event_list[2].value = 0.75
+            event_list[3].value = 0.0
+        elif event.event_type == InputType.JoystickHat:
+            event_list = [event.clone(), event.clone()]
+            event_list[0].value = (0, 0)
+
+        self.repeater.events = event_list
+
+    def _mode_configuration_changed(self):
+        """Updates the mode configuration of the selector and profile."""
+        self.mode_selector.populate_selector(
+            self._profile,
+            self._current_mode
+        )
+
+    def _sanitize_profile(self, profile_data):
+        """Validates a profile file before actually loading it.
+
+        :param profile_data the profile to verify
+        """
+        profile_devices = {}
+        for device in profile_data.devices.values():
+            # Ignore the keyboard
+            if device.hardware_id == 0:
+                continue
+            profile_devices[util.device_id(device)] = device.name
+
+        physical_devices = {}
+        for device in self.devices:
+            if device.is_virtual:
+                continue
+            physical_devices[util.device_id(device)] = device.name
+
+        # Find profile data that conflicts with currently connected
+        # hardware and warn the user
+        hardware_id_clash = False
+        for dev_id, dev_name in physical_devices.items():
+            if dev_id in profile_devices and profile_devices[dev_id] != dev_name:
+                hardware_id_clash = True
+
+        if hardware_id_clash:
+            util.display_error(
+                "The profile contains duplicate / wrong device ids. "
+                "The profile may no longer work as intended."
+            )
+
+    def _set_joystick_input_highlighting(self, is_enabled):
+        """Enables / disables the highlighting of the current input
+        when used."""
+        el = EventListener()
+        if is_enabled:
+            el.joystick_event.connect(
+                self._joystick_input_selection
+            )
+        else:
+            el.joystick_event.disconnect(
+                self._joystick_input_selection
+            )
+
+    def _should_process_input(self, event):
+        """Returns True when to process and input, False otherwise.
+
+        This enforces a certain downtime between subsequent inputs
+        triggering an update of the UI as well as preventing inputs
+        from the same, currently active input to trigger another
+        update.
+
+        :param event the event to make the decision about
+        :return True if the event is to be processed, False otherwise
+        """
+        # Check if the input in general is something we want to process
+        process_input = False
+        if event.event_type == InputType.JoystickButton:
+            process_input = event.is_pressed
+        elif event.event_type == InputType.JoystickAxis:
+            process_input = abs(event.value) > 0.25
+        elif event.event_type == InputType.JoystickHat:
+            process_input = event.value != (0, 0)
+        else:
+            logging.warning("Event with bad content received")
+            process_input = False
+
+        # Check if we should actually react to the event
+        if event == self._last_input_event:
+            return False
+        elif self._last_input_timestamp + 0.25 > time.time():
+            return False
+        elif not process_input:
+            return False
+        else:
+            self._last_input_event = event
+            self._last_input_timestamp = time.time()
+            return True
+
     def _update_statusbar_repeater(self, text):
         """Updates the statusbar with information from the input
         repeater module.
@@ -1657,60 +1727,14 @@ class GremlinUi(QtWidgets.QMainWindow):
             "<b>Repeater: </b> {}".format(text)
         )
 
-    def _options_dialog(self):
-        """Opens the options dialog."""
-        self.options_window = OptionsUi()
-        self.options_window.show()
-        self.options_window.closed.connect(
-            lambda: self.apply_user_settings()
-        )
-
-    def _create_1to1_mapping(self):
-        """Creates a 1 to 1 mapping of the given device to the first
-        vJoy device.
-        """
-        # Don't attempt to create the mapping for the "Getting Started"
-        # widget
-        if isinstance(self.ui.devices.currentWidget(), QtWidgets.QTextEdit):
-            return
-
-        device_profile = self.ui.devices.currentWidget().device_profile
-        # Don't create mappings for non joystick devices
-        if device_profile.type != profile.DeviceType.Joystick:
-            return
-
-        vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
-        mode = device_profile.modes[self._current_mode]
-        input_types = [
-            UiInputType.JoystickAxis,
-            UiInputType.JoystickButton,
-            UiInputType.JoystickHat
-        ]
-        type_name = {
-            UiInputType.JoystickAxis: "axis",
-            UiInputType.JoystickButton: "button",
-            UiInputType.JoystickHat: "hat",
-        }
-        main_profile = device_profile.parent
-        from action.common import ButtonCondition
-        for input_type in input_types:
-            for entry in mode.config[input_type].values():
-                item_list = main_profile.list_unused_vjoy_inputs(
-                    vjoy_devices
-                )
-                act = profile.create_action("remap", entry)
-                act.input_type = input_type
-                act.vjoy_device_id = 1
-                if len(item_list[1][type_name[input_type]]) > 0:
-                    act.vjoy_input_id = item_list[1][type_name[input_type]][0]
-                else:
-                    act.vjoy_input_id = 1
-                act.is_valid = True
-
-                if input_type == UiInputType.JoystickButton:
-                    act.condition = ButtonCondition(True, True)
-                entry.actions.append(act)
-        self._create_tabs()
+    def _update_window_title(self):
+        """Updates the window title to include the current profile."""
+        if self._profile_fname is not None:
+            self.setWindowTitle("Joystick Gremlin - {}".format(
+                os.path.basename(self._profile_fname))
+            )
+        else:
+            self.setWindowTitle("Joystick Gremlin")
 
 
 if __name__ == "__main__":
@@ -1722,7 +1746,7 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M",
         level=logging.DEBUG
     )
-    logging.debug("Starting Joystick Gremlin R3")
+    logging.debug("Starting Joystick Gremlin R5")
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
