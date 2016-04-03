@@ -249,7 +249,7 @@ class OptionsUi(QtWidgets.QWidget):
     closed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        """Creates a new opions UI instance.
+        """Creates a new options UI instance.
 
         :param parent the parent of this widget
         """
@@ -261,19 +261,59 @@ class OptionsUi(QtWidgets.QWidget):
         self.setWindowTitle("Options")
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.tab_container = QtWidgets.QTabWidget()
+        self.main_layout.addWidget(self.tab_container)
 
+        self._create_general_page()
+        self._create_profile_page()
+
+    def _create_general_page(self):
+        self.general_page = QtWidgets.QWidget()
+        self.general_layout = QtWidgets.QVBoxLayout(self.general_page)
+
+        # Highlight input option
         self.highlight_input = QtWidgets.QCheckBox(
             "Highlight currently used input"
         )
         self.highlight_input.clicked.connect(self._highlight_input)
         self.highlight_input.setChecked(self.config.highlight_input)
+
+        # Close to system tray option
+        self.close_to_systray = QtWidgets.QCheckBox(
+            "Closing minimizes to system tray"
+        )
+        self.close_to_systray.clicked.connect(self._close_to_systray)
+        self.close_to_systray.setChecked(self.config.close_to_tray)
+
+        # Show message on mode change
+        self.show_mode_change_message = QtWidgets.QCheckBox(
+            "Show message when changing mode"
+        )
+        self.show_mode_change_message.clicked.connect(
+            self._show_mode_change_message
+        )
+        self.show_mode_change_message.setChecked(
+            self.config.mode_change_message
+        )
+
+        self.general_layout.addWidget(self.highlight_input)
+        self.general_layout.addWidget(self.close_to_systray)
+        self.general_layout.addWidget(self.show_mode_change_message)
+        self.general_layout.addStretch()
+        self.tab_container.addTab(self.general_page, "General")
+
+    def _create_profile_page(self):
+        self.profile_page = QtWidgets.QWidget()
+        self.profile_page_layout = QtWidgets.QVBoxLayout(self.profile_page)
+
+        # Autload profile option
         self.autoload_checkbox = QtWidgets.QCheckBox(
             "Automatically load profile based on current application"
         )
         self.autoload_checkbox.clicked.connect(self._autoload_profiles)
         self.autoload_checkbox.setChecked(self.config.autoload_profiles)
 
-        # Profile handling
+        # Executable dropdown list
         self.executable_layout = QtWidgets.QHBoxLayout()
         self.executable_label = QtWidgets.QLabel("Executable")
         self.executable_selection = QtWidgets.QComboBox()
@@ -304,11 +344,12 @@ class OptionsUi(QtWidgets.QWidget):
         self.profile_layout.addWidget(self.profile_field)
         self.profile_layout.addWidget(self.profile_select)
 
-        self.main_layout.addWidget(self.highlight_input)
-        self.main_layout.addWidget(self.autoload_checkbox)
-        self.main_layout.addLayout(self.executable_layout)
-        self.main_layout.addLayout(self.profile_layout)
-        self.main_layout.addStretch()
+        self.profile_page_layout.addWidget(self.autoload_checkbox)
+        self.profile_page_layout.addLayout(self.executable_layout)
+        self.profile_page_layout.addLayout(self.profile_layout)
+        self.profile_page_layout.addStretch()
+
+        self.tab_container.addTab(self.profile_page, "Profiles")
 
         self.populate_executables()
 
@@ -330,6 +371,10 @@ class OptionsUi(QtWidgets.QWidget):
 
     def _autoload_profiles(self, clicked):
         self.config.autoload_profiles = clicked
+        self.config.save()
+
+    def _close_to_systray(self, clicked):
+        self.config.close_to_tray = clicked
         self.config.save()
 
     def _highlight_input(self, clicked):
@@ -362,6 +407,10 @@ class OptionsUi(QtWidgets.QWidget):
         :param exec_path path to the executable to shop
         """
         self.profile_field.setText(self.config.get_profile(exec_path))
+
+    def _show_mode_change_message(self, clicked):
+        self.config.mode_change_message = clicked
+        self.config.save()
 
     def _update_profile(self):
         """Updates the profile associated with the current executable."""
