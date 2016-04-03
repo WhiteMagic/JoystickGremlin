@@ -899,6 +899,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.ui = Ui_Gremlin()
         self.ui.setupUi(self)
+        self._create_system_tray()
 
         # Process monitor
         self.process_monitor = gremlin.process_monitor.ProcessMonitor()
@@ -980,8 +981,13 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param evt the closure event
         """
-        self.process_monitor.running = False
-        QtCore.QCoreApplication.quit()
+        if self.config.close_to_tray and self.ui.tray_icon.isVisible():
+            self.hide()
+            evt.ignore()
+        else:
+            self.process_monitor.running = False
+            del self.ui.tray_icon
+            QtCore.QCoreApplication.quit()
 
     def load_profile(self):
         """Prompts the user to select a profile file to load."""
@@ -1148,6 +1154,11 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Opens the about window."""
         self.about_window = GremlinAboutUi()
         self.about_window.show()
+
+    def _force_close(self):
+        """Forces the closure of the program."""
+        self.ui.tray_icon.hide()
+        self.close()
 
     def _do_load_profile(self, fname):
         """Load the profile with the given filename.
@@ -1440,6 +1451,33 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.statusbar.addWidget(self.status_bar_mode, 3)
         self.ui.statusbar.addWidget(self.status_bar_repeater, 1)
 
+    def _create_system_tray(self):
+        """Creates the system tray icon and menu."""
+        self.ui.tray_menu = QtWidgets.QMenu("Menu")
+        self.ui.action_tray_show = \
+            QtWidgets.QAction("Show / Hide", self)
+        self.ui.action_tray_enable = \
+            QtWidgets.QAction("Enable / Disable", self)
+        self.ui.action_tray_quit = QtWidgets.QAction("Quit", self)
+        self.ui.tray_menu.addAction(self.ui.action_tray_show)
+        self.ui.tray_menu.addAction(self.ui.action_tray_enable)
+        self.ui.tray_menu.addAction(self.ui.action_tray_quit)
+
+        self.ui.action_tray_show.triggered.connect(
+            lambda: self.setHidden(not self.isHidden())
+        )
+        self.ui.action_tray_enable.triggered.connect(
+            self.ui.actionActivate.trigger
+        )
+        self.ui.action_tray_quit.triggered.connect(
+            self._force_close
+        )
+
+        self.ui.tray_icon = QtWidgets.QSystemTrayIcon()
+        self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon.ico"))
+        self.ui.tray_icon.setContextMenu(self.ui.tray_menu)
+        self.ui.tray_icon.show()
+
     def _get_device_profile(self, device):
         """Returns a profile for the given device.
 
@@ -1477,7 +1515,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionNewProfile.triggered.connect(self.new_profile)
         self.ui.actionSaveProfile.triggered.connect(self.save_profile)
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
-        self.ui.actionExit.triggered.connect(self.close)
+        self.ui.actionExit.triggered.connect(self._force_close)
         # Actions
         self.ui.actionCreate1to1Mapping.triggered.connect(
             self._create_1to1_mapping
@@ -1505,6 +1543,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Toolbar actions
         self.ui.actionActivate.triggered.connect(self.activate)
         self.ui.actionOpen.triggered.connect(self.load_profile)
+
+        # Tray icon
+        self.ui.tray_icon.activated.connect(self._tray_icon_activated_cb)
 
     def _setup_icons(self):
         """Sets the icons of all QAction items."""
@@ -1554,6 +1595,14 @@ class GremlinUi(QtWidgets.QMainWindow):
             QtGui.QIcon("gfx/profile_open.svg")
         )
 
+    def _tray_icon_activated_cb(self, reason):
+        """Callback triggered by clicking on the system tray icon.
+
+        :param reason the type of click performed on the icon
+        """
+        if reason == QtWidgets.QSystemTrayIcon.Trigger:
+            self.setHidden(not self.isHidden())
+
     def _mode_changed_cb(self, new_mode):
         """Updates the current mode to the provided one.
 
@@ -1572,6 +1621,13 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param mode the now current mode
         """
         self.status_bar_mode.setText("<b>Mode:</b> {}".format(mode))
+        if self.config.mode_change_message:
+            self.ui.tray_icon.showMessage(
+                "Mode: {}".format(mode),
+                "",
+                0,
+                250
+            )
 
     def _update_statusbar_active(self, is_active):
         """Updates the status bar with the current state of the system.
