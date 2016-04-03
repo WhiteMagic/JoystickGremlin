@@ -579,7 +579,7 @@ class CalibrationUi(QtWidgets.QWidget):
         self.closed.emit()
 
 
-class GremlinAboutUi(QtWidgets.QWidget):
+class AboutUi(QtWidgets.QWidget):
 
     """Widget which displays information about the application."""
 
@@ -1047,7 +1047,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def about(self):
         """Opens the about window."""
-        self.about_window = GremlinAboutUi()
+        self.about_window = AboutUi()
         self.about_window.show()
 
     def calibration(self):
