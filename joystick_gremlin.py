@@ -1509,9 +1509,15 @@ class GremlinUi(QtWidgets.QMainWindow):
     def _setup_icons(self):
         """Sets the icons of all QAction items."""
         # Menu actions
-        self.ui.actionLoadProfile.setIcon(QtGui.QIcon("gfx/profile_open.svg"))
-        self.ui.actionNewProfile.setIcon(QtGui.QIcon("gfx/profile_new.svg"))
-        self.ui.actionSaveProfile.setIcon(QtGui.QIcon("gfx/profile_save.svg"))
+        self.ui.actionLoadProfile.setIcon(
+            QtGui.QIcon("gfx/profile_open.svg")
+        )
+        self.ui.actionNewProfile.setIcon(
+            QtGui.QIcon("gfx/profile_new.svg")
+        )
+        self.ui.actionSaveProfile.setIcon(
+            QtGui.QIcon("gfx/profile_save.svg")
+        )
         self.ui.actionSaveProfileAs.setIcon(
             QtGui.QIcon("gfx/profile_save_as.svg")
         )
@@ -1521,11 +1527,15 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionManageCustomModules.setIcon(
             QtGui.QIcon("gfx/manage_modules.svg")
         )
-        self.ui.actionManageModes.setIcon(QtGui.QIcon("gfx/manage_modes.svg"))
+        self.ui.actionManageModes.setIcon(
+            QtGui.QIcon("gfx/manage_modes.svg")
+        )
         self.ui.actionInputRepeater.setIcon(
             QtGui.QIcon("gfx/input_repeater.svg")
         )
-        self.ui.actionCalibration.setIcon(QtGui.QIcon("gfx/calibration.svg"))
+        self.ui.actionCalibration.setIcon(
+            QtGui.QIcon("gfx/calibration.svg")
+        )
         self.ui.actionAbout.setIcon(QtGui.QIcon("gfx/about.svg"))
 
         # Toolbar actions
@@ -1540,7 +1550,9 @@ class GremlinUi(QtWidgets.QMainWindow):
             QtGui.QIcon.On
         )
         self.ui.actionActivate.setIcon(activate_icon)
-        self.ui.actionOpen.setIcon(QtGui.QIcon("gfx/profile_open.svg"))
+        self.ui.actionOpen.setIcon(
+            QtGui.QIcon("gfx/profile_open.svg")
+        )
 
     def _mode_changed_cb(self, new_mode):
         """Updates the current mode to the provided one.
