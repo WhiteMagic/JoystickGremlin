@@ -370,14 +370,24 @@ class OptionsUi(QtWidgets.QWidget):
         self.profile_field.textChanged.connect(self._update_profile)
 
     def _autoload_profiles(self, clicked):
+        """Stores profile autoloading preference.
+
+        :param clicked whether or not the checkbox is ticked
+        """
         self.config.autoload_profiles = clicked
         self.config.save()
 
     def _close_to_systray(self, clicked):
+        """Stores closing to system tray preference.
+
+        :param clicked whether or not the checkbox is ticked"""
         self.config.close_to_tray = clicked
         self.config.save()
 
     def _highlight_input(self, clicked):
+        """Stores preference for input highlighting.
+
+        :param clicked whether or not the checkbox is ticked"""
         self.config.highlight_input = clicked
         self.config.save()
 
@@ -401,24 +411,6 @@ class OptionsUi(QtWidgets.QWidget):
         self.config.remove_profile(self.executable_selection.currentText())
         self.populate_executables()
 
-    def _show_executable(self, exec_path):
-        """Displays the profile associated with the given executable.
-
-        :param exec_path path to the executable to shop
-        """
-        self.profile_field.setText(self.config.get_profile(exec_path))
-
-    def _show_mode_change_message(self, clicked):
-        self.config.mode_change_message = clicked
-        self.config.save()
-
-    def _update_profile(self):
-        """Updates the profile associated with the current executable."""
-        self.config.set_profile(
-            self.executable_selection.currentText(),
-            self.profile_field.text()
-        )
-
     def _select_profile(self):
         """Displays a file selection dialog for a profile.
 
@@ -437,6 +429,27 @@ class OptionsUi(QtWidgets.QWidget):
                 self.executable_selection.currentText(),
                 self.profile_field.text()
             )
+
+    def _show_executable(self, exec_path):
+        """Displays the profile associated with the given executable.
+
+        :param exec_path path to the executable to shop
+        """
+        self.profile_field.setText(self.config.get_profile(exec_path))
+
+    def _show_mode_change_message(self, clicked):
+        """Stores the user's preference for mode change notifications.
+
+        :param clicked whether or not the checkbox is ticked"""
+        self.config.mode_change_message = clicked
+        self.config.save()
+
+    def _update_profile(self):
+        """Updates the profile associated with the current executable."""
+        self.config.set_profile(
+            self.executable_selection.currentText(),
+            self.profile_field.text()
+        )
 
 
 class CalibrationUi(QtWidgets.QWidget):
