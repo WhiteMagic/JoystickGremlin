@@ -18,7 +18,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action.common import AbstractAction, AbstractActionWidget, parse_bool
+from action.common import AbstractAction, AbstractActionWidget, \
+    NoKeyboardPushButton, parse_bool
 from gremlin.common import UiInputType
 import gremlin.macro
 
@@ -97,6 +98,9 @@ class MacroListModel(QtCore.QAbstractListModel):
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
 
+        if len(self.entries) == 0:
+            return QtCore.QAbstractItemModel.flags(self, index)
+
         entry = self.entries[index.row()]
         if isinstance(entry, gremlin.macro.Macro.Pause):
             return QtCore.QAbstractItemModel.flags(self, index) | \
@@ -153,8 +157,6 @@ class MacroWidget(AbstractActionWidget):
         )
         assert(isinstance(profile_data, Macro))
 
-        self._recording = False
-
     def _setup_ui(self):
         self.model = MacroListModel()
         self._connect_signals()
@@ -187,7 +189,8 @@ class MacroWidget(AbstractActionWidget):
             QtGui.QIcon.Active,
             QtGui.QIcon.On
         )
-        self.button_record = QtWidgets.QPushButton(record_icon, "Record")
+
+        self.button_record = NoKeyboardPushButton(record_icon, "Record")
         self.button_record.setCheckable(True)
         self.button_record.clicked.connect(self._record_cb)
         self.button_pause = QtWidgets.QPushButton(
@@ -203,27 +206,15 @@ class MacroWidget(AbstractActionWidget):
         self.main_layout.addWidget(self.list_view)
         self.main_layout.addLayout(self.button_layout)
 
-    def keyPressEvent(self, event):
-        if self._recording and not event.isAutoRepeat():
-            action = gremlin.macro.Macro.KeyAction(
-                gremlin.macro.key_from_code(
-                    event.nativeScanCode() & 255,
-                    (event.nativeScanCode() & 0x100) != 0
-                ),
-                True
-            )
-            self._append_entry(action)
-
-    def keyReleaseEvent(self, event):
-        if self._recording and not event.isAutoRepeat():
-            action = gremlin.macro.Macro.KeyAction(
-                gremlin.macro.key_from_code(
-                    event.nativeScanCode() & 255,
-                    (event.nativeScanCode() & 0x100) != 0
-                ),
-                False
-            )
-            self._append_entry(action)
+    def key_event_cb(self, event):
+        action = gremlin.macro.Macro.KeyAction(
+            gremlin.macro.key_from_code(
+                event.identifier[0],
+                event.identifier[1]
+            ),
+            event.is_pressed
+        )
+        self._append_entry(action)
 
     def to_profile(self):
         self.action_data.sequence = self.model.entries
@@ -262,9 +253,13 @@ class MacroWidget(AbstractActionWidget):
         if self.button_record.isChecked():
             # Record keystrokes
             self._recording = True
+            el = gremlin.event_handler.EventListener()
+            el.keyboard_event.connect(self.key_event_cb)
         else:
             # Stop recording keystrokes
             self._recording = False
+            el = gremlin.event_handler.EventListener()
+            el.keyboard_event.disconnect(self.key_event_cb)
 
     def _pause_cb(self):
         """Adds a pause macro action to the list."""

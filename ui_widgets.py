@@ -1140,7 +1140,7 @@ class InputItemList(QtWidgets.QWidget):
         # If this is the keyboard tab add the button needed to add
         # new keys.
         if self.device_profile.type == profile.DeviceType.Keyboard:
-            self.key_add_button = QtWidgets.QPushButton("Add Key")
+            self.key_add_button = action.common.NoKeyboardPushButton("Add Key")
             self.key_add_button.clicked.connect(self._add_new_key)
             self.main_layout.addWidget(self.key_add_button)
 
