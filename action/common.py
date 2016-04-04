@@ -130,6 +130,17 @@ template_helpers = {
 }
 
 
+class NoKeyboardPushButton(QtWidgets.QPushButton):
+
+    """Standard PushButton which does not react to keyboard input."""
+
+    def __init__(self, *args, **kwargs):
+        QtWidgets.QPushButton.__init__(self, *args, **kwargs)
+
+    def keyPressEvent(self, event):
+        pass
+
+
 class DualSlider(QtWidgets.QWidget):
 
     """Slider widget which provides two sliders to define a range. The
