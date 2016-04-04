@@ -153,7 +153,6 @@ class MacroWidget(AbstractActionWidget):
         )
         assert(isinstance(profile_data, Macro))
 
-        self.model = MacroListModel()
         self._recording = False
 
     def _setup_ui(self):
