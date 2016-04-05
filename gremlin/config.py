@@ -24,6 +24,7 @@ from PyQt5 import QtCore
 import gremlin.util
 
 
+@gremlin.util.SingletonDecorator
 class Configuration(object):
 
     """Responsible for loading and saving configuration data."""
