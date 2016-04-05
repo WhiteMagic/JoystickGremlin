@@ -412,6 +412,7 @@ def clear_layout(layout):
         if child.layout():
             clear_layout(child.layout())
         elif child.widget():
+            child.widget().hide()
             child.widget().deleteLater()
         layout.removeItem(child)
 
