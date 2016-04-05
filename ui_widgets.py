@@ -1222,6 +1222,10 @@ class InputItemList(QtWidgets.QWidget):
             (UiInputType.JoystickHat, self.phys_device.hats)
         ]
 
+        # Ensure the current mode exists for the device even if it
+        # was added at runtime
+        self.device_profile.ensure_mode_exists(self.current_mode)
+
         # Create items for each of the inputs on the device
         for input_type, count in input_counts:
             for i in range(1, count + 1):
