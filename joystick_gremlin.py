@@ -24,8 +24,9 @@ import importlib
 import logging
 import os
 import sys
-import threading
 import time
+
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
 import sdl2
@@ -33,920 +34,17 @@ import sdl2.ext
 import sdl2.hints
 
 import gremlin
+from gremlin.code_runner import CodeRunner
 from gremlin.code_generator import CodeGenerator
-from gremlin import documenter, input_devices
-from gremlin.event_handler import input_type_to_name
-from ui_about import Ui_About
+from gremlin.common import UiInputType
+from gremlin.event_handler import EventListener, InputType
+from gremlin.repeater import Repeater
+
+import gremlin.ui_widgets as widgets
+import gremlin.ui_dialogs as dialogs
+import gremlin.util as util
+
 from ui_gremlin import Ui_Gremlin
-import ui_widgets
-from ui_widgets import *
-
-
-class CodeRunner(object):
-
-    """Runs the actual profile code."""
-
-    def __init__(self):
-        """Creates a new code runner instance."""
-        self.event_handler = gremlin.event_handler.EventHandler()
-        self.event_handler.add_plugin(input_devices.JoystickPlugin())
-        self.event_handler.add_plugin(input_devices.VJoyPlugin())
-        self.event_handler.add_plugin(input_devices.KeyboardPlugin())
-
-        self._inheritance_tree = None
-        self._running = False
-
-    def is_running(self):
-        """Returns whether or not the code runner is executing code.
-
-        :return True if code is being executed, False otherwise
-        """
-        return self._running
-
-    def start(self, inheritance_tree):
-        """Starts listening to events and loads all existing callbacks.
-
-        :param inheritance_tree tree encoding inheritance between the
-            different modes
-        """
-        # Reset states to their default values
-        self._inheritance_tree = inheritance_tree
-        self._reset_state()
-
-        # Load the generated code
-        try:
-            gremlin_code = util.load_module("gremlin_code")
-
-            # Create callbacks
-            callback_count = 0
-            for dev_id, modes in input_devices.callback_registry.registry.items():
-                for mode, callbacks in modes.items():
-                    for event, callback_list in callbacks.items():
-                        for callback in callback_list.values():
-                            self.event_handler.add_callback(
-                                dev_id,
-                                mode,
-                                event,
-                                callback[0],
-                                callback[1]
-                            )
-                            callback_count += 1
-            self.event_handler.build_event_lookup(inheritance_tree)
-
-            # Connect signals
-            evt_listener = gremlin.event_handler.EventListener()
-            kb = input_devices.Keyboard()
-            evt_listener.keyboard_event.connect(self.event_handler.process_event)
-            evt_listener.joystick_event.connect(self.event_handler.process_event)
-            evt_listener.keyboard_event.connect(kb.keyboard_event)
-
-            self.event_handler.change_mode(list(self._inheritance_tree.keys())[0])
-            self.event_handler.resume()
-            self._running = True
-        except ImportError as e:
-            util.display_error(
-                "Unable to launch due to missing custom modules: {}"
-                .format(str(e))
-            )
-
-    def stop(self):
-        """Stops listening to events and unloads all callbacks."""
-        # Disconnect all signals
-        if self._running:
-            evt_lst = gremlin.event_handler.EventListener()
-            kb = input_devices.Keyboard()
-            evt_lst.keyboard_event.disconnect(self.event_handler.process_event)
-            evt_lst.joystick_event.disconnect(self.event_handler.process_event)
-            evt_lst.keyboard_event.disconnect(kb.keyboard_event)
-        self._running = False
-
-        # Empty callback registry
-        input_devices.callback_registry.clear()
-        self.event_handler.clear()
-
-        # Remove all claims on VJoy devices
-        input_devices.VJoyProxy.reset()
-
-    def _reset_state(self):
-        """Resets all states to their default values."""
-        self.event_handler._active_mode = list(self._inheritance_tree.keys())[0]
-        self.event_handler._previous_mode = list(self._inheritance_tree.keys())[0]
-
-
-class Repeater(QtCore.QObject):
-
-    """Responsible to repeatedly emit a set of given events.
-
-    The class receives a list of events that are to be emitted in
-    sequence. The events are emitted in a separate thread and the
-    emission cannot be aborted once it started. While events are
-    being emitted a change of events is not performed to prevent
-    continuous emitting of events.
-    """
-
-    def __init__(self, events, update_func):
-        """Creates a new instance.
-
-        :param events the list of events to emit
-        """
-        QtCore.QObject.__init__(self)
-        self.is_running = False
-        self._events = events
-        self._thread = threading.Thread(target=self.emit_events)
-        self._start_timer = threading.Timer(1.0, self.run)
-        self._stop_timer = threading.Timer(5.0, self.stop)
-        self._update_func = update_func
-        self._timeout = time.time()
-
-    @property
-    def events(self):
-        return self._events
-
-    @events.setter
-    def events(self, event_list):
-        """Sets the list of events to execute and queues execution.
-
-        Starts emitting the list of events after a short delay. If a
-        new list of events is received before the timeout, the old timer
-        is destroyed and replaced with a new one for the new list of
-        events. Once events are being emitted all change requests will
-        be ignored.
-
-        :param event_list the list of events to emit
-        """
-        # Only proceed when waiting for input and valid input is provided
-        if self.is_running or len(event_list) == 0:
-            return
-        # Discard inputs that arrive in too quick of a succession
-        if time.time() - self._timeout < 0.25:
-            return
-
-        self._events = event_list
-        if self._start_timer:
-            self._start_timer.cancel()
-        self._start_timer = threading.Timer(1.0, self.run)
-        self._start_timer.start()
-        self._update_func("Received input")
-        self._timeout = time.time()
-
-    def stop(self):
-        """Stops the event dispatch thread."""
-        self.is_running = False
-        self._thread.join()
-
-    def run(self):
-        """Starts the event dispatch thread."""
-        if self._thread.is_alive():
-            return
-        self.is_running = True
-        self._stop_timer = threading.Timer(5.0, self.stop)
-        self._stop_timer.start()
-        self._thread = threading.Thread(target=self.emit_events)
-        self._thread.start()
-
-    def emit_events(self):
-        """Emits events until stopped."""
-        index = 0
-        el = EventListener()
-
-        # Repeatedly send events until the thread is interrupted
-        while self.is_running:
-            if self._events[0].event_type == InputType.Keyboard:
-                el.keyboard_event.emit(self._events[index])
-            else:
-                el.joystick_event.emit(self._events[index])
-
-            self._update_func("{} {}".format(
-                input_type_to_name(self._events[index].event_type),
-                str(self._events[index].identifier)
-            ))
-
-            index = (index + 1) % len(self._events)
-            time.sleep(0.25)
-
-        # This timeout prevents the below state reset to cause the
-        # program to trigger another round of repeats with the same
-        # input
-        self._timeout = time.time()
-
-        # Ensure we leave the input in a neutral state when done
-        event = self._events[0].clone()
-        if event.event_type == InputType.JoystickButton:
-            event.is_pressed = False
-        elif event.event_type == InputType.JoystickAxis:
-            event.value = 0.0
-        elif event.event_type == InputType.JoystickHat:
-            event.value = (0, 0)
-        el.joystick_event.emit(event)
-        self._update_func("Waiting for input")
-
-
-class OptionsUi(QtWidgets.QWidget):
-
-    """UI allowing the configuration of a variety of options."""
-
-    # Signal emitted when the dialog is being closed
-    closed = QtCore.pyqtSignal()
-
-    def __init__(self, parent=None):
-        """Creates a new options UI instance.
-
-        :param parent the parent of this widget
-        """
-        QtWidgets.QWidget.__init__(self, parent)
-
-        # Actual configuration object being managed
-        self.config = gremlin.config.Configuration()
-
-        self.setWindowTitle("Options")
-
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.tab_container = QtWidgets.QTabWidget()
-        self.main_layout.addWidget(self.tab_container)
-
-        self._create_general_page()
-        self._create_profile_page()
-
-    def _create_general_page(self):
-        self.general_page = QtWidgets.QWidget()
-        self.general_layout = QtWidgets.QVBoxLayout(self.general_page)
-
-        # Highlight input option
-        self.highlight_input = QtWidgets.QCheckBox(
-            "Highlight currently used input"
-        )
-        self.highlight_input.clicked.connect(self._highlight_input)
-        self.highlight_input.setChecked(self.config.highlight_input)
-
-        # Close to system tray option
-        self.close_to_systray = QtWidgets.QCheckBox(
-            "Closing minimizes to system tray"
-        )
-        self.close_to_systray.clicked.connect(self._close_to_systray)
-        self.close_to_systray.setChecked(self.config.close_to_tray)
-
-        # Show message on mode change
-        self.show_mode_change_message = QtWidgets.QCheckBox(
-            "Show message when changing mode"
-        )
-        self.show_mode_change_message.clicked.connect(
-            self._show_mode_change_message
-        )
-        self.show_mode_change_message.setChecked(
-            self.config.mode_change_message
-        )
-
-        self.general_layout.addWidget(self.highlight_input)
-        self.general_layout.addWidget(self.close_to_systray)
-        self.general_layout.addWidget(self.show_mode_change_message)
-        self.general_layout.addStretch()
-        self.tab_container.addTab(self.general_page, "General")
-
-    def _create_profile_page(self):
-        self.profile_page = QtWidgets.QWidget()
-        self.profile_page_layout = QtWidgets.QVBoxLayout(self.profile_page)
-
-        # Autload profile option
-        self.autoload_checkbox = QtWidgets.QCheckBox(
-            "Automatically load profile based on current application"
-        )
-        self.autoload_checkbox.clicked.connect(self._autoload_profiles)
-        self.autoload_checkbox.setChecked(self.config.autoload_profiles)
-
-        # Executable dropdown list
-        self.executable_layout = QtWidgets.QHBoxLayout()
-        self.executable_label = QtWidgets.QLabel("Executable")
-        self.executable_selection = QtWidgets.QComboBox()
-        self.executable_selection.currentTextChanged.connect(
-            self._show_executable
-        )
-        self.executable_add = QtWidgets.QPushButton()
-        self.executable_add.setIcon(QtGui.QIcon("gfx/button_add.png"))
-        self.executable_add.clicked.connect(self._new_executable)
-        self.executable_remove = QtWidgets.QPushButton()
-        self.executable_remove.setIcon(QtGui.QIcon("gfx/button_delete.png"))
-        self.executable_remove.clicked.connect(self._remove_executable)
-
-        self.executable_layout.addWidget(self.executable_label)
-        self.executable_layout.addWidget(self.executable_selection)
-        self.executable_layout.addWidget(self.executable_add)
-        self.executable_layout.addWidget(self.executable_remove)
-        self.executable_layout.addStretch()
-
-        self.profile_layout = QtWidgets.QHBoxLayout()
-        self.profile_field = QtWidgets.QLineEdit()
-        self.profile_field.textChanged.connect(self._update_profile)
-        self.profile_field.editingFinished.connect(self._update_profile)
-        self.profile_select = QtWidgets.QPushButton()
-        self.profile_select.setIcon(QtGui.QIcon("gfx/button_edit.png"))
-        self.profile_select.clicked.connect(self._select_profile)
-
-        self.profile_layout.addWidget(self.profile_field)
-        self.profile_layout.addWidget(self.profile_select)
-
-        self.profile_page_layout.addWidget(self.autoload_checkbox)
-        self.profile_page_layout.addLayout(self.executable_layout)
-        self.profile_page_layout.addLayout(self.profile_layout)
-        self.profile_page_layout.addStretch()
-
-        self.tab_container.addTab(self.profile_page, "Profiles")
-
-        self.populate_executables()
-
-    def closeEvent(self, event):
-        """Closes the calibration window.
-
-        :param event the close event
-        """
-        self.config.save()
-        self.closed.emit()
-
-    def populate_executables(self):
-        """Populates the profile drop down menu."""
-        self.profile_field.textChanged.disconnect(self._update_profile)
-        self.executable_selection.clear()
-        for path in self.config.get_executable_list():
-            self.executable_selection.addItem(path)
-        self.profile_field.textChanged.connect(self._update_profile)
-
-    def _autoload_profiles(self, clicked):
-        """Stores profile autoloading preference.
-
-        :param clicked whether or not the checkbox is ticked
-        """
-        self.config.autoload_profiles = clicked
-        self.config.save()
-
-    def _close_to_systray(self, clicked):
-        """Stores closing to system tray preference.
-
-        :param clicked whether or not the checkbox is ticked"""
-        self.config.close_to_tray = clicked
-        self.config.save()
-
-    def _highlight_input(self, clicked):
-        """Stores preference for input highlighting.
-
-        :param clicked whether or not the checkbox is ticked"""
-        self.config.highlight_input = clicked
-        self.config.save()
-
-    def _new_executable(self):
-        """Prompts the user to select a new executable to add to the
-        profile.
-        """
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
-            None,
-            "Path to executable",
-            "C:\\",
-            "Executable (*.exe)"
-        )
-        if fname != "":
-            self.config.set_profile(fname, "")
-            self.populate_executables()
-            self._show_executable(fname)
-
-    def _remove_executable(self):
-        """Removes the current executable from the configuration."""
-        self.config.remove_profile(self.executable_selection.currentText())
-        self.populate_executables()
-
-    def _select_profile(self):
-        """Displays a file selection dialog for a profile.
-
-        If a valid file is selected the mapping from executable to
-        profile is updated.
-        """
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
-            None,
-            "Path to executable",
-            util.userprofile_path(),
-            "Profile (*.xml)"
-        )
-        if fname != "":
-            self.profile_field.setText(fname)
-            self.config.set_profile(
-                self.executable_selection.currentText(),
-                self.profile_field.text()
-            )
-
-    def _show_executable(self, exec_path):
-        """Displays the profile associated with the given executable.
-
-        :param exec_path path to the executable to shop
-        """
-        self.profile_field.setText(self.config.get_profile(exec_path))
-
-    def _show_mode_change_message(self, clicked):
-        """Stores the user's preference for mode change notifications.
-
-        :param clicked whether or not the checkbox is ticked"""
-        self.config.mode_change_message = clicked
-        self.config.save()
-
-    def _update_profile(self):
-        """Updates the profile associated with the current executable."""
-        self.config.set_profile(
-            self.executable_selection.currentText(),
-            self.profile_field.text()
-        )
-
-
-class CalibrationUi(QtWidgets.QWidget):
-
-    """Dialog to calibrate joystick axes."""
-
-    # Signal emitted when the dialog is being closed
-    closed = QtCore.pyqtSignal()
-
-    def __init__(self, parent=None):
-        """Creates the calibration UI.
-
-        :param parent the parent widget of this object
-        """
-        QtWidgets.QWidget.__init__(self, parent)
-        self.devices = [
-            dev for dev in util.joystick_devices() if not dev.is_virtual
-        ]
-        self.current_selection_id = 0
-
-        # Create the required layouts
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.axes_layout = QtWidgets.QVBoxLayout()
-        self.button_layout = QtWidgets.QHBoxLayout()
-
-        self._create_ui()
-
-    def _create_ui(self):
-        """Creates all widgets required for the user interface."""
-        # Device selection drop down
-        self.device_dropdown = QtWidgets.QComboBox()
-        self.device_dropdown.currentIndexChanged.connect(
-            self._create_axes
-        )
-        for device in self.devices:
-            self.device_dropdown.addItem(device.name)
-
-        # Set the title
-        self.setWindowTitle("Calibration")
-
-        # Various buttons
-        self.button_close = QtWidgets.QPushButton("Close")
-        self.button_close.pressed.connect(self.close)
-        self.button_save = QtWidgets.QPushButton("Save")
-        self.button_save.pressed.connect(self._save_calibration)
-        self.button_centered = QtWidgets.QPushButton("Centered")
-        self.button_centered.pressed.connect(self._calibrate_centers)
-        self.button_layout.addWidget(self.button_save)
-        self.button_layout.addWidget(self.button_close)
-        self.button_layout.addStretch(0)
-        self.button_layout.addWidget(self.button_centered)
-
-        # Axis widget readout headers
-        self.label_layout = QtWidgets.QGridLayout()
-        label_spacer = QtWidgets.QLabel()
-        label_spacer.setMinimumWidth(200)
-        label_spacer.setMaximumWidth(200)
-        self.label_layout.addWidget(label_spacer, 0, 0, 0, 3)
-        label_current = QtWidgets.QLabel("<b>Current</b>")
-        label_current.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_current, 0, 3)
-        label_minimum = QtWidgets.QLabel("<b>Minimum</b>")
-        label_minimum.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_minimum, 0, 4)
-        label_center = QtWidgets.QLabel("<b>Center</b>")
-        label_center.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_center, 0, 5)
-        label_maximum = QtWidgets.QLabel("<b>Maximum</b>")
-        label_maximum.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_maximum, 0, 6)
-
-        # Organizing everything into the various layouts
-        self.main_layout.addWidget(self.device_dropdown)
-        self.main_layout.addLayout(self.label_layout)
-        self.main_layout.addLayout(self.axes_layout)
-        self.main_layout.addStretch(0)
-        self.main_layout.addLayout(self.button_layout)
-
-        # Create the axis calibration widgets
-        self.axes = []
-        self._create_axes(self.current_selection_id)
-
-        # Connect to the joystick events
-        el = EventListener()
-        el.joystick_event.connect(self._handle_event)
-
-    def _calibrate_centers(self):
-        """Records the centered or neutral position of the current device."""
-        for widget in self.axes:
-            widget.centered()
-
-    def _save_calibration(self):
-        """Saves the current calibration data to the hard drive."""
-        cfg = gremlin.config.Configuration()
-        dev_id = util.device_id(self.devices[self.current_selection_id])
-        cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
-
-    def _create_axes(self, index):
-        """Creates the axis calibration widget for the current device.
-
-        :param index the index of the currently selected device
-            in the dropdown menu
-        """
-        ui_widgets.clear_layout(self.axes_layout)
-        self.axes = []
-        self.current_selection_id = index
-        for i in range(self.devices[index].axes):
-            self.axes.append(AxisCalibrationWidget())
-            self.axes_layout.addWidget(self.axes[-1])
-
-    def _handle_event(self, event):
-        """Process a single joystick event.
-
-        :param event the event to process
-        """
-        if util.device_id(event) == util.device_id(self.devices[self.current_selection_id]) \
-                and event.event_type == InputType.JoystickAxis:
-            self.axes[event.identifier-1].set_current(event.raw_value)
-
-    def closeEvent(self, event):
-        """Closes the calibration window.
-
-        :param event the close event
-        """
-        el = EventListener()
-        el.joystick_event.disconnect(self._handle_event)
-        self.closed.emit()
-
-
-class AboutUi(QtWidgets.QWidget):
-
-    """Widget which displays information about the application."""
-
-    def __init__(self, parent=None):
-        """Creates a new about widget.
-
-        This creates a simple widget which shows version information
-        and various software licenses.
-
-        :param parent parent of this widget
-        """
-        QtWidgets.QWidget.__init__(self, parent)
-        self.ui = Ui_About()
-        self.ui.setupUi(self)
-
-        self.ui.about.setHtml(open("about/about.html").read())
-
-        self.ui.jg_license.setHtml(
-            open("about/joystick_gremlin.html").read()
-        )
-
-        license_list = [
-            "about/third_party_licenses.html",
-            "about/modernuiicons.html",
-            "about/pyqt.html",
-            "about/pysdl2.html",
-            "about/pywin32.html",
-            "about/qt5.html",
-            "about/sdl2.html",
-            "about/vjoy.html",
-            "about/mako.html",
-        ]
-        third_party_licenses = ""
-        for fname in license_list:
-            third_party_licenses += open(fname).read()
-        self.ui.third_party_licenses.setHtml(third_party_licenses)
-
-
-class ModeManagerUi(QtWidgets.QWidget):
-
-    """Enables the creation of modes and configuring their inheritance."""
-
-    # Signal emitted when mode configuration changes
-    modes_changed = QtCore.pyqtSignal()
-
-    def __init__(self, profile_data, parent=None):
-        """Creates a new instance.
-
-        :param profile_data the data being profile whose modes are being
-            configured
-        :param parent the parent of this wideget
-        """
-        QtWidgets.QWidget.__init__(self, parent)
-        self._profile = profile_data
-        self.setWindowTitle("Mode Manager")
-
-        self.mode_dropdowns = {}
-        self.mode_rename = {}
-        self.mode_delete = {}
-        self.mode_callbacks = {}
-
-        self._create_ui()
-
-        # Disable keyboard event handler
-        el = gremlin.event_handler.EventListener()
-        el.keyboard_hook.stop()
-
-    def closeEvent(self, event):
-        # Re-enable keyboard event handler
-        el = gremlin.event_handler.EventListener()
-        el.keyboard_hook.start()
-
-    def _create_ui(self):
-        """Creates the required UII elements."""
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.mode_layout = QtWidgets.QGridLayout()
-
-        self.main_layout.addLayout(self.mode_layout)
-        self.add_button = QtWidgets.QPushButton("Add Mode")
-        self.add_button.clicked.connect(self._add_mode_cb)
-        self.main_layout.addWidget(self.add_button)
-
-        self._populate_mode_layout()
-
-    def _populate_mode_layout(self):
-        """Generates the mode layout UI displaying the different modes."""
-        # Clear potentially existing content
-        util.clear_layout(self.mode_layout)
-        self.mode_dropdowns = {}
-        self.mode_rename = {}
-        self.mode_delete = {}
-        self.mode_callbacks = {}
-
-        # Obtain mode names and the mode they inherit from
-        mode_list = {}
-        for device in self._profile.devices.values():
-            for mode in device.modes.values():
-                if mode.name not in mode_list:
-                    mode_list[mode.name] = mode.inherit
-
-        # Create UI element for each mode
-        row = 0
-        for mode, inherit in sorted(mode_list.items()):
-            self.mode_layout.addWidget(QtWidgets.QLabel(mode), row, 0)
-            self.mode_dropdowns[mode] = QtWidgets.QComboBox()
-            self.mode_dropdowns[mode].addItem("None")
-            self.mode_dropdowns[mode].setMinimumContentsLength(20)
-            for name in sorted(mode_list.keys()):
-                if name != mode:
-                    self.mode_dropdowns[mode].addItem(name)
-
-            self.mode_callbacks[mode] = self._create_inheritance_change_cb(mode)
-            self.mode_dropdowns[mode].currentTextChanged.connect(
-                self.mode_callbacks[mode]
-            )
-            self.mode_dropdowns[mode].setCurrentText(inherit)
-
-            # Rename mode button
-            self.mode_rename[mode] = QtWidgets.QPushButton(
-                QtGui.QIcon("gfx/button_edit.png"), ""
-            )
-            self.mode_layout.addWidget(self.mode_rename[mode], row, 2)
-            self.mode_rename[mode].clicked.connect(
-                self._create_rename_mode_cb(mode)
-            )
-            # Delete mode button
-            self.mode_delete[mode] = QtWidgets.QPushButton(
-                QtGui.QIcon("gfx/mode_delete"), ""
-            )
-            self.mode_layout.addWidget(self.mode_delete[mode], row, 3)
-            self.mode_delete[mode].clicked.connect(
-                self._create_delete_mode_cb(mode)
-            )
-
-            self.mode_layout.addWidget(self.mode_dropdowns[mode], row, 1)
-            row += 1
-
-    def _create_inheritance_change_cb(self, mode):
-        """Returns a lambda function callback to change the inheritance of
-        a mode.
-
-        This is required as otherwise lambda functions created within a
-        function do not behave as desired.
-
-        :param mode the mode for which the callback is being created
-        :return customized lambda function
-        """
-        return lambda x: self._change_mode_inheritance(mode, x)
-
-    def _create_rename_mode_cb(self, mode):
-        """Returns a lambda function callback to rename a mode.
-
-        This is required as otherwise lambda functions created within a
-        function do not behave as desired.
-
-        :param mode the mode for which the callback is being created
-        :return customized lambda function
-        """
-        return lambda: self._rename_mode(mode)
-
-    def _create_delete_mode_cb(self, mode):
-        """Returns a lambda function callback to delete the given mode.
-
-        This is required as otherwise lambda functions created within a
-        function do not behave as desired.
-
-        :param mode the mode to remove
-        :return lambda function to perform the removal
-        """
-        return lambda: self._delete_mode(mode)
-
-    def _change_mode_inheritance(self, mode, inherit):
-        """Updates the inheritance information of a given mode.
-
-        :param mode the mode to update
-        :param inherit the name of the mode this mode inherits from
-        """
-        # Check if this inheritance would cause a cycle, turning the
-        # tree structure into a graph
-        has_inheritance_cycle = False
-        if inherit != "None":
-            all_modes = list(self._profile.devices.values())[0].modes
-            cur_mode = inherit
-            while all_modes[cur_mode].inherit is not None:
-                if all_modes[cur_mode].inherit == mode:
-                    has_inheritance_cycle = True
-                    break
-                cur_mode = all_modes[cur_mode].inherit
-
-        # Update the inheritance information in the profile
-        if not has_inheritance_cycle:
-            for name, device in self._profile.devices.items():
-                if inherit == "None":
-                    inherit = None
-                device.modes[mode].inherit = inherit
-            self.modes_changed.emit()
-
-    def _rename_mode(self, mode_name):
-        """Asks the user for the new name for the given mode.
-
-        If the user provided name for the mode is invalid the
-        renaming is aborted and no change made.
-        """
-        # Retrieve new name from the user
-        name, user_input = QtWidgets.QInputDialog.getText(
-                self,
-                "Mode name",
-                "",
-                QtWidgets.QLineEdit.Normal,
-                mode_name
-        )
-        if user_input:
-            if name in util.mode_list(self._profile):
-                util.display_error(
-                    "A mode with the name \"{}\" already exists".format(name)
-                )
-            else:
-                # Update the renamed mode in each device
-                for device in self._profile.devices.values():
-                    device.modes[name] = device.modes[mode_name]
-                    device.modes[name].name = name
-                    del device.modes[mode_name]
-
-                    # Update inheritance information
-                    for mode in device.modes.values():
-                        if mode.inherit == mode_name:
-                            mode.inherit = name
-
-                self.modes_changed.emit()
-
-            self._populate_mode_layout()
-
-    def _delete_mode(self, mode_name):
-        """Removes the specified mode.
-
-        Performs an update of the inheritance of all modes that inherited
-        from the deleted mode.
-
-        :param mode_name the name of the mode to delete
-        """
-        # Obtain mode from which the mode we want to delete inherits
-        parent_of_deleted = None
-        for mode in list(self._profile.devices.values())[0].modes.values():
-            if mode.name == mode_name:
-                parent_of_deleted = mode.inherit
-
-        # Assign the inherited mode of the the deleted one to all modes that
-        # inherit from the mode to be deleted
-        for device in self._profile.devices.values():
-            for mode in device.modes.values():
-                if mode.inherit == mode_name:
-                    mode.inherit = parent_of_deleted
-
-        # Remove the mode from the profile
-        for device in self._profile.devices.values():
-            del device.modes[mode_name]
-
-        # Update the ui
-        self._populate_mode_layout()
-        self.modes_changed.emit()
-
-    def _add_mode_cb(self, checked):
-        """Asks the user for a new mode to add.
-
-        If the user provided name for the mode is invalid no mode is
-        added.
-        """
-        name, user_input = QtWidgets.QInputDialog.getText(None, "Mode name", "")
-        if user_input:
-            if name in util.mode_list(self._profile):
-                util.display_error(
-                    "A mode with the name \"{}\" already exists".format(name)
-                )
-            else:
-                for device in self._profile.devices.values():
-                    new_mode = profile.Mode(device)
-                    new_mode.name = name
-                    device.modes[name] = new_mode
-                self.modes_changed.emit()
-
-            self._populate_mode_layout()
-
-
-class ModuleManagerUi(QtWidgets.QWidget):
-
-    """UI which allows the user to manage custom python modules to
-    be loaded by the program."""
-
-    def __init__(self, profile_data, parent=None):
-        """Creates a new instance.
-
-        :param profile_data the profile with which to populate the ui
-        :param parent the parent widget
-        """
-        QtWidgets.QWidget.__init__(self, parent)
-        self._profile = profile_data
-        self.setWindowTitle("User Module Manager")
-
-        self._create_ui()
-        # Disable keyboard event handler
-        el = gremlin.event_handler.EventListener()
-        el.keyboard_hook.stop()
-
-    def closeEvent(self, event):
-        # Re-enable keyboard event handler
-        el = gremlin.event_handler.EventListener()
-        el.keyboard_hook.start()
-
-    def _create_ui(self):
-        """Creates all the UI elements."""
-        self.model = QtCore.QStringListModel()
-        self.model.setStringList(sorted(self._profile.imports))
-
-        self.view = QtWidgets.QListView()
-        self.view.setModel(self.model)
-        self.view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        # Add widgets which allow modifying the mode list
-        self.add = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_add.svg"), "Add"
-        )
-        self.add.clicked.connect(self._add_cb)
-        self.delete = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_delete.svg"), "Delete"
-        )
-        self.delete.clicked.connect(self._delete_cb)
-
-        self.actions_layout = QtWidgets.QHBoxLayout()
-        self.actions_layout.addWidget(self.add)
-        self.actions_layout.addWidget(self.delete)
-
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.main_layout.addWidget(self.view)
-        self.main_layout.addLayout(self.actions_layout)
-
-    def _add_cb(self):
-        """Asks the user for the name of a new module to add to the list
-        of imported modules.
-
-        If the name is not a valid python identifier nothing is added.
-        """
-        new_import, input_ok = QtWidgets.QInputDialog.getText(
-            self,
-            "Module name",
-            "Enter the name of the module to import"
-        )
-        if input_ok and new_import != "":
-            if not util.valid_python_identifier(new_import):
-                util.display_error(
-                    "\"{}\" is not a valid python module name"
-                    .format(new_import)
-                )
-            else:
-                import_list = self.model.stringList()
-                import_list.append(new_import)
-                self.model.setStringList(sorted(import_list))
-                self._profile.imports = list(import_list)
-
-    def _delete_cb(self):
-        """Removes the currently selected module from the list."""
-        import_list = self.model.stringList()
-        index = self.view.currentIndex().row()
-        if 0 <= index <= len(import_list):
-            del import_list[index]
-            self.model.setStringList(import_list)
-            self.view.setCurrentIndex(self.model.index(0, 0))
-            self._profile.imports = list(import_list)
 
 
 class GremlinUi(QtWidgets.QMainWindow):
@@ -983,14 +81,14 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._update_statusbar_active
         )
 
-        self.mode_selector = ModeWidget()
+        self.mode_selector = widgets.ModeWidget()
         self.mode_selector.mode_changed.connect(self._mode_changed_cb)
 
         self.ui.toolBar.addWidget(self.mode_selector)
 
         # Setup profile storage
         self._current_mode = None
-        self._profile = profile.Profile()
+        self._profile = gremlin.profile.Profile()
         self._profile_fname = None
         self._profile_auto_activated = False
         # Input selection storage
@@ -1047,12 +145,12 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def about(self):
         """Opens the about window."""
-        self.about_window = AboutUi()
+        self.about_window = dialogs.AboutUi()
         self.about_window.show()
 
     def calibration(self):
         """Opens the calibration window."""
-        self.calibration_window = CalibrationUi()
+        self.calibration_window = dialogs.CalibrationUi()
         self.calibration_window.show()
         gremlin.shared_state.set_suspend_input_highlighting(True)
         self.calibration_window.closed.connect(
@@ -1061,7 +159,8 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def device_information(self):
         """Opens the device information window."""
-        self.device_information = DeviceInformationWidget(self.devices)
+        self.device_information = \
+            widgets.DeviceInformationWidget(self.devices)
         geom = self.geometry()
         self.device_information.setGeometry(
             geom.x() + geom.width() / 2 - 150,
@@ -1073,23 +172,22 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def manage_custom_modules(self):
         """Opens the custom module management window."""
-        self.module_manager = ModuleManagerUi(self._profile)
+        self.module_manager = dialogs.ModuleManagerUi(self._profile)
         self.module_manager.show()
 
     def manage_modes(self):
         """Opens the mode management window."""
-        self.mode_manager = ModeManagerUi(self._profile)
+        self.mode_manager = dialogs.ModeManagerUi(self._profile)
         self.mode_manager.modes_changed.connect(self._mode_configuration_changed)
         self.mode_manager.show()
 
     def options_dialog(self):
         """Opens the options dialog."""
-        self.options_window = OptionsUi()
+        self.options_window = dialogs.OptionsUi()
         self.options_window.show()
         self.options_window.closed.connect(
             lambda: self._apply_user_settings()
         )
-
 
     # +---------------------------------------------------------------
     # | Action implementations
@@ -1126,7 +224,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         device_profile = self.ui.devices.currentWidget().device_profile
         # Don't create mappings for non joystick devices
-        if device_profile.type != profile.DeviceType.Joystick:
+        if device_profile.type != gremlin.profile.DeviceType.Joystick:
             return
 
         vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
@@ -1148,7 +246,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 item_list = main_profile.list_unused_vjoy_inputs(
                     vjoy_devices
                 )
-                act = profile.create_action("remap", entry)
+                act = gremlin.profile.create_action("remap", entry)
                 act.input_type = input_type
                 act.vjoy_device_id = 1
                 if len(item_list[1][type_name[input_type]]) > 0:
@@ -1200,24 +298,24 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def new_profile(self):
         """Creates a new empty profile."""
-        self._profile = profile.Profile()
+        self._profile = gremlin.profile.Profile()
 
         # For each connected device create a new empty device entry
         # in the new profile
         for device in [entry for entry in self.devices if not entry.is_virtual]:
-            new_device = profile.Device(self._profile)
+            new_device = gremlin.profile.Device(self._profile)
             new_device.name = device.name
             new_device.hardware_id = device.hardware_id
             new_device.windows_id = device.windows_id
-            new_device.type = profile.DeviceType.Joystick
+            new_device.type = gremlin.profile.DeviceType.Joystick
             self._profile.devices[util.device_id(new_device)] = new_device
 
         # Create keyboard device entry
-        keyboard_device = profile.Device(self._profile)
+        keyboard_device = gremlin.profile.Device(self._profile)
         keyboard_device.name = "keyboard"
         keyboard_device.hardware_id = 0
         keyboard_device.windows_id = 0
-        keyboard_device.type = profile.DeviceType.Keyboard
+        keyboard_device.type = gremlin.profile.DeviceType.Keyboard
         self._profile.devices[util.device_id(keyboard_device)] = keyboard_device
 
         # Update profile information
@@ -1374,7 +472,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device.name
             )
 
-            widget = DeviceTabWidget(
+            widget = widgets.DeviceTabWidget(
                 vjoy_devices,
                 device,
                 device_profile,
@@ -1386,10 +484,12 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Create keyboard tab
         device_profile = self._profile.get_device_modes(
-            util.device_id(gremlin.event_handler.Event.from_key(macro.Keys.A)),
+            util.device_id(gremlin.event_handler.Event.from_key(
+                gremlin.macro.Keys.A)
+            ),
             "keyboard"
         )
-        widget = DeviceTabWidget(
+        widget = widgets.DeviceTabWidget(
             vjoy_devices,
             None,
             device_profile,
@@ -1592,7 +692,11 @@ class GremlinUi(QtWidgets.QMainWindow):
             util.userprofile_path(),
             "{} files (*.{})".format(file_format.upper(), file_format)
         )
-        documenter.generate_cheatsheet(file_format, fname, self._profile)
+        gremlin.documenter.generate_cheatsheet(
+            file_format,
+            fname,
+            self._profile
+        )
 
     def _do_load_profile(self, fname):
         """Load the profile with the given filename.
@@ -1606,7 +710,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Attempt to load the new profile
         try:
-            new_profile = profile.Profile()
+            new_profile = gremlin.profile.Profile()
             new_profile.from_xml(fname)
 
             profile_folder = os.path.dirname(fname)
@@ -1841,6 +945,6 @@ if __name__ == "__main__":
     ui.runner.stop()
 
     # Relinquish control over all VJoy devices used
-    input_devices.VJoyProxy.reset()
+    gremlin.input_devices.VJoyProxy.reset()
 
     sys.exit(0)
