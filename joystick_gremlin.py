@@ -922,6 +922,10 @@ if __name__ == "__main__":
     )
     sdl2.ext.init()
 
+    # Check if vJoy is properly setup and if not display an error
+    # and terminate Gremlin
+    vjoy_working = len([dev for dev in util.joystick_devices() if dev.is_virtual]) != 0
+
     # Setup device key generator based on whether or not we have
     # duplicate devices connected.
     util.setup_duplicate_joysticks()
@@ -931,8 +935,14 @@ if __name__ == "__main__":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
-    ui = GremlinUi()
-    ui.show()
+    app.setApplicationDisplayName("Joystick Gremlin")
+
+    if not vjoy_working:
+        util.display_error(
+            "vJoy is not present or incorrectly setup, terminating.")
+    else:
+        ui = GremlinUi()
+        ui.show()
 
     # Run UI
     app.exec_()
@@ -941,8 +951,9 @@ if __name__ == "__main__":
     event_listener = gremlin.event_handler.EventListener()
     event_listener.terminate()
 
-    # Properly terminate the runner instance should it be running
-    ui.runner.stop()
+    if vjoy_working:
+        # Properly terminate the runner instance should it be running
+        ui.runner.stop()
 
     # Relinquish control over all VJoy devices used
     gremlin.input_devices.VJoyProxy.reset()
