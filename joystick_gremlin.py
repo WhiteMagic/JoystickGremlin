@@ -896,11 +896,11 @@ class GremlinUi(QtWidgets.QMainWindow):
     def _update_window_title(self):
         """Updates the window title to include the current profile."""
         if self._profile_fname is not None:
-            self.setWindowTitle("Joystick Gremlin - {}".format(
+            self.setWindowTitle("{}".format(
                 os.path.basename(self._profile_fname))
             )
         else:
-            self.setWindowTitle("Joystick Gremlin")
+            self.setWindowTitle("")
 
 
 if __name__ == "__main__":
