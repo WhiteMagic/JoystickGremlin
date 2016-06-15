@@ -67,7 +67,7 @@ def create_node(tag, data):
 
 
 def create_folder_structure(folder_list):
-    """Creates the basic XML direcotry structure.
+    """Creates the basic XML directory structure.
 
     :param folder_list the list of folders present
     :return dictionary with folder nodes
@@ -103,7 +103,10 @@ def create_folder_structure(folder_list):
             "Id": "H2ikProgramFilesFolder"
         }
     )
-    node.append(create_node("RemoveFolder", {"Id": "RemoveH2iKFolder", "On": "uninstall"}))
+    node.append(create_node(
+        "RemoveFolder",
+        {"Id": "RemoveH2iKFolder", "On": "uninstall"})
+    )
     structure["h2ik"].append(node)
 
     # Create the folder structure for the Joystick Gremlin install
@@ -142,7 +145,10 @@ def add_file_nodes(structure, data):
         f_node = ElementTree.Element("File")
         f_node.set("Id", entry["file_id"])
         f_node.set("KeyPath", "yes")
-        f_node.set("Source", os.path.join("joystick_gremlin", entry["file_source"]))
+        f_node.set(
+            "Source",
+            os.path.join("joystick_gremlin", entry["file_source"])
+        )
 
         c_node.append(f_node)
 
@@ -205,7 +211,8 @@ def create_document():
         })
     mug = create_node("MajorUpgrade",
         {
-            "DowngradeErrorMessage": "Cannot directly downgrade, uninstall current version first."
+            "DowngradeErrorMessage":
+                "Cannot directly downgrade, uninstall current version first."
         }
     )
     pkg = create_node(
@@ -371,7 +378,7 @@ def create_shortcuts(doc, root):
 def write_xml(node, fname):
     """Saves the XML document to the given file.
 
-    :param root node of the XML document
+    :param node node of the XML document
     :param fname the file to store the XML document in
     """
     ugly_xml = ElementTree.tostring(node, encoding="unicode")
@@ -383,7 +390,11 @@ def write_xml(node, fname):
 def main():
     # Command line arguments
     parser = argparse.ArgumentParser("Generate WIX component data")
-    parser.add_argument("--folder", default="dist/joystick_gremlin", help="Folder to parse")
+    parser.add_argument(
+        "--folder",
+        default="dist/joystick_gremlin",
+        help="Folder to parse"
+    )
     args = parser.parse_args()
 
     # Attempt to load existing file data
