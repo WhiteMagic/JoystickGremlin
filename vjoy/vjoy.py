@@ -316,9 +316,10 @@ class VJoy(object):
         :returns dictionary of Axis objects
         """
         axes = {}
-        for axis in AxisName:
+        for i, axis in enumerate(AxisName):
             if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value):
                 axes[axis] = Axis(self, axis.value)
+                axes[i+1] = Axis(self, axis.value)
         return axes
 
     def _init_hats(self):
