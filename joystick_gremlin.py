@@ -188,7 +188,9 @@ class GremlinUi(QtWidgets.QMainWindow):
     def manage_modes(self):
         """Opens the mode management window."""
         self.mode_manager = dialogs.ModeManagerUi(self._profile)
-        self.mode_manager.modes_changed.connect(self._mode_configuration_changed)
+        self.mode_manager.modes_changed.connect(
+            self._mode_configuration_changed
+        )
         self.mode_manager.show()
 
     def options_dialog(self):
