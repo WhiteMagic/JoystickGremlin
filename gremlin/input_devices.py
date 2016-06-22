@@ -17,6 +17,9 @@
 
 import functools
 import logging
+from queue import PriorityQueue
+import time
+import threading
 
 from PyQt5 import QtCore
 import sdl2
@@ -65,11 +68,83 @@ class CallbackRegistry(object):
         self._registry = {}
 
 
+class PeriodicRegistry(object):
+
+    """Registry for periodically executed functions."""
+
+    def __init__(self):
+        """Creates a new instance."""
         self._registry = {}
+        self._running = False
+        self._thread = threading.Thread(target=self._thread_loop)
+        self._queue = PriorityQueue()
+
+    def start(self):
+        """Starts the event loop."""
+        # Only create a new thread and start it if the thread is not
+        # currently running
+        self._running = True
+        if not self._thread.is_alive():
+            self._thread = threading.Thread(target=self._thread_loop)
+            self._thread.start()
+
+    def stop(self):
+        """Stops the event loop."""
+        self._running = False
+        if self._thread.is_alive():
+            self._thread.join()
+
+    def add(self, callback, interval):
+        """Adds a function to execute periodically.
+
+        :param callback the function to execute
+        :param interval the time between executions
+        """
+        self._registry[callback] = (interval, callback)
+
+    def remove(self, callback):
+        """Removes a callback from the registry."""
+        if callback in self._registry:
+            del self._registry[callback]
+
+    def clear(self):
+        """Clears the registry."""
+        self._registry = {}
+
+    def _create_queue_entry(self, key):
+        """Creates a priority queue entry based on a callback.
+
+        :param key the callback to create the priority queue entry for
+        :return priority queue entry
+        """
+        return (time.time() + self._registry[key][0], key)
+
+    def _thread_loop(self):
+        """Main execution loop run in a separate thread."""
+        # Populate the queue
+        self._queue = PriorityQueue()
+        print(self._registry.values())
+        for item in self._registry.values():
+            self._queue.put(self._create_queue_entry(item[1]))
+
+        while self._running:
+            # Process all events that require running
+            item = self._queue.get()
+            while item[0] < time.time():
+                item[1]()
+
+                self._queue.put(self._create_queue_entry(item[1]))
+                item = self._queue.get()
+            self._queue.put(item)
+
+            time.sleep(0.01)
 
 
 # Global registry of all registered callbacks
 callback_registry = CallbackRegistry()
+
+# Global registry of all periodic callbacks
+periodic_registry = PeriodicRegistry()
 
 
 class VJoyProxy(object):
@@ -520,6 +595,25 @@ def keyboard(key_name, mode, always_execute=False):
         key = macro.key_from_name(key_name)
         event = event_handler.Event.from_key(key)
         callback_registry.add(wrapper_fn, event, mode, always_execute)
+
+        return wrapper_fn
+
+    return wrap
+
+
+def periodic(interval):
+    """Decorator for periodic function callbacks.
+
+    :param interval the duration between executions of the function
+    """
+
+    def wrap(callback):
+
+        @functools.wraps(callback)
+        def wrapper_fn(*args, **kwargs):
+            callback(*args, **kwargs)
+
+        periodic_registry.add(wrapper_fn, interval)
 
         return wrapper_fn
 

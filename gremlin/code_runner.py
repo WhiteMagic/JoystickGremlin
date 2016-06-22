@@ -77,6 +77,8 @@ class CodeRunner(object):
             evt_listener.joystick_event.connect(self.event_handler.process_event)
             evt_listener.keyboard_event.connect(kb.keyboard_event)
 
+            input_devices.periodic_registry.start()
+
             self.event_handler.change_mode(list(self._inheritance_tree.keys())[0])
             self.event_handler.resume()
             self._running = True
@@ -100,6 +102,10 @@ class CodeRunner(object):
         # Empty callback registry
         input_devices.callback_registry.clear()
         self.event_handler.clear()
+
+        # Stop periodic events and clear registry
+        input_devices.periodic_registry.stop()
+        input_devices.periodic_registry.clear()
 
         # Remove all claims on VJoy devices
         input_devices.VJoyProxy.reset()
