@@ -16,8 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import functools
+import heapq
 import logging
-from queue import PriorityQueue
 import time
 import threading
 
@@ -77,7 +77,7 @@ class PeriodicRegistry(object):
         self._registry = {}
         self._running = False
         self._thread = threading.Thread(target=self._thread_loop)
-        self._queue = PriorityQueue()
+        self._queue = []
 
     def start(self):
         """Starts the event loop."""
@@ -122,22 +122,27 @@ class PeriodicRegistry(object):
     def _thread_loop(self):
         """Main execution loop run in a separate thread."""
         # Populate the queue
-        self._queue = PriorityQueue()
-        print(self._registry.values())
+        self._queue = []
         for item in self._registry.values():
-            self._queue.put(self._create_queue_entry(item[1]))
+            heapq.heappush(
+                self._queue,
+                self._create_queue_entry(item[1])
+            )
 
         while self._running:
             # Process all events that require running
-            item = self._queue.get()
-            while item[0] < time.time():
+            while self._queue[0][0] < time.time():
+                item = heapq.heappop(self._queue)
                 item[1]()
 
-                self._queue.put(self._create_queue_entry(item[1]))
-                item = self._queue.get()
-            self._queue.put(item)
+                heapq.heappush(
+                    self._queue,
+                    self._create_queue_entry(item[1])
+                )
 
-            time.sleep(0.01)
+            # Sleep until either the next function needs to be run or
+            # our timeout expires
+            time.sleep(min(self._queue[0][0] - time.time(), 1.0))
 
 
 # Global registry of all registered callbacks
