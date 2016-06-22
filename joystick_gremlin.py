@@ -118,6 +118,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.module_manager = None
         self.mode_manager = None
         self.options_window = None
+        self.log_window = None
 
         # Enable reloading for when a user connects / disconnects a
         # device
@@ -138,6 +139,10 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.process_monitor.running = False
             del self.ui.tray_icon
             QtCore.QCoreApplication.quit()
+
+        # Terminate file watcher thread
+        if self.log_window:
+            self.log_window.watcher.stop()
 
     # +---------------------------------------------------------------
     # | Modal window creation
@@ -169,6 +174,11 @@ class GremlinUi(QtWidgets.QMainWindow):
             150
         )
         self.device_information.show()
+
+    def log_window(self):
+        """Opens the log display window."""
+        self.log_window = dialogs.LogWindowUi()
+        self.log_window.show()
 
     def manage_custom_modules(self):
         """Opens the custom module management window."""
@@ -399,6 +409,9 @@ class GremlinUi(QtWidgets.QMainWindow):
             lambda: self._create_cheatsheet("pdf")
         )
         self.ui.actionOptions.triggered.connect(self.options_dialog)
+        self.ui.actionLogDisplay.triggered.connect(
+            self.log_window
+        )
         # About
         self.ui.actionAbout.triggered.connect(self.about)
 

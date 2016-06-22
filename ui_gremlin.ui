@@ -69,6 +69,7 @@
     <addaction name="actionPDFCheatsheet"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
+    <addaction name="actionLogDisplay"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -195,6 +196,11 @@
   <action name="actionCreate1to1Mapping">
    <property name="text">
     <string>Create 1:1 mapping</string>
+   </property>
+  </action>
+  <action name="actionLogDisplay">
+   <property name="text">
+    <string>&amp;Log display</string>
    </property>
   </action>
  </widget>

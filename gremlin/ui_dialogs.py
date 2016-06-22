@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from gremlin import config, profile, util
@@ -23,7 +25,6 @@ from gremlin.event_handler import EventListener, InputType
 import gremlin.ui_widgets as widgets
 
 from ui_about import Ui_About
-
 
 
 class OptionsUi(QtWidgets.QWidget):
@@ -364,6 +365,78 @@ class CalibrationUi(QtWidgets.QWidget):
         el = EventListener()
         el.joystick_event.disconnect(self._handle_event)
         self.closed.emit()
+
+
+class LogWindowUi(QtWidgets.QWidget):
+
+    """Window displaying log file content."""
+
+    def __init__(self,  parent=None):
+        """Creates a new instance.
+
+        :param parent the parent of this widget
+        """
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.setWindowTitle("Log Viewer")
+        self.setMinimumWidth(600)
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.tab_container = QtWidgets.QTabWidget()
+        self.main_layout.addWidget(self.tab_container)
+
+        self._ui_elements = {}
+        self._create_log_display(
+            os.path.join(util.userprofile_path(), "system.log"),
+            "System"
+        )
+        self._create_log_display(
+            os.path.join(util.userprofile_path(), "user.log"),
+            "User"
+        )
+        self.watcher = util.FileWatcher([
+            os.path.join(util.userprofile_path(), "system.log"),
+            os.path.join(util.userprofile_path(), "user.log")
+        ])
+        self.watcher.file_changed.connect(self._reload)
+
+    def closeEvent(self, evt):
+        """Handles closing of the window."""
+        self.watcher.stop()
+
+    def _create_log_display(self, fname, title):
+        """Creates a new tab displaying log file contents.
+
+        :param fname path to the file whose content to display
+        :param title the title of the tab
+        """
+        page = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(page)
+        log_display = QtWidgets.QTextEdit()
+        log_display.setText(open(fname).read())
+        layout.addWidget(log_display)
+
+        self._ui_elements[fname] = {
+            "page": page,
+            "layout": layout,
+            "log_display": log_display
+        }
+
+        self.tab_container.addTab(
+            self._ui_elements[fname]["page"],
+            title
+        )
+
+    def _reload(self, fname):
+        """Reloads the content of tab displaying the given file.
+
+        :param fname name of the file whose content to update
+        """
+        widget = self._ui_elements[fname]["log_display"]
+        widget.setText(open(fname).read())
+        widget.verticalScrollBar().setValue(
+            widget.verticalScrollBar().maximum()
+        )
 
 
 class AboutUi(QtWidgets.QWidget):

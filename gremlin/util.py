@@ -17,13 +17,16 @@
 
 import importlib
 import logging
-from mako.template import Template
 import os
-from PyQt5 import QtWidgets
 import re
-import sdl2
 import struct
 import sys
+import threading
+import time
+
+from mako.template import Template
+from PyQt5 import QtCore, QtWidgets
+import sdl2
 
 import gremlin
 from gremlin import error, fsm
@@ -55,6 +58,46 @@ class SingletonDecorator:
         if self.instance is None:
             self.instance = self.klass(*args, **kwargs)
         return self.instance
+
+
+class FileWatcher(QtCore.QObject):
+
+    """Watches files for change."""
+
+    # Signal emitted when the watched file is modified
+    file_changed = QtCore.pyqtSignal(str)
+
+    def __init__(self, file_names, parent=None):
+        """Creates a new instance.
+
+        :param file_names list of files to watch
+        :param parent parent of this object
+        """
+        QtCore.QObject.__init__(self, parent)
+        self._file_names = file_names
+        self._last_size = {}
+        for fname in self._file_names:
+            self._last_size[fname] = 0
+
+        self._is_running = True
+        self._watch_thread = threading.Thread(target=self._monitor)
+        self._watch_thread.start()
+
+    def stop(self):
+        """Terminates the thread monitoring files."""
+        self._is_running = False
+        if self._watch_thread.is_alive():
+            self._watch_thread.join()
+
+    def _monitor(self):
+        """Continuously monitors files for change."""
+        while self._is_running:
+            for fname in self._file_names:
+                stats = os.stat(fname)
+                if stats.st_size != self._last_size:
+                    self._last_size[fname] = stats.st_size
+                    self.file_changed.emit(fname)
+            time.sleep(1)
 
 
 class JoystickDeviceData(object):

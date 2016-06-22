@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_gremlin.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -21,6 +21,7 @@ class Ui_Gremlin(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.tab)
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.devices.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
@@ -84,6 +85,8 @@ class Ui_Gremlin(object):
         self.actionOptions.setObjectName("actionOptions")
         self.actionCreate1to1Mapping = QtWidgets.QAction(Gremlin)
         self.actionCreate1to1Mapping.setObjectName("actionCreate1to1Mapping")
+        self.actionLogDisplay = QtWidgets.QAction(Gremlin)
+        self.actionLogDisplay.setObjectName("actionLogDisplay")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
@@ -100,6 +103,7 @@ class Ui_Gremlin(object):
         self.menuTools.addAction(self.actionPDFCheatsheet)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.actionOptions)
+        self.menuTools.addAction(self.actionLogDisplay)
         self.menu_Help.addAction(self.actionAbout)
         self.menu_Actions.addAction(self.actionCreate1to1Mapping)
         self.menubar.addAction(self.menu_File.menuAction())
@@ -141,4 +145,5 @@ class Ui_Gremlin(object):
         self.actionExit.setText(_translate("Gremlin", "E&xit"))
         self.actionOptions.setText(_translate("Gremlin", "&Options"))
         self.actionCreate1to1Mapping.setText(_translate("Gremlin", "Create 1:1 mapping"))
+        self.actionLogDisplay.setText(_translate("Gremlin", "&Log display"))
 
