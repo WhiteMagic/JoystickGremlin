@@ -852,7 +852,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
             try:
                 self._add_widget(self.item_profile.actions[i], False)
             except error.GremlinError as err:
-                logging.exception(str(err))
+                logging.getLogger("system").exception(str(err))
                 raise err
         self.always_execute.setChecked(self.item_profile.always_execute)
         self._description_field.setText(self.item_profile.description)

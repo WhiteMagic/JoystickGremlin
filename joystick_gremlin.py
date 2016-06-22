@@ -734,7 +734,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         except TypeError as e:
             # An error occurred while parsing an existing profile,
             # creating an empty profile instead
-            logging.exception("Invalid profile content:\n{}".format(e))
+            logging.getLogger("system").exception(
+                "Invalid profile content:\n{}".format(e)
+            )
             self.new_profile()
 
     def _force_close(self):
@@ -868,7 +870,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         elif event.event_type == InputType.JoystickHat:
             process_input = event.value != (0, 0)
         else:
-            logging.warning("Event with bad content received")
+            logging.getLogger("system").warning(
+                "Event with bad content received"
+            )
             process_input = False
 
         # Check if we should actually react to the event
@@ -903,16 +907,38 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.setWindowTitle("")
 
 
+def configure_logger(config):
+    logger = logging.getLogger(config["name"])
+    logger.setLevel(config["level"])
+    handler = logging.FileHandler(config["logfile"])
+    handler.setLevel(config["level"])
+    formatter = logging.Formatter(config["format"], "%Y-%m-%d %H:%M")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    logger.debug("-" * 80)
+    logger.debug(time.strftime("%Y-%m-%d %H:%M"))
+    logger.debug("Starting Joystick Gremlin R5")
+    logger.debug("-" * 80)
+
+
 if __name__ == "__main__":
     sys.path.insert(0, util.userprofile_path())
     util.setup_userprofile()
-    logging.basicConfig(
-        filename=os.path.join(util.userprofile_path(), "debug.log"),
-        format="%(asctime)s %(levelname)10s %(message)s",
-        datefmt="%Y-%m-%d %H:%M",
-        level=logging.DEBUG
-    )
-    logging.debug("Starting Joystick Gremlin R5")
+
+    # Configure logging for system and user events
+    configure_logger({
+        "name": "system",
+        "level": logging.DEBUG,
+        "logfile": os.path.join(util.userprofile_path(), "system.log"),
+        "format": "%(asctime)s %(levelname)10s %(message)s"
+    })
+    configure_logger({
+        "name": "user",
+        "level": logging.DEBUG,
+        "logfile": os.path.join(util.userprofile_path(), "user.log"),
+        "format": "%(asctime)s %(message)s"
+    })
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)

@@ -71,7 +71,9 @@ class JoystickDeviceData(object):
         name_object = sdl2.SDL_JoystickName(device)
         if name_object is None:
             self._name = "Unknown device"
-            logging.error("Encountered an invalid device name")
+            logging.getLogger("system").error(
+                "Encountered an invalid device name"
+            )
         else:
             self._name = name_object.decode("utf-8")
         self._is_virtual = self._name == "vJoy Device"
@@ -157,7 +159,9 @@ def joystick_devices():
     for i in range(sdl2.SDL_NumJoysticks()):
         joy = sdl2.SDL_JoystickOpen(i)
         if joy is None:
-            logging.error("Invalid joystick device at id {}".format(i))
+            logging.getLogger("system").error(
+                "Invalid joystick device at id {}".format(i)
+            )
         else:
             devices.append(JoystickDeviceData(joy))
 

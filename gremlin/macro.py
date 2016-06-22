@@ -335,7 +335,9 @@ def key_from_name(name):
     """
     key = name_to_key.get(name, None)
     if key is None:
-        logging.warning("Invalid key name specified \"{}\"".format(name))
+        logging.getLogger("system").warning(
+            "Invalid key name specified \"{}\"".format(name)
+        )
     return key
 
 
@@ -350,8 +352,9 @@ def key_from_code(scan_code, is_extended):
     """
     key = code_to_key.get((scan_code, is_extended), None)
     if key is None:
-        logging.warning("Invalid scan code specified ({}, {})".format(
-            scan_code, is_extended
+        logging.getLogger("system").warning(
+            "Invalid scan code specified ({}, {})".format(
+                scan_code, is_extended
         ))
     return key
 

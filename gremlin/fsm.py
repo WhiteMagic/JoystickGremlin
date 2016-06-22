@@ -67,7 +67,7 @@ class FiniteStateMachine(object):
         assert(self.transitions[key].new_state in self.states)
         self.transitions[key].callback()
         if self.debug:
-            logging.debug("FSM: {} -> {} ({})".format(
+            logging.getLogger("system").debug("FSM: {} -> {} ({})".format(
                 self.current_state,
                 self.transitions[key].new_state,
                 action

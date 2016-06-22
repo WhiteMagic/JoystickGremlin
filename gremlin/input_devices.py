@@ -52,8 +52,10 @@ class CallbackRegistry(object):
             self._registry[device_id][mode][event][function_name] = \
                 (callback, always_execute)
         else:
-            logging.warning("Function with name {} exists multiple"
-                            " times".format(function_name))
+            logging.getLogger("system").warning(
+                "Function with name {} exists multiple times".format(
+                    function_name
+            ))
 
     @property
     def registry(self):

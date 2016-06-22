@@ -304,7 +304,9 @@ class EventListener(QtCore.QObject):
         for i in range(sdl2.joystick.SDL_NumJoysticks()):
             joy = sdl2.SDL_JoystickOpen(i)
             if joy is None:
-                logging.error("Invalid joystick device at id {}".format(i))
+                logging.getLogger("system").error(
+                    "Invalid joystick device at id {}".format(i)
+                )
             else:
                 guid = util.guid_to_number(sdl2.SDL_JoystickGetGUID(joy).data)
                 self._joysticks[guid] = joy
@@ -430,8 +432,10 @@ class EventHandler(QtCore.QObject):
             if new_mode in device:
                 mode_exists = True
         if not mode_exists:
-            logging.error("The mode \"{}\" does not exist or has no"
-                          " associated callbacks".format(new_mode))
+            logging.getLogger("system").error(
+                "The mode \"{}\" does not exist or has no"
+                " associated callbacks".format(new_mode)
+            )
 
         if mode_exists:
             if self._active_mode != new_mode:
@@ -473,7 +477,9 @@ class EventHandler(QtCore.QObject):
                 cb(event)
             except error.VJoyError as e:
                 util.display_error(str(e))
-                logging.exception("VJoy related error: {}".format(e))
+                logging.getLogger("system").exception(
+                    "VJoy related error: {}".format(e)
+                )
                 self.pause()
 
     def _matching_callbacks(self, event):
