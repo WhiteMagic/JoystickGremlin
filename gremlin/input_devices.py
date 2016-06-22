@@ -54,9 +54,17 @@ class CallbackRegistry(object):
 
     @property
     def registry(self):
+        """Returns the registry dictionary.
+
+        :return registry dictionary
+        """
         return self._registry
 
     def clear(self):
+        """Clears the registry entries."""
+        self._registry = {}
+
+
         self._registry = {}
 
 
