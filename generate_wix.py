@@ -39,6 +39,15 @@ def generate_folder_list(root_folder):
     return folder_list
 
 
+def sanitize_path(path):
+    """Formats the paths in an acceptable way for wix.
+
+    :param path path to sanitize
+    :return sanitized file path
+    """
+    return path.replace("\\", "__").replace("-", "_")
+
+
 def create_data_for_file(path):
     """Creates the entries required to create the file's XML entries.
 
@@ -47,8 +56,8 @@ def create_data_for_file(path):
     """
     return {
         "component_guid": uuid.uuid4(),
-        "component_id": "component_{}".format(path.replace("\\", "__")),
-        "file_id": "file_{}".format(path.replace("\\", "__")),
+        "component_id": "component_{}".format(sanitize_path(path)),
+        "file_id": "file_{}".format(sanitize_path(path)),
         "file_source": path
     }
 
@@ -153,7 +162,7 @@ def add_file_nodes(structure, data):
         c_node.append(f_node)
 
         # Attach component node to the proper directory node
-        parent = os.path.dirname(path).replace("\\", "__")
+        parent = sanitize_path(os.path.dirname(path))
         if len(parent) == 0:
             parent = "jg"
         structure[parent].append(c_node)
