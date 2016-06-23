@@ -43,6 +43,7 @@ class OptionsUi(QtWidgets.QWidget):
 
         # Actual configuration object being managed
         self.config = config.Configuration()
+        self.setMinimumWidth(400)
 
         self.setWindowTitle("Options")
 
@@ -71,6 +72,13 @@ class OptionsUi(QtWidgets.QWidget):
         self.close_to_systray.clicked.connect(self._close_to_systray)
         self.close_to_systray.setChecked(self.config.close_to_tray)
 
+        # Start minimized option
+        self.start_minimized = QtWidgets.QCheckBox(
+            "Start Joystick Gremlin minimized"
+        )
+        self.start_minimized.clicked.connect(self._start_minimized)
+        self.start_minimized.setChecked(self.config.start_minimized)
+
         # Show message on mode change
         self.show_mode_change_message = QtWidgets.QCheckBox(
             "Show message when changing mode"
@@ -84,6 +92,7 @@ class OptionsUi(QtWidgets.QWidget):
 
         self.general_layout.addWidget(self.highlight_input)
         self.general_layout.addWidget(self.close_to_systray)
+        self.general_layout.addWidget(self.start_minimized)
         self.general_layout.addWidget(self.show_mode_change_message)
         self.general_layout.addStretch()
         self.tab_container.addTab(self.general_page, "General")
@@ -92,7 +101,7 @@ class OptionsUi(QtWidgets.QWidget):
         self.profile_page = QtWidgets.QWidget()
         self.profile_page_layout = QtWidgets.QVBoxLayout(self.profile_page)
 
-        # Autload profile option
+        # Autoload profile option
         self.autoload_checkbox = QtWidgets.QCheckBox(
             "Automatically load profile based on current application"
         )
@@ -103,6 +112,7 @@ class OptionsUi(QtWidgets.QWidget):
         self.executable_layout = QtWidgets.QHBoxLayout()
         self.executable_label = QtWidgets.QLabel("Executable")
         self.executable_selection = QtWidgets.QComboBox()
+        self.executable_selection.setMinimumWidth(300)
         self.executable_selection.currentTextChanged.connect(
             self._show_executable
         )
@@ -166,14 +176,24 @@ class OptionsUi(QtWidgets.QWidget):
     def _close_to_systray(self, clicked):
         """Stores closing to system tray preference.
 
-        :param clicked whether or not the checkbox is ticked"""
+        :param clicked whether or not the checkbox is ticked
+        """
         self.config.close_to_tray = clicked
+        self.config.save()
+
+    def _start_minimized(self, clicked):
+        """Stores start minimized preference.
+
+        :param clicked whether or not the checkbox is ticked
+        """
+        self.config.start_minimized = clicked
         self.config.save()
 
     def _highlight_input(self, clicked):
         """Stores preference for input highlighting.
 
-        :param clicked whether or not the checkbox is ticked"""
+        :param clicked whether or not the checkbox is ticked
+        """
         self.config.highlight_input = clicked
         self.config.save()
 

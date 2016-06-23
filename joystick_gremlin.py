@@ -125,7 +125,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         el = EventListener()
         el.device_change_event.connect(self._device_change_cb)
 
-        self._apply_user_settings()
+        self.apply_user_settings()
 
     def closeEvent(self, evt):
         """Terminate the entire application if the main window is closed.
@@ -198,7 +198,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.options_window = dialogs.OptionsUi()
         self.options_window.show()
         self.options_window.closed.connect(
-            lambda: self._apply_user_settings()
+            lambda: self.apply_user_settings()
         )
 
     # +---------------------------------------------------------------
@@ -686,11 +686,12 @@ class GremlinUi(QtWidgets.QMainWindow):
     # | Utilities
     # +---------------------------------------------------------------
 
-    def _apply_user_settings(self):
+    def apply_user_settings(self):
         """Configures the program based on user settings."""
         self._set_joystick_input_highlighting(
             self.config.highlight_input
         )
+        self.setHidden(self.config.start_minimized)
         if self.config.autoload_profiles:
             self.process_monitor.start()
         else:
@@ -984,6 +985,7 @@ if __name__ == "__main__":
     else:
         ui = GremlinUi()
         ui.show()
+        ui.apply_user_settings()
 
     # Run UI
     app.exec_()

@@ -228,3 +228,11 @@ class Configuration(object):
     @close_to_tray.setter
     def close_to_tray(self, value):
         self._data["close_to_tray"] = bool(value)
+
+    @property
+    def start_minimized(self):
+        return self._data.get("start_minimized", False)
+
+    @start_minimized.setter
+    def start_minimized(self, value):
+        self._data["start_minimized"] = bool(value)
