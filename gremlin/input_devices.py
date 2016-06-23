@@ -56,7 +56,8 @@ class CallbackRegistry(object):
             logging.getLogger("system").warning(
                 "Function with name {} exists multiple times".format(
                     function_name
-            ))
+                )
+            )
 
     @property
     def registry(self):

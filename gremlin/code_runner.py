@@ -73,13 +73,19 @@ class CodeRunner(object):
             # Connect signals
             evt_listener = event_handler.EventListener()
             kb = input_devices.Keyboard()
-            evt_listener.keyboard_event.connect(self.event_handler.process_event)
-            evt_listener.joystick_event.connect(self.event_handler.process_event)
+            evt_listener.keyboard_event.connect(
+                self.event_handler.process_event
+            )
+            evt_listener.joystick_event.connect(
+                self.event_handler.process_event
+            )
             evt_listener.keyboard_event.connect(kb.keyboard_event)
 
             input_devices.periodic_registry.start()
 
-            self.event_handler.change_mode(list(self._inheritance_tree.keys())[0])
+            self.event_handler.change_mode(
+                list(self._inheritance_tree.keys())[0]
+            )
             self.event_handler.resume()
             self._running = True
         except ImportError as e:
@@ -112,5 +118,7 @@ class CodeRunner(object):
 
     def _reset_state(self):
         """Resets all states to their default values."""
-        self.event_handler._active_mode = list(self._inheritance_tree.keys())[0]
-        self.event_handler._previous_mode = list(self._inheritance_tree.keys())[0]
+        self.event_handler._active_mode =\
+            list(self._inheritance_tree.keys())[0]
+        self.event_handler._previous_mode =\
+            list(self._inheritance_tree.keys())[0]
