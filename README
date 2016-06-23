@@ -41,11 +41,7 @@ Used Software
 - Python 3.4 [8]
 - PySDL2 [10]
 - Mako [11]
-- Qt5 [12]
-
-To obtain current version which work with Python 3.4 you have to
-download the following ones from this alternative page [4].
-- PyWin32
+- Qt5 [4]
 
 
 Other Sources
@@ -76,7 +72,7 @@ References
 [ 1] http://www.pyinstaller.org/
 [ 2] http://www.riverbankcomputing.co.uk/software/pyqt/intro
 [ 3] http://wixtoolset.org/
-[ 4] http://www.lfd.uci.edu/~gohlke/pythonlibs
+[ 4] http://qt-project.org/
 [ 5] http://sourceforge.net/projects/pywin32
 [ 6] https://www.libsdl.org/index.php
 [ 7] http://vjoystick.sourceforge.net
@@ -84,4 +80,4 @@ References
 [ 9} http://modernuiicons.com/
 [10] https://bitbucket.org/marcusva/py-sdl2/overview
 [11] http://www.makotemplates.org/
-[12] http://qt-project.org/
+
