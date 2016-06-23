@@ -17,6 +17,7 @@
 
 import functools
 import heapq
+import inspect
 import logging
 import time
 import threading
@@ -80,6 +81,7 @@ class PeriodicRegistry(object):
         self._running = False
         self._thread = threading.Thread(target=self._thread_loop)
         self._queue = []
+        self._plugins = []
 
     def start(self):
         """Starts the event loop."""
@@ -104,33 +106,44 @@ class PeriodicRegistry(object):
         """
         self._registry[callback] = (interval, callback)
 
-    def remove(self, callback):
-        """Removes a callback from the registry."""
-        if callback in self._registry:
-            del self._registry[callback]
-
     def clear(self):
         """Clears the registry."""
         self._registry = {}
 
-    def _create_queue_entry(self, key):
-        """Creates a priority queue entry based on a callback.
+    def _install_plugins(self, callback):
+        """Installs the current plugins into the given callback.
 
-        :param key the callback to create the priority queue entry for
-        :return priority queue entry
+        :param callback the callback function to install the plugins
+            into
+        :return new callback with plugins installed
         """
-        return (time.time() + self._registry[key][0], key)
+        signature = inspect.signature(callback)
+        new_callback = self._plugins[0].install(callback, signature)
+        for plugin in self._plugins[1:]:
+            new_callback = plugin.install(new_callback, signature)
+        return new_callback
 
     def _thread_loop(self):
         """Main execution loop run in a separate thread."""
+        # Setup plugins to use
+        self._plugins = [
+            JoystickPlugin(),
+            VJoyPlugin(),
+            KeyboardPlugin()
+        ]
+        callback_map = {}
+
         # Populate the queue
         self._queue = []
         for item in self._registry.values():
+            plugin_cb = self._install_plugins(item[1])
+            callback_map[plugin_cb] = item[0]
             heapq.heappush(
                 self._queue,
-                self._create_queue_entry(item[1])
+                (time.time() + callback_map[plugin_cb], plugin_cb)
             )
 
+        # Main thread loop
         while self._running:
             # Process all events that require running
             while self._queue[0][0] < time.time():
@@ -139,7 +152,7 @@ class PeriodicRegistry(object):
 
                 heapq.heappush(
                     self._queue,
-                    self._create_queue_entry(item[1])
+                    (time.time() + callback_map[item[1]], item[1])
                 )
 
             # Sleep until either the next function needs to be run or
