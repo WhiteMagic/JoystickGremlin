@@ -86,6 +86,10 @@ class PeriodicRegistry(object):
 
     def start(self):
         """Starts the event loop."""
+        # Only proceed if we have functions to call
+        if len(self._registry) == 0:
+            return
+
         # Only create a new thread and start it if the thread is not
         # currently running
         self._running = True
