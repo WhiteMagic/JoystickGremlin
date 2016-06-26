@@ -928,7 +928,7 @@ def configure_logger(config):
     logger.setLevel(config["level"])
     handler = logging.FileHandler(config["logfile"])
     handler.setLevel(config["level"])
-    formatter = logging.Formatter(config["format"], "%Y-%m-%d %H:%M")
+    formatter = logging.Formatter(config["format"], "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
