@@ -9,6 +9,7 @@ import action.text_to_speech
 
 from gremlin.profile import UiInputType
 
+
 # Mapping which indicates which action widgets have a condition
 # associated with them in UI
 condition_map = {
@@ -27,6 +28,7 @@ condition_map = {
         action.macro.MacroWidget,
         action.mode_control.CycleModesWidget,
         action.mode_control.SwitchModeWidget,
+        action.mode_control.SwitchPreviousModeWidget,
         action.pause_resume.PauseActionWidget,
         action.pause_resume.ResumeActionWidget,
         action.pause_resume.TogglePauseResumeActionWidget,
@@ -46,6 +48,7 @@ condition_map = {
         action.macro.MacroWidget,
         action.mode_control.CycleModesWidget,
         action.mode_control.SwitchModeWidget,
+        action.mode_control.SwitchPreviousModeWidget,
         action.pause_resume.PauseActionWidget,
         action.pause_resume.ResumeActionWidget,
         action.pause_resume.TogglePauseResumeActionWidget,
