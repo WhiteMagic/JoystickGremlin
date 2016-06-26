@@ -207,6 +207,57 @@ class JoystickWrapper(object):
 
     """Wraps SDL2 joysticks and presents an API similar to vjoy."""
 
+    class Input(object):
+
+        """Represents a joystick input."""
+
+        def __init__(self, joystick, index):
+            """Creates a new instance.
+
+            :param joystick the SDL joystick instance this input
+                belongs to
+            :param index the index of the input
+            """
+            self._joystick = joystick
+            self._index = index
+
+    class Axis(Input):
+
+        """Represents a single axis of a joystick."""
+
+        def __init__(self, joystick, index):
+            super().__init__(joystick, index)
+
+        @property
+        def value(self):
+            return sdl2.SDL_JoystickGetAxis(
+                self._joystick, self._index
+            ) / float(32768)
+
+    class Button(Input):
+
+        """Represents a single button of a joystick."""
+
+        def __init__(self, joystick, index):
+            super().__init__(joystick, index)
+
+        @property
+        def is_pressed(self):
+            return sdl2.SDL_JoystickGetButton(self._joystick, self._index)
+
+    class Hat(Input):
+
+        """Represents a single hat of a joystick,"""
+
+        def __init__(self, joystick, index):
+            super().__init__(joystick, index)
+
+        @property
+        def direction(self):
+            return convert_sdl_hat(sdl2.SDL_JoystickGetHat(
+                self._joystick, self._index)
+            )
+
     def __init__(self, jid):
         """Creates a new wrapper object for the given object id.
 
@@ -215,6 +266,9 @@ class JoystickWrapper(object):
         if jid > sdl2.joystick.SDL_NumJoysticks():
             raise GremlinError("No device with the provided ID exist")
         self._joystick = sdl2.SDL_JoystickOpen(jid)
+        self._axis = self._init_axes()
+        self._buttons = self._init_buttons()
+        self._hats = self._init_hats()
 
     def windows_id(self):
         """Returns the system id of the wrapped joystick.
@@ -231,7 +285,7 @@ class JoystickWrapper(object):
         :param index the index of the axis to return to value of
         :return the current value of the axis
         """
-        return sdl2.SDL_JoystickGetAxis(self._joystick, index-1) / float(32768)
+        return self._axis[index-1]
 
     def button(self, index):
         """Returns the current state of the button with the given index.
@@ -241,7 +295,7 @@ class JoystickWrapper(object):
         :param index the index of the axis to return to value of
         :return the current state of the button
         """
-        return sdl2.SDL_JoystickGetButton(self._joystick, index-1)
+        return self._buttons[index-1]
 
     def hat(self, index):
         """Returns the current state of the hat with the given index.
@@ -251,9 +305,7 @@ class JoystickWrapper(object):
         :param index the index of the hat to return to value of
         :return the current state of the hat
         """
-        return convert_sdl_hat(sdl2.SDL_JoystickGetHat(
-            self._joystick, index-1)
-        )
+        return self._hats[index-1]
 
     def axis_count(self):
         """Returns the number of axis of the joystick.
@@ -261,6 +313,36 @@ class JoystickWrapper(object):
         :return number of axes
         """
         return sdl2.SDL_JoystickNumAxes(self._joystick)
+
+    def _init_axes(self):
+        """Initializes the axes of the joystick.
+
+        :return list of JoystickWrapper.Axis objects
+        """
+        axes = []
+        for i in range(sdl2.SDL_JoystickNumAxes(self._joystick)):
+            axes.append(JoystickWrapper.Axis(self._joystick, i))
+        return axes
+
+    def _init_buttons(self):
+        """Initializes the buttons of the joystick.
+
+        :return list of JoystickWrapper.Button objects
+        """
+        buttons = []
+        for i in range(sdl2.SDL_JoystickNumButtons(self._joystick)):
+            buttons.append(JoystickWrapper.Button(self._joystick, i))
+        return buttons
+
+    def _init_hats(self):
+        """Initializes the hats of the joystick.
+
+        :return list of JoystickWrapper.Hat objects
+        """
+        hats = []
+        for i in range(sdl2.SDL_JoystickNumHats(self._joystick)):
+            hats.append(JoystickWrapper.Hat(self._joystick, i))
+        return hats
 
 
 class JoystickProxy(object):
@@ -508,7 +590,7 @@ class AutomaticButtonRelease(QtCore.QObject):
         if evt in self._registry and not evt.is_pressed:
             vjoy = VJoyProxy()
             for entry in self._registry[evt]:
-                vjoy[entry[0]].button[entry[1]].is_pressed = False
+                vjoy[entry[0]].button(entry[1]).is_pressed = False
             self._registry[evt] = []
 
 

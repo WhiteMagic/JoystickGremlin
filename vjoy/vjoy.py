@@ -39,6 +39,14 @@ class AxisName(enum.Enum):
     SL1 = 0x37
 
 
+class HatType(enum.Enum):
+
+    """Valid hat types."""
+
+    Discrete = 0
+    Continuous = 1
+
+
 class Axis(object):
 
     """Represents an analog axis in vJoy, allows setting the value
@@ -80,6 +88,7 @@ class Axis(object):
 
         :return position of the axis as a value between [-1, 1]
         """
+        self.vjoy_dev.used()
         return self._value
 
     @value.setter
@@ -125,6 +134,7 @@ class Button(object):
 
         :return True if the button is pressed, False otherwise
         """
+        self.vjoy_dev.used()
         return self._is_pressed
 
     @is_pressed.setter
@@ -150,16 +160,24 @@ class Hat(object):
     of the hat."""
 
     # Recognized direction names
-    discrete_directions = {
-        "North": 0,
-        "Up": 0,
-        "East": 1,
-        "Right": 1,
-        "South": 2,
-        "Down": 2,
-        "West": 3,
-        "Left": 3,
-        "Neutral": -1
+    to_discrete_direction = {
+        (0, 1): 0,
+        (1, 0): 1,
+        (0, -1): 2,
+        (-1, 0): 3,
+        (0, 0): -1
+    }
+
+    to_continuous_direction = {
+        (0, 0): -1,
+        (0, 1): 0,
+        (1, 1): 4500,
+        (1, 0): 9000,
+        (1, -1): 13500,
+        (0, -1): 18000,
+        (-1, -1): 22500,
+        (-1, 0): 27000,
+        (-1, 1): 31500
     }
 
     def __init__(self, vjoy_dev, hat_id, hat_type):
@@ -171,15 +189,16 @@ class Hat(object):
         self.vjoy_dev = vjoy_dev
         self.vjoy_id = vjoy_dev.vjoy_id
         self.hat_id = hat_id
-        self._direction = -1
+        self._direction = (0, 0)
         self.hat_type = hat_type
 
     @property
     def direction(self):
         """Returns the current direction of the hat.
 
-        :return current direction of the hat
+        :return current direction of the hat encoded as a tuple (x, y)
         """
+        self.vjoy_dev.used()
         return self._direction
 
     @direction.setter
@@ -188,9 +207,9 @@ class Hat(object):
 
         :param direction the new direction of the hat
         """
-        if self.hat_type == "discrete":
+        if self.hat_type == HatType.Discrete:
             self._set_discrete_direction(direction)
-        elif self.hat_type == "continuous":
+        elif self.hat_type == HatType.Continuous:
             self._set_continuous_direction(direction)
         else:
             raise VJoyError("Invalid hat type specified")
@@ -201,13 +220,14 @@ class Hat(object):
 
         :param direction the direction of the hat
         """
-        if direction not in self.discrete_directions:
+        if direction not in Hat.to_discrete_direction:
             raise VJoyError(
                 "Invalid direction specified: {}".format(str(direction))
             )
-        self._direction = self.discrete_directions[direction]
+
+        self._direction = direction
         if not VJoyInterface.SetDiscPov(
-                self._direction,
+                Hat.to_discrete_direction[direction],
                 self.vjoy_id,
                 self.hat_id
         ):
@@ -218,16 +238,14 @@ class Hat(object):
 
         :param direction the angle in degree of the hat
         """
-        if direction >= 0:
-            val = min(359.99, max(0, direction))
-            self._direction = int(val * 100)
-        else:
-            self._direction = -1
+        if direction not in Hat.to_continuous_direction:
+            raise VJoyError(
+                "Invalid direction specified: {}".format(str(direction))
+            )
 
-        assert(0 <= self._direction <= 35999 or self._direction == -1)
-
+        self._direction = direction
         if not VJoyInterface.SetContPov(
-                self._direction,
+                Hat.to_continuous_direction[direction],
                 self.vjoy_id,
                 self.hat_id
         ):
@@ -255,9 +273,9 @@ class VJoy(object):
         self.vjoy_id = vjoy_id
 
         # Initialize all controls
-        self.button = self._init_buttons()
-        self.axis = self._init_axes()
-        self.hat = self._init_hats()
+        self._axis = self._init_axes()
+        self._button = self._init_buttons()
+        self._hat = self._init_hats()
 
         # Timestamp of the last time the device was used
         self._last_active = time.time()
@@ -266,6 +284,15 @@ class VJoy(object):
 
         # Reset all controls
         VJoyInterface.ResetVJD(self.vjoy_id)
+
+    def axis(self, index):
+        return self._axis[index]
+
+    def button(self, index):
+        return self._button[index]
+
+    def hat(self, index):
+        return self._hat[index]
 
     def reset(self):
         """Resets the state of all inputs to their default state."""
@@ -333,9 +360,9 @@ class VJoy(object):
         """
         hats = {}
         for hat_id in range(1, VJoyInterface.GetVJDDiscPovNumber(self.vjoy_id)+1):
-            hats[hat_id] = Hat(self, hat_id, "discrete")
+            hats[hat_id] = Hat(self, hat_id, HatType.Discrete)
         for hat_id in range(1, VJoyInterface.GetVJDContPovNumber(self.vjoy_id)+1):
-            hats[hat_id] = Hat(self, hat_id, "continuous")
+            hats[hat_id] = Hat(self, hat_id, HatType.Continuous)
         return hats
 
     def __str__(self):
