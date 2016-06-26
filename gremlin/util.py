@@ -272,6 +272,14 @@ def display_error(msg):
     QtWidgets.QErrorMessage.qtHandler().showMessage(msg)
 
 
+def log(msg):
+    """Logs the provided message to the user log file.
+
+    :param msg the message to log
+    """
+    logging.getLogger("user").debug(str(msg))
+
+
 def format_name(name):
     """Returns the name formatted as valid python variable name.
 
