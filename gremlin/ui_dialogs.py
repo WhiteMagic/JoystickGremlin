@@ -434,11 +434,15 @@ class LogWindowUi(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(page)
         log_display = QtWidgets.QTextEdit()
         log_display.setText(open(fname).read())
+        button = QtWidgets.QPushButton("Clear log")
+        button.clicked.connect(lambda: self._clear_log(fname))
         layout.addWidget(log_display)
+        layout.addWidget(button)
 
         self._ui_elements[fname] = {
             "page": page,
             "layout": layout,
+            "button": button,
             "log_display": log_display
         }
 
@@ -446,6 +450,13 @@ class LogWindowUi(QtWidgets.QWidget):
             self._ui_elements[fname]["page"],
             title
         )
+
+    def _clear_log(self, fname):
+        """Clears the specified log file.
+
+        :param fname path to the file to clear
+        """
+        open(fname, "w").close()
 
     def _reload(self, fname):
         """Reloads the content of tab displaying the given file.
