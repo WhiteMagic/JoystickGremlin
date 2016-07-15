@@ -2,7 +2,7 @@ import gremlin
 from vjoy.vjoy import AxisName
 
 def set_throttle(vjoy, value):
-    vjoy[1].axis[AxisName.Z].value = value
+    vjoy[1].axis(AxisName.Z).value = value
 
 @gremlin.input_devices.keyboard("1", "Global")
 def throttle_0(event, vjoy):

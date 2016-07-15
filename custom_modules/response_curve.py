@@ -18,8 +18,8 @@ curve = CubicSpline([
 
 @chfs.axis(1)
 def pitch(event, vjoy):
-    vjoy[1].axis[AxisName.X].value = curve(event.value)
+    vjoy[1].axis(AxisName.X).value = curve(event.value)
 
 @chfs.axis(2)
 def yaw(event, vjoy):
-    vjoy[1].axis[AxisName.Y].value = curve(event.value)
+    vjoy[1].axis(AxisName.Y).value = curve(event.value)

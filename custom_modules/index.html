@@ -9,7 +9,7 @@ layout: default
 <p class="text-justify">
     While common configuration tasks can be performed directly via the
     UI, more advanced and specialised configurations require writing
-    custom modules. Each module is a simple Python script which defines
+    custom modules.  Each module is a simple Python script which defines
     the functions (callbacks) triggered in reaction to inputs being
     used. Since the functions are written in Python there is no limit as
     to what can be expressed. The following section assumes some basic
@@ -17,8 +17,11 @@ layout: default
     layout of a custom module in <a href="#3_1">Section 3.1</a> which is
     followed by an quick overview of the API in <a href="#3_2">Section
     3.2</a> followed by the description of the decorator based callback
-    system in <a href="#3_3">Section 3.3</a>. Finally, <a href="#3_4">
-    Section 3.4</a> provides a few practical examples.
+    system in <a href="#3_3">Section 3.3</a> with periodic function
+    callbacks described in <a href="#3_4">Section 3.4</a>. Some words on how
+    to debug custom modules is provided in <a href="#3_5">Section 3.5</a>.
+    Finally, <a href="#3_6">Section 3.6</a> provides a few practical
+    examples.
 </p>
 
 
@@ -82,12 +85,20 @@ def callback_function(event, <optional parameter list>):
 </p>
 
 
-<h3><a name="3_2">3.2 API</a></h3>
+<h3><a name="3_2">3.2 Plugin API</a></h3>
 
 <p class="text-justify">
     The following describes the API of the optional variables exposed
-    via the decorator callback framework.
+    via the decorator plugin framework. The plugins provide access to
+    commonly used information by simply adding a properly named
+    parameter to the callback function.
 </p>
+<p class="text-justify">
+    These parameters must be listed after the event parameter in the
+    case of user input callbacks.
+</p>
+
+
 
 
 <h4 class="subsection">vJoy</h4>
@@ -103,14 +114,16 @@ def callback_function(event, <optional parameter list>):
 </p>
 
 {% highlight python3 %}# Access the first vJoy device and press the third button
-vjoy[1].button[3].is_pressed = True
+vjoy[1].button(3).is_pressed = True
 
 # Access the second vJoy device and move the Y axis to -0.25
-vjoy[2].axis[AxisName.Y].value = -0.25
+vjoy[2].axis(AxisName.Y).value = -0.25
+# or equivalently
+vjoy[2].axis(2).value = -0.25
 
 # Access the first vJoy device and move the first hat to
 # the top right position
-vjoy[1].hat[1].direction = 45{% endhighlight %}
+vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
 
 
 <h4 class="subsection">Joystick State</h4>
@@ -136,7 +149,7 @@ vjoy[1].hat[1].direction = 45{% endhighlight %}
     To read the current value of a joystick axis both the index of the
     axis as well as the system id of the joystick, starting with 1, are
     needed, with these the axis value is obtained as:
-    {% highlight python3 %}axis_value = joy[system_id].axis(axis_index){% endhighlight %}
+    {% highlight python3 %}axis_value = joy[system_id].axis(axis_index).value{% endhighlight %}
 </p>
 
 <p class="text-justify">
@@ -144,7 +157,7 @@ vjoy[1].hat[1].direction = 45{% endhighlight %}
     To read the current state of a button both the joystick's system id
     as well as index of the button, starting at 1, are needed. The
     following then reads the button state:
-    {% highlight python3 %}is_pressed = joy[system_id].button(button_id){% endhighlight %}
+    {% highlight python3 %}state = joy[system_id].button(button_id).is_pressed{% endhighlight %}
 </p>
 
 
@@ -156,7 +169,7 @@ vjoy[1].hat[1].direction = 45{% endhighlight %}
     \in \left\{-1, 0, 1\right\}\){% endraw %}. A \(x\) value of 1 is right
     and -1 left while a value of 1 for \(y\) means up and -1 down. A
     value of \(0\) represents a centred position. The value is read as follows:
-    {% highlight python3 %}position = joy[system_id].hat(hat_id){% endhighlight %}
+    {% highlight python3 %}position = joy[system_id].hat(hat_id).direction{% endhighlight %}
 </p>
 
 
@@ -178,7 +191,7 @@ vjoy[1].hat[1].direction = 45{% endhighlight %}
 </p>
 
 
-<h3><a name="3_3">3.3 Decorator Based Callback Generation</a></h3>
+<h3><a name="3_3">3.3 Decorator Based User Input Callback Generation</a></h3>
 
 <p class="text-justify">
     Callbacks reacting to user inputs are created by decorating
@@ -236,7 +249,48 @@ def keyboard_callback(event):
 </p>
 
 
-<h3><a name="3_4">3.4 Examples</a></h3>
+<h3><a name="3_4">3.4 Decorator Based Periodic Function Callbacks</a></h3>
+
+<p class="text-justify">
+    In some situations a function needs to be executed at regular
+    intervals. This is facilitated by a decoartor that ensures that the
+    function is run at a specified interval while Joystick Gremlin is
+    active.
+    </br></br>
+    The decorator takes a single argument that indicates the interval,
+    i.e. the duration, between executions of the function. The callback
+    function can use the same plugin system the user input callbacks to
+    access information, i.e.  <code>vjoy</code>, <code>joy</code>, and
+    <code>keyboard</code>.
+    </br></br>
+    A generic example of periodic function callback is shown below.
+</p>
+
+{% highlight python3 %}@gremlin.input_devices.periodic(<seconds>)
+def periodic_function():
+    pass{% endhighlight %}
+</p>
+
+
+<h3><a name="3_5">3.5 Debugging</a></h3>
+
+<p class="text-justify">
+    To facilitate the debugging of custom modules without setting up the
+    source code of Joystick Gremlin in an IDE the logging function
+    <code>gremlin.util.log()</code> can be used. This stores the
+    provided text to the user log file which can be viewed directly in
+    Joystick Gremlin via the <em>Tools -> Log display</em> option.
+</p>
+
+<p class="text-justify">
+    For more detailed debugging Joystick Gremlin needs to be run from
+    within an IDE by getting the development environment setup. While
+    this provides the best debugging experience it also involves the
+    most work so for simple tasks the logging approach is sufficient.
+</p>
+
+
+<h3><a name="3_6">3.6 Examples</a></h3>
 
 <p class="text-justify">
     In the following a few examples of custom modules are shown. They

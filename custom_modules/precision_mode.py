@@ -30,22 +30,22 @@ def set_weapon_group(gid, is_pressed):
 @tm16000.button(1)
 def weapon_group_1(event, vjoy):
     set_weapon_group(1, event.is_pressed)
-    vjoy[1].button[1].is_pressed = event.is_pressed
+    vjoy[1].button(1).is_pressed = event.is_pressed
 
 @tm16000.button(2)
 def weapon_group_2(event, vjoy):
     set_weapon_group(2, event.is_pressed)
-    vjoy[1].button[2].is_pressed = event.is_pressed
+    vjoy[1].button(2).is_pressed = event.is_pressed
 
 @tm16000.button(3)
 def weapon_group_3(event, vjoy):
     set_weapon_group(3, event.is_pressed)
-    vjoy[1].button[3].is_pressed = event.is_pressed
+    vjoy[1].button(3).is_pressed = event.is_pressed
 
 @tm16000.axis(1)
 def pitch(event, vjoy):
-    vjoy[1].axis[AxisName.X].value = active_curve(event.value)
+    vjoy[1].axis(AxisName.X).value = active_curve(event.value)
 
 @tm16000.axis(2)
 def yaw(event, vjoy):
-    vjoy[1].axis[AxisName.Y].value = active_curve(event.value)
+    vjoy[1].axis(AxisName.Y).value = active_curve(event.value)

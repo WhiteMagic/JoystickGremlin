@@ -618,11 +618,30 @@ layout: default
     to buttons and axes to axes.
 </p>
 
+<h4 class="subsection">Log viewer</h4>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/log_viewer.jpg">
+    </div>
+    <div class="col-md-5">
+        <em>The log viewer allows the user to easily check the content of the
+            log file as well as clear it.</em>
+    </div>
+</div>
+<p class="text-justify">
+    The log viewer can be accessed via <em>Tools > Options</em> and allows easy
+    viewing of both the system and user log files. The display is updated
+    whenever the content of the log changes. Clearing the entire log is alos
+    possible from this screen.
+</p>
+
 
 <h4 class="subsection">Options</h4>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/options.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/options_tab1.jpg">
+        </br>
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/options_tab2.jpg">
     </div>
     <div class="col-md-5">
         <em>The options dialogue which is used to set some default
@@ -633,26 +652,38 @@ layout: default
 <p class="text-justify">
     There are several user controllable options in Joystick Gremlin
     which can be controlled via the options dialogue, accessible via
-    <em>Tools > Options</em>. Currently the following options are
-    exposed:
-    
+    <em>Tools > Options</em>.    
+</p>
+
+<p class="text-justify">
+    The following options are accessible via the <em>General</em> tab:
     <dl class="text-justify">
         <dt>Highlight currently used input</dt>
         <dd>This option causes Joystick Gremlin to automatically select
             the input configuration matching the physical input's being
             used.</dd>
+        <dt>Closing minimizes to system tray</dt>
+        <dd>Instead of quiting the application when it is closed, Joystick
+            Gremlin is simply minimized to the system tray.</dd>
+        <dt>Start Joystick Gremlin minimized</dt>
+        <dd>Launches Joystick Gremlin minimized to the system tray instead of
+            opening the main window.</dd>
+        <dt>Show message when changing mode</dt>
+        <dd>Displays a windows notification when the mode is changed.</dd>
+    </dl>
+</p>
+
+<p class="text-justify">
+    The <em>Profiles</em> tab exposes the following options:
+    <dl class="text-justify">
         <dt>Automatically load profile based on current application</dt>
         <dd>This option makes Joystick Gremlin to automatically load and
             activate the profile assigned to the currently active
             application.</dd>
     </dl>
-</p>
-
-<p class="text-justify">
-    To configure the automatic profile loading an executable has to be
-    added by pressing on the "plus" symbol to the right of
-    the dropdown menu. Once the executable is added it can be selected
-    from the dropdown menu and then linked to a profile by selecting it
-    from the file selection dialogue opened by pressing the edit button
-    to the right of the text field.
+    The drop down menu and input fields allow selecting the executable and the
+    profile associated with it. When an executable specified in this list is
+    active the profile associated with it is automatically loaded and
+    activated. Once the profile stops being the active one Joystick Gremlin is
+    automatically stopped.
 </p>
