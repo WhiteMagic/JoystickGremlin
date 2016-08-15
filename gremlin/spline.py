@@ -29,8 +29,12 @@ class CubicSpline(object):
 
         :param points the set of (x, y) control points
         """
-        self.x = [v[0] for v in points]
-        self.y = [v[1] for v in points]
+        # Order the points by increasing x coordinate to guarantee proper
+        # functioning of the spline code
+        ordered_points = sorted(points, key=lambda x: x[0])
+
+        self.x = [v[0] for v in ordered_points]
+        self.y = [v[1] for v in ordered_points]
         self.z = [0] * len(points)
 
         self._fit()
