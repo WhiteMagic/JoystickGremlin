@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
@@ -52,7 +53,7 @@ class PreviousMode(AbstractAction):
 
     """Action that switches to the previously active mode."""
 
-    icon = "gfx/action/action_previous_mode.png"
+    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Switch to previous Mode"
     tag = "previous-mode"
     widget = PreviousModeWidget

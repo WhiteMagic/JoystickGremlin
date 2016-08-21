@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
@@ -59,7 +60,7 @@ class SwitchMode(AbstractAction):
 
     """Action representing the change of mode."""
 
-    icon = "gfx/action/action_switch_mode.png"
+    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Switch Mode"
     tag = "switch-mode"
     widget = SwitchModeWidget

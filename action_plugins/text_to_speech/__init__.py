@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
@@ -55,7 +56,7 @@ class TextToSpeech(AbstractAction):
 
     """Action representing a single TTS entry."""
 
-    icon = "gfx/action/action_text_to_speech.png"
+    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Text to Speech"
     tag = "text-to-speech"
     widget = TextToSpeechWidget

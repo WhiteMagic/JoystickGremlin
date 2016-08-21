@@ -274,7 +274,7 @@ class ActionLabel(QtWidgets.QLabel):
             elif action_entry.input_type == UiInputType.JoystickHat:
                 input_string = "hat"
             self.setPixmap(QtGui.QPixmap(
-                "gfx/action/action_remap_{}_{:03d}.png".format(
+                "action_plugins/remap/icon_{}_{:03d}.png".format(
                         input_string,
                         action_entry.vjoy_input_id
                 )

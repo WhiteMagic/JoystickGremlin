@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
@@ -51,7 +53,7 @@ class PauseAction(AbstractAction):
 
     """Action for pausing the execution of callbacks."""
 
-    icon = "gfx/action/action_pause.png"
+    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Pause"
     tag = "pause"
     widget = PauseActionWidget

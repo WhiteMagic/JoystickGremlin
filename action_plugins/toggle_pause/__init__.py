@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
@@ -52,7 +53,7 @@ class TogglePauseAction(AbstractAction):
 
     """Action to resume callback execution."""
 
-    icon = "gfx/action/action_pause_resume.png"
+    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Toggle Pause & Resume"
     tag = "toggle-pause"
     widget = TogglePauseActionWidget

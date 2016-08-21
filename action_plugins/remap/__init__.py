@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
@@ -181,7 +182,7 @@ class RemapWidget(AbstractActionWidget):
         )
         btn_id = self.input_item_dropdowns[dev_id].findText(input_name)
 
-        # Select and display correct comboboxes and entries within
+        # Select and display correct combo boxes and entries within
         self.device_dropdown.setCurrentIndex(dev_id)
         for entry in self.input_item_dropdowns:
             entry.setVisible(False)
