@@ -24,9 +24,9 @@ Collection of widgets used in the configuration UI.
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import action
-import action.common
-from gremlin import common, error, macro, profile, shared_state, util
+import action_plugins
+from action_plugins import common
+from gremlin import common, error, macro, plugin_manager, profile, shared_state, util
 from gremlin.event_handler import Event, EventListener, InputType
 from gremlin.common import UiInputType
 
@@ -267,7 +267,7 @@ class ActionLabel(QtWidgets.QLabel):
         """
         QtWidgets.QLabel.__init__(self, parent)
 
-        if isinstance(action_entry, action.remap.Remap):
+        if isinstance(action_entry, action_plugins.remap.Remap):
             input_string = "axis"
             if action_entry.input_type == UiInputType.JoystickButton:
                 input_string = "button"
@@ -544,9 +544,10 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         QtWidgets.QDockWidget.__init__(self, parent)
         assert(isinstance(
             action_widget,
-            action.common.AbstractActionWidget
+            action_plugins.common.AbstractActionWidget
         ))
 
+        # Lookup table from input type to available actions
         self.action_widget = action_widget
 
         self.setWindowTitle(action_widget.action_data.name)
@@ -568,14 +569,14 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         if self._is_button_like() and self._has_condition():
             # Extract activation condition data
             self.action_widget.action_data.condition =\
-                action.common.ButtonCondition(
+                action_plugins.common.ButtonCondition(
                     self.condition.press.isChecked(),
                     self.condition.release.isChecked(),
                     self.condition.shift_data
                 )
         elif self._is_hat() and self._has_condition():
-            self.action_widget.action_data.condition =\
-                action.common.HatCondition(
+            self.action_widget.action_data.condition = \
+                action_plugins.common.HatCondition(
                     self.condition.widgets["N"].isChecked(),
                     self.condition.widgets["NE"].isChecked(),
                     self.condition.widgets["E"].isChecked(),
@@ -586,8 +587,8 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
                     self.condition.widgets["NW"].isChecked()
                 )
         elif self._is_axis() and self._has_condition():
-            self.action_widget.action_data.condition =\
-                action.common.AxisCondition(
+            self.action_widget.action_data.condition = \
+                action_plugins.common.AxisCondition(
                     self.condition.checkbox.isChecked(),
                     self.condition.lower_limit.value(),
                     self.condition.upper_limit.value()
@@ -667,33 +668,29 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         :return True if a condition is present, False otherwise
         """
         has_condition = False
+        type_action_map = plugin_manager.ActionPlugins().type_action_map
         input_type = self.action_widget.action_data.parent.input_type
         widget_type = type(self.action_widget)
-        if self._is_button_like() and \
-                widget_type in action.condition_map[input_type]:
+        if self._is_button_like() and widget_type in type_action_map[input_type]:
             has_condition = True
-        elif self._is_hat() and \
-                widget_type in action.condition_map[input_type]:
+        elif self._is_hat() and widget_type in type_action_map[input_type]:
             has_condition = True
-        elif self._is_axis() and \
-                widget_type in action.condition_map[input_type]:
+        elif self._is_axis() and widget_type in type_action_map[input_type]:
             has_condition = True
 
         return has_condition
 
     def _add_condition(self):
         """Adds a condition widget to the UI if necessary."""
+        type_action_map = plugin_manager.ActionPlugins().type_action_map
         input_type = self.action_widget.action_data.parent.input_type
         widget_type = type(self.action_widget)
         condition = None
-        if self._is_button_like() and \
-                widget_type in action.condition_map[input_type]:
+        if self._is_button_like() and widget_type in type_action_map[input_type]:
             condition = ButtonConditionWidget(self.to_profile)
-        elif self._is_hat() and \
-                widget_type in action.condition_map[input_type]:
+        elif self._is_hat() and widget_type in type_action_map[input_type]:
             condition = HatConditionWidget(self.to_profile)
-        elif self._is_axis() and \
-                widget_type in action.condition_map[input_type]:
+        elif self._is_axis() and widget_type in type_action_map[input_type]:
             condition = AxisConditionWidget(self.to_profile)
 
         if condition is not None:
@@ -722,7 +719,7 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         """
         is_hat = self.action_widget.action_data.parent.input_type == \
             UiInputType.JoystickHat
-        is_remap = isinstance(self.action_widget.action_data, action.remap.Remap)
+        is_remap = isinstance(self.action_widget.action_data, action_plugins.remap.Remap)
         return is_hat and not is_remap
 
     def _is_axis(self):
@@ -776,14 +773,14 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
             if self.item_profile.input_type in [
                 UiInputType.JoystickButton, UiInputType.Keyboard
             ]:
-                action_profile.condition = action.common.ButtonCondition()
+                action_profile.condition = action_plugins.common.ButtonCondition()
                 # Remap actions should typically trigger both on press
                 # and release
-                if isinstance(action_profile, action.remap.Remap):
-                    action_profile.condition =\
-                        action.common.ButtonCondition(True, True)
+                if isinstance(action_profile, action_plugins.remap.Remap):
+                    action_profile.condition = \
+                        action_plugins.common.ButtonCondition(True, True)
             elif self.item_profile.input_type == UiInputType.JoystickHat:
-                action_profile.condition = action.common.HatCondition(
+                action_profile.condition = action_plugins.common.HatCondition(
                     False, False, False, False, False, False, False, False
                 )
             self.item_profile.actions.append(action_profile)
@@ -830,7 +827,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         """
         # Build label to class map
         lookup = {}
-        for klass in profile.action_lookup.values():
+        for klass in plugin_manager.ActionPlugins().repository.values():
             lookup[klass.name] = klass
         # Create desired widget
         selection = lookup[self.action_dropdown.currentText()]
@@ -901,7 +898,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         :return list of valid action names
         """
         action_list = []
-        for entry in profile.action_lookup.values():
+        for entry in plugin_manager.ActionPlugins().repository.values():
             if self.item_profile.input_type in entry.input_types:
                 action_list.append(entry.name)
         return sorted(action_list)
@@ -1140,7 +1137,7 @@ class InputItemList(QtWidgets.QWidget):
         # If this is the keyboard tab add the button needed to add
         # new keys.
         if self.device_profile.type == profile.DeviceType.Keyboard:
-            self.key_add_button = action.common.NoKeyboardPushButton("Add Key")
+            self.key_add_button = action_plugins.common.NoKeyboardPushButton("Add Key")
             self.key_add_button.clicked.connect(self._add_new_key)
             self.main_layout.addWidget(self.key_add_button)
 
@@ -1395,7 +1392,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
         :param phys_device the physical device being configured
         :param device_profile the profile of the device
         :param current_mode the currently active mode
-        :param parent the parent of this widdget
+        :param parent the parent of this widget
         """
         QtWidgets.QWidget.__init__(self, parent)
 

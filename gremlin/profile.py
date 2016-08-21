@@ -19,7 +19,7 @@ import enum
 from xml.etree import ElementTree
 from xml.dom import minidom
 
-import action
+import action_plugins
 import gremlin
 from gremlin.common import UiInputType
 
@@ -89,33 +89,6 @@ def _parse_bool(value):
         raise gremlin.error.ProfileError(
             "Invalid type provided: {}".format(type(value))
         )
-
-
-action_lookup = {
-    # Input actions
-    "macro": action.macro.Macro,
-    "remap": action.remap.Remap,
-    "response-curve": action.response_curve.ResponseCurve,
-    # Control actions
-    "cycle-modes": action.mode_control.CycleModes,
-    "pause-action": action.pause_resume.PauseAction,
-    "resume-action": action.pause_resume.ResumeAction,
-    "toggle-pause-resume-action": action.pause_resume.TogglePauseResumeAction,
-    "switch-mode": action.mode_control.SwitchMode,
-    "switch-to-previous-mode": action.mode_control.SwitchPreviousMode,
-    # Other actions
-    "text-to-speech": action.text_to_speech.TextToSpeech,
-}
-
-
-def create_action(type_name, input_item):
-    """Creates an action object of the requested type.
-
-    :param type_name name of the action to create
-    :param input_item the item with which to associated the action
-    :return the requested action
-    """
-    return action_lookup[type_name](input_item)
 
 
 class DeviceType(enum.Enum):
@@ -204,15 +177,15 @@ class Profile(object):
             for mode in dev.modes.values():
                 for item in mode.config[UiInputType.JoystickAxis].values():
                     remap_actions.extend(
-                        [e for e in item.actions if isinstance(e, action.remap.Remap)]
+                        [e for e in item.actions if isinstance(e, action_plugins.remap.Remap)]
                     )
                 for item in mode.config[UiInputType.JoystickButton].values():
                     remap_actions.extend(
-                        [e for e in item.actions if isinstance(e, action.remap.Remap)]
+                        [e for e in item.actions if isinstance(e, action_plugins.remap.Remap)]
                     )
                 for item in mode.config[UiInputType.JoystickHat].values():
                     remap_actions.extend(
-                        [e for e in item.actions if isinstance(e, action.remap.Remap)]
+                        [e for e in item.actions if isinstance(e, action_plugins.remap.Remap)]
                     )
 
         # Remove all remap actions from the list of available inputs
@@ -481,6 +454,7 @@ class InputItem(object):
 
         :param node XML node to parse
         """
+        action_name_map = gremlin.plugin_manager.ActionPlugins().action_name_map
         self.input_type = tag_to_input_type(node.tag)
         self.input_id = int(node.get("id"))
         self.description = node.get("description")
@@ -488,10 +462,10 @@ class InputItem(object):
         if self.input_type == UiInputType.Keyboard:
             self.input_id = (self.input_id, _parse_bool(node.get("extended")))
         for child in node:
-            if child.tag not in action_lookup:
+            if child.tag not in action_name_map:
                 print("Unknown node: ", child.tag)
                 continue
-            entry = action_lookup[child.tag](self)
+            entry = action_name_map[child.tag](self)
             entry.from_xml(child)
             self.actions.append(entry)
 
@@ -501,7 +475,7 @@ class InputItem(object):
         :return XML node representing this object
         """
         node = ElementTree.Element(
-            action.common.input_type_to_tag(self.input_type)
+            action_plugins.common.input_type_to_tag(self.input_type)
         )
         if self.input_type == UiInputType.Keyboard:
             node.set("id", str(self.input_id[0]))

@@ -17,8 +17,9 @@
 
 import re
 
-import action
 from mako.template import Template
+
+import action_plugins
 import gremlin
 from gremlin.common import UiInputType
 from gremlin import error, profile, util
@@ -56,9 +57,9 @@ def generate_parameter_list(input_item):
     """
     params = []
     for entry in input_item.actions:
-        if isinstance(entry, action.remap.Remap):
+        if isinstance(entry, action_plugins.remap.Remap):
             params.append("vjoy")
-        if isinstance(entry.condition, action.common.ButtonCondition) \
+        if isinstance(entry.condition, action_plugins.common.ButtonCondition) \
                 and entry.condition.shift_button is not None:
             if entry.condition.shift_button["hardware_id"] == 0:
                 params.append("keyboard")
@@ -97,12 +98,12 @@ def actions_to_code(actions, code):
     :return code corresponding to the provided list of actions
     """
     for entry in actions:
-        if not isinstance(entry, action.remap.Remap):
+        if not isinstance(entry, action_plugins.remap.Remap):
             for key, value in entry.to_code().items():
                 assert(key in code)
                 code[key].append(value)
     for entry in actions:
-        if isinstance(entry, action.remap.Remap):
+        if isinstance(entry, action_plugins.remap.Remap):
             for key, value in entry.to_code().items():
                 assert(key in code)
                 code[key].append(value)

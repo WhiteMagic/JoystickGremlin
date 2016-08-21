@@ -20,7 +20,6 @@ Main UI of JoystickGremlin.
 """
 
 import ctypes
-import importlib
 import logging
 import os
 import sys
@@ -29,8 +28,6 @@ import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
-import sdl2
-import sdl2.ext
 import sdl2.hints
 
 import gremlin
@@ -239,6 +236,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         if device_profile.type != gremlin.profile.DeviceType.Joystick:
             return
 
+        action_plugins = gremlin.plugin_manager.ActionPlugins()
+
         vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
         mode = device_profile.modes[self._current_mode]
         input_types = [
@@ -252,13 +251,13 @@ class GremlinUi(QtWidgets.QMainWindow):
             UiInputType.JoystickHat: "hat",
         }
         main_profile = device_profile.parent
-        from action.common import ButtonCondition
+        from action_plugins.common import ButtonCondition
         for input_type in input_types:
             for entry in mode.config[input_type].values():
                 item_list = main_profile.list_unused_vjoy_inputs(
                     vjoy_devices
                 )
-                act = gremlin.profile.create_action("remap", entry)
+                act = action_plugins.repository["remap"](entry)
                 act.input_type = input_type
                 act.vjoy_device_id = 1
                 if len(item_list[1][type_name[input_type]]) > 0:
@@ -491,8 +490,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 vjoy_devices,
                 device,
                 device_profile,
-                self._current_mode,
-                self
+                self._current_mode
             )
             self.tabs[util.device_id(device)] = widget
             self.ui.devices.addTab(widget, device.name)
@@ -508,8 +506,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             vjoy_devices,
             None,
             device_profile,
-            self._current_mode,
-            self
+            self._current_mode
         )
         self.tabs[util.device_id(device_profile)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
@@ -971,6 +968,9 @@ if __name__ == "__main__":
     # Setup device key generator based on whether or not we have
     # duplicate devices connected.
     util.setup_duplicate_joysticks()
+
+    # Initialize action plugins
+    gremlin.plugin_manager.ActionPlugins()
 
     # Create user interface
     app_id = u"joystick.gremlin"
