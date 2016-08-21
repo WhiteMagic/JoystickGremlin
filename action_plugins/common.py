@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 from xml.etree import ElementTree
 from PyQt5 import QtCore, QtWidgets
 
 from mako.template import Template
 
-import action
 import gremlin
 from gremlin.common import UiInputType
 
@@ -523,12 +523,12 @@ class AbstractAction(object):
         params["InputType"] = UiInputType
 
         body_code = Template(
-            filename="templates/{}_body.tpl".format(template_name)
+            filename="action_plugins/{}/body.tpl".format(template_name)
         ).render(
             **params
         )
         global_code = Template(
-            filename="templates/{}_global.tpl".format(template_name)
+            filename="action_plugins/{}/global.tpl".format(template_name)
         ).render(
             **params
         )
@@ -557,8 +557,9 @@ class AbstractAction(object):
 
         :param node the XML node in which to store condition information
         """
+        type_action_map = gremlin.plugin_manager.ActionPlugins().type_action_map
         input_type = self.parent.input_type
-        action_widget = action.action_to_widget[type(self)]
+        action_widget = type(self).widget
         button_types = [
             UiInputType.JoystickButton,
             UiInputType.Keyboard
@@ -569,7 +570,7 @@ class AbstractAction(object):
             return
 
         if input_type in button_types and \
-                action_widget in action.condition_map[input_type]:
+                action_widget in type_action_map[input_type]:
             node.set("on-press", str(self.condition.on_press))
             node.set("on-release", str(self.condition.on_release))
 
@@ -600,7 +601,7 @@ class AbstractAction(object):
                 node.append(shift_node)
 
         elif input_type == UiInputType.JoystickHat and \
-                action_widget in action.condition_map[input_type]:
+                action_widget in type_action_map[input_type]:
             node.set("on-n", str(self.condition.on_n))
             node.set("on-ne", str(self.condition.on_ne))
             node.set("on-e", str(self.condition.on_e))
@@ -610,7 +611,7 @@ class AbstractAction(object):
             node.set("on-w", str(self.condition.on_w))
             node.set("on-nw", str(self.condition.on_nw))
         elif input_type == UiInputType.JoystickAxis and \
-                action_widget in action.condition_map[input_type]:
+                action_widget in type_action_map[input_type]:
             node.set("is-active", str(self.condition.is_active))
             node.set("lower-limit", str(self.condition.lower_limit))
             node.set("upper-limit", str(self.condition.upper_limit))

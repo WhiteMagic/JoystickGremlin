@@ -1,0 +1,10 @@
+import action_plugins.cycle_modes
+import action_plugins.macro
+import action_plugins.pause
+import action_plugins.previous_mode
+import action_plugins.remap
+import action_plugins.response_curve
+import action_plugins.resume
+import action_plugins.switch_mode
+import action_plugins.text_to_speech
+import action_plugins.toggle_pause

@@ -4,9 +4,10 @@ block_cipher = None
 
 added_files = [
     ("about", "about"),
+    ("action_plugins", "action_plugins"),
     ("doc", "doc"),
     ("gfx", "gfx"),
-    ("templates", "templates"),
+    ("templates", "templates")
 ]
 added_binaries = [
     ("vjoy/vJoyInterface.dll", "."),
