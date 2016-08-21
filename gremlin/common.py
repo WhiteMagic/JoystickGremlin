@@ -26,7 +26,7 @@ class UiInputType(enum.Enum):
     JoystickAxis = 2
     JoystickButton = 3
     JoystickHat = 4
-    Count = 6
+    Count = 5
 
 
 def ui_input_type_to_name(input_type):
