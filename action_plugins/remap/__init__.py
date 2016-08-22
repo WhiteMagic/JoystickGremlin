@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtGui, QtWidgets
 from xml.etree import ElementTree
 
 import action_plugins.common
@@ -211,6 +211,17 @@ class Remap(AbstractAction):
         self.vjoy_device_id = None
         self.vjoy_input_id = None
         self.input_type = None
+
+    def icon(self):
+        input_string = "axis"
+        if self.input_type == UiInputType.JoystickButton:
+            input_string = "button"
+        elif self.input_type == UiInputType.JoystickHat:
+            input_string = "hat"
+        return "action_plugins/remap/icon_{}_{:03d}.png".format(
+                input_string,
+                self.vjoy_input_id
+            )
 
     def _parse_xml(self, node):
         if "axis" in node.attrib:

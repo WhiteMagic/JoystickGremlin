@@ -316,7 +316,6 @@ class Macro(AbstractAction):
 
     """Represents a macro action."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Macro"
     tag = "macro"
     widget = MacroWidget
@@ -334,6 +333,9 @@ class Macro(AbstractAction):
         """
         AbstractAction.__init__(self, parent)
         self.sequence = []
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         """Parses the XML node corresponding to a macro action.

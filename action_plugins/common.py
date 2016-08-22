@@ -485,6 +485,15 @@ class AbstractAction(object):
         self._generate_condition(node)
         return node
 
+    def icon(self):
+        """Returns the icon to use when representing the action.
+
+        :return icon to use
+        """
+        raise gremlin.error.MissingImplementationError(
+            "AbstractAction.icon not implemented in subclass"
+        )
+
     def _generate_xml(self):
         """Generates the XML node for this action.
 

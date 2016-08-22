@@ -53,7 +53,6 @@ class PauseAction(AbstractAction):
 
     """Action for pausing the execution of callbacks."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Pause"
     tag = "pause"
     widget = PauseActionWidget
@@ -66,6 +65,9 @@ class PauseAction(AbstractAction):
 
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         pass

@@ -131,7 +131,6 @@ class CycleModes(AbstractAction):
 
     """Action allowing the switching through a list of modes."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Cycle Modes"
     tag = "cycle-modes"
     widget = CycleModesWidget
@@ -145,6 +144,9 @@ class CycleModes(AbstractAction):
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)
         self.mode_list = []
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         for child in node:

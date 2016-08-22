@@ -56,7 +56,6 @@ class TextToSpeech(AbstractAction):
 
     """Action representing a single TTS entry."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Text to Speech"
     tag = "text-to-speech"
     widget = TextToSpeechWidget
@@ -70,6 +69,9 @@ class TextToSpeech(AbstractAction):
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)
         self.text = ""
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         self.text = node.get("text")

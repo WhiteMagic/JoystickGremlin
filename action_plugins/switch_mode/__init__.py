@@ -60,7 +60,6 @@ class SwitchMode(AbstractAction):
 
     """Action representing the change of mode."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Switch Mode"
     tag = "switch-mode"
     widget = SwitchModeWidget
@@ -74,6 +73,9 @@ class SwitchMode(AbstractAction):
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)
         self.mode_name = None
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         self.mode_name = node.get("name")

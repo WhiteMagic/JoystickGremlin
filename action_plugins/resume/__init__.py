@@ -53,7 +53,6 @@ class ResumeAction(AbstractAction):
 
     """Action to resume callback execution."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Resume"
     tag = "resume"
     widget = ResumeActionWidget
@@ -63,6 +62,9 @@ class ResumeAction(AbstractAction):
         UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)

@@ -53,7 +53,6 @@ class PreviousMode(AbstractAction):
 
     """Action that switches to the previously active mode."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Switch to previous Mode"
     tag = "previous-mode"
     widget = PreviousModeWidget
@@ -66,6 +65,9 @@ class PreviousMode(AbstractAction):
 
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         pass

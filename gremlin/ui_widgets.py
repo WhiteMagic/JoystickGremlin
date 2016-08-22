@@ -266,21 +266,7 @@ class ActionLabel(QtWidgets.QLabel):
         :param parent the parent
         """
         QtWidgets.QLabel.__init__(self, parent)
-
-        if isinstance(action_entry, action_plugins.remap.Remap):
-            input_string = "axis"
-            if action_entry.input_type == UiInputType.JoystickButton:
-                input_string = "button"
-            elif action_entry.input_type == UiInputType.JoystickHat:
-                input_string = "hat"
-            self.setPixmap(QtGui.QPixmap(
-                "action_plugins/remap/icon_{}_{:03d}.png".format(
-                        input_string,
-                        action_entry.vjoy_input_id
-                )
-            ))
-        else:
-            self.setPixmap(QtGui.QPixmap(action_entry.icon))
+        self.setPixmap(QtGui.QPixmap(action_entry.icon()))
 
 
 class InputItemButton(QtWidgets.QFrame):

@@ -53,7 +53,6 @@ class TogglePauseAction(AbstractAction):
 
     """Action to resume callback execution."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Toggle Pause & Resume"
     tag = "toggle-pause"
     widget = TogglePauseActionWidget
@@ -66,6 +65,9 @@ class TogglePauseAction(AbstractAction):
 
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         pass

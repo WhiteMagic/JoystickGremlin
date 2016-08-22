@@ -990,7 +990,6 @@ class ResponseCurve(AbstractAction):
 
     """Represents axis response curve mapping."""
 
-    icon = "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
     name = "Response Curve"
     tag = "response-curve"
     widget = AxisResponseCurveWidget
@@ -1013,6 +1012,9 @@ class ResponseCurve(AbstractAction):
         self.sensitivity = 1.0
         self.mapping_type = "cubic-spline"
         self.control_points = [(-1.0, -1.0), (1.0, 1.0)]
+
+    def icon(self):
+        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def _parse_xml(self, node):
         """Parses the XML corresponding to a response curve.
