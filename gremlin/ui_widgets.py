@@ -757,20 +757,6 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         # In case the profile was just created by adding a new action
         # fill some of the fields.
         if not action_profile.is_valid:
-            action_profile.input_type = self.item_profile.input_type
-            if self.item_profile.input_type in [
-                UiInputType.JoystickButton, UiInputType.Keyboard
-            ]:
-                action_profile.condition = action_plugins.common.ButtonCondition()
-                # Remap actions should typically trigger both on press
-                # and release
-                if isinstance(action_profile, action_plugins.remap.Remap):
-                    action_profile.condition = \
-                        action_plugins.common.ButtonCondition(True, True)
-            elif self.item_profile.input_type == UiInputType.JoystickHat:
-                action_profile.condition = action_plugins.common.HatCondition(
-                    False, False, False, False, False, False, False, False
-                )
             self.item_profile.actions.append(action_profile)
 
         # Create the widget using the information from the action item

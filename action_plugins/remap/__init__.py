@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
 import action_plugins.common
@@ -210,7 +210,7 @@ class Remap(AbstractAction):
 
         self.vjoy_device_id = None
         self.vjoy_input_id = None
-        self.input_type = None
+        self.input_type = self.parent.input_type
 
     def icon(self):
         input_string = "axis"
@@ -221,6 +221,16 @@ class Remap(AbstractAction):
         return "action_plugins/remap/icon_{}_{:03d}.png".format(
                 input_string,
                 self.vjoy_input_id
+            )
+
+    def _create_default_condition(self):
+        if self.parent.input_type in [UiInputType.JoystickButton, UiInputType.Keyboard]:
+            self.condition = action_plugins.common.ButtonCondition(True, True)
+        elif self.parent.input_type == UiInputType.JoystickAxis:
+            self.condition = None
+        elif self.parent.input_type == UiInputType.JoystickHat:
+            self.condition = action_plugins.common.HatCondition(
+                False, False, False, False, False, False, False, False
             )
 
     def _parse_xml(self, node):

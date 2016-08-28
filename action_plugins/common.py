@@ -457,6 +457,7 @@ class AbstractAction(object):
         self.parent = parent
         self.condition = None
         self.is_valid = False
+        self._create_default_condition()
 
     def from_xml(self, node):
         """Populates the instance with data from the given XML node.
@@ -493,6 +494,16 @@ class AbstractAction(object):
         raise gremlin.error.MissingImplementationError(
             "AbstractAction.icon not implemented in subclass"
         )
+
+    def _create_default_condition(self):
+        if self.parent.input_type in [UiInputType.JoystickButton, UiInputType.Keyboard]:
+            self.condition = ButtonCondition()
+        elif self.parent.input_type == UiInputType.JoystickAxis:
+            self.condition = None
+        elif self.parent.input_type == UiInputType.JoystickHat:
+            self.condition = HatCondition(
+                False, False, False, False, False, False, False, False
+            )
 
     def _generate_xml(self):
         """Generates the XML node for this action.
@@ -634,7 +645,7 @@ class AbstractActionWidget(QtWidgets.QFrame):
     def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
         """Creates a new instance.
 
-        :param action_data the subclassed AbstractAction instance
+        :param action_data the sub-classed AbstractAction instance
             associated with this specific action.
         :param vjoy_devices list of vjoy devices available
         :param change_cb the callback to execute when changes occur
