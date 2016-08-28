@@ -656,12 +656,13 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         has_condition = False
         type_action_map = plugin_manager.ActionPlugins().type_action_map
         input_type = self.action_widget.action_data.parent.input_type
-        widget_type = type(self.action_widget)
-        if self._is_button_like() and widget_type in type_action_map[input_type]:
+        action_type = type(self.action_widget.action_data)
+
+        if self._is_button_like() and action_type in type_action_map[input_type]:
             has_condition = True
-        elif self._is_hat() and widget_type in type_action_map[input_type]:
+        elif self._is_hat() and action_type in type_action_map[input_type]:
             has_condition = True
-        elif self._is_axis() and widget_type in type_action_map[input_type]:
+        elif self._is_axis() and action_type in type_action_map[input_type]:
             has_condition = True
 
         return has_condition
@@ -670,13 +671,14 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         """Adds a condition widget to the UI if necessary."""
         type_action_map = plugin_manager.ActionPlugins().type_action_map
         input_type = self.action_widget.action_data.parent.input_type
-        widget_type = type(self.action_widget)
+        action_type = type(self.action_widget.action_data)
         condition = None
-        if self._is_button_like() and widget_type in type_action_map[input_type]:
+
+        if self._is_button_like() and action_type in type_action_map[input_type]:
             condition = ButtonConditionWidget(self.to_profile)
-        elif self._is_hat() and widget_type in type_action_map[input_type]:
+        elif self._is_hat() and action_type in type_action_map[input_type]:
             condition = HatConditionWidget(self.to_profile)
-        elif self._is_axis() and widget_type in type_action_map[input_type]:
+        elif self._is_axis() and action_type in type_action_map[input_type]:
             condition = AxisConditionWidget(self.to_profile)
 
         if condition is not None:

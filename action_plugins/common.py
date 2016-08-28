@@ -568,7 +568,7 @@ class AbstractAction(object):
         """
         type_action_map = gremlin.plugin_manager.ActionPlugins().type_action_map
         input_type = self.parent.input_type
-        action_widget = type(self).widget
+        action_widget = type(self)
         button_types = [
             UiInputType.JoystickButton,
             UiInputType.Keyboard
