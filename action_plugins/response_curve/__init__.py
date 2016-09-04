@@ -420,7 +420,10 @@ class CurveScene(QtWidgets.QGraphicsScene):
         self.model = curve_model
         self.point_editor = point_editor
         self.callback_fn = callback_fn
-        self.background_image = QtGui.QImage("gfx/grid.svg")
+
+        self.background_image = QtGui.QImage(
+            "{}/grid.svg".format(os.path.dirname(os.path.realpath(__file__)))
+        )
 
         # Connect editor widget signals
         self.point_editor.x_input.valueChanged.connect(self._editor_update)

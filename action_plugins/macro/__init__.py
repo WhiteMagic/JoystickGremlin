@@ -167,27 +167,32 @@ class MacroWidget(AbstractActionWidget):
         self.list_view.setModel(self.model)
         self.list_view.setCurrentIndex(self.model.index(0, 0))
 
+        gfx_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "gfx"
+        )
+
         # Buttons
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_up = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_up.svg"), "Up"
+            QtGui.QIcon("gfx/list_up"), "Up"
         )
         self.button_up.clicked.connect(self._up_cb)
         self.button_down = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_down.svg"), "Down"
+            QtGui.QIcon("gfx/list_down"), "Down"
         )
         self.button_delete = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_delete"), "Delete"
+            QtGui.QIcon("gfx/list_delete"), "Delete"
         )
         self.button_delete.clicked.connect(self._delete_cb)
         self.button_down.clicked.connect(self._down_cb)
         record_icon = QtGui.QIcon()
         record_icon.addPixmap(
-            QtGui.QPixmap("gfx/macro_record"),
+            QtGui.QPixmap("{}/macro_record".format(gfx_path)),
             QtGui.QIcon.Normal
         )
         record_icon.addPixmap(
-            QtGui.QPixmap("gfx/macro_record_on"),
+            QtGui.QPixmap("{}/macro_record_on".format(gfx_path)),
             QtGui.QIcon.Active,
             QtGui.QIcon.On
         )
@@ -196,7 +201,7 @@ class MacroWidget(AbstractActionWidget):
         self.button_record.setCheckable(True)
         self.button_record.clicked.connect(self._record_cb)
         self.button_pause = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_add_pause"), "Add Pause"
+            QtGui.QIcon("{}/macro_add_pause".format(gfx_path)), "Add Pause"
         )
         self.button_pause.clicked.connect(self._pause_cb)
         self.button_layout.addWidget(self.button_up)

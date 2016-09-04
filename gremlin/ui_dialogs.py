@@ -790,11 +790,11 @@ class ModuleManagerUi(QtWidgets.QWidget):
 
         # Add widgets which allow modifying the mode list
         self.add = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_add.svg"), "Add"
+            QtGui.QIcon("gfx/list_add.svg"), "Add"
         )
         self.add.clicked.connect(self._add_cb)
         self.delete = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/macro_delete.svg"), "Delete"
+            QtGui.QIcon("gfx/list_delete.svg"), "Delete"
         )
         self.delete.clicked.connect(self._delete_cb)
 
