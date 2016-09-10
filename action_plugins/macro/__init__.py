@@ -330,6 +330,7 @@ class Macro(AbstractAction):
         UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
+    callback_params = []
 
     def __init__(self, parent):
         """Creates a new Macro instance.

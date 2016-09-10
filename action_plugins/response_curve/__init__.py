@@ -999,6 +999,7 @@ class ResponseCurve(AbstractAction):
     input_types = [
         UiInputType.JoystickAxis,
     ]
+    callback_params = []
 
     curve_name_map = {
         "Cubic Spline": "cubic-spline",

@@ -62,6 +62,7 @@ class ResumeAction(AbstractAction):
         UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
+    callback_params = []
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))

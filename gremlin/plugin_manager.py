@@ -125,6 +125,14 @@ class ActionPlugins(object):
         for entry in self._plugins.values():
             self.action_name_map[entry.tag] = entry
 
+    def _create_parameter_requirements(self):
+        """Creates a mapping from parameter names to actions."""
+        for entry in self._plugins.values():
+            for name in entry.callback_params:
+                if name not in self._parameter_requirements:
+                    self._parameter_requirements[name] = []
+                self._parameter_requirements[name].append(entry)
+
     def _discover_plugins(self):
         for root, dirs, files in os.walk("action_plugins"):
             for fname in [v for v in files if v == "__init__.py"]:

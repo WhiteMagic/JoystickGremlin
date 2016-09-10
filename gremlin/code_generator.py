@@ -56,8 +56,10 @@ def generate_parameter_list(input_item):
         provided input_item
     """
     params = []
+    vjoy_required = gremlin.plugin_manager.ActionPlugins() \
+        .plugins_requiring_parameter("vjoy")
     for entry in input_item.actions:
-        if isinstance(entry, action_plugins.remap.Remap):
+        if type(entry) in vjoy_required:
             params.append("vjoy")
         if isinstance(entry.condition, action_plugins.common.ButtonCondition) \
                 and entry.condition.shift_button is not None:

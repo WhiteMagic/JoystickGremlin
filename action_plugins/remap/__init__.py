@@ -204,6 +204,7 @@ class Remap(AbstractAction):
         UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
+    callback_params = ["vjoy"]
 
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)

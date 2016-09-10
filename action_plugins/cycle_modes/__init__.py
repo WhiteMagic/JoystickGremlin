@@ -140,6 +140,7 @@ class CycleModes(AbstractAction):
         UiInputType.JoystickHat,
         UiInputType.Keyboard
     ]
+    callback_params = []
 
     def __init__(self, parent):
         AbstractAction.__init__(self, parent)
