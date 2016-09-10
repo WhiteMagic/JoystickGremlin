@@ -6,5 +6,6 @@ import action_plugins.remap
 import action_plugins.response_curve
 import action_plugins.resume
 import action_plugins.switch_mode
+import action_plugins.split_axis
 import action_plugins.text_to_speech
 import action_plugins.toggle_pause
