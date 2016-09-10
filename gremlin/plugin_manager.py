@@ -78,38 +78,62 @@ class PluginList(object):
                     # Log an error and ignore the action_plugins if
                     # anything is wrong with it
                     print("Loading action_plugins '{}' failed due to: {}".format(fname, e))
+                    raise e
 
 
 @SingletonDecorator
 class ActionPlugins(object):
 
-    """Handles discovery and derivation of action plugins."""
+    """Handles discovery and handling of action plugins."""
 
     def __init__(self):
+        """Initializes the action plugin manager."""
         self._plugins = {}
         self._type_action_map = {}
         self._action_name_to_type = {}
         self._action_type_to_name = {}
+        self._parameter_requirements = {}
 
         self._discover_plugins()
 
         self._create_type_action_map()
         self._create_action_name_map()
+        self._create_parameter_requirements()
 
     @property
     def repository(self):
+        """Returns the dictionary of all found plugins.
+
+        :return dictionary containing all plugins found
+        """
         return self._plugins
 
     @property
     def type_action_map(self):
+        """Returns a mapping from input types to valid action plugins.
+
+        :return mapping from input types to associated actions
+        """
         return self._type_action_map
 
     @property
     def action_name_map(self):
+        """Returns the mapping from an action name to the action plugin.
+
+        :return mapping from action name to action plugin
+        """
         return self._action_name_to_type
 
+    def plugins_requiring_parameter(self, param_name):
+        """Returns the list of plugins requiring a certain parameter.
+
+        :param param_name the parameter name required by the returned actions
+        :return list of actions requiring a certain parameter in the callback
+        """
+        return self._parameter_requirements.get(param_name, [])
+
     def _create_type_action_map(self):
-        """Creates a lookup table of input types and their available actions."""
+        """Creates a lookup table from input types to available actions."""
         self._type_action_map = {
             UiInputType.JoystickAxis: [],
             UiInputType.JoystickButton: [],
@@ -122,6 +146,7 @@ class ActionPlugins(object):
                 self._type_action_map[input_type].append(entry)
 
     def _create_action_name_map(self):
+        """Creates a lookup table from action names to actions."""
         for entry in self._plugins.values():
             self.action_name_map[entry.tag] = entry
 
@@ -134,6 +159,7 @@ class ActionPlugins(object):
                 self._parameter_requirements[name].append(entry)
 
     def _discover_plugins(self):
+        """Processes known plugin folders for action plugins."""
         for root, dirs, files in os.walk("action_plugins"):
             for fname in [v for v in files if v == "__init__.py"]:
                 try:
