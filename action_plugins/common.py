@@ -441,6 +441,136 @@ class DualSlider(QtWidgets.QWidget):
         painter.drawComplexControl(QtWidgets.QStyle.CC_Slider, option_upper)
 
 
+class VJoySelector(QtWidgets.QWidget):
+
+    # Mapping from types to display names
+    type_to_name_map = {
+        UiInputType.JoystickAxis: "Axis",
+        UiInputType.JoystickButton: "Button",
+        UiInputType.JoystickHat: "Hat",
+        UiInputType.Keyboard: "Button",
+    }
+    name_to_type_map = {
+        "Axis": UiInputType.JoystickAxis,
+        "Button": UiInputType.JoystickButton,
+        "Hat": UiInputType.JoystickHat
+    }
+
+    def __init__(self, vjoy_devices, change_cb, valid_types, parent=None):
+        """Creates a widget to select a Vjoy output.
+
+        :param vjoy_devices the list of available vjoy devices
+        :param change_cb callback to execute when the widget changes
+        :param valid_types the input type to present in the selection
+        :param parent of this widget
+        """
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.vjoy_devices = vjoy_devices
+        self.change_cb = change_cb
+        self.valid_types = valid_types
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.main_layout)
+
+        self.device_dropdown = None
+        self.input_item_dropdowns = []
+
+        self._create_device_dropdown()
+        self._create_input_dropdown()
+
+    def get_selection(self):
+        vjoy_device_id = self.device_dropdown.currentIndex()
+        input_selection = \
+            self.input_item_dropdowns[vjoy_device_id].currentText()
+        # Count devices starting at 1 rather then 0
+        vjoy_device_id += 1
+
+        arr = input_selection.split()
+        vjoy_input_type = self.name_to_type_map[arr[0]]
+        vjoy_item_id = int(arr[1])
+
+        return {
+            "device_id": vjoy_device_id,
+            "input_id": vjoy_item_id,
+            "input_type": vjoy_input_type
+        }
+
+    def set_selection(self, input_type, device_id, input_id):
+        # Get the appropriate vjoy device identifier
+        dev_id = 0
+        if device_id not in [0, None]:
+            dev_id = self.device_dropdown.findText(
+                "vJoy Device {:d}".format(device_id)
+            )
+
+        # Retrieve the index of the correct entry in the combobox
+        input_name = "{} {:d}".format(
+            self.type_to_name_map[input_type],
+            input_id
+        )
+        btn_id = self.input_item_dropdowns[dev_id].findText(input_name)
+
+        # Select and display correct combo boxes and entries within
+        self.device_dropdown.setCurrentIndex(dev_id)
+        for entry in self.input_item_dropdowns:
+            entry.setVisible(False)
+        self.input_item_dropdowns[dev_id].setVisible(True)
+        self.input_item_dropdowns[dev_id].setCurrentIndex(btn_id)
+
+    def _create_device_dropdown(self):
+        """Creates the vJoy device selection drop downs."""
+        self.device_dropdown = QtWidgets.QComboBox(self)
+        for i in range(1, len(self.vjoy_devices)+1):
+            self.device_dropdown.addItem("vJoy Device {:d}".format(i))
+        self.main_layout.addWidget(self.device_dropdown)
+
+    def _create_input_dropdown(self):
+        """Creates the vJoy input item selection drop downs."""
+        count_map = {
+            UiInputType.JoystickAxis: lambda x: x.axes,
+            UiInputType.JoystickButton: lambda x: x.buttons,
+            UiInputType.JoystickHat: lambda x: x.hats
+        }
+
+        self.input_item_dropdowns = []
+
+        # Create input item selections for the vjoy devices, each
+        # selection will be invisible unless it is selected as the
+        # active device
+        for dev in self.vjoy_devices:
+            selection = QtWidgets.QComboBox(self)
+            selection.setMaxVisibleItems(20)
+
+            # Add items based on the input type
+            for input_type in self.valid_types:
+                for i in range(1, count_map[input_type](dev)+1):
+                    selection.addItem("{} {:d}".format(
+                        self.type_to_name_map[input_type],
+                        i
+                    ))
+
+            # Add the selection and hide it
+            selection.setVisible(False)
+            selection.activated.connect(self.change_cb)
+            self.main_layout.addWidget(selection)
+            self.input_item_dropdowns.append(selection)
+
+        # Show the "None" selection entry
+        self.input_item_dropdowns[0].setVisible(True)
+
+    def _update_device(self, index):
+        """Handles changing the vJoy device selection.
+
+        :param index vjoy device index
+        """
+        for entry in self.input_item_dropdowns:
+            entry.setVisible(False)
+        self.input_item_dropdowns[index].setVisible(True)
+        self.input_item_dropdowns[index].setCurrentIndex(0)
+        self.change_cb()
+
+
 class AbstractAction(object):
 
     """Base class for all actions that can be encoded via the XML and
