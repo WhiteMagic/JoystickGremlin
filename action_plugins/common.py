@@ -180,6 +180,8 @@ class DualSlider(QtWidgets.QWidget):
         if min_val > max_val:
             min_val, max_val = max_val, min_val
         self._range = [min_val, max_val]
+        self._lower_position = min_val
+        self._upper_position = max_val
 
     def range(self):
         """Returns the range, i.e. minimum and maximum of accepted
@@ -524,6 +526,7 @@ class VJoySelector(QtWidgets.QWidget):
         for i in range(1, len(self.vjoy_devices)+1):
             self.device_dropdown.addItem("vJoy Device {:d}".format(i))
         self.main_layout.addWidget(self.device_dropdown)
+        self.device_dropdown.activated.connect(self._update_device)
 
     def _create_input_dropdown(self):
         """Creates the vJoy input item selection drop downs."""
