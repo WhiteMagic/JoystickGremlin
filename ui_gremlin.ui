@@ -82,6 +82,7 @@
      <string>&amp;Actions</string>
     </property>
     <addaction name="actionCreate1to1Mapping"/>
+    <addaction name="actionMergeAxis"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Actions"/>
@@ -201,6 +202,11 @@
   <action name="actionLogDisplay">
    <property name="text">
     <string>&amp;Log display</string>
+   </property>
+  </action>
+  <action name="actionMergeAxis">
+   <property name="text">
+    <string>&amp;Merge Axis</string>
    </property>
   </action>
  </widget>

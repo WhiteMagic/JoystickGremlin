@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_gremlin.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -21,7 +21,6 @@ class Ui_Gremlin(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.tab)
-        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.devices.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
@@ -87,6 +86,8 @@ class Ui_Gremlin(object):
         self.actionCreate1to1Mapping.setObjectName("actionCreate1to1Mapping")
         self.actionLogDisplay = QtWidgets.QAction(Gremlin)
         self.actionLogDisplay.setObjectName("actionLogDisplay")
+        self.actionMergeAxis = QtWidgets.QAction(Gremlin)
+        self.actionMergeAxis.setObjectName("actionMergeAxis")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
@@ -106,6 +107,7 @@ class Ui_Gremlin(object):
         self.menuTools.addAction(self.actionLogDisplay)
         self.menu_Help.addAction(self.actionAbout)
         self.menu_Actions.addAction(self.actionCreate1to1Mapping)
+        self.menu_Actions.addAction(self.actionMergeAxis)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menu_Actions.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
@@ -146,4 +148,5 @@ class Ui_Gremlin(object):
         self.actionOptions.setText(_translate("Gremlin", "&Options"))
         self.actionCreate1to1Mapping.setText(_translate("Gremlin", "Create 1:1 mapping"))
         self.actionLogDisplay.setText(_translate("Gremlin", "&Log display"))
+        self.actionMergeAxis.setText(_translate("Gremlin", "&Merge Axis"))
 

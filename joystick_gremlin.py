@@ -112,6 +112,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.about_window = None
         self.calibration_window = None
         self.device_information = None
+        self.merge_axis_ui = None
         self.module_manager = None
         self.mode_manager = None
         self.options_window = None
@@ -189,6 +190,10 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._mode_configuration_changed
         )
         self.mode_manager.show()
+
+    def merge_axis(self):
+        self.merge_axis_ui = dialogs.MergeAxisUi(self._profile)
+        self.merge_axis_ui.show()
 
     def options_dialog(self):
         """Opens the options dialog."""
@@ -393,6 +398,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionCreate1to1Mapping.triggered.connect(
             self.create_1to1_mapping
         )
+        self.ui.actionMergeAxis.triggered.connect(self.merge_axis)
+
         # Tools
         self.ui.actionDeviceInformation.triggered.connect(
             self.device_information
