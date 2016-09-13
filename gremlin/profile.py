@@ -110,6 +110,7 @@ class Profile(object):
         """Constructor creating a new instance."""
         self.devices = {}
         self.imports = []
+        self.merge_axes = []
         self.parent = None
 
     def build_inheritance_tree(self):
@@ -239,6 +240,10 @@ class Profile(object):
             for entry in child:
                 self.imports.append(entry.get("name"))
 
+        # Parse merge axis entries
+        for child in root.iter("merge-axis"):
+            self.merge_axes.append(self._parse_merge_axis(child))
+
     def to_xml(self, fname):
         """Generates XML code corresponding to this profile.
 
@@ -247,14 +252,28 @@ class Profile(object):
         # Generate XML document
         root = ElementTree.Element("devices")
         root.set("version", "1")
+        # Per device data
         for device in self.devices.values():
             root.append(device.to_xml())
+
+        # Module imports
         import_node = ElementTree.Element("import")
         for entry in self.imports:
             node = ElementTree.Element("module")
             node.set("name", entry)
             import_node.append(node)
         root.append(import_node)
+
+        # Merge axis data
+        for entry in self.merge_axes:
+            node = ElementTree.Element("merge-axis")
+            node.set("mode", str(entry["mode"]))
+            for tag in ["vjoy", "lower", "upper"]:
+                sub_node = ElementTree.Element(tag)
+                sub_node.set("device", str(entry[tag][0]))
+                sub_node.set("axis", str(entry[tag][1]))
+                node.append(sub_node)
+            root.append(node)
 
         # Serialize XML document
         ugly_xml = ElementTree.tostring(root, encoding="unicode")
@@ -283,6 +302,16 @@ class Profile(object):
                 device.type = DeviceType.Keyboard
             self.devices[device_id] = device
         return self.devices[device_id]
+
+    def _parse_merge_axis(self, node):
+        entry = {}
+        entry["mode"] = node.get("mode", None)
+        for tag in ["vjoy", "lower", "upper"]:
+            entry[tag] = (
+                int(node.find(tag).get("device")),
+                int(node.find(tag).get("axis"))
+            )
+        return entry
 
 
 class Device(object):

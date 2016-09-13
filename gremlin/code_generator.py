@@ -140,6 +140,7 @@ class CodeGenerator(object):
             "global": [],
             "callback": [],
         }
+        self.decorator_map = {}
 
         try:
             self.generate_from_profile(config_profile)
@@ -171,14 +172,35 @@ class CodeGenerator(object):
         :param config_profile the Profile to turn into code
         """
         assert(isinstance(config_profile, profile.Profile))
+
+        # Custom modules
         tpl = Template(filename="templates/import.tpl")
         self.code["import"].append(tpl.render(
             user_imports=config_profile.imports
         ))
 
+        # Device, mode, actions
         for device in config_profile.devices.values():
             for i, mode in enumerate(device.modes.values()):
                 self.process_device_mode(mode, i)
+
+        # Merge axes
+        for i, entry in enumerate(config_profile.merge_axes):
+            self.process_merge_axis(i, entry)
+
+    def process_merge_axis(self, idx, entry):
+        tpl_main = Template(filename="templates/merge_axis_main.tpl")
+        tpl_cb = Template(filename="templates/merge_axis_callback.tpl")
+
+        self.code["global"].append(tpl_main.render(
+            entry=entry,
+            idx=idx
+        ))
+        self.code["callback"].append(tpl_cb.render(
+            entry=entry,
+            idx=idx,
+            decorator_map=self.decorator_map
+        ))
 
     def process_device_mode(self, mode, index):
         """Processes a single Mode object and turns it's contents to
@@ -193,6 +215,11 @@ class CodeGenerator(object):
             decorator=decorator_name(mode, index),
             mode=mode
         ))
+
+        dev_id = util.device_id(mode.parent)
+        if dev_id not in self.decorator_map:
+            self.decorator_map[dev_id] = {}
+        self.decorator_map[dev_id][mode.name] = decorator_name(mode, index)
 
         for input_type, input_items in mode.config.items():
             for entry in input_items.values():

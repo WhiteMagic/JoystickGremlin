@@ -20,8 +20,10 @@ import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from action_plugins.common import VJoySelector
 from gremlin import config, profile, util
 from gremlin.event_handler import EventListener, InputType
+from gremlin.profile import UiInputType
 import gremlin.ui_widgets as widgets
 
 from ui_about import Ui_About
@@ -507,6 +509,286 @@ class AboutUi(QtWidgets.QWidget):
         for fname in license_list:
             third_party_licenses += open(fname).read()
         self.ui.third_party_licenses.setHtml(third_party_licenses)
+
+
+class MergeAxisUi(QtWidgets.QWidget):
+
+    """Allows merging physical axes into a single virtual ones."""
+
+    def __init__(self, profile_data, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.setWindowTitle("Merge Axis")
+
+        self.profile_data = profile_data
+        self.entries = []
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.merge_layout = QtWidgets.QVBoxLayout()
+
+        self.add_button = QtWidgets.QPushButton("New Axis")
+        self.add_button.clicked.connect(self._add_entry)
+
+        self.main_layout.addLayout(self.merge_layout)
+        self.main_layout.addWidget(self.add_button)
+
+        self.from_profile()
+
+    def _add_entry(self):
+        entry = MergeAxisEntry(self.to_profile, self.profile_data)
+        entry.closed.connect(self.to_profile)
+
+        self.entries.append(entry)
+        self.merge_layout.addWidget(entry)
+        self.to_profile()
+
+    def to_profile(self):
+        self.profile_data.merge_axes = []
+        for entry in self.entries:
+            vjoy_sel = entry.vjoy_selector.get_selection()
+            joy1_sel = entry.joy1_selector.get_selection()
+            joy2_sel = entry.joy2_selector.get_selection()
+            mode_idx = entry.mode_selector.selector.currentIndex()
+            self.profile_data.merge_axes.append({
+                "mode": entry.mode_selector.mode_list[mode_idx],
+                "vjoy": (vjoy_sel["device_id"], vjoy_sel["input_id"]),
+                "lower": (joy1_sel["device_id"], joy1_sel["input_id"]),
+                "upper": (joy2_sel["device_id"], joy2_sel["input_id"]),
+            })
+
+    def from_profile(self):
+        for entry in self.profile_data.merge_axes:
+            self._add_entry()
+            tmp = self.entries[-1]
+            tmp.select(entry)
+
+
+class MergeAxisEntry(QtWidgets.QDockWidget):
+
+    # Signal which is emitted whenever the widget is closed
+    closed = QtCore.pyqtSignal(QtWidgets.QWidget)
+
+    # Palette used to render widgets
+    palette = QtGui.QPalette()
+    palette.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
+
+    def __init__(self, change_cb, profile_data, parent=None):
+        QtWidgets.QDockWidget.__init__(self, parent)
+
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
+
+        # Setup the dock widget
+        self.main_widget = QtWidgets.QWidget()
+        self.main_widget.setAutoFillBackground(True)
+        self.main_widget.setPalette(MergeAxisEntry.palette)
+
+        self.main_layout = QtWidgets.QGridLayout(self.main_widget)
+        self.setWidget(self.main_widget)
+
+        joy_devices = util.joystick_devices()
+        vjoy_devices = [joy for joy in joy_devices if joy.is_virtual]
+        phys_devices = [joy for joy in joy_devices if not joy.is_virtual]
+
+        self.vjoy_selector = VJoySelector(
+            vjoy_devices,
+            change_cb,
+            [UiInputType.JoystickAxis]
+        )
+        self.joy1_selector = JoystickSelector(
+            phys_devices,
+            change_cb,
+            [UiInputType.JoystickAxis]
+        )
+        self.joy2_selector = JoystickSelector(
+            phys_devices,
+            change_cb,
+            [UiInputType.JoystickAxis]
+        )
+        self.mode_selector = widgets.ModeWidget()
+        self.mode_selector.populate_selector(profile_data)
+        self.mode_selector.mode_changed.connect(change_cb)
+
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b><center>Lower Half</center></b>"), 0, 0
+        )
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b><center>Upper Half</center></b>"), 0, 1
+        )
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b><center>Merge Axis</center></b>"), 0, 2
+        )
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b><center>Mode</center></b>"), 0, 3
+        )
+        self.main_layout.addWidget(self.joy1_selector, 1, 0)
+        self.main_layout.addWidget(self.joy2_selector, 1, 1)
+        self.main_layout.addWidget(self.vjoy_selector, 1, 2)
+        self.main_layout.addWidget(self.mode_selector, 1, 3)
+
+    def closeEvent(self, event):
+        """Emits the closed event when this widget is being closed.
+
+        :param event the close event details
+        """
+        QtWidgets.QDockWidget.closeEvent(self, event)
+        self.closed.emit(self)
+
+    def select(self, data):
+        self.vjoy_selector.set_selection(
+            UiInputType.JoystickAxis,
+            data["vjoy"][0],
+            data["vjoy"][1]
+        )
+        self.joy1_selector.set_selection(
+            UiInputType.JoystickAxis,
+            data["lower"][0],
+            data["lower"][1]
+        )
+        self.joy2_selector.set_selection(
+            UiInputType.JoystickAxis,
+            data["upper"][0],
+            data["upper"][1]
+        )
+        if data["mode"] in self.mode_selector.mode_list:
+            self.mode_selector.selector.setCurrentIndex(
+                self.mode_selector.mode_list.index(data["mode"])
+            )
+
+
+class JoystickSelector(QtWidgets.QWidget):
+
+    # Mapping from types to display names
+    type_to_name_map = {
+        UiInputType.JoystickAxis: "Axis",
+        UiInputType.JoystickButton: "Button",
+        UiInputType.JoystickHat: "Hat",
+        UiInputType.Keyboard: "Button",
+    }
+    name_to_type_map = {
+        "Axis": UiInputType.JoystickAxis,
+        "Button": UiInputType.JoystickButton,
+        "Hat": UiInputType.JoystickHat
+    }
+
+    def __init__(self, devices, change_cb, valid_types, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.devices = devices
+        self.change_cb = change_cb
+        self.valid_types = valid_types
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        self.device_dropdown = None
+        self.input_item_dropdowns = []
+
+        self._create_device_dropdown()
+        self._create_input_dropdown()
+
+        self._device_id_to_index_map = {}
+        self._index_to_device_id_map = {}
+        for i, device in enumerate(sorted(self.devices, key=lambda x: x.windows_id)):
+            self._device_id_to_index_map[util.device_id(device)] = i
+            self._index_to_device_id_map[i] = util.device_id(device)
+
+    def get_selection(self):
+        selection_id = self.device_dropdown.currentIndex()
+
+        if selection_id != -1:
+            input_selection = \
+                self.input_item_dropdowns[selection_id].currentText()
+
+            arr = input_selection.split()
+            device_id = self._index_to_device_id_map[selection_id]
+            input_type = self.name_to_type_map[arr[0]]
+            input_id = int(arr[1])
+        else:
+            device_id = None
+            input_id = None
+            input_type = None
+
+        return {
+            "device_id": device_id,
+            "input_id": input_id,
+            "input_type": input_type
+        }
+
+    def set_selection(self, input_type, device_id, input_id):
+        # Get the appropriate vjoy device identifier
+        dev_id = 0
+        if device_id not in [0, None] and device_id in self._device_id_to_index_map:
+            dev_id = self._device_id_to_index_map[device_id]
+
+        # If we have no device simply stop here
+        if dev_id == 0:
+            return
+
+        # Retrieve the index of the correct entry in the combobox
+        input_name = "{} {:d}".format(
+            self.type_to_name_map[input_type],
+            input_id
+        )
+        btn_id = self.input_item_dropdowns[dev_id].findText(input_name)
+
+        # Select and display correct combo boxes and entries within
+        self.device_dropdown.setCurrentIndex(dev_id)
+        for entry in self.input_item_dropdowns:
+            entry.setVisible(False)
+        self.input_item_dropdowns[dev_id].setVisible(True)
+        self.input_item_dropdowns[dev_id].setCurrentIndex(btn_id)
+
+    def _create_device_dropdown(self):
+        """Creates the vJoy device selection drop downs."""
+        self.device_dropdown = QtWidgets.QComboBox(self)
+        for device in sorted(self.devices, key=lambda x: x.windows_id):
+            self.device_dropdown.addItem(device.name)
+        self.main_layout.addWidget(self.device_dropdown)
+        self.device_dropdown.activated.connect(self._update_device)
+
+    def _create_input_dropdown(self):
+        """Creates the vJoy input item selection drop downs."""
+        count_map = {
+            UiInputType.JoystickAxis: lambda x: x.axes,
+            UiInputType.JoystickButton: lambda x: x.buttons,
+            UiInputType.JoystickHat: lambda x: x.hats
+        }
+
+        self.input_item_dropdowns = []
+
+        # Create input item selections for the vjoy devices, each
+        # selection will be invisible unless it is selected as the
+        # active device
+        for device in sorted(self.devices, key=lambda x: x.windows_id):
+            selection = QtWidgets.QComboBox(self)
+            selection.setMaxVisibleItems(20)
+
+            # Add items based on the input type
+            for input_type in self.valid_types:
+                for i in range(1, count_map[input_type](device)+1):
+                    selection.addItem("{} {:d}".format(
+                        self.type_to_name_map[input_type],
+                        i
+                    ))
+
+            # Add the selection and hide it
+            selection.setVisible(False)
+            selection.activated.connect(self.change_cb)
+            self.main_layout.addWidget(selection)
+            self.input_item_dropdowns.append(selection)
+
+        # Show the "None" selection entry
+        if len(self.input_item_dropdowns) > 0:
+            self.input_item_dropdowns[0].setVisible(True)
+
+    def _update_device(self, index):
+        """Handles changing the vJoy device selection.
+
+        :param index vjoy device index
+        """
+        for entry in self.input_item_dropdowns:
+            entry.setVisible(False)
+        self.input_item_dropdowns[index].setVisible(True)
+        self.input_item_dropdowns[index].setCurrentIndex(0)
+        self.change_cb()
 
 
 class ModeManagerUi(QtWidgets.QWidget):
