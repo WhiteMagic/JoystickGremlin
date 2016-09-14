@@ -344,6 +344,11 @@ class AxisConditionWidget(QtWidgets.QWidget):
     of axis triggers."""
 
     def __init__(self, change_cb, parent=None):
+        """Creates a new AxisConditionWidget object.
+
+        :param change_cb callback function to execute when data is changed
+        :param parent the parent of this widget
+        """
         QtWidgets.QWidget.__init__(self, parent)
 
         self.change_cb = change_cb
@@ -368,11 +373,13 @@ class AxisConditionWidget(QtWidgets.QWidget):
         self.connect_signals()
 
     def connect_signals(self):
+        """Connects widget signals to the callback function."""
         self.checkbox.stateChanged.connect(self.change_cb)
         self.lower_limit.valueChanged.connect(self.change_cb)
         self.upper_limit.valueChanged.connect(self.change_cb)
 
     def disconnect_signals(self):
+        """Disconnects widget signals from the callback function."""
         self.checkbox.stateChanged.disconnect(self.change_cb)
         self.lower_limit.valueChanged.disconnect(self.change_cb)
         self.upper_limit.valueChanged.disconnect(self.change_cb)
@@ -390,6 +397,11 @@ class ButtonConditionWidget(QtWidgets.QWidget):
     of button like actions."""
 
     def __init__(self, change_cb, parent=None):
+        """Creates a new ButtonConditionWidget object.
+
+        :param change_cb callback function to execute when data is changed
+        :param parent the parent of this widget
+        """
         QtWidgets.QWidget.__init__(self, parent)
 
         self.change_cb = change_cb
@@ -407,11 +419,13 @@ class ButtonConditionWidget(QtWidgets.QWidget):
         self.shift_data = None
 
     def connect_signals(self):
+        """Connects widget signals to the callback function."""
         self.press.stateChanged.connect(self.change_cb)
         self.release.stateChanged.connect(self.change_cb)
         self.shift_button.clicked.connect(self._shift_button_cb)
 
     def disconnect_signals(self):
+        """Disconnects widget signals from the callback function."""
         self.press.stateChanged.disconnect(self.change_cb)
         self.release.stateChanged.disconnect(self.change_cb)
         self.shift_button.clicked.disconnect(self._shift_button_cb)
@@ -447,6 +461,10 @@ class ButtonConditionWidget(QtWidgets.QWidget):
         self.button_press_dialog.show()
 
     def _assign_shift_button_cb(self, value):
+        """Sets the shift button once it has been pressed by the user.
+
+        :param value holds the shift button information
+        """
         if isinstance(value, Event):
             devices = util.joystick_devices()
             for dev in devices:
@@ -482,6 +500,11 @@ class HatConditionWidget(QtWidgets.QWidget):
     of hat actions."""
 
     def __init__(self, change_cb, parent=None):
+        """Creates a new ButtonConditionWidget object.
+
+        :param change_cb callback function to execute when data is changed
+        :param parent the parent of this widget
+        """
         QtWidgets.QWidget.__init__(self, parent)
 
         self.change_cb = change_cb
@@ -494,10 +517,12 @@ class HatConditionWidget(QtWidgets.QWidget):
         self.connect_signals()
 
     def connect_signals(self):
+        """Connects widget signals to the callback function."""
         for name in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]:
             self.widgets[name].stateChanged.connect(self.change_cb)
 
     def disconnect_signals(self):
+        """Disconnects widget signals from the callback function."""
         for name in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]:
             self.widgets[name].stateChanged.disconnect(self.change_cb)
 
@@ -581,6 +606,7 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
                 )
 
     def _populate_condition(self):
+        """Populate widget items with data if present."""
         # Only run if we need a condition
         if not self._has_condition():
             return
@@ -731,6 +757,12 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
     changed = QtCore.pyqtSignal()
 
     def __init__(self, vjoy_devices, item_profile, parent=None):
+        """Creates a new object instance.
+
+        :param vjoy_devices list of vJoy devices
+        :param item_profile profile data associated with the item
+        :param parent the parent of this widget
+        """
         QtWidgets.QFrame.__init__(self, parent)
 
         self.item_profile = item_profile
@@ -1014,6 +1046,14 @@ class DeviceTabWidget(QtWidgets.QWidget):
             current_mode,
             parent=None
     ):
+        """Creates a new object instance.
+
+        :param vjoy_devices list of vJoy devices
+        :param phys_device list of physical devices
+        :param device_profile profile data of the entire device
+        :param current_mode currently active mode
+        :param parent the parent of this widget
+        """
         QtWidgets.QWidget.__init__(self, parent)
 
         # Store parameters
@@ -1068,7 +1108,7 @@ class InputItemList(QtWidgets.QWidget):
         :param phys_device the physical device the list represents
         :param device_profile the profile used to describe the device
         :param current_mode the currently active mode
-        :parent the parent of this widget
+        :param parent the parent of this widget
         """
         QtWidgets.QWidget.__init__(self, parent)
 

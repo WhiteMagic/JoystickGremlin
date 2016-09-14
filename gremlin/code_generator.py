@@ -189,6 +189,11 @@ class CodeGenerator(object):
             self.process_merge_axis(i, entry)
 
     def process_merge_axis(self, idx, entry):
+        """Processes a merge axis entry.
+
+        :param idx the id of the entry
+        :param entry the entry to turn into code
+        """
         tpl_main = Template(filename="templates/merge_axis_main.tpl")
         tpl_cb = Template(filename="templates/merge_axis_callback.tpl")
 

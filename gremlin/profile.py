@@ -304,6 +304,11 @@ class Profile(object):
         return self.devices[device_id]
 
     def _parse_merge_axis(self, node):
+        """Parses merge axis entries.
+
+        :param node the node to process
+        :return mergee axis data structure parsed from the XML node
+        """
         entry = {}
         entry["mode"] = node.get("mode", None)
         for tag in ["vjoy", "lower", "upper"]:
