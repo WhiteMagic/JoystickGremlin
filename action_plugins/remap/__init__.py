@@ -139,6 +139,8 @@ class RemapWidget(AbstractActionWidget):
         vjoy_device_id += 1
 
         arr = input_selection.split()
+        if len(arr) == 0:
+            return
         vjoy_input_type = self.name_to_type_map[arr[0]]
         vjoy_item_id = int(arr[1])
 

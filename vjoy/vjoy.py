@@ -265,6 +265,8 @@ class VJoy(object):
 
         if not VJoyInterface.vJoyEnabled():
             raise VJoyError("vJoy is not currently running")
+        if VJoyInterface.GetvJoyVersion() != 0x216:
+            raise VJoyError("Running incompatible vJoy version, 2.1.6 required")
         elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
             raise VJoyError("Requested vJoy device is not available")
         elif not VJoyInterface.AcquireVJD(vjoy_id):
@@ -286,13 +288,42 @@ class VJoy(object):
         VJoyInterface.ResetVJD(self.vjoy_id)
 
     def axis(self, index):
+        """Returns the axis object associated with the provided index.
+
+        :param index the index of the axis to return
+        :return Axis object corresponding to the provided index
+        """
+        if index not in self._axis:
+            raise VJoyError("Invalid axis index requested: {:d}".format(index))
         return self._axis[index]
 
     def button(self, index):
+        """Returns the axis object associated with the provided index.
+
+        :param index the index of the button to return
+        :return Button object corresponding to the provided index
+        """
+        if index not in self._button:
+            print("x")
+            raise VJoyError("Invalid button index requested: {:d}".format(index))
         return self._button[index]
 
     def hat(self, index):
+        """Returns the hat object associated with the provided index.
+
+        :param index the index of the hat to return
+        :return Hat object corresponding to the provided index
+        """
+        if index not in self._hat:
+            raise VJoyError("Invalid hat index requested: {:d}".format(index))
         return self._hat[index]
+
+    def is_button_valid(self, index):
+        """Returns whether or not the provided button index is valid.
+
+        :param index button index to check
+        """
+        return index in self._button
 
     def reset(self):
         """Resets the state of all inputs to their default state."""
@@ -359,8 +390,12 @@ class VJoy(object):
         :returns list of Hat objects
         """
         hats = {}
-        for hat_id in range(1, VJoyInterface.GetVJDDiscPovNumber(self.vjoy_id)+1):
-            hats[hat_id] = Hat(self, hat_id, HatType.Discrete)
+        # We can't use discrete hats as such their existence is considered
+        # an error
+        # if VJoyInterface.GetVJDContPovNumber() > 0:
+        #     raise VJoyError("Discrete POVs cannot be used")
+        # for hat_id in range(1, VJoyInterface.GetVJDDiscPovNumber(self.vjoy_id)+1):
+        #     hats[hat_id] = Hat(self, hat_id, HatType.Discrete)
         for hat_id in range(1, VJoyInterface.GetVJDContPovNumber(self.vjoy_id)+1):
             hats[hat_id] = Hat(self, hat_id, HatType.Continuous)
         return hats

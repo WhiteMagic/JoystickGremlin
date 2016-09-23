@@ -28,7 +28,7 @@ import sdl2
 from gremlin import event_handler, macro, util
 from gremlin.util import SingletonDecorator, convert_sdl_hat, extract_ids
 from gremlin.error import GremlinError
-from vjoy.vjoy import VJoy
+from vjoy.vjoy import VJoy, VJoyError
 
 
 class CallbackRegistry(object):
@@ -590,7 +590,10 @@ class AutomaticButtonRelease(QtCore.QObject):
         if evt in self._registry and not evt.is_pressed:
             vjoy = VJoyProxy()
             for entry in self._registry[evt]:
-                vjoy[entry[0]].button(entry[1]).is_pressed = False
+                # Check if the button is valid otherwise we cause Gremlin
+                # to crash
+                if vjoy[entry[0]].is_button_valid(entry[1]):
+                    vjoy[entry[0]].button(entry[1]).is_pressed = False
             self._registry[evt] = []
 
 
