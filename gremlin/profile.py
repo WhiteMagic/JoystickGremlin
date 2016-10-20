@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import enum
+import logging
+import shutil
 from xml.etree import ElementTree
 from xml.dom import minidom
 
@@ -97,6 +99,89 @@ class DeviceType(enum.Enum):
 
     Keyboard = 1
     Joystick = 2
+    VJoy = 3
+
+
+class ProfileConverter(object):
+
+    """Handle converting and checking profiles."""
+
+    def __init__(self):
+        pass
+
+    def is_current(self, fname):
+        """Returns whether or not the provided profile is current.
+
+        :param fname path to the profile to evaluate
+        """
+        tree = ElementTree.parse(fname)
+        root = tree.getroot()
+
+        return self._determine_version(root) == 2
+
+    def convert_profile(self, fname):
+        """Converts the provided profile to the current version.
+
+        :param fname path to the profile to convert
+        """
+        # Load the profile
+        tree = ElementTree.parse(fname)
+        root = tree.getroot()
+
+        # Check if a conversion is required
+        if self.is_current(fname):
+            return
+
+        # Create a backup of the outdated profile
+        old_version = self._determine_version(root)
+        shutil.copyfile(fname, "{}.v{:d}".format(fname, old_version))
+
+        # Convert the profile
+        if old_version == 1:
+            new_root = self._convert_from_v1(root)
+
+        # Save converted version
+        ugly_xml = ElementTree.tostring(new_root, encoding="unicode")
+        ugly_xml = "".join([line.strip() for line in ugly_xml.split("\n")])
+        dom_xml = minidom.parseString(ugly_xml)
+        with open(fname, "w") as out:
+            out.write(dom_xml.toprettyxml(indent="    ", newl="\n"))
+
+    def _determine_version(self, root):
+        """Returns the version of the provided profile.
+
+        :param root root node of the profile to determine the version of
+        :return version of the profile
+        """
+        if root.tag == "devices" and int(root.get("version")) == 1:
+            return 1
+        elif root.tag == "profile" and int(root.get("version")) == 2:
+            return 2
+        else:
+            raise gremlin.error.ProfileError(
+                "Invalid profile version encountered"
+            )
+
+    def _convert_from_v1(self, root):
+        """Converts v1 profiles to the current version.
+
+        :param root the v1 profile
+        :return representation of the profile in the current version
+        """
+        new_root = ElementTree.Element("profile")
+        new_root.set("version", "2")
+
+        # Device entries
+        devices = ElementTree.Element("devices")
+        for node in root.iter("device"):
+            devices.append(node)
+        new_root.append(devices)
+
+        # Module imports
+        for node in root.iter("import"):
+            new_root.append(node)
+
+        return new_root
 
 
 class Profile(object):
@@ -206,6 +291,12 @@ class Profile(object):
 
         :param fname the path to the XML file to parse
         """
+        # Check for outdated profile structure and warn user / convert
+        profile_converter = ProfileConverter()
+        if not profile_converter.is_current(fname):
+            logging.getLogger("system").warning("Outdated profile, converting")
+            profile_converter.convert_profile(fname)
+
         tree = ElementTree.parse(fname)
         root = tree.getroot()
 
@@ -250,11 +341,20 @@ class Profile(object):
         :param fname name of the file to save the XML to
         """
         # Generate XML document
-        root = ElementTree.Element("devices")
-        root.set("version", "1")
-        # Per device data
+        root = ElementTree.Element("profile")
+        root.set("version", "2")
+
+        # Device settings
+        devices = ElementTree.Element("devices")
         for device in self.devices.values():
-            root.append(device.to_xml())
+            devices.append(device.to_xml())
+        root.append(devices)
+
+        # VJoy settings
+        vjoy_devices = ElementTree.Element("vjoy-devices")
+        for device in self.vjoy_devices.values():
+            vjoy_devices.append(device.to_xml())
+        root.append(vjoy_devices)
 
         # Module imports
         import_node = ElementTree.Element("import")
