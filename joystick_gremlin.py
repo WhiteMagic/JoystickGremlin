@@ -518,6 +518,22 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.tabs[util.device_id(device_profile)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
+        # Create the vjoy devices tab
+        for device in vjoy_devices:
+            device_profile = self._profile.get_device_modes(
+                util.device_id(device),
+                device.name
+            )
+
+            widget = widgets.DeviceTabWidget(
+                vjoy_devices,
+                device,
+                device_profile,
+                self._current_mode
+            )
+            self.tabs[util.device_id(device)] = widget
+            self.ui.devices.addTab(widget, device.name)
+
         # Connect the mode changed event to all tabs
         for widget in self.tabs.values():
             self.mode_selector.mode_changed.connect(

@@ -904,9 +904,19 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         :return list of valid action names
         """
         action_list = []
-        for entry in plugin_manager.ActionPlugins().repository.values():
-            if self.item_profile.input_type in entry.input_types:
+        if self.item_profile.parent.parent.type == profile.DeviceType.VJoy:
+            entry = plugin_manager.ActionPlugins().repository.get(
+                "response-curve",
+                None
+            )
+            if entry is not None:
                 action_list.append(entry.name)
+            else:
+                raise error.GremlinError("Response curve plugin is missing")
+        else:
+            for entry in plugin_manager.ActionPlugins().repository.values():
+                if self.item_profile.input_type in entry.input_types:
+                    action_list.append(entry.name)
         return sorted(action_list)
 
 
@@ -1041,7 +1051,7 @@ class DeviceTabWidget(QtWidgets.QWidget):
     def __init__(
             self,
             vjoy_devices,
-            phys_device,
+            device,
             device_profile,
             current_mode,
             parent=None
@@ -1049,7 +1059,7 @@ class DeviceTabWidget(QtWidgets.QWidget):
         """Creates a new object instance.
 
         :param vjoy_devices list of vJoy devices
-        :param phys_device list of physical devices
+        :param device list of physical devices
         :param device_profile profile data of the entire device
         :param current_mode currently active mode
         :param parent the parent of this widget
@@ -1061,13 +1071,13 @@ class DeviceTabWidget(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
         self.input_item_list = InputItemList(
-            phys_device,
+            device,
             device_profile,
             current_mode
         )
         self.configuration_panel = ConfigurationPanel(
             vjoy_devices,
-            phys_device,
+            device,
             device_profile,
             current_mode
         )
@@ -1098,14 +1108,14 @@ class InputItemList(QtWidgets.QWidget):
 
     def __init__(
             self,
-            phys_device,
+            device,
             device_profile,
             current_mode,
             parent=None
     ):
         """Creates a new instance.
 
-        :param phys_device the physical device the list represents
+        :param device the physical device the list represents
         :param device_profile the profile used to describe the device
         :param current_mode the currently active mode
         :param parent the parent of this widget
@@ -1121,8 +1131,10 @@ class InputItemList(QtWidgets.QWidget):
         }
 
         # Store parameters
-        self.phys_device = phys_device
+        self.device = device
         self.device_profile = device_profile
+        if self.device is not None and self.device.is_virtual:
+            self.device_profile.type = profile.DeviceType.VJoy
         self.current_mode = current_mode
         self.current_identifier = None
 
@@ -1220,7 +1232,9 @@ class InputItemList(QtWidgets.QWidget):
 
         if self.device_profile.type == profile.DeviceType.Keyboard:
             self._populate_keyboard()
-        else:
+        elif self.device_profile.type == profile.DeviceType.VJoy:
+            self._populate_vjoy()
+        elif self.device_profile.type == profile.DeviceType.Joystick:
             self._populate_joystick()
 
         self.scroll_layout.addStretch()
@@ -1228,9 +1242,9 @@ class InputItemList(QtWidgets.QWidget):
     def _populate_joystick(self):
         """Handles generating the items for a joystick device."""
         input_counts = [
-            (UiInputType.JoystickAxis, self.phys_device.axes),
-            (UiInputType.JoystickButton, self.phys_device.buttons),
-            (UiInputType.JoystickHat, self.phys_device.hats)
+            (UiInputType.JoystickAxis, self.device.axes),
+            (UiInputType.JoystickButton, self.device.buttons),
+            (UiInputType.JoystickHat, self.device.hats)
         ]
 
         # Ensure the current mode exists for the device even if it
@@ -1288,6 +1302,35 @@ class InputItemList(QtWidgets.QWidget):
             item.input_item_clicked.connect(self._input_item_selection)
             # Add the new item to the panel
             self.input_items[UiInputType.Keyboard][key_code] = item
+            self.scroll_layout.addWidget(item)
+
+    def _populate_vjoy(self):
+        """Handles generating the items for a vjoy device."""
+        # Ensure the current mode exists for the device even if it
+        # was added at runtime
+        self.device_profile.ensure_mode_exists(self.current_mode)
+
+        # Create items for each axis
+        for i in range(1, self.device.axes+1):
+            item = InputItemButton(
+                i,
+                InputIdentifier(
+                    UiInputType.JoystickAxis,
+                    i,
+                    self.device_profile.type
+                ),
+                self
+            )
+            item.create_action_icons(
+                self.device_profile.modes[self.current_mode].get_data(
+                    UiInputType.JoystickAxis,
+                    i
+                )
+            )
+            item.input_item_clicked.connect(
+                self._input_item_selection
+            )
+            self.input_items[UiInputType.JoystickAxis][i] = item
             self.scroll_layout.addWidget(item)
 
     def _input_item_selection(self, identifier):
@@ -1395,7 +1438,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
     def __init__(
             self,
             vjoy_devices,
-            phys_device,
+            device,
             device_profile,
             current_mode,
             parent=None
@@ -1403,7 +1446,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
         """Creates a new instance.
 
         :param vjoy_devices the vjoy devices present in the system
-        :param phys_device the physical device being configured
+        :param device the physical device being configured
         :param device_profile the profile of the device
         :param current_mode the currently active mode
         :param parent the parent of this widget
@@ -1412,7 +1455,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
 
         # Store parameters
         self.vjoy_devices = vjoy_devices
-        self.phys_device = phys_device
+        self.device = device
         self.device_profile = device_profile
         self.current_mode = current_mode
 
