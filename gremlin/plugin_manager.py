@@ -17,6 +17,7 @@
 
 
 import importlib
+import logging
 import os
 
 from gremlin.common import UiInputType
@@ -53,8 +54,7 @@ class PluginList(object):
         return self._repository
 
     def _discover_plugins(self):
-        print("Searching for plugins in: {}".format(self._plugin_folder))
-
+        #print("Searching for plugins in: {}".format(self._plugin_folder))
         for root, dirs, files in os.walk(self._plugin_folder):
             for fname in files:
                 try:
@@ -71,14 +71,20 @@ class PluginList(object):
                     ))
                     if "version" in plugin.__dict__:
                         self._repository[plugin.name] = plugin.create
-                        print("Loaded: {}".format(plugin.name))
+                        logging.getLogger("system").debug(
+                            "Loaded: {}".format(plugin.name)
+                        )
                     else:
                         del plugin
                 except Exception as e:
                     # Log an error and ignore the action_plugins if
                     # anything is wrong with it
-                    print("Loading action_plugins '{}' failed due to: {}".format(fname, e))
-                    raise e
+                    logging.getLogger("system").warning(
+                        "Loading action_plugins '{}' failed due to: {}".format(
+                            fname,
+                            e
+                        )
+                    )
 
 
 @SingletonDecorator
@@ -172,10 +178,17 @@ class ActionPlugins(object):
                     plugin = importlib.import_module("action_plugins.{}".format(module))
                     if "version" in plugin.__dict__:
                         self._plugins[plugin.name] = plugin.create
-                        print("Loaded: {}".format(plugin.name))
+                        logging.getLogger("system").debug(
+                            "Loaded: {}".format(plugin.name)
+                        )
                     else:
                         del plugin
                 except Exception as e:
                     # Log an error and ignore the action_plugins if
                     # anything is wrong with it
-                    print("Loading action_plugins '{}' failed due to: {}".format(fname, e))
+                    logging.getLogger("system").warning(
+                        "Loading action_plugins '{}' failed due to: {}".format(
+                            fname,
+                            e
+                        )
+                    )
