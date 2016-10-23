@@ -494,9 +494,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Create joystick devices
         vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
         phys_devices = [dev for dev in self.devices if not dev.is_virtual]
-        for device in phys_devices:
+        for device in sorted(phys_devices, key=lambda x: x.name):
             device_profile = self._profile.get_device_modes(
                 util.device_id(device),
+                gremlin.profile.DeviceType.Joystick,
                 device.name
             )
 
@@ -514,6 +515,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             util.device_id(gremlin.event_handler.Event.from_key(
                 gremlin.macro.Keys.A)
             ),
+            gremlin.profile.DeviceType.Keyboard,
             "keyboard"
         )
         widget = widgets.DeviceTabWidget(
@@ -526,9 +528,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.devices.addTab(widget, "Keyboard")
 
         # Create the vjoy devices tab
-        for device in vjoy_devices:
+        for device in sorted(vjoy_devices, key=lambda x: x.windows_id):
             device_profile = self._profile.get_device_modes(
-                util.device_id(device),
+                device.vjoy_id,
+                gremlin.profile.DeviceType.VJoy,
                 device.name
             )
 
@@ -539,7 +542,10 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self._current_mode
             )
             self.tabs[util.device_id(device)] = widget
-            self.ui.devices.addTab(widget, device.name)
+            self.ui.devices.addTab(
+                widget,
+                "{} #{:d}".format(device.name, device_profile.windows_id)
+            )
 
         # Connect the mode changed event to all tabs
         for widget in self.tabs.values():

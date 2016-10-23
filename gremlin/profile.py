@@ -66,6 +66,44 @@ def input_type_to_tag(input_type):
         )
 
 
+def type_name_to_device_type(type_name):
+    """Returns the DeviceType representing the provided textual value.
+
+    :param type_name the DeviceType textual representation
+    :return DeviceType enum value
+    """
+    lookup = {
+        "keyboard": DeviceType.Keyboard,
+        "joystick": DeviceType.Joystick,
+        "vjoy": DeviceType.VJoy
+    }
+    if type_name in lookup:
+        return lookup[type_name]
+    else:
+        raise gremlin.error.ProfileError(
+            "Invalid device type specified {}".format(type_name)
+        )
+
+
+def device_type_to_type_name(device_type):
+    """Returns the textual representation of a DeviceType enum entry.
+
+    :param device_type DeviceType enum entry to convert to string
+    :return textual representation of the provided DeviceType enum
+    """
+    lookup = {
+        DeviceType.Keyboard: "keyboard",
+        DeviceType.Joystick: "joystick",
+        DeviceType.VJoy: "vjoy"
+    }
+    if device_type in lookup:
+        return lookup[device_type]
+    else:
+        raise gremlin.error.ProfileError(
+            "Invalid DeviceType enum entry provided {}".format(device_type)
+        )
+
+
 def _parse_bool(value):
     """Returns the boolean representation of the provided value.
 
@@ -174,7 +212,13 @@ class ProfileConverter(object):
         # Device entries
         devices = ElementTree.Element("devices")
         for node in root.iter("device"):
+            # Modify each node to include the correct type attribute
+            if node.get("name") == "keyboard" and int(node.get("windows_id")) == 0:
+                node.set("type", "keyboard")
+            else:
+                node.set("type", "joystick")
             devices.append(node)
+
         new_root.append(devices)
 
         # Module imports
@@ -194,6 +238,7 @@ class Profile(object):
     def __init__(self):
         """Constructor creating a new instance."""
         self.devices = {}
+        self.vjoy_devices = {}
         self.imports = []
         self.merge_axes = []
         self.parent = None
@@ -305,19 +350,38 @@ class Profile(object):
             device = Device(self)
             device.from_xml(child)
             self.devices[gremlin.util.device_id(device)] = device
+        # Parse each vjoy device into separate DeviceConfiguration objects
+        for child in root.iter("vjoy-device"):
+            device = Device(self)
+            device.from_xml(child)
+            self.vjoy_devices[device.hardware_id] = device
 
         # Ensure that the profile contains an entry for every existing
         # device even if it was not part of the loaded XML and
-        # replicate the modes present in the profile.
+        # replicate the modes present in the profile. This adds both entries
+        # for physical and virtual joysticks.
         devices = gremlin.util.joystick_devices()
         for dev in devices:
-            if not dev.is_virtual and gremlin.util.device_id(dev) not in self.devices:
+            add_device = False
+            if dev.is_virtual and dev.vjoy_id not in self.vjoy_devices:
+                add_device = True
+            elif not dev.is_virtual and \
+                    gremlin.util.device_id(dev) not in self.devices:
+                add_device = True
+
+            if add_device:
                 new_device = Device(self)
                 new_device.name = dev.name
-                new_device.hardware_id = dev.hardware_id
-                new_device.windows_id = dev.windows_id
-                new_device.type = DeviceType.Joystick
-                self.devices[gremlin.util.device_id(new_device)] = new_device
+                if dev.is_virtual:
+                    new_device.type = DeviceType.VJoy
+                    new_device.hardware_id = dev.vjoy_id
+                    new_device.windows_id = dev.vjoy_id
+                    self.vjoy_devices[dev.vjoy_id] = new_device
+                else:
+                    new_device.type = DeviceType.Joystick
+                    new_device.hardware_id = dev.hardware_id
+                    new_device.windows_id = dev.windows_id
+                    self.devices[gremlin.util.device_id(new_device)] = new_device
 
                 # Create required modes
                 mode_list = gremlin.util.mode_list(new_device)
@@ -381,14 +445,18 @@ class Profile(object):
         with open(fname, "w") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
-    def get_device_modes(self, device_id, device_name=None):
+    def get_device_modes(self, device_id, device_type, device_name=None):
         """Returns the modes associated with the given device.
 
         :param device_id the key composed of hardware and windows id
+        :param device_type the type of the device being queried
         :param device_name the name of the device
         :return all modes for the specified device
         """
-        if device_id not in self.devices:
+        if device_type == DeviceType.VJoy:
+            return self.vjoy_devices[device_id]
+
+        elif device_id not in self.devices:
             # Create the device
             hid, wid = gremlin.util.extract_ids(device_id)
             device = Device(self)
@@ -450,10 +518,7 @@ class Device(object):
         self.name = node.get("name")
         self.hardware_id = int(node.get("id"))
         self.windows_id = int(node.get("windows_id"))
-        if self.name == "keyboard" and self.hardware_id == 0:
-            self.type = DeviceType.Keyboard
-        else:
-            self.type = DeviceType.Joystick
+        self.type = type_name_to_device_type(node.get("type"))
 
         for child in node:
             mode = Mode(self)
@@ -465,10 +530,12 @@ class Device(object):
 
         :return xml node of this device's contents
         """
-        node = ElementTree.Element("device")
+        node_tag = "device" if self.type != DeviceType.VJoy else "vjoy-device"
+        node = ElementTree.Element(node_tag)
         node.set("name", self.name)
         node.set("id", str(self.hardware_id))
         node.set("windows_id", str(self.windows_id))
+        node.set("type", device_type_to_type_name(self.type))
         for mode in self.modes.values():
             node.append(mode.to_xml())
         return node
@@ -597,7 +664,9 @@ class InputItem(object):
             self.input_id = (self.input_id, _parse_bool(node.get("extended")))
         for child in node:
             if child.tag not in action_name_map:
-                print("Unknown node: ", child.tag)
+                logging.getLogger("system").warning(
+                    "Unknown node present: {}".format(child.tag)
+                )
                 continue
             entry = action_name_map[child.tag](self)
             entry.from_xml(child)

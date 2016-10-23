@@ -123,6 +123,7 @@ class JoystickDeviceData(object):
         self._axes = sdl2.SDL_JoystickNumAxes(device)
         self._buttons = sdl2.SDL_JoystickNumButtons(device)
         self._hats = sdl2.SDL_JoystickNumHats(device)
+        self._vjoy_id = 0
 
     @property
     def hardware_id(self):
@@ -151,6 +152,10 @@ class JoystickDeviceData(object):
     @property
     def hats(self):
         return self._hats
+
+    @property
+    def vjoy_id(self):
+        return self._vjoy_id
 
 
 class AxisButton(object):
@@ -199,6 +204,7 @@ def joystick_devices():
     :return list containing information about all joystick like devices
     """
     devices = []
+    # Get all connected devices
     for i in range(sdl2.SDL_NumJoysticks()):
         joy = sdl2.SDL_JoystickOpen(i)
         if joy is None:
@@ -207,6 +213,13 @@ def joystick_devices():
             )
         else:
             devices.append(JoystickDeviceData(joy))
+    # For virtual joysticks set their vjoy_id based on the windows_id
+    vjoy_devices = sorted(
+        [dev for dev in devices if dev.is_virtual],
+        key=lambda x: x.windows_id
+    )
+    for i, dev in enumerate(vjoy_devices):
+        dev._vjoy_id = i+1
 
     return devices
 
