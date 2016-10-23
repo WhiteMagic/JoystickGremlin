@@ -106,7 +106,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.new_profile()
 
         # Create device tabs
-        self._create_tabs()
+        # FIXME: why was this added initially?
+        #self._create_tabs()
 
         # Modal windows
         self.about_window = None
@@ -119,9 +120,15 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.log_window = None
 
         # Enable reloading for when a user connects / disconnects a
-        # device
+        # device. Sleep for a bit to avert race with devices being added
+        # when they already exist.
         el = EventListener()
+        time.sleep(0.1)
         el.device_change_event.connect(self._device_change_cb)
+
+        # Enable mode change callback handling only once all the setup
+        # has been completed
+        #self.mode_selector.mode_changed.connect(self._mode_changed_cb)
 
         self.apply_user_settings()
 
@@ -759,14 +766,15 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile_fname = fname
             self._update_window_title()
 
-            self._current_mode = self._profile.get_root_modes()[0]
+            self._current_mode = sorted(self._profile.get_root_modes())[0]
             self._create_tabs()
 
             # Make the first root node the default active mode
             self.mode_selector.populate_selector(
                 self._profile, self._current_mode
             )
-            self._mode_configuration_changed()
+            # FIXME: no longer required above line does all of this
+            #self._mode_configuration_changed()
         except TypeError as e:
             # An error occurred while parsing an existing profile,
             # creating an empty profile instead
