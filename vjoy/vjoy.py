@@ -18,11 +18,13 @@
 
 import ctypes
 import enum
+import logging
 import threading
 import time
 
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 from gremlin.error import VJoyError
+import gremlin.spline
 
 
 class AxisName(enum.Enum):
@@ -79,8 +81,39 @@ class Axis(object):
         self._max_value = tmp.value
         self._half_range = int(self._max_value / 2)
 
+        self._deadzone_fn = lambda x: deadzone(x, -1.0, -0.0, 0.0, 1.0)
+        self._response_curve_fn = lambda x: x
+
         # If this is not the case our value setter needs to change
-        assert(self._min_value == 0)
+        if self._min_value != 0:
+            raise VJoyError("vJoy axis minimum value is not 0")
+
+    def set_response_curve(self, spline_type, control_points):
+        """Sets the response curve to use for the axis.
+
+        :param spline_type the type of spline to use
+        :param control_points the control points defining the spline
+        """
+        if spline_type == "cubic-spline":
+            self._response_curve_fn = gremlin.spline.CubicSpline(control_points)
+        elif spline_type == "cubic-bezier-spline":
+            self._response_curve_fn = \
+                gremlin.spline.CubicBezierSpline(control_points)
+        else:
+            logging.getLogger("system").error("Invalid spline type specified")
+            self._response_curve_fn = lambda x: x
+
+    def set_deadzone(self, low, center_low, center_high, high):
+        """Sets the deadzone for the axis.
+
+        :param low low deadzone limit
+        :param center_low lower center deadzone limit
+        :param center_high upper center deadzone limit
+        :param high high deadzone limit
+        """
+        self._deadzone_fn = lambda x: deadzone(
+            x, low, center_low, center_high, high
+        )
 
     @property
     def value(self):
@@ -97,12 +130,19 @@ class Axis(object):
 
         :param value the position of the axis in the range [-1, 1]
         """
+        # Log an error on invalid data but continue processing by clamping
+        # the values in the next step
         if 1.0 - abs(value) < -0.001:
-            raise VJoyError(
+            logging.getLogger("system").warning(
                 "Wrong data type provided, has to be float in [-1, 1],"
                 " provided value was {:.2f}".format(value)
             )
-        self._value = min(1.0, max(-1.0, value))
+
+        # Normalize value to [-1, 1] and apply response curve and deadzone
+        # settings
+        self._value = self._response_curve_fn(
+            self._deadzone_fn(min(1.0, max(-1.0, value)))
+        )
 
         if not VJoyInterface.SetAxis(
                 int(self._half_range + self._half_range * self._value),
@@ -318,6 +358,14 @@ class VJoy(object):
             raise VJoyError("Invalid hat index requested: {:d}".format(index))
         return self._hat[index]
 
+    def is_axis_valid(self, index):
+        """Returns whether or not an axis is valid.
+
+        :param index the index of the axis to test
+        :return True if the axis is valid, False otherwise
+        """
+        return index in self._axis
+
     def is_button_valid(self, index):
         """Returns whether or not the provided button index is valid.
 
@@ -411,3 +459,23 @@ class VJoy(object):
             len(self.button),
             len(self.hat)
         )
+
+
+def deadzone(value, low, low_center, high_center, high):
+    """Returns the mapped value taking the provided deadzone into
+    account.
+
+    The following relationship between the limits has to hold.
+    -1 <= low < low_center <= 0 <= high_center < high <= 1
+
+    :param value the raw input value
+    :param low low deadzone limit
+    :param low_center lower center deadzone limit
+    :param high_center upper center deadzone limit
+    :param high high deadzone limit
+    :return corrected value
+    """
+    if value >= 0:
+        return min(1, max(0, (value - high_center) / abs(high - high_center)))
+    else:
+        return max(-1, min(0, (value - low_center) / abs(low - low_center)))

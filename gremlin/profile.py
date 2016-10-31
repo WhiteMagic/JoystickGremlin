@@ -454,31 +454,41 @@ class Profile(object):
         :return all modes for the specified device
         """
         if device_type == DeviceType.VJoy:
+            if device_id not in self.vjoy_devices:
+                # Create the device
+                device = Device(self)
+                device.name = device_name
+                device.hardware_id = device_id
+                device.windows_id = device_id
+                device.type = DeviceType.VJoy
+                self.vjoy_devices[device_id] = device
             return self.vjoy_devices[device_id]
 
-        elif device_id not in self.devices:
-            # Create the device
-            hid, wid = gremlin.util.extract_ids(device_id)
-            device = Device(self)
-            device.name = device_name
-            device.hardware_id = hid
-            device.windows_id = wid
+        else:
+            if device_id not in self.devices:
+                # Create the device
+                hid, wid = gremlin.util.extract_ids(device_id)
+                device = Device(self)
+                device.name = device_name
+                device.hardware_id = hid
+                device.windows_id = wid
 
-            # Set the correct device type
-            device.type = DeviceType.Joystick
-            if device_name == "keyboard":
-                device.type = DeviceType.Keyboard
-            self.devices[device_id] = device
-        return self.devices[device_id]
+                # Set the correct device type
+                device.type = DeviceType.Joystick
+                if device_name == "keyboard":
+                    device.type = DeviceType.Keyboard
+                self.devices[device_id] = device
+            return self.devices[device_id]
 
     def _parse_merge_axis(self, node):
         """Parses merge axis entries.
 
         :param node the node to process
-        :return mergee axis data structure parsed from the XML node
+        :return merge axis data structure parsed from the XML node
         """
-        entry = {}
-        entry["mode"] = node.get("mode", None)
+        entry = {
+            "mode": node.get("mode", None)
+        }
         for tag in ["vjoy", "lower", "upper"]:
             entry[tag] = (
                 int(node.find(tag).get("device")),

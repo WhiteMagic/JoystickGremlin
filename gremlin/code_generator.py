@@ -188,6 +188,15 @@ class CodeGenerator(object):
         for i, entry in enumerate(config_profile.merge_axes):
             self.process_merge_axis(i, entry)
 
+        # Vjoy response curve switching
+        tpl = Template(filename="templates/vjoy_curves.tpl")
+        self.code["global"].append(tpl.render(
+            vjoy_devices=config_profile.vjoy_devices,
+            vjoy_ids=[joy.vjoy_id for joy in gremlin.util.joystick_devices()
+                      if joy.is_virtual],
+            UiInputType=gremlin.common.UiInputType
+        ))
+
     def process_merge_axis(self, idx, entry):
         """Processes a merge axis entry.
 
