@@ -175,15 +175,19 @@ class ProfileConverter(object):
         shutil.copyfile(fname, "{}.v{:d}".format(fname, old_version))
 
         # Convert the profile
+        new_root = None
         if old_version == 1:
             new_root = self._convert_from_v1(root)
 
-        # Save converted version
-        ugly_xml = ElementTree.tostring(new_root, encoding="unicode")
-        ugly_xml = "".join([line.strip() for line in ugly_xml.split("\n")])
-        dom_xml = minidom.parseString(ugly_xml)
-        with open(fname, "w") as out:
-            out.write(dom_xml.toprettyxml(indent="    ", newl="\n"))
+        if new_root is not None:
+            # Save converted version
+            ugly_xml = ElementTree.tostring(new_root, encoding="unicode")
+            ugly_xml = "".join([line.strip() for line in ugly_xml.split("\n")])
+            dom_xml = minidom.parseString(ugly_xml)
+            with open(fname, "w") as out:
+                out.write(dom_xml.toprettyxml(indent="    ", newl="\n"))
+        else:
+            raise gremlin.error.ProfileError("Failed to convert profile")
 
     def _determine_version(self, root):
         """Returns the version of the provided profile.
