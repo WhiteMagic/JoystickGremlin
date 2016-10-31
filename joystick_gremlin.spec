@@ -1,14 +1,24 @@
 # -*- mode: python -*-
 
+import os
+
 block_cipher = None
+
+# Properly enumerate all files required for the action_plugins syustem
+action_plugins_files = []
+for root, _, files in os.walk("action_plugins"):
+    for fname in files:
+        if fname.endswith(".pyc"):
+            continue
+        action_plugins_files.append((os.path.join(root, fname), root))
 
 added_files = [
     ("about", "about"),
-    ("action_plugins", "action_plugins"),
     ("doc", "doc"),
     ("gfx", "gfx"),
     ("templates", "templates")
 ]
+added_files.extend(action_plugins_files)
 added_binaries = [
     ("vjoy/vJoyInterface.dll", "."),
     ("SDL2.dll", "."),
