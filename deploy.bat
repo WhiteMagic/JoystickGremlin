@@ -1,5 +1,13 @@
+echo "Starting to build Gremlin ..."
+C:
+cd Users\Ivan Dolvich\PycharmProjects\JoystickGremlin
+
 echo "Building executable ..."
 pyinstaller -y --clean joystick_gremlin.spec
+
+echo "Generating WIX ..."
+python generate_wix.py
+copy /Y joystick_gremlin.wxs dist\joystick_gremlin.wxs
 
 echo "Building MSI installer ..."
 cd dist
