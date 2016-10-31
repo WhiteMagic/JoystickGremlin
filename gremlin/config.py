@@ -42,7 +42,8 @@ class Configuration(object):
 
     def reload(self):
         """Loads the configuration file's content."""
-        if self._last_reload is not None and time.time() - self._last_reload < 1:
+        if self._last_reload is not None and \
+                time.time() - self._last_reload < 1:
             return
 
         fname = os.path.join(gremlin.util.userprofile_path(), "config.json")

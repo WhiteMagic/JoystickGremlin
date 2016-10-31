@@ -338,6 +338,7 @@ def key_from_name(name):
         logging.getLogger("system").warning(
             "Invalid key name specified \"{}\"".format(name)
         )
+        raise KeyboardError("Invalid key specified")
     return key
 
 
@@ -355,7 +356,8 @@ def key_from_code(scan_code, is_extended):
         logging.getLogger("system").warning(
             "Invalid scan code specified ({}, {})".format(
                 scan_code, is_extended
-        ))
+            )
+        )
     return key
 
 

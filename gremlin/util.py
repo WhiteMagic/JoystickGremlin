@@ -421,7 +421,7 @@ def device_id_duplicates(device):
     :param device the object with device related information
     :return unique identifier of this device
     """
-    return (device.hardware_id, device.windows_id)
+    return device.hardware_id, device.windows_id
 
 
 def device_id_unique(device):

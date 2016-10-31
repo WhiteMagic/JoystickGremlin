@@ -63,8 +63,7 @@ def cycle_modes(mode_list):
 
     :param mode_list list of mode names to cycle through
     """
-    eh = EventHandler()
-    eh.change_mode(mode_list.next())
+    EventHandler().change_mode(mode_list.next())
 
 
 def pause():

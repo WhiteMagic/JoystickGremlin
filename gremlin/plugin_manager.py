@@ -54,7 +54,6 @@ class PluginList(object):
         return self._repository
 
     def _discover_plugins(self):
-        #print("Searching for plugins in: {}".format(self._plugin_folder))
         for root, dirs, files in os.walk(self._plugin_folder):
             for fname in files:
                 try:
@@ -175,7 +174,9 @@ class ActionPlugins(object):
 
                     # Attempt to load the file and if it looks like a proper
                     # action_plugins store it in the registry
-                    plugin = importlib.import_module("action_plugins.{}".format(module))
+                    plugin = importlib.import_module(
+                        "action_plugins.{}".format(module)
+                    )
                     if "version" in plugin.__dict__:
                         self._plugins[plugin.name] = plugin.create
                         logging.getLogger("system").debug(

@@ -28,7 +28,7 @@ import sdl2
 from gremlin import event_handler, macro, util
 from gremlin.util import SingletonDecorator, convert_sdl_hat, extract_ids
 from gremlin.error import GremlinError
-from vjoy.vjoy import VJoy, VJoyError
+from vjoy.vjoy import VJoy
 
 
 class CallbackRegistry(object):
@@ -36,9 +36,18 @@ class CallbackRegistry(object):
     """Registry of all callbacks known to the system."""
 
     def __init__(self):
+        """Creates a new callback registry instance."""
         self._registry = {}
 
     def add(self, callback, event, mode, always_execute=False):
+        """Adds a new callback to the registry.
+
+        :param callback function to add as a callback
+        :param event the event on which to trigger the callback
+        :param mode the mode in which to trigger the callback
+        :param always_execute if True the callback is run even if Gremlin
+            is paused
+        """
         device_id = util.device_id(event)
         function_name = callback.__name__
 
@@ -174,8 +183,7 @@ periodic_registry = PeriodicRegistry()
 
 class VJoyProxy(object):
 
-    """Manages the usage of vJoy and allows shared access all
-    callbacks."""
+    """Manages the usage of vJoy and allows shared access all callbacks."""
 
     vjoy_devices = {}
 
@@ -189,7 +197,7 @@ class VJoyProxy(object):
             return VJoyProxy.vjoy_devices[key]
         else:
             if not isinstance(key, int):
-                raise TypeError("Integer ID expected")
+                raise GremlinError("Integer ID for vjoy device ID expected")
 
             device = VJoy(key)
             VJoyProxy.vjoy_devices[key] = device
@@ -214,8 +222,7 @@ class JoystickWrapper(object):
         def __init__(self, joystick, index):
             """Creates a new instance.
 
-            :param joystick the SDL joystick instance this input
-                belongs to
+            :param joystick the SDL joystick instance this input belongs to
             :param index the index of the input
             """
             self._joystick = joystick
@@ -365,7 +372,7 @@ class JoystickProxy(object):
             return JoystickProxy.joystick_devices[key]
         else:
             if type(key) != int:
-                raise TypeError("Integer ID expected")
+                raise GremlinError("Expected integer id for joystick id")
             if key > sdl2.joystick.SDL_NumJoysticks():
                 raise GremlinError("No device with the provided ID exist")
 

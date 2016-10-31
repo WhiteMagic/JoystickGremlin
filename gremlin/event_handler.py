@@ -160,7 +160,8 @@ class Event(object):
         hash_val = 0
         if self.event_type == InputType.Keyboard:
             extended_val = 1 << 8 if self.identifier[1] else 0
-            hash_val += (extended_val + int(self.identifier[0])) << Event.ShiftIdentifier
+            hash_val += (extended_val + int(self.identifier[0])) \
+                << Event.ShiftIdentifier
         else:
             hash_val += self.identifier << Event.ShiftIdentifier
         hash_val += self.event_type.value << Event.ShiftEventId

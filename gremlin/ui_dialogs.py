@@ -377,7 +377,8 @@ class CalibrationUi(QtWidgets.QWidget):
 
         :param event the event to process
         """
-        if util.device_id(event) == util.device_id(self.devices[self.current_selection_id]) \
+        selection_id = util.device_id(self.devices[self.current_selection_id])
+        if util.device_id(event) == selection_id \
                 and event.event_type == InputType.JoystickAxis:
             self.axes[event.identifier-1].set_current(event.raw_value)
 

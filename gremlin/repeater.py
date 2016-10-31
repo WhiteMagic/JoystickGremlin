@@ -108,7 +108,9 @@ class Repeater(QtCore.QObject):
                 el.joystick_event.emit(self._events[index])
 
             self._update_func("{} {}".format(
-                event_handler.input_type_to_name(self._events[index].event_type),
+                event_handler.input_type_to_name(
+                    self._events[index].event_type
+                ),
                 str(self._events[index].identifier)
             ))
 

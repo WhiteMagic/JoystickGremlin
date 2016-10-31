@@ -26,7 +26,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import action_plugins
 from action_plugins import common
-from gremlin import common, error, macro, plugin_manager, profile, shared_state, util
+from gremlin import common, error, macro, plugin_manager, \
+    profile, shared_state, util
 from gremlin.event_handler import Event, EventListener, InputType
 from gremlin.common import UiInputType
 
@@ -733,7 +734,9 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         """
         is_hat = self.action_widget.action_data.parent.input_type == \
             UiInputType.JoystickHat
-        is_remap = isinstance(self.action_widget.action_data, action_plugins.remap.Remap)
+        is_remap = isinstance(
+            self.action_widget.action_data, action_plugins.remap.Remap
+        )
         return is_hat and not is_remap
 
     def _is_axis(self):
@@ -1163,7 +1166,8 @@ class InputItemList(QtWidgets.QWidget):
         # If this is the keyboard tab add the button needed to add
         # new keys.
         if self.device_profile.type == profile.DeviceType.Keyboard:
-            self.key_add_button = action_plugins.common.NoKeyboardPushButton("Add Key")
+            self.key_add_button = \
+                action_plugins.common.NoKeyboardPushButton("Add Key")
             self.key_add_button.clicked.connect(self._add_new_key)
             self.main_layout.addWidget(self.key_add_button)
 
@@ -1193,8 +1197,11 @@ class InputItemList(QtWidgets.QWidget):
             assert(input_type == UiInputType.Keyboard)
 
             self._populate_item_list()
-            if self.current_identifier and self.current_identifier.input_id in self.input_items[UiInputType.Keyboard]:
-                item = self.input_items[UiInputType.Keyboard][self.current_identifier.input_id]
+            if self.current_identifier and self.current_identifier.input_id in \
+                    self.input_items[UiInputType.Keyboard]:
+                item = self.input_items[UiInputType.Keyboard][
+                    self.current_identifier.input_id
+                ]
                 item.setAutoFillBackground(True)
                 item.setPalette(self.cur_palette)
 

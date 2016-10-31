@@ -217,7 +217,8 @@ class ProfileConverter(object):
         devices = ElementTree.Element("devices")
         for node in root.iter("device"):
             # Modify each node to include the correct type attribute
-            if node.get("name") == "keyboard" and int(node.get("windows_id")) == 0:
+            if node.get("name") == "keyboard" and \
+                    int(node.get("windows_id")) == 0:
                 node.set("type", "keyboard")
             else:
                 node.set("type", "joystick")
@@ -312,15 +313,18 @@ class Profile(object):
             for mode in dev.modes.values():
                 for item in mode.config[UiInputType.JoystickAxis].values():
                     remap_actions.extend(
-                        [e for e in item.actions if isinstance(e, action_plugins.remap.Remap)]
+                        [e for e in item.actions
+                         if isinstance(e, action_plugins.remap.Remap)]
                     )
                 for item in mode.config[UiInputType.JoystickButton].values():
                     remap_actions.extend(
-                        [e for e in item.actions if isinstance(e, action_plugins.remap.Remap)]
+                        [e for e in item.actions
+                         if isinstance(e, action_plugins.remap.Remap)]
                     )
                 for item in mode.config[UiInputType.JoystickHat].values():
                     remap_actions.extend(
-                        [e for e in item.actions if isinstance(e, action_plugins.remap.Remap)]
+                        [e for e in item.actions
+                         if isinstance(e, action_plugins.remap.Remap)]
                     )
 
         # Remove all remap actions from the list of available inputs

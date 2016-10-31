@@ -344,7 +344,6 @@ class VJoy(object):
         :return Button object corresponding to the provided index
         """
         if index not in self._button:
-            print("x")
             raise VJoyError("Invalid button index requested: {:d}".format(index))
         return self._button[index]
 
