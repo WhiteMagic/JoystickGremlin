@@ -67,6 +67,7 @@
     <addaction name="separator"/>
     <addaction name="actionHTMLCheatsheet"/>
     <addaction name="actionPDFCheatsheet"/>
+    <addaction name="actionCreateTemplate"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
     <addaction name="actionLogDisplay"/>
@@ -207,6 +208,11 @@
   <action name="actionMergeAxis">
    <property name="text">
     <string>&amp;Merge Axis</string>
+   </property>
+  </action>
+  <action name="actionCreateTemplate">
+   <property name="text">
+    <string>Create &amp;Template</string>
    </property>
   </action>
  </widget>

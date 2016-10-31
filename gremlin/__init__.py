@@ -15,5 +15,6 @@ import gremlin.process_monitor
 import gremlin.profile
 import gremlin.shared_state
 import gremlin.spline
+import gremlin.template
 import gremlin.tts
 import gremlin.util

@@ -88,6 +88,8 @@ class Ui_Gremlin(object):
         self.actionLogDisplay.setObjectName("actionLogDisplay")
         self.actionMergeAxis = QtWidgets.QAction(Gremlin)
         self.actionMergeAxis.setObjectName("actionMergeAxis")
+        self.actionCreateTemplate = QtWidgets.QAction(Gremlin)
+        self.actionCreateTemplate.setObjectName("actionCreateTemplate")
         self.menu_File.addAction(self.actionNewProfile)
         self.menu_File.addAction(self.actionLoadProfile)
         self.menu_File.addAction(self.actionSaveProfile)
@@ -102,6 +104,7 @@ class Ui_Gremlin(object):
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.actionHTMLCheatsheet)
         self.menuTools.addAction(self.actionPDFCheatsheet)
+        self.menuTools.addAction(self.actionCreateTemplate)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.actionOptions)
         self.menuTools.addAction(self.actionLogDisplay)
@@ -149,4 +152,5 @@ class Ui_Gremlin(object):
         self.actionCreate1to1Mapping.setText(_translate("Gremlin", "Create 1:1 mapping"))
         self.actionLogDisplay.setText(_translate("Gremlin", "&Log display"))
         self.actionMergeAxis.setText(_translate("Gremlin", "&Merge Axis"))
+        self.actionCreateTemplate.setText(_translate("Gremlin", "Create &Template"))
 

@@ -396,6 +396,8 @@ class LogWindowUi(QtWidgets.QWidget):
 
     """Window displaying log file content."""
 
+    # TODO: prevent this from scrolling down all the time
+
     def __init__(self,  parent=None):
         """Creates a new instance.
 
@@ -1037,3 +1039,10 @@ class ModuleManagerUi(QtWidgets.QWidget):
             self.model.setStringList(import_list)
             self.view.setCurrentIndex(self.model.index(0, 0))
             self._profile.imports = list(import_list)
+
+
+# class TemplateViewer(QtWidgets.QWidget):
+#
+#     def __init__(self, fname, parent=None):
+#         QtWidgets.QWidget.__init__(self, parent)
+#         self._template = gremlin.template.Template()

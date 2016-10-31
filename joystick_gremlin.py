@@ -284,6 +284,9 @@ class GremlinUi(QtWidgets.QMainWindow):
                 entry.actions.append(act)
         self._create_tabs()
 
+    def create_template(self):
+        tpl = gremlin.template.Template(self._profile)
+
     def generate(self):
         """Generates python code for the code runner from the current
         profile.
@@ -424,6 +427,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionPDFCheatsheet.triggered.connect(
             lambda: self._create_cheatsheet("pdf")
         )
+        self.ui.actionCreateTemplate.triggered.connect(self.create_template)
         self.ui.actionOptions.triggered.connect(self.options_dialog)
         self.ui.actionLogDisplay.triggered.connect(
             self.log_window
