@@ -94,7 +94,7 @@ class FileWatcher(QtCore.QObject):
         while self._is_running:
             for fname in self._file_names:
                 stats = os.stat(fname)
-                if stats.st_size != self._last_size:
+                if stats.st_size != self._last_size[fname]:
                     self._last_size[fname] = stats.st_size
                     self.file_changed.emit(fname)
             time.sleep(1)
