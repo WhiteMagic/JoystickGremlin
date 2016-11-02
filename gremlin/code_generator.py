@@ -217,27 +217,30 @@ class CodeGenerator(object):
         ))
 
     def process_device_mode(self, mode, index):
-        """Processes a single Mode object and turns it's contents to
-        code.
+        """Processes a single Mode object and turns its contents into code.
 
         :param mode the profile.Mode object to process
         :param index the index to use in the decorator name
         """
         assert(isinstance(mode, profile.Mode))
-        tpl = Template(filename="templates/mode.tpl")
-        self.code["decorator"].append(tpl.render(
-            decorator=decorator_name(mode, index),
-            mode=mode
-        ))
 
         dev_id = util.device_id(mode.parent)
         if dev_id not in self.decorator_map:
             self.decorator_map[dev_id] = {}
         self.decorator_map[dev_id][mode.name] = decorator_name(mode, index)
 
+        items_added = 0
         for input_type, input_items in mode.config.items():
             for entry in input_items.values():
                 self.generate_input_item(entry, mode, index)
+                items_added += len(entry.actions)
+
+        if items_added > 0:
+            tpl = Template(filename="templates/mode.tpl")
+            self.code["decorator"].append(tpl.render(
+                decorator=decorator_name(mode, index),
+                mode=mode
+            ))
 
     def generate_input_item(self, input_item, mode, index):
         """Generates code for the provided profile.InputItem object.
