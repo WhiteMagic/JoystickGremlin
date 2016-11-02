@@ -282,7 +282,13 @@ def display_error(msg):
 
     :param msg the error message to display
     """
-    QtWidgets.QErrorMessage.qtHandler().showMessage(msg)
+    box = QtWidgets.QMessageBox(
+        QtWidgets.QMessageBox.Critical,
+        "Error",
+        msg,
+        QtWidgets.QMessageBox.Ok
+    )
+    box.exec()
 
 
 def log(msg):
