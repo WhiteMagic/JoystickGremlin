@@ -299,25 +299,8 @@ def format_name(name):
     :param name the name to format
     :return name formatted to be suitable as a python variable name
     """
-    new_name = re.sub("[^A-Za-z]", "_", name.lower()[0]) + \
-        re.sub("[^A-Za-z0-9]", "_", name.lower()[1:])
-    if valid_identifier(new_name):
-        return new_name
-    else:
-        raise error.GremlinError(
-            "Invalid string provided, only letters, numbers and white"
-            " space supported, \"{}\".".format(new_name)
-        )
-
-
-def valid_identifier(name):
-    """Returns whether or not a given name can be transformed into a
-    valid python identifier.
-
-    :param name the text to check
-    :return True if name is a valid python identifier, false otherwise
-    """
-    return re.fullmatch("^[a-zA-Z0-9 _]+$", name) is not None
+    return re.sub("[^A-Za-z]", "", name.lower()[0]) + \
+        re.sub("[^A-Za-z0-9]", "", name.lower()[1:])
 
 
 def valid_python_identifier(name):
