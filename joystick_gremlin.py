@@ -24,6 +24,7 @@ import logging
 import os
 import sys
 import time
+import traceback
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -972,6 +973,19 @@ def configure_logger(config):
     logger.debug("-" * 80)
 
 
+def exception_hook(exception_type, value, trace):
+    """Logs any uncaught exceptions.
+
+    :param exception_type type of exception being caught
+    :param value content of the exception
+    :param trace the stack trace which produced the exception
+    """
+    msg = "Uncaught exception:\n"
+    msg += " ".join(traceback.format_exception(exception_type, value, trace))
+    logging.getLogger("system").error(msg)
+    util.display_error(msg)
+
+
 if __name__ == "__main__":
     sys.path.insert(0, util.userprofile_path())
     util.setup_userprofile()
@@ -989,6 +1003,9 @@ if __name__ == "__main__":
         "logfile": os.path.join(util.userprofile_path(), "user.log"),
         "format": "%(asctime)s %(message)s"
     })
+
+    # Unhandled exception traceback
+    sys.excepthook = exception_hook
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
