@@ -959,6 +959,10 @@ class GremlinUi(QtWidgets.QMainWindow):
 
 
 def configure_logger(config):
+    """Creates a new logger instance.
+
+    :param config configuration information for the new logger
+    """
     logger = logging.getLogger(config["name"])
     logger.setLevel(config["level"])
     handler = logging.FileHandler(config["logfile"])
