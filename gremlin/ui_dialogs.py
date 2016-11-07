@@ -544,10 +544,27 @@ class MergeAxisUi(QtWidgets.QWidget):
     def _add_entry(self):
         """Adds a new axis to merge configuration entry."""
         entry = MergeAxisEntry(self.to_profile, self.profile_data)
-        entry.closed.connect(self.to_profile)
+        entry.closed.connect(self._remove_entry)
 
         self.entries.append(entry)
         self.merge_layout.addWidget(entry)
+        self.to_profile()
+
+    def _remove_entry(self, widget):
+        """Removes a widget from the dialog.
+
+        :param widget the widget to remove
+        """
+        assert(isinstance(widget, MergeAxisEntry))
+
+        # Remove profile data
+        del self.profile_data.merge_axes[self.entries.index(widget)]
+
+        # Remove UI entry
+        self.merge_layout.removeWidget(widget)
+        self.entries.remove(widget)
+
+        # Update the profile
         self.to_profile()
 
     def to_profile(self):
@@ -569,8 +586,8 @@ class MergeAxisUi(QtWidgets.QWidget):
         """Populates the merge axis entries of the ui from the profile data."""
         for entry in self.profile_data.merge_axes:
             self._add_entry()
-            tmp = self.entries[-1]
-            tmp.select(entry)
+            new_entry = self.entries[-1]
+            new_entry.select(entry)
 
 
 class MergeAxisEntry(QtWidgets.QDockWidget):

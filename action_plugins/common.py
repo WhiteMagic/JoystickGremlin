@@ -522,12 +522,12 @@ class JoystickSelector(QtWidgets.QWidget):
         :param input_id the id of the input
         """
         # Get the appropriate vjoy device identifier
-        dev_id = 0
+        dev_id = None
         if device_id not in [0, None] and device_id in self._device_id_to_index_map:
             dev_id = self._device_id_to_index_map[device_id]
 
         # If we have no device simply stop here
-        if dev_id == 0:
+        if dev_id is None:
             return
 
         # Retrieve the index of the correct entry in the combobox
