@@ -141,6 +141,8 @@ class CodeGenerator(object):
             "callback": [],
         }
         self.decorator_map = {}
+        self.decorator_usage_counts = {}
+        self.decorator_templates = {}
 
         try:
             self.generate_from_profile(config_profile)
@@ -188,6 +190,16 @@ class CodeGenerator(object):
         for i, entry in enumerate(config_profile.merge_axes):
             self.process_merge_axis(i, entry)
 
+        # Add required decorator definitions into the code
+        for dev_id in self.decorator_usage_counts:
+            for mode, count in self.decorator_usage_counts[dev_id].items():
+                if count > 0:
+                    self.code["global"].append(
+                        self.decorator_templates[dev_id][mode]
+                    )
+                else:
+                    print(dev_id, mode)
+
         # Vjoy response curve switching
         tpl = Template(filename="templates/vjoy_curves.tpl")
         self.code["global"].append(tpl.render(
@@ -216,6 +228,11 @@ class CodeGenerator(object):
             decorator_map=self.decorator_map
         ))
 
+        # Account for axis merging needing certain decorators which otherwise
+        # might appear unused
+        self.decorator_usage_counts[entry["lower"][0]][entry["mode"]] += 1
+        self.decorator_usage_counts[entry["upper"][0]][entry["mode"]] += 1
+
     def process_device_mode(self, mode, index):
         """Processes a single Mode object and turns its contents into code.
 
@@ -227,6 +244,8 @@ class CodeGenerator(object):
         dev_id = util.device_id(mode.parent)
         if dev_id not in self.decorator_map:
             self.decorator_map[dev_id] = {}
+            self.decorator_usage_counts[dev_id] = {}
+            self.decorator_templates[dev_id] = {}
         self.decorator_map[dev_id][mode.name] = decorator_name(mode, index)
 
         items_added = 0
@@ -235,12 +254,14 @@ class CodeGenerator(object):
                 self.generate_input_item(entry, mode, index)
                 items_added += len(entry.actions)
 
-        if items_added > 0:
-            tpl = Template(filename="templates/mode.tpl")
-            self.code["decorator"].append(tpl.render(
-                decorator=decorator_name(mode, index),
-                mode=mode
-            ))
+        # Generate decorator code and keep track of how often they are used
+        # to later decide which ones to include in the final code
+        tpl = Template(filename="templates/mode.tpl")
+        self.decorator_templates[dev_id][mode.name] = tpl.render(
+            decorator=decorator_name(mode, index),
+            mode=mode
+        )
+        self.decorator_usage_counts[dev_id][mode.name] = items_added
 
     def generate_input_item(self, input_item, mode, index):
         """Generates code for the provided profile.InputItem object.
