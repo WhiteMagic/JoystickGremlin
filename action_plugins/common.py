@@ -43,7 +43,7 @@ def format_condition(condition, data=None):
                 )
             # Joystick button is being used as a shift button
             else:
-                shift_term = "joy[{:d}].button({:d})".format(
+                shift_term = "joy[{:d}].button({:d}).is_pressed".format(
                     condition.shift_button["windows_id"],
                     condition.shift_button["id"]
                 )
