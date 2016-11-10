@@ -31,7 +31,6 @@ class VJoyCurves(QtCore.QObject):
                     "${action.mapping_type}",
                     ${action.control_points}
                 )
-                print(${action.deadzone[1]})
                 % endfor
             % endif
             % endfor

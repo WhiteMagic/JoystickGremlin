@@ -197,8 +197,6 @@ class CodeGenerator(object):
                     self.code["global"].append(
                         self.decorator_templates[dev_id][mode]
                     )
-                else:
-                    print(dev_id, mode)
 
         # Vjoy response curve switching
         tpl = Template(filename="templates/vjoy_curves.tpl")
