@@ -74,11 +74,11 @@ class PreviousMode(AbstractAction):
         pass
 
     def _generate_xml(self):
-        return ElementTree.Element("switch-to-previous-mode")
+        return ElementTree.Element("previous-mode")
 
     def _generate_code(self):
         return self._code_generation(
-            "switch_previous_mode",
+            "previous_mode",
             {"entry": self}
         )
 

@@ -77,7 +77,7 @@ class TogglePauseAction(AbstractAction):
         return ElementTree.Element("toggle-pause-resume-action")
 
     def _generate_code(self):
-        return self._code_generation("toggle_pause_resume", {"entry": self})
+        return self._code_generation("toggle_pause", {"entry": self})
 
 
 version = 1
