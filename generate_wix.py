@@ -213,11 +213,12 @@ def create_document():
             "Manufacturer": "H2IK",
             #"Id": "a0a7fc85-8651-4b57-b7ee-a7f718857939", # 4.0.0
             #"Id": "447529e9-4f78-4baf-b51c-21db602a5f7b", # 4.0.1
-            "Id": "510CBEE4-3947-11E6-8BA5-2DD7CD7856CC", # 5.0.0
+            #"Id": "510CBEE4-3947-11E6-8BA5-2DD7CD7856CC", # 5.0.0
+            "Id": "a02bac10-af70-41c2-b109-34e80eb54902", # 6.0.0
             "UpgradeCode": "0464914b-97da-4889-8699-bcde4e767517",
             "Language": "1033",
             "Codepage": "1252",
-            "Version": "5.0.0"
+            "Version": "6.0.0"
         })
     mug = create_node("MajorUpgrade",
         {
@@ -423,6 +424,7 @@ def main():
             paths_to_delete.append(path)
     for path in paths_to_delete:
         del data[path]
+
     pickle.dump(data, open("wix_data.p", "wb"))
 
     # Create document and file structure
