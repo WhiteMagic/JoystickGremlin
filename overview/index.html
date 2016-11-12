@@ -12,11 +12,12 @@ layout: default
     T.A.R.G.E.T. do for their respectively supported joysticks. However,
     Joystick Gremlin works with any device be it from different manufacturers
     or custom devices that appear as a joystick to Windows. Joystick Gremlin
-    uses the virtual joysticks provided by vJoy to map physical to virtual
-    inputs and apply various other transformations such as response curves to
-    analogue axes. In addition to managing joysticks, Joystick Gremlin also
-    provides keyboard macros, a flexible mode system, scripting using Python,
-    and many other features.
+    uses the virtual joysticks provided by
+    <a href="http://vjoystick.sourceforge.net/site/">vJoy</a>
+    to map physical to virtual inputs and apply various other transformations
+    such as response curves to analogue axes. In addition to managing
+    joysticks, Joystick Gremlin also provides keyboard macros, a flexible mode
+    system, scripting using Python, and many other features.
 </p>
 
 <p class="text-justify">
@@ -28,7 +29,7 @@ layout: default
         <li>Axis response curve and dead zone configuration</li>
         <li>Arbitrary number of modes with inheritance and customizable mode switching</li>
         <li>Keyboard macros for joystick buttons and keyboard keys</li>
-        <li>Python scripting support</li>
+        <li>Python scripting</li>
     </ul>
 </p>
 
@@ -84,8 +85,8 @@ layout: default
     vJoy device is enough. In order to use 8-way POV hats with Joystick Gremlin
     the hats have the be configured as continuous in vJoy.  The image below
     shows what a properly configured vJoy device looks like. Once everything is
-    set as desired clicking <i>Ok</i> configures the vJoy device and closes the
-    program.
+    set as desired clicking <i>Apply</i> configures the vJoy device and the
+    window can be closed.
 
     <div class="row bottom-gap">
         <div class="col-md-7">
@@ -103,8 +104,8 @@ layout: default
 
 <p class="text-justify">
     The following section introduces the terminology used by Joystick Gremlin.
-    We'll explain the different concepts from the inner most going outwards, as
-    the outer parts contain parts further in.
+    We'll explain the different concepts starting with individual actions and
+    ending with a complete profile.
 </p>
 
 
@@ -114,9 +115,9 @@ layout: default
     activating a physical input.  Examples include running a macro, sending
     button presses to vJoy, or changing to a different mode. Each action has a
     condition attached to it which can further dictate when an action is to be
-    executed. For buttons the conditions are the state, i.e.  pressed or
-    released as well as an optional shift modifier which has be be pressed in
-    order for the action to be run.
+    executed. For buttons the conditions are the state of the button, i.e.
+    pressed or released as well as an optional shift modifier which has be be
+    pressed in order for the action to be run.
 </p>
 
 <h4 class="subsection">Input</h4>
