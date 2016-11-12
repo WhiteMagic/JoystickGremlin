@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Joystick Gremlin</title>
+
+    <link rel="canonical" href="http://localhost:4000/JoystickGremlin/faq/">
+
+    <!-- Code highlighting CSS -->
+    <link rel="stylesheet" href="/JoystickGremlin/css/github.css">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- Bootstrap theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <!-- MathJax -->
+    <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+    <!-- Raleway font -->
+    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+
+    <!-- Custom CSS overrides -->
+    <link rel="stylesheet" href="/JoystickGremlin/css/override.css">
+</head>
+
+
+    <body>
+
+        <nav class="navbar navbar-default">
+            <div class="conainer-fluid">
+
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/JoystickGremlin/"><img src="/JoystickGremlin/images/icon.png"></a>
+                </div>
+
+                <div class="collapse navbar-collapse" id="navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <!-- Home -->
+                        <li ><a href="/JoystickGremlin/">Home</a></li>
+
+                        <!-- Download -->
+                        <li ><a href="/JoystickGremlin/download/">Download</a></li>
+
+                        <!-- Manual entries -->
+                        <li class="dropdown active">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
+                            
+                            <ul class="dropdown-menu">
+                                <li ><a href="/JoystickGremlin/overview/">Overview</a></li>
+                                <li ><a href="/JoystickGremlin/interface/">Interface</a></li>
+                                <li ><a href="/JoystickGremlin/custom_modules/">Custom Modules</a></li>
+                                <li ><a href="/JoystickGremlin/technical_design/">Technical Design</a></li>
+                                <!--<li ><a href="/JoystickGremlin/examples/">Examples</a></li>-->
+                                <li class="active"><a href="/JoystickGremlin/faq/">FAQ</a></li>
+                                <li ><a href="/JoystickGremlin/changelog/">Changelog</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <h2><a name="6">6. Frequently Asked Questions</a></h2>
+
+<h4>The game does not see Joystick Gremlin inputs, only the original joystick ones.</h4>
+<p class="text-justify">
+    This wil happen quite often as Joystick Gremlin cannot hide the physical
+    devices inputs. To circumvent this issue the <em>Input Repeater</em> tool
+    was implemented. You can activate it via <em>Tools > Input Repeater</em>.
+    Once activated go into the game's input remaping screen, use the input you
+    want to map by either pressing or moving it. Then, activate the remapping
+    dialog of the game and it should recognize the virtual joystick's input.
+    The input repeater will repeat your input for a duration of five seconds.
+</p>
+
+<h4>How can I implement a mode shift button?</h4>
+<p class="text-justify">
+    There are several ways in which this can be achieved. If only a handful of
+    buttons need to change based on the mode shift button being pressed, the
+    <em>Shift key</em> function for buttons is sufficient. However, if the
+    shift button affects many inputs or involves axes, then the best way is to
+    create a new mode which inherits from the current one. Joystick Gremlin is
+    then told to switch to this new mode when the shift button is pressed. When
+    the shift button is released Joystick Gremlin is then told to switch back
+    to the previous mode.
+</p>
+
+<h4>How to verify that Joystick Gremlin produces the desired output?</h4>
+<p class="text-justify">
+    The simplest way which doesn't require any additional tools is to use the
+    Windows game controller program, which can be launched by running
+    <em>joy.cpl</em>. To see the output simply open the dialog for the desired
+    vJoy device. One drawback of this tool is that it requires focus to show
+    anything which can be a bit cumbersome at times. Some alternative programs
+    which can show information about various joystick devices are:
+</p>
+
+<h4>Macros don't work in-game</h4>
+<p class="text-justify">
+    The most likely cause for this is that the game was launched with
+    administrator privileges while Joystick Gremlin was launched with normal
+    user privileges. As the macro system injects key presses into the Windows
+    event system Joystick Gremlin has to have the same or higher privilege
+    level as the receiving application. As such if the game is run as
+    administrator then Joystick Gremlin needs to be run as administrator as
+    well.
+</p>
+
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        </div>
+
+
+        <footer class="footer">
+    <div class="container">
+        <div class="col-md-offset-2 col-md8">
+            <p class="text-muted">Last update: November 13, 2016</p>
+        </div>
+    </div>
+</footer>
+
+
+    </body>
+
+</html>
