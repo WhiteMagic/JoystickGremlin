@@ -1041,8 +1041,25 @@ class ModuleManagerUi(QtWidgets.QWidget):
             self._profile.imports = list(import_list)
 
 
-# class TemplateViewer(QtWidgets.QWidget):
-#
-#     def __init__(self, fname, parent=None):
-#         QtWidgets.QWidget.__init__(self, parent)
-#         self._template = gremlin.template.Template()
+class TemplateViewer(QtWidgets.QWidget):
+
+    def __init__(self, profile_data, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+        self.profile_data = profile_data
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.toolbox = QtWidgets.QToolBox()
+        for mode in self._mode_list():
+            self.toolbox.addItem(
+                widgets.TemplateInputs(self.profile_data, mode),
+                mode
+            )
+        self.main_layout.addWidget(self.toolbox)
+
+    def _mode_list(self):
+        """Returns the list of modes present in the profile data."""
+        modes = []
+        for device in self.profile_data.devices.values():
+            modes.extend(device.modes.keys())
+        return list(set(modes))
+

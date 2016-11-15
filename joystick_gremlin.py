@@ -284,8 +284,21 @@ class GremlinUi(QtWidgets.QMainWindow):
                 entry.actions.append(act)
         self._create_tabs()
 
-    def create_template(self):
-        tpl = gremlin.template.Template(self._profile)
+    def load_as_template(self):
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "Profile to load as template",
+            util.userprofile_path(),
+            "XML files (*.xml)"
+        )
+        if fname == "":
+            return
+
+        profile_data = gremlin.profile.Profile()
+        profile_data.from_xml(fname)
+
+        self.bla = dialogs.TemplateViewer(profile_data)
+        self.bla.show()
 
     def generate(self):
         """Generates python code for the code runner from the current
@@ -404,6 +417,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionNewProfile.triggered.connect(self.new_profile)
         self.ui.actionSaveProfile.triggered.connect(self.save_profile)
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
+        self.ui.actionLoadAsTemplate.triggered.connect(self.load_as_template)
         self.ui.actionExit.triggered.connect(self._force_close)
         # Actions
         self.ui.actionCreate1to1Mapping.triggered.connect(
@@ -427,7 +441,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionPDFCheatsheet.triggered.connect(
             lambda: self._create_cheatsheet("pdf")
         )
-        self.ui.actionCreateTemplate.triggered.connect(self.create_template)
         self.ui.actionOptions.triggered.connect(self.options_dialog)
         self.ui.actionLogDisplay.triggered.connect(
             self.log_window

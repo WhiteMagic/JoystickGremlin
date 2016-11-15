@@ -1581,6 +1581,25 @@ class ConfigurationPanel(QtWidgets.QWidget):
         self.input_item_changed.emit(self.current_identifier)
 
 
+class TemplateInputs(QtWidgets.QWidget):
+
+    def __init__(self, profile_data, mode, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+        self.profile_data = profile_data
+        self.mode = mode
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self._actions = []
+        self._add_actions()
+
+    def _add_actions(self):
+        for device in self.profile_data.devices.values():
+            for type, data in device.modes[self.mode].config.items():
+                if data.description != "":
+                    self._actions.append(QtWidgets.QLabel(data.description))
+                    self.main_layout.addWidget(self._actions[-1])
+
+
 def clear_layout(layout):
     """Removes all items from the given layout.
 
