@@ -851,6 +851,10 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         if not data:
             return
 
+        # Remove signal callbacks
+        self.description_field.textChanged.disconnect(self.to_profile)
+        self.always_execute.stateChanged.disconnect(self.to_profile)
+
         # Create UI widgets and populate them based on the type of
         # action stored in the profile.
         self.item_profile = data
@@ -860,15 +864,19 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
             except error.GremlinError as err:
                 logging.getLogger("system").exception(str(err))
                 raise err
+        self.description_field.setText(self.item_profile.description)
         self.always_execute.setChecked(self.item_profile.always_execute)
-        self._description_field.setText(self.item_profile.description)
+
+        # Reconnect all signals
+        self.description_field.textChanged.connect(self.to_profile)
+        self.always_execute.stateChanged.connect(self.to_profile)
 
     def to_profile(self):
         """Updates all action items associated with this input item."""
         for widget in self.action_widgets:
             widget.to_profile()
         self.item_profile.always_execute = self.always_execute.isChecked()
-        self.item_profile.description = self._description_field.text()
+        self.item_profile.description = self.description_field.text()
 
     def _create_description(self):
         """Creates the description input for the input item."""
@@ -876,9 +884,9 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         self._description_layout.addWidget(
             QtWidgets.QLabel("<b>Description</b>")
         )
-        self._description_field = QtWidgets.QLineEdit()
-        self._description_field.textChanged.connect(self.to_profile)
-        self._description_layout.addWidget(self._description_field)
+        self.description_field = QtWidgets.QLineEdit()
+        self.description_field.textChanged.connect(self.to_profile)
+        self._description_layout.addWidget(self.description_field)
 
         self.main_layout.addLayout(self._description_layout)
 
