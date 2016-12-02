@@ -372,6 +372,14 @@ class VJoy(object):
         """
         return index in self._button
 
+    def is_hat_valid(self, index):
+        """Returns whether or not a hat is valid.
+
+        :param index the index of the hat to test
+        :return True if the hat is valid, False otherwise
+        """
+        return index in self._hat
+
     def reset(self):
         """Resets the state of all inputs to their default state."""
         VJoyInterface.ResetVJD(self.vjoy_id)
