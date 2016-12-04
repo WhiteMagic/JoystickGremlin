@@ -579,9 +579,20 @@ class MergeAxisUi(QtWidgets.QWidget):
             mode_idx = entry.mode_selector.selector.currentIndex()
             self.profile_data.merge_axes.append({
                 "mode": entry.mode_selector.mode_list[mode_idx],
-                "vjoy": (vjoy_sel["device_id"], vjoy_sel["input_id"]),
-                "lower": (joy1_sel["device_id"], joy1_sel["input_id"]),
-                "upper": (joy2_sel["device_id"], joy2_sel["input_id"]),
+                "vjoy": {
+                    "device_id": vjoy_sel["device_id"],
+                    "axis_id": vjoy_sel["input_id"]
+                },
+                "lower": {
+                    "hardware_id": joy1_sel["hardware_id"],
+                    "windows_id": joy1_sel["windows_id"],
+                    "axis_id": joy1_sel["input_id"]
+                },
+                "upper": {
+                    "hardware_id": joy2_sel["hardware_id"],
+                    "windows_id": joy2_sel["windows_id"],
+                    "axis_id": joy2_sel["input_id"]
+                }
             })
 
     def from_profile(self):
@@ -683,18 +694,26 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         """
         self.vjoy_selector.set_selection(
             UiInputType.JoystickAxis,
-            data["vjoy"][0],
-            data["vjoy"][1]
+            data["vjoy"]["device_id"],
+            data["vjoy"]["axis_id"]
         )
+
+        # Create correct physical device id
+        joy1_id = data["lower"]["hardware_id"]
+        joy2_id = data["upper"]["hardware_id"]
+        if util.g_duplicate_devices:
+            joy1_id = (data["lower"]["hardware_id"], data["lower"]["windows_id"])
+            joy2_id = (data["upper"]["hardware_id"], data["upper"]["windows_id"])
+
         self.joy1_selector.set_selection(
             UiInputType.JoystickAxis,
-            data["lower"][0],
-            data["lower"][1]
+            joy1_id,
+            data["lower"]["axis_id"]
         )
         self.joy2_selector.set_selection(
             UiInputType.JoystickAxis,
-            data["upper"][0],
-            data["upper"][1]
+            joy2_id,
+            data["upper"]["axis_id"]
         )
         if data["mode"] in self.mode_selector.mode_list:
             self.mode_selector.selector.setCurrentIndex(

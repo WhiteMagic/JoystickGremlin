@@ -483,10 +483,10 @@ class JoystickSelector(QtWidgets.QWidget):
         self._create_input_dropdown()
 
         self._device_id_to_index_map = {}
-        self._index_to_device_id_map = {}
+        self._index_to_device_map = {}
         for i, device in enumerate(sorted(self.devices, key=lambda x: x.windows_id)):
             self._device_id_to_index_map[gremlin.util.device_id(device)] = i
-            self._index_to_device_id_map[i] = gremlin.util.device_id(device)
+            self._index_to_device_map[i] = device
 
     def get_selection(self):
         """Returns information about the currently selected entry.
@@ -500,16 +500,19 @@ class JoystickSelector(QtWidgets.QWidget):
                 self.input_item_dropdowns[selection_id].currentText()
 
             arr = input_selection.split()
-            device_id = self._index_to_device_id_map[selection_id]
+            windows_id = self._index_to_device_map[selection_id].windows_id
+            hardware_id = self._index_to_device_map[selection_id].hardware_id
             input_type = self.name_to_type_map[arr[0]]
             input_id = int(arr[1])
         else:
-            device_id = None
+            hardware_id = None
+            windows_id = None
             input_id = None
             input_type = None
 
         return {
-            "device_id": device_id,
+            "hardware_id": hardware_id,
+            "windows_id": windows_id,
             "input_id": input_id,
             "input_type": input_type
         }

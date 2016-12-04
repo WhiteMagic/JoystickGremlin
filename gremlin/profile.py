@@ -440,10 +440,16 @@ class Profile(object):
         for entry in self.merge_axes:
             node = ElementTree.Element("merge-axis")
             node.set("mode", str(entry["mode"]))
-            for tag in ["vjoy", "lower", "upper"]:
+            for tag in ["vjoy"]:
                 sub_node = ElementTree.Element(tag)
-                sub_node.set("device", str(entry[tag][0]))
-                sub_node.set("axis", str(entry[tag][1]))
+                sub_node.set("device", str(entry[tag]["device_id"]))
+                sub_node.set("axis", str(entry[tag]["axis_id"]))
+                node.append(sub_node)
+            for tag in ["lower", "upper"]:
+                sub_node = ElementTree.Element(tag)
+                sub_node.set("id", str(entry[tag]["hardware_id"]))
+                sub_node.set("windows_id", str(entry[tag]["windows_id"]))
+                sub_node.set("axis", str(entry[tag]["axis_id"]))
                 node.append(sub_node)
             root.append(node)
 
@@ -497,11 +503,17 @@ class Profile(object):
         entry = {
             "mode": node.get("mode", None)
         }
-        for tag in ["vjoy", "lower", "upper"]:
-            entry[tag] = (
-                int(node.find(tag).get("device")),
-                int(node.find(tag).get("axis"))
-            )
+        for tag in ["vjoy"]:
+            entry[tag] = {
+                "device_id": int(node.find(tag).get("device")),
+                "axis_id": int(node.find(tag).get("axis"))
+            }
+        for tag in ["lower", "upper"]:
+            entry[tag] = {
+                "hardware_id": int(node.find(tag).get("id")),
+                "windows_id": int(node.find(tag).get("windows_id")),
+                "axis_id": int(node.find(tag).get("axis"))
+            }
         return entry
 
 
