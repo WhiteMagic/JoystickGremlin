@@ -298,14 +298,15 @@ class Profile(object):
         """
         # Create list of all inputs provided by the vjoy devices
         vjoy = {}
-        for i, entry in enumerate(vjoy_data):
-            vjoy[i+1] = {"axis": [], "button": [], "hat": []}
-            for j in range(entry.axes):
-                vjoy[i+1]["axis"].append(j+1)
-            for j in range(entry.buttons):
-                vjoy[i+1]["button"].append(j+1)
-            for j in range(entry.hats):
-                vjoy[i+1]["hat"].append(j+1)
+        for entry in vjoy_data:
+            vjoy[entry.vjoy_id] = {"axis": [], "button": [], "hat": []}
+            # TODO: the axis need not be sequential
+            for i in range(entry.axes):
+                vjoy[entry.vjoy_id]["axis"].append(i+1)
+            for i in range(entry.buttons):
+                vjoy[entry.vjoy_id]["button"].append(i+1)
+            for i in range(entry.hats):
+                vjoy[entry.vjoy_id]["hat"].append(i+1)
 
         # Create a list of all used remap actions
         remap_actions = []
