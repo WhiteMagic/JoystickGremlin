@@ -327,6 +327,18 @@ class VJoy(object):
         # Reset all controls
         VJoyInterface.ResetVJD(self.vjoy_id)
 
+    @property
+    def axis_count(self):
+        return len(self._axis)
+
+    @property
+    def button_count(self):
+        return len(self._button)
+
+    @property
+    def hat_count(self):
+        return len(self._hat)
+
     def axis(self, index):
         """Returns the axis object associated with the provided index.
 
@@ -369,13 +381,14 @@ class VJoy(object):
         """Returns whether or not the provided button index is valid.
 
         :param index button index to check
+        :return True if the button is valid, False otherwise
         """
         return index in self._button
 
     def is_hat_valid(self, index):
-        """Returns whether or not a hat is valid.
+        """Returns whether or not the provided hat index is valid.
 
-        :param index the index of the hat to test
+        :param index hat index to check
         :return True if the hat is valid, False otherwise
         """
         return index in self._hat
@@ -430,7 +443,7 @@ class VJoy(object):
         """
         axes = {}
         for i, axis in enumerate(AxisName):
-            if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value):
+            if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value) > 0:
                 axes[axis] = Axis(self, axis.value)
                 axes[i+1] = axes[axis]
         return axes

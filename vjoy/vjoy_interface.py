@@ -88,9 +88,12 @@ class VJoyInterface(object):
             "arguments": [ctypes.c_uint],
             "returns": ctypes.c_int
         },
+        # API claims this should return a bool, however, this is untrue and
+        # is an int, see:
+        # http://vjoystick.sourceforge.net/site/index.php/forum/5-Discussion/1026-bug-with-getvjdaxisexist
         "GetVJDAxisExist": {
             "arguments": [ctypes.c_uint, ctypes.c_uint],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_int
         },
         "GetVJDAxisMax": {
             "arguments": [ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p],
