@@ -20,7 +20,8 @@ from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
 import action_plugins.common
-from action_plugins.common import AbstractAction, AbstractActionWidget
+from action_plugins.common import AbstractAction, AbstractActionWidget,\
+    VJoySelector
 from gremlin.common import UiInputType
 import gremlin.error
 
@@ -62,91 +63,32 @@ class RemapWidget(AbstractActionWidget):
         assert(isinstance(action_data, Remap))
 
     def _setup_ui(self):
-        self.device_dropdown = None
-        self.input_item_dropdowns = []
-
-        self._create_device_dropdown()
-        self._create_input_item_dropdown()
-
-    def _create_device_dropdown(self):
-        """Creates the vJoy device selection drop downs."""
-        self.device_dropdown = QtWidgets.QComboBox(self)
-        for i in range(1, len(self.vjoy_devices)+1):
-            self.device_dropdown.addItem("vJoy Device {:d}".format(i))
-        self.main_layout.addWidget(self.device_dropdown)
-        self.device_dropdown.activated.connect(self._update_device)
-
-    def _create_input_item_dropdown(self):
-        """Creates the vJoy input item selection drop downs."""
-        count_map = {
-            UiInputType.JoystickAxis: lambda x: x.axes,
-            UiInputType.JoystickButton: lambda x: x.buttons,
-            UiInputType.JoystickHat: lambda x: x.hats
+        input_types = {
+            UiInputType.Keyboard: [UiInputType.JoystickButton],
+            UiInputType.JoystickAxis:
+                [UiInputType.JoystickAxis, UiInputType.JoystickButton],
+            UiInputType.JoystickButton: [UiInputType.JoystickButton],
+            UiInputType.JoystickHat: [UiInputType.JoystickHat]
         }
-        input_type = self.action_data.parent.input_type
-        if input_type == UiInputType.Keyboard:
-            input_type = UiInputType.JoystickButton
-
-        self.input_item_dropdowns = []
-
-        # Create input item selections for the vjoy devices, each
-        # selection will be invisible unless it is selected as the
-        # active device
-        for dev in self.vjoy_devices:
-            selection = QtWidgets.QComboBox(self)
-            selection.setMaxVisibleItems(20)
-
-            # Add items based on the input type
-            for i in range(1, count_map[input_type](dev)+1):
-                selection.addItem("{} {:d}".format(
-                    self.type_to_name_map[input_type],
-                    i
-                ))
-            # If we are dealing with an axis add buttons as valid
-            # remap targets as well for usage with axis conditions
-            if input_type == UiInputType.JoystickAxis:
-                for i in range(1, count_map[UiInputType.JoystickButton](dev)+1):
-                    selection.addItem("{} {:d}".format(
-                        self.type_to_name_map[UiInputType.JoystickButton],
-                        i
-                    ))
-
-            # Add the selection and hide it
-            selection.setVisible(False)
-            selection.activated.connect(self.change_cb)
-            self.main_layout.addWidget(selection)
-            self.input_item_dropdowns.append(selection)
-
-        # Show the "None" selection entry
-        self.input_item_dropdowns[0].setVisible(True)
+        self.vjoy_selector = VJoySelector(
+            self.vjoy_devices,
+            self.change_cb,
+            input_types[self.action_data.parent.input_type]
+        )
+        self.main_layout.addWidget(self.vjoy_selector)
 
     def _update_device(self, index):
         """Handles changing the vJoy device in a remap configuration.
 
         :param index vjoy device index
         """
-        for entry in self.input_item_dropdowns:
-            entry.setVisible(False)
-        self.input_item_dropdowns[index].setVisible(True)
-        self.input_item_dropdowns[index].setCurrentIndex(0)
         self.change_cb()
 
     def to_profile(self):
-        vjoy_device_id = self.device_dropdown.currentIndex()
-        input_selection = \
-            self.input_item_dropdowns[vjoy_device_id].currentText()
-        # Count devices starting at 1 rather then 0
-        vjoy_device_id += 1
-
-        arr = input_selection.split()
-        if len(arr) == 0:
-            return
-        vjoy_input_type = self.name_to_type_map[arr[0]]
-        vjoy_item_id = int(arr[1])
-
-        self.action_data.vjoy_device_id = vjoy_device_id
-        self.action_data.vjoy_input_id = vjoy_item_id
-        self.action_data.input_type = vjoy_input_type
+        vjoy_data = self.vjoy_selector.get_selection()
+        self.action_data.vjoy_device_id = vjoy_data["device_id"]
+        self.action_data.vjoy_input_id = vjoy_data["input_id"]
+        self.action_data.input_type = vjoy_data["input_type"]
         self.action_data.is_valid = True
 
     def initialize_from_profile(self, action_data):
@@ -154,42 +96,33 @@ class RemapWidget(AbstractActionWidget):
         self.action_data = action_data
 
         # Get the appropriate vjoy device identifier
-        dev_id = 0
+        vjoy_dev_id = 0
         if action_data.vjoy_device_id not in [0, None]:
-            dev_id = self.device_dropdown.findText(
-                "vJoy Device {:d}".format(action_data.vjoy_device_id)
-            )
+            vjoy_dev_id = action_data.vjoy_device_id
 
         # If no valid input item is selected get the next unused one
         if action_data.vjoy_input_id in [0, None]:
             main_profile = self.action_data.parent.parent.parent.parent
-            free_inputs = main_profile.list_unused_vjoy_inputs(
-                    self.vjoy_devices
-            )
-            type_name = self.type_to_name_map[action_data.input_type].lower()
-            input_list = free_inputs[dev_id+1][type_name]
+            free_inputs = \
+                main_profile.list_unused_vjoy_inputs(self.vjoy_devices)
+            input_type = self.type_to_name_map[action_data.input_type].lower()
+            if vjoy_dev_id == 0:
+                vjoy_dev_id = sorted(free_inputs.keys())[0]
+            input_list = free_inputs[vjoy_dev_id][input_type]
             # If we have an unused item use it, otherwise use the first one
             if len(input_list) > 0:
-                input_id = input_list[0]
+                vjoy_input_id = input_list[0]
             else:
-                input_id = 1
+                vjoy_input_id = 1
         # If a valid input item is present use it
         else:
-            input_id = action_data.vjoy_input_id
+            vjoy_input_id = action_data.vjoy_input_id
 
-        # Retrieve the index of the correct entry in the combobox
-        input_name = "{} {:d}".format(
-            self.type_to_name_map[action_data.input_type],
-            input_id
+        self.vjoy_selector.set_selection(
+            self.action_data.input_type,
+            vjoy_dev_id,
+            vjoy_input_id
         )
-        btn_id = self.input_item_dropdowns[dev_id].findText(input_name)
-
-        # Select and display correct combo boxes and entries within
-        self.device_dropdown.setCurrentIndex(dev_id)
-        for entry in self.input_item_dropdowns:
-            entry.setVisible(False)
-        self.input_item_dropdowns[dev_id].setVisible(True)
-        self.input_item_dropdowns[dev_id].setCurrentIndex(btn_id)
 
 
 class Remap(AbstractAction):

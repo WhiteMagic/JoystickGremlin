@@ -213,13 +213,48 @@ def joystick_devices():
             )
         else:
             devices.append(JoystickDeviceData(joy))
-    # For virtual joysticks set their vjoy_id based on the windows_id
-    vjoy_devices = sorted(
-        [dev for dev in devices if dev.is_virtual],
-        key=lambda x: x.windows_id
-    )
-    for i, dev in enumerate(vjoy_devices):
-        dev._vjoy_id = i+1
+    # Create hashes based on number of inputs for each virtual device. As we
+    # absolutely need to be able to assign the SDL device to the correct
+    # vJoy device we will not proceed if this mapping cannot be made without
+    # ambiguity.
+    vjoy_lookup = {}
+    for i, dev in enumerate(devices):
+        if not dev.is_virtual:
+            continue
+        hash_value = (dev.axes, dev.buttons, dev.hats)
+        if hash_value in vjoy_lookup:
+            raise gremlin.error.GremlinError(
+                "Indistinguishable vJoy devices present"
+            )
+        vjoy_lookup[hash_value] = i
+
+    # For virtual joysticks query them id by id until we have found all active
+    # devices
+    vjoy_proxy = gremlin.input_devices.VJoyProxy()
+
+    # Try each possible vJoy device and if it exists find the matching device
+    # as detected by SDL
+    for i in range(1, 17):
+        try:
+            vjoy_dev = vjoy_proxy[i]
+            hash_value = (
+                # This is needed as we have two names for each axis
+                int(vjoy_dev.axis_count / 2),
+                vjoy_dev.button_count,
+                vjoy_dev.hat_count
+            )
+            if hash_value in vjoy_lookup:
+                devices[vjoy_lookup[hash_value]]._vjoy_id = vjoy_dev.vjoy_id
+
+            if hash_value not in vjoy_lookup:
+                raise gremlin.error.GremlinError(
+                    "Unable to match vJoy device to windows device data"
+                )
+        except gremlin.error.VJoyError as e:
+            pass
+
+    # Reset all devices so we don't hog the ones we aren't actually using
+    gremlin.input_devices.VJoyProxy.reset()
 
     return devices
 
