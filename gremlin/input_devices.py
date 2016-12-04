@@ -25,7 +25,7 @@ import threading
 from PyQt5 import QtCore
 import sdl2
 
-from gremlin import common, event_handler, macro, util
+from gremlin import event_handler, macro, util
 from gremlin.util import SingletonDecorator, convert_sdl_hat, extract_ids
 from gremlin.error import GremlinError
 from vjoy.vjoy import VJoy
@@ -554,13 +554,13 @@ class JoystickDecorator(object):
 
 
 @SingletonDecorator
-class AutomaticInputRelease(QtCore.QObject):
+class AutomaticButtonRelease(QtCore.QObject):
 
-    """Ensures that vjoy inputs are reliably released.
+    """Ensures that vjoy buttons are reliably released.
 
-    The class ensures that vjoy buttons and hats are released even if they
-    have been pressed in a different mode then the active one when the physical
-    button or hat that pressed them is released.
+    The class ensures that vjoy buttons are released even if they
+    have been pressed in a different mode then the active one when
+    the physical button that pressed them is released.
     """
 
     def __init__(self):
@@ -571,78 +571,37 @@ class AutomaticInputRelease(QtCore.QObject):
         el = event_handler.EventListener()
         el.joystick_event.connect(self._joystick_cb)
 
-        self._callback_handlers = {
-            event_handler.InputType.JoystickAxis: self._handle_axis,
-            event_handler.InputType.JoystickButton: self._handle_button,
-            event_handler.InputType.JoystickHat: self._handle_hat
-        }
-
-    def register(self, vjoy_input, physical_event, mode):
+    def register(self, vjoy_input, physical_event):
         """Registers a physical and vjoy button pair for tracking.
 
-        :param vjoy_input the vjoy input to release, represented by
-            (vjoy_device_id, vjoy_input_id)
-        :param physical_event the event with which the vjoy_input is associated
-        :param mode the mode in which this event was triggered
+        :param vjoy_input the vjoy button to release, represented as
+            (vjoy_device_id, vjoy_button_id)
+        :param physical_event the button event when release should
+            trigger the release of the vjoy button
         """
         release_evt = physical_event.clone()
+        release_evt.is_pressed = False
 
         if release_evt not in self._registry:
             self._registry[release_evt] = []
-        self._registry[release_evt].append({
-            "vjoy": vjoy_input,
-            "event": release_evt,
-            "mode": mode
-        })
+        self._registry[release_evt].append(vjoy_input)
 
     def _joystick_cb(self, evt):
-        """Releases vjoy inputs if appropriate.
+        """Releases vjoy buttons if appropriate.
+
+        If any vjoy buttons are associated with the event they are
+        released
 
         :param evt the joystick event to process
         """
-        if evt in self._registry:
-            self._callback_handlers[evt.event_type](evt)
-
-    def _handle_axis(self, evt):
-        """Handles the release of an axis.
-
-        :param evt the joystick event to process"""
-        pass
-
-    def _handle_button(self, evt):
-        """Handles the release of a button.
-
-        :param evt the joystick event to process
-        """
-        if not evt.is_pressed:
+        if evt in self._registry and not evt.is_pressed:
             vjoy = VJoyProxy()
             for entry in self._registry[evt]:
-                # Check if the button is valid otherwise we cause
-                # Gremlin to crash
-                dev_id = entry["vjoy"][0]
-                input_id = entry["vjoy"][1]
-                if vjoy[dev_id].is_button_valid(input_id):
-                    vjoy[dev_id].button(input_id).is_pressed = False
+                # Check if the button is valid otherwise we cause Gremlin
+                # to crash
+                if vjoy[entry[0]].is_button_valid(entry[1]):
+                    vjoy[entry[0]].button(entry[1]).is_pressed = False
             self._registry[evt] = []
-
-    def _handle_hat(self, evt):
-        """Handles the release of a hat.
-
-        :param evt the joystick event to process
-        """
-        vjoy = VJoyProxy()
-        cur_mode = event_handler.EventHandler().active_mode
-        entries_to_remove = []
-        for i, entry in enumerate(self._registry[evt]):
-            dev_id = entry["vjoy"][0]
-            input_id = entry["vjoy"][1]
-            if entry["mode"] != cur_mode and \
-                    entry["event"].value != evt.value and \
-                    vjoy[dev_id].is_hat_valid(input_id):
-                vjoy[dev_id].hat(input_id).direction = (0, 0)
-                entries_to_remove.append(entry)
-        for entry in entries_to_remove:
-            del self._registry[evt][self._registry[evt].index(entry)]
 
 
 def _button(button_id, device_id, mode, always_execute=False):
