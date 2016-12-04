@@ -546,7 +546,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.devices.addTab(widget, "Keyboard")
 
         # Create the vjoy devices tab
-        for device in sorted(vjoy_devices, key=lambda x: x.windows_id):
+        for device in sorted(vjoy_devices, key=lambda x: x.vjoy_id):
             device_profile = self._profile.get_device_modes(
                 device.vjoy_id,
                 gremlin.profile.DeviceType.VJoy,
@@ -562,7 +562,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.tabs[util.device_id(device)] = widget
             self.ui.devices.addTab(
                 widget,
-                "{} #{:d}".format(device.name, device_profile.windows_id)
+                "{} #{:d}".format(device.name, device.vjoy_id)
             )
 
         # Connect the mode changed event to all tabs
@@ -1026,7 +1026,7 @@ if __name__ == "__main__":
     })
 
     # Unhandled exception traceback
-    sys.excepthook = exception_hook
+    #sys.excepthook = exception_hook
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
