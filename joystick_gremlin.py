@@ -19,6 +19,7 @@
 Main UI of JoystickGremlin.
 """
 
+import argparse
 import ctypes
 import logging
 import os
@@ -1008,6 +1009,18 @@ def exception_hook(exception_type, value, trace):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--profile",
+        help="Path to the profile to load on startup",
+    )
+    parser.add_argument(
+        "--enable",
+        help="Enable Joystick Gremlin upon launch",
+        action="store_true"
+    )
+    args = parser.parse_args()
+
     sys.path.insert(0, util.userprofile_path())
     util.setup_userprofile()
 
@@ -1061,6 +1074,13 @@ if __name__ == "__main__":
         ui = GremlinUi()
         ui.show()
         ui.apply_user_settings()
+
+        # Handle user provided command line arguments
+        if args.profile is not None and os.path.isfile(args.profile):
+            ui._do_load_profile(args.profile)
+        if args.enable:
+            ui.ui.actionActivate.setChecked(True)
+            ui.activate(True)
 
     # Run UI
     app.exec_()
