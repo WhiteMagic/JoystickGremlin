@@ -20,6 +20,7 @@ This module provides convenient access to the Microsoft SAPI text
 to speech system.
 """
 
+import logging
 import win32com.client
 
 from gremlin import util
@@ -40,7 +41,12 @@ class TextToSpeech(object):
 
         :param text the text to speak
         """
-        self._speaker.Speak(text, 1)
+        try:
+            self._speaker.Speak(text, 1)
+        except Exception as e:
+            logging.getLogger("system").error(
+                "TTS encountered a problem: {}".format(e)
+            )
 
     def set_volume(self, value):
         """Sets the volume anywhere between 0 and 100.
