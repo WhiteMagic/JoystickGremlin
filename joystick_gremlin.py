@@ -209,7 +209,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.options_window = dialogs.OptionsUi()
         self.options_window.show()
         self.options_window.closed.connect(
-            lambda: self.apply_user_settings()
+            lambda: self.apply_user_settings(ignore_minimize=True)
         )
 
     # +---------------------------------------------------------------
@@ -738,12 +738,13 @@ class GremlinUi(QtWidgets.QMainWindow):
     # | Utilities
     # +---------------------------------------------------------------
 
-    def apply_user_settings(self):
+    def apply_user_settings(self, ignore_minimize=False):
         """Configures the program based on user settings."""
         self._set_joystick_input_highlighting(
             self.config.highlight_input
         )
-        self.setHidden(self.config.start_minimized)
+        if not ignore_minimize:
+            self.setHidden(self.config.start_minimized)
         if self.config.autoload_profiles:
             self.process_monitor.start()
         else:
