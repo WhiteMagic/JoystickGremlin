@@ -65,22 +65,18 @@ class InputListenerWidget(QtWidgets.QFrame):
     """Widget overlaying the main gui while waiting for the user
     to press a key."""
 
-    def __init__(self, callback, listen_keyboard, listen_joystick, parent=None):
+    def __init__(self, callback, event_types, parent=None):
         """Creates a new instance.
 
         :param callback the function to pass the key pressed by the
             user to
-        :param listen_keyboard flag indicating whether or not to
-            listen to keyboard events
-        :parma listen_joystick flag indicating whether or not to
-            listen to joystick button events
+        :param event_types the events to capture and return
         :param parent the parent widget of this widget
         """
         QtWidgets.QWidget.__init__(self, parent)
 
         self.callback = callback
-        self._listen_keyboard = listen_keyboard
-        self._listen_joystick = listen_joystick
+        self._event_types = event_types
 
         # Create and configure the ui overlay
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -99,9 +95,11 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         # Start listening to user key presses
         event_listener = EventListener()
-        if listen_keyboard:
+        if UiInputType.Keyboard in self._event_types:
             event_listener.keyboard_event.connect(self._kb_event_cb)
-        if listen_joystick:
+        if UiInputType.JoystickAxis in self._event_types or \
+                UiInputType.JoystickButton in self._event_types or \
+                UiInputType.JoystickHat in self._event_types:
             event_listener.joystick_event.connect(self._joy_event_cb)
 
     def _kb_event_cb(self, event):
@@ -130,13 +128,23 @@ class InputListenerWidget(QtWidgets.QFrame):
                 not event.is_pressed:
             self.callback(event)
             self._close_window()
+        elif event.event_type == InputType.JoystickAxis and \
+                abs(event.value) > 0.5:
+            self.callback(event)
+            self._close_window()
+        elif event.event_type == InputType.JoystickHat and \
+                event.value != (0, 0):
+            self.callback(event)
+            self._close_window()
 
     def _close_window(self):
         """Closes the overlay window."""
         event_listener = EventListener()
-        if self._listen_keyboard:
+        if UiInputType.Keyboard in self._event_types:
             event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        if self._listen_joystick:
+        if UiInputType.JoystickAxis in self._event_types or \
+                UiInputType.JoystickButton in self._event_types or \
+                UiInputType.JoystickHat in self._event_types:
             event_listener.joystick_event.disconnect(self._joy_event_cb)
         self.close()
 
@@ -441,8 +449,7 @@ class ButtonConditionWidget(QtWidgets.QWidget):
         """Queries the user for the shift button to use."""
         self.button_press_dialog = InputListenerWidget(
             self._assign_shift_button_cb,
-            True,
-            True
+            [UiInputType.Keyboard, UiInputType.JoystickButton]
         )
 
         shared_state.set_suspend_input_highlighting(True)
@@ -1396,8 +1403,7 @@ class InputItemList(QtWidgets.QWidget):
         """
         self.keyboard_press_dialog = InputListenerWidget(
             self._add_key_to_scroll_list_cb,
-            True,
-            False
+            [UiInputType.Keyboard]
         )
 
         # Display the dialog centered in the middle of the UI
@@ -1602,10 +1608,85 @@ class TemplateInputs(QtWidgets.QWidget):
 
     def _add_actions(self):
         for device in self.profile_data.devices.values():
-            for type, data in device.modes[self.mode].config.items():
-                if data.description != "":
-                    self._actions.append(QtWidgets.QLabel(data.description))
-                    self.main_layout.addWidget(self._actions[-1])
+            for input_type, data in device.modes[self.mode].config.items():
+                for input_id, entry in data.items():
+                    if entry.description != "":
+                        self._actions.append(
+                            TemplateBindableAction(entry.description)
+                        )
+                        self.main_layout.addWidget(self._actions[-1])
+        self.main_layout.addStretch(0)
+
+
+class TemplateBindableAction(QtWidgets.QWidget):
+
+    def __init__(self, label, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.description = QtWidgets.QLabel(label)
+        self.bound_action = QtWidgets.QPushButton("Unbound")
+        self.bound_action.clicked.connect(self._bind_action)
+
+        self.main_layout.addWidget(self.description)
+        self.main_layout.addWidget(self.bound_action)
+
+    def _bind_action(self):
+        self.button_press_dialog = InputListenerWidget(
+            self._assign_action,
+            [
+                UiInputType.Keyboard,
+                UiInputType.JoystickAxis,
+                UiInputType.JoystickButton,
+                UiInputType.JoystickHat
+            ]
+        )
+
+        shared_state.set_suspend_input_highlighting(True)
+
+        # Display the dialog centered in the middle of the UI
+        geom = self.geometry()
+        point = self.mapToGlobal(QtCore.QPoint(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+        ))
+        self.button_press_dialog.setGeometry(
+            point.x(),
+            point.y(),
+            300,
+            150
+        )
+        self.button_press_dialog.show()
+
+    def _assign_action(self, value):
+        print(value)
+        # if isinstance(value, Event):
+        #     devices = util.joystick_devices()
+        #     for dev in devices:
+        #         if util.device_id(value) == util.device_id(dev):
+        #             # Set the button label
+        #             self.shift_button.setText("{} - Button {:d}".format(
+        #                 dev.name,
+        #                 value.identifier
+        #             ))
+        #
+        #             # Store the information inside the profile
+        #             self.shift_data = {
+        #                 "id": value.identifier,
+        #                 "hardware_id": dev.hardware_id,
+        #                 "windows_id": dev.windows_id
+        #             }
+        #             break
+        # elif isinstance(value, macro.Keys.Key):
+        #     self.shift_button.setText(value.name)
+        #     self.shift_data = {
+        #         "id": (value.scan_code, value.is_extended),
+        #         "hardware_id": 0,
+        #         "windows_id": 0
+        #     }
+        #
+        # shared_state.set_suspend_input_highlighting(False)
+        # self.change_cb()
 
 
 def clear_layout(layout):

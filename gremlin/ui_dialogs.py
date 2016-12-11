@@ -1066,6 +1066,8 @@ class TemplateViewer(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent)
         self.profile_data = profile_data
 
+        self.setMinimumSize(400, 500)
+
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.toolbox = QtWidgets.QToolBox()
         for mode in self._mode_list():
