@@ -32,6 +32,20 @@ from gremlin.event_handler import Event, EventListener, InputType
 from gremlin.common import UiInputType
 
 
+class LeftRightPushButton(QtWidgets.QPushButton):
+
+    clicked_right = QtCore.pyqtSignal()
+
+    def __init__(self, label, parent=None):
+        QtWidgets.QPushButton.__init__(self, label, parent)
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.RightButton:
+            self.clicked_right.emit()
+        else:
+            super().mousePressEvent(event)
+
+
 class InputIdentifier(object):
 
     """Represents the identifier of a single input item."""
