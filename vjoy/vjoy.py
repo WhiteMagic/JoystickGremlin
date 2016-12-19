@@ -325,7 +325,7 @@ class VJoy(object):
         self._keep_alive_timer.start()
 
         # Reset all controls
-        VJoyInterface.ResetVJD(self.vjoy_id)
+        self.reset()
 
     @property
     def axis_count(self):
@@ -396,6 +396,12 @@ class VJoy(object):
     def reset(self):
         """Resets the state of all inputs to their default state."""
         VJoyInterface.ResetVJD(self.vjoy_id)
+
+        # Set X, Y, Z, RX, RY, and RZ to the mid point rather then only
+        # X, Y, and Z as ResetVJD does
+        for i in range(1, 7):
+            if self.is_axis_valid(i):
+                self.axis(i).value = 0.0
 
     def used(self):
         """Updates the timestamp of the last time the device has been used."""
