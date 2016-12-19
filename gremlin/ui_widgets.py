@@ -79,7 +79,7 @@ class InputListenerWidget(QtWidgets.QFrame):
     """Widget overlaying the main gui while waiting for the user
     to press a key."""
 
-    def __init__(self, callback, event_types, parent=None):
+    def __init__(self, callback, event_types, return_kb_event=False, parent=None):
         """Creates a new instance.
 
         :param callback the function to pass the key pressed by the
@@ -91,13 +91,16 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         self.callback = callback
         self._event_types = event_types
+        self._return_kb_event = return_kb_event
 
         # Create and configure the ui overlay
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.main_layout.addWidget(QtWidgets.QLabel(
-            """<center>Please press the key / button you want to add.
+            """<center>Please press the desired {}.
             <br/><br/>
-            Pressing ESC aborts.</center>"""
+            Pressing ESC aborts.</center>""".format(
+                self._valid_event_types_string()
+            )
         ))
 
         self.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -109,11 +112,10 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         # Start listening to user key presses
         event_listener = EventListener()
-        if UiInputType.Keyboard in self._event_types:
-            event_listener.keyboard_event.connect(self._kb_event_cb)
-        if UiInputType.JoystickAxis in self._event_types or \
-                UiInputType.JoystickButton in self._event_types or \
-                UiInputType.JoystickHat in self._event_types:
+        event_listener.keyboard_event.connect(self._kb_event_cb)
+        if InputType.JoystickAxis in self._event_types or \
+                InputType.JoystickButton in self._event_types or \
+                InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.connect(self._joy_event_cb)
 
     def _kb_event_cb(self, event):
@@ -126,9 +128,15 @@ class InputListenerWidget(QtWidgets.QFrame):
                 event.identifier[0],
                 event.identifier[1]
         )
-        if key != macro.Keys.Esc:
-            self.callback(key)
-        self._close_window()
+
+        if InputType.Keyboard in self._event_types and key != macro.Keys.Esc:
+            if not self._return_kb_event:
+                self.callback(key)
+            else:
+                self.callback(event)
+            self._close_window()
+        elif key == macro.Keys.Esc:
+            self._close_window()
 
     def _joy_event_cb(self, event):
         """Passes the pressed joystick event to the provided callback
@@ -138,6 +146,10 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         :param event the keypress event to be processed
         """
+        # Only react to events we're interested in
+        if event.event_type not in self._event_types:
+            return
+
         if event.event_type == InputType.JoystickButton and \
                 not event.is_pressed:
             self.callback(event)
@@ -154,14 +166,15 @@ class InputListenerWidget(QtWidgets.QFrame):
     def _close_window(self):
         """Closes the overlay window."""
         event_listener = EventListener()
-        if UiInputType.Keyboard in self._event_types:
-            event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        if UiInputType.JoystickAxis in self._event_types or \
-                UiInputType.JoystickButton in self._event_types or \
-                UiInputType.JoystickHat in self._event_types:
+        event_listener.keyboard_event.disconnect(self._kb_event_cb)
+        if InputType.JoystickAxis in self._event_types or \
+                InputType.JoystickButton in self._event_types or \
+                InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.disconnect(self._joy_event_cb)
         self.close()
 
+    def _valid_event_types_string(self):
+        """Returns a formatted string containing the valid event types.
 
         :return string representing the valid event types
         """
