@@ -29,9 +29,14 @@ import gremlin.ui_widgets as widgets
 from ui_about import Ui_About
 
 
-class OptionsUi(QtWidgets.QWidget):
+class BaseDialogUi(QtWidgets.QWidget):
 
-    """UI allowing the configuration of a variety of options."""
+    """Base class for all UI dialogs.
+
+    The main purpose of this class is to provide the closed signal to dialogs
+    so that the main application can react to the dialog being closed if
+    desired.
+    """
 
     # Signal emitted when the dialog is being closed
     closed = QtCore.pyqtSignal()
@@ -42,6 +47,25 @@ class OptionsUi(QtWidgets.QWidget):
         :param parent the parent of this widget
         """
         QtWidgets.QWidget.__init__(self, parent)
+
+    def closeEvent(self, event):
+        """Closes the calibration window.
+
+        :param event the close event
+        """
+        self.closed.emit()
+
+
+class OptionsUi(BaseDialogUi):
+
+    """UI allowing the configuration of a variety of options."""
+
+    def __init__(self, parent=None):
+        """Creates a new options UI instance.
+
+        :param parent the parent of this widget
+        """
+        BaseDialogUi.__init__(self, parent)
 
         # Actual configuration object being managed
         self.config = config.Configuration()
@@ -159,7 +183,7 @@ class OptionsUi(QtWidgets.QWidget):
         :param event the close event
         """
         self.config.save()
-        self.closed.emit()
+        super().closeEvent(event)
 
     def populate_executables(self):
         """Populates the profile drop down menu."""
@@ -262,19 +286,16 @@ class OptionsUi(QtWidgets.QWidget):
         )
 
 
-class CalibrationUi(QtWidgets.QWidget):
+class CalibrationUi(BaseDialogUi):
 
     """Dialog to calibrate joystick axes."""
-
-    # Signal emitted when the dialog is being closed
-    closed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         """Creates the calibration UI.
 
         :param parent the parent widget of this object
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        BaseDialogUi.__init__(self, parent)
         self.devices = [
             dev for dev in util.joystick_devices() if not dev.is_virtual
         ]
@@ -389,21 +410,19 @@ class CalibrationUi(QtWidgets.QWidget):
         """
         el = EventListener()
         el.joystick_event.disconnect(self._handle_event)
-        self.closed.emit()
+        super().closeEvent(event)
 
 
-class LogWindowUi(QtWidgets.QWidget):
+class LogWindowUi(BaseDialogUi):
 
     """Window displaying log file content."""
-
-    # TODO: prevent this from scrolling down all the time
 
     def __init__(self,  parent=None):
         """Creates a new instance.
 
         :param parent the parent of this widget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        BaseDialogUi.__init__(self, parent)
 
         self.setWindowTitle("Log Viewer")
         self.setMinimumWidth(600)
@@ -427,9 +446,13 @@ class LogWindowUi(QtWidgets.QWidget):
         ])
         self.watcher.file_changed.connect(self._reload)
 
-    def closeEvent(self, evt):
-        """Handles closing of the window."""
+    def closeEvent(self, event):
+        """Handles closing of the window.
+
+        :param event the closing event
+        """
         self.watcher.stop()
+        super().closeEvent(event)
 
     def _create_log_display(self, fname, title):
         """Creates a new tab displaying log file contents.
@@ -477,7 +500,7 @@ class LogWindowUi(QtWidgets.QWidget):
         )
 
 
-class AboutUi(QtWidgets.QWidget):
+class AboutUi(BaseDialogUi):
 
     """Widget which displays information about the application."""
 
@@ -489,7 +512,7 @@ class AboutUi(QtWidgets.QWidget):
 
         :param parent parent of this widget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        BaseDialogUi.__init__(self, parent)
         self.ui = Ui_About()
         self.ui.setupUi(self)
 
@@ -516,7 +539,7 @@ class AboutUi(QtWidgets.QWidget):
         self.ui.third_party_licenses.setHtml(third_party_licenses)
 
 
-class MergeAxisUi(QtWidgets.QWidget):
+class MergeAxisUi(BaseDialogUi):
 
     """Allows merging physical axes into a single virtual ones."""
 
@@ -526,7 +549,7 @@ class MergeAxisUi(QtWidgets.QWidget):
         :param profile_data complete profile data
         :param parent the parent of this widget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        BaseDialogUi.__init__(self, parent)
 
         self.setWindowTitle("Merge Axis")
 
@@ -621,7 +644,7 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         :param profile_data profile information
         :param parent the parent of this widget
         """
-        QtWidgets.QDockWidget.__init__(self, parent)
+        BaseDialogUi.__init__(self, parent)
 
         self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
 
@@ -721,7 +744,7 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
             )
 
 
-class ModeManagerUi(QtWidgets.QWidget):
+class ModeManagerUi(BaseDialogUi):
 
     """Enables the creation of modes and configuring their inheritance."""
 
@@ -735,7 +758,7 @@ class ModeManagerUi(QtWidgets.QWidget):
             configured
         :param parent the parent of this wideget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        BaseDialogUi.__init__(self, parent)
         self._profile = profile_data
         self.setWindowTitle("Mode Manager")
 
@@ -758,6 +781,7 @@ class ModeManagerUi(QtWidgets.QWidget):
         # Re-enable keyboard event handler
         el = EventListener()
         el.keyboard_hook.start()
+        super().closeEvent(event)
 
     def _create_ui(self):
         """Creates the required UII elements."""
@@ -970,7 +994,7 @@ class ModeManagerUi(QtWidgets.QWidget):
             self._populate_mode_layout()
 
 
-class ModuleManagerUi(QtWidgets.QWidget):
+class ModuleManagerUi(BaseDialogUi):
 
     """UI which allows the user to manage custom python modules to
     be loaded by the program."""
@@ -981,7 +1005,7 @@ class ModuleManagerUi(QtWidgets.QWidget):
         :param profile_data the profile with which to populate the ui
         :param parent the parent widget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        BaseDialogUi.__init__(self, parent)
         self._profile = profile_data
         self.setWindowTitle("User Module Manager")
 
@@ -998,6 +1022,7 @@ class ModuleManagerUi(QtWidgets.QWidget):
         # Re-enable keyboard event handler
         el = EventListener()
         el.keyboard_hook.start()
+        super().closeEvent(event)
 
     def _create_ui(self):
         """Creates all the UI elements."""
@@ -1060,27 +1085,51 @@ class ModuleManagerUi(QtWidgets.QWidget):
             self._profile.imports = list(import_list)
 
 
-class TemplateViewer(QtWidgets.QWidget):
+class DeviceInformationUi(BaseDialogUi):
 
-    def __init__(self, profile_data, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.profile_data = profile_data
+    """Widget which displays information about all connected joystick
+    devices."""
 
-        self.setMinimumSize(400, 500)
+    def __init__(self, devices, parent=None):
+        """Creates a new instance.
 
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.toolbox = QtWidgets.QToolBox()
-        for mode in self._mode_list():
-            self.toolbox.addItem(
-                widgets.TemplateInputs(self.profile_data, mode),
-                mode
+        :param devices the list of device information objects
+        :param parent the parent widget
+        """
+        BaseDialogUi.__init__(self, parent)
+
+        self.devices = devices
+
+        self.setWindowTitle("Device Information")
+        self.main_layout = QtWidgets.QGridLayout(self)
+
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>Name</b>"), 0, 0)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>Axes</b>"), 0, 1)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>Buttons</b>"), 0, 2)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>Hats</b>"), 0, 3)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>System ID</b>"), 0, 4)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>Hardware ID</b>"), 0, 5)
+
+        for i, entry in enumerate(self.devices):
+            self.main_layout.addWidget(
+                QtWidgets.QLabel(entry.name), i+1, 0
             )
-        self.main_layout.addWidget(self.toolbox)
+            self.main_layout.addWidget(
+                QtWidgets.QLabel(str(entry.axes)), i+1, 1
+            )
+            self.main_layout.addWidget(
+                QtWidgets.QLabel(str(entry.buttons)), i+1, 2
+            )
+            self.main_layout.addWidget(
+                QtWidgets.QLabel(str(entry.hats)), +i+1, 3
+            )
+            self.main_layout.addWidget(
+                QtWidgets.QLabel(str(entry.windows_id)), i+1, 4
+            )
+            self.main_layout.addWidget(
+                QtWidgets.QLabel(str(entry.hardware_id)), i+1, 5
+            )
 
-    def _mode_list(self):
-        """Returns the list of modes present in the profile data."""
-        modes = []
-        for device in self.profile_data.devices.values():
-            modes.extend(device.modes.keys())
-        return list(set(modes))
-
+        self.close_button = QtWidgets.QPushButton("Close")
+        self.close_button.clicked.connect(lambda: self.close())
+        self.main_layout.addWidget(self.close_button, len(devices)+1, 3)

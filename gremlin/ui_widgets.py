@@ -149,54 +149,19 @@ class InputListenerWidget(QtWidgets.QFrame):
         self.close()
 
 
-class DeviceInformationWidget(QtWidgets.QWidget):
-
-    """Widget which displays information about all connected joystick
-    devices."""
-
-    def __init__(self, devices, parent=None):
-        """Creates a new instance.
-
-        :param devices the list of device information objects
-        :param parent the parent widget
+        :return string representing the valid event types
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        valid_str = []
+        if InputType.JoystickAxis in self._event_types:
+            valid_str.append("Axis")
+        if InputType.JoystickButton in self._event_types:
+            valid_str.append("Button")
+        if InputType.JoystickHat in self._event_types:
+            valid_str.append("Hat")
+        if InputType.Keyboard in self._event_types:
+            valid_str.append("Key")
 
-        self.devices = devices
-
-        self.setWindowTitle("Device Information")
-        self.main_layout = QtWidgets.QGridLayout(self)
-
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Name</b>"), 0, 0)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Axes</b>"), 0, 1)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Buttons</b>"), 0, 2)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Hats</b>"), 0, 3)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>System ID</b>"), 0, 4)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Hardware ID</b>"), 0, 5)
-
-        for i, entry in enumerate(self.devices):
-            self.main_layout.addWidget(
-                QtWidgets.QLabel(entry.name), i+1, 0
-            )
-            self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.axes)), i+1, 1
-            )
-            self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.buttons)), i+1, 2
-            )
-            self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.hats)), +i+1, 3
-            )
-            self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.windows_id)), i+1, 4
-            )
-            self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.hardware_id)), i+1, 5
-            )
-
-        self.close_button = QtWidgets.QPushButton("Close")
-        self.close_button.clicked.connect(lambda: self.close())
-        self.main_layout.addWidget(self.close_button, len(devices)+1, 3)
+        return ", ".join(valid_str)
 
 
 class AxisCalibrationWidget(QtWidgets.QWidget):
