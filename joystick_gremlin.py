@@ -38,6 +38,7 @@ from gremlin.code_generator import CodeGenerator
 from gremlin.common import UiInputType
 from gremlin.event_handler import EventListener, InputType
 from gremlin.repeater import Repeater
+from gremlin.profile_creator import ProfileCreator
 
 import gremlin.ui_widgets as widgets
 import gremlin.ui_dialogs as dialogs
@@ -231,6 +232,29 @@ class GremlinUi(QtWidgets.QMainWindow):
             lambda: self._remove_modal_window("options")
         )
 
+    def profile_creator(self):
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "Profile to load as template",
+            util.userprofile_path(),
+            "XML files (*.xml)"
+        )
+        if fname == "":
+            return
+
+        profile_data = gremlin.profile.Profile()
+        profile_data.from_xml(fname)
+
+        self.modal_windows["profile_creator"] = ProfileCreator(profile_data)
+        self.modal_windows["profile_creator"].show()
+        gremlin.shared_state.set_suspend_input_highlighting(True)
+        self.modal_windows["profile_creator"].closed.connect(
+            lambda: gremlin.shared_state.set_suspend_input_highlighting(False)
+        )
+        self.modal_windows["profile_creator"].closed.connect(
+            lambda: self._remove_modal_window("profile_creator")
+        )
+
     def _remove_modal_window(self, name):
         """Removes the modal window widget from the system.
 
@@ -310,22 +334,6 @@ class GremlinUi(QtWidgets.QMainWindow):
                     act.condition = ButtonCondition(True, True)
                 entry.actions.append(act)
         self._create_tabs()
-
-    def load_as_template(self):
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
-            None,
-            "Profile to load as template",
-            util.userprofile_path(),
-            "XML files (*.xml)"
-        )
-        if fname == "":
-            return
-
-        profile_data = gremlin.profile.Profile()
-        profile_data.from_xml(fname)
-
-        self.bla = dialogs.TemplateViewer(profile_data)
-        self.bla.show()
 
     def generate(self):
         """Generates python code for the code runner from the current
@@ -444,7 +452,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionNewProfile.triggered.connect(self.new_profile)
         self.ui.actionSaveProfile.triggered.connect(self.save_profile)
         self.ui.actionSaveProfileAs.triggered.connect(self.save_profile_as)
-        self.ui.actionLoadAsTemplate.triggered.connect(self.load_as_template)
+        self.ui.actionModifyProfile.triggered.connect(self.profile_creator)
         self.ui.actionExit.triggered.connect(self._force_close)
         # Actions
         self.ui.actionCreate1to1Mapping.triggered.connect(

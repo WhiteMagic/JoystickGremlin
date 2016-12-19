@@ -20,7 +20,6 @@
 Collection of widgets used in the configuration UI.
 """
 
-
 import logging
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -1585,100 +1584,6 @@ class ConfigurationPanel(QtWidgets.QWidget):
 
         self.current_configuration_dialog.to_profile()
         self.input_item_changed.emit(self.current_identifier)
-
-
-class TemplateInputs(QtWidgets.QWidget):
-
-    def __init__(self, profile_data, mode, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.profile_data = profile_data
-        self.mode = mode
-
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self._actions = []
-        self._add_actions()
-
-    def _add_actions(self):
-        for device in self.profile_data.devices.values():
-            for input_type, data in device.modes[self.mode].config.items():
-                for input_id, entry in data.items():
-                    if entry.description != "":
-                        self._actions.append(
-                            TemplateBindableAction(entry.description)
-                        )
-                        self.main_layout.addWidget(self._actions[-1])
-        self.main_layout.addStretch(0)
-
-
-class TemplateBindableAction(QtWidgets.QWidget):
-
-    def __init__(self, label, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-
-        self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.description = QtWidgets.QLabel(label)
-        self.bound_action = QtWidgets.QPushButton("Unbound")
-        self.bound_action.clicked.connect(self._bind_action)
-
-        self.main_layout.addWidget(self.description)
-        self.main_layout.addWidget(self.bound_action)
-
-    def _bind_action(self):
-        self.button_press_dialog = InputListenerWidget(
-            self._assign_action,
-            [
-                UiInputType.Keyboard,
-                UiInputType.JoystickAxis,
-                UiInputType.JoystickButton,
-                UiInputType.JoystickHat
-            ]
-        )
-
-        shared_state.set_suspend_input_highlighting(True)
-
-        # Display the dialog centered in the middle of the UI
-        geom = self.geometry()
-        point = self.mapToGlobal(QtCore.QPoint(
-            geom.x() + geom.width() / 2 - 150,
-            geom.y() + geom.height() / 2 - 75,
-        ))
-        self.button_press_dialog.setGeometry(
-            point.x(),
-            point.y(),
-            300,
-            150
-        )
-        self.button_press_dialog.show()
-
-    def _assign_action(self, value):
-        print(value)
-        # if isinstance(value, Event):
-        #     devices = util.joystick_devices()
-        #     for dev in devices:
-        #         if util.device_id(value) == util.device_id(dev):
-        #             # Set the button label
-        #             self.shift_button.setText("{} - Button {:d}".format(
-        #                 dev.name,
-        #                 value.identifier
-        #             ))
-        #
-        #             # Store the information inside the profile
-        #             self.shift_data = {
-        #                 "id": value.identifier,
-        #                 "hardware_id": dev.hardware_id,
-        #                 "windows_id": dev.windows_id
-        #             }
-        #             break
-        # elif isinstance(value, macro.Keys.Key):
-        #     self.shift_button.setText(value.name)
-        #     self.shift_data = {
-        #         "id": (value.scan_code, value.is_extended),
-        #         "hardware_id": 0,
-        #         "windows_id": 0
-        #     }
-        #
-        # shared_state.set_suspend_input_highlighting(False)
-        # self.change_cb()
 
 
 def clear_layout(layout):

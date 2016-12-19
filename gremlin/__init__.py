@@ -13,6 +13,7 @@ import gremlin.macro
 import gremlin.plugin_manager
 import gremlin.process_monitor
 import gremlin.profile
+import gremlin.profile_creator
 import gremlin.shared_state
 import gremlin.spline
 import gremlin.template
