@@ -20,7 +20,7 @@ import copy
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from gremlin import profile, ui_dialogs, ui_widgets, util
+from gremlin import macro, profile, ui_dialogs, ui_widgets, util
 from gremlin.event_handler import InputType, system_event_to_input_event
 
 
@@ -248,11 +248,22 @@ class ModeBindings(QtWidgets.QWidget):
 
         bound_input = self.bound_inputs[input_item]
 
-        return "{} - {} {}".format(
-            self.device_names[bound_input.parent.parent.hardware_id],
-            profile.input_type_to_tag(bound_input.input_type).capitalize(),
-            bound_input.input_id
-        )
+        # Special handling of keyboards
+        if bound_input.parent.parent.hardware_id == 0:
+            key_name = macro.key_from_code(
+                bound_input.input_id[0],
+                bound_input.input_id[1]
+            ).name
+            return "{} - {}".format(
+                self.device_names[bound_input.parent.parent.hardware_id],
+                key_name
+            )
+        else:
+            return "{} - {} {}".format(
+                self.device_names[bound_input.parent.parent.hardware_id],
+                profile.input_type_to_tag(bound_input.input_type).capitalize(),
+                bound_input.input_id
+            )
 
     def _create_input_cb(self, input_item):
         """Creates a callback function for the provided input item.
@@ -271,6 +282,7 @@ class ModeBindings(QtWidgets.QWidget):
         device_lookup = {}
         for dev in devices:
             device_lookup[dev.hardware_id] = dev.name
+        device_lookup[util.get_device_id(0, 0)] = "Keyboard"
         return device_lookup
 
 
