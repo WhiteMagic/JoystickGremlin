@@ -305,8 +305,8 @@ class VJoy(object):
 
         if not VJoyInterface.vJoyEnabled():
             raise VJoyError("vJoy is not currently running")
-        if VJoyInterface.GetvJoyVersion() != 0x216:
-            raise VJoyError("Running incompatible vJoy version, 2.1.6 required")
+        if VJoyInterface.GetvJoyVersion() != 0x218:
+            raise VJoyError("Running incompatible vJoy version, 2.1.8 required")
         elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
             raise VJoyError("Requested vJoy device is not available")
         elif not VJoyInterface.AcquireVJD(vjoy_id):
