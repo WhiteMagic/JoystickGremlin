@@ -7,7 +7,7 @@ from .. import events, mouse, keyboard, rect
 
 __all__ = ["RELEASED", "HOVERED", "PRESSED", "BUTTON", "CHECKBUTTON",
            "TEXTENTRY", "UIProcessor", "UIFactory"
-           ]
+          ]
 
 
 RELEASED = 0x0000

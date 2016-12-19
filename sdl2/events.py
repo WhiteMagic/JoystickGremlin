@@ -15,15 +15,18 @@ __all__ = ["SDL_FIRSTEVENT", "SDL_QUIT", "SDL_APP_TERMINATING",
            "SDL_MOUSEMOTION", "SDL_MOUSEBUTTONDOWN", "SDL_MOUSEBUTTONUP",
            "SDL_MOUSEWHEEL", "SDL_JOYAXISMOTION", "SDL_JOYBALLMOTION",
            "SDL_JOYHATMOTION", "SDL_JOYBUTTONDOWN", "SDL_JOYBUTTONUP",
-           "SDL_JOYDEVICEADDED", "SDL_JOYDEVICEREMOVED",
+           "SDL_JOYDEVICEADDED", "SDL_JOYDEVICEREMOVED", "SDL_KEYMAPCHANGED",
            "SDL_CONTROLLERAXISMOTION", "SDL_CONTROLLERBUTTONDOWN",
            "SDL_CONTROLLERBUTTONUP", "SDL_CONTROLLERDEVICEADDED",
            "SDL_CONTROLLERDEVICEREMOVED", "SDL_CONTROLLERDEVICEREMAPPED",
            "SDL_FINGERDOWN", "SDL_FINGERUP", "SDL_FINGERMOTION",
            "SDL_DOLLARGESTURE", "SDL_DOLLARRECORD", "SDL_MULTIGESTURE",
-           "SDL_CLIPBOARDUPDATE", "SDL_DROPFILE", "SDL_RENDER_TARGETS_RESET",
-           "SDL_RENDER_DEVICE_RESET", "SDL_USEREVENT", "SDL_LASTEVENT",
-           "SDL_EventType","SDL_GenericEvent", "SDL_WindowEvent",
+           "SDL_CLIPBOARDUPDATE", "SDL_DROPFILE", "SDL_DROPTEXT",
+           "SDL_DROPBEGIN", "SDL_DROPCOMPLETE",
+           "SDL_RENDER_TARGETS_RESET", "SDL_RENDER_DEVICE_RESET",
+           "SDL_USEREVENT", "SDL_LASTEVENT", "SDL_AUDIODEVICEADDED",
+           "SDL_AUDIODEVICEREMOVED",
+           "SDL_EventType","SDL_CommonEvent", "SDL_WindowEvent",
            "SDL_KeyboardEvent", "SDL_TEXTEDITINGEVENT_TEXT_SIZE",
            "SDL_TextEditingEvent", "SDL_TEXTINPUTEVENT_TEXT_SIZE",
            "SDL_TextInputEvent", "SDL_MouseMotionEvent", "SDL_MouseButtonEvent",
@@ -41,7 +44,8 @@ __all__ = ["SDL_FIRSTEVENT", "SDL_QUIT", "SDL_APP_TERMINATING",
            "SDL_GetEventFilter", "SDL_AddEventWatch", "SDL_DelEventWatch",
            "SDL_FilterEvents", "SDL_QUERY", "SDL_IGNORE", "SDL_DISABLE",
            "SDL_ENABLE", "SDL_EventState", "SDL_GetEventState",
-           "SDL_RegisterEvents", "SDL_QuitRequested"
+           "SDL_RegisterEvents", "SDL_QuitRequested", "SDL_PRESSED",
+           "SDL_RELEASED"
            ]
 
 SDL_FIRSTEVENT = 0
@@ -58,6 +62,7 @@ SDL_KEYDOWN = 0x300
 SDL_KEYUP = 0x301
 SDL_TEXTEDITING = 0x302
 SDL_TEXTINPUT = 0x303
+SDL_KEYMAPCHANGED = 0x304
 SDL_MOUSEMOTION = 0x400
 SDL_MOUSEBUTTONDOWN = 0x401
 SDL_MOUSEBUTTONUP = 0x402
@@ -83,13 +88,22 @@ SDL_DOLLARRECORD = 0x801
 SDL_MULTIGESTURE = 0x802
 SDL_CLIPBOARDUPDATE = 0x900
 SDL_DROPFILE = 0x1000
+SDL_DROPTEXT = 0x1001
+SDL_DROPBEGIN = 0x1002
+SDL_DROPCOMPLETE = 0x1003
+SDL_AUDIODEVICEADDED = 0x1100
+SDL_AUDIODEVICEREMOVED = 0x1101
 SDL_RENDER_TARGETS_RESET = 0x2000
 SDL_RENDER_DEVICE_RESET = 0x2001
 SDL_USEREVENT = 0x8000
 SDL_LASTEVENT = 0xFFFF
 SDL_EventType = c_int
 
-class SDL_GenericEvent(Structure):
+SDL_RELEASED = 0
+SDL_PRESSED = 1
+
+
+class SDL_CommonEvent(Structure):
     _fields_ = [("type", Uint32), ("timestamp", Uint32)]
 
 class SDL_WindowEvent(Structure):
@@ -165,7 +179,8 @@ class SDL_MouseWheelEvent(Structure):
                 ("windowID", Uint32),
                 ("which", Uint32),
                 ("x", Sint32),
-                ("y", Sint32)
+                ("y", Sint32),
+                ("direction", Uint32)
                 ]
 
 class SDL_JoyAxisEvent(Structure):
@@ -246,6 +261,16 @@ class SDL_ControllerDeviceEvent(Structure):
                 ("which", Sint32)
                 ]
 
+class SDL_AudioDeviceEvent(Structure):
+    _fields_ = [("type", Uint32),
+                ("timestamp", Uint32),
+                ("which", Uint32),
+                ("iscapture", Uint8),
+                ("padding1", Uint8),
+                ("padding2", Uint8),
+                ("padding3", Uint8)
+            ]
+
 class SDL_TouchFingerEvent(Structure):
     _fields_ = [("type", Uint32),
                 ("timestamp", Uint32),
@@ -284,7 +309,8 @@ class SDL_DollarGestureEvent(Structure):
 class SDL_DropEvent(Structure):
     _fields_ = [("type", Uint32),
                 ("timestamp", Uint32),
-                ("file", c_char_p)
+                ("file", c_char_p),
+                ("windowID", Uint32)
                 ]
 
 class SDL_QuitEvent(Structure):
@@ -318,7 +344,7 @@ class SDL_SysWMEvent(Structure):
 
 class SDL_Event(Union):
     _fields_ = [("type", Uint32),
-                ("generic", SDL_GenericEvent),
+                ("common", SDL_CommonEvent),
                 ("window", SDL_WindowEvent),
                 ("key", SDL_KeyboardEvent),
                 ("edit", SDL_TextEditingEvent),
@@ -334,6 +360,7 @@ class SDL_Event(Union):
                 ("caxis", SDL_ControllerAxisEvent),
                 ("cbutton", SDL_ControllerButtonEvent),
                 ("cdevice", SDL_ControllerDeviceEvent),
+                ("adevice", SDL_AudioDeviceEvent),
                 ("quit", SDL_QuitEvent),
                 ("user", SDL_UserEvent),
                 ("syswm", SDL_SysWMEvent),

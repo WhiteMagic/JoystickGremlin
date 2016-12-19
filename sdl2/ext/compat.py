@@ -34,10 +34,7 @@ isiterable = lambda x: isinstance(x, collections.Iterable)
 
 def platform_is_64bit():
     """Checks, if the platform is a 64-bit machine."""
-    is64bit = sys.maxsize > 2 ** 32
-    if sys.platform == "cli":
-        is64bit = sys.executable.endswith("ipy64.exe")
-    return is64bit
+    return sys.maxsize > 2 ** 32
 
 
 def deprecated(func):

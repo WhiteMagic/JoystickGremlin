@@ -48,7 +48,6 @@ class Window(object):
         if not window:
             raise SDLError()
         self.window = window.contents
-        self._renderer = None  # used by get_renderer()
 
     def __del__(self):
         """Releases the resources of the Window, implicitly destroying the

@@ -1,5 +1,6 @@
 from ctypes import Structure, POINTER, c_int, c_char_p, c_float
 from .dll import _bind
+from .endian import SDL_BYTEORDER, SDL_BIG_ENDIAN, SDL_LIL_ENDIAN
 from .stdinc import Uint8, Uint16, Uint32, SDL_bool
 
 SDL_ALPHA_OPAQUE = 255
@@ -73,15 +74,37 @@ def SDL_ISPIXELFORMAT_INDEXED(pformat):
             ((SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_INDEX1) or
              (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_INDEX4) or
              (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_INDEX8)))
+
+def SDL_ISPIXELFORMAT_PACKED(pformat):
+    """Checks, if the passed format value is a packed format."""
+    return (not SDL_ISPIXELFORMAT_FOURCC(pformat) and
+            ((SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_PACKED8) or
+             (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_PACKED16) or
+             (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_PACKED32)))
+
+def SDL_ISPIXELFORMAT_ARRAY(pformat):
+    """Checks, if the passed format value is an array format."""
+    return (not SDL_ISPIXELFORMAT_FOURCC(pformat) and
+            ((SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_ARRAYU8) and
+             (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_ARRAYU16) or
+             (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_ARRAYU32) or
+             (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_ARRAYF16) or
+             (SDL_PIXELTYPE(pformat) == SDL_PIXELTYPE_ARRAYF32)))
+
 def SDL_ISPIXELFORMAT_ALPHA(pformat):
     """Checks, if the passed format value is an alpha channel supporting
     format.
     """
-    return ((not SDL_ISPIXELFORMAT_FOURCC(pformat)) and
-            ((SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_ARGB) or
-             (SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_RGBA) or
-             (SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_ABGR) or
-             (SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_BGRA)))
+    return ((SDL_ISPIXELFORMAT_PACKED(pformat) and
+             ((SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_ARGB) or
+              (SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_RGBA) or
+              (SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_ABGR) or
+              (SDL_PIXELORDER(pformat) == SDL_PACKEDORDER_BGRA))) or
+            (SDL_ISPIXELFORMAT_ARRAY(pformat) and
+             ((SDL_PIXELORDER(pformat) == SDL_ARRAYORDER_ARGB) or
+              (SDL_PIXELORDER(pformat) == SDL_ARRAYORDER_RGBA) or
+              (SDL_PIXELORDER(pformat) == SDL_ARRAYORDER_ABGR) or
+              (SDL_PIXELORDER(pformat) == SDL_ARRAYORDER_BGRA))))
 
 SDL_ISPIXELFORMAT_FOURCC = lambda fmt: ((fmt) and (SDL_PIXELFLAG(fmt) != 1))
 SDL_PIXELFORMAT_UNKNOWN = 0
@@ -173,11 +196,23 @@ SDL_PIXELFORMAT_ARGB2101010 = SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32,
                                                      SDL_PACKEDORDER_ARGB,
                                                      SDL_PACKEDLAYOUT_2101010,
                                                      32, 4)
+if SDL_BYTEORDER == SDL_BIG_ENDIAN:
+    SDL_PIXELFORMAT_RGBA32 = SDL_PIXELFORMAT_RGBA8888
+    SDL_PIXELFORMAT_ARGB32 = SDL_PIXELFORMAT_ARGB8888
+    SDL_PIXELFORMAT_BGRA32 = SDL_PIXELFORMAT_BGRA8888
+    SDL_PIXELFORMAT_ABGR32 = SDL_PIXELFORMAT_ABGR8888
+else:
+    SDL_PIXELFORMAT_RGBA32 = SDL_PIXELFORMAT_ABGR8888
+    SDL_PIXELFORMAT_ARGB32 = SDL_PIXELFORMAT_BGRA8888
+    SDL_PIXELFORMAT_BGRA32 = SDL_PIXELFORMAT_ARGB8888
+    SDL_PIXELFORMAT_ABGR32 = SDL_PIXELFORMAT_RGBA8888
 SDL_PIXELFORMAT_YV12 = SDL_DEFINE_PIXELFOURCC('Y', 'V', '1', '2')
 SDL_PIXELFORMAT_IYUV = SDL_DEFINE_PIXELFOURCC('I', 'Y', 'U', 'V')
 SDL_PIXELFORMAT_YUY2 = SDL_DEFINE_PIXELFOURCC('Y', 'U', 'Y', '2')
 SDL_PIXELFORMAT_UYVY = SDL_DEFINE_PIXELFOURCC('U', 'Y', 'V', 'Y')
 SDL_PIXELFORMAT_YVYU = SDL_DEFINE_PIXELFOURCC('Y', 'V', 'Y', 'U')
+SDL_PIXELFORMAT_NV12 = SDL_DEFINE_PIXELFOURCC('N', 'V', '1', '2')
+SDL_PIXELFORMAT_NV21 = SDL_DEFINE_PIXELFOURCC('N', 'V', '2', '1')
 
 ALL_PIXELFORMATS = (
     SDL_PIXELFORMAT_INDEX1LSB,
@@ -210,11 +245,17 @@ ALL_PIXELFORMATS = (
     SDL_PIXELFORMAT_ABGR8888,
     SDL_PIXELFORMAT_BGRA8888,
     SDL_PIXELFORMAT_ARGB2101010,
+    SDL_PIXELFORMAT_RGBA32,
+    SDL_PIXELFORMAT_ARGB32,
+    SDL_PIXELFORMAT_BGRA32,
+    SDL_PIXELFORMAT_ABGR32,
     SDL_PIXELFORMAT_YV12,
     SDL_PIXELFORMAT_IYUV,
     SDL_PIXELFORMAT_YUY2,
     SDL_PIXELFORMAT_UYVY,
     SDL_PIXELFORMAT_YVYU,
+    SDL_PIXELFORMAT_NV12,
+    SDL_PIXELFORMAT_NV21
     )
 
 

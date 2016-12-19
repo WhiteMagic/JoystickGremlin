@@ -19,7 +19,7 @@ class SDL_Keysym(Structure):
     _fields_ = [("scancode", SDL_Scancode),
                 ("sym", SDL_Keycode),
                 ("mod", Uint16),
-                ("unicode", Uint32)
+                ("unused", Uint32)
                 ]
 
 SDL_GetKeyboardFocus = _bind("SDL_GetKeyboardFocus", None, POINTER(SDL_Window))

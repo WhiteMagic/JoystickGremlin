@@ -115,14 +115,18 @@ def line(target, color, dline, width=1):
         x1, y1, x2, y2 = dline[idx:idx + 4]
         if x1 == x2:
             # Vertical line
-            yh = abs(y2 - y1)
-            varea = SDLRect(x1 - width // 2, y1, width, yh)
+            if y1 < y2:
+                varea = SDLRect(x1 - width // 2, y1, width, y2 - y1)
+            else:
+                varea = SDLRect(x1 - width // 2, y2, width, y1 - y2)
             fillrect(rtarget, varea, color)
             continue
         if y1 == y2:
             # Horizontal line
-            xw = abs(x2 - x1)
-            varea = SDLRect(x1, y1 - width // 2, xw, width)
+            if x1 < x2:
+                varea = SDLRect(x1, y1 - width // 2, x2 - x1, width)
+            else:
+                varea = SDLRect(x2, y1 - width // 2, x1 - x2, width)
             fillrect(rtarget, varea, color)
             continue
         if width != 1:

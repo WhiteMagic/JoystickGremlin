@@ -158,6 +158,7 @@ class SDL_HapticEffect(Union):
                 ("periodic", SDL_HapticPeriodic),
                 ("condition", SDL_HapticCondition),
                 ("ramp", SDL_HapticRamp),
+                ("leftright", SDL_HapticLeftRight),
                 ("custom", SDL_HapticCustom),
                 ]
 

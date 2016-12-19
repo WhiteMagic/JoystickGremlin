@@ -1,7 +1,6 @@
-import sys
 from ctypes import Structure, c_int, c_char_p, c_double, c_void_p, CFUNCTYPE, \
     POINTER
-from .dll import _bind
+from .dll import _bind, nullfunc
 from .endian import SDL_BYTEORDER, SDL_LIL_ENDIAN
 from .stdinc import Uint8, Uint16, Uint32
 from .rwops import SDL_RWops, SDL_RWFromFile
@@ -29,7 +28,8 @@ __all__ = ["SDL_AudioFormat", "SDL_AUDIO_MASK_BITSIZE",
            "SDL_ConvertAudio", "SDL_MIX_MAXVOLUME", "SDL_MixAudio",
            "SDL_MixAudioFormat", "SDL_LockAudio", "SDL_LockAudioDevice",
            "SDL_UnlockAudio", "SDL_UnlockAudioDevice", "SDL_CloseAudio",
-           "SDL_CloseAudioDevice"
+           "SDL_CloseAudioDevice", "SDL_QueueAudio", "SDL_GetQueuedAudioSize",
+           "SDL_ClearQueuedAudio", "SDL_DequeueAudio"
          ]
 
 SDL_AudioFormat = Uint16
@@ -115,14 +115,6 @@ class SDL_AudioCVT(Structure):
     pass
 
 SDL_AudioFilter = CFUNCTYPE(POINTER(SDL_AudioCVT), SDL_AudioFormat)
-# HACK: hack for an IronPython 2.7.2.1+ issue:
-#    ptrarray = (CFUNCTYPE() * int)
-# is not supported properly
-if sys.platform == "cli":
-    _X_SDL_AudioFilter = POINTER(SDL_AudioFilter)
-else:
-    _X_SDL_AudioFilter = SDL_AudioFilter
-
 SDL_AudioCVT._fields_ = [("needed", c_int),
                          ("src_format", SDL_AudioFormat),
                          ("dst_format", SDL_AudioFormat),
@@ -132,7 +124,7 @@ SDL_AudioCVT._fields_ = [("needed", c_int),
                          ("len_cvt", c_int),
                          ("len_mult", c_int),
                          ("len_ratio", c_double),
-                         ("filters", (_X_SDL_AudioFilter * 10)),
+                         ("filters", (SDL_AudioFilter * 10)),
                          ("filter_index", c_int)
                          ]
 
@@ -168,4 +160,8 @@ SDL_UnlockAudio = _bind("SDL_UnlockAudio")
 SDL_UnlockAudioDevice = _bind("SDL_UnlockAudioDevice", [SDL_AudioDeviceID])
 SDL_CloseAudio = _bind("SDL_CloseAudio")
 SDL_CloseAudioDevice = _bind("SDL_CloseAudioDevice", [SDL_AudioDeviceID])
+SDL_QueueAudio = _bind("SDL_QueueAudio", [SDL_AudioDeviceID, c_void_p, Uint32], c_int, nullfunc)
+SDL_DequeueAudio = _bind("SDL_DequeueAudio", [SDL_AudioDeviceID, c_void_p, Uint32], Uint32, nullfunc)
+SDL_GetQueuedAudioSize = _bind("SDL_GetQueuedAudioSize", [SDL_AudioDeviceID], Uint32, nullfunc)
+SDL_ClearQueuedAudio = _bind("SDL_ClearQueuedAudio", [SDL_AudioDeviceID], optfunc=nullfunc)
 

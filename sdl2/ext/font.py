@@ -47,7 +47,8 @@ class BitmapFont(object):
                   "klmnopqrst",
                   "uvwxyz    ",
                   ",;.:!?+-()"
-                  ]
+                ]
+
 
     def __init__(self, imgsurface, size, mapping=None):
         """Creates a new BitmapFont instance from the passed image.
@@ -63,7 +64,8 @@ class BitmapFont(object):
         self.offsets = {}
         if isinstance(imgsurface, SoftwareSprite):
             self.surface = imgsurface.surface
-        #elif isinstance(surface, sprite.Sprite):
+        # elif isinstance(surface, sprite.Sprite):
+
         #    TODO
         elif isinstance(imgsurface, surface.SDL_Surface):
             self.surface = imgsurface
@@ -112,7 +114,8 @@ class BitmapFont(object):
                 dstr.x = x
                 if c in offsets:
                     blit_surface(fontsf, offsets[c], target, dstr)
-                #elif c != ' ':
+                # elif c != ' ':
+
                 #    TODO: raise an exception for unknown char?
                 x += w
             y += h
@@ -130,7 +133,8 @@ class BitmapFont(object):
         target = None
         if isinstance(imgsurface, SoftwareSprite):
             target = imgsurface.surface
-        #elif isinstance(surface, sprite.Sprite):
+        # elif isinstance(surface, sprite.Sprite):
+
         #    TODO
         elif isinstance(imgsurface, surface.SDL_Surface):
             target = imgsurface
@@ -151,7 +155,8 @@ class BitmapFont(object):
                 dstr.x = x
                 if c in offsets:
                     blit_surface(fontsf, offsets[c], target, dstr)
-                #elif c != ' ':
+                # elif c != ' ':
+
                 #    TODO: raise an exception for unknown char?
                 x += w
             y += h
@@ -175,7 +180,7 @@ class BitmapFont(object):
 class FontManager(object):
     """Manage fonts and rendering of text."""
     def __init__(self, font_path, alias=None, size=16,
-                 color=Color(255, 255, 255), bg_color=Color(0, 0, 0)):
+                 color=Color(255, 255, 255), bg_color=Color(0, 0, 0), index=0):
         """Initialize the FontManager
 
         One font path must be given to initialize the FontManager. The
@@ -195,7 +200,7 @@ class FontManager(object):
         self.color = color
         self.bg_color = bg_color
         self.size = size
-        self._default_font = self.add(font_path, alias)
+        self._default_font = self.add(font_path, alias, index)
 
     def __del__(self):
         """Close all opened fonts."""
@@ -210,7 +215,7 @@ class FontManager(object):
         self.fonts = {}
         self.aliases = {}
 
-    def add(self, font_path, alias=None, size=None):
+    def add(self, font_path, alias=None, size=None, index=0):
         """Add a font to the Font Manager.
 
         alias is by default the font name. But another name can be
@@ -232,18 +237,22 @@ class FontManager(object):
                 if not os.path.isfile(font_path):
                     raise IOError("Cannot find %s" % font_path)
 
-        font = self._load_font(font_path, size)
+        font = self._load_font(font_path, size, index)
         self.aliases[alias] = font_path
         self.fonts[alias] = {}
         self.fonts[alias][size] = font
         return font
 
-    def _load_font(self, font_path, size):
+    def _load_font(self, font_path, size, index=0):
         """Helper function to open the font.
 
         Raises an exception if something went wrong.
         """
-        font = sdlttf.TTF_OpenFont(byteify(font_path, "utf-8"), size)
+        if index == 0:
+            font = sdlttf.TTF_OpenFont(byteify(font_path, "utf-8"), size)
+        else:
+            font = sdlttf.TTF_OpenFontIndex(byteify(font_path, "utf-8"), size,
+                                            index)
         if font is None:
             raise SDLError()
         return font

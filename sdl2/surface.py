@@ -1,5 +1,5 @@
 from ctypes import CFUNCTYPE, Structure, POINTER, c_int, c_void_p
-from .dll import _bind
+from .dll import _bind, nullfunc
 from .stdinc import Uint8, Uint32, SDL_bool
 from .blendmode import SDL_BlendMode
 from .rect import SDL_Rect
@@ -19,8 +19,9 @@ __all__ = ["SDL_SWSURFACE", "SDL_PREALLOC", "SDL_RLEACCEL", "SDL_DONTFREE",
            "SDL_ConvertSurfaceFormat", "SDL_ConvertPixels", "SDL_FillRect",
            "SDL_FillRects", "SDL_UpperBlit", "SDL_BlitSurface", "SDL_LowerBlit",
            "SDL_SoftStretch", "SDL_UpperBlitScaled", "SDL_BlitScaled",
-           "SDL_LowerBlitScaled"
-           ]
+           "SDL_LowerBlitScaled", "SDL_CreateRGBSurfaceWithFormat",
+           "SDL_CreateRGBSurfaceWithFormatFrom"
+          ]
 
 SDL_SWSURFACE = 0
 SDL_PREALLOC = 0x00000001
@@ -44,12 +45,14 @@ class SDL_Surface(Structure):
                 ("clip_rect", SDL_Rect),
                 ("map", POINTER(SDL_BlitMap)),
                 ("refcount", c_int)
-                ]
+               ]
 
 SDL_Blit = CFUNCTYPE(c_int, POINTER(SDL_Surface), POINTER(SDL_Rect), POINTER(SDL_Surface), POINTER(SDL_Rect))
 
 SDL_CreateRGBSurface = _bind("SDL_CreateRGBSurface", [Uint32, c_int, c_int, c_int, Uint32, Uint32, Uint32, Uint32], POINTER(SDL_Surface))
 SDL_CreateRGBSurfaceFrom = _bind("SDL_CreateRGBSurfaceFrom", [c_void_p, c_int, c_int, c_int, c_int, Uint32, Uint32, Uint32, Uint32], POINTER(SDL_Surface))
+SDL_CreateRGBSurfaceWithFormat = _bind("SDL_CreateRGBSurfaceWithFormat", [Uint32, c_int, c_int, c_int, Uint32], POINTER(SDL_Surface), optfunc=nullfunc)
+SDL_CreateRGBSurfaceWithFormatFrom = _bind("SDL_CreateRGBSurfaceWithFormatFrom", [c_void_p, c_int, c_int, c_int, c_int, Uint32], POINTER(SDL_Surface), optfunc=nullfunc)
 SDL_FreeSurface = _bind("SDL_FreeSurface", [POINTER(SDL_Surface)])
 SDL_SetSurfacePalette = _bind("SDL_SetSurfacePalette", [POINTER(SDL_Surface), POINTER(SDL_Palette)], c_int)
 SDL_LockSurface = _bind("SDL_LockSurface", [POINTER(SDL_Surface)], c_int)
@@ -76,7 +79,6 @@ SDL_ConvertSurfaceFormat = _bind("SDL_ConvertSurfaceFormat", [POINTER(SDL_Surfac
 SDL_ConvertPixels = _bind("SDL_ConvertPixels", [c_int, c_int, Uint32, c_void_p, c_int, Uint32, c_void_p, c_int], c_int)
 SDL_FillRect = _bind("SDL_FillRect", [POINTER(SDL_Surface), POINTER(SDL_Rect), Uint32], c_int)
 SDL_FillRects = _bind("SDL_FillRects", [POINTER(SDL_Surface), POINTER(SDL_Rect), c_int, Uint32], c_int)
-
 
 SDL_UpperBlit = _bind("SDL_UpperBlit", [POINTER(SDL_Surface), POINTER(SDL_Rect), POINTER(SDL_Surface), POINTER(SDL_Rect)], c_int)
 SDL_BlitSurface = SDL_UpperBlit

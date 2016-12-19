@@ -1,6 +1,6 @@
 import os
 from ctypes import Structure, POINTER, c_int, c_long, c_char_p
-from .dll import DLL
+from .dll import DLL, nullfunc
 from .version import SDL_version
 from .rwops import SDL_RWops
 from .stdinc import Uint16, Uint32
@@ -33,7 +33,8 @@ __all__ = ["get_dll_file", "SDL_TTF_MAJOR_VERSION", "SDL_TTF_MINOR_VERSION",
           "TTF_RenderUTF8_Blended_Wrapped", "TTF_RenderUNICODE_Blended_Wrapped",
           "TTF_RenderGlyph_Blended", "TTF_RenderText", "TTF_RenderUTF",
           "TTF_RenderUNICODE", "TTF_CloseFont", "TTF_Quit", "TTF_WasInit",
-          "TTF_GetFontKerningSize", "TTF_SetError", "TTF_GetError"
+          "TTF_GetFontKerningSize", "TTF_GetFontKerningSizeGlyphs",
+          "TTF_SetError", "TTF_GetError"
           ]
 
 try:
@@ -50,7 +51,7 @@ _bind = dll.bind_function
 
 SDL_TTF_MAJOR_VERSION = 2
 SDL_TTF_MINOR_VERSION = 0
-SDL_TTF_PATCHLEVEL = 12
+SDL_TTF_PATCHLEVEL = 14
 
 
 def SDL_TTF_VERSION(x):
@@ -131,8 +132,9 @@ TTF_RenderUTF = TTF_RenderUTF8_Shaded
 TTF_RenderUNICODE = TTF_RenderUNICODE_Shaded
 TTF_CloseFont = _bind("TTF_CloseFont", [POINTER(TTF_Font)])
 TTF_Quit = _bind("TTF_Quit") 
-TTF_WasInit = _bind("TTF_WasInit", None, c_int) 
+TTF_WasInit = _bind("TTF_WasInit", None, c_int)
 TTF_GetFontKerningSize = _bind("TTF_GetFontKerningSize", [POINTER(TTF_Font), c_int, c_int], c_int)
+TTF_GetFontKerningSizeGlyphs = _bind("TTF_GetFontKerningSizeGlyphs", [POINTER(TTF_Font), Uint16, Uint16], c_int, nullfunc)
 TTF_SetError = SDL_SetError
 TTF_GetError = SDL_GetError
 

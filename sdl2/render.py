@@ -38,7 +38,8 @@ __all__ = ["SDL_RendererFlags", "SDL_RENDERER_SOFTWARE",
            "SDL_RenderCopy", "SDL_RenderCopyEx", "SDL_RenderReadPixels",
            "SDL_RenderPresent", "SDL_DestroyTexture", "SDL_DestroyRenderer",
            "SDL_UpdateYUVTexture", "SDL_GL_BindTexture", "SDL_GL_UnbindTexture",
-           "SDL_GetRendererOutputSize"
+           "SDL_GetRendererOutputSize", "SDL_RenderGetIntegerScale",
+           "SDL_RenderSetIntegerScale"
            ]
 
 SDL_RendererFlags = c_int
@@ -107,6 +108,8 @@ SDL_RenderSetClipRect = _bind("SDL_RenderSetClipRect", [POINTER(SDL_Renderer), P
 SDL_RenderIsClipEnabled = _bind("SDL_RenderIsClipEnabled", [POINTER(SDL_Renderer)], SDL_bool, nullfunc)
 SDL_RenderSetScale = _bind("SDL_RenderSetScale", [POINTER(SDL_Renderer), c_float, c_float], c_int)
 SDL_RenderGetScale = _bind("SDL_RenderGetScale", [POINTER(SDL_Renderer), POINTER(c_float), POINTER(c_float)])
+SDL_RenderGetIntegerScale = _bind("SDL_RenderGetIntegerScale", [POINTER(SDL_Renderer)], SDL_bool, optfunc=nullfunc)
+SDL_RenderSetIntegerScale = _bind("SDL_RenderSetIntegerScale", [POINTER(SDL_Renderer), SDL_bool], c_int, optfunc=nullfunc)
 SDL_SetRenderDrawColor = _bind("SDL_SetRenderDrawColor", [POINTER(SDL_Renderer), Uint8, Uint8, Uint8, Uint8], c_int)
 SDL_GetRenderDrawColor = _bind("SDL_GetRenderDrawColor", [POINTER(SDL_Renderer), POINTER(Uint8), POINTER(Uint8), POINTER(Uint8), POINTER(Uint8)], c_int)
 SDL_SetRenderDrawBlendMode = _bind("SDL_SetRenderDrawBlendMode", [POINTER(SDL_Renderer), SDL_BlendMode], c_int)

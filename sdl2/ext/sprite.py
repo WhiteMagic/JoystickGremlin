@@ -13,7 +13,8 @@ from ..stdinc import Uint8, Uint32
 
 __all__ = ["Sprite", "SoftwareSprite", "TextureSprite", "SpriteFactory",
            "SoftwareSpriteRenderSystem", "SpriteRenderSystem",
-           "TextureSpriteRenderSystem", "Renderer", "TEXTURE", "SOFTWARE"]
+           "TextureSpriteRenderSystem", "Renderer", "TEXTURE", "SOFTWARE"
+          ]
 
 TEXTURE = 0
 SOFTWARE = 1
@@ -21,7 +22,7 @@ SOFTWARE = 1
 
 class Renderer(object):
     """SDL2-based renderer for windows and sprites."""
-    def __init__(self, target, index=-1,
+    def __init__(self, target, index=-1, logical_size=None,
                  flags=render.SDL_RENDERER_ACCELERATED):
         """Creates a new Renderer for the given target.
 
@@ -30,34 +31,57 @@ class Renderer(object):
         a SoftwareSprite or SDL_Surface, the index and flags arguments are
         ignored.
         """
-        self.renderer = None
+        self.sdlrenderer = None
         self.rendertaget = None
         if isinstance(target, Window):
-            self.renderer = render.SDL_CreateRenderer(target.window, index,
-                                                      flags)
+            self.sdlrenderer = render.SDL_CreateRenderer(target.window, index,
+                                                         flags)
             self.rendertarget = target.window
         elif isinstance(target, video.SDL_Window):
-            self.renderer = render.SDL_CreateRenderer(target, index, flags)
+            self.sdlrenderer = render.SDL_CreateRenderer(target, index, flags)
             self.rendertarget = target
         elif isinstance(target, SoftwareSprite):
-            self.renderer = render.SDL_CreateSoftwareRenderer(target.surface)
+            self.sdlrenderer = render.SDL_CreateSoftwareRenderer(target.surface)
             self.rendertarget = target.surface
         elif isinstance(target, surface.SDL_Surface):
-            self.renderer = render.SDL_CreateSoftwareRenderer(target)
+            self.sdlrenderer = render.SDL_CreateSoftwareRenderer(target)
             self.rendertarget = target
         else:
             raise TypeError("unsupported target type")
 
+        if logical_size is not None:
+            self.logical_size = logical_size
+
     def __del__(self):
-        if self.renderer:
-            render.SDL_DestroyRenderer(self.renderer)
+        if self.sdlrenderer:
+            render.SDL_DestroyRenderer(self.sdlrenderer)
         self.rendertarget = None
+
+    @property
+    @deprecated
+    def renderer(self):
+        return self.sdlrenderer
+
+    @property
+    def logical_size(self):
+        """The logical pixel size of the Renderer"""
+        w, h = c_int(), c_int()
+        render.SDL_RenderGetLogicalSize(self.sdlrenderer, byref(w), byref(h))
+        return w.value, h.value
+
+    @logical_size.setter
+    def logical_size(self, size):
+        """The logical pixel size of the Renderer"""
+        width, height = size
+        ret = render.SDL_RenderSetLogicalSize(self.sdlrenderer, width, height)
+        if ret != 0:
+            raise SDLError()
 
     @property
     def color(self):
         """The drawing color of the Renderer."""
         r, g, b, a = Uint8(), Uint8(), Uint8(), Uint8()
-        ret = render.SDL_GetRenderDrawColor(self.renderer, byref(r), byref(g),
+        ret = render.SDL_GetRenderDrawColor(self.sdlrenderer, byref(r), byref(g),
                                             byref(b), byref(a))
         if ret == -1:
             raise SDLError()
@@ -67,7 +91,7 @@ class Renderer(object):
     def color(self, value):
         """The drawing color of the Renderer."""
         c = convert_to_color(value)
-        ret = render.SDL_SetRenderDrawColor(self.renderer, c.r, c.g, c.b, c.a)
+        ret = render.SDL_SetRenderDrawColor(self.sdlrenderer, c.r, c.g, c.b, c.a)
         if ret == -1:
             raise SDLError()
 
@@ -75,7 +99,7 @@ class Renderer(object):
     def blendmode(self):
         """The blend mode used for drawing operations (fill and line)."""
         mode = blendmode.SDL_BlendMode()
-        ret = render.SDL_GetRenderDrawBlendMode(self.renderer, byref(mode))
+        ret = render.SDL_GetRenderDrawBlendMode(self.sdlrenderer, byref(mode))
         if ret == -1:
             raise SDLError()
         return mode
@@ -83,7 +107,7 @@ class Renderer(object):
     @blendmode.setter
     def blendmode(self, value):
         """The blend mode used for drawing operations (fill and line)."""
-        ret = render.SDL_SetRenderDrawBlendMode(self.renderer, value)
+        ret = render.SDL_SetRenderDrawBlendMode(self.sdlrenderer, value)
         if ret == -1:
             raise SDLError()
 
@@ -92,13 +116,13 @@ class Renderer(object):
         """The horizontal and vertical drawing scale."""
         sx = c_float(0.0)
         sy = c_float(0.0)
-        render.SDL_RenderGetScale(self.renderer, byref(sx), byref(sy))
+        render.SDL_RenderGetScale(self.sdlrenderer, byref(sx), byref(sy))
         return sx.value, sy.value
 
     @scale.setter
     def scale(self, value):
         """The horizontal and vertical drawing scale."""
-        ret = render.SDL_RenderGetScale(self.renderer, value[0], value[1])
+        ret = render.SDL_RenderSetScale(self.sdlrenderer, value[0], value[1])
         if ret != 0:
             raise SDLError()
 
@@ -107,47 +131,53 @@ class Renderer(object):
         if color is not None:
             tmp = self.color
             self.color = color
-        ret = render.SDL_RenderClear(self.renderer)
+        ret = render.SDL_RenderClear(self.sdlrenderer)
         if color is not None:
             self.color = tmp
         if ret == -1:
             raise SDLError()
 
-    def copy(self, src, srcrect=None, dstrect=None):
+    def copy(self, src, srcrect=None, dstrect=None, angle=0, center=None,
+             flip=render.SDL_FLIP_NONE):
         """Copies (blits) the passed source to the target of the Renderer."""
-        SDL_Rect = rect.SDL_Rect
         if isinstance(src, TextureSprite):
             texture = src.texture
+            angle = angle or src.angle
+            center = center or src.center
+            flip = flip or src.flip
         elif isinstance(src, render.SDL_Texture):
             texture = src
         else:
             raise TypeError("src must be a TextureSprite or SDL_Texture")
         if srcrect is not None:
             x, y, w, h = srcrect
-            srcrect = SDL_Rect(x, y, w, h)
+            srcrect = rect.SDL_Rect(x, y, w, h)
         if dstrect is not None:
             x, y, w, h = dstrect
-            dstrect = SDL_Rect(x, y, w, h)
-        ret = render.SDL_RenderCopy(self.renderer, texture, srcrect, dstrect)
+            dstrect = rect.SDL_Rect(x, y, w, h)
+        ret = render.SDL_RenderCopyEx(self.sdlrenderer, texture, srcrect,
+                                      dstrect, angle, center, flip)
         if ret == -1:
             raise SDLError()
 
     def present(self):
         """Refreshes the target of the Renderer."""
-        render.SDL_RenderPresent(self.renderer)
+        render.SDL_RenderPresent(self.sdlrenderer)
 
     def draw_line(self, points, color=None):
-        """Draws one or multiple lines on the renderer."""
+        """Draws one or multiple connected lines on the renderer."""
         # (x1, y1, x2, y2, ...)
         pcount = len(points)
-        if (pcount % 4) != 0:
+        if (pcount % 2) != 0:
             raise ValueError("points does not contain a valid set of points")
+        if pcount < 4:
+            raise ValueError("points must contain more that one point")
         if pcount == 4:
             if color is not None:
                 tmp = self.color
                 self.color = color
             x1, y1, x2, y2 = points
-            ret = render.SDL_RenderDrawLine(self.renderer, x1, y1, x2, y2)
+            ret = render.SDL_RenderDrawLine(self.sdlrenderer, x1, y1, x2, y2)
             if color is not None:
                 self.color = tmp
             if ret == -1:
@@ -166,7 +196,7 @@ class Renderer(object):
                 tmp = self.color
                 self.color = color
             ptr = cast(ptlist, POINTER(SDL_Point))
-            ret = render.SDL_RenderDrawLines(self.renderer, ptr, count)
+            ret = render.SDL_RenderDrawLines(self.sdlrenderer, ptr, count)
             if color is not None:
                 self.color = tmp
             if ret == -1:
@@ -182,7 +212,7 @@ class Renderer(object):
             if color is not None:
                 tmp = self.color
                 self.color = color
-            ret = render.SDL_RenderDrawPoint(self.renderer, points[0],
+            ret = render.SDL_RenderDrawPoint(self.sdlrenderer, points[0],
                                              points[1])
             if color is not None:
                 self.color = tmp
@@ -202,7 +232,7 @@ class Renderer(object):
                 tmp = self.color
                 self.color = color
             ptr = cast(ptlist, POINTER(SDL_Point))
-            ret = render.SDL_RenderDrawPoints(self.renderer, ptr, count)
+            ret = render.SDL_RenderDrawPoints(self.sdlrenderer, ptr, count)
             if color is not None:
                 self.color = tmp
             if ret == -1:
@@ -218,7 +248,7 @@ class Renderer(object):
                 tmp = self.color
                 self.color = color
             x, y, w, h = rects
-            ret = render.SDL_RenderDrawRect(self.renderer, SDL_Rect(x, y, w, h))
+            ret = render.SDL_RenderDrawRect(self.sdlrenderer, SDL_Rect(x, y, w, h))
             if color is not None:
                 self.color = tmp
             if ret == -1:
@@ -232,7 +262,7 @@ class Renderer(object):
                 tmp = self.color
                 self.color = color
             ptr = cast(rlist, POINTER(SDL_Rect))
-            ret = render.SDL_RenderDrawRects(self.renderer, ptr, len(rects))
+            ret = render.SDL_RenderDrawRects(self.sdlrenderer, ptr, len(rects))
             if color is not None:
                 self.color = tmp
             if ret == -1:
@@ -248,7 +278,7 @@ class Renderer(object):
                 tmp = self.color
                 self.color = color
             x, y, w, h = rects
-            ret = render.SDL_RenderFillRect(self.renderer, SDL_Rect(x, y, w, h))
+            ret = render.SDL_RenderFillRect(self.sdlrenderer, SDL_Rect(x, y, w, h))
             if color is not None:
                 self.color = tmp
             if ret == -1:
@@ -262,11 +292,12 @@ class Renderer(object):
                 tmp = self.color
                 self.color = color
             ptr = cast(rlist, POINTER(SDL_Rect))
-            ret = render.SDL_RenderFillRects(self.renderer, ptr, len(rects))
+            ret = render.SDL_RenderFillRects(self.sdlrenderer, ptr, len(rects))
             if color is not None:
                 self.color = tmp
             if ret == -1:
                 raise SDLError()
+
 
 
 class Sprite(object):
@@ -360,13 +391,29 @@ class TextureSprite(Sprite):
                                       byref(w), byref(h))
         if ret == -1:
             raise SDLError()
+        self.angle = 0.0
+        self.flip = render.SDL_FLIP_NONE
         self._size = w.value, h.value
+        self._center = None
 
     def __del__(self):
         """Releases the bound SDL_Texture."""
         if self.texture is not None:
             render.SDL_DestroyTexture(self.texture)
         self.texture = None
+
+    @property
+    def center(self):
+        """The center of the TextureSprite as tuple."""
+        return self._center
+
+    @center.setter
+    def center(self, value):
+        """Sets the center of the TextureSprite."""
+        if value != None:
+            self._center = rect.SDL_Point(value[0], value[1])
+        else:
+            self._center = None
 
     @property
     def size(self):
@@ -382,8 +429,9 @@ class TextureSprite(Sprite):
                                       byref(access), byref(w), byref(h))
         if ret == -1:
             raise SDLError()
-        return "TextureSprite(format=%d, access=%d, size=%s)" % \
-            (flags.value, access.value, (w.value, h.value))
+        return "TextureSprite(format=%d, access=%d, size=%s, angle=%f, center=%s)" % \
+            (flags.value, access.value, (w.value, h.value), self.angle,
+             (self.center.x, self.center.y))
 
 
 class SpriteFactory(object):
@@ -401,7 +449,7 @@ class SpriteFactory(object):
             if "renderer" not in kwargs:
                 raise ValueError("you have to provide a renderer=<arg> argument")
         elif sprite_type != SOFTWARE:
-            raise ValueError("stype must be TEXTURE or SOFTWARE")
+            raise ValueError("sprite_type must be TEXTURE or SOFTWARE")
         self._spritetype = sprite_type
         self.default_args = kwargs
 
@@ -440,16 +488,17 @@ class SpriteFactory(object):
         """
         if self.sprite_type == TEXTURE:
             renderer = self.default_args["renderer"]
-            texture = render.SDL_CreateTextureFromSurface(renderer.renderer,
+            texture = render.SDL_CreateTextureFromSurface(renderer.sdlrenderer,
                                                           tsurface)
             if not texture:
                 raise SDLError()
-            s = TextureSprite(texture.contents)
+            sprite = TextureSprite(texture.contents)
             if free:
                 surface.SDL_FreeSurface(tsurface)
+            return sprite
         elif self.sprite_type == SOFTWARE:
-            s = SoftwareSprite(tsurface, free)
-        return s
+            return SoftwareSprite(tsurface, free)
+        raise ValueError("sprite_type must be TEXTURE or SOFTWARE")
 
     def from_object(self, obj):
         """Creates a Sprite from an arbitrary object."""
@@ -459,14 +508,14 @@ class SpriteFactory(object):
             imgsurface = surface.SDL_LoadBMP_RW(rw, True)
             if not imgsurface:
                 raise SDLError()
-            s = self.from_surface(imgsurface.contents, True)
+            return self.from_surface(imgsurface.contents, True)
         elif self.sprite_type == SOFTWARE:
             rw = rwops.rw_from_object(obj)
             imgsurface = surface.SDL_LoadBMP_RW(rw, True)
             if not imgsurface:
                 raise SDLError()
-            s = SoftwareSprite(imgsurface.contents, True)
-        return s
+            return SoftwareSprite(imgsurface.contents, True)
+        raise ValueError("sprite_type must be TEXTURE or SOFTWARE")
 
     def from_color(self, color, size, bpp=32, masks=None):
         """Creates a sprite with a certain color.
@@ -476,29 +525,29 @@ class SpriteFactory(object):
             rmask, gmask, bmask, amask = masks
         else:
             rmask = gmask = bmask = amask = 0
-        sf = surface.SDL_CreateRGBSurface(0, size[0], size[1], bpp, rmask,
-                                          gmask, bmask, amask)
-        if not sf:
+        sfc = surface.SDL_CreateRGBSurface(0, size[0], size[1], bpp, rmask,
+                                           gmask, bmask, amask)
+        if not sfc:
             raise SDLError()
-        sf = sf.contents
-        fmt = sf.format.contents
+        sfc = sfc.contents
+        fmt = sfc.format.contents
         if fmt.Amask != 0:
             # Target has an alpha mask
-            c = pixels.SDL_MapRGBA(fmt, color.r, color.g, color.b, color.a)
+            col = pixels.SDL_MapRGBA(fmt, color.r, color.g, color.b, color.a)
         else:
-            c = pixels.SDL_MapRGB(fmt, color.r, color.g, color.b)
-        ret = surface.SDL_FillRect(sf, None, c)
+            col = pixels.SDL_MapRGB(fmt, color.r, color.g, color.b)
+        ret = surface.SDL_FillRect(sfc, None, col)
         if ret == -1:
             raise SDLError()
-        return self.from_surface(sf, True)
+        return self.from_surface(sfc, True)
 
     def from_text(self, text, **kwargs):
         """Creates a Sprite from a string of text."""
         args = self.default_args.copy()
         args.update(kwargs)
         fontmanager = args['fontmanager']
-        surface = fontmanager.render(text, **args)
-        return self.from_surface(surface, free=True)
+        sfc = fontmanager.render(text, **args)
+        return self.from_surface(sfc, free=True)
 
     def create_sprite(self, **kwargs):
         """Creates an empty Sprite.
@@ -549,7 +598,7 @@ class SpriteFactory(object):
         if isinstance(renderer, render.SDL_Renderer):
             sdlrenderer = renderer
         elif isinstance(renderer, Renderer):
-            sdlrenderer = renderer.renderer
+            sdlrenderer = renderer.sdlrenderer
         else:
             raise TypeError("renderer must be a Renderer or SDL_Renderer")
         texture = render.SDL_CreateTexture(sdlrenderer, pformat, access,
@@ -572,7 +621,7 @@ class SpriteRenderSystem(System):
         self.componenttypes = (Sprite,)
         self._sortfunc = lambda e: e.depth
 
-    def render(self, sprites):
+    def render(self, sprites, x=None, y=None):
         """Renders the passed sprites.
 
         This is a no-op function and needs to be implemented by inheriting
@@ -624,10 +673,10 @@ class SoftwareSpriteRenderSystem(SpriteRenderSystem):
             self.window = window
         else:
             raise TypeError("unsupported window type")
-        surface = video.SDL_GetWindowSurface(self.window)
-        if not surface:
+        sfc = video.SDL_GetWindowSurface(self.window)
+        if not sfc:
             raise SDLError()
-        self.surface = surface.contents
+        self.surface = sfc.contents
         self.componenttypes = (SoftwareSprite,)
 
     def render(self, sprites, x=None, y=None):
@@ -647,10 +696,10 @@ class SoftwareSpriteRenderSystem(SpriteRenderSystem):
             imgsurface = self.surface
             x = x or 0
             y = y or 0
-            for sp in sprites:
-                r.x = x + sp.x
-                r.y = y + sp.y
-                blit_surface(sp.surface, None, imgsurface, r)
+            for sprite in sprites:
+                r.x = x + sprite.x
+                r.y = y + sprite.y
+                blit_surface(sprite.surface, None, imgsurface, r)
         else:
             r.x = sprites.x
             r.y = sprites.y
@@ -678,10 +727,9 @@ class TextureSpriteRenderSystem(SpriteRenderSystem):
         if isinstance(target, (Window, video.SDL_Window)):
             # Create a Renderer for the window and use that one.
             target = Renderer(target)
-
         if isinstance(target, Renderer):
             self._renderer = target  # Used to prevent GC
-            sdlrenderer = target.renderer
+            sdlrenderer = target.sdlrenderer
         elif isinstance(target, render.SDL_Renderer):
             sdlrenderer = target
         else:
@@ -701,16 +749,17 @@ class TextureSpriteRenderSystem(SpriteRenderSystem):
         denote the absolute position of the TextureSprite, if set.
         """
         r = rect.SDL_Rect(0, 0, 0, 0)
+        rcopy = render.SDL_RenderCopyEx
         if isiterable(sprites):
-            rcopy = render.SDL_RenderCopy
             renderer = self.sdlrenderer
             x = x or 0
             y = y or 0
-            for sp in sprites:
-                r.x = x + sp.x
-                r.y = y + sp.y
-                r.w, r.h = sp.size
-                if rcopy(renderer, sp.texture, None, r) == -1:
+            for sprite in sprites:
+                r.x = x + sprite.x
+                r.y = y + sprite.y
+                r.w, r.h = sprite.size
+                if rcopy(renderer, sprite.texture, None, r, sprite.angle,
+                         sprite.center, sprite.flip) == -1:
                     raise SDLError()
         else:
             r.x = sprites.x
@@ -719,5 +768,7 @@ class TextureSpriteRenderSystem(SpriteRenderSystem):
             if x is not None and y is not None:
                 r.x = x
                 r.y = y
-            render.SDL_RenderCopy(self.sdlrenderer, sprites.texture, None, r)
+            if rcopy(self.sdlrenderer, sprites.texture, None, r, sprites.angle,
+                     sprites.center, sprites.flip) == -1:
+                raise SDLError()
         render.SDL_RenderPresent(self.sdlrenderer)

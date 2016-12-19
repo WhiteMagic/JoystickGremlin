@@ -1,8 +1,6 @@
-import sys
 from .dll import _bind
 from ctypes import c_int, c_int8, c_uint8, c_int16, c_uint16, c_int32, \
-    c_uint32, c_int64, c_uint64, cdll, c_size_t, c_void_p, c_char_p
-from ctypes.util import find_library
+    c_uint32, c_int64, c_uint64, c_size_t, c_void_p, c_char_p
 
 __all__ = ["SDL_FALSE", "SDL_TRUE", "SDL_bool", "Sint8", "Uint8", "Sint16",
            "Uint16", "Sint32", "Uint32", "Sint64", "Uint64", "SDL_malloc",

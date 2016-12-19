@@ -1,6 +1,6 @@
 import sys
 from ctypes import Structure, POINTER, CFUNCTYPE, c_int, c_size_t, c_void_p, \
-    c_char_p, memmove, string_at
+    c_char_p, memmove, string_at, Union
 from .dll import _bind
 from .stdinc import Sint64, Uint8, Uint16, Uint32, Uint64, SDL_bool
 
@@ -26,6 +26,9 @@ SDL_RWOPS_MEMORY_RO = 5
 class SDL_RWops(Structure):
     pass
 
+class _hidden(Union):
+    pass
+
 _sdlsize = CFUNCTYPE(Sint64, POINTER(SDL_RWops))
 _sdlseek = CFUNCTYPE(Sint64, POINTER(SDL_RWops), Sint64, c_int)
 _sdlread = CFUNCTYPE(c_size_t, POINTER(SDL_RWops), c_void_p, c_size_t, c_size_t)
@@ -37,7 +40,7 @@ SDL_RWops._fields_ = [("size", _sdlsize),
                       ("write", _sdlwrite),
                       ("close", _sdlclose),
                       ("type", Uint32),
-                      # TODO: Union hidden
+                      ("hidden", _hidden)
                       ]
 
 SDL_RWFromFile = _bind("SDL_RWFromFile", [c_char_p, c_char_p], POINTER(SDL_RWops))

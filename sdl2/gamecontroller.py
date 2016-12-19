@@ -1,7 +1,7 @@
 from ctypes import Structure, Union, c_int, c_char_p, POINTER
 from .dll import _bind, nullfunc
 from .stdinc import SDL_bool, Sint16, Uint8
-from .joystick import SDL_JoystickGUID, SDL_Joystick
+from .joystick import SDL_JoystickGUID, SDL_Joystick, SDL_JoystickID
 from .rwops import SDL_RWops, SDL_RWFromFile
 
 
@@ -35,7 +35,8 @@ __all__ = ["SDL_GameController", "SDL_CONTROLLER_BINDTYPE_NONE",
            "SDL_GameControllerGetStringForButton",
            "SDL_GameControllerGetBindForButton", "SDL_GameControllerGetButton",
            "SDL_GameControllerClose", "SDL_GameControllerAddMappingsFromFile",
-           "SDL_GameControllerAddMappingsFromRW"
+           "SDL_GameControllerAddMappingsFromRW",
+           "SDL_GameControllerFromInstanceID",
            ]
 
 class SDL_GameController(Structure):
@@ -105,4 +106,5 @@ SDL_GameControllerGetButton = _bind("SDL_GameControllerGetButton", [POINTER(SDL_
 SDL_GameControllerClose = _bind("SDL_GameControllerClose", [POINTER(SDL_GameController)])
 SDL_GameControllerAddMappingsFromRW = _bind("SDL_GameControllerAddMappingsFromRW", [POINTER(SDL_RWops), c_int], c_int, nullfunc)
 SDL_GameControllerAddMappingsFromFile = lambda fname: SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(fname, b"rb"), 1)
+SDL_GameControllerFromInstanceID = _bind("SDL_GameControllerFromInstanceID", [SDL_JoystickID], POINTER(SDL_GameController), nullfunc)
 

@@ -11,7 +11,7 @@ __all__ = ["DLL", "nullfunc"]
 def _findlib(libnames, path=None):
     """."""
     platform = sys.platform
-    if platform in ("win32", "cli"):
+    if platform in ("win32",):
         pattern = "%s.dll"
     elif platform == "darwin":
         pattern = "lib%s.dylib"
@@ -20,9 +20,6 @@ def _findlib(libnames, path=None):
     searchfor = libnames
     if type(libnames) is dict:
         # different library names for the platforms
-        if platform == "cli" and platform not in libnames:
-            # if not explicitly specified, use the Win32 libs for IronPython
-            platform = "win32"
         if platform not in libnames:
             platform = "DEFAULT"
         searchfor = libnames[platform]
@@ -38,6 +35,10 @@ def _findlib(libnames, path=None):
         if dllfile:
             results.append(dllfile)
     return results
+
+
+class DLLWarning(Warning):
+    pass
 
 
 class DLL(object):
@@ -57,13 +58,14 @@ class DLL(object):
                 self._libfile = libfile
                 break
             except Exception as exc:
-                # Could not load it, silently ignore that issue and move
-                # to the next one.
-                warnings.warn(repr(exc), ImportWarning)
+                # Could not load the DLL, move to the next, but inform the user
+                # about something weird going on - this may become noisy, but
+                # is better than confusing the users with the RuntimeError below
+                warnings.warn(repr(exc), DLLWarning)
         if self._dll is None:
             raise RuntimeError("found %s, but it's not usable for the library %s" %
                                (foundlibs, libinfo))
-        if path is not None and sys.platform in ("win32", "cli") and \
+        if path is not None and sys.platform in ("win32",) and \
             path in self._libfile:
             os.environ["PATH"] = "%s;%s" % (path, os.environ["PATH"])
 

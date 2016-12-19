@@ -1,4 +1,4 @@
-from ctypes import c_int, c_char_p, c_void_p, CFUNCTYPE, POINTER, py_object
+from ctypes import c_int, c_char_p, c_void_p, CFUNCTYPE, POINTER
 from .dll import _bind
 
 __all__ = ["SDL_MAX_LOG_MESSAGE", "SDL_LOG_CATEGORY_APPLICATION",
@@ -44,6 +44,7 @@ SDL_LOG_CATEGORY_RESERVED8 = 16
 SDL_LOG_CATEGORY_RESERVED9 = 17
 SDL_LOG_CATEGORY_RESERVED10 = 18
 SDL_LOG_CATEGORY_CUSTOM = 19
+
 SDL_LOG_PRIORITY_VERBOSE = 1
 SDL_LOG_PRIORITY_DEBUG = 2
 SDL_LOG_PRIORITY_INFO = 3

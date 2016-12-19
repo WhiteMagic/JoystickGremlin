@@ -10,6 +10,13 @@ from .color import *
 from .resources import *
 from .events import *
 from .ebs import *
+
 from .common import *
+from .draw import *
+from .font import *
+from .gui import *
+from .image import *
+from .pixelaccess import *
 from .sprite import *
+from .surface import *
 from .window import *
