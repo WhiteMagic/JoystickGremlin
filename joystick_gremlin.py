@@ -108,10 +108,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         else:
             self.new_profile()
 
-        # Create device tabs
-        # FIXME: why was this added initially?
-        #self._create_tabs()
-
         # Modal windows
         self.modal_windows = {}
 
@@ -833,8 +829,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.mode_selector.populate_selector(
                 self._profile, self._current_mode
             )
-            # FIXME: no longer required above line does all of this
-            #self._mode_configuration_changed()
         except TypeError as e:
             # An error occurred while parsing an existing profile,
             # creating an empty profile instead
