@@ -276,6 +276,15 @@ class JoystickWrapper(object):
         self._axis = self._init_axes()
         self._buttons = self._init_buttons()
         self._hats = self._init_hats()
+        self._name = sdl2.joystick.SDL_JoystickNameForIndex(jid).decode("utf-8")
+
+    @property
+    def name(self):
+        """Returns the name of the joystick.
+
+        :return name of the joystick
+        """
+        return self._name
 
     def windows_id(self):
         """Returns the system id of the wrapped joystick.
@@ -368,20 +377,20 @@ class JoystickProxy(object):
         :param key id of the joystick device
         :return the corresponding joystick device
         """
-        if key in JoystickProxy.joystick_devices:
-            return JoystickProxy.joystick_devices[key]
-        else:
-            if type(key) != int:
-                raise GremlinError("Expected integer id for joystick id")
-            if key > sdl2.joystick.SDL_NumJoysticks():
-                raise GremlinError("No device with the provided ID exist")
-
+        if len(JoystickProxy.joystick_devices) == 0:
             # The id used to open the device is not the same as the
             # system_id reported by SDL, hence we grab all devices and
             # store them using their system_id
             for i in range(sdl2.joystick.SDL_NumJoysticks()):
                 joy = JoystickWrapper(i)
                 JoystickProxy.joystick_devices[joy.windows_id()] = joy
+                JoystickProxy.joystick_devices[joy.name] = joy
+
+        if key not in JoystickProxy.joystick_devices:
+            raise GremlinError(
+                "No device with the provided identifier: {} exists".format(key)
+            )
+        else:
             return JoystickProxy.joystick_devices[key]
 
 
