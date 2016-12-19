@@ -498,6 +498,19 @@ def extract_ids(dev_id):
         return dev_id, -1
 
 
+def get_device_id(hardware_id, windows_id):
+    """Returns the correct device id given both hardware and windows id.
+
+    :param hardware_id the hardware id of the device
+    :param windows_id the windows id of the device
+    :return correct combination of hardware and windows id
+    """
+    if g_duplicate_devices:
+        return hardware_id, windows_id
+    else:
+        return hardware_id
+
+
 def clear_layout(layout):
     """Removes all items from the given layout.
 
