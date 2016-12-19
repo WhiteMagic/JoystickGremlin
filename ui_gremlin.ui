@@ -53,7 +53,7 @@
     <addaction name="actionSaveProfile"/>
     <addaction name="actionSaveProfileAs"/>
     <addaction name="separator"/>
-    <addaction name="actionLoadAsTemplate"/>
+    <addaction name="actionModifyProfile"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -211,9 +211,9 @@
     <string>&amp;Merge Axis</string>
    </property>
   </action>
-  <action name="actionLoadAsTemplate">
+  <action name="actionModifyProfile">
    <property name="text">
-    <string>Load as Template</string>
+    <string>Modify Profile</string>
    </property>
   </action>
  </widget>
