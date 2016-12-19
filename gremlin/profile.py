@@ -232,6 +232,31 @@ class ProfileConverter(object):
 
         return new_root
 
+    def _convert_from_v2(self, root):
+        """Converts v2 profiles to v3 profiles.
+
+        :param root the v2 profile
+        :return v3 representation of the profile
+        """
+        # Get hardware ids of the connected devices
+        device_name_map = {}
+        for device in gremlin.util.joystick_devices():
+            device_name_map[device.name] = device.hardware_id
+
+        # Fix the device entries in the provided document
+        new_root = copy.deepcopy(root)
+        new_root.set("version", "3")
+        for device in new_root.iter("device"):
+            if device.get("type") == "joystick":
+                if device.get("name") in device_name_map:
+                    device.set("id", str(device_name_map[device.get("name")]))
+                else:
+                    logging.getLogger("system").warning(
+                        "Device '{}' missing, no conversion performed, ID"
+                        " will be incorrect.".format(device.get("name"))
+                    )
+        return new_root
+
 
 class Profile(object):
 
