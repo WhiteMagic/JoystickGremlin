@@ -118,10 +118,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         time.sleep(0.1)
         el.device_change_event.connect(self._device_change_cb)
 
-        # Enable mode change callback handling only once all the setup
-        # has been completed
-        #self.mode_selector.mode_changed.connect(self._mode_changed_cb)
-
         self.apply_user_settings()
 
     def closeEvent(self, evt):
@@ -1068,7 +1064,7 @@ if __name__ == "__main__":
     })
 
     # Unhandled exception traceback
-    #sys.excepthook = exception_hook
+    # sys.excepthook = exception_hook
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)

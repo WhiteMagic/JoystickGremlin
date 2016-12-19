@@ -18,7 +18,7 @@
 
 import copy
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 
 from gremlin import macro, profile, ui_dialogs, ui_widgets, util
 from gremlin.event_handler import InputType, system_event_to_input_event
@@ -221,7 +221,11 @@ class ModeBindings(QtWidgets.QWidget):
 
         # Find all input items associated with this mode and show them as
         # a bindable item in the UI
-        for device in sorted(self.profile_data.devices.values(), key=lambda x: x.name):
+        sorted_devices = sorted(
+            self.profile_data.devices.values(),
+            key=lambda x: x.name
+        )
+        for device in sorted_devices:
             for input_type in all_input_types:
                 data = device.modes[self.mode].config[input_type]
                 for input_item in sorted(data.values(), key=lambda x: x.input_id):

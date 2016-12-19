@@ -236,7 +236,8 @@ class MacroWidget(AbstractActionWidget):
         self._disconnect_signals()
 
         # Replace existing model with an empty one which is filled from
-        # the profile data
+        # the profile data.
+        # This needs to stay otherwise the code breaks.
         self.model = MacroListModel()
         self.list_view.setModel(self.model)
         for i, entry in enumerate(action_data.sequence):

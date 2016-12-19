@@ -19,7 +19,6 @@ import importlib
 import logging
 import os
 import re
-import struct
 import sys
 import threading
 import time
@@ -250,7 +249,7 @@ def joystick_devices():
                 raise gremlin.error.GremlinError(
                     "Unable to match vJoy device to windows device data"
                 )
-        except gremlin.error.VJoyError as e:
+        except gremlin.error.VJoyError:
             pass
 
     # Reset all devices so we don't hog the ones we aren't actually using

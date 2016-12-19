@@ -80,7 +80,7 @@ class AbstractCurveModel(object):
 
 class CubicSplineModel(AbstractCurveModel):
 
-    """Represents a simple cubic cpline model."""
+    """Represents a simple cubic spline model."""
 
     def __init__(self):
         """Creates a new instance."""
@@ -839,17 +839,17 @@ class AxisResponseCurveWidget(AbstractActionWidget):
         self.main_layout.addWidget(self.deadzone_label)
         self.main_layout.addWidget(self.deadzone)
 
-    def _change_model(self, name):
+    def _change_model(self, curve_type):
         """Changes the type of curve used.
 
-        :param name the name of the new curve type
+        :param curve_type the name of the new curve type
         """
         model_map = {
             "Cubic Spline": CubicSplineModel,
             "Cubic Bezier Spline": CubicBezierSplineModel
         }
         # Create new model
-        self.curve_model = model_map[name]()
+        self.curve_model = model_map[curve_type]()
         # Recreate the UI components
         self.curve_scene = CurveScene(
             self.curve_model,
@@ -859,10 +859,10 @@ class AxisResponseCurveWidget(AbstractActionWidget):
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
         self._initialize_response_curve_view()
 
-        if name == "Cubic Spline":
+        if curve_type == "Cubic Spline":
             self.curve_scene.add_control_point(Point2D(-1.0, -1.0))
             self.curve_scene.add_control_point(Point2D(1.0, 1.0))
-        elif name == "Cubic Bezier Spline":
+        elif curve_type == "Cubic Bezier Spline":
             self.curve_scene.add_control_point(
                 Point2D(-1.0, -1.0),
                 (Point2D(-0.95, -1.0),)
@@ -921,14 +921,16 @@ class AxisResponseCurveWidget(AbstractActionWidget):
                         action_data.control_points[i][0],
                         action_data.control_points[i][1]
                     ),
-                    [Point2D(
-                        action_data.control_points[i-1][0],
-                        action_data.control_points[i-1][1]
-                    ),
-                    Point2D(
-                        action_data.control_points[i+1][0],
-                        action_data.control_points[i+1][1]
-                    )]
+                    [
+                        Point2D(
+                            action_data.control_points[i-1][0],
+                            action_data.control_points[i-1][1]
+                        ),
+                        Point2D(
+                            action_data.control_points[i+1][0],
+                            action_data.control_points[i+1][1]
+                        )
+                    ]
                 )
             self.curve_scene.add_control_point(
                 Point2D(

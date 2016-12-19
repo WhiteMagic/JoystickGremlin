@@ -155,9 +155,9 @@ class CycleModes(AbstractAction):
 
     def _generate_xml(self):
         node = ElementTree.Element("cycle-modes")
-        for name in self.mode_list:
+        for mode_name in self.mode_list:
             child = ElementTree.Element("mode")
-            child.set("name", name)
+            child.set("name", mode_name)
             node.append(child)
         return node
 

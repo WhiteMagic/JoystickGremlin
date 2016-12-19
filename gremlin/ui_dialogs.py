@@ -644,7 +644,7 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         :param profile_data profile information
         :param parent the parent of this widget
         """
-        BaseDialogUi.__init__(self, parent)
+        QtWidgets.QDockWidget.__init__(self, parent)
 
         self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
 

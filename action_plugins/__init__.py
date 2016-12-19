@@ -1,3 +1,4 @@
+import action_plugins.common
 import action_plugins.cycle_modes
 import action_plugins.macro
 import action_plugins.pause

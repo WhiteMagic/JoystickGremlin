@@ -48,7 +48,7 @@ def tag_to_input_type(tag):
 
 
 def input_type_to_tag(input_type):
-    """Returns the tag corresponding to the given input tpye.
+    """Returns the tag corresponding to the given input type.
 
     :param input_type the input type to convert
     :return text representation of the input type
