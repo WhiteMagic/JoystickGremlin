@@ -109,7 +109,7 @@ class JoystickDeviceData(object):
 
         :param device pyGame joystick object
         """
-        self._hardware_id = guid_to_number(sdl2.SDL_JoystickGetGUID(device))
+        self._hardware_id = get_device_guid(device)
         self._windows_id = sdl2.SDL_JoystickInstanceID(device)
         name_object = sdl2.SDL_JoystickName(device)
         if name_object is None:
@@ -366,13 +366,16 @@ def clamp(value, min_val, max_val):
     return min(max_val, max(min_val, value))
 
 
-def guid_to_number(guid):
-    """Converts a byte array GUID into a string.
+def get_device_guid(device):
+    """Returns the GUID of the provided device.
 
-    :param guid the byte array to convert
-    :return hex string representation of the given guid
+    :param device SDL2 joystick device for which to get the GUID
+    :return GUID for the provided device
     """
-    return struct.unpack(">4I", guid)[0]
+    vendor_id = sdl2.SDL_JoystickGetVendor(device)
+    product_id = sdl2.SDL_JoystickGetProduct(device)
+
+    return (vendor_id << 16) + product_id
 
 
 def mode_list(node):

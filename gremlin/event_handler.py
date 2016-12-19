@@ -309,7 +309,7 @@ class EventListener(QtCore.QObject):
                     "Invalid joystick device at id {}".format(i)
                 )
             else:
-                guid = util.guid_to_number(sdl2.SDL_JoystickGetGUID(joy).data)
+                guid = util.get_device_guid(joy)
                 self._joysticks[guid] = joy
                 self._joystick_guid_map[sdl2.SDL_JoystickInstanceID(joy)] = guid
                 self._load_calibrations(guid)
