@@ -112,14 +112,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         #self._create_tabs()
 
         # Modal windows
-        self.about_window = None
-        self.calibration_window = None
-        self.device_information = None
-        self.merge_axis_ui = None
-        self.module_manager = None
-        self.mode_manager = None
-        self.options_window = None
-        self.log_window = None
+        self.modal_windows = {}
 
         # Enable reloading for when a user connects / disconnects a
         # device. Sleep for a bit to avert race with devices being added
@@ -148,8 +141,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             QtCore.QCoreApplication.quit()
 
         # Terminate file watcher thread
-        if self.log_window:
-            self.log_window.watcher.stop()
+        if "log" in self.modal_windows:
+            self.modal_windows["log"].watcher.stop()
 
     # +---------------------------------------------------------------
     # | Modal window creation
@@ -157,60 +150,93 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def about(self):
         """Opens the about window."""
-        self.about_window = dialogs.AboutUi()
-        self.about_window.show()
+        self.modal_windows["about"] = dialogs.AboutUi()
+        self.modal_windows["about"].show()
+        self.modal_windows["about"].closed.connect(
+            lambda: self._remove_modal_window("about")
+        )
 
     def calibration(self):
         """Opens the calibration window."""
-        self.calibration_window = dialogs.CalibrationUi()
-        self.calibration_window.show()
+        self.modal_windows["calibration"] = dialogs.CalibrationUi()
+        self.modal_windows["calibration"].show()
         gremlin.shared_state.set_suspend_input_highlighting(True)
-        self.calibration_window.closed.connect(
+        self.modal_windows["calibration"].closed.connect(
             lambda: gremlin.shared_state.set_suspend_input_highlighting(False)
+        )
+        self.modal_windows["calibration"].closed.connect(
+            lambda: self._remove_modal_window("calibration")
         )
 
     def device_information(self):
         """Opens the device information window."""
-        self.device_information = \
-            widgets.DeviceInformationWidget(self.devices)
+        self.modal_windows["device_information"] = \
+            dialogs.DeviceInformationUi(self.devices)
         geom = self.geometry()
-        self.device_information.setGeometry(
+        self.modal_windows["device_information"].setGeometry(
             geom.x() + geom.width() / 2 - 150,
             geom.y() + geom.height() / 2 - 75,
             300,
             150
         )
-        self.device_information.show()
+        self.modal_windows["device_information"].show()
+        self.modal_windows["device_information"].closed.connect(
+            lambda: self._remove_modal_window("device_information")
+        )
 
     def log_window(self):
         """Opens the log display window."""
-        self.log_window = dialogs.LogWindowUi()
-        self.log_window.show()
+        self.modal_windows["log"] = dialogs.LogWindowUi()
+        self.modal_windows["log"].show()
+        self.modal_windows["log"].closed.connect(
+            lambda: self._remove_modal_window("log")
+        )
 
     def manage_custom_modules(self):
         """Opens the custom module management window."""
-        self.module_manager = dialogs.ModuleManagerUi(self._profile)
-        self.module_manager.show()
+        self.modal_windows["module_manager"] = \
+            dialogs.ModuleManagerUi(self._profile)
+        self.modal_windows["module_manager"].show()
+        self.modal_windows["module_manager"].closed.connect(
+            lambda: self._remove_modal_window("module_manager")
+        )
 
     def manage_modes(self):
         """Opens the mode management window."""
-        self.mode_manager = dialogs.ModeManagerUi(self._profile)
-        self.mode_manager.modes_changed.connect(
+        self.modal_windows["mode_manager"] = \
+            dialogs.ModeManagerUi(self._profile)
+        self.modal_windows["mode_manager"].modes_changed.connect(
             self._mode_configuration_changed
         )
-        self.mode_manager.show()
+        self.modal_windows["mode_manager"].show()
+        self.modal_windows["mode_manager"].closed.connect(
+            lambda: self._remove_modal_window("mode_manager")
+        )
 
     def merge_axis(self):
-        self.merge_axis_ui = dialogs.MergeAxisUi(self._profile)
-        self.merge_axis_ui.show()
+        self.modal_windows["merge_axis"] = dialogs.MergeAxisUi(self._profile)
+        self.modal_windows["merge_axis"].show()
+        self.modal_windows["merge_axis"].closed.connect(
+            lambda: self._remove_modal_window("merge_axis")
+        )
 
     def options_dialog(self):
         """Opens the options dialog."""
-        self.options_window = dialogs.OptionsUi()
-        self.options_window.show()
-        self.options_window.closed.connect(
+        self.modal_windows["options"] = dialogs.OptionsUi()
+        self.modal_windows["options"].show()
+        self.modal_windows["options"].closed.connect(
             lambda: self.apply_user_settings(ignore_minimize=True)
         )
+        self.modal_windows["options"].closed.connect(
+            lambda: self._remove_modal_window("options")
+        )
+
+    def _remove_modal_window(self, name):
+        """Removes the modal window widget from the system.
+
+        :param name the name of the modal window to remove
+        """
+        del self.modal_windows[name]
 
     # +---------------------------------------------------------------
     # | Action implementations
