@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import enum
 import logging
 import shutil
@@ -144,6 +145,8 @@ class ProfileConverter(object):
 
     """Handle converting and checking profiles."""
 
+    current_version = 3
+
     def __init__(self):
         pass
 
@@ -155,7 +158,7 @@ class ProfileConverter(object):
         tree = ElementTree.parse(fname)
         root = tree.getroot()
 
-        return self._determine_version(root) == 2
+        return self._determine_version(root) == ProfileConverter.current_version
 
     def convert_profile(self, fname):
         """Converts the provided profile to the current version.
@@ -178,6 +181,9 @@ class ProfileConverter(object):
         new_root = None
         if old_version == 1:
             new_root = self._convert_from_v1(root)
+            new_root = self._convert_from_v2(new_root)
+        if old_version == 2:
+            new_root = self._convert_from_v2(root)
 
         if new_root is not None:
             # Save converted version
@@ -186,6 +192,11 @@ class ProfileConverter(object):
             dom_xml = minidom.parseString(ugly_xml)
             with open(fname, "w") as out:
                 out.write(dom_xml.toprettyxml(indent="    ", newl="\n"))
+
+            gremlin.util.display_error(
+                "Profile has been converted, please check the error log for "
+                "potential issues."
+            )
         else:
             raise gremlin.error.ProfileError("Failed to convert profile")
 
@@ -199,16 +210,18 @@ class ProfileConverter(object):
             return 1
         elif root.tag == "profile" and int(root.get("version")) == 2:
             return 2
+        elif root.tag == "profile" and int(root.get("version")) == 3:
+            return 3
         else:
             raise gremlin.error.ProfileError(
                 "Invalid profile version encountered"
             )
 
     def _convert_from_v1(self, root):
-        """Converts v1 profiles to the current version.
+        """Converts v1 profiles to v2 profiles.
 
         :param root the v1 profile
-        :return representation of the profile in the current version
+        :return v2 representation of the profile
         """
         new_root = ElementTree.Element("profile")
         new_root.set("version", "2")
