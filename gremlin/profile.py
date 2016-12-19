@@ -767,3 +767,19 @@ class InputItem(object):
             node.append(entry.to_xml())
 
         return node
+
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
+
+    def __hash__(self):
+        """Returns the hash of this input item.
+
+        The hash takes into account to which device and mode the input item is
+        bound.
+
+        :return hash of this InputItem instance
+        """
+        device_id = gremlin.util.device_id(self.parent.parent)
+        mode = self.parent.name
+
+        return hash((device_id, mode, self.input_type, self.input_id))
