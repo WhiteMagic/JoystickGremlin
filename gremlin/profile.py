@@ -553,6 +553,23 @@ class Profile(object):
                 "windows_id": int(node.find(tag).get("windows_id")),
                 "axis_id": int(node.find(tag).get("axis"))
             }
+
+        # If we have duplicate devices check if this device is a duplicate, if
+        # not fix the windows_id in case it no longer matches
+        if gremlin.util.g_duplicate_devices:
+            device_counts = {}
+            windows_ids = {}
+            for dev in gremlin.util.joystick_devices():
+                device_counts[dev.hardware_id] = \
+                    device_counts.get(dev.hardware_id, 0) + 1
+                windows_ids[dev.hardware_id] = dev.windows_id
+
+            for tag in ["lower", "upper"]:
+                # Only one device exists, override system id
+                if device_counts.get(entry[tag]["hardware_id"], 0) == 1:
+                    entry[tag]["windows_id"] = \
+                        windows_ids[entry[tag]["hardware_id"]]
+
         return entry
 
 
@@ -588,6 +605,18 @@ class Device(object):
         self.hardware_id = int(node.get("id"))
         self.windows_id = int(node.get("windows_id"))
         self.type = type_name_to_device_type(node.get("type"))
+
+        # If we have duplicate devices check if this device is a duplicate, if
+        # not fix the windows_id in case it no longer matches
+        if gremlin.util.g_duplicate_devices and self.type == DeviceType.Joystick:
+            device_counts = {}
+            windows_ids = {}
+            for dev in gremlin.util.joystick_devices():
+                device_counts[dev.hardware_id] = \
+                    device_counts.get(dev.hardware_id, 0) + 1
+                windows_ids[dev.hardware_id] = dev.windows_id
+            if device_counts.get(self.hardware_id, 0) == 1:
+                self.windows_id = windows_ids[self.hardware_id]
 
         for child in node:
             mode = Mode(self)
