@@ -573,7 +573,6 @@ class MergeAxisUi(BaseDialogUi):
 
         self.entries.append(entry)
         self.merge_layout.addWidget(entry)
-        self.to_profile()
 
     def _remove_entry(self, widget):
         """Removes a widget from the dialog.
