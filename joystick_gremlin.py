@@ -349,6 +349,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         else:
             el.keyboard_event.disconnect(self._handle_input_repeat)
             el.joystick_event.disconnect(self._handle_input_repeat)
+            self.repeater.stop()
             self.status_bar_repeater.setText("")
 
     def load_profile(self):
