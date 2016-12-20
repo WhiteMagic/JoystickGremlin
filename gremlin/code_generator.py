@@ -223,13 +223,22 @@ class CodeGenerator(object):
         self.code["callback"].append(tpl_cb.render(
             entry=entry,
             idx=idx,
-            decorator_map=self.decorator_map
+            decorator_map=self.decorator_map,
+            get_device_id=util.get_device_id
         ))
 
         # Account for axis merging needing certain decorators which otherwise
         # might appear unused
-        self.decorator_usage_counts[entry["lower"][0]][entry["mode"]] += 1
-        self.decorator_usage_counts[entry["upper"][0]][entry["mode"]] += 1
+        dev_id_lower = util.get_device_id(
+            entry["lower"]["hardware_id"],
+            entry["lower"]["windows_id"]
+        )
+        dev_id_upper = util.get_device_id(
+            entry["upper"]["hardware_id"],
+            entry["upper"]["windows_id"]
+        )
+        self.decorator_usage_counts[dev_id_lower][entry["mode"]] += 1
+        self.decorator_usage_counts[dev_id_upper][entry["mode"]] += 1
 
     def process_device_mode(self, mode, index):
         """Processes a single Mode object and turns its contents into code.

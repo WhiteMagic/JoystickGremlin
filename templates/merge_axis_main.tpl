@@ -8,4 +8,4 @@ ${var_lower} = 0
 ${var_upper} = 0
 
 def ${function_name}(vjoy):
-    vjoy[${entry["vjoy"][0]}].axis(${entry["vjoy"][1]}).value = (${var_lower} - ${var_upper}) / 2.0
+    vjoy[${entry["vjoy"]["device_id"]}].axis(${entry["vjoy"]["axis_id"]}).value = (${var_lower} - ${var_upper}) / 2.0
