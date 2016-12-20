@@ -440,7 +440,7 @@ class ButtonConditionWidget(QtWidgets.QWidget):
         """Queries the user for the shift button to use."""
         self.button_press_dialog = InputListenerWidget(
             self._assign_shift_button_cb,
-            [UiInputType.Keyboard, UiInputType.JoystickButton]
+            [InputType.Keyboard, InputType.JoystickButton]
         )
 
         shared_state.set_suspend_input_highlighting(True)
@@ -1394,7 +1394,7 @@ class InputItemList(QtWidgets.QWidget):
         """
         self.keyboard_press_dialog = InputListenerWidget(
             self._add_key_to_scroll_list_cb,
-            [UiInputType.Keyboard]
+            [InputType.Keyboard]
         )
 
         # Display the dialog centered in the middle of the UI
