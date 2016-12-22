@@ -141,6 +141,9 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
     known. Using the device's system id as index the joystick can be
     accessed by:
     {% highlight python3 %}joystick_device = joy[system_id]{% endhighlight %}
+    If no duplicate devices are present another option to access a specific
+    joystick is to use its name as follows:
+    {% highlight python3 %}joystick_device = joy["T.16000M"]{% endhighlight %}
 </p>
 
 

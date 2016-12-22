@@ -9,10 +9,21 @@ layout: default
 
 <p class="text-justify">
     In the following the various components of the user interface are
-    introduced and their usage described. The UI should be sufficient for
-    most common use cases, however, if functionality is missing user created
-    modules can provide these.
+    introduced and their usage described. The UI should be sufficient for most
+    common use cases, however, if functionality is missing user created modules
+    can provide these. Examples of how to achieve certain tasks using the tools
+    provided by Joystick Gremlin are shown in <a href="{{ site.baseurl
+    }}/examples/">5. Examples</a>.
 </p>
+
+<h4>Table of Contents</h4>
+<ul>
+    <li><a href="#2_1">Overview</a></li>
+    <li><a href="#2_2">Conditions</a></li>
+    <li><a href="#2_3">Actions</a></li>
+    <li><a href="#2_4">Tools</a></li>
+    <li><a href="#2_5">Command Line Options</a></li>
+</ul>
 
 
 <h3><a name="2_1">2.1 Overview</a></h3>
@@ -490,7 +501,7 @@ layout: default
 </p>
 
 
-<h3><a name="2_5">2.5 Tools &amp; Actions</a></h3>
+<h3><a name="2_4">2.4 Tools</a></h3>
 
 <p class="text-justify">
     In the following section the various tools provided by Joystick
@@ -659,6 +670,40 @@ layout: default
     to buttons and axes to axes.
 </p>
 
+<h4 class="subsection">Profile Creator</h4>
+<p class="text-justify">
+    In order to enable easier sharing of configurations, even if different
+    devices are used, the Profile Creator allows creating a new profile from an
+    existing one. When started the tool asks for a profile to use as a template
+    and then presents all the bound actions within to the user for binding to
+    their particular devices.
+</p>
+
+<div class="text-justify row bottom-gap">
+    <div class="col-md-5">
+        The interface shows:
+        <ul>
+            <li>Description of the action</li>
+            <li>Type of actions used</li>
+            <li>What input the action is currently bound to</li>
+        </ul>
+        Clicking on the button allows the user to press / move the input they wish
+        to associate with the particular action. Once this is done the button will
+        reflect this binding. When all desired actions are bound the configuration
+        can be saved as a new profile by clicking on the save button.
+    </div>
+
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/create_profile.png">
+    </div>
+</div>
+
+<p class="alert alert-warning text-justify">
+    This tool is only capable of binding actions defined via the UI and if
+    custom modules are used in a profile those will not be automatically
+    adapted to the new devices used.
+</p>
+
 <h4 class="subsection">Log viewer</h4>
 <div class="row bottom-gap">
     <div class="col-md-7">
@@ -728,3 +773,23 @@ layout: default
     activated. Once the profile stops being the active one Joystick Gremlin is
     automatically stopped.
 </p>
+
+
+<h3><a name="2_5">2.5 Command Line Options</a></h3>
+
+Joystick Gremlin allows controlling the following options via command line
+parameters:
+<ul>
+    <li>Loading a specific profile</li>
+    <li>Enabling the program on launch</li>
+</ul>
+
+<h4>Profile Loading</h4>
+
+By passing the <code>--profile</code> parameter followed by the path to the
+profile to load Joystick Gremlin will load the specified profile.
+
+<h4>Enabling on Launch</h4>
+
+Passing the <code>--enable</code> flag will enable Joystick Gremlin once the
+program has been fully loaded.
