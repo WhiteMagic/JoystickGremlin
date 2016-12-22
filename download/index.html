@@ -62,7 +62,7 @@
                                 <li ><a href="/JoystickGremlin/interface/">Interface</a></li>
                                 <li ><a href="/JoystickGremlin/custom_modules/">Custom Modules</a></li>
                                 <li ><a href="/JoystickGremlin/technical_design/">Technical Design</a></li>
-                                <!--<li ><a href="/JoystickGremlin/examples/">Examples</a></li>-->
+                                <li ><a href="/JoystickGremlin/examples/">Examples</a></li>
                                 <li ><a href="/JoystickGremlin/faq/">FAQ</a></li>
                                 <li ><a href="/JoystickGremlin/changelog/">Changelog</a></li>
                             </ul>
@@ -82,37 +82,39 @@
                 <div class="col-md-8">
                     <div class="row">
     <div class="col-md-6">
-        <h2>Release 6</h2>
+        <h2>Release 7</h2>
     </div>
     <div class="col-md-6 text-right">
-        <h2><small>2016-11-11</small></h2>
+        <h2><small>2016-12-22</small></h2>
     </div>
 </div>
 
 <a class="btn btn-primary"
-    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_6/Joystick.Gremlin.R6.msi">Download
-    Release 6 MSI</a>
+    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7/Joystick.Gremlin.R7.msi">Download
+    Release 7 MSI</a>
 <a class="btn btn-primary"
-    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_6/Joystick.Gremlin.R6.zip">Download
-    Release 6 ZIP</a>
+    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7/Joystick.Gremlin.R7.zip">Download
+    Release 7 ZIP</a>
 
 
 <h3>Change log</h3>
 
 <h4>New Features</h4>
 <ul>
-    <li>Split and merge axis functionality</li>
-    <li>Actions implemented as a plugin system</li>
-    <li>Ability to specify response curves for virtual axes</li>
+    <li>Template system, allows creation of a new profile based on an existing one</li>
+    <li>Profile loading and enabling of Joystick Gremlin via command line arguments</li>
+    <li>Proper unique device ids due to an Update of third party libraries</li>
+    <li>Joystick devices can now be addressed by their name instead of only ID in code</li>
 </ul>
 
 <h4>Fixes</h4>
 <ul>
-    <li>More robust error handling</li>
-    <li>Validate installed version of vJoy</li>
-    <li>Fix generation of invalid Python identifiers</li>
-    <li>Prevent continous scrolling of the log display</li>
-    <li>Fix cubic spline implementation</li>
+    <li>TTS system induced crash</li>
+    <li>Handle multiple vJoy devices correctly</li>
+    <li>Fix issues with the merge axis feature</li>
+    <li>Handle switching modes while a hat is pressed properly</li>
+    <li>Fixed a possible crash in the input repeater tool</li>
+    <li>Various UI glitches and bugs</li>
 </ul>
 
                 </div>
@@ -124,7 +126,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: November 13, 2016</p>
+            <p class="text-muted">Last update: December 23, 2016</p>
         </div>
     </div>
 </footer>

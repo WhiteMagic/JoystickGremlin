@@ -62,7 +62,7 @@
                                 <li ><a href="/JoystickGremlin/interface/">Interface</a></li>
                                 <li class="active"><a href="/JoystickGremlin/custom_modules/">Custom Modules</a></li>
                                 <li ><a href="/JoystickGremlin/technical_design/">Technical Design</a></li>
-                                <!--<li ><a href="/JoystickGremlin/examples/">Examples</a></li>-->
+                                <li ><a href="/JoystickGremlin/examples/">Examples</a></li>
                                 <li ><a href="/JoystickGremlin/faq/">FAQ</a></li>
                                 <li ><a href="/JoystickGremlin/changelog/">Changelog</a></li>
                             </ul>
@@ -217,6 +217,9 @@
     known. Using the device's system id as index the joystick can be
     accessed by:
     <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span class="n">joystick_device</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">system_id</span><span class="p">]</span></code></pre></figure>
+    If no duplicate devices are present another option to access a specific
+    joystick is to use its name as follows:
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span class="n">joystick_device</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="s">&quot;T.16000M&quot;</span><span class="p">]</span></code></pre></figure>
 </p>
 
 
@@ -562,7 +565,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: November 13, 2016</p>
+            <p class="text-muted">Last update: December 23, 2016</p>
         </div>
     </div>
 </footer>
