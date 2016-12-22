@@ -1068,7 +1068,7 @@ if __name__ == "__main__":
     })
 
     # Unhandled exception traceback
-    # sys.excepthook = exception_hook
+    sys.excepthook = exception_hook
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
