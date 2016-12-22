@@ -941,9 +941,12 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self._joystick_input_selection
             )
         else:
-            el.joystick_event.disconnect(
-                self._joystick_input_selection
-            )
+            # Try to disconnect the handler and if it's not there ignore
+            # the exception raised by QT
+            try:
+                el.joystick_event.disconnect(self._joystick_input_selection)
+            except TypeError:
+                pass
 
     def _should_process_input(self, event):
         """Returns True when to process and input, False otherwise.
@@ -1099,7 +1102,6 @@ if __name__ == "__main__":
     else:
         ui = GremlinUi()
         ui.show()
-        ui.apply_user_settings()
 
         # Handle user provided command line arguments
         if args.profile is not None and os.path.isfile(args.profile):
