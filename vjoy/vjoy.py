@@ -296,6 +296,9 @@ class VJoy(object):
 
     """Represents a vJoy device present in the system."""
 
+    # Duration of inactivity fter which the keep alive routine is run
+    keep_alive_timeout = 60
+
     def __init__(self, vjoy_id):
         """Creates a new object.
 
@@ -321,7 +324,10 @@ class VJoy(object):
 
         # Timestamp of the last time the device was used
         self._last_active = time.time()
-        self._keep_alive_timer = threading.Timer(60.0, self._keep_alive)
+        self._keep_alive_timer = threading.Timer(
+            VJoy.keep_alive_timeout,
+            self._keep_alive
+        )
         self._keep_alive_timer.start()
 
         # Reset all controls
@@ -395,13 +401,28 @@ class VJoy(object):
 
     def reset(self):
         """Resets the state of all inputs to their default state."""
+        # Obtain the current state of all inputs
+        axis_states = {}
+        button_states = {}
+        hat_states = {}
+
+        for id, axis in self._axis.items():
+            axis_states[id] = axis.value
+        for id, button in self._button.items():
+            button_states[id] = button.is_pressed
+        for id, hat in self._hat.items():
+            hat_states[id] = hat.direction
+
+        # Perform reset using default vJoy functionality
         VJoyInterface.ResetVJD(self.vjoy_id)
 
-        # Set X, Y, Z, RX, RY, and RZ to the mid point rather then only
-        # X, Y, and Z as ResetVJD does
-        for i in range(1, 7):
-            if self.is_axis_valid(i):
-                self.axis(i).value = 0.0
+        # Restore input states based on what we recorded
+        for id in self._axis:
+            self._axis[id].value = axis_states[id]
+        for id in self._button:
+            self._button[id].is_pressed = button_states[id]
+        for id in self._hat:
+            self._hat[id].direction = hat_states[id]
 
     def used(self):
         """Updates the timestamp of the last time the device has been used."""
@@ -425,9 +446,12 @@ class VJoy(object):
         If the device hasn't been used in the last 60 seconds the device will
         be reset to ensure it doesn't time out.
         """
-        if self._last_active + 60 < time.time():
+        if self._last_active + VJoy.keep_alive_timeout < time.time():
             self.reset()
-        self._keep_alive_timer = threading.Timer(60.0, self._keep_alive)
+        self._keep_alive_timer = threading.Timer(
+            VJoy.keep_alive_timeout,
+            self._keep_alive
+        )
         self._keep_alive_timer.start()
 
     def _init_buttons(self):
