@@ -290,15 +290,27 @@ class InputItemButton(QtWidgets.QFrame):
         QtWidgets.QFrame.__init__(self, parent)
         self.identifier = identifier
         self.label = str(label)
+
+        self._label_widget = QtWidgets.QLabel(self._create_button_label())
+        self._description_widget = QtWidgets.QLabel("")
+        self._icon_layout = QtWidgets.QHBoxLayout()
         self._icons = []
 
         self.setFrameShape(QtWidgets.QFrame.Box)
-        self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.addWidget(
-            QtWidgets.QLabel(self._create_button_label())
-        )
-        self.main_layout.addStretch(0)
+        self.main_layout = QtWidgets.QGridLayout(self)
+        self.main_layout.addWidget(self._label_widget, 0, 0)
+        self.main_layout.addWidget(self._description_widget, 0, 1)
+        self.main_layout.addLayout(self._icon_layout, 0, 2)
+        self.main_layout.setColumnMinimumWidth(0, 50)
+
         self.setMinimumSize(100, 40)
+
+    def update_description(self, description):
+        """Updates the description of the button.
+
+        :param description the description to use
+        """
+        self._description_widget.setText("<i>{}</i>".format(description))
 
     def create_action_icons(self, profile_data):
         """Creates the label of this instance.
@@ -310,14 +322,12 @@ class InputItemButton(QtWidgets.QFrame):
             with this instance
         """
         # Clear any potentially existing labels before adding labels
-        while self.main_layout.count() > 2:
-            item = self.main_layout.takeAt(2)
-            item.widget().deleteLater()
-            self.main_layout.removeItem(item)
+        clear_layout(self._icon_layout)
 
         # Create the actual icons
+        self._icon_layout.addStretch(0)
         for entry in profile_data.actions:
-            self.main_layout.addWidget(ActionLabel(entry))
+            self._icon_layout.addWidget(ActionLabel(entry))
 
     def mousePressEvent(self, event):
         """Emits the input_item_changed event when this instance is
@@ -850,7 +860,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
             return
 
         # Remove signal callbacks
-        self.description_field.textChanged.disconnect(self.to_profile)
+        self.description_field.textChanged.disconnect(self._update_description)
         self.always_execute.stateChanged.disconnect(self.to_profile)
 
         # Create UI widgets and populate them based on the type of
@@ -866,7 +876,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         self.always_execute.setChecked(self.item_profile.always_execute)
 
         # Reconnect all signals
-        self.description_field.textChanged.connect(self.to_profile)
+        self.description_field.textChanged.connect(self._update_description)
         self.always_execute.stateChanged.connect(self.to_profile)
 
     def to_profile(self):
@@ -883,7 +893,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
             QtWidgets.QLabel("<b>Description</b>")
         )
         self.description_field = QtWidgets.QLineEdit()
-        self.description_field.textChanged.connect(self.to_profile)
+        self.description_field.textChanged.connect(self._update_description)
         self._description_layout.addWidget(self.description_field)
 
         self.main_layout.addLayout(self._description_layout)
@@ -927,6 +937,9 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
                 if self.item_profile.input_type in entry.input_types:
                     action_list.append(entry.name)
         return sorted(action_list)
+
+    def _update_description(self):
+        self.changed.emit()
 
 
 class ModeWidget(QtWidgets.QWidget):
@@ -1212,20 +1225,30 @@ class InputItemList(QtWidgets.QWidget):
                 item.setPalette(self.cur_palette)
 
             if input_id in self.input_items[input_type]:
-                self.input_items[input_type][input_id].create_action_icons(
+                local_profile_data = \
                     self.device_profile.modes[self.current_mode].get_data(
                         input_type,
                         input_id
                     )
+                self.input_items[input_type][input_id].create_action_icons(
+                    local_profile_data
+                )
+                self.input_items[input_type][input_id].update_description(
+                    local_profile_data.description
                 )
 
         # Joystick input item entries are never removed
         else:
-            self.input_items[input_type][input_id].create_action_icons(
+            local_profile_data = \
                 self.device_profile.modes[self.current_mode].get_data(
                     identifier.input_type,
                     identifier.input_id
                 )
+            self.input_items[input_type][input_id].create_action_icons(
+                local_profile_data
+            )
+            self.input_items[input_type][input_id].update_description(
+                local_profile_data.description
             )
 
     def _populate_item_list(self):
@@ -1277,12 +1300,13 @@ class InputItemList(QtWidgets.QWidget):
                     self
                 )
 
-                item.create_action_icons(
+                local_profile_data = \
                     self.device_profile.modes[self.current_mode].get_data(
                         input_type,
                         i
                     )
-                )
+                item.create_action_icons(local_profile_data)
+                item.update_description(local_profile_data.description)
                 item.input_item_clicked.connect(
                     self._input_item_selection
                 )
@@ -1312,6 +1336,7 @@ class InputItemList(QtWidgets.QWidget):
                 self
             )
             item.create_action_icons(entry)
+            item.update_description(entry.description)
             item.input_item_clicked.connect(self._input_item_selection)
             # Add the new item to the panel
             self.input_items[UiInputType.Keyboard][key_code] = item
@@ -1334,12 +1359,13 @@ class InputItemList(QtWidgets.QWidget):
                 ),
                 self
             )
-            item.create_action_icons(
+            local_profile_data = \
                 self.device_profile.modes[self.current_mode].get_data(
                     UiInputType.JoystickAxis,
                     i
                 )
-            )
+            item.create_action_icons(local_profile_data)
+            item.update_description(local_profile_data.description)
             item.input_item_clicked.connect(
                 self._input_item_selection
             )
