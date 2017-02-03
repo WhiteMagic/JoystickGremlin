@@ -1101,7 +1101,6 @@ if __name__ == "__main__":
             "vJoy is not present or incorrectly setup, terminating.")
     else:
         ui = GremlinUi()
-        ui.show()
 
         # Handle user provided command line arguments
         if args.profile is not None and os.path.isfile(args.profile):
