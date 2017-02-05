@@ -1078,9 +1078,37 @@ if __name__ == "__main__":
     )
     sdl2.ext.init()
 
+    # Create user interface
+    app_id = u"joystick.gremlin"
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+    app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
+    app.setApplicationDisplayName("Joystick Gremlin")
+
     # Check if vJoy is properly setup and if not display an error
     # and terminate Gremlin
-    vjoy_working = len([dev for dev in util.joystick_devices() if dev.is_virtual]) != 0
+    try:
+        vjoy_working = len(
+            [dev for dev in util.joystick_devices() if dev.is_virtual]
+        ) != 0
+
+        if not vjoy_working:
+            raise gremlin.error.GremlinError(
+                "vJoy is not present or incorrectly setup."
+            )
+
+    except gremlin.error.GremlinError as e:
+        error_display = QtWidgets.QMessageBox(
+            QtWidgets.QMessageBox.Critical,
+            "Error",
+            e.value,
+            QtWidgets.QMessageBox.Ok
+        )
+        error_display.show()
+        app.exec_()
+
+        gremlin.input_devices.VJoyProxy.reset()
+        sys.exit(0)
 
     # Setup device key generator based on whether or not we have
     # duplicate devices connected.
@@ -1089,25 +1117,15 @@ if __name__ == "__main__":
     # Initialize action plugins
     gremlin.plugin_manager.ActionPlugins()
 
-    # Create user interface
-    app_id = u"joystick.gremlin"
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-    app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
-    app.setApplicationDisplayName("Joystick Gremlin")
+    # Create Gremlin UI
+    ui = GremlinUi()
 
-    if not vjoy_working:
-        util.display_error(
-            "vJoy is not present or incorrectly setup, terminating.")
-    else:
-        ui = GremlinUi()
-
-        # Handle user provided command line arguments
-        if args.profile is not None and os.path.isfile(args.profile):
-            ui._do_load_profile(args.profile)
-        if args.enable:
-            ui.ui.actionActivate.setChecked(True)
-            ui.activate(True)
+    # Handle user provided command line arguments
+    if args.profile is not None and os.path.isfile(args.profile):
+        ui._do_load_profile(args.profile)
+    if args.enable:
+        ui.ui.actionActivate.setChecked(True)
+        ui.activate(True)
 
     # Run UI
     app.exec_()
