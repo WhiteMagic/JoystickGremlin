@@ -152,6 +152,35 @@ class Axis(object):
             raise VJoyError("Failed setting axis value")
         self.vjoy_dev.used()
 
+    def set_absolute_value(self, value):
+        """Sets the position of the axis based on a value between [-1, 1].
+
+        In comparison to the value setter this function bypasses the
+        deadzone and response curve settings.
+
+        :param value the position of the axis in the range [-1, 1]
+        """
+        # Log an error on invalid data but continue processing by clamping
+        # the values in the next step
+        if 1.0 - abs(value) < -0.001:
+            logging.getLogger("system").warning(
+                "Wrong data type provided, has to be float in [-1, 1],"
+                " provided value was {:.2f}".format(value)
+            )
+
+        # Normalize value to [-1, 1] and apply response curve and deadzone
+        # settings
+        self._value = value
+
+        if not VJoyInterface.SetAxis(
+                int(self._half_range + self._half_range * self._value),
+                self.vjoy_id,
+                self.axis_id
+        ):
+            raise VJoyError("Failed setting axis value")
+        self.vjoy_dev.used()
+
+
 
 class Button(object):
 
@@ -296,7 +325,7 @@ class VJoy(object):
 
     """Represents a vJoy device present in the system."""
 
-    # Duration of inactivity fter which the keep alive routine is run
+    # Duration of inactivity after which the keep alive routine is run
     keep_alive_timeout = 60
 
     def __init__(self, vjoy_id):
@@ -406,8 +435,8 @@ class VJoy(object):
         button_states = {}
         hat_states = {}
 
-        for id, axis in self._axis.items():
-            axis_states[id] = axis.value
+        for axis_name in AxisName:
+            axis_states[axis_name] = self._axis[axis_name].value
         for id, button in self._button.items():
             button_states[id] = button.is_pressed
         for id, hat in self._hat.items():
@@ -417,8 +446,8 @@ class VJoy(object):
         VJoyInterface.ResetVJD(self.vjoy_id)
 
         # Restore input states based on what we recorded
-        for id in self._axis:
-            self._axis[id].value = axis_states[id]
+        for axis_name, value in axis_states.items():
+            self._axis[axis_name].set_absolute_value(value)
         for id in self._button:
             self._button[id].is_pressed = button_states[id]
         for id in self._hat:
