@@ -25,7 +25,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import action_plugins
 from action_plugins import common
-from gremlin import common, error, macro, plugin_manager, \
+from gremlin import common, config, error, macro, plugin_manager, \
     profile, shared_state, util
 from gremlin.event_handler import Event, EventListener, InputType
 from gremlin.common import UiInputType
@@ -902,11 +902,14 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         """Creates a drop down selection with actions that can be
         added to the current input item.
         """
+        config.Configuration().default_action
         self.action_layout = QtWidgets.QHBoxLayout()
         self.action_dropdown = QtWidgets.QComboBox()
         for name in self._valid_action_list():
             self.action_dropdown.addItem(name)
-        self.action_dropdown.setCurrentText("Remap")
+        self.action_dropdown.setCurrentText(
+            config.Configuration().default_action
+        )
         self.action_layout.addWidget(self.action_dropdown)
         self.add_action_button = QtWidgets.QPushButton("Add")
         self.add_action_button.clicked.connect(self._add_action)

@@ -21,7 +21,7 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from action_plugins.common import JoystickSelector, VJoySelector
-from gremlin import config, profile, util
+from gremlin import config, profile, plugin_manager, util
 from gremlin.event_handler import EventListener, InputType
 from gremlin.profile import UiInputType
 import gremlin.ui_widgets as widgets
@@ -117,10 +117,20 @@ class OptionsUi(BaseDialogUi):
             self.config.mode_change_message
         )
 
+        # Default action selection
+        self.default_action_layout = QtWidgets.QHBoxLayout()
+        self.default_action_label = QtWidgets.QLabel("Default action")
+        self.default_action_dropdown = QtWidgets.QComboBox()
+        self.default_action_layout.addWidget(self.default_action_label)
+        self.default_action_layout.addWidget(self.default_action_dropdown)
+        self._init_action_dropdown()
+        self.default_action_layout.addStretch()
+
         self.general_layout.addWidget(self.highlight_input)
         self.general_layout.addWidget(self.close_to_systray)
         self.general_layout.addWidget(self.start_minimized)
         self.general_layout.addWidget(self.show_mode_change_message)
+        self.general_layout.addLayout(self.default_action_layout)
         self.general_layout.addStretch()
         self.tab_container.addTab(self.general_page, "General")
 
@@ -284,6 +294,25 @@ class OptionsUi(BaseDialogUi):
             self.executable_selection.currentText(),
             self.profile_field.text()
         )
+
+    def _init_action_dropdown(self):
+        """Initializes the action selection dropdown menu."""
+        plugins = plugin_manager.ActionPlugins()
+
+        for act in sorted(plugins.repository.values(), key=lambda x: x.name):
+            self.default_action_dropdown.addItem(act.name)
+        self.default_action_dropdown.setCurrentText(self.config.default_action)
+        self.default_action_dropdown.currentTextChanged.connect(
+            self._update_default_action
+        )
+
+    def _update_default_action(self, value):
+        """Updates the config with the newly selected action name.
+
+        :param value the name of the newly selected action
+        """
+        self.config.default_action = value
+        self.config.save()
 
 
 class CalibrationUi(BaseDialogUi):

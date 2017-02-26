@@ -237,3 +237,11 @@ class Configuration(object):
     @start_minimized.setter
     def start_minimized(self, value):
         self._data["start_minimized"] = bool(value)
+
+    @property
+    def default_action(self):
+        return self._data.get("default_action", "Remap")
+
+    @default_action.setter
+    def default_action(self, value):
+        self._data["default_action"] = str(value)
