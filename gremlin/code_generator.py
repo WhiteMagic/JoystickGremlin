@@ -17,12 +17,14 @@
 
 import re
 
+import gremlin.common
+from mako.lookup import TemplateLookup
 from mako.template import Template
 
-import action_plugins
+import action_plugins.remap
+import action_plugins.common
 import gremlin
-from gremlin.common import UiInputType
-from gremlin import error, profile, util
+from . import common, error, joystick_handling, profile, util
 
 
 def decorator_name(mode, index):
@@ -58,15 +60,10 @@ def generate_parameter_list(input_item):
     params = []
     vjoy_required = gremlin.plugin_manager.ActionPlugins() \
         .plugins_requiring_parameter("vjoy")
-    for entry in input_item.actions:
-        if type(entry) in vjoy_required:
-            params.append("vjoy")
-        if isinstance(entry.condition, action_plugins.common.ButtonCondition) \
-                and entry.condition.shift_button is not None:
-            if entry.condition.shift_button["hardware_id"] == 0:
-                params.append("keyboard")
-            else:
-                params.append("joy")
+    for container in input_item.actions:
+        for entry in container.actions:
+            if type(entry) in vjoy_required:
+                params.append("vjoy")
     params = list(set(params))
     params.insert(0, "event")
     return ", ".join(params)
@@ -122,6 +119,229 @@ def input_item_identifier_string(input_item):
         return "_{}".format(wid)
     else:
         return ""
+
+
+# def format_condition(condition, data=None):
+#     """Returns code representing the button condition.
+#
+#     :param condition the condition to turn into textual python code
+#     :param data additional data that may be used to pass information
+#     :return python code representing the condition
+#     """
+#     if isinstance(condition, ButtonCondition):
+#         shift_term = ""
+#         if condition.shift_button is not None:
+#             # Keyboard key is being used as a shift button
+#             if condition.shift_button["hardware_id"] == 0:
+#                 shift_term = "keyboard.is_pressed(gremlin.macro.key_from_code({:d}, {}))".format(
+#                     condition.shift_button["id"][0],
+#                     condition.shift_button["id"][1]
+#                 )
+#             # Joystick button is being used as a shift button
+#             else:
+#                 shift_term = "joy[{:d}].button({:d}).is_pressed".format(
+#                     condition.shift_button["windows_id"],
+#                     condition.shift_button["id"]
+#                 )
+#
+#             shift_term = " and {}".format(shift_term)
+#
+#         if condition.on_press and condition.on_release:
+#             condition_term = "    if True"
+#         elif condition.on_press:
+#             condition_term = "    if is_pressed"
+#         elif condition.on_release:
+#             condition_term = "    if not is_pressed"
+#         else:
+#             condition_term = "    if False"
+#
+#         return "{}{}:".format(condition_term, shift_term)
+#     elif isinstance(condition, HatCondition):
+#         positive_instances = []
+#         if condition.on_n:
+#             positive_instances.append((0, 1))
+#         if condition.on_ne:
+#             positive_instances.append((1, 1))
+#         if condition.on_e:
+#             positive_instances.append((1, 0))
+#         if condition.on_se:
+#             positive_instances.append((1, -1))
+#         if condition.on_s:
+#             positive_instances.append((0, -1))
+#         if condition.on_sw:
+#             positive_instances.append((-1, -1))
+#         if condition.on_w:
+#             positive_instances.append((-1, 0))
+#         if condition.on_nw:
+#             positive_instances.append((-1, 1))
+#
+#         condition_text = ", ".join(
+#             ["({}, {})".format(v[0], v[1]) for v in positive_instances]
+#         )
+#         return "    if value in [{}]:".format(condition_text)
+#     else:
+#         return "    if True:"
+
+
+def list_to_string(params):
+    """Returns a textual representing of a list.
+
+    :param params the parameters to turn into a lists
+    :return textual representation of the parameters
+    """
+    if len(params) == 0:
+        return ""
+    elif len(params) == 1:
+        return "\"{0}\"".format(params[0])
+    else:
+        return "[" + ", ".join(["\"{0}\"".format(v) for v in params]) + "]"
+
+
+def string_to_bool(text):
+    """Returns text into a boolean variable.
+
+    :param text the text to convert
+    :return bool representing the text
+    """
+    return text.lower() in ["true", "yes", "t", "1"]
+
+
+def coords_to_string(container):
+    """Returns a textual representation of a sequence of coordinates.
+
+    :param container container holding the coordinates
+    :return textual representing of the coordinates
+    """
+    return "[{}]".format(", ".join(
+        ["({:.4f}, {:.4f})".format(e[0], e[1]) for e in container])
+    )
+
+
+# Dictionary containing template helper functions
+template_helpers = {
+    # "format_condition": format_condition,
+    "list_tostring": list_to_string,
+    "string_to_bool": string_to_bool,
+    "coords_to_string": coords_to_string,
+}
+
+
+class CodeGeneratorV2:
+
+    def __init__(self, config_profile):
+        self.decorators = {}
+        self.callbacks = {}
+
+        self.code = ""
+        try:
+            self.generate_from_profile(config_profile)
+        except error.GremlinError as err:
+            util.display_error(str(err))
+
+    def generate_from_profile(self, config_profile):
+        assert (isinstance(config_profile, profile.Profile))
+
+        # Device, mode, actions
+        for device in config_profile.devices.values():
+            for i, mode in enumerate(device.modes.values()):
+                self._process_device_mode(mode, i)
+
+        tpl_lookup = TemplateLookup(directories=["."])
+        tpl = Template(
+            filename="templates/everything.tpl",
+            lookup=tpl_lookup
+        )
+        self.code = tpl.render(
+            gremlin=gremlin,
+            profile=config_profile,
+            decorators=self.decorators,
+            callbacks=self.callbacks
+        )
+
+    def write_code(self, fname):
+        code = re.sub("\r", "", self.code)
+        with open(fname, "w") as out:
+            out.write(code)
+
+    def _process_device_mode(self, mode, index):
+        device_id = util.device_id(mode.parent)
+
+        # Ensure data storage is properly initialized
+        if device_id not in self.decorators:
+            self.decorators[device_id] = {}
+        if device_id not in self.callbacks:
+            self.callbacks[device_id] = {}
+        if mode not in self.callbacks[device_id]:
+            self.callbacks[device_id][mode.name] = []
+
+        # Gather data required to generate decorator definitions
+        if mode.parent.type != gremlin.common.DeviceType.Keyboard:
+            self.decorators[device_id][mode.name] = {
+                "decorator_name": decorator_name(mode, index),
+                "device_name": mode.parent.name
+            }
+
+        # Gather data required to generate callback related code
+        for input_type, input_items in mode.config.items():
+            for input_item in input_items.values():
+                # self.generate_input_item(entry, mode, index)
+
+        # def generate_input_item(self, input_item, mode, index):
+        #     assert (isinstance(input_item, profile.InputItem))
+        #     assert (isinstance(mode, profile.Mode))
+        #     assert (input_item.parent == mode)
+
+                # Nothing to do if we have no associated actions
+                if len(input_item.actions) == 0:
+                    continue
+
+                # input_type_templates = {
+                #     UiInputType.JoystickAxis: "templates/axis.tpl",
+                #     UiInputType.JoystickButton: "templates/button_callback.tpl",
+                #     UiInputType.JoystickHat: "templates/hat.tpl",
+                #     UiInputType.Keyboard: "templates/key.tpl",
+                # }
+
+                # Generate code for the actions associated with the item
+                # code = {
+                #     "body": [],
+                #     "global": [],
+                # }
+                # actions_to_code(input_item.actions, code)
+                # self.code["global"].extend(code["global"])
+                #
+                # tpl = Template(filename=input_type_templates[input_item.input_type])
+
+                code_block = profile.CodeBlock()
+                for container in input_item.actions:
+                    code_block.append(container.to_code())
+
+                self.callbacks[device_id][mode.name].append({
+                    "input_item": input_item,
+                    "decorator_name": decorator_name(mode, index),
+                    "mode_index": index,
+                    "parameter_list": generate_parameter_list(input_item),
+                    "device_name": "{}{}".format(
+                        util.format_name(mode.parent.name),
+                        input_item_identifier_string(input_item)
+                    ),
+                    "code_block": code_block
+                })
+                # helpers = {
+                #     "wid": input_item_identifier_string,
+                # }
+                # self.code["callback"].append(tpl.render(
+                #     device_name=util.format_name(mode.parent.name),
+                #     decorator=decorator_name(mode, index),
+                #     mode=mode.name,
+                #     mode_index=index,
+                #     input_item=input_item,
+                #     # code=code,
+                #     code_blocks=code["body"],
+                #     param_list=generate_parameter_list(input_item),
+                #     helpers=helpers,
+                #     gremlin=gremlin
+                # ))
 
 
 class CodeGenerator(object):
@@ -199,12 +419,16 @@ class CodeGenerator(object):
                     )
 
         # Vjoy response curve switching
+        vjoy_ids = []
+        for joy in joystick_handling.joystick_devices():
+            if joy.is_virtual:
+                vjoy_ids.append(joy.vjoy_id)
+
         tpl = Template(filename="templates/vjoy_curves.tpl")
         self.code["global"].append(tpl.render(
             vjoy_devices=config_profile.vjoy_devices,
-            vjoy_ids=[joy.vjoy_id for joy in gremlin.util.joystick_devices()
-                      if joy.is_virtual],
-            UiInputType=gremlin.common.UiInputType
+            vjoy_ids=vjoy_ids,
+            UiInputType=gremlin.common.InputType
         ))
 
     def process_merge_axis(self, idx, entry):
@@ -286,10 +510,10 @@ class CodeGenerator(object):
             return {}
 
         input_type_templates = {
-            UiInputType.JoystickAxis: "templates/axis.tpl",
-            UiInputType.JoystickButton: "templates/button.tpl",
-            UiInputType.JoystickHat: "templates/hat.tpl",
-            UiInputType.Keyboard: "templates/key.tpl",
+            common.InputType.JoystickAxis: "templates/axis.tpl",
+            common.InputType.JoystickButton: "templates/button_callback.tpl",
+            common.InputType.JoystickHat: "templates/hat.tpl",
+            common.InputType.Keyboard: "templates/key.tpl",
         }
 
         # Generate code for the actions associated with the item
@@ -304,14 +528,14 @@ class CodeGenerator(object):
         helpers = {
             "wid": input_item_identifier_string,
         }
-
         self.code["callback"].append(tpl.render(
             device_name=util.format_name(mode.parent.name),
             decorator=decorator_name(mode, index),
             mode=mode.name,
             mode_index=index,
             input_item=input_item,
-            code=code,
+            #code=code,
+            code_blocks=code["body"],
             param_list=generate_parameter_list(input_item),
             helpers=helpers,
             gremlin=gremlin
