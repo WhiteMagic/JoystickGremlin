@@ -28,7 +28,6 @@ from PyQt5 import QtCore, QtWidgets
 import sdl2
 
 import gremlin
-from gremlin import error, fsm
 
 
 # Flag indicating that multiple physical devices with the same name exist
@@ -169,12 +168,12 @@ class AxisButton(object):
         states = ["up", "down"]
         actions = ["press", "release"]
         transitions = {
-            ("up", "press"): fsm.Transition(self._press, "down"),
-            ("up", "release"): fsm.Transition(self._noop, "up"),
-            ("down", "release"): fsm.Transition(self._release, "up"),
-            ("down", "press"): fsm.Transition(self._noop, "down")
+            ("up", "press"): gremlin.fsm.Transition(self._press, "down"),
+            ("up", "release"): gremlin.fsm.Transition(self._noop, "up"),
+            ("down", "release"): gremlin.fsm.Transition(self._release, "up"),
+            ("down", "press"): gremlin.fsm.Transition(self._noop, "down")
         }
-        return fsm.FiniteStateMachine("up", states, actions, transitions)
+        return gremlin.fsm.FiniteStateMachine("up", states, actions, transitions)
 
     def process(self, value, callback):
         self.callback = callback
@@ -373,7 +372,6 @@ def get_device_guid(device):
     """
     vendor_id = sdl2.SDL_JoystickGetVendor(device)
     product_id = sdl2.SDL_JoystickGetProduct(device)
-
     return (vendor_id << 16) + product_id
 
 
@@ -431,11 +429,13 @@ def setup_userprofile():
         try:
             os.mkdir(folder)
         except Exception as e:
-            raise error.GremlinError(
+            raise gremlin.error.GremlinError(
                 "Unable to create data folder: {}".format(str(e))
             )
     elif not os.path.isdir(folder):
-        raise error.GremlinError("Data folder exists but is not a folder")
+        raise gremlin.error.GremlinError(
+            "Data folder exists but is not a folder"
+        )
 
 
 def device_id_duplicates(device):

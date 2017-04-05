@@ -20,12 +20,9 @@ import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from action_plugins.common import JoystickSelector, VJoySelector
-from gremlin import config, profile, util
-from gremlin.event_handler import EventListener, InputType
-from gremlin.profile import UiInputType
+import action_plugins.common
 import gremlin.ui_widgets as widgets
-
+from gremlin import common, config, event_handler, profile, util_simple
 from ui_about import Ui_About
 
 
@@ -254,7 +251,7 @@ class OptionsUi(BaseDialogUi):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             "Path to executable",
-            util.userprofile_path(),
+            util_simple.userprofile_path(),
             "Profile (*.xml)"
         )
         if fname != "":
@@ -286,133 +283,6 @@ class OptionsUi(BaseDialogUi):
         )
 
 
-class CalibrationUi(BaseDialogUi):
-
-    """Dialog to calibrate joystick axes."""
-
-    def __init__(self, parent=None):
-        """Creates the calibration UI.
-
-        :param parent the parent widget of this object
-        """
-        BaseDialogUi.__init__(self, parent)
-        self.devices = [
-            dev for dev in util.joystick_devices() if not dev.is_virtual
-        ]
-        self.current_selection_id = 0
-
-        # Create the required layouts
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.axes_layout = QtWidgets.QVBoxLayout()
-        self.button_layout = QtWidgets.QHBoxLayout()
-
-        self._create_ui()
-
-    def _create_ui(self):
-        """Creates all widgets required for the user interface."""
-        # Device selection drop down
-        self.device_dropdown = QtWidgets.QComboBox()
-        self.device_dropdown.currentIndexChanged.connect(
-            self._create_axes
-        )
-        for device in self.devices:
-            self.device_dropdown.addItem(device.name)
-
-        # Set the title
-        self.setWindowTitle("Calibration")
-
-        # Various buttons
-        self.button_close = QtWidgets.QPushButton("Close")
-        self.button_close.pressed.connect(self.close)
-        self.button_save = QtWidgets.QPushButton("Save")
-        self.button_save.pressed.connect(self._save_calibration)
-        self.button_centered = QtWidgets.QPushButton("Centered")
-        self.button_centered.pressed.connect(self._calibrate_centers)
-        self.button_layout.addWidget(self.button_save)
-        self.button_layout.addWidget(self.button_close)
-        self.button_layout.addStretch(0)
-        self.button_layout.addWidget(self.button_centered)
-
-        # Axis widget readout headers
-        self.label_layout = QtWidgets.QGridLayout()
-        label_spacer = QtWidgets.QLabel()
-        label_spacer.setMinimumWidth(200)
-        label_spacer.setMaximumWidth(200)
-        self.label_layout.addWidget(label_spacer, 0, 0, 0, 3)
-        label_current = QtWidgets.QLabel("<b>Current</b>")
-        label_current.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_current, 0, 3)
-        label_minimum = QtWidgets.QLabel("<b>Minimum</b>")
-        label_minimum.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_minimum, 0, 4)
-        label_center = QtWidgets.QLabel("<b>Center</b>")
-        label_center.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_center, 0, 5)
-        label_maximum = QtWidgets.QLabel("<b>Maximum</b>")
-        label_maximum.setAlignment(QtCore.Qt.AlignRight)
-        self.label_layout.addWidget(label_maximum, 0, 6)
-
-        # Organizing everything into the various layouts
-        self.main_layout.addWidget(self.device_dropdown)
-        self.main_layout.addLayout(self.label_layout)
-        self.main_layout.addLayout(self.axes_layout)
-        self.main_layout.addStretch(0)
-        self.main_layout.addLayout(self.button_layout)
-
-        # Create the axis calibration widgets
-        self.axes = []
-        self._create_axes(self.current_selection_id)
-
-        # Connect to the joystick events
-        el = EventListener()
-        el.joystick_event.connect(self._handle_event)
-
-    def _calibrate_centers(self):
-        """Records the centered or neutral position of the current device."""
-        for widget in self.axes:
-            widget.centered()
-
-    def _save_calibration(self):
-        """Saves the current calibration data to the hard drive."""
-        cfg = config.Configuration()
-        dev_id = util.device_id(
-            self.devices[self.current_selection_id]
-        )
-        cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
-
-    def _create_axes(self, index):
-        """Creates the axis calibration widget for the current device.
-
-        :param index the index of the currently selected device
-            in the dropdown menu
-        """
-        widgets.clear_layout(self.axes_layout)
-        self.axes = []
-        self.current_selection_id = index
-        for i in range(self.devices[index].axes):
-            self.axes.append(widgets.AxisCalibrationWidget())
-            self.axes_layout.addWidget(self.axes[-1])
-
-    def _handle_event(self, event):
-        """Process a single joystick event.
-
-        :param event the event to process
-        """
-        selection_id = util.device_id(self.devices[self.current_selection_id])
-        if util.device_id(event) == selection_id \
-                and event.event_type == InputType.JoystickAxis:
-            self.axes[event.identifier-1].set_current(event.raw_value)
-
-    def closeEvent(self, event):
-        """Closes the calibration window.
-
-        :param event the close event
-        """
-        el = EventListener()
-        el.joystick_event.disconnect(self._handle_event)
-        super().closeEvent(event)
-
-
 class LogWindowUi(BaseDialogUi):
 
     """Window displaying log file content."""
@@ -433,16 +303,16 @@ class LogWindowUi(BaseDialogUi):
 
         self._ui_elements = {}
         self._create_log_display(
-            os.path.join(util.userprofile_path(), "system.log"),
+            os.path.join(util_simple.userprofile_path(), "system.log"),
             "System"
         )
         self._create_log_display(
-            os.path.join(util.userprofile_path(), "user.log"),
+            os.path.join(util_simple.userprofile_path(), "user.log"),
             "User"
         )
-        self.watcher = util.FileWatcher([
-            os.path.join(util.userprofile_path(), "system.log"),
-            os.path.join(util.userprofile_path(), "user.log")
+        self.watcher = util_simple.FileWatcher([
+            os.path.join(util_simple.userprofile_path(), "system.log"),
+            os.path.join(util_simple.userprofile_path(), "user.log")
         ])
         self.watcher.file_changed.connect(self._reload)
 
@@ -656,26 +526,26 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         self.setWidget(self.main_widget)
 
         # List of joystick like devices
-        joy_devices = util.joystick_devices()
+        joy_devices = util_simple.joystick_devices()
         vjoy_devices = [joy for joy in joy_devices if joy.is_virtual]
         phys_devices = [joy for joy in joy_devices if not joy.is_virtual]
 
         # Selectors for both physical and virtual joystick axis for the
         # mapping selection
-        self.vjoy_selector = VJoySelector(
+        self.vjoy_selector = action_plugins.commonVJoySelector(
             vjoy_devices,
             change_cb,
-            [UiInputType.JoystickAxis]
+            [common.InputType.JoystickAxis]
         )
-        self.joy1_selector = JoystickSelector(
+        self.joy1_selector = action_plugins.commonJoystickSelector(
             phys_devices,
             change_cb,
-            [UiInputType.JoystickAxis]
+            [common.InputType.JoystickAxis]
         )
-        self.joy2_selector = JoystickSelector(
+        self.joy2_selector = action_plugins.commonJoystickSelector(
             phys_devices,
             change_cb,
-            [UiInputType.JoystickAxis]
+            [common.InputType.JoystickAxis]
         )
 
         # Mode selection
@@ -715,7 +585,7 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         :param data information about which entries to select
         """
         self.vjoy_selector.set_selection(
-            UiInputType.JoystickAxis,
+            common.InputType.JoystickAxis,
             data["vjoy"]["device_id"],
             data["vjoy"]["axis_id"]
         )
@@ -723,17 +593,17 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         # Create correct physical device id
         joy1_id = data["lower"]["hardware_id"]
         joy2_id = data["upper"]["hardware_id"]
-        if util.g_duplicate_devices:
+        if util_simple.g_duplicate_devices:
             joy1_id = (data["lower"]["hardware_id"], data["lower"]["windows_id"])
             joy2_id = (data["upper"]["hardware_id"], data["upper"]["windows_id"])
 
         self.joy1_selector.set_selection(
-            UiInputType.JoystickAxis,
+            common.InputType.JoystickAxis,
             joy1_id,
             data["lower"]["axis_id"]
         )
         self.joy2_selector.set_selection(
-            UiInputType.JoystickAxis,
+            common.InputType.JoystickAxis,
             joy2_id,
             data["upper"]["axis_id"]
         )
@@ -769,7 +639,7 @@ class ModeManagerUi(BaseDialogUi):
         self._create_ui()
 
         # Disable keyboard event handler
-        el = EventListener()
+        el = event_handler.EventListener()
         el.keyboard_hook.stop()
 
     def closeEvent(self, event):
@@ -778,7 +648,7 @@ class ModeManagerUi(BaseDialogUi):
         :param event the close event details
         """
         # Re-enable keyboard event handler
-        el = EventListener()
+        el = event_handler.EventListener()
         el.keyboard_hook.start()
         super().closeEvent(event)
 
@@ -797,7 +667,7 @@ class ModeManagerUi(BaseDialogUi):
     def _populate_mode_layout(self):
         """Generates the mode layout UI displaying the different modes."""
         # Clear potentially existing content
-        util.clear_layout(self.mode_layout)
+        util_simple.clear_layout(self.mode_layout)
         self.mode_dropdowns = {}
         self.mode_rename = {}
         self.mode_delete = {}
@@ -922,8 +792,8 @@ class ModeManagerUi(BaseDialogUi):
                 mode_name
         )
         if user_input:
-            if name in util.mode_list(self._profile):
-                util.display_error(
+            if name in util_simple.mode_list(self._profile):
+                util_simple.display_error(
                     "A mode with the name \"{}\" already exists".format(name)
                 )
             else:
@@ -979,8 +849,8 @@ class ModeManagerUi(BaseDialogUi):
         """
         name, user_input = QtWidgets.QInputDialog.getText(None, "Mode name", "")
         if user_input:
-            if name in util.mode_list(self._profile):
-                util.display_error(
+            if name in util_simple.mode_list(self._profile):
+                util_simple.display_error(
                     "A mode with the name \"{}\" already exists".format(name)
                 )
             else:
@@ -1010,7 +880,7 @@ class ModuleManagerUi(BaseDialogUi):
 
         self._create_ui()
         # Disable keyboard event handler
-        el = EventListener()
+        el = event_handler.EventListener()
         el.keyboard_hook.stop()
 
     def closeEvent(self, event):
@@ -1019,7 +889,7 @@ class ModuleManagerUi(BaseDialogUi):
         :param event the close event details
         """
         # Re-enable keyboard event handler
-        el = EventListener()
+        el = event_handler.EventListener()
         el.keyboard_hook.start()
         super().closeEvent(event)
 
@@ -1062,8 +932,8 @@ class ModuleManagerUi(BaseDialogUi):
             "Enter the name of the module to import"
         )
         if input_ok and new_import != "":
-            if not util.valid_python_identifier(new_import):
-                util.display_error(
+            if not util_simple.valid_python_identifier(new_import):
+                util_simple.display_error(
                     "\"{}\" is not a valid python module name"
                     .format(new_import)
                 )

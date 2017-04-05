@@ -21,28 +21,14 @@ Collection of widgets used in the configuration UI.
 """
 
 import logging
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import action_plugins
-from action_plugins import common
-from gremlin import common, error, macro, plugin_manager, \
-    profile, shared_state, util
-from gremlin.event_handler import Event, EventListener, InputType
-from gremlin.common import UiInputType
-
-
-class LeftRightPushButton(QtWidgets.QPushButton):
-
-    clicked_right = QtCore.pyqtSignal()
-
-    def __init__(self, label, parent=None):
-        QtWidgets.QPushButton.__init__(self, label, parent)
-
-    def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.RightButton:
-            self.clicked_right.emit()
-        else:
-            super().mousePressEvent(event)
+import action_plugins.common
+import container_plugins
+import gremlin.ui.common
+from gremlin import base_classes, common, error, event_handler, macro, \
+    plugin_manager, profile, shared_state, util_simple
 
 
 class InputIdentifier(object):
@@ -110,11 +96,11 @@ class InputListenerWidget(QtWidgets.QFrame):
         self.setPalette(palette)
 
         # Start listening to user key presses
-        event_listener = EventListener()
+        event_listener = event_handler.EventListener()
         event_listener.keyboard_event.connect(self._kb_event_cb)
-        if InputType.JoystickAxis in self._event_types or \
-                InputType.JoystickButton in self._event_types or \
-                InputType.JoystickHat in self._event_types:
+        if event_handler.InputType.JoystickAxis in self._event_types or \
+                event_handler.InputType.JoystickButton in self._event_types or \
+                event_handler.InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.connect(self._joy_event_cb)
 
     def _kb_event_cb(self, event):
@@ -128,7 +114,8 @@ class InputListenerWidget(QtWidgets.QFrame):
                 event.identifier[1]
         )
 
-        if InputType.Keyboard in self._event_types and key != macro.Keys.Esc:
+        if event_handler.InputType.Keyboard in self._event_types and \
+                key != macro.Keys.Esc:
             if not self._return_kb_event:
                 self.callback(key)
             else:
@@ -149,26 +136,26 @@ class InputListenerWidget(QtWidgets.QFrame):
         if event.event_type not in self._event_types:
             return
 
-        if event.event_type == InputType.JoystickButton and \
+        if event.event_type == event_handler.InputType.JoystickButton and \
                 not event.is_pressed:
             self.callback(event)
             self._close_window()
-        elif event.event_type == InputType.JoystickAxis and \
+        elif event.event_type == event_handler.InputType.JoystickAxis and \
                 abs(event.value) > 0.5:
             self.callback(event)
             self._close_window()
-        elif event.event_type == InputType.JoystickHat and \
+        elif event.event_type == event_handler.InputType.JoystickHat and \
                 event.value != (0, 0):
             self.callback(event)
             self._close_window()
 
     def _close_window(self):
         """Closes the overlay window."""
-        event_listener = EventListener()
+        event_listener = event_handler.EventListener()
         event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        if InputType.JoystickAxis in self._event_types or \
-                InputType.JoystickButton in self._event_types or \
-                InputType.JoystickHat in self._event_types:
+        if event_handler.InputType.JoystickAxis in self._event_types or \
+                event_handler.InputType.JoystickButton in self._event_types or \
+                event_handler.InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.disconnect(self._joy_event_cb)
         self.close()
 
@@ -178,81 +165,16 @@ class InputListenerWidget(QtWidgets.QFrame):
         :return string representing the valid event types
         """
         valid_str = []
-        if InputType.JoystickAxis in self._event_types:
+        if event_handler.InputType.JoystickAxis in self._event_types:
             valid_str.append("Axis")
-        if InputType.JoystickButton in self._event_types:
+        if event_handler.InputType.JoystickButton in self._event_types:
             valid_str.append("Button")
-        if InputType.JoystickHat in self._event_types:
+        if event_handler.InputType.JoystickHat in self._event_types:
             valid_str.append("Hat")
-        if InputType.Keyboard in self._event_types:
+        if event_handler.InputType.Keyboard in self._event_types:
             valid_str.append("Key")
 
         return ", ".join(valid_str)
-
-
-class AxisCalibrationWidget(QtWidgets.QWidget):
-
-    """Widget displaying calibration information about a single axis."""
-
-    def __init__(self, parent=None):
-        """Creates a new object.
-
-        :param parent the parent widget of this one
-        """
-        QtWidgets.QWidget.__init__(self, parent)
-
-        self.main_layout = QtWidgets.QGridLayout(self)
-        self.limits = [0, 0, 0]
-
-        # Create slider showing the axis position graphically
-        self.slider = QtWidgets.QProgressBar()
-        self.slider.setMinimum(-32768)
-        self.slider.setMaximum(32767)
-        self.slider.setValue(self.limits[1])
-        self.slider.setMinimumWidth(200)
-        self.slider.setMaximumWidth(200)
-
-        # Create the labels
-        self.current = QtWidgets.QLabel("0")
-        self.current.setAlignment(QtCore.Qt.AlignRight)
-        self.minimum = QtWidgets.QLabel("0")
-        self.minimum.setAlignment(QtCore.Qt.AlignRight)
-        self.center = QtWidgets.QLabel("0")
-        self.center.setAlignment(QtCore.Qt.AlignRight)
-        self.maximum = QtWidgets.QLabel("0")
-        self.maximum.setAlignment(QtCore.Qt.AlignRight)
-        self._update_labels()
-
-        # Populate the layout
-        self.main_layout.addWidget(self.slider, 0, 0, 0, 3)
-        self.main_layout.addWidget(self.current, 0, 3)
-        self.main_layout.addWidget(self.minimum, 0, 4)
-        self.main_layout.addWidget(self.center, 0, 5)
-        self.main_layout.addWidget(self.maximum, 0, 6)
-
-    def set_current(self, value):
-        """Updates the limits of the axis.
-
-        :param value the new value
-        """
-        self.slider.setValue(value)
-        if value > self.limits[2]:
-            self.limits[2] = value
-        if value < self.limits[0]:
-            self.limits[0] = value
-        self._update_labels()
-
-    def centered(self):
-        """Records the value of the center or neutral position."""
-        self.limits[1] = self.slider.value()
-        self._update_labels()
-
-    def _update_labels(self):
-        """Updates the axis limit values."""
-        self.current.setText("{: 5d}".format(self.slider.value()))
-        self.minimum.setText("{: 5d}".format(self.limits[0]))
-        self.center.setText("{: 5d}".format(self.limits[1]))
-        self.maximum.setText("{: 5d}".format(self.limits[2]))
 
 
 class ActionLabel(QtWidgets.QLabel):
@@ -316,8 +238,10 @@ class InputItemButton(QtWidgets.QFrame):
             self.main_layout.removeItem(item)
 
         # Create the actual icons
+        # FIXME: this currently ignores the containers
         for entry in profile_data.actions:
-            self.main_layout.addWidget(ActionLabel(entry))
+            for action in entry.actions:
+                self.main_layout.addWidget(ActionLabel(action))
 
     def mousePressEvent(self, event):
         """Emits the input_item_changed event when this instance is
@@ -440,7 +364,10 @@ class ButtonConditionWidget(QtWidgets.QWidget):
         """Queries the user for the shift button to use."""
         self.button_press_dialog = InputListenerWidget(
             self._assign_shift_button_cb,
-            [InputType.Keyboard, InputType.JoystickButton]
+            [
+                event_handler.InputType.Keyboard,
+                event_handler.InputType.JoystickButton
+            ]
         )
 
         shared_state.set_suspend_input_highlighting(True)
@@ -464,10 +391,10 @@ class ButtonConditionWidget(QtWidgets.QWidget):
 
         :param value holds the shift button information
         """
-        if isinstance(value, Event):
-            devices = util.joystick_devices()
+        if isinstance(value, event_handler.Event):
+            devices = util_simple.joystick_devices()
             for dev in devices:
-                if util.device_id(value) == util.device_id(dev):
+                if util_simple.device_id(value) == util_simple.device_id(dev):
                     # Set the button label
                     self.shift_button.setText("{} - Button {:d}".format(
                         dev.name,
@@ -532,11 +459,7 @@ class HatConditionWidget(QtWidgets.QWidget):
         pass
 
 
-class ActionWidgetContainer(QtWidgets.QDockWidget):
-
-    """Represents a proxy widget which contains another widget and
-    simply allows the management of said contained widgets.
-    """
+class ContainerDock(QtWidgets.QDockWidget):
 
     # Signal which is emitted whenever the widget is closed
     closed = QtCore.pyqtSignal(QtWidgets.QWidget)
@@ -545,125 +468,128 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
     palette = QtGui.QPalette()
     palette.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
 
-    def __init__(self, action_widget, parent=None):
+    def __init__(self, container_widget, parent=None):
         """Creates a new instance.
 
-        :param action_widget the widget this proxy manages
+        :param container_widget the container widget this dock holds
         :param parent the parent widget of this widget
         """
-        QtWidgets.QDockWidget.__init__(self, parent)
+        super().__init__(parent)
         assert(isinstance(
-            action_widget,
-            action_plugins.common.AbstractActionWidget
+            container_widget,
+            base_classes.AbstractContainerWidget
         ))
 
         # Lookup table from input type to available actions
-        self.action_widget = action_widget
+        self.container_widget = container_widget
 
-        self.setWindowTitle(action_widget.action_data.name)
+        self.setWindowTitle(self.container_widget.data.name)
         self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
 
+        # Create root widget of the dock element
         self.main_widget = QtWidgets.QWidget()
         self.main_widget.setAutoFillBackground(True)
         self.main_widget.setPalette(self.palette)
 
         self.main_layout = QtWidgets.QVBoxLayout(self.main_widget)
-        self._add_condition()
-        self.main_layout.addWidget(self.action_widget)
+        # TODO: need to handle those differently now
+        # self._add_condition()
+        self.main_layout.addWidget(self.container_widget)
         self.setWidget(self.main_widget)
 
     def to_profile(self):
-        """Updates the profile data associated with the widget with
-        the UI contents."""
-        self.action_widget.to_profile()
-        if self._is_button_like() and self._has_condition():
-            # Extract activation condition data
-            self.action_widget.action_data.condition =\
-                action_plugins.common.ButtonCondition(
-                    self.condition.press.isChecked(),
-                    self.condition.release.isChecked(),
-                    self.condition.shift_data
-                )
-        elif self._is_hat() and self._has_condition():
-            self.action_widget.action_data.condition = \
-                action_plugins.common.HatCondition(
-                    self.condition.widgets["N"].isChecked(),
-                    self.condition.widgets["NE"].isChecked(),
-                    self.condition.widgets["E"].isChecked(),
-                    self.condition.widgets["SE"].isChecked(),
-                    self.condition.widgets["S"].isChecked(),
-                    self.condition.widgets["SW"].isChecked(),
-                    self.condition.widgets["W"].isChecked(),
-                    self.condition.widgets["NW"].isChecked()
-                )
-        elif self._is_axis() and self._has_condition():
-            self.action_widget.action_data.condition = \
-                action_plugins.common.AxisCondition(
-                    self.condition.checkbox.isChecked(),
-                    self.condition.lower_limit.value(),
-                    self.condition.upper_limit.value()
-                )
+        """Updates the profile data associated with the container's content."""
+        self.container_widget.to_profile()
+        # TODO: This is condition stuff and needs to be handled differently
+        # if self._is_button_like() and self._has_condition():
+        #     # Extract activation condition data
+        #     self.action_widget.action_data.condition =\
+        #         action_plugins.common.ButtonCondition(
+        #             self.condition.press.isChecked(),
+        #             self.condition.release.isChecked(),
+        #             self.condition.shift_data
+        #         )
+        # elif self._is_hat() and self._has_condition():
+        #     self.action_widget.action_data.condition = \
+        #         action_plugins.common.HatCondition(
+        #             self.condition.widgets["N"].isChecked(),
+        #             self.condition.widgets["NE"].isChecked(),
+        #             self.condition.widgets["E"].isChecked(),
+        #             self.condition.widgets["SE"].isChecked(),
+        #             self.condition.widgets["S"].isChecked(),
+        #             self.condition.widgets["SW"].isChecked(),
+        #             self.condition.widgets["W"].isChecked(),
+        #             self.condition.widgets["NW"].isChecked()
+        #         )
+        # elif self._is_axis() and self._has_condition():
+        #     self.action_widget.action_data.condition = \
+        #         action_plugins.common.AxisCondition(
+        #             self.condition.checkbox.isChecked(),
+        #             self.condition.lower_limit.value(),
+        #             self.condition.upper_limit.value()
+        #         )
 
-    def _populate_condition(self):
-        """Populate widget items with data if present."""
-        # Only run if we need a condition
-        if not self._has_condition():
-            return
-
-        # Get condition data and return if there is nothing
-        condition = self.action_widget.action_data.condition
-        if condition is None:
-            return
-
-        if self._is_button_like():
-            self.condition.disconnect_signals()
-
-            self.condition.press.setChecked(condition.on_press)
-            self.condition.release.setChecked(condition.on_release)
-
-            # Shift action label
-            if condition.shift_button is not None:
-                self.condition.shift_data = condition.shift_button
-                if condition.shift_button["hardware_id"] == 0:
-                    key = macro.key_from_code(
-                        condition.shift_button["id"][0],
-                        condition.shift_button["id"][1]
-                    )
-                    self.condition.shift_button.setText(key.name)
-                else:
-                    devices = util.joystick_devices()
-                    dummy_event = Event(
-                        InputType.JoystickButton,
-                        condition.shift_button["id"],
-                        condition.shift_button["hardware_id"],
-                        condition.shift_button["windows_id"]
-                    )
-                    for dev in devices:
-                        if util.device_id(dummy_event) == util.device_id(dev):
-                            self.condition.shift_button.setText(
-                                "{} - Button {:d}".format(
-                                    dev.name,
-                                    condition.shift_button["id"]
-                                ))
-            self.condition.connect_signals()
-
-        elif self._is_hat():
-            self.condition.disconnect_signals()
-            self.condition.widgets["N"].setChecked(condition.on_n)
-            self.condition.widgets["NE"].setChecked(condition.on_ne)
-            self.condition.widgets["E"].setChecked(condition.on_e)
-            self.condition.widgets["SE"].setChecked(condition.on_se)
-            self.condition.widgets["S"].setChecked(condition.on_s)
-            self.condition.widgets["SW"].setChecked(condition.on_sw)
-            self.condition.widgets["W"].setChecked(condition.on_w)
-            self.condition.widgets["NW"].setChecked(condition.on_nw)
-            self.condition.connect_signals()
-        elif self._is_axis():
-            self.condition.disconnect_signals()
-            self.condition.checkbox.setChecked(condition.is_active)
-            self.condition.lower_limit.setValue(condition.lower_limit)
-            self.condition.upper_limit.setValue(condition.upper_limit)
-            self.condition.connect_signals()
+    # TODO: Handle condition stuff saner
+    # def _populate_condition(self):
+    #     """Populate widget items with data if present."""
+    #     # Only run if we need a condition
+    #     if not self._has_condition():
+    #         return
+    #
+    #     # Get condition data and return if there is nothing
+    #     condition = self.container_widget.action_data.condition
+    #     if condition is None:
+    #         return
+    #
+    #     if self._is_button_like():
+    #         self.condition.disconnect_signals()
+    #
+    #         self.condition.press.setChecked(condition.on_press)
+    #         self.condition.release.setChecked(condition.on_release)
+    #
+    #         # Shift action label
+    #         if condition.shift_button is not None:
+    #             self.condition.shift_data = condition.shift_button
+    #             if condition.shift_button["hardware_id"] == 0:
+    #                 key = macro.key_from_code(
+    #                     condition.shift_button["id"][0],
+    #                     condition.shift_button["id"][1]
+    #                 )
+    #                 self.condition.shift_button.setText(key.name)
+    #             else:
+    #                 devices = util.joystick_devices()
+    #                 dummy_event = Event(
+    #                     InputType.JoystickButton,
+    #                     condition.shift_button["id"],
+    #                     condition.shift_button["hardware_id"],
+    #                     condition.shift_button["windows_id"]
+    #                 )
+    #                 for dev in devices:
+    #                     if util.device_id(dummy_event) == util.device_id(dev):
+    #                         self.condition.shift_button.setText(
+    #                             "{} - Button {:d}".format(
+    #                                 dev.name,
+    #                                 condition.shift_button["id"]
+    #                             ))
+    #         self.condition.connect_signals()
+    #
+    #     elif self._is_hat():
+    #         self.condition.disconnect_signals()
+    #         self.condition.widgets["N"].setChecked(condition.on_n)
+    #         self.condition.widgets["NE"].setChecked(condition.on_ne)
+    #         self.condition.widgets["E"].setChecked(condition.on_e)
+    #         self.condition.widgets["SE"].setChecked(condition.on_se)
+    #         self.condition.widgets["S"].setChecked(condition.on_s)
+    #         self.condition.widgets["SW"].setChecked(condition.on_sw)
+    #         self.condition.widgets["W"].setChecked(condition.on_w)
+    #         self.condition.widgets["NW"].setChecked(condition.on_nw)
+    #         self.condition.connect_signals()
+    #     elif self._is_axis():
+    #         self.condition.disconnect_signals()
+    #         self.condition.checkbox.setChecked(condition.is_active)
+    #         self.condition.lower_limit.setValue(condition.lower_limit)
+    #         self.condition.upper_limit.setValue(condition.upper_limit)
+    #         self.condition.connect_signals()
 
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
@@ -673,79 +599,79 @@ class ActionWidgetContainer(QtWidgets.QDockWidget):
         QtWidgets.QDockWidget.closeEvent(self, event)
         self.closed.emit(self)
 
-    def _has_condition(self):
-        """Returns whether or not the widget has a condition.
+    # def _has_condition(self):
+    #     """Returns whether or not the widget has a condition.
+    #
+    #     :return True if a condition is present, False otherwise
+    #     """
+    #     has_condition = False
+    #     type_action_map = plugin_manager.ActionPlugins().type_action_map
+    #     input_type = self.container_widget.action_data.parent.input_type
+    #     action_type = type(self.container_widget.action_data)
+    #
+    #     if self._is_button_like() and action_type in type_action_map[input_type]:
+    #         has_condition = True
+    #     elif self._is_hat() and action_type in type_action_map[input_type]:
+    #         has_condition = True
+    #     elif self._is_axis() and action_type in type_action_map[input_type]:
+    #         has_condition = True
+    #
+    #     return has_condition
 
-        :return True if a condition is present, False otherwise
-        """
-        has_condition = False
-        type_action_map = plugin_manager.ActionPlugins().type_action_map
-        input_type = self.action_widget.action_data.parent.input_type
-        action_type = type(self.action_widget.action_data)
+    # def _add_condition(self):
+    #     """Adds a condition widget to the UI if necessary."""
+    #     type_action_map = plugin_manager.ActionPlugins().type_action_map
+    #     input_type = self.container_widget.action_data.parent.input_type
+    #     action_type = type(self.container_widget.action_data)
+    #     condition = None
+    #
+    #     if self._is_button_like() and action_type in type_action_map[input_type]:
+    #         condition = ButtonConditionWidget(self.to_profile)
+    #     elif self._is_hat() and action_type in type_action_map[input_type]:
+    #         condition = HatConditionWidget(self.to_profile)
+    #     elif self._is_axis() and action_type in type_action_map[input_type]:
+    #         condition = AxisConditionWidget(self.to_profile)
+    #
+    #     if condition is not None:
+    #         self.condition = condition
+    #         self._populate_condition()
+    #         self.main_layout.addWidget(self.condition)
 
-        if self._is_button_like() and action_type in type_action_map[input_type]:
-            has_condition = True
-        elif self._is_hat() and action_type in type_action_map[input_type]:
-            has_condition = True
-        elif self._is_axis() and action_type in type_action_map[input_type]:
-            has_condition = True
-
-        return has_condition
-
-    def _add_condition(self):
-        """Adds a condition widget to the UI if necessary."""
-        type_action_map = plugin_manager.ActionPlugins().type_action_map
-        input_type = self.action_widget.action_data.parent.input_type
-        action_type = type(self.action_widget.action_data)
-        condition = None
-
-        if self._is_button_like() and action_type in type_action_map[input_type]:
-            condition = ButtonConditionWidget(self.to_profile)
-        elif self._is_hat() and action_type in type_action_map[input_type]:
-            condition = HatConditionWidget(self.to_profile)
-        elif self._is_axis() and action_type in type_action_map[input_type]:
-            condition = AxisConditionWidget(self.to_profile)
-
-        if condition is not None:
-            self.condition = condition
-            self._populate_condition()
-            self.main_layout.addWidget(self.condition)
-
-    def _is_button_like(self):
-        """Returns True if the action_widget is button like, i.e. a
-        joystick button or a keyboard key.
-
-        :return True if the action_widget is associated with a button
-            like input type, False otherwise
-        """
-        input_type = self.action_widget.action_data.parent.input_type
-        return input_type in [
-            UiInputType.JoystickButton,
-            UiInputType.Keyboard
-        ]
-
-    def _is_hat(self):
-        """Returns True if the action_widget is associated with a hat.
-
-        :return True if the action_widget is associated with a hat,
-            False otherwise
-        """
-        is_hat = self.action_widget.action_data.parent.input_type == \
-            UiInputType.JoystickHat
-        is_remap = isinstance(
-            self.action_widget.action_data, action_plugins.remap.Remap
-        )
-        return is_hat and not is_remap
-
-    def _is_axis(self):
-        """Returns True if the action_widget is associated with an axis.
-
-        :return True if the action_widget is associated with an axis,
-            False otherwise
-        """
-        is_axis = self.action_widget.action_data.parent.input_type == \
-            UiInputType.JoystickAxis
-        return is_axis
+    # def _is_button_like(self):
+    #     """Returns True if the action_widget is button like, i.e. a
+    #     joystick button or a keyboard key.
+    #
+    #     :return True if the action_widget is associated with a button
+    #         like input type, False otherwise
+    #     """
+    #     input_type = self.container_widget.action_data.parent.input_type
+    #     return input_type in [
+    #         UiInputType.JoystickButton,
+    #         UiInputType.Keyboard
+    #     ]
+    #
+    # def _is_hat(self):
+    #     """Returns True if the action_widget is associated with a hat.
+    #
+    #     :return True if the action_widget is associated with a hat,
+    #         False otherwise
+    #     """
+    #     is_hat = self.container_widget.action_data.parent.input_type == \
+    #              UiInputType.JoystickHat
+    #     is_remap = isinstance(
+    #         self.container_widget.action_data, action_plugins.remap.Remap
+    #     )
+    #     return is_hat and not is_remap
+    #
+    # def _is_axis(self):
+    #     """Returns True if the action_widget is associated with an axis.
+    #
+    #     :return True if the action_widget is associated with an axis,
+    #         False otherwise
+    #     """
+    #     is_axis = self.container_widget.action_data.parent.input_type == \
+    #               UiInputType.JoystickAxis
+    #     return is_axis
 
 
 class InputItemConfigurationPanel(QtWidgets.QFrame):
@@ -774,52 +700,68 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         self.widget_layout = QtWidgets.QVBoxLayout()
 
         self._create_description()
-        self._create_action_dropdown()
+        self._create_dropdowns()
         self.main_layout.addLayout(self.widget_layout)
 
         self.action_widgets = []
         self.from_profile(self.item_profile)
 
-    def _add_widget(self, action_profile, emit=True):
+    def _do_add(self, container, emit=True):
         """Adds an ActionWidget to the ui by placing it into a
         closable container.
 
-        :param action_profile the action type for which to create a new widget
+        :param element the action type for which to create a new widget
         :param emit whether or not to emit a changed signal
         """
+
+        assert isinstance(container, base_classes.AbstractContainer)
+
         # In case the profile was just created by adding a new action
         # fill some of the fields.
-        if not action_profile.is_valid:
-            self.item_profile.actions.append(action_profile)
+        # if not action_item.is_valid:
+        #     self.item_profile.actions.append(action_item)
+
+        if container not in self.item_profile.actions:
+            self.item_profile.actions.append(container)
+
+        widget = container.widget(container)
+        widget.modified.connect(lambda: self.changed.emit())
 
         # Create the widget using the information from the action item
-        widget = action_profile.widget(
-            action_profile,
-            self.vjoy_devices,
-            lambda: self.changed.emit()
-        )
+        # widget = action_item.widget(
+        #     action_item,
+        #     self.vjoy_devices,
+        #     lambda: self.changed.emit()
+        # )
 
-        # Add the newly created widget to the UI
-        self.action_widgets.append(ActionWidgetContainer(widget))
-        self.action_widgets[-1].closed.connect(self._remove_widget)
+        # Place the new contained in a dock and visualize it in the
+        # configuration panel
+        self.action_widgets.append(widget)
+        self.action_widgets[-1].closed.connect(self._do_remove)
         self.main_layout.addWidget(self.action_widgets[-1])
         if emit:
             self.changed.emit()
 
         return widget
 
-    def _remove_widget(self, widget, emit=True):
+    def _configuration_changed(self):
+        self.changed.emit()
+
+    def _do_remove(self, widget, emit=True):
         """Removes a widget from the ui as well as the profile.
 
         :param widget the widget and associated data to remove
         :param emit emits a changed signal if True, otherwise nothing
             is emitted
         """
-        assert(isinstance(widget, ActionWidgetContainer))
+        assert isinstance(
+            widget,
+            base_classes.AbstractContainerWidget
+        )
         # Remove profile data
-        action_data = widget.action_widget.action_data
-        assert(action_data in self.item_profile.actions)
-        self.item_profile.actions.remove(action_data)
+        profile_data = widget.profile_data
+        assert profile_data in self.item_profile.actions
+        self.item_profile.actions.remove(profile_data)
         # Remove UI widgets
         self.main_layout.removeWidget(widget)
         self.action_widgets.remove(widget)
@@ -827,18 +769,24 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         if emit:
             self.changed.emit()
 
-    def _add_action(self, checked=False):
+    def _add_action(self, action_name):
         """Adds a new action to the input item.
-
-        :param checked if the button is checked or not
         """
         # Build label to class map
         lookup = {}
         for klass in plugin_manager.ActionPlugins().repository.values():
             lookup[klass.name] = klass
-        # Create desired widget
-        selection = lookup[self.action_dropdown.currentText()]
-        self._add_widget(selection(self.item_profile))
+
+        container = container_plugins.basic.BasicContainer(self.item_profile)
+        container.add_action(lookup[action_name](container))
+        self._do_add(container)
+
+    def _add_container(self, container_name):
+        # Build label to class map
+        lookup = {}
+        for klass in plugin_manager.ContainerPlugins().repository.values():
+            lookup[klass.name] = klass
+        self._do_add(lookup[container_name](self.item_profile))
 
     def from_profile(self, data):
         """Sets the data of this widget.
@@ -858,7 +806,7 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
         self.item_profile = data
         for i in range(len(self.item_profile.actions)):
             try:
-                self._add_widget(self.item_profile.actions[i], False)
+                self._do_add(self.item_profile.actions[i], False)
             except error.GremlinError as err:
                 logging.getLogger("system").exception(str(err))
                 raise err
@@ -888,22 +836,35 @@ class InputItemConfigurationPanel(QtWidgets.QFrame):
 
         self.main_layout.addLayout(self._description_layout)
 
-    def _create_action_dropdown(self):
+    def _create_dropdowns(self):
         """Creates a drop down selection with actions that can be
         added to the current input item.
         """
         self.action_layout = QtWidgets.QHBoxLayout()
-        self.action_dropdown = QtWidgets.QComboBox()
-        for name in self._valid_action_list():
-            self.action_dropdown.addItem(name)
-        self.action_dropdown.setCurrentText("Remap")
-        self.action_layout.addWidget(self.action_dropdown)
-        self.add_action_button = QtWidgets.QPushButton("Add")
-        self.add_action_button.clicked.connect(self._add_action)
-        self.action_layout.addWidget(self.add_action_button)
-        self.action_layout.addStretch()
+        # self.action_dropdown = QtWidgets.QComboBox()
+        # for name in self._valid_action_list():
+        #     self.action_dropdown.addItem(name)
+        # self.action_dropdown.setCurrentText("Remap")
+        # self.action_layout.addWidget(self.action_dropdown)
+        # self.add_action_button = QtWidgets.QPushButton("Add")
+        # self.add_action_button.clicked.connect(self._add_action)
+        # self.action_layout.addWidget(self.add_action_button)
+        # self.action_layout.addStretch()
+        # self.always_execute = QtWidgets.QCheckBox("Always execute")
+        # self.always_execute.stateChanged.connect(self.to_profile)
+        # self.action_layout.addWidget(self.always_execute)
+
+        self.action_selector = gremlin.ui.common.ActionSelector(
+            self.item_profile.input_type
+        )
+        self.action_selector.action_added.connect(self._add_action)
+        self.container_selector = ContainerSelector()
+        self.container_selector.container_added.connect(self._add_container)
         self.always_execute = QtWidgets.QCheckBox("Always execute")
         self.always_execute.stateChanged.connect(self.to_profile)
+
+        self.action_layout.addWidget(self.action_selector)
+        self.action_layout.addWidget(self.container_selector)
         self.action_layout.addWidget(self.always_execute)
         self.main_layout.addLayout(self.action_layout)
 
@@ -1133,10 +1094,10 @@ class InputItemList(QtWidgets.QWidget):
 
         # Input item button storage
         self.input_items = {
-            UiInputType.JoystickAxis: {},
-            UiInputType.JoystickButton: {},
-            UiInputType.JoystickHat: {},
-            UiInputType.Keyboard: {}
+            common.InputType.JoystickAxis: {},
+            common.InputType.JoystickButton: {},
+            common.InputType.JoystickHat: {},
+            common.InputType.Keyboard: {}
         }
 
         # Store parameters
@@ -1173,7 +1134,7 @@ class InputItemList(QtWidgets.QWidget):
         # new keys.
         if self.device_profile.type == profile.DeviceType.Keyboard:
             self.key_add_button = \
-                action_plugins.common.NoKeyboardPushButton("Add Key")
+                gremlin.ui.common.NoKeyboardPushButton("Add Key")
             self.key_add_button.clicked.connect(self._add_new_key)
             self.main_layout.addWidget(self.key_add_button)
 
@@ -1200,12 +1161,12 @@ class InputItemList(QtWidgets.QWidget):
 
         # If this is a keyboard check if we need to remove the key
         if self.device_profile.type == profile.DeviceType.Keyboard:
-            assert(input_type == UiInputType.Keyboard)
+            assert(input_type == common.InputType.Keyboard)
 
             self._populate_item_list()
             if self.current_identifier and self.current_identifier.input_id in \
-                    self.input_items[UiInputType.Keyboard]:
-                item = self.input_items[UiInputType.Keyboard][
+                    self.input_items[common.InputType.Keyboard]:
+                item = self.input_items[common.InputType.Keyboard][
                     self.current_identifier.input_id
                 ]
                 item.setAutoFillBackground(True)
@@ -1233,10 +1194,10 @@ class InputItemList(QtWidgets.QWidget):
         # Remove existing content
         clear_layout(self.scroll_layout)
         self.input_items = {
-            UiInputType.JoystickAxis: {},
-            UiInputType.JoystickButton: {},
-            UiInputType.JoystickHat: {},
-            UiInputType.Keyboard: {}
+            common.InputType.JoystickAxis: {},
+            common.InputType.JoystickButton: {},
+            common.InputType.JoystickHat: {},
+            common.InputType.Keyboard: {}
         }
 
         # Bail if the current mode is invalid
@@ -1255,9 +1216,9 @@ class InputItemList(QtWidgets.QWidget):
     def _populate_joystick(self):
         """Handles generating the items for a joystick device."""
         input_counts = [
-            (UiInputType.JoystickAxis, self.device.axes),
-            (UiInputType.JoystickButton, self.device.buttons),
-            (UiInputType.JoystickHat, self.device.hats)
+            (common.InputType.JoystickAxis, self.device.axes),
+            (common.InputType.JoystickButton, self.device.buttons),
+            (common.InputType.JoystickHat, self.device.hats)
         ]
 
         # Ensure the current mode exists for the device even if it
@@ -1294,7 +1255,7 @@ class InputItemList(QtWidgets.QWidget):
         # Add existing keys to the scroll
         mode = self.device_profile.modes[self.current_mode]
         key_dict = {}
-        for key, entry in mode.config[UiInputType.Keyboard].items():
+        for key, entry in mode.config[common.InputType.Keyboard].items():
             key_dict[macro.key_from_code(key[0], key[1]).name] = entry
 
         for key_string in sorted(key_dict.keys()):
@@ -1305,7 +1266,7 @@ class InputItemList(QtWidgets.QWidget):
             item = InputItemButton(
                 key.name,
                 InputIdentifier(
-                    UiInputType.Keyboard,
+                    common.InputType.Keyboard,
                     key_code,
                     self.device_profile.type
                 ),
@@ -1314,7 +1275,7 @@ class InputItemList(QtWidgets.QWidget):
             item.create_action_icons(entry)
             item.input_item_clicked.connect(self._input_item_selection)
             # Add the new item to the panel
-            self.input_items[UiInputType.Keyboard][key_code] = item
+            self.input_items[common.InputType.Keyboard][key_code] = item
             self.scroll_layout.addWidget(item)
 
     def _populate_vjoy(self):
@@ -1328,7 +1289,7 @@ class InputItemList(QtWidgets.QWidget):
             item = InputItemButton(
                 i,
                 InputIdentifier(
-                    UiInputType.JoystickAxis,
+                    common.InputType.JoystickAxis,
                     i,
                     self.device_profile.type
                 ),
@@ -1336,14 +1297,14 @@ class InputItemList(QtWidgets.QWidget):
             )
             item.create_action_icons(
                 self.device_profile.modes[self.current_mode].get_data(
-                    UiInputType.JoystickAxis,
+                    common.InputType.JoystickAxis,
                     i
                 )
             )
             item.input_item_clicked.connect(
                 self._input_item_selection
             )
-            self.input_items[UiInputType.JoystickAxis][i] = item
+            self.input_items[common.InputType.JoystickAxis][i] = item
             self.scroll_layout.addWidget(item)
 
     def _input_item_selection(self, identifier):
@@ -1363,13 +1324,13 @@ class InputItemList(QtWidgets.QWidget):
         self.current_identifier = identifier
 
         # Deselect all input item entries
-        for axis_id, axis in self.input_items[UiInputType.JoystickAxis].items():
+        for axis_id, axis in self.input_items[common.InputType.JoystickAxis].items():
             axis.setPalette(self.palette())
-        for btn_id, button in self.input_items[UiInputType.JoystickButton].items():
+        for btn_id, button in self.input_items[common.InputType.JoystickButton].items():
             button.setPalette(self.palette())
-        for hat_id, hat in self.input_items[UiInputType.JoystickHat].items():
+        for hat_id, hat in self.input_items[common.InputType.JoystickHat].items():
             hat.setPalette(self.palette())
-        for key_id, key in self.input_items[UiInputType.Keyboard].items():
+        for key_id, key in self.input_items[common.InputType.Keyboard].items():
             key.setPalette(self.palette())
 
         # Highlight selected button
@@ -1394,7 +1355,7 @@ class InputItemList(QtWidgets.QWidget):
         """
         self.keyboard_press_dialog = InputListenerWidget(
             self._add_key_to_scroll_list_cb,
-            [InputType.Keyboard]
+            [event_handler.InputType.Keyboard]
         )
 
         # Display the dialog centered in the middle of the UI
@@ -1427,14 +1388,14 @@ class InputItemList(QtWidgets.QWidget):
         # Grab the profile entry which creates one if it doesn't exist
         # yet
         self.device_profile.modes[self.current_mode].get_data(
-            UiInputType.Keyboard,
+            common.InputType.Keyboard,
             key_pair
         )
 
         # Recreate the entire UI to have the button show up
         self._populate_item_list()
         self._input_item_selection(InputIdentifier(
-            UiInputType.Keyboard,
+            common.InputType.Keyboard,
             key_pair,
             profile.DeviceType.Keyboard
         ))
@@ -1571,7 +1532,7 @@ class ConfigurationPanel(QtWidgets.QWidget):
                 if (item_profile.parent.name == self.current_mode) and \
                         len(item_profile.actions) == 0:
                     self.device_profile.modes[self.current_mode].delete_data(
-                        UiInputType.Keyboard,
+                        common.InputType.Keyboard,
                         item_profile.input_id
                     )
                     self.input_item_changed.emit(self.current_identifier)
@@ -1584,6 +1545,38 @@ class ConfigurationPanel(QtWidgets.QWidget):
 
         self.current_configuration_dialog.to_profile()
         self.input_item_changed.emit(self.current_identifier)
+
+
+class ContainerSelector(QtWidgets.QWidget):
+
+    container_added = QtCore.pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+
+        self.container_dropdown = QtWidgets.QComboBox()
+        for name in self._valid_container_list():
+            self.container_dropdown.addItem(name)
+        self.add_button = QtWidgets.QPushButton("Add")
+        self.add_button.clicked.connect(self._add_container)
+
+        self.main_layout.addWidget(self.container_dropdown)
+        self.main_layout.addWidget(self.add_button)
+
+    def _valid_container_list(self):
+        """Returns a list of valid actions for this InputItemWidget.
+
+        :return list of valid action names
+        """
+        container_list = []
+        for entry in plugin_manager.ContainerPlugins().repository.values():
+            container_list.append(entry.name)
+        return sorted(container_list)
+
+    def _add_container(self, clicked=False):
+        self.container_added.emit(self.container_dropdown.currentText())
 
 
 def clear_layout(layout):
