@@ -23,7 +23,7 @@ from threading import Thread
 import win32con
 import win32api
 
-from gremlin.error import KeyboardError
+import gremlin
 
 
 # Default delay between subsequent message dispatch. This is to to get
@@ -46,7 +46,7 @@ def _run_macro(sequence):
         elif isinstance(item, Macro.Pause):
             time.sleep(item.duration)
         else:
-            raise KeyboardError("Invalid item in the sequence {}".format(
+            raise gremlin.error.KeyboardError("Invalid item in the sequence {}".format(
                 type(item))
             )
         time.sleep(default_delay)
@@ -124,7 +124,7 @@ class Macro(object):
         elif isinstance(key, Keys.Key):
             pass
         else:
-            raise KeyboardError("Invalid key specified")
+            raise gremlin.error.KeyboardError("Invalid key specified")
 
         self._sequence.append(Macro.KeyAction(key, is_pressed))
 
@@ -140,7 +140,9 @@ class Macro(object):
                 otherwise
             """
             if not isinstance(key, Keys.Key):
-                raise KeyboardError("Invalid Key instance provided")
+                raise gremlin.error.KeyboardError(
+                    "Invalid Key instance provided"
+                )
             self.key = key
             self.is_pressed = is_pressed
 
@@ -338,7 +340,7 @@ def key_from_name(name):
         logging.getLogger("system").warning(
             "Invalid key name specified \"{}\"".format(name)
         )
-        raise KeyboardError("Invalid key specified")
+        raise gremlin.error.KeyboardError("Invalid key specified")
     return key
 
 

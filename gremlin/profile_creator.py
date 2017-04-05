@@ -20,11 +20,13 @@ import copy
 
 from PyQt5 import QtWidgets
 
-from gremlin import macro, profile, ui_dialogs, ui_widgets, util
-from gremlin.event_handler import InputType, system_event_to_input_event
+from . import common, joystick_handling, macro, profile, util
+import gremlin.ui.common
+import gremlin.ui.input_item
+import gremlin.ui.ui_widgets
 
 
-class ProfileCreator(ui_dialogs.BaseDialogUi):
+class ProfileCreator(gremlin.ui.common.BaseDialogUi):
 
     """Displays a dialog to create a new profile from an existing one.
 
@@ -38,7 +40,7 @@ class ProfileCreator(ui_dialogs.BaseDialogUi):
         :param profile_data the data to use as the template
         :param parent the parent widget of this one
         """
-        ui_dialogs.BaseDialogUi.__init__(self, parent)
+        gremlin.ui.common.BaseDialogUi.__init__(self, parent)
         self.profile_data = profile_data
         self.new_profile = self._create_empty_profile()
 
@@ -72,7 +74,7 @@ class ProfileCreator(ui_dialogs.BaseDialogUi):
 
             # Get the input item to be mapped then modify it and set it again
             item = self.new_profile.devices[device_id].modes[mode].get_data(
-                system_event_to_input_event(event.event_type),
+                event.event_type,
                 event.identifier
             )
 
@@ -103,7 +105,7 @@ class ProfileCreator(ui_dialogs.BaseDialogUi):
 
     def _create_ui(self):
         """Creates the UI of this dialog."""
-        ui_widgets.clear_layout(self.main_layout)
+        gremlin.ui.common.clear_layout(self.main_layout)
         self.mode_index = {}
 
         # Create the drawers for each of the modes
@@ -213,10 +215,10 @@ class ModeBindings(QtWidgets.QWidget):
     def _create_ui(self):
         """Creates the UI elements for each bindable action."""
         all_input_types = [
-            profile.UiInputType.Keyboard,
-            profile.UiInputType.JoystickAxis,
-            profile.UiInputType.JoystickButton,
-            profile.UiInputType.JoystickHat
+            common.InputType.Keyboard,
+            common.InputType.JoystickAxis,
+            common.InputType.JoystickButton,
+            common.InputType.JoystickHat
         ]
 
         # Find all input items associated with this mode and show them as
@@ -282,7 +284,7 @@ class ModeBindings(QtWidgets.QWidget):
 
         :return dictionary mapping device hardware id to the corresponding name
         """
-        devices = util.joystick_devices()
+        devices = joystick_handling.joystick_devices()
         device_lookup = {}
         for dev in devices:
             device_lookup[dev.hardware_id] = dev.name
@@ -296,15 +298,19 @@ class BindableAction(QtWidgets.QWidget):
 
     # Stores which input types are valid together
     valid_bind_types = {
-        profile.UiInputType.JoystickAxis: [InputType.JoystickAxis],
-        profile.UiInputType.JoystickButton: [
-            InputType.JoystickButton,
-            InputType.Keyboard
+        common.InputType.JoystickAxis: [
+            common.InputType.JoystickAxis
         ],
-        profile.UiInputType.JoystickHat: [InputType.JoystickHat],
-        profile.UiInputType.Keyboard: [
-            InputType.JoystickButton,
-            InputType.Keyboard
+        common.InputType.JoystickButton: [
+            common.InputType.JoystickButton,
+            common.InputType.Keyboard
+        ],
+        common.InputType.JoystickHat: [
+            common.InputType.JoystickHat
+        ],
+        common.InputType.Keyboard: [
+            common.InputType.JoystickButton,
+            common.InputType.Keyboard
         ]
     }
 
@@ -329,7 +335,7 @@ class BindableAction(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QHBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.description = QtWidgets.QLabel(description)
-        self.bound_action = ui_widgets.LeftRightPushButton(label)
+        self.bound_action = gremlin.ui.common.LeftRightPushButton(label)
         self.bound_action.setMinimumWidth(200)
         self.bound_action.setMaximumWidth(200)
         self.bound_action.clicked.connect(self._bind_action)
@@ -339,13 +345,14 @@ class BindableAction(QtWidgets.QWidget):
         self.icon_layout = QtWidgets.QHBoxLayout()
         self.icon_layout.addStretch()
         for action in input_item.actions:
-            self.icon_layout.addWidget(ui_widgets.ActionLabel(action))
+            self.icon_layout.addWidget(
+                gremlin.ui.input_item.ActionLabel(action))
         self.main_layout.addLayout(self.icon_layout)
         self.main_layout.addWidget(self.bound_action)
 
     def _bind_action(self):
         """Prompts the user for the input to bind to this item."""
-        self.button_press_dialog = ui_widgets.InputListenerWidget(
+        self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
             self.input_cb,
             BindableAction.valid_bind_types[self.input_type],
             True

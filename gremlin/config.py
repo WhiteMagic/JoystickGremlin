@@ -21,10 +21,10 @@ import os
 
 from PyQt5 import QtCore
 
-import gremlin.util
+from . import common, util
 
 
-@gremlin.util.SingletonDecorator
+@common.SingletonDecorator
 class Configuration(object):
 
     """Responsible for loading and saving configuration data."""
@@ -36,7 +36,7 @@ class Configuration(object):
         self.reload()
 
         self.watcher = QtCore.QFileSystemWatcher([
-            os.path.join(gremlin.util.userprofile_path(), "config.json")
+            os.path.join(util.userprofile_path(), "config.json")
         ])
         self.watcher.fileChanged.connect(self.reload)
 
@@ -46,7 +46,7 @@ class Configuration(object):
                 time.time() - self._last_reload < 1:
             return
 
-        fname = os.path.join(gremlin.util.userprofile_path(), "config.json")
+        fname = os.path.join(util.userprofile_path(), "config.json")
         # Attempt to load the configuration file if this fails set
         # default empty values.
         load_successful = False
@@ -77,7 +77,7 @@ class Configuration(object):
 
     def save(self):
         """Writes the configuration file to disk."""
-        fname = os.path.join(gremlin.util.userprofile_path(), "config.json")
+        fname = os.path.join(util.userprofile_path(), "config.json")
         with open(fname, "w") as hdl:
             encoder = json.JSONEncoder(
                 sort_keys=True,
@@ -91,7 +91,7 @@ class Configuration(object):
         :param dev_id the id of the device
         :param limits the calibration data for each of the axes
         """
-        hid, wid = gremlin.util.extract_ids(dev_id)
+        hid, wid = util.extract_ids(dev_id)
         identifier = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
         if identifier in self._data["calibration"]:
             del self._data["calibration"][identifier]
@@ -113,7 +113,7 @@ class Configuration(object):
         :param axis_id the id of the desired axis
         :return the calibration data for the desired axis
         """
-        hid, wid = gremlin.util.extract_ids(dev_id)
+        hid, wid = util.extract_ids(dev_id)
         identifier = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
         axis_name = "axis_{}".format(axis_id)
         if identifier not in self._data["calibration"]:

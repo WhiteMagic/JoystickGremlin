@@ -22,7 +22,8 @@ from ctypes import wintypes
 import threading
 import time
 
-from gremlin.util import SingletonDecorator
+import gremlin
+import gremlin.common
 
 
 class KeyEvent(object):
@@ -71,7 +72,7 @@ class KeyEvent(object):
         return self._is_injected
 
 
-@SingletonDecorator
+@gremlin.common.SingletonDecorator
 class KeyboardHook(object):
 
     """Hooks into the event stream and grabs keyboard related events

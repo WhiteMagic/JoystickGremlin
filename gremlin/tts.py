@@ -23,10 +23,11 @@ to speech system.
 import logging
 import win32com.client
 
-from gremlin import util
+from mako.template import Template
+from . import event_handler, util
 
 
-class TextToSpeech(object):
+class TextToSpeech:
 
     def __init__(self):
         """Creates a new instance."""
@@ -64,3 +65,16 @@ class TextToSpeech(object):
         :param value the new speaking rate
         """
         self._speaker.Rate = int(util.clamp(value, -10, 10))
+
+
+def text_substitution(text):
+    """Returns the provided text after running text substitution on it.
+
+    :param text the text to substitute parts of
+    :return original text with parts substituted
+    """
+    eh = event_handler.EventHandler()
+    tpl = Template(text)
+    return tpl.render(
+        current_mode=eh.active_mode
+    )

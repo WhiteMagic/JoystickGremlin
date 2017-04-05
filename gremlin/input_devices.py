@@ -23,12 +23,10 @@ import time
 import threading
 
 from PyQt5 import QtCore
+
 import sdl2
 
-from gremlin import event_handler, macro, util
-from gremlin.util import SingletonDecorator, convert_sdl_hat, extract_ids
-from gremlin.error import GremlinError
-from vjoy.vjoy import VJoy
+from . import common, error, event_handler, joystick_handling, macro, util
 
 
 class CallbackRegistry(object):
@@ -181,36 +179,6 @@ callback_registry = CallbackRegistry()
 periodic_registry = PeriodicRegistry()
 
 
-class VJoyProxy(object):
-
-    """Manages the usage of vJoy and allows shared access all callbacks."""
-
-    vjoy_devices = {}
-
-    def __getitem__(self, key):
-        """Returns the requested vJoy instance.
-
-        :param key id of the vjoy device
-        :return the corresponding vjoy device
-        """
-        if key in VJoyProxy.vjoy_devices:
-            return VJoyProxy.vjoy_devices[key]
-        else:
-            if not isinstance(key, int):
-                raise GremlinError("Integer ID for vjoy device ID expected")
-
-            device = VJoy(key)
-            VJoyProxy.vjoy_devices[key] = device
-            return device
-
-    @classmethod
-    def reset(cls):
-        """Relinquishes control over all held VJoy devices."""
-        for device in VJoyProxy.vjoy_devices.values():
-            device.invalidate()
-        VJoyProxy.vjoy_devices = {}
-
-
 class JoystickWrapper(object):
 
     """Wraps SDL2 joysticks and presents an API similar to vjoy."""
@@ -261,7 +229,7 @@ class JoystickWrapper(object):
 
         @property
         def direction(self):
-            return convert_sdl_hat(sdl2.SDL_JoystickGetHat(
+            return util.convert_sdl_hat(sdl2.SDL_JoystickGetHat(
                 self._joystick, self._index)
             )
 
@@ -271,7 +239,7 @@ class JoystickWrapper(object):
         :param jid the id of the joystick instance to wrap
         """
         if jid > sdl2.joystick.SDL_NumJoysticks():
-            raise GremlinError("No device with the provided ID exist")
+            raise error.GremlinError("No device with the provided ID exist")
         self._joystick = sdl2.SDL_JoystickOpen(jid)
         self._axis = self._init_axes()
         self._buttons = self._init_buttons()
@@ -387,7 +355,7 @@ class JoystickProxy(object):
                 JoystickProxy.joystick_devices[joy.name] = joy
 
         if key not in JoystickProxy.joystick_devices:
-            raise GremlinError(
+            raise error.GremlinError(
                 "No device with the provided identifier: {} exists".format(key)
             )
         else:
@@ -402,7 +370,7 @@ class VJoyPlugin(object):
     to be named "vjoy".
     """
 
-    vjoy = VJoyProxy()
+    vjoy = joystick_handling.VJoyProxy()
 
     def __init__(self):
         self.keyword = "vjoy"
@@ -466,7 +434,7 @@ class JoystickPlugin(object):
         return wrapper
 
 
-@SingletonDecorator
+@common.SingletonDecorator
 class Keyboard(QtCore.QObject):
 
     """Provides access to the keyboard state."""
@@ -562,7 +530,7 @@ class JoystickDecorator(object):
         )
 
 
-@SingletonDecorator
+@common.SingletonDecorator
 class AutomaticButtonRelease(QtCore.QObject):
 
     """Ensures that vjoy buttons are reliably released.
@@ -604,7 +572,7 @@ class AutomaticButtonRelease(QtCore.QObject):
         :param evt the joystick event to process
         """
         if evt in self._registry and not evt.is_pressed:
-            vjoy = VJoyProxy()
+            vjoy = joystick_handling.VJoyProxy()
             for entry in self._registry[evt]:
                 # Check if the button is valid otherwise we cause Gremlin
                 # to crash
@@ -629,9 +597,9 @@ def _button(button_id, device_id, mode, always_execute=False):
         def wrapper_fn(*args, **kwargs):
             callback(*args, **kwargs)
 
-        hid, wid = extract_ids(device_id)
+        hid, wid = util.extract_ids(device_id)
         event = event_handler.Event(
-            event_type=event_handler.InputType.JoystickButton,
+            event_type=common.InputType.JoystickButton,
             hardware_id=hid,
             windows_id=wid,
             identifier=button_id
@@ -659,9 +627,9 @@ def _hat(hat_id, device_id, mode, always_execute=False):
         def wrapper_fn(*args, **kwargs):
             callback(*args, **kwargs)
 
-        hid, wid = extract_ids(device_id)
+        hid, wid = util.extract_ids(device_id)
         event = event_handler.Event(
-            event_type=event_handler.InputType.JoystickHat,
+            event_type=common.InputType.JoystickHat,
             hardware_id=hid,
             windows_id=wid,
             identifier=hat_id
@@ -689,9 +657,9 @@ def _axis(axis_id, device_id, mode, always_execute=False):
         def wrapper_fn(*args, **kwargs):
             callback(*args, **kwargs)
 
-        hid, wid = extract_ids(device_id)
+        hid, wid = util.extract_ids(device_id)
         event = event_handler.Event(
-            event_type=event_handler.InputType.JoystickAxis,
+            event_type=common.InputType.JoystickAxis,
             hardware_id=hid,
             windows_id=wid,
             identifier=axis_id

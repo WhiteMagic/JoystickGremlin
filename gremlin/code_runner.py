@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from gremlin import event_handler, input_devices, util
+from gremlin import event_handler, input_devices, joystick_handling, util
 
 
 class CodeRunner(object):
@@ -114,7 +114,7 @@ class CodeRunner(object):
         input_devices.periodic_registry.clear()
 
         # Remove all claims on VJoy devices
-        input_devices.VJoyProxy.reset()
+        joystick_handling.VJoyProxy.reset()
 
     def _reset_state(self):
         """Resets all states to their default values."""

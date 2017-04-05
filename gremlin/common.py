@@ -18,7 +18,7 @@
 import enum
 
 
-class UiInputType(enum.Enum):
+class InputType(enum.Enum):
 
     """Enumeration of possible UI input types."""
 
@@ -27,16 +27,6 @@ class UiInputType(enum.Enum):
     JoystickButton = 3
     JoystickHat = 4
     Count = 5
-
-
-def ui_input_type_to_name(input_type):
-    lookup = {
-        UiInputType.Keyboard: "Keyboard",
-        UiInputType.JoystickAxis: "Axis",
-        UiInputType.JoystickButton: "Button",
-        UiInputType.JoystickHat: "Hat",
-    }
-    return lookup[input_type]
 
 
 def index_to_direction(direction):
@@ -51,3 +41,33 @@ def index_to_direction(direction):
         8: "Up & Left"
     }
     return lookup[int(direction)]
+
+input_type_to_name = {
+    InputType.Keyboard: "Keyboard",
+    InputType.JoystickAxis: "Axis",
+    InputType.JoystickButton: "Button",
+    InputType.JoystickHat: "Hat"
+}
+
+
+class SingletonDecorator:
+
+    """Decorator turning a class into a singleton."""
+
+    def __init__(self, klass):
+        self.klass = klass
+        self.instance = None
+
+    def __call__(self, *args, **kwargs):
+        if self.instance is None:
+            self.instance = self.klass(*args, **kwargs)
+        return self.instance
+
+
+class DeviceType(enum.Enum):
+
+    """Enumeration of the different possible input types."""
+
+    Keyboard = 1
+    Joystick = 2
+    VJoy = 3

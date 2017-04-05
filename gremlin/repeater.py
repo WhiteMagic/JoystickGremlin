@@ -21,7 +21,7 @@ import time
 
 from PyQt5 import QtCore
 
-from gremlin import event_handler
+from . import common, event_handler
 
 
 class Repeater(QtCore.QObject):
@@ -102,15 +102,13 @@ class Repeater(QtCore.QObject):
 
         # Repeatedly send events until the thread is interrupted
         while self.is_running:
-            if self._events[0].event_type == event_handler.InputType.Keyboard:
+            if self._events[0].event_type == common.InputType.Keyboard:
                 el.keyboard_event.emit(self._events[index])
             else:
                 el.joystick_event.emit(self._events[index])
 
             self._update_func("{} {}".format(
-                event_handler.input_type_to_name(
-                    self._events[index].event_type
-                ),
+                common.input_type_to_name[self._events[index].event_type],
                 str(self._events[index].identifier)
             ))
 
@@ -124,11 +122,11 @@ class Repeater(QtCore.QObject):
 
         # Ensure we leave the input in a neutral state when done
         event = self._events[0].clone()
-        if event.event_type == event_handler.InputType.JoystickButton:
+        if event.event_type == common.InputType.JoystickButton:
             event.is_pressed = False
-        elif event.event_type == event_handler.InputType.JoystickAxis:
+        elif event.event_type == common.InputType.JoystickAxis:
             event.value = 0.0
-        elif event.event_type == event_handler.InputType.JoystickHat:
+        elif event.event_type == common.InputType.JoystickHat:
             event.value = (0, 0)
         el.joystick_event.emit(event)
         self._update_func("Waiting for input")
