@@ -3,4 +3,3 @@ def ${device_name}${helpers["wid"](input_item)}_${mode_index}_button_${input_ite
     """${input_item.description}"""
     is_pressed = event.is_pressed
 ${"\n".join(code["body"])}
-
