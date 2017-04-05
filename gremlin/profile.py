@@ -16,15 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
-import enum
 import logging
 import shutil
-from xml.etree import ElementTree
+from abc import abstractmethod, ABCMeta
 from xml.dom import minidom
+from xml.etree import ElementTree
 
 import action_plugins
-import gremlin
-from gremlin.common import UiInputType
+from gremlin.common import DeviceType, InputType
+from . import error, joystick_handling, plugin_manager, util
 
 
 def tag_to_input_type(tag):
@@ -34,15 +34,15 @@ def tag_to_input_type(tag):
     :return InputType enum corresponding to the given XML tag
     """
     lookup = {
-        "axis": UiInputType.JoystickAxis,
-        "button": UiInputType.JoystickButton,
-        "hat": UiInputType.JoystickHat,
-        "key": UiInputType.Keyboard,
+        "axis": InputType.JoystickAxis,
+        "button": InputType.JoystickButton,
+        "hat": InputType.JoystickHat,
+        "key": InputType.Keyboard,
     }
     if tag.lower() in lookup:
         return lookup[tag.lower()]
     else:
-        raise gremlin.error.ProfileError(
+        raise error.ProfileError(
             "Invalid input type specified {}".format(tag)
         )
 
@@ -54,15 +54,15 @@ def input_type_to_tag(input_type):
     :return text representation of the input type
     """
     lookup = {
-        UiInputType.JoystickAxis: "axis",
-        UiInputType.JoystickButton: "button",
-        UiInputType.JoystickHat: "hat",
-        UiInputType.Keyboard: "key"
+        InputType.JoystickAxis: "axis",
+        InputType.JoystickButton: "button",
+        InputType.JoystickHat: "hat",
+        InputType.Keyboard: "key"
     }
     if input_type in lookup:
         return lookup[input_type]
     else:
-        raise gremlin.error.ProfileError(
+        raise error.ProfileError(
             "Invalid input type specified {}".format(input_type)
         )
 
@@ -81,9 +81,28 @@ def type_name_to_device_type(type_name):
     if type_name in lookup:
         return lookup[type_name]
     else:
-        raise gremlin.error.ProfileError(
+        raise error.ProfileError(
             "Invalid device type specified {}".format(type_name)
         )
+
+
+def mode_list(node):
+    """Returns a list of all modes based on the given node.
+
+    :param node a node from a profile tree
+    :return list of mode names
+    """
+    # Get profile root node
+    parent = node
+    while parent.parent is not None:
+        parent = parent.parent
+    assert(type(parent) == Profile)
+    # Generate list of modes
+    mode_names = []
+    for device in parent.devices.values():
+        mode_names.extend(device.modes.keys())
+
+    return sorted(list(set(mode_names)), key=lambda x: x.lower())
 
 
 def device_type_to_type_name(device_type):
@@ -100,12 +119,28 @@ def device_type_to_type_name(device_type):
     if device_type in lookup:
         return lookup[device_type]
     else:
-        raise gremlin.error.ProfileError(
+        raise error.ProfileError(
             "Invalid DeviceType enum entry provided {}".format(device_type)
         )
 
 
-def _parse_bool(value):
+def read_bool(node, key, default_value=False):
+    """Attempts to read a boolean value.
+
+    If there is an error when reading the given field from the node
+    the default value is returned instead.
+
+    :param node the node from which to read the value
+    :param key the key to read from the node
+    :param default_value the default value to return in case of errors
+    """
+    try:
+        return parse_bool(node.get(key))
+    except error.ProfileError:
+        return default_value
+
+
+def parse_bool(value):
     """Returns the boolean representation of the provided value.
 
     :param value the value as string to parse
@@ -116,32 +151,49 @@ def _parse_bool(value):
         if int_value in [0, 1]:
             return int_value == 1
         else:
-            raise gremlin.error.ProfileError(
+            raise error.ProfileError(
                 "Invalid bool value used: {}".format(value)
             )
     except ValueError:
         if value.lower() in ["true", "false"]:
             return True if value.lower() == "true" else False
         else:
-            raise gremlin.error.ProfileError(
+            raise error.ProfileError(
                 "Invalid bool value used: {}".format(value)
             )
     except TypeError:
-        raise gremlin.error.ProfileError(
+        raise error.ProfileError(
             "Invalid type provided: {}".format(type(value))
         )
 
 
-class DeviceType(enum.Enum):
+def parse_float(value):
+    """Returns the float representation of the provided value.
 
-    """Enumeration of the different possible input types."""
+    :param value the value as string to parse
+    :return representation of value as float
+    """
+    try:
+        return float(value)
+    except ValueError:
+        raise error.ProfileError(
+            "Invalid float value used: {}".format(value)
+        )
+    except TypeError:
+        raise error.ProfileError(
+            "Invalid type provided: {}".format(type(value))
+        )
 
-    Keyboard = 1
-    Joystick = 2
-    VJoy = 3
+
+def extract_remap_actions(action_list):
+    remap_actions = []
+    for entry in action_list:
+        if isinstance(entry, action_plugins.remap.Remap):
+            remap_actions.append(entry)
+    return remap_actions
 
 
-class ProfileConverter(object):
+class ProfileConverter:
 
     """Handle converting and checking profiles."""
 
@@ -193,12 +245,12 @@ class ProfileConverter(object):
             with open(fname, "w") as out:
                 out.write(dom_xml.toprettyxml(indent="    ", newl="\n"))
 
-            gremlin.util.display_error(
+            util.display_error(
                 "Profile has been converted, please check the error log for "
                 "potential issues."
             )
         else:
-            raise gremlin.error.ProfileError("Failed to convert profile")
+            raise error.ProfileError("Failed to convert profile")
 
     def _determine_version(self, root):
         """Returns the version of the provided profile.
@@ -213,7 +265,7 @@ class ProfileConverter(object):
         elif root.tag == "profile" and int(root.get("version")) == 3:
             return 3
         else:
-            raise gremlin.error.ProfileError(
+            raise error.ProfileError(
                 "Invalid profile version encountered"
             )
 
@@ -253,7 +305,7 @@ class ProfileConverter(object):
         """
         # Get hardware ids of the connected devices
         device_name_map = {}
-        for device in gremlin.util.joystick_devices():
+        for device in joystick_handling.joystick_devices():
             device_name_map[device.name] = device.hardware_id
 
         # Fix the device entries in the provided document
@@ -271,7 +323,7 @@ class ProfileConverter(object):
         return new_root
 
 
-class Profile(object):
+class Profile:
 
     """Stores the contents of an entire configuration profile.
 
@@ -285,6 +337,24 @@ class Profile(object):
         self.imports = []
         self.merge_axes = []
         self.parent = None
+
+    def initialize_joystick_device(self, device, modes):
+        new_device = Device(self)
+        new_device.name = device.name
+        new_device.hardware_id = device.hardware_id
+        new_device.windows_id = device.windows_id
+        new_device.type = DeviceType.Joystick
+        self.devices[util.device_id(new_device)] = new_device
+
+        for mode in modes:
+            new_device.ensure_mode_exists(mode)
+            new_mode = new_device.modes[mode]
+            for id in range(1, device.axes+1):
+                new_mode.get_data(InputType.JoystickAxis, id)
+            for id in range(1, device.buttons+1):
+                new_mode.get_data(InputType.JoystickButton, id)
+            for id in range(1, device.hats+1):
+                new_mode.get_data(InputType.JoystickHat, id)
 
     def build_inheritance_tree(self):
         """Returns a tree structure encoding the inheritance between the
@@ -346,25 +416,24 @@ class Profile(object):
             for i in range(entry.hats):
                 vjoy[entry.vjoy_id]["hat"].append(i+1)
 
+        # List all input types
+        all_input_types = [
+            InputType.JoystickAxis,
+            InputType.JoystickButton,
+            InputType.JoystickHat,
+            InputType.Keyboard
+        ]
+
         # Create a list of all used remap actions
         remap_actions = []
         for dev in self.devices.values():
             for mode in dev.modes.values():
-                for item in mode.config[UiInputType.JoystickAxis].values():
-                    remap_actions.extend(
-                        [e for e in item.actions
-                         if isinstance(e, action_plugins.remap.Remap)]
-                    )
-                for item in mode.config[UiInputType.JoystickButton].values():
-                    remap_actions.extend(
-                        [e for e in item.actions
-                         if isinstance(e, action_plugins.remap.Remap)]
-                    )
-                for item in mode.config[UiInputType.JoystickHat].values():
-                    remap_actions.extend(
-                        [e for e in item.actions
-                         if isinstance(e, action_plugins.remap.Remap)]
-                    )
+                for input_type in all_input_types:
+                    for item in mode.config[input_type].values():
+                        for container in item.actions:
+                            remap_actions.extend(
+                                extract_remap_actions(container.actions)
+                            )
 
         # Remove all remap actions from the list of available inputs
         for act in remap_actions:
@@ -396,7 +465,7 @@ class Profile(object):
         for child in root.iter("device"):
             device = Device(self)
             device.from_xml(child)
-            self.devices[gremlin.util.device_id(device)] = device
+            self.devices[util.device_id(device)] = device
         # Parse each vjoy device into separate DeviceConfiguration objects
         for child in root.iter("vjoy-device"):
             device = Device(self)
@@ -407,13 +476,13 @@ class Profile(object):
         # device even if it was not part of the loaded XML and
         # replicate the modes present in the profile. This adds both entries
         # for physical and virtual joysticks.
-        devices = gremlin.util.joystick_devices()
+        devices = joystick_handling.joystick_devices()
         for dev in devices:
             add_device = False
             if dev.is_virtual and dev.vjoy_id not in self.vjoy_devices:
                 add_device = True
             elif not dev.is_virtual and \
-                    gremlin.util.device_id(dev) not in self.devices:
+                    util.device_id(dev) not in self.devices:
                 add_device = True
 
             if add_device:
@@ -428,11 +497,10 @@ class Profile(object):
                     new_device.type = DeviceType.Joystick
                     new_device.hardware_id = dev.hardware_id
                     new_device.windows_id = dev.windows_id
-                    self.devices[gremlin.util.device_id(new_device)] = new_device
+                    self.devices[util.device_id(new_device)] = new_device
 
                 # Create required modes
-                mode_list = gremlin.util.mode_list(new_device)
-                for mode in mode_list:
+                for mode in mode_list(new_device):
                     if mode not in new_device.modes:
                         new_device.modes[mode] = Mode(new_device)
                         new_device.modes[mode].name = mode
@@ -520,7 +588,7 @@ class Profile(object):
         else:
             if device_id not in self.devices:
                 # Create the device
-                hid, wid = gremlin.util.extract_ids(device_id)
+                hid, wid = util.extract_ids(device_id)
                 device = Device(self)
                 device.name = device_name
                 device.hardware_id = hid
@@ -556,10 +624,10 @@ class Profile(object):
 
         # If we have duplicate devices check if this device is a duplicate, if
         # not fix the windows_id in case it no longer matches
-        if gremlin.util.g_duplicate_devices:
+        if util.g_duplicate_devices:
             device_counts = {}
             windows_ids = {}
-            for dev in gremlin.util.joystick_devices():
+            for dev in joystick_handling.joystick_devices():
                 device_counts[dev.hardware_id] = \
                     device_counts.get(dev.hardware_id, 0) + 1
                 windows_ids[dev.hardware_id] = dev.windows_id
@@ -573,7 +641,7 @@ class Profile(object):
         return entry
 
 
-class Device(object):
+class Device:
 
     """Stores the information about a single device including it's modes."""
 
@@ -589,12 +657,21 @@ class Device(object):
         self.modes = {}
         self.type = None
 
-    def ensure_mode_exists(self, mode_name):
+    def ensure_mode_exists(self, mode_name, device=None):
         if mode_name in self.modes:
-            return
-        mode = Mode(self)
-        mode.name = mode_name
-        self.modes[mode.name] = mode
+            mode = self.modes[mode_name]
+        else:
+            mode = Mode(self)
+            mode.name = mode_name
+            self.modes[mode.name] = mode
+
+        if device is not None:
+            for id in range(1, device.axes + 1):
+                mode.get_data(InputType.JoystickAxis, id)
+            for id in range(1, device.buttons + 1):
+                mode.get_data(InputType.JoystickButton, id)
+            for id in range(1, device.hats + 1):
+                mode.get_data(InputType.JoystickHat, id)
 
     def from_xml(self, node):
         """Populates this device based on the xml data.
@@ -608,10 +685,10 @@ class Device(object):
 
         # If we have duplicate devices check if this device is a duplicate, if
         # not fix the windows_id in case it no longer matches
-        if gremlin.util.g_duplicate_devices and self.type == DeviceType.Joystick:
+        if util.g_duplicate_devices and self.type == DeviceType.Joystick:
             device_counts = {}
             windows_ids = {}
-            for dev in gremlin.util.joystick_devices():
+            for dev in joystick_handling.joystick_devices():
                 device_counts[dev.hardware_id] = \
                     device_counts.get(dev.hardware_id, 0) + 1
                 windows_ids[dev.hardware_id] = dev.windows_id
@@ -639,7 +716,7 @@ class Device(object):
         return node
 
 
-class Mode(object):
+class Mode:
 
     """Represents the configuration of the mode of a single device."""
 
@@ -653,10 +730,10 @@ class Mode(object):
         self.name = None
 
         self.config = {
-            UiInputType.JoystickAxis: {},
-            UiInputType.JoystickButton: {},
-            UiInputType.JoystickHat: {},
-            UiInputType.Keyboard: {}
+            InputType.JoystickAxis: {},
+            InputType.JoystickButton: {},
+            InputType.JoystickHat: {},
+            InputType.Keyboard: {}
         }
 
     def from_xml(self, node):
@@ -732,7 +809,7 @@ class Mode(object):
         return input_id in self.config[input_type]
 
 
-class InputItem(object):
+class InputItem:
 
     """Represents a single input item such as a button or axis."""
 
@@ -753,20 +830,28 @@ class InputItem(object):
 
         :param node XML node to parse
         """
-        action_name_map = gremlin.plugin_manager.ActionPlugins().action_name_map
+        container_name_map = plugin_manager.ContainerPlugins().tag_map
         self.input_type = tag_to_input_type(node.tag)
         self.input_id = int(node.get("id"))
         self.description = node.get("description")
-        self.always_execute = _parse_bool(node.get("always-execute", "False"))
-        if self.input_type == UiInputType.Keyboard:
-            self.input_id = (self.input_id, _parse_bool(node.get("extended")))
+        self.always_execute = parse_bool(node.get("always-execute", "False"))
+        if self.input_type == InputType.Keyboard:
+            self.input_id = (self.input_id, parse_bool(node.get("extended")))
         for child in node:
-            if child.tag not in action_name_map:
+            # if child.tag not in action_name_map:
+            #     logging.getLogger("system").warning(
+            #         "Unknown node present: {}".format(child.tag)
+            #     )
+            #     continue
+            # entry = action_name_map[child.tag](self)
+            # entry.from_xml(child)
+            container_type = child.attrib["type"]
+            if container_type not in container_name_map:
                 logging.getLogger("system").warning(
-                    "Unknown node present: {}".format(child.tag)
+                    "Unknown container type used: {}".format(container_type)
                 )
                 continue
-            entry = action_name_map[child.tag](self)
+            entry = container_name_map[container_type](self)
             entry.from_xml(child)
             self.actions.append(entry)
 
@@ -778,7 +863,7 @@ class InputItem(object):
         node = ElementTree.Element(
             action_plugins.common.input_type_to_tag(self.input_type)
         )
-        if self.input_type == UiInputType.Keyboard:
+        if self.input_type == InputType.Keyboard:
             node.set("id", str(self.input_id[0]))
             node.set("extended", str(self.input_id[1]))
         else:
@@ -793,7 +878,8 @@ class InputItem(object):
             node.set("description", "")
 
         for entry in self.actions:
-            node.append(entry.to_xml())
+            if entry.is_valid():
+                node.append(entry.to_xml())
 
         return node
 
@@ -808,7 +894,106 @@ class InputItem(object):
 
         :return hash of this InputItem instance
         """
-        device_id = gremlin.util.device_id(self.parent.parent)
+        device_id = util.device_id(self.parent.parent)
         mode = self.parent.name
 
         return hash((device_id, mode, self.input_type, self.input_id))
+
+
+class CodeBlock:
+
+    def __init__(self, body_code="", static_code=""):
+        self._body = body_code
+        self._static = static_code
+
+    @property
+    def body(self):
+        return self._body
+
+    @property
+    def static(self):
+        return self._static
+
+    def append(self, other):
+        self._body += other.body
+        self._static += other.static
+
+
+class ProfileData(metaclass=ABCMeta):
+
+    """Base class for all items holding profile data.
+
+    This is primarily used for containers and actions to represent their
+    configuration and to easily load, store, and generate code from them.
+    """
+
+    # Monotonically increasing counter for unique ids
+    next_code_id = 0
+
+    def __init__(self, parent):
+        """Creates a new instance.
+
+        :param parent the parent item of this instance in the profile tree
+        """
+        self.parent = parent
+
+    def from_xml(self, node):
+        """Initializes this node's values based on the provided XML node.
+
+        :param node the XML node to use to populate this instance
+        """
+        self._parse_xml(node)
+
+    def to_xml(self):
+        """Returns the XML representation of this instance.
+
+        :return XML representation of this instance
+        """
+        return self._generate_xml()
+
+    def to_code(self):
+        """Generates the code to execute the behaviour of this instance.
+
+        :return code representing this instance's behaviour
+        """
+        code = self._generate_code()
+        assert isinstance(code, CodeBlock)
+        ProfileData.next_code_id += 1
+        return code
+
+    def is_valid(self):
+        return self._is_valid()
+
+    def get_input_type(self):
+        item = self.parent
+        while not isinstance(item, InputItem):
+            item = item.parent
+        return item.input_type
+
+    @abstractmethod
+    def _parse_xml(self, node):
+        """Implementation of the XML parsing.
+
+        :param node the XML node to use to populate this instance
+        """
+        pass
+
+    @abstractmethod
+    def _generate_xml(self):
+        """Implementation of the XML generation.
+
+        :return XML representation of this instance
+        """
+        pass
+
+    @abstractmethod
+    def _generate_code(self):
+        """Implementation of the code generation.
+
+        :return code representing this instance's behaviour
+        """
+        pass
+
+    @abstractmethod
+    def _is_valid(self):
+        pass
