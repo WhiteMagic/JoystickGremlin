@@ -20,12 +20,11 @@ import importlib
 import logging
 import os
 
-from gremlin.common import UiInputType
-from gremlin.util import SingletonDecorator
+from . import common, error
 
 
-@SingletonDecorator
-class PluginManager(object):
+@common.SingletonDecorator
+class PluginManager:
 
     """Responsible for handling all plugins."""
 
@@ -41,7 +40,7 @@ class PluginManager(object):
         return self._repositories[key]
 
 
-class PluginList(object):
+class PluginList:
 
     def __init__(self, folder):
         self._plugin_folder = folder
@@ -86,17 +85,83 @@ class PluginList(object):
                     )
 
 
-@SingletonDecorator
-class ActionPlugins(object):
+@common.SingletonDecorator
+class ContainerPlugins:
+
+    def __init__(self):
+        self._plugins = {}
+        self._discover_plugins()
+
+        self._tag_to_type_map = {}
+        self._name_to_type_map = {}
+
+        self._create_maps()
+
+    @property
+    def tag_map(self):
+        return self._tag_to_type_map
+
+    @property
+    def repository(self):
+        return self._plugins
+
+    def get_class(self, name):
+        if name not in self._name_to_type_map:
+            raise error.GremlinError(
+                "No container with name '{}' exists".format(name)
+            )
+        return self._name_to_type_map[name]
+
+    def _discover_plugins(self):
+        """Processes known plugin folders for action plugins."""
+        for root, dirs, files in os.walk("container_plugins"):
+            for fname in [v for v in files if v == "__init__.py"]:
+                try:
+                    folder, module = os.path.split(root)
+                    if folder != "container_plugins":
+                        continue
+
+                    # Attempt to load the file and if it looks like a proper
+                    # action_plugins store it in the registry
+                    plugin = importlib.import_module(
+                        "container_plugins.{}".format(module)
+                    )
+                    if "version" in plugin.__dict__:
+                        self._plugins[plugin.name] = plugin.create
+                        logging.getLogger("system").debug(
+                            "Loaded: {}".format(plugin.name)
+                        )
+                    else:
+                        del plugin
+                except Exception as e:
+                    # Log an error and ignore the action_plugins if
+                    # anything is wrong with it
+                    logging.getLogger("system").warning(
+                        "Loading container_plugins '{}' failed due to: {}".format(
+                            fname,
+                            e
+                        )
+                    )
+
+    def _create_maps(self):
+        """Creates a lookup table from container tag to container object."""
+        for entry in self._plugins.values():
+            self._tag_to_type_map[entry.tag] = entry
+            self._name_to_type_map[entry.name] = entry
+
+
+@common.SingletonDecorator
+class ActionPlugins:
 
     """Handles discovery and handling of action plugins."""
 
     def __init__(self):
         """Initializes the action plugin manager."""
         self._plugins = {}
-        self._type_action_map = {}
-        self._action_name_to_type = {}
-        self._action_type_to_name = {}
+        self._type_to_action_map = {}
+        self._type_to_name_map = {}
+        self._name_to_type_map = {}
+        self._tag_to_type_map = {}
         self._parameter_requirements = {}
 
         self._discover_plugins()
@@ -119,15 +184,22 @@ class ActionPlugins(object):
 
         :return mapping from input types to associated actions
         """
-        return self._type_action_map
+        return self._type_to_action_map
 
     @property
-    def action_name_map(self):
-        """Returns the mapping from an action name to the action plugin.
+    def tag_map(self):
+        """Returns the mapping from an action tag to the action plugin.
 
         :return mapping from action name to action plugin
         """
-        return self._action_name_to_type
+        return self._tag_to_type_map
+
+    def get_class(self, name):
+        if name not in self._name_to_type_map:
+            raise error.GremlinError(
+                "No action with name '{}' exists".format(name)
+            )
+        return self._name_to_type_map[name]
 
     def plugins_requiring_parameter(self, param_name):
         """Returns the list of plugins requiring a certain parameter.
@@ -139,21 +211,22 @@ class ActionPlugins(object):
 
     def _create_type_action_map(self):
         """Creates a lookup table from input types to available actions."""
-        self._type_action_map = {
-            UiInputType.JoystickAxis: [],
-            UiInputType.JoystickButton: [],
-            UiInputType.JoystickHat: [],
-            UiInputType.Keyboard: []
+        self._type_to_action_map = {
+            common.InputType.JoystickAxis: [],
+            common.InputType.JoystickButton: [],
+            common.InputType.JoystickHat: [],
+            common.InputType.Keyboard: []
         }
 
         for entry in self._plugins.values():
             for input_type in entry.input_types:
-                self._type_action_map[input_type].append(entry)
+                self._type_to_action_map[input_type].append(entry)
 
     def _create_action_name_map(self):
         """Creates a lookup table from action names to actions."""
         for entry in self._plugins.values():
-            self.action_name_map[entry.tag] = entry
+            self._name_to_type_map[entry.name] = entry
+            self._tag_to_type_map[entry.tag] = entry
 
     def _create_parameter_requirements(self):
         """Creates a mapping from parameter names to actions."""
@@ -189,7 +262,7 @@ class ActionPlugins(object):
                     # anything is wrong with it
                     logging.getLogger("system").warning(
                         "Loading action_plugins '{}' failed due to: {}".format(
-                            fname,
+                            root.split("\\")[-1],
                             e
                         )
                     )
