@@ -1,5 +1,5 @@
 # mako/cache.py
-# Copyright (C) 2006-2014 the Mako authors and contributors <see AUTHORS file>
+# Copyright (C) 2006-2016 the Mako authors and contributors <see AUTHORS file>
 #
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -13,6 +13,7 @@ register_plugin("beaker", "mako.ext.beaker_cache", "BeakerCacheImpl")
 
 
 class Cache(object):
+
     """Represents a data content cache made available to the module
     space of a specific :class:`.Template` object.
 
@@ -88,9 +89,10 @@ class Cache(object):
         if not self.template.cache_enabled:
             return creation_function()
 
-        return self.impl.get_or_create(key,
-                        creation_function,
-                        **self._get_cache_kw(kw, context))
+        return self.impl.get_or_create(
+            key,
+            creation_function,
+            **self._get_cache_kw(kw, context))
 
     def set(self, key, value, **kw):
         """Place a value in the cache.
@@ -178,7 +180,9 @@ class Cache(object):
             tmpl_kw.setdefault('context', context)
         return tmpl_kw
 
+
 class CacheImpl(object):
+
     """Provide a cache implementation for use by :class:`.Cache`."""
 
     def __init__(self, cache):

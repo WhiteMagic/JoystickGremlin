@@ -1,5 +1,5 @@
 # mako/exceptions.py
-# Copyright (C) 2006-2014 the Mako authors and contributors <see AUTHORS file>
+# Copyright (C) 2006-2016 the Mako authors and contributors <see AUTHORS file>
 #
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -10,11 +10,14 @@ import traceback
 import sys
 from mako import util, compat
 
+
 class MakoException(Exception):
     pass
 
+
 class RuntimeException(MakoException):
     pass
+
 
 def _format_filepos(lineno, pos, filename):
     if filename is None:
@@ -24,42 +27,56 @@ def _format_filepos(lineno, pos, filename):
 
 
 class CompileException(MakoException):
+
     def __init__(self, message, source, lineno, pos, filename):
-        MakoException.__init__(self,
-                              message + _format_filepos(lineno, pos, filename))
+        MakoException.__init__(
+            self,
+            message + _format_filepos(lineno, pos, filename))
         self.lineno = lineno
         self.pos = pos
         self.filename = filename
         self.source = source
+
 
 class SyntaxException(MakoException):
+
     def __init__(self, message, source, lineno, pos, filename):
-        MakoException.__init__(self,
-                              message + _format_filepos(lineno, pos, filename))
+        MakoException.__init__(
+            self,
+            message + _format_filepos(lineno, pos, filename))
         self.lineno = lineno
         self.pos = pos
         self.filename = filename
         self.source = source
 
+
 class UnsupportedError(MakoException):
+
     """raised when a retired feature is used."""
 
+
 class NameConflictError(MakoException):
+
     """raised when a reserved word is used inappropriately"""
+
 
 class TemplateLookupException(MakoException):
     pass
 
+
 class TopLevelLookupException(TemplateLookupException):
     pass
 
+
 class RichTraceback(object):
+
     """Pull the current exception from the ``sys`` traceback and extracts
     Mako-specific template information.
 
     See the usage examples in :ref:`handling_exceptions`.
 
     """
+
     def __init__(self, error=None, traceback=None):
         self.source, self.lineno = "", 0
 
@@ -162,18 +179,18 @@ class RichTraceback(object):
                         else:
                             line = line.decode('ascii', 'replace')
                     new_trcback.append((filename, lineno, function, line,
-                                            None, None, None, None))
+                                        None, None, None, None))
                     continue
 
                 template_ln = 1
 
                 source_map = mako.template.ModuleInfo.\
-                                get_module_source_metadata(
-                                    module_source, full_line_map=True)
+                    get_module_source_metadata(
+                        module_source, full_line_map=True)
                 line_map = source_map['full_line_map']
 
-                template_lines = [line for line in
-                                    template_source.split("\n")]
+                template_lines = [line_ for line_ in
+                                  template_source.split("\n")]
                 mods[filename] = (line_map, template_lines)
 
             template_ln = line_map[lineno - 1]
@@ -233,26 +250,28 @@ ${tback.errorname}: ${tback.message}
 """)
 
 
-# There is no need for pygments and this just causes cx_freeze to get confused. As such disabled as
-# there is also no evidence of this piece of code being used anywhere.
-# def _install_pygments():
-#     global syntax_highlight, pygments_html_formatter
-#     from mako.ext.pygmentplugin import syntax_highlight,\
-#             pygments_html_formatter
-#
-# def _install_fallback():
-#     global syntax_highlight, pygments_html_formatter
-#     from mako.filters import html_escape
-#     pygments_html_formatter = None
-#     def syntax_highlight(filename='', language=None):
-#         return html_escape
-#
-# def _install_highlighting():
-#     try:
-#         _install_pygments()
-#     except ImportError:
-#         _install_fallback()
-# _install_highlighting()
+def _install_pygments():
+    global syntax_highlight, pygments_html_formatter
+    from mako.ext.pygmentplugin import syntax_highlight  # noqa
+    from mako.ext.pygmentplugin import pygments_html_formatter  # noqa
+
+
+def _install_fallback():
+    global syntax_highlight, pygments_html_formatter
+    from mako.filters import html_escape
+    pygments_html_formatter = None
+
+    def syntax_highlight(filename='', language=None):
+        return html_escape
+
+
+def _install_highlighting():
+    try:
+        _install_pygments()
+    except ImportError:
+        _install_fallback()
+_install_highlighting()
+
 
 def html_error_template():
     """Provides a template that renders a stack trace in an HTML format,
@@ -372,4 +391,4 @@ def html_error_template():
 </html>
 % endif
 """, output_encoding=sys.getdefaultencoding(),
-        encoding_errors='htmlentityreplace')
+                                  encoding_errors='htmlentityreplace')

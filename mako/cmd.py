@@ -1,5 +1,5 @@
 # mako/cmd.py
-# Copyright (C) 2006-2014 the Mako authors and contributors <see AUTHORS file>
+# Copyright (C) 2006-2016 the Mako authors and contributors <see AUTHORS file>
 #
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -10,26 +10,31 @@ from mako.template import Template
 from mako.lookup import TemplateLookup
 from mako import exceptions
 
+
 def varsplit(var):
     if "=" not in var:
         return (var, "")
     return var.split("=", 1)
 
+
 def _exit():
     sys.stderr.write(exceptions.text_error_template().render())
     sys.exit(1)
 
+
 def cmdline(argv=None):
 
     parser = ArgumentParser("usage: %prog [FILENAME]")
-    parser.add_argument("--var", default=[], action="append",
-                  help="variable (can be used multiple times, use name=value)")
-    parser.add_argument("--template-dir", default=[], action="append",
-                  help="Directory to use for template lookup (multiple "
-                    "directories may be provided). If not given then if the "
-                    "template is read from stdin, the value defaults to be "
-                    "the current directory, otherwise it defaults to be the "
-                    "parent directory of the file provided.")
+    parser.add_argument(
+        "--var", default=[], action="append",
+        help="variable (can be used multiple times, use name=value)")
+    parser.add_argument(
+        "--template-dir", default=[], action="append",
+        help="Directory to use for template lookup (multiple "
+        "directories may be provided). If not given then if the "
+        "template is read from stdin, the value defaults to be "
+        "the current directory, otherwise it defaults to be the "
+        "parent directory of the file provided.")
     parser.add_argument('input', nargs='?', default='-')
 
     options = parser.parse_args(argv)
