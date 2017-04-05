@@ -14,15 +14,3 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-"""
-Collection of widgets used in the configuration UI.
-"""
-
-from PyQt5 import QtCore, QtWidgets
-
-import gremlin
-from . import common
-
-
