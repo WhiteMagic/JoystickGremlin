@@ -21,7 +21,7 @@ from PyQt5 import QtGui, QtPrintSupport
 from mako.template import Template
 
 import gremlin
-from gremlin.common import UiInputType
+
 
 templates = {
     "pdf": {
@@ -311,13 +311,13 @@ def format_input_name(input_type, identifier):
     :return formatted string of the provided input
     """
     type_map = {
-        UiInputType.JoystickAxis: "Axis",
-        UiInputType.JoystickButton: "Button",
-        UiInputType.JoystickHat: "Hat",
-        UiInputType.Keyboard: "Key",
+        gremlin.common.UiInputType.JoystickAxis: "Axis",
+        gremlin.common.UiInputType.JoystickButton: "Button",
+        gremlin.common.UiInputType.JoystickHat: "Hat",
+        gremlin.common.UiInputType.Keyboard: "Key",
     }
 
-    if input_type == UiInputType.Keyboard:
+    if input_type == gremlin.common.UiInputType.Keyboard:
         return gremlin.macro.key_from_code(identifier[0], identifier[1]).name
     else:
         return "{} {}".format(type_map[input_type], identifier)

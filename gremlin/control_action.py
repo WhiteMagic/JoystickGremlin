@@ -17,7 +17,7 @@
 
 """Collection of actions that allow controlling JoystickGremlin."""
 
-from gremlin.event_handler import EventHandler
+import gremlin.event_handler
 
 
 class ModeList(object):
@@ -46,12 +46,12 @@ def switch_mode(mode):
 
     :param mode the mode to switch to
     """
-    EventHandler().change_mode(mode)
+    gremlin.event_handler.EventHandler().change_mode(mode)
 
 
 def switch_to_previous_mode():
     """Switches to the previously active mode."""
-    eh = EventHandler()
+    eh = gremlin.event_handler.EventHandler()
     eh.change_mode(eh.previous_mode)
 
 
@@ -63,7 +63,7 @@ def cycle_modes(mode_list):
 
     :param mode_list list of mode names to cycle through
     """
-    EventHandler().change_mode(mode_list.next())
+    gremlin.event_handler.EventHandler().change_mode(mode_list.next())
 
 
 def pause():
@@ -72,14 +72,14 @@ def pause():
     Only callbacks that are marked to be executed all the time will
     run when the program is paused.
     """
-    EventHandler().pause()
+    gremlin.event_handler.EventHandler().pause()
 
 
 def resume():
     """Resumes the execution of callbacks."""
-    EventHandler().resume()
+    gremlin.event_handler.EventHandler().resume()
 
 
 def toggle_pause_resume():
     """Toggles between executing and not executing callbacks."""
-    EventHandler().toggle_active()
+    gremlin.event_handler.EventHandler().toggle_active()

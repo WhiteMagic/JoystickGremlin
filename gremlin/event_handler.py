@@ -15,65 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import enum
 import inspect
 import logging
 import time
 from threading import Thread
 
 from PyQt5 import QtCore
+
 import sdl2
 import sdl2.ext
 
-import gremlin
-from gremlin.common import UiInputType
-from gremlin.keyboard_hook import KeyboardHook
-from gremlin.util import SingletonDecorator
-from gremlin import error, macro, util
+from . import common, config, error, joystick_handling, keyboard_hook, \
+    macro, util
 
 
-class InputType(enum.Enum):
-
-    """Enumeration of the possible input types."""
-
-    Keyboard = 1
-    JoystickAxis = 2
-    JoystickButton = 3
-    JoystickHat = 4
-    Count = 5
-
-
-def input_type_to_name(input_type):
-    """Returns the name corresponding to the given input type.
-
-    :param input_type the input type for which to return a name
-    :return textual name representing the input type
-    """
-    lookup = {
-        InputType.Keyboard: "Keyboard",
-        InputType.JoystickAxis: "Axis",
-        InputType.JoystickButton: "Button",
-        InputType.JoystickHat: "Hat"
-    }
-    return lookup.get(input_type, "Invalid type")
-
-
-def system_event_to_input_event(event_type):
-    """Translates a system event enum into an input enum event.
-
-    :param event_type the event type to translate
-    :return the translated event type
-    """
-    lookup = {
-        InputType.Keyboard: UiInputType.Keyboard,
-        InputType.JoystickAxis: UiInputType.JoystickAxis,
-        InputType.JoystickButton: UiInputType.JoystickButton,
-        InputType.JoystickHat: UiInputType.JoystickHat
-    }
-    return lookup[event_type]
-
-
-class Event(object):
+class Event:
 
     """Represents a single event captured by the system.
 
@@ -158,7 +114,7 @@ class Event(object):
         :return integer hash value of this event
         """
         hash_val = 0
-        if self.event_type == InputType.Keyboard:
+        if self.event_type == common.InputType.Keyboard:
             extended_val = 1 << 8 if self.identifier[1] else 0
             hash_val += (extended_val + int(self.identifier[0])) \
                 << Event.ShiftIdentifier
@@ -180,14 +136,14 @@ class Event(object):
         """
         assert isinstance(key, macro.Keys.Key)
         return Event(
-            event_type=InputType.Keyboard,
+            event_type=common.InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
             hardware_id=0,
             windows_id=0
         )
 
 
-@SingletonDecorator
+@common.SingletonDecorator
 class EventListener(QtCore.QObject):
 
     """Listens for keyboard and joystick events and publishes them
@@ -204,7 +160,7 @@ class EventListener(QtCore.QObject):
     def __init__(self):
         """Creates a new instance."""
         QtCore.QObject.__init__(self)
-        self.keyboard_hook = KeyboardHook()
+        self.keyboard_hook = keyboard_hook.KeyboardHook()
         self.keyboard_hook.register(self._keyboard_handler)
         self._joysticks = {}
         self._joystick_guid_map = {}
@@ -247,7 +203,7 @@ class EventListener(QtCore.QObject):
             if not is_repeat:
                 self._keyboard_state[key_id] = is_pressed
                 self.keyboard_event.emit(Event(
-                    event_type=InputType.Keyboard,
+                    event_type=common.InputType.Keyboard,
                     hardware_id=0,
                     windows_id=0,
                     identifier=key_id,
@@ -271,7 +227,7 @@ class EventListener(QtCore.QObject):
                     event.jaxis.axis + 1
                 )
                 self.joystick_event.emit(Event(
-                    event_type=InputType.JoystickAxis,
+                    event_type=common.InputType.JoystickAxis,
                     hardware_id=self._joystick_guid_map[event.jaxis.which],
                     windows_id=event.jaxis.which,
                     identifier=event.jaxis.axis + 1,
@@ -281,7 +237,7 @@ class EventListener(QtCore.QObject):
         elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:
             if self._joystick_guid_map[event.jbutton.which] != 873639358:
                 self.joystick_event.emit(Event(
-                    event_type=InputType.JoystickButton,
+                    event_type=common.InputType.JoystickButton,
                     hardware_id=self._joystick_guid_map[event.jbutton.which],
                     windows_id=event.jbutton.which,
                     identifier=event.jbutton.button + 1,
@@ -290,7 +246,7 @@ class EventListener(QtCore.QObject):
         elif event.type == sdl2.SDL_JOYHATMOTION:
             if self._joystick_guid_map[event.jhat.which] != 873639358:
                 self.joystick_event.emit(Event(
-                    event_type=InputType.JoystickHat,
+                    event_type=common.InputType.JoystickHat,
                     hardware_id=self._joystick_guid_map[event.jhat.which],
                     windows_id=event.jhat.which,
                     identifier=event.jhat.hat + 1,
@@ -309,10 +265,20 @@ class EventListener(QtCore.QObject):
                     "Invalid joystick device at id {}".format(i)
                 )
             else:
-                guid = util.get_device_guid(joy)
+                guid = self._get_device_guid(joy)
                 self._joysticks[guid] = joy
                 self._joystick_guid_map[sdl2.SDL_JoystickInstanceID(joy)] = guid
                 self._load_calibrations(guid)
+
+    def _get_device_guid(self, device):
+        """Returns the GUID of the provided device.
+
+        :param device SDL2 joystick device for which to get the GUID
+        :return GUID for the provided device
+        """
+        vendor_id = sdl2.SDL_JoystickGetVendor(device)
+        product_id = sdl2.SDL_JoystickGetProduct(device)
+        return (vendor_id << 16) + product_id
 
     def _load_calibrations(self, guid):
         """Loads the calibration data for the given joystick.
@@ -320,18 +286,19 @@ class EventListener(QtCore.QObject):
         :param guid the id of the joystick to load the calibration
             data for
         """
-        config = gremlin.config.Configuration()
+        cfg = config.Configuration()
         for i in range(sdl2.SDL_JoystickNumAxes(self._joysticks[guid])):
-            device = util.JoystickDeviceData(self._joysticks[guid])
-            limits = config.get_calibration(util.device_id(device), i+1)
-            self._calibrations[(guid, i+1)] = util.create_calibration_function(
-                limits[0],
-                limits[1],
-                limits[2]
-            )
+            device = joystick_handling.JoystickDeviceData(self._joysticks[guid])
+            limits = cfg.get_calibration(util.device_id(device), i + 1)
+            self._calibrations[(guid, i+1)] = \
+                util.create_calibration_function(
+                    limits[0],
+                    limits[1],
+                    limits[2]
+                )
 
 
-@SingletonDecorator
+@common.SingletonDecorator
 class EventHandler(QtCore.QObject):
 
     """Listens to the inputs from multiple different input devices."""
@@ -444,8 +411,8 @@ class EventHandler(QtCore.QObject):
             self._active_mode = new_mode
             self.mode_changed.emit(self._active_mode)
 
-            config = gremlin.config.Configuration()
-            config.set_last_mode(config.last_profile, self._active_mode)
+            cfg = config.Configuration()
+            cfg.set_last_mode(cfg.last_profile, self._active_mode)
 
     def resume(self):
         """Resumes the processing of callbacks."""
