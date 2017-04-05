@@ -20,26 +20,20 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action_plugins.common import AbstractAction, AbstractActionWidget
-from gremlin.common import UiInputType
-import gremlin.util
+from gremlin.base_classes import AbstractAction
+from gremlin.common import InputType
+import gremlin.ui.input_item
 
 
-class CycleModesWidget(AbstractActionWidget):
+class CycleModesWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget allowing the configuration of a list of modes to cycle."""
 
-    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(
-            self,
-            action_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
+    def __init__(self, action_data, parent=None):
+        super().__init__(action_data, parent)
         assert(isinstance(action_data, CycleModes))
 
-    def _setup_ui(self):
+    def _create_ui(self):
         self.model = QtCore.QStringListModel()
         self.view = QtWidgets.QListView()
         self.view.setModel(self.model)
@@ -47,7 +41,7 @@ class CycleModesWidget(AbstractActionWidget):
 
         # Add widgets which allow modifying the mode list
         self.mode_list = QtWidgets.QComboBox()
-        for entry in gremlin.util.mode_list(self.action_data):
+        for entry in gremlin.profile.mode_list(self.action_data):
             self.mode_list.addItem(entry)
         self.add = QtWidgets.QPushButton(
             QtGui.QIcon("gfx/list_add.svg"), "Add"
@@ -66,31 +60,31 @@ class CycleModesWidget(AbstractActionWidget):
         )
         self.down.clicked.connect(self._down_cb)
 
-        self.actions_layout = QtWidgets.QHBoxLayout()
-        self.actions_layout.addWidget(self.mode_list)
-        self.actions_layout.addWidget(self.add)
-        self.actions_layout.addWidget(self.delete)
-        self.actions_layout.addWidget(self.up)
-        self.actions_layout.addWidget(self.down)
+        self.actions_layout = QtWidgets.QGridLayout()
+        self.actions_layout.addWidget(self.mode_list, 0, 0)
+        self.actions_layout.addWidget(self.add, 0, 1)
+        self.actions_layout.addWidget(self.delete, 0, 2)
+        self.actions_layout.addWidget(self.up, 1, 1)
+        self.actions_layout.addWidget(self.down, 1, 2)
 
         self.main_layout.addWidget(self.view)
         self.main_layout.addLayout(self.actions_layout)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-    def to_profile(self):
+    def _populate_ui(self):
+        self.model.setStringList(self.action_data.mode_list)
+
+    def save_changes(self):
         mode_list = self.model.stringList()
         self.action_data.mode_list = mode_list
-        self.action_data.is_valid = len(mode_list) > 0
-
-    def initialize_from_profile(self, action_data):
-        self.action_data = action_data
-        self.model.setStringList(self.action_data.mode_list)
+        self.modified.emit()
 
     def _add_cb(self):
         """Adds the currently selected mode to the list of modes."""
         mode_list = self.model.stringList()
         mode_list.append(self.mode_list.currentText())
         self.model.setStringList(mode_list)
-        self.change_cb()
+        self.save_changes()
 
     def _up_cb(self):
         """Moves the currently selected mode upwards."""
@@ -102,7 +96,7 @@ class CycleModesWidget(AbstractActionWidget):
                 mode_list[new_index], mode_list[index]
             self.model.setStringList(mode_list)
             self.view.setCurrentIndex(self.model.index(new_index, 0))
-            self.change_cb()
+            self.save_changes()
 
     def _down_cb(self):
         """Moves the currently selected mode downwards."""
@@ -114,7 +108,7 @@ class CycleModesWidget(AbstractActionWidget):
                 mode_list[new_index], mode_list[index]
             self.model.setStringList(mode_list)
             self.view.setCurrentIndex(self.model.index(new_index, 0))
-            self.change_cb()
+            self.save_changes()
 
     def _remove_cb(self):
         """Removes the currently selected mode from the list of modes."""
@@ -124,7 +118,7 @@ class CycleModesWidget(AbstractActionWidget):
             del mode_list[index]
             self.model.setStringList(mode_list)
             self.view.setCurrentIndex(self.model.index(0, 0))
-            self.change_cb()
+            self.save_changes()
 
 
 class CycleModes(AbstractAction):
@@ -135,15 +129,15 @@ class CycleModes(AbstractAction):
     tag = "cycle-modes"
     widget = CycleModesWidget
     input_types = [
-        UiInputType.JoystickAxis,
-        UiInputType.JoystickButton,
-        UiInputType.JoystickHat,
-        UiInputType.Keyboard
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
     callback_params = []
 
     def __init__(self, parent):
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
         self.mode_list = []
 
     def icon(self):
@@ -152,6 +146,9 @@ class CycleModes(AbstractAction):
     def _parse_xml(self, node):
         for child in node:
             self.mode_list.append(child.get("name"))
+
+    def _is_valid(self):
+        return len(self.mode_list) > 0
 
     def _generate_xml(self):
         node = ElementTree.Element("cycle-modes")
@@ -166,9 +163,6 @@ class CycleModes(AbstractAction):
             "cycle_modes",
             {
                 "entry": self,
-                "mode_list_name":
-                    "mode_list_{:04d}".format(CycleModes.next_code_id),
-                "gremlin": gremlin
             }
         )
 

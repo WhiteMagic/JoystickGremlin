@@ -18,14 +18,13 @@
 
 from xml.etree import ElementTree
 
-import action_plugins.common
-from action_plugins.common import AbstractAction, AbstractActionWidget,\
-    VJoySelector
-from gremlin.common import UiInputType
-import gremlin.error
+from .. import common
+from gremlin.common import InputType
+import gremlin.ui.common
+import gremlin.ui.input_item
 
 
-class RemapWidget(AbstractActionWidget):
+class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Dialog which allows the selection of a vJoy output to use as
     as the remapping for the currently selected input.
@@ -33,78 +32,67 @@ class RemapWidget(AbstractActionWidget):
 
     # Mapping from types to display names
     type_to_name_map = {
-        UiInputType.JoystickAxis: "Axis",
-        UiInputType.JoystickButton: "Button",
-        UiInputType.JoystickHat: "Hat",
-        UiInputType.Keyboard: "Button",
+        InputType.JoystickAxis: "Axis",
+        InputType.JoystickButton: "Button",
+        InputType.JoystickHat: "Hat",
+        InputType.Keyboard: "Button",
     }
     name_to_type_map = {
-        "Axis": UiInputType.JoystickAxis,
-        "Button": UiInputType.JoystickButton,
-        "Hat": UiInputType.JoystickHat
+        "Axis": InputType.JoystickAxis,
+        "Button": InputType.JoystickButton,
+        "Hat": InputType.JoystickHat
     }
 
-    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
+    def __init__(self, action_data, parent=None):
         """Creates a new RemapWidget.
 
         :param action_data profile.InputItem data for this widget
-        :param vjoy_devices the list of available vjoy devices
-        :param change_cb callback to execute when the widget changes
         :param parent of this widget
         """
-        AbstractActionWidget.__init__(
-            self,
-            action_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
+        devices = gremlin.joystick_handling.joystick_devices()
+        self.vjoy_devices = [dev for dev in devices if dev.is_virtual]
+        super().__init__(action_data, parent)
         assert(isinstance(action_data, Remap))
 
-    def _setup_ui(self):
+    def _create_ui(self):
         input_types = {
-            UiInputType.Keyboard: [UiInputType.JoystickButton],
-            UiInputType.JoystickAxis:
-                [UiInputType.JoystickAxis, UiInputType.JoystickButton],
-            UiInputType.JoystickButton: [UiInputType.JoystickButton],
-            UiInputType.JoystickHat: [UiInputType.JoystickHat]
+            InputType.Keyboard: [InputType.JoystickButton],
+            InputType.JoystickAxis: [
+                InputType.JoystickAxis,
+                InputType.JoystickButton
+            ],
+            InputType.JoystickButton: [InputType.JoystickButton],
+            InputType.JoystickHat: [InputType.JoystickHat]
         }
-        self.vjoy_selector = VJoySelector(
+        self.vjoy_selector = gremlin.ui.common.VJoySelector(
             self.vjoy_devices,
-            self.change_cb,
-            input_types[self.action_data.parent.input_type]
+            self.save_changes,
+            input_types[self._get_input_type()]
         )
         self.main_layout.addWidget(self.vjoy_selector)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-    def _update_device(self, index):
-        """Handles changing the vJoy device in a remap configuration.
-
-        :param index vjoy device index
-        """
-        self.change_cb()
-
-    def to_profile(self):
-        vjoy_data = self.vjoy_selector.get_selection()
-        self.action_data.vjoy_device_id = vjoy_data["device_id"]
-        self.action_data.vjoy_input_id = vjoy_data["input_id"]
-        self.action_data.input_type = vjoy_data["input_type"]
-        self.action_data.is_valid = True
-
-    def initialize_from_profile(self, action_data):
-        # Store new profile data
-        self.action_data = action_data
+    def _populate_ui(self):
+        # If this is a new item, i.e. no vjoy device and vjoy input set
+        # force the condition for buttons to trigger both on release and
+        # press
+        if self.action_data.vjoy_device_id is None and \
+                self.action_data.vjoy_input_id is None and \
+                self.action_data.get_input_type() == InputType.JoystickButton:
+            self.action_data.condition.on_press = True
+            self.action_data.condition.on_release = True
 
         # Get the appropriate vjoy device identifier
         vjoy_dev_id = 0
-        if action_data.vjoy_device_id not in [0, None]:
-            vjoy_dev_id = action_data.vjoy_device_id
+        if self.action_data.vjoy_device_id not in [0, None]:
+            vjoy_dev_id = self.action_data.vjoy_device_id
 
         # If no valid input item is selected get the next unused one
-        if action_data.vjoy_input_id in [0, None]:
-            main_profile = self.action_data.parent.parent.parent.parent
-            free_inputs = \
-                main_profile.list_unused_vjoy_inputs(self.vjoy_devices)
-            input_type = self.type_to_name_map[action_data.input_type].lower()
+        if self.action_data.vjoy_input_id in [0, None]:
+            free_inputs = self._get_profile_root().list_unused_vjoy_inputs(
+                self.vjoy_devices
+            )
+            input_type = self.type_to_name_map[self.action_data.input_type].lower()
             if vjoy_dev_id == 0:
                 vjoy_dev_id = sorted(free_inputs.keys())[0]
             input_list = free_inputs[vjoy_dev_id][input_type]
@@ -115,7 +103,7 @@ class RemapWidget(AbstractActionWidget):
                 vjoy_input_id = 1
         # If a valid input item is present use it
         else:
-            vjoy_input_id = action_data.vjoy_input_id
+            vjoy_input_id = self.action_data.vjoy_input_id
 
         self.vjoy_selector.set_selection(
             self.action_data.input_type,
@@ -123,8 +111,15 @@ class RemapWidget(AbstractActionWidget):
             vjoy_input_id
         )
 
+    def save_changes(self):
+        vjoy_data = self.vjoy_selector.get_selection()
+        self.action_data.vjoy_device_id = vjoy_data["device_id"]
+        self.action_data.vjoy_input_id = vjoy_data["input_id"]
+        self.action_data.input_type = vjoy_data["input_type"]
+        self.modified.emit()
 
-class Remap(AbstractAction):
+
+class Remap(gremlin.base_classes.AbstractAction):
 
     """Action remapping physical joystick inputs to vJoy inputs."""
 
@@ -133,58 +128,48 @@ class Remap(AbstractAction):
     tag = "remap"
     widget = RemapWidget
     input_types = [
-        UiInputType.JoystickAxis,
-        UiInputType.JoystickButton,
-        UiInputType.JoystickHat,
-        UiInputType.Keyboard
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
     callback_params = ["vjoy"]
 
     def __init__(self, parent):
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
 
-        self.vjoy_device_id = None
-        self.vjoy_input_id = None
-        self.input_type = self.parent.input_type
+        # FIXME: this used to be None instead of 1 does this change cause
+        # bad side effects?
+        self.vjoy_device_id = 1
+        self.vjoy_input_id = 1
+        self.input_type = self.parent.parent.input_type
+        if self.input_type in [InputType.JoystickButton, InputType.Keyboard]:
+            self.condition = gremlin.base_classes.ButtonCondition(True, True)
 
     def icon(self):
         input_string = "axis"
-        if self.input_type == UiInputType.JoystickButton:
+        if self.input_type == InputType.JoystickButton:
             input_string = "button"
-        elif self.input_type == UiInputType.JoystickHat:
+        elif self.input_type == InputType.JoystickHat:
             input_string = "hat"
-        return "action_plugins/remap/icon_{}_{:03d}.png".format(
+        return "action_plugins/remap/gfx/icon_{}_{:03d}.png".format(
                 input_string,
                 self.vjoy_input_id
             )
 
-    def _create_default_condition(self):
-        if self.parent.input_type in [UiInputType.JoystickButton, UiInputType.Keyboard]:
-            self.condition = action_plugins.common.ButtonCondition(True, True)
-        elif self.parent.input_type == UiInputType.JoystickAxis:
-            self.condition = None
-        elif self.parent.input_type == UiInputType.JoystickHat:
-            self.condition = action_plugins.common.HatCondition(
-                False, False, False, False, False, False, False, False
-            )
-
     def _parse_xml(self, node):
         if "axis" in node.attrib:
-            self.input_type = UiInputType.JoystickAxis
+            self.input_type = InputType.JoystickAxis
             self.vjoy_input_id = int(node.get("axis"))
-            self.condition = action_plugins.common.parse_axis_condition(node)
         elif "button" in node.attrib:
-            self.input_type = UiInputType.JoystickButton
+            self.input_type = InputType.JoystickButton
             self.vjoy_input_id = int(node.get("button"))
-            self.condition = action_plugins.common.parse_button_condition(node)
         elif "hat" in node.attrib:
-            self.input_type = UiInputType.JoystickHat
+            self.input_type = InputType.JoystickHat
             self.vjoy_input_id = int(node.get("hat"))
-            self.condition = action_plugins.common.parse_hat_condition(node)
         elif "keyboard" in node.attrib:
-            self.input_type = UiInputType.Keyboard
+            self.input_type = InputType.Keyboard
             self.vjoy_input_id = int(node.get("button"))
-            self.condition = action_plugins.common.parse_button_condition(node)
         else:
             raise gremlin.error.GremlinError(
                 "Invalid remap type provided: {}".format(node.attrib)
@@ -195,14 +180,14 @@ class Remap(AbstractAction):
     def _generate_xml(self):
         node = ElementTree.Element("remap")
         node.set("vjoy", str(self.vjoy_device_id))
-        if self.input_type == UiInputType.Keyboard:
+        if self.input_type == InputType.Keyboard:
             node.set(
-                action_plugins.common.input_type_to_tag(UiInputType.JoystickButton),
+                common.input_type_to_tag(InputType.JoystickButton),
                 str(self.vjoy_input_id)
             )
         else:
             node.set(
-                action_plugins.common.input_type_to_tag(self.input_type),
+                common.input_type_to_tag(self.input_type),
                 str(self.vjoy_input_id)
             )
         return node
@@ -211,10 +196,12 @@ class Remap(AbstractAction):
         return self._code_generation(
             "remap",
             {
-                "entry": self,
-                "gremlin": gremlin
+                "entry": self
             }
         )
+
+    def _is_valid(self):
+        return True
 
 version = 1
 name = "remap"

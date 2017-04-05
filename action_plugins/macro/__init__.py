@@ -20,10 +20,11 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action_plugins.common import AbstractAction, AbstractActionWidget, \
-    NoKeyboardPushButton, parse_bool
-from gremlin.common import UiInputType
+from gremlin.base_classes import AbstractAction
+from gremlin.common import InputType
 import gremlin.macro
+from gremlin.ui.common import NoKeyboardPushButton
+import gremlin.ui.input_item
 
 
 class MacroListModel(QtCore.QAbstractListModel):
@@ -33,14 +34,14 @@ class MacroListModel(QtCore.QAbstractListModel):
     This model supports model modification.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, data_storage, parent=None):
         """Creates a new instance.
 
         :param parent parent widget
         """
         QtCore.QAbstractListModel.__init__(self, parent)
 
-        self.entries = []
+        self.entries = data_storage
 
     def rowCount(self, parent=None):
         """Returns the number of rows in the model.
@@ -145,23 +146,17 @@ class MacroListModel(QtCore.QAbstractListModel):
             self.dataChanged.emit(self.index(id1, 0), self.index(id2, 0))
 
 
-class MacroWidget(AbstractActionWidget):
+class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget which allows creating and editing of macros."""
 
-    def __init__(self, profile_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(
-            self,
-            profile_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
-        assert(isinstance(profile_data, Macro))
+    def __init__(self, action_data, parent=None):
+        super().__init__(action_data, parent)
+        assert(isinstance(action_data, Macro))
 
-    def _setup_ui(self):
-        self.model = MacroListModel()
-        self._connect_signals()
+    def _create_ui(self):
+        self.model = MacroListModel(self.action_data.sequence)
+        #self._connect_signals()
 
         self.list_view = QtWidgets.QListView()
         self.list_view.setModel(self.model)
@@ -173,7 +168,7 @@ class MacroWidget(AbstractActionWidget):
         )
 
         # Buttons
-        self.button_layout = QtWidgets.QHBoxLayout()
+        self.button_layout = QtWidgets.QGridLayout()
         self.button_up = QtWidgets.QPushButton(
             QtGui.QIcon("gfx/list_up"), "Up"
         )
@@ -204,14 +199,22 @@ class MacroWidget(AbstractActionWidget):
             QtGui.QIcon("{}/macro_add_pause".format(gfx_path)), "Add Pause"
         )
         self.button_pause.clicked.connect(self._pause_cb)
-        self.button_layout.addWidget(self.button_up)
-        self.button_layout.addWidget(self.button_down)
-        self.button_layout.addWidget(self.button_delete)
-        self.button_layout.addWidget(self.button_record)
-        self.button_layout.addWidget(self.button_pause)
+        self.button_layout.addWidget(self.button_up, 0, 0)
+        self.button_layout.addWidget(self.button_down, 0, 1)
+        self.button_layout.addWidget(self.button_delete, 0, 2)
+        self.button_layout.addWidget(self.button_record, 1, 0)
+        self.button_layout.addWidget(self.button_pause, 1, 1)
 
         self.main_layout.addWidget(self.list_view)
         self.main_layout.addLayout(self.button_layout)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+
+    def _populate_ui(self):
+        # Replace existing model with an empty one which is filled from
+        # the profile data.
+        # This needs to stay otherwise the code breaks.
+        self.model = MacroListModel(self.action_data.sequence)
+        self.list_view.setModel(self.model)
 
     def key_event_cb(self, event):
         action = gremlin.macro.Macro.KeyAction(
@@ -222,27 +225,6 @@ class MacroWidget(AbstractActionWidget):
             event.is_pressed
         )
         self._append_entry(action)
-
-    def to_profile(self):
-        self.action_data.sequence = self.model.entries
-        self.action_data.is_valid = self.model.rowCount() > 0
-
-    def initialize_from_profile(self, action_data):
-        # Store profile data
-        self.action_data = action_data
-
-        # Disconnect from all update signals before we load a profile in
-        # to prevent export spam
-        self._disconnect_signals()
-
-        # Replace existing model with an empty one which is filled from
-        # the profile data.
-        # This needs to stay otherwise the code breaks.
-        self.model = MacroListModel()
-        self.list_view.setModel(self.model)
-        for i, entry in enumerate(action_data.sequence):
-            self.model.add_entry(i, entry)
-        self._connect_signals()
 
     def _up_cb(self):
         """Moves the currently selected entry upwards."""
@@ -303,20 +285,6 @@ class MacroWidget(AbstractActionWidget):
             self.model.index(cur_index+1, 0)
         )
 
-    def _connect_signals(self):
-        """Connects model signals to the change callback."""
-        self.model.dataChanged.connect(self.change_cb)
-        self.model.rowsMoved.connect(self.change_cb)
-        self.model.rowsInserted.connect(self.change_cb)
-        self.model.rowsRemoved.connect(self.change_cb)
-
-    def _disconnect_signals(self):
-        """Disconnects model signals from the notify function."""
-        self.model.dataChanged.disconnect()
-        self.model.rowsMoved.disconnect()
-        self.model.rowsInserted.disconnect()
-        self.model.rowsRemoved.disconnect()
-
 
 class Macro(AbstractAction):
 
@@ -326,10 +294,10 @@ class Macro(AbstractAction):
     tag = "macro"
     widget = MacroWidget
     input_types = [
-        UiInputType.JoystickAxis,
-        UiInputType.JoystickButton,
-        UiInputType.JoystickHat,
-        UiInputType.Keyboard
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
     callback_params = []
 
@@ -338,7 +306,7 @@ class Macro(AbstractAction):
 
         :param parent the parent profile.ItemAction of this macro action
         """
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
         self.sequence = []
 
     def icon(self):
@@ -355,9 +323,9 @@ class Macro(AbstractAction):
                 key_action = gremlin.macro.Macro.KeyAction(
                     gremlin.macro.key_from_code(
                         int(child.get("scan_code")),
-                        parse_bool(child.get("extended"))
+                        gremlin.profile.parse_bool(child.get("extended"))
                     ),
-                    parse_bool(child.get("press"))
+                    gremlin.profile.parse_bool(child.get("press"))
                 )
                 self.sequence.append(key_action)
             elif child.tag == "pause":
@@ -392,11 +360,12 @@ class Macro(AbstractAction):
         return self._code_generation(
             "macro",
             {
-                "entry": self,
-                "macro_name": "macro_{:04d}".format(Macro.next_code_id),
-                "gremlin": gremlin
+                "entry": self
             }
         )
+
+    def _is_valid(self):
+        return len(self.sequence) > 0
 
 version = 1
 name = "macro"

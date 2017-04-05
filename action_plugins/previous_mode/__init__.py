@@ -20,33 +20,25 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from action_plugins.common import AbstractAction, AbstractActionWidget
-from gremlin.common import UiInputType
+from gremlin.base_classes import AbstractAction
+from gremlin.common import InputType
+import gremlin.ui.input_item
 
 
-class PreviousModeWidget(AbstractActionWidget):
+class PreviousModeWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget associated with the action of switching to the previous mode."""
 
-    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(
-            self,
-            action_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
+    def __init__(self, action_data, parent=None):
+        super().__init__(action_data, parent)
         assert(isinstance(action_data, PreviousMode))
 
-    def _setup_ui(self):
+    def _create_ui(self):
         self.label = QtWidgets.QLabel("Switches to the previously active mode")
         self.main_layout.addWidget(self.label)
 
-    def to_profile(self):
-        self.action_data.is_valid = True
-
-    def initialize_from_profile(self, action_data):
-        self.action_data = action_data
+    def _populate_ui(self):
+        pass
 
 
 class PreviousMode(AbstractAction):
@@ -57,15 +49,15 @@ class PreviousMode(AbstractAction):
     tag = "previous-mode"
     widget = PreviousModeWidget
     input_types = [
-        UiInputType.JoystickAxis,
-        UiInputType.JoystickButton,
-        UiInputType.JoystickHat,
-        UiInputType.Keyboard
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
     callback_params = []
 
     def __init__(self, parent):
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
@@ -81,6 +73,9 @@ class PreviousMode(AbstractAction):
             "previous_mode",
             {"entry": self}
         )
+
+    def _is_valid(self):
+        return True
 
 version = 1
 name = "previous-mode"

@@ -1,9 +1,7 @@
-% if entry.parent.input_type == InputType.JoystickAxis:
-% if entry.condition and entry.condition.is_active:
-${helpers["format_condition"](entry.condition)}
-        ${axis_button_name}.process(value, lambda x: ${axis_button_cb}(x))
+% if entry.get_input_type() == InputType.JoystickAxis:
+    % if entry.condition and entry.condition.is_active:
+axis_button_${id}.process(value, lambda x: axis_button_callback_${id}(x))
     % endif
 % else:
-${helpers["format_condition"](entry.condition)}
-        ${macro_name}.run()
+macro_${id}.run()
 % endif

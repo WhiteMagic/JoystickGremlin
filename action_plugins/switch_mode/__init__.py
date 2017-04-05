@@ -20,39 +20,33 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from action_plugins.common import AbstractAction, AbstractActionWidget
-from gremlin.common import UiInputType
-import gremlin.util
+from gremlin.base_classes import AbstractAction
+from gremlin.common import InputType
+import gremlin.profile
+import gremlin.ui.input_item
 
 
-class SwitchModeWidget(AbstractActionWidget):
+class SwitchModeWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget which allows the configuration of a mode to switch to."""
 
-    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(
-            self,
-            action_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
-        assert(isinstance(action_data, SwitchMode))
+    def __init__(self, action_data, parent=None):
+        super().__init__(action_data, parent)
+        assert isinstance(action_data, SwitchMode)
 
-    def _setup_ui(self):
+    def _create_ui(self):
         self.mode_list = QtWidgets.QComboBox()
-        for entry in gremlin.util.mode_list(self.action_data):
+        for entry in gremlin.profile.mode_list(self.action_data):
             self.mode_list.addItem(entry)
-        self.mode_list.activated.connect(self.change_cb)
+        self.mode_list.activated.connect(self._mode_list_changed_cb)
         self.main_layout.addWidget(self.mode_list)
 
-    def to_profile(self):
+    def _mode_list_changed_cb(self):
         self.action_data.mode_name = self.mode_list.currentText()
-        self.action_data.is_valid = len(self.action_data.mode_name) > 0
+        self.modified.emit()
 
-    def initialize_from_profile(self, action_data):
-        self.action_data = action_data
-        mode_id = self.mode_list.findText(action_data.mode_name)
+    def _populate_ui(self):
+        mode_id = self.mode_list.findText(self.action_data.mode_name)
         self.mode_list.setCurrentIndex(mode_id)
 
 
@@ -64,15 +58,15 @@ class SwitchMode(AbstractAction):
     tag = "switch-mode"
     widget = SwitchModeWidget
     input_types = [
-        UiInputType.JoystickAxis,
-        UiInputType.JoystickButton,
-        UiInputType.JoystickHat,
-        UiInputType.Keyboard
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
     callback_params = []
 
     def __init__(self, parent):
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
         self.mode_name = None
 
     def icon(self):
@@ -91,6 +85,10 @@ class SwitchMode(AbstractAction):
             "switch_mode",
             {"entry": self}
         )
+
+    def _is_valid(self):
+        return len(self.mode_name) > 0
+
 
 version = 1
 name = "switch-mode"

@@ -20,31 +20,24 @@ import os
 from PyQt5 import QtCore, QtWidgets
 from xml.etree import ElementTree
 
-import action_plugins.common
-from action_plugins.common import AbstractAction, AbstractActionWidget
-from gremlin.common import UiInputType
+
+from gremlin.base_classes import AbstractAction
+from gremlin.common import InputType
+import gremlin.ui.input_item
 
 
-class SplitAxisWidget(AbstractActionWidget):
+class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
 
-    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
+    def __init__(self, action_data, parent=None):
         """Creates a new RemapWidget.
 
         :param action_data profile.InputItem data for this widget
-        :param vjoy_devices the list of available vjoy devices
-        :param change_cb callback to execute when the widget changes
         :param parent of this widget
         """
-        AbstractActionWidget.__init__(
-            self,
-            action_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
-        assert(isinstance(action_data, SplitAxis))
+        super().__init__(action_data, parent)
+        assert isinstance(action_data, SplitAxis)
 
-    def _setup_ui(self):
+    def _create_ui(self):
         # Slider and readout setup
         self.split_slider_layout = QtWidgets.QHBoxLayout()
         self.split_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
@@ -63,15 +56,15 @@ class SplitAxisWidget(AbstractActionWidget):
 
         # Device selection
         self.split_device_layout = QtWidgets.QHBoxLayout()
-        self.vjoy_selector_1 = action_plugins.common.VJoySelector(
+        self.vjoy_selector_1 = gremlin.ui.common.VJoySelector(
             self.vjoy_devices,
             self.change_cb,
-            [UiInputType.JoystickAxis]
+            [InputType.JoystickAxis]
         )
-        self.vjoy_selector_2 = action_plugins.common.VJoySelector(
+        self.vjoy_selector_2 = gremlin.ui.common.VJoySelector(
             self.vjoy_devices,
             self.change_cb,
-            [UiInputType.JoystickAxis]
+            [InputType.JoystickAxis]
         )
         self.split_device_layout.addWidget(self.vjoy_selector_1)
         self.split_device_layout.addWidget(self.vjoy_selector_2)
@@ -80,30 +73,28 @@ class SplitAxisWidget(AbstractActionWidget):
         self.main_layout.addLayout(self.split_slider_layout)
         self.main_layout.addLayout(self.split_device_layout)
 
+    def _populate_ui(self):
+        # FIXME: this seemed to act like a check for initialization
+        # if self.action_data.is_valid:
+        self.split_slider.setValue(self.action_data.center_point * 1e5)
+        self.split_readout.setValue(self.action_data.center_point)
+        self.vjoy_selector_1.set_selection(
+            InputType.JoystickAxis,
+            self.action_data.axis1[0],
+            self.action_data.axis1[1]
+        )
+        self.vjoy_selector_2.set_selection(
+            InputType.JoystickAxis,
+            self.action_data.axis2[0],
+            self.action_data.axis2[1]
+        )
+
     def to_profile(self):
         tmp = self.vjoy_selector_1.get_selection()
         self.action_data.axis1 = (tmp["device_id"], tmp["input_id"])
         tmp = self.vjoy_selector_2.get_selection()
         self.action_data.axis2 = (tmp["device_id"], tmp["input_id"])
         self.action_data.center_point = self.split_readout.value()
-        self.action_data.is_valid = True
-
-    def initialize_from_profile(self, action_data):
-        self.action_data = action_data
-
-        if self.action_data.is_valid:
-            self.split_slider.setValue(self.action_data.center_point * 1e5)
-            self.split_readout.setValue(self.action_data.center_point)
-            self.vjoy_selector_1.set_selection(
-                UiInputType.JoystickAxis,
-                self.action_data.axis1[0],
-                self.action_data.axis1[1]
-            )
-            self.vjoy_selector_2.set_selection(
-                UiInputType.JoystickAxis,
-                self.action_data.axis2[0],
-                self.action_data.axis2[1]
-            )
 
     def _update_readout(self, value):
         self.split_readout.setValue(value / 1e5)
@@ -120,12 +111,12 @@ class SplitAxis(AbstractAction):
     tag = "split-axis"
     widget = SplitAxisWidget
     input_types = [
-        UiInputType.JoystickAxis
+        InputType.JoystickAxis
     ]
     callback_params = ["vjoy"]
 
     def __init__(self, parent):
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
 
         self.center_point = 0.0
         self.axis1 = None
@@ -150,6 +141,9 @@ class SplitAxis(AbstractAction):
 
     def _generate_code(self):
         return self._code_generation("split_axis", {"entry": self})
+
+    def _is_valid(self):
+        return True
 
 
 version = 1

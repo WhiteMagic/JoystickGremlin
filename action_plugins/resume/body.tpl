@@ -1,3 +1,5 @@
+resume_${id}(is_pressed)
+<%doc>
 % if entry.parent.input_type == InputType.JoystickAxis:
 % if entry.condition and entry.condition.is_active:
 ${helpers["format_condition"](entry.condition)}
@@ -7,3 +9,4 @@ ${helpers["format_condition"](entry.condition)}
 ${helpers["format_condition"](entry.condition)}
         gremlin.control_action.resume()
 % endif
+</%doc>

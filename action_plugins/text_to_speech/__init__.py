@@ -20,35 +20,28 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from action_plugins.common import AbstractAction, AbstractActionWidget
-from gremlin.common import UiInputType
+from gremlin.base_classes import AbstractAction
+from gremlin.common import InputType
+import gremlin.ui.input_item
 
 
-class TextToSpeechWidget(AbstractActionWidget):
+class TextToSpeechWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget which allows the configuration of TTS actions."""
 
-    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
-        AbstractActionWidget.__init__(
-            self,
-            action_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
-        assert(isinstance(action_data, TextToSpeech))
+    def __init__(self, action_data, parent=None):
+        super().__init__(action_data, parent)
+        assert isinstance(action_data, TextToSpeech)
 
-    def _setup_ui(self):
+    def _create_ui(self):
         self.text_field = QtWidgets.QPlainTextEdit()
-        self.text_field.textChanged.connect(self.to_profile)
+        self.text_field.textChanged.connect(self._content_changed_cb)
         self.main_layout.addWidget(self.text_field)
 
-    def to_profile(self):
+    def _content_changed_cb(self):
         self.action_data.text = self.text_field.toPlainText()
-        self.action_data.is_valid = len(self.action_data.text) > 0
 
-    def initialize_from_profile(self, action_data):
-        self.action_data = action_data
+    def _populate_ui(self):
         self.text_field.setPlainText(self.action_data.text)
 
 
@@ -60,15 +53,15 @@ class TextToSpeech(AbstractAction):
     tag = "text-to-speech"
     widget = TextToSpeechWidget
     input_types = [
-        UiInputType.JoystickAxis,
-        UiInputType.JoystickButton,
-        UiInputType.JoystickHat,
-        UiInputType.Keyboard
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
     callback_params = []
 
     def __init__(self, parent):
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
         self.text = ""
 
     def icon(self):
@@ -84,6 +77,9 @@ class TextToSpeech(AbstractAction):
 
     def _generate_code(self):
         return self._code_generation("text_to_speech", {"entry": self})
+
+    def _is_valid(self):
+        return len(self.text) > 0
 
 
 version = 1

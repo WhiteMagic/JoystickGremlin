@@ -11,6 +11,10 @@
         8: AxisName.SL1
     }
 %>\
+<%
+    input_type = entry.parent.parent.input_type
+%>\
+<%doc>
 % if entry.parent.input_type == InputType.JoystickAxis:
     % if entry.input_type == InputType.JoystickAxis:
 ${helpers["format_condition"](entry.condition)}
@@ -29,4 +33,12 @@ ${helpers["format_condition"](entry.condition)}
         vjoy[${entry.vjoy_device_id}].button(${entry.vjoy_input_id}).is_pressed = is_pressed
 % elif entry.parent.input_type == InputType.JoystickHat:
     vjoy[${entry.vjoy_device_id}].hat(${entry.vjoy_input_id}).direction = value
+% endif
+</%doc>
+% if input_type == InputType.JoystickAxis:
+remap_${id}(value)
+% elif input_type in [InputType.JoystickButton, InputType.Keyboard]:
+remap_${id}(is_pressed)
+% elif input_type == InputType.JoystickHat:
+remap_${id}(direction)
 % endif

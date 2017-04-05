@@ -20,35 +20,43 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from action_plugins.common import AbstractAction, AbstractActionWidget, DualSlider
 import gremlin
-from gremlin.common import UiInputType
-
+from gremlin.base_classes import AbstractAction
+from gremlin.common import InputType
+from gremlin.ui.common import DualSlider
+import gremlin.ui.input_item
 
 g_scene_size = 200.0
 
 
-class AbstractCurveModel(object):
+class AbstractCurveModel:
 
     """Abstract base class for all  curve models."""
 
-    def __init__(self):
-        """Initializes an empty model."""
-        self.control_points = []
+    def __init__(self, profile_data):
+        """Initializes an empty model.
+        
+        :param profile_data the data of this response curve
+        """
+        self._control_points = []
+        self._profile_data = profile_data
+        self._init_from_profile_data()
 
     def get_curve_function(self):
         """Returns the curve function corresponding to the model.
 
         :return curve function corresponding to the model
         """
-        raise gremlin.error.MissingImplementationError("Implementation missing")
+        raise gremlin.error.MissingImplementationError(
+            "AbstractCurveModel::get_curve_function not implemented"
+        )
 
     def get_control_points(self):
         """Returns the list of control points.
 
         :return list of control points
         """
-        return self.control_points
+        return self._control_points
 
     def add_control_point(self, point, handles=()):
         """Adds a new control point to the model.
@@ -57,16 +65,31 @@ class AbstractCurveModel(object):
         :param handles list of potential handles
         :return the newly created control point
         """
-        raise gremlin.error.MissingImplementationError("Implementation missing")
+        cp = self._create_control_point(point, handles)
+        self._control_points.append(cp)
+        self.synchronize_data()
+        return cp
+
+    def _create_control_point(self, point, handles=()):
+        """Subclass specific implementation to add new control points.
+
+        :param point the center of the control point
+        :param handles list of potential handles
+        :return the newly created control point
+        """
+        raise gremlin.error.MissingImplementationError(
+            "AbstractCurveModel::_add_control_point not implemented"
+        )
 
     def remove_control_point(self, control_point):
         """Removes the specified control point if it exists in the model.
 
         :param control_point the control point to remove
         """
-        idx = self.control_points.index(control_point)
+        idx = self._control_points.index(control_point)
         if idx:
-            del self.control_points[idx]
+            del self._control_points[idx]
+            self.synchronize_data()
 
     def is_valid_point(self, point, identifier=None):
         """Checks is a point is valid in the model.
@@ -75,16 +98,31 @@ class AbstractCurveModel(object):
         :param identifier the identifier of a control point to ignore
         :return True if valid, False otherwise
         """
-        raise gremlin.error.MissingImplementationError("Implementation missing")
+        raise gremlin.error.MissingImplementationError(
+            "AbstractCurveModel::is_valid_point not implemented"
+        )
+
+    def _init_from_profile_data(self):
+        """Initializes the control points based on profile data."""
+        raise gremlin.error.MissingImplementationError(
+            "AbstractCurveModel::_init_from_profile_data not implemented"
+        )
+
+    def synchronize_data(self):
+        """Ensures that the control point data is properly recorded in
+        the profile data."""
+        raise gremlin.error.MissingImplementationError(
+            "AbstractCurveModel::_update_profile_data not implemented"
+        )
 
 
 class CubicSplineModel(AbstractCurveModel):
 
     """Represents a simple cubic spline model."""
 
-    def __init__(self):
+    def __init__(self, profile_data):
         """Creates a new instance."""
-        AbstractCurveModel.__init__(self)
+        super().__init__(profile_data)
 
     def get_curve_function(self):
         """Returns the curve function corresponding to the model.
@@ -92,23 +130,21 @@ class CubicSplineModel(AbstractCurveModel):
         :return curve function corresponding to the model
         """
         points = []
-        for pt in sorted(self.control_points, key=lambda e: e.center.x):
-            points.append((pt.center.x, pt.center.y))
+        for cp in sorted(self._control_points, key=lambda e: e.center.x):
+            points.append((cp.center.x, cp.center.y))
         if len(points) < 2:
             return None
         else:
             return gremlin.spline.CubicSpline(points)
 
-    def add_control_point(self, point, handles=()):
+    def _create_control_point(self, point, handles=()):
         """Adds a new control point to the model.
 
         :param point the center of the control point
         :param handles list of potential handles
         :return the newly created control point
         """
-        cp = ControlPoint(self, point)
-        self.control_points.append(cp)
-        return cp
+        return ControlPoint(self, point)
 
     def is_valid_point(self, point, identifier=None):
         """Checks is a point is valid in the model.
@@ -118,21 +154,36 @@ class CubicSplineModel(AbstractCurveModel):
         :return True if valid, False otherwise
         """
         is_valid = True
-        for other in self.control_points:
+        for other in self._control_points:
             if other.identifier == identifier:
                 continue
             elif other.center.x == point.x:
                 is_valid = False
         return is_valid
 
+    def _init_from_profile_data(self):
+        """Initializes the control points based on profile data."""
+        for coord in self._profile_data.control_points:
+            self._control_points.append(
+                ControlPoint(self, Point2D(coord[0], coord[1]))
+            )
+
+    def synchronize_data(self):
+        """Ensures that the control point data is properly recorded in
+        the profile data."""
+        self._profile_data.mapping_type = "cubic-spline"
+        self._profile_data.control_points = []
+        for cp in self._control_points:
+            self._profile_data.control_points.append((cp.center.x, cp.center.y))
+
 
 class CubicBezierSplineModel(AbstractCurveModel):
 
     """Represents a cubic bezier spline model."""
 
-    def __init__(self):
+    def __init__(self, profile_data):
         """Creates a new model."""
-        AbstractCurveModel.__init__(self)
+        super().__init__(profile_data)
 
     def get_curve_function(self):
         """Returns the curve function corresponding to the model.
@@ -140,11 +191,14 @@ class CubicBezierSplineModel(AbstractCurveModel):
         :return curve function corresponding to the model
         """
         points = []
-        for i, pt in enumerate(sorted(self.control_points, key=lambda e: e.center.x)):
+        sorted_control_points = sorted(
+            self._control_points, key=lambda e: e.center.x
+        )
+        for i, pt in enumerate(sorted_control_points):
             if i == 0:
                 points.append((pt.center.x, pt.center.y))
                 points.append((pt.handles[0].x, pt.handles[0].y))
-            elif i == len(self.control_points) - 1:
+            elif i == len(self._control_points) - 1:
                 points.append((pt.handles[0].x, pt.handles[0].y))
                 points.append((pt.center.x, pt.center.y))
             else:
@@ -156,7 +210,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
         else:
             return gremlin.spline.CubicBezierSpline(points)
 
-    def add_control_point(self, point, handles=()):
+    def _create_control_point(self, point, handles=()):
         """Adds a new control point to the model.
 
         :param point the center of the control point
@@ -168,9 +222,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
                 Point2D(point.x - 0.05, point.y),
                 Point2D(point.x + 0.05, point.y)
             )
-        cp = ControlPoint(self, point, handles)
-        self.control_points.append(cp)
-        return cp
+        return ControlPoint(self, point, handles)
 
     def is_valid_point(self, point, identifier=None):
         """Checks is a point is valid in the model.
@@ -180,15 +232,86 @@ class CubicBezierSplineModel(AbstractCurveModel):
         :return True if valid, False otherwise
         """
         is_valid = True
-        for other in self.control_points:
+        for other in self._control_points:
             if other.identifier == identifier:
                 continue
             elif other.center.x == point.x:
                 is_valid = False
         return is_valid
 
+    def _init_from_profile_data(self):
+        # If the data appears to be invalid insert a valid default
+        if len(self._profile_data.control_points) < 4:
+            self._profile_data.control_points = []
+            self._profile_data.control_points.extend([
+                (-1, -1),
+                (-0.9, -0.9),
+                (0.9, 0.9),
+                (1, 1)
+            ])
+        coordinates = self._profile_data.control_points
 
-class ControlPoint(object):
+        self._control_points.append(
+            ControlPoint(
+                self,
+                Point2D(coordinates[0][0], coordinates[0][1]),
+                [Point2D(coordinates[1][0], coordinates[1][1])]
+            )
+        )
+
+        for i in range(3, len(coordinates)-3):
+            self._control_points.append(
+                ControlPoint(
+                    self,
+                    Point2D(coordinates[i][0], coordinates[i][1]),
+                    [
+                        Point2D(coordinates[i-1][0], coordinates[i-1][1]),
+                        Point2D(coordinates[i+1][0], coordinates[i+1][1])
+                    ]
+                )
+            )
+        self._control_points.append(
+            ControlPoint(
+                self,
+                Point2D(coordinates[-1][0], coordinates[-1][1]),
+                [Point2D(coordinates[-2][0], coordinates[-2][1])]
+            )
+        )
+
+    def synchronize_data(self):
+        control_points = sorted(
+            self._control_points,
+            key=lambda entry: entry.center.x
+        )
+        self._profile_data.control_points = []
+        for cp in control_points:
+            if cp.center.x == -1:
+                self._profile_data.control_points.append(
+                    [cp.center.x, cp.center.y]
+                )
+                self._profile_data.control_points.append(
+                    [cp.handles[0].x, cp.handles[0].y]
+                )
+            elif cp.center.x == 1:
+                self._profile_data.control_points.append(
+                    [cp.handles[0].x, cp.handles[0].y]
+                )
+                self._profile_data.control_points.append(
+                    [cp.center.x, cp.center.y]
+                )
+            else:
+                self._profile_data.control_points.append(
+                    [cp.handles[0].x, cp.handles[0].y]
+                )
+                self._profile_data.control_points.append(
+                    [cp.center.x, cp.center.y]
+                )
+                self._profile_data.control_points.append(
+                    [cp.handles[1].x, cp.handles[1].y]
+                )
+
+
+class ControlPoint:
 
     """Represents a single control point in a response curve.
 
@@ -213,6 +336,10 @@ class ControlPoint(object):
         self.handles = [hdl for hdl in handles]
         self.identifier = ControlPoint.next_id
         ControlPoint.next_id += 1
+
+    @property
+    def model(self):
+        return self._model
 
     @property
     def center(self):
@@ -269,7 +396,7 @@ class ControlPointGraphicsItem(QtWidgets.QGraphicsEllipseItem):
         :param control_point the control point this element visualizes
         :param parent the parent of this widget
         """
-        QtWidgets.QGraphicsEllipseItem.__init__(self, -4, -4, 8, 8, parent)
+        super().__init__(-4, -4, 8, 8, parent)
         assert(isinstance(control_point, ControlPoint))
 
         self.control_point = control_point
@@ -336,6 +463,7 @@ class ControlPointGraphicsItem(QtWidgets.QGraphicsEllipseItem):
 
         self.control_point.set_center(new_point)
         self.scene().redraw_scene()
+        self.scene().model.synchronize_data()
 
 
 class CurveHandleGraphicsItem(QtWidgets.QGraphicsRectItem):
@@ -349,7 +477,7 @@ class CurveHandleGraphicsItem(QtWidgets.QGraphicsRectItem):
         :param point the location of the handle
         :param parent the parent of this widget
         """
-        QtWidgets.QGraphicsRectItem.__init__(self, -4, -4, 8, 8, parent)
+        super().__init__(-4, -4, 8, 8, parent)
         self.setPos(point.x, point.y)
         self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
         self.parent = parent
@@ -402,24 +530,23 @@ class CurveHandleGraphicsItem(QtWidgets.QGraphicsRectItem):
 
         self.parent.control_point.set_handle(self.index, new_point)
         self.parent.scene().redraw_scene()
+        self.scene().model.synchronize_data()
 
 
 class CurveScene(QtWidgets.QGraphicsScene):
 
     """Visualization of the entire curve editor UI element."""
 
-    def __init__(self, curve_model, point_editor, callback_fn, parent=None):
+    def __init__(self, curve_model, point_editor, parent=None):
         """Creates a new instance.
 
         :param curve_model the model to visualize
         :param point_editor the point editor to use
-        :param callback_fn function to call upon changes to the model
         :param parent parent of this widget
         """
-        QtWidgets.QGraphicsScene.__init__(self, parent)
+        super().__init__(parent)
         self.model = curve_model
         self.point_editor = point_editor
-        self.callback_fn = callback_fn
 
         self.background_image = QtGui.QImage(
             "{}/grid.svg".format(os.path.dirname(os.path.realpath(__file__)))
@@ -430,12 +557,12 @@ class CurveScene(QtWidgets.QGraphicsScene):
         self.point_editor.y_input.valueChanged.connect(self._editor_update)
 
         self.current_item = None
+        self._populate_from_model()
 
-    def reset(self):
-        """Resets the model, ensuring no data is contained within."""
-        self.model.control_points = []
-        for item in self.items():
-            self.removeItem(item)
+    def _populate_from_model(self):
+        for cp in self.model.get_control_points():
+            self.addItem(ControlPointGraphicsItem(cp))
+        self.redraw_scene()
 
     def add_control_point(self, point, handles=()):
         """Adds a new control point to the model and scene.
@@ -452,6 +579,10 @@ class CurveScene(QtWidgets.QGraphicsScene):
 
         :param value the new value entered using the editor UI
         """
+        # We can only move control points around using the numerical inputs
+        if not isinstance(self.current_item, ControlPointGraphicsItem):
+            return
+
         if self.current_item:
             new_point = Point2D(
                 self.point_editor.x_input.value(),
@@ -506,8 +637,6 @@ class CurveScene(QtWidgets.QGraphicsScene):
                     self.current_item.control_point.center
                 )
 
-        self.callback_fn()
-
     def mousePressEvent(self, evt):
         """Informs the model about point selection if a point is clicked.
 
@@ -561,9 +690,9 @@ class CurveScene(QtWidgets.QGraphicsScene):
         )
 
 
-class Point2D(object):
+class Point2D:
 
-    """Represents a 2D point."""
+    """Represents a 2D point with support for addition and subtraction."""
 
     def __init__(self, x=0.0, y=0.0):
         """Creates a new instance.
@@ -594,7 +723,7 @@ class ControlPointEditorWidget(QtWidgets.QWidget):
 
         :param parent the parent widget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        super().__init__(parent)
 
         # Generate controls
         self.main_layout = QtWidgets.QHBoxLayout(self)
@@ -632,16 +761,15 @@ class DeadzoneWidget(QtWidgets.QWidget):
     """Widget visualizing deadzone settings as well as allowing the
     modification of these."""
 
-    def __init__(self, values, change_cb, parent=None):
+    def __init__(self, profile_data, parent=None):
         """Creates a new instance.
 
-        :param values the initial deadzone settings
-        :param change_cb callback function to execute upon change
+        :param profile_data the data of this response curve
         :param parent the parent widget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        super().__init__(parent)
 
-        self.change_cb = change_cb
+        self.profile_data = profile_data
 
         self.main_layout = QtWidgets.QGridLayout(self)
 
@@ -706,7 +834,7 @@ class DeadzoneWidget(QtWidgets.QWidget):
         )
 
         # Set slider positions
-        self.set_values(values)
+        self.set_values(self.profile_data.deadzone)
 
         # Put everything into the layout
         self.main_layout.addWidget(self.left_slider, 0, 0, 1, 2)
@@ -746,9 +874,10 @@ class DeadzoneWidget(QtWidgets.QWidget):
         """
         if handle == DualSlider.LowerHandle:
             self.left_lower.setValue(value / self._normalizer)
+            self.profile_data.deadzone[0] = value / self._normalizer
         elif handle == DualSlider.UpperHandle:
             self.left_upper.setValue(value / self._normalizer)
-        self.change_cb()
+            self.profile_data.deadzone[1] = value / self._normalizer
 
     def _update_right(self, handle, value):
         """Updates the right spin boxes.
@@ -758,9 +887,10 @@ class DeadzoneWidget(QtWidgets.QWidget):
         """
         if handle == DualSlider.LowerHandle:
             self.right_lower.setValue(value / self._normalizer)
+            self.profile_data.deadzone[2] = value / self._normalizer
         elif handle == DualSlider.UpperHandle:
             self.right_upper.setValue(value / self._normalizer)
-        self.change_cb()
+            self.profile_data.deadzone[3] = value / self._normalizer
 
     def _update_from_spinner(self, value, handle, widget):
         """Updates the slider position.
@@ -773,64 +903,52 @@ class DeadzoneWidget(QtWidgets.QWidget):
             widget.setLowerPosition(value * self._normalizer)
         elif handle == DualSlider.UpperHandle:
             widget.setUpperPosition(value * self._normalizer)
-        self.change_cb()
 
 
-class AxisResponseCurveWidget(AbstractActionWidget):
+class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget that allows configuring the response of an axis to
     user inputs."""
 
-    def __init__(self, action_data, vjoy_devices, change_cb, parent=None):
+    def __init__(self, action_data, parent=None):
         """Creates a new instance.
 
         :param action_data the data associated with this specific action.
-        :param change_cb the callback to execute when changes occur
         :param parent parent widget
         """
-        AbstractActionWidget.__init__(
-            self,
-            action_data,
-            vjoy_devices,
-            change_cb,
-            parent
-        )
+        super().__init__(action_data, parent)
 
-    def _setup_ui(self):
-        """Creates the required UI elements."""
-        # Axis configuration storage
-        self.deadzone = [-1, 0, 0, 1]
         self.is_inverted = False
+        self.symmetry_mode_on = False
 
+    def _create_ui(self):
+        """Creates the required UI elements."""
         # Dropdown menu for the different curve types
         self.curve_type_selection = QtWidgets.QComboBox()
         self.curve_type_selection.addItem("Cubic Spline")
         self.curve_type_selection.addItem("Cubic Bezier Spline")
-        self.curve_type_selection.currentTextChanged.connect(self._change_model)
+        self.curve_type_selection.currentTextChanged.connect(
+            self._change_curve_type
+        )
 
         # Create all objects required for the response curve UI
         self.control_point_editor = ControlPointEditorWidget()
         # Response curve model used
-        self.curve_model = CubicSplineModel()
+        self.curve_model = CubicSplineModel(self.action_data)
         # Graphical curve editor
         self.curve_scene = CurveScene(
             self.curve_model,
-            self.control_point_editor,
-            self.change_cb
+            self.control_point_editor
         )
-        self.curve_scene.add_control_point(Point2D(-1.0, -1.0))
-        self.curve_scene.add_control_point(Point2D(1.0, 1.0))
+
         # Create view displaying the curve scene
         self.curve_view_layout = QtWidgets.QHBoxLayout()
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
-        self._initialize_response_curve_view()
+        self._configure_response_curve_view()
 
         # Deadzone configuration
         self.deadzone_label = QtWidgets.QLabel("Deadzone")
-        self.deadzone = DeadzoneWidget(
-            self.action_data.deadzone,
-            self.change_cb
-        )
+        self.deadzone = DeadzoneWidget(self.action_data)
 
         # Add all widgets to the layout
         self.main_layout.addWidget(self.curve_type_selection)
@@ -839,7 +957,22 @@ class AxisResponseCurveWidget(AbstractActionWidget):
         self.main_layout.addWidget(self.deadzone_label)
         self.main_layout.addWidget(self.deadzone)
 
-    def _change_model(self, curve_type):
+    def _populate_ui(self):
+        # Create mapping from XML name to ui name
+        name_map = {}
+        for key, value in ResponseCurve.curve_name_map.items():
+            name_map[value] = key
+
+        # Setup correct response curve object
+        self.curve_type_selection.setCurrentText(
+            name_map[self.action_data.mapping_type]
+        )
+        self.curve_scene.redraw_scene()
+
+        # Set deadzone values
+        self.deadzone.set_values(self.action_data.deadzone)
+
+    def _change_curve_type(self, curve_type):
         """Changes the type of curve used.
 
         :param curve_type the name of the new curve type
@@ -849,30 +982,39 @@ class AxisResponseCurveWidget(AbstractActionWidget):
             "Cubic Bezier Spline": CubicBezierSplineModel
         }
         # Create new model
-        self.curve_model = model_map[curve_type]()
+        if curve_type == "Cubic Spline":
+            self.action_data.control_points = [(-1.0, -1.0), (1.0, 1.0)]
+        elif curve_type == "Cubic Bezier Spline":
+            self.action_data.control_points = [
+                (-1.0, -1.0), (-0.8, -0.8), (0.8, 0.8), (1.0, 1.0)
+            ]
+
+        self.curve_model = model_map[curve_type](self.action_data)
+
         # Recreate the UI components
         self.curve_scene = CurveScene(
             self.curve_model,
-            self.control_point_editor,
-            self.change_cb
+            self.control_point_editor
         )
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
-        self._initialize_response_curve_view()
+        self._configure_response_curve_view()
 
-        if curve_type == "Cubic Spline":
-            self.curve_scene.add_control_point(Point2D(-1.0, -1.0))
-            self.curve_scene.add_control_point(Point2D(1.0, 1.0))
-        elif curve_type == "Cubic Bezier Spline":
-            self.curve_scene.add_control_point(
-                Point2D(-1.0, -1.0),
-                (Point2D(-0.95, -1.0),)
-            )
-            self.curve_scene.add_control_point(
-                Point2D(1.0, 1.0),
-                (Point2D(0.95, 1.0),)
-            )
+        # if curve_type == "Cubic Spline":
+        #     self.curve_scene.add_control_point(Point2D(-1.0, -1.0))
+        #     self.curve_scene.add_control_point(Point2D(1.0, 1.0))
+        #     self.action_data.mapping_type = "cubic-spline"
+        # elif curve_type == "Cubic Bezier Spline":
+        #     self.curve_scene.add_control_point(
+        #         Point2D(-1.0, -1.0),
+        #         (Point2D(-0.95, -1.0),)
+        #     )
+        #     self.curve_scene.add_control_point(
+        #         Point2D(1.0, 1.0),
+        #         (Point2D(0.95, 1.0),)
+        #     )
+        #     self.action_data.mapping_type = "cubic-bezier-spline"
 
-    def _initialize_response_curve_view(self):
+    def _configure_response_curve_view(self):
         """Initializes the response curve view components."""
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
         self.curve_view.setFixedSize(QtCore.QSize(410, 410))
@@ -883,112 +1025,51 @@ class AxisResponseCurveWidget(AbstractActionWidget):
             2*g_scene_size,
             2*g_scene_size
         ))
-        gremlin.util.clear_layout(self.curve_view_layout)
+        gremlin.ui.common.clear_layout(self.curve_view_layout)
         self.curve_view_layout.addStretch()
         self.curve_view_layout.addWidget(self.curve_view)
         self.curve_view_layout.addStretch()
 
-    def initialize_from_profile(self, action_data):
-        # Create mapping from XML name to ui name
-        name_map = {}
-        for key, value in ResponseCurve.curve_name_map.items():
-            name_map[value] = key
-
-        # Setup correct response curve object
-        self.curve_type_selection.setCurrentText(
-            name_map[action_data.mapping_type]
-        )
-        self.curve_scene.reset()
-
-        # Add points to the curve
-        if action_data.mapping_type == "cubic-spline":
-            for point in action_data.control_points:
-                self.curve_scene.add_control_point(Point2D(point[0], point[1]))
-        elif action_data.mapping_type == "cubic-bezier-spline":
-            self.curve_scene.add_control_point(
-                Point2D(
-                    action_data.control_points[0][0],
-                    action_data.control_points[0][1]
-                ),
-                [Point2D(
-                    action_data.control_points[1][0],
-                    action_data.control_points[1][1]
-                )]
-            )
-            for i in range(3, len(action_data.control_points)-2, 3):
-                self.curve_scene.add_control_point(
-                    Point2D(
-                        action_data.control_points[i][0],
-                        action_data.control_points[i][1]
-                    ),
-                    [
-                        Point2D(
-                            action_data.control_points[i-1][0],
-                            action_data.control_points[i-1][1]
-                        ),
-                        Point2D(
-                            action_data.control_points[i+1][0],
-                            action_data.control_points[i+1][1]
-                        )
-                    ]
-                )
-            self.curve_scene.add_control_point(
-                Point2D(
-                    action_data.control_points[-1][0],
-                    action_data.control_points[-1][1]
-                ),
-                [Point2D(
-                    action_data.control_points[-2][0],
-                    action_data.control_points[-2][1]
-                )]
-            )
-        self.curve_scene.redraw_scene()
-
-        # Set deadzone values
-        self.deadzone.set_values(action_data.deadzone)
-
-    def to_profile(self):
-        self.action_data.mapping_type = \
-            ResponseCurve.curve_name_map[self.curve_type_selection.currentText()]
-        self.action_data.deadzone = self.deadzone.get_values()
-        self.action_data.control_points = []
-        if self.action_data.mapping_type == "cubic-spline":
-            for cp in self.curve_model.get_control_points():
-                self.action_data.control_points.append(
-                    [cp.center.x, cp.center.y]
-                )
-        elif self.action_data.mapping_type == "cubic-bezier-spline":
-            control_points = sorted(
-                self.curve_model.get_control_points(),
-                key=lambda entry: entry.center.x
-            )
-            for cp in control_points:
-                if cp.center.x == -1:
-                    self.action_data.control_points.append(
-                        [cp.center.x, cp.center.y]
-                    )
-                    self.action_data.control_points.append(
-                        [cp.handles[0].x, cp.handles[0].y]
-                    )
-                elif cp.center.x == 1:
-                    self.action_data.control_points.append(
-                        [cp.handles[0].x, cp.handles[0].y]
-                    )
-                    self.action_data.control_points.append(
-                        [cp.center.x, cp.center.y]
-                    )
-                else:
-                    self.action_data.control_points.append(
-                        [cp.handles[0].x, cp.handles[0].y]
-                    )
-                    self.action_data.control_points.append(
-                        [cp.center.x, cp.center.y]
-                    )
-                    self.action_data.control_points.append(
-                        [cp.handles[1].x, cp.handles[1].y]
-                    )
-
-        self.action_data.is_valid = True
+    # def to_profile(self):
+    #     self.action_data.mapping_type = \
+    #         ResponseCurve.curve_name_map[self.curve_type_selection.currentText()]
+    #     self.action_data.deadzone = self.deadzone.get_values()
+    #     self.action_data.control_points = []
+    #     if self.action_data.mapping_type == "cubic-spline":
+    #         for cp in self.curve_model.get_control_points():
+    #             self.action_data.control_points.append(
+    #                 [cp.center.x, cp.center.y]
+    #             )
+    #     elif self.action_data.mapping_type == "cubic-bezier-spline":
+    #         control_points = sorted(
+    #             self.curve_model.get_control_points(),
+    #             key=lambda entry: entry.center.x
+    #         )
+    #         for cp in control_points:
+    #             if cp.center.x == -1:
+    #                 self.action_data.control_points.append(
+    #                     [cp.center.x, cp.center.y]
+    #                 )
+    #                 self.action_data.control_points.append(
+    #                     [cp.handles[0].x, cp.handles[0].y]
+    #                 )
+    #             elif cp.center.x == 1:
+    #                 self.action_data.control_points.append(
+    #                     [cp.handles[0].x, cp.handles[0].y]
+    #                 )
+    #                 self.action_data.control_points.append(
+    #                     [cp.center.x, cp.center.y]
+    #                 )
+    #             else:
+    #                 self.action_data.control_points.append(
+    #                     [cp.handles[0].x, cp.handles[0].y]
+    #                 )
+    #                 self.action_data.control_points.append(
+    #                     [cp.center.x, cp.center.y]
+    #                 )
+    #                 self.action_data.control_points.append(
+    #                     [cp.handles[1].x, cp.handles[1].y]
+    #                 )
 
 
 class ResponseCurve(AbstractAction):
@@ -999,7 +1080,7 @@ class ResponseCurve(AbstractAction):
     tag = "response-curve"
     widget = AxisResponseCurveWidget
     input_types = [
-        UiInputType.JoystickAxis,
+        InputType.JoystickAxis,
     ]
     callback_params = []
 
@@ -1013,7 +1094,7 @@ class ResponseCurve(AbstractAction):
 
         :param parent the parent profile.InputItem of this instance
         """
-        AbstractAction.__init__(self, parent)
+        super().__init__(parent)
         self.deadzone = [-1, 0, 0, 1]
         self.sensitivity = 1.0
         self.mapping_type = "cubic-spline"
@@ -1078,9 +1159,12 @@ class ResponseCurve(AbstractAction):
             {
                 "entry": self,
                 "gremlin": gremlin,
-                "curve_name": "curve_{:04d}".format(ResponseCurve.next_code_id)
+                "curve_name": "curve_{:d}".format(ResponseCurve.next_code_id)
             }
         )
+
+    def _is_valid(self):
+        return True
 
 version = 1
 name = "response-curve"
