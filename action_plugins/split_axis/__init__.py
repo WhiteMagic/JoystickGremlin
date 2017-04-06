@@ -34,6 +34,9 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data profile.InputItem data for this widget
         :param parent of this widget
         """
+        devices = gremlin.joystick_handling.joystick_devices()
+        self.vjoy_devices = [dev for dev in devices if dev.is_virtual]
+
         super().__init__(action_data, parent)
         assert isinstance(action_data, SplitAxis)
 
@@ -58,12 +61,12 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.split_device_layout = QtWidgets.QHBoxLayout()
         self.vjoy_selector_1 = gremlin.ui.common.VJoySelector(
             self.vjoy_devices,
-            self.change_cb,
+            self.save_changes,
             [InputType.JoystickAxis]
         )
         self.vjoy_selector_2 = gremlin.ui.common.VJoySelector(
             self.vjoy_devices,
-            self.change_cb,
+            self.save_changes,
             [InputType.JoystickAxis]
         )
         self.split_device_layout.addWidget(self.vjoy_selector_1)
@@ -78,18 +81,24 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         # if self.action_data.is_valid:
         self.split_slider.setValue(self.action_data.center_point * 1e5)
         self.split_readout.setValue(self.action_data.center_point)
-        self.vjoy_selector_1.set_selection(
-            InputType.JoystickAxis,
-            self.action_data.axis1[0],
-            self.action_data.axis1[1]
-        )
-        self.vjoy_selector_2.set_selection(
-            InputType.JoystickAxis,
-            self.action_data.axis2[0],
-            self.action_data.axis2[1]
-        )
+        if self.action_data.axis1 is None:
+            self.vjoy_selector_1.set_selection(InputType.JoystickAxis, -1, -1)
+        else:
+            self.vjoy_selector_1.set_selection(
+                InputType.JoystickAxis,
+                self.action_data.axis1[0],
+                self.action_data.axis1[1]
+            )
+        if self.action_data.axis2 is None:
+            self.vjoy_selector_2.set_selection(InputType.JoystickAxis, -1, -1)
+        else:
+            self.vjoy_selector_2.set_selection(
+                InputType.JoystickAxis,
+                self.action_data.axis2[0],
+                self.action_data.axis2[1]
+            )
 
-    def to_profile(self):
+    def save_changes(self):
         tmp = self.vjoy_selector_1.get_selection()
         self.action_data.axis1 = (tmp["device_id"], tmp["input_id"])
         tmp = self.vjoy_selector_2.get_selection()
@@ -98,11 +107,11 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     def _update_readout(self, value):
         self.split_readout.setValue(value / 1e5)
-        self.change_cb()
+        self.save_changes()
 
     def _update_slider(self, value):
         self.split_slider.setValue(value * 1e5)
-        self.change_cb()
+        self.save_changes()
 
 
 class SplitAxis(AbstractAction):

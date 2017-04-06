@@ -598,9 +598,12 @@ class VJoySelector(QtWidgets.QWidget):
         :param vjoy_input_id the id of the input
         """
         # Get the appropriate vjoy device identifier
-        dev_id = self.device_dropdown.findText(
-            "vJoy Device {:d}".format(vjoy_dev_id)
-        )
+        if vjoy_dev_id is None:
+            dev_id = -1
+        else:
+            dev_id = self.device_dropdown.findText(
+                "vJoy Device {:d}".format(vjoy_dev_id)
+            )
 
         # Retrieve the index of the correct entry in the combobox
         input_name = "{} {:d}".format(
