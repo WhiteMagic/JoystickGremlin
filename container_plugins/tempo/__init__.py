@@ -35,6 +35,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.delay_input.setRange(0.1, 2.0)
         self.delay_input.setSingleStep(0.1)
         self.delay_input.setValue(0.5)
+        self.delay_input.setValue(self.profile_data.delay)
         self.delay_input.valueChanged.connect(self._delay_changed_cb)
         self.delay_layout.addWidget(self.delay_input)
         self.delay_layout.addStretch()
