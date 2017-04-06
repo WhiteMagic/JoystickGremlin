@@ -14,9 +14,6 @@ class InputItemConfiguration(QtWidgets.QFrame):
     input item such as an axis, button, hat, or key.
     """
 
-    # Signal which is emitted whenever the configuration changes
-    #changed = QtCore.pyqtSignal()
-
     def __init__(self, vjoy_devices, item_data, parent=None):
         """Creates a new object instance.
 
@@ -45,12 +42,6 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.action_view.redraw()
 
         self.main_layout.addWidget(self.action_view)
-
-        # self.main_layout.addStretch(1)
-        # self.main_layout.addLayout(self.widget_layout)
-
-        # self.action_widgets = []
-        # self.from_profile(self.item_profile)
 
     # def from_profile(self, data):
     #     """Sets the data of this widget.
