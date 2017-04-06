@@ -91,6 +91,21 @@ class InputItemListModel(common.AbstractModel):
             elif index < axis_count + button_count + hat_count:
                 return input_items.config[InputType.JoystickHat][index - axis_count - button_count + 1]
 
+    def event_to_index(self, event):
+        input_items = self._device_data.modes[self._mode]
+        offset_map = dict()
+        offset_map[InputType.Keyboard] = 0
+        offset_map[InputType.JoystickAxis] =\
+            len(input_items.config[InputType.Keyboard])
+        offset_map[InputType.JoystickButton] = \
+            offset_map[InputType.JoystickAxis] + \
+            len(input_items.config[InputType.JoystickAxis])
+        offset_map[InputType.JoystickHat] = \
+            offset_map[InputType.JoystickButton] + \
+            len(input_items.config[InputType.JoystickButton])
+
+        return offset_map[event.event_type] + event.identifier - 1
+
 
 class InputItemListView(common.AbstractView):
 
@@ -147,6 +162,9 @@ class InputItemListView(common.AbstractView):
         return lambda x: self.select_item(index)
 
     def select_item(self, index):
+        if isinstance(index, gremlin.event_handler.Event):
+            index = self.model.event_to_index(index)
+
         for i in range(self.scroll_layout.count()):
             item = self.scroll_layout.itemAt(i)
             if item.widget():

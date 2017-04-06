@@ -695,8 +695,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # needs to be pressed and press is
         if gremlin.util.device_id(event) == gremlin.util.device_id(widget.device_profile):
             if self._should_process_input(event):
-                btn = widget.input_item_list.input_items[event.event_type][event.identifier]
-                btn.mousePressEvent(None)
+                widget.input_item_list_view.select_item(event)
 
     def _mode_changed_cb(self, new_mode):
         """Updates the current mode to the provided one.
