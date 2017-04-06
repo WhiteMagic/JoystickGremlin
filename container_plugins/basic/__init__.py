@@ -36,9 +36,14 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             )
             self.main_layout.addWidget(self._add_action_widget(action_widget))
         else:
-            action_selector = gremlin.ui.common.ActionSelector(
-                self.profile_data.parent.input_type
-            )
+            if self.profile_data.get_device_type() == gremlin.common.DeviceType.VJoy:
+                action_selector = gremlin.ui.common.ActionSelector(
+                    gremlin.common.DeviceType.VJoy
+                )
+            else:
+                action_selector = gremlin.ui.common.ActionSelector(
+                    self.profile_data.parent.input_type
+                )
             action_selector.action_added.connect(self._add_action)
             self.main_layout.addWidget(action_selector)
 

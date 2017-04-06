@@ -34,7 +34,10 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.widget_layout = QtWidgets.QVBoxLayout()
 
         self._create_description()
-        self._create_dropdowns()
+        if self.item_data.parent.parent.type == gremlin.common.DeviceType.VJoy:
+            self._create_vjoy_dropdowns()
+        else:
+            self._create_dropdowns()
 
         self.action_model = ActionContainerModel(self.item_data.actions)
         self.action_view = ActionContainerView()
@@ -180,6 +183,16 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.action_layout.addWidget(self.action_selector)
         self.action_layout.addWidget(self.container_selector)
         self.action_layout.addWidget(self.always_execute)
+        self.main_layout.addLayout(self.action_layout)
+
+    def _create_vjoy_dropdowns(self):
+        self.action_layout = QtWidgets.QHBoxLayout()
+
+        self.action_selector = gremlin.ui.common.ActionSelector(
+            gremlin.common.DeviceType.VJoy
+        )
+        self.action_selector.action_added.connect(self._add_action)
+        self.action_layout.addWidget(self.action_selector)
         self.main_layout.addLayout(self.action_layout)
 
     def _edit_description_cb(self, text):

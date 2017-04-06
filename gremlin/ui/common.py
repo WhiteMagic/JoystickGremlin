@@ -718,9 +718,12 @@ class ActionSelector(QtWidgets.QWidget):
         :return list of valid action names
         """
         action_list = []
-        for entry in gremlin.plugin_manager.ActionPlugins().repository.values():
-            if self.input_type in entry.input_types:
-                action_list.append(entry.name)
+        if self.input_type == gremlin.common.DeviceType.VJoy:
+            action_list.append("Response Curve")
+        else:
+            for entry in gremlin.plugin_manager.ActionPlugins().repository.values():
+                if self.input_type in entry.input_types:
+                    action_list.append(entry.name)
         return sorted(action_list)
 
     def _add_action(self, clicked=False):

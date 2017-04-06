@@ -970,6 +970,12 @@ class ProfileData(metaclass=ABCMeta):
             item = item.parent
         return item.input_type
 
+    def get_device_type(self):
+        item = self.parent
+        while not isinstance(item, Device):
+            item = item.parent
+        return item.type
+
     @abstractmethod
     def _parse_xml(self, node):
         """Implementation of the XML parsing.
