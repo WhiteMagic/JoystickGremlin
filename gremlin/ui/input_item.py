@@ -119,6 +119,13 @@ class InputItemListView(common.AbstractView):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.shown_input_types = [
+            InputType.JoystickAxis,
+            InputType.JoystickButton,
+            InputType.JoystickHat,
+            InputType.Keyboard
+        ]
+
         # Create required UI items
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.scroll_area = QtWidgets.QScrollArea()
@@ -141,11 +148,20 @@ class InputItemListView(common.AbstractView):
         # Add the scroll area to the main layout
         self.main_layout.addWidget(self.scroll_area)
 
+    def limit_input_types(self, types):
+        self.shown_input_types = types
+        self.redraw()
+
     def redraw(self):
         common.clear_layout(self.scroll_layout)
 
+        if self.model is None:
+            return
+
         for index in range(self.model.rows()):
             data = self.model.data(index)
+            if data.input_type not in self.shown_input_types:
+                continue
             label = str(data.input_id)
             identifier = InputIdentifier(
                 data.input_type,

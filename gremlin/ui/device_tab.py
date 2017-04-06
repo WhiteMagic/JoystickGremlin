@@ -310,12 +310,6 @@ class DeviceTabWidget(QtWidgets.QWidget):
         self.device = device
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
-        # self.input_item_list = input_item.InputItemList(
-        #     device,
-        #     device_profile,
-        #     current_mode
-        # )
-        # device_profile.parent.ini
         self.device_profile.ensure_mode_exists(self.current_mode, self.device)
 
         # List of inputs
@@ -324,34 +318,18 @@ class DeviceTabWidget(QtWidgets.QWidget):
             current_mode
         )
         self.input_item_list_view = input_item.InputItemListView()
+        # Only show axis values for vJoy devices
+        if device is not None and device.hardware_id == 305446573:
+            self.input_item_list_view.limit_input_types([InputType.JoystickAxis])
         self.input_item_list_view.set_model(self.input_item_list_model)
         # TODO: make this saner
         self.input_item_list_view.redraw()
-
-        # Configuration panel
-        # self.configuration_panel_layout = QtWidgets.QVBoxLayout()
-
-        # self.configuration_panel = ConfigurationPanel(
-        #     vjoy_devices,
-        #     device,
-        #     device_profile,
-        #     current_mode
-        # )
 
         # Handle user interaction
         self.input_item_list_view.item_selected.connect(
             self.input_item_selected_cb
         )
-        # self.input_item_list.input_item_selected.connect(
-        #     self.input_item_selected_cb
-        # )
-        # self.configuration_panel.input_item_changed.connect(
-        #     self.input_item_list.input_item_changed_cb
-        # )
-
-        # self.main_layout.addWidget(self.input_item_list)
         self.main_layout.addWidget(self.input_item_list_view)
-        #self.main_layout.addLayout(self.configuration_panel_layout)
 
     def input_item_selected_cb(self, index):
         item_data = input_item_index_lookup(
