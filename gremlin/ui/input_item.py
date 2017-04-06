@@ -924,7 +924,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
     def _create_ui(self):
         raise gremlin.error.MissingImplementationError(
-            "AbstractContainerWidget._setup_ui not "
+            "AbstractContainerWidget._create_ui not "
             "implemented in subclass"
         )
 
