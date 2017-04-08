@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import functools
 import inspect
 import logging
 import time
@@ -312,7 +313,7 @@ class EventHandler(QtCore.QObject):
         """Creates a new instance."""
         QtCore.QObject.__init__(self)
         self.process_callbacks = True
-        self.plugins = []
+        self.plugins = {}
         self.callbacks = {}
         self._event_lookup = {}
         self._active_mode = None
@@ -332,10 +333,8 @@ class EventHandler(QtCore.QObject):
         :param plugin the plugin to add
         """
         # Do not add the same type of plugin multiple times
-        for entry in self.plugins:
-            if type(entry) == type(plugin):
-                return
-        self.plugins.append(plugin)
+        if plugin.keyword not in self.plugins:
+            self.plugins[plugin.keyword] = plugin
 
     def add_callback(self, device_id, mode, event, callback, permanent=False):
         """Installs the provided callback for the given event.
@@ -479,8 +478,11 @@ class EventHandler(QtCore.QObject):
             into
         :return new callback with plugins installed
         """
-        signature = inspect.signature(callback)
-        new_callback = self.plugins[0].install(callback, signature)
-        for plugin in self.plugins[1:]:
-            new_callback = plugin.install(new_callback, signature)
-        return new_callback
+        signature = inspect.signature(callback).parameters
+        partial_fn = functools.partial
+        if "self" in signature:
+            partial_fn = functools.partialmethod
+        for keyword, plugin in self.plugins.items():
+            if keyword in signature:
+                callback = plugin.install(callback, partial_fn)
+        return callback

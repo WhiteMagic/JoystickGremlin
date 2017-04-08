@@ -375,7 +375,7 @@ class VJoyPlugin(object):
     def __init__(self):
         self.keyword = "vjoy"
 
-    def install(self, callback, signature):
+    def install(self, callback, partial_fn):
         """Decorates the given callback function to provide access to
         the VJoyProxy object.
 
@@ -383,19 +383,10 @@ class VJoyPlugin(object):
         decorator applied.
 
         :param callback the callback to decorate
-        :param signature the signature of the original callback
-        :return either the original callback or the newly decorated
-            version
+        :param partial_fn function to create the partial function / method
+        :return callback with the plugin parameter bound
         """
-        if self.keyword not in signature.parameters:
-            return callback
-
-        @functools.wraps(callback)
-        def wrapper(*args, **kwargs):
-            kwargs[self.keyword] = VJoyPlugin.vjoy
-            callback(*args, **kwargs)
-
-        return wrapper
+        return partial_fn(callback, vjoy=VJoyPlugin.vjoy)
 
 
 class JoystickPlugin(object):
@@ -411,7 +402,7 @@ class JoystickPlugin(object):
     def __init__(self):
         self.keyword = "joy"
 
-    def install(self, callback, signature):
+    def install(self, callback, partial_fn):
         """Decorates the given callback function to provide access
         to the JoystickProxy object.
 
@@ -419,19 +410,10 @@ class JoystickPlugin(object):
         decorator applied.
 
         :param callback the callback to decorate
-        :param signature the signature of the original callback
-        :return either the original callback or the newly decorated
-            version
+        :param partial_fn function to create the partial function / method
+        :return callback with the plugin parameter bound
         """
-        if self.keyword not in signature.parameters:
-            return callback
-
-        @functools.wraps(callback)
-        def wrapper(*args, **kwargs):
-            kwargs[self.keyword] = JoystickPlugin.joystick
-            callback(*args, **kwargs)
-
-        return wrapper
+        return partial_fn(callback, joy=JoystickPlugin.joystick)
 
 
 @common.SingletonDecorator
@@ -482,27 +464,15 @@ class KeyboardPlugin(object):
     def __init__(self):
         self.keyword = "keyboard"
 
-    def install(self, callback, signature):
+    def install(self, callback, partial_fn):
         """Decorates the given callback function to provide access to
         the Keyboard object.
 
-        Only if the signature contains the plugin's keyword is the
-        decorator applied.
-
         :param callback the callback to decorate
-        :param signature the signature of the original callback
-        :return either the original callback or the newly decorated
-            version
+        :param partial_fn function to create the partial function / method
+        :return callback with the plugin parameter bound
         """
-        if self.keyword not in signature.parameters:
-            return callback
-
-        @functools.wraps(callback)
-        def wrapper(*args, **kwargs):
-            kwargs[self.keyword] = KeyboardPlugin.keyboard
-            callback(*args, **kwargs)
-
-        return wrapper
+        return partial_fn(callback, keyboard=KeyboardPlugin.keyword)
 
 
 class JoystickDecorator(object):
