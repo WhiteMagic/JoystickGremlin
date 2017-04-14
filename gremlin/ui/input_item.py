@@ -82,7 +82,8 @@ class InputItemListModel(common.AbstractModel):
         key_count = len(input_items.config[InputType.Keyboard])
 
         if key_count > 0:
-            return input_items.config[InputType.Keyboard][index]
+            sorted_keys = sorted(input_items.config[InputType.Keyboard].keys())
+            return input_items.config[InputType.Keyboard][sorted_keys[index]]
         else:
             if index < axis_count:
                 return input_items.config[InputType.JoystickAxis][index + 1]
