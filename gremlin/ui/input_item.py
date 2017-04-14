@@ -242,8 +242,8 @@ class InputItemButton(QtWidgets.QFrame):
 
         # Create the actual icons
         # FIXME: this currently ignores the containers themselves
-        for entry in profile_data.actions:
-            for action in entry.actions:
+        for container in profile_data.containers:
+            for action in container.actions:
                 if action is not None:
                     self.main_layout.addWidget(ActionLabel(action))
 

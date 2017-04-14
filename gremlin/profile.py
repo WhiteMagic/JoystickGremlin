@@ -430,7 +430,7 @@ class Profile:
             for mode in dev.modes.values():
                 for input_type in all_input_types:
                     for item in mode.config[input_type].values():
-                        for container in item.actions:
+                        for container in item.containers:
                             remap_actions.extend(
                                 extract_remap_actions(container.actions)
                             )
@@ -823,7 +823,7 @@ class InputItem:
         self.input_id = None
         self.always_execute = False
         self.description = ""
-        self.actions = []
+        self.containers = []
 
     def from_xml(self, node):
         """Parses an InputItem node.
@@ -853,7 +853,7 @@ class InputItem:
                 continue
             entry = container_name_map[container_type](self)
             entry.from_xml(child)
-            self.actions.append(entry)
+            self.containers.append(entry)
 
     def to_xml(self):
         """Generates a XML node representing this object's data.
@@ -877,7 +877,7 @@ class InputItem:
         else:
             node.set("description", "")
 
-        for entry in self.actions:
+        for entry in self.containers:
             if entry.is_valid():
                 node.append(entry.to_xml())
 
