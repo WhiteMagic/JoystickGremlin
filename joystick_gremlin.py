@@ -310,7 +310,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             gremlin.common.InputType.JoystickHat: "hat",
         }
         main_profile = device_profile.parent
-        from action_plugins.common import ButtonCondition
+        from gremlin.base_classes import ButtonCondition
         for input_type in input_types:
             for entry in mode.config[input_type].values():
                 item_list = main_profile.list_unused_vjoy_inputs(
