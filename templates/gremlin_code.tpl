@@ -44,7 +44,7 @@ template_map = {
     InputType.JoystickAxis: "axis_callback.tpl",
     InputType.JoystickButton: "button_callback.tpl",
     InputType.JoystickHat: "hat_callback.tpl",
-    InputType.Keyboard: "button_callback.tpl"
+    InputType.Keyboard: "keyboard_callback.tpl"
 }
 %>
 
