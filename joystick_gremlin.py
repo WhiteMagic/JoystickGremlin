@@ -534,13 +534,14 @@ class GremlinUi(QtWidgets.QMainWindow):
         the different connected devices.
         """
         # Disconnect the old tabs before deleting them (eventually)
-        for widget in self.tabs.values():
-            self.mode_selector.mode_changed.disconnect(
-                widget.input_item_list.mode_changed_cb
-            )
-            self.mode_selector.mode_changed.disconnect(
-                widget.configuration_panel.mode_changed_cb
-            )
+        # FIXME: re-enable this
+        # for widget in self.tabs.values():
+        #     self.mode_selector.mode_changed.disconnect(
+        #         widget.input_item_list.mode_changed_cb
+        #     )
+        #     self.mode_selector.mode_changed.disconnect(
+        #         widget.configuration_panel.mode_changed_cb
+        #     )
         self.ui.devices.clear()
         self.tabs = {}
 
@@ -565,8 +566,10 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Create keyboard tab
         device_profile = self._profile.get_device_modes(
-            gremlin.util.device_id(gremlin.event_handler.Event.from_key(
-                gremlin.macro.Keys.A)
+            gremlin.util.device_id(
+                gremlin.event_handler.Event.from_key(
+                    gremlin.macro.Keys.A
+                )
             ),
             gremlin.profile.DeviceType.Keyboard,
             "keyboard"
@@ -599,17 +602,6 @@ class GremlinUi(QtWidgets.QMainWindow):
                 widget,
                 "{} #{:d}".format(device.name, device.vjoy_id)
             )
-
-        # Connect the mode changed event to all tabs
-        for widget in self.tabs.values():
-            # TODO: reenable this
-            pass
-            # self.mode_selector.mode_changed.connect(
-            #     widget.input_item_list.mode_changed_cb
-            # )
-            # self.mode_selector.mode_changed.connect(
-            #     widget.configuration_panel.mode_changed_cb
-            # )
 
         # Add the getting started tab
         # widget = QtWidgets.QTextEdit()
