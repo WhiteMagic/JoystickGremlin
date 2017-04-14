@@ -83,16 +83,6 @@ class AbstractAction(profile.ProfileData):
         :param params the parameters to pass to the template
         :return CodeBlock object containing the generated code
         """
-        # Generate body and global code
-        # TODO: these ids no longer are part of AbstractAction but ProfileData
-        # params["axis_button_name"] = "axis_button_{:04d}".format(
-        #     AbstractAction.next_code_id
-        # )
-        # params["axis_button_cb"] = "axis_button_callback_{:04d}".format(
-        #     AbstractAction.next_code_id
-        # )
-        #params["helpers"] = template_helpers
-
         # Insert additional common parameters
         params["InputType"] = common.InputType
         params["input_type"] = params["entry"].get_input_type()
@@ -100,23 +90,22 @@ class AbstractAction(profile.ProfileData):
         params["gremlin"] = gremlin
 
         tpl_lookup = TemplateLookup(directories=["."])
-        body_code = Template(
-            filename="action_plugins/{}/body.tpl".format(template_name),
+
+        code_block = profile.CodeBlock()
+        code_block.store("container_action", Template(
+            filename="action_plugins/{}/container_action.tpl".format(template_name),
             lookup=tpl_lookup
         ).render(
             **params
-        )
-        global_code = Template(
-            filename="action_plugins/{}/global.tpl".format(template_name),
+        ))
+        code_block.store("setup", Template(
+            filename="action_plugins/{}/setup.tpl".format(template_name),
             lookup=tpl_lookup
         ).render(
             **params
-        )
+        ))
 
-        # Put required conditions around the body block
-        body_code = self.condition.to_code(body_code)
-
-        return profile.CodeBlock(body_code, global_code)
+        return code_block
 
 
 class AbstractContainer(profile.ProfileData):

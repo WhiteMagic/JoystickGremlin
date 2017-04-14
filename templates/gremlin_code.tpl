@@ -16,18 +16,25 @@ tts = gremlin.tts.TextToSpeech()
 # Create all required decorators
 % for device_id, modes in decorators.items():
     % for mode_name, data in modes.items():
-${data["decorator_name"]} = gremlin.input_devices.JoystickDecorator(
-    name="${data['device_name']}",
+${data.decorator_name} = gremlin.input_devices.JoystickDecorator(
+    name="${data.device_name}",
     device_id=${device_id},
     mode="${mode_name}"
 )
     % endfor
 % endfor
 
+# Create action setup code
+% for entry in setup:
+${entry}
+% endfor
+
+
+# Create container and action combinations used in the callbacks
 % for device_id, modes in callbacks.items():
     % for mode_name, callbacks_data in modes.items():
-        % for entry in callbacks_data:
-${util.indent(entry["code_block"].static, 0)}
+        % for input_item in callbacks_data:
+${util.indent(input_item.code_block.container, 0)}
         % endfor
     % endfor
 % endfor
@@ -43,16 +50,16 @@ template_map = {
 
 % for device_id, modes in callbacks.items():
     % for mode_name, callbacks_data in modes.items():
-        % for entry in callbacks_data:
+        % for input_item in callbacks_data:
 <%include
-    file="${template_map[entry['input_item'].input_type]}"
+    file="${template_map[input_item.input_item.input_type]}"
     args="
-        input_item=entry['input_item'],
-        decorator_name=entry['decorator_name'],
-        mode_index=entry['mode_index'],
-        parameter_list=entry['parameter_list'],
-        device_name=entry['device_name'],
-        code_block=entry['code_block']
+        input_item=input_item.input_item,
+        decorator_name=input_item.decorator_name,
+        mode_index=input_item.mode_index,
+        parameter_list=input_item.parameter_list,
+        device_name=input_item.device_name,
+        code_block=input_item.code_block
     "
 />
         % endfor

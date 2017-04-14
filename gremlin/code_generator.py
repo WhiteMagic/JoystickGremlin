@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import collections
 import re
 
 import gremlin.common
@@ -22,9 +23,31 @@ from mako.lookup import TemplateLookup
 from mako.template import Template
 
 import action_plugins.remap
+import action_plugins.response_curve
 import action_plugins.common
 import gremlin
 from . import common, error, joystick_handling, profile, util
+
+
+CallbackData = collections.namedtuple(
+    "CallbackData",
+    [
+        "input_item",
+        "decorator_name",
+        "mode_index",
+        "parameter_list",
+        "device_name",
+        "code_block"
+    ]
+)
+
+DecoratorData = collections.namedtuple(
+    "DecoratorData",
+    [
+        "decorator_name",
+        "device_name"
+    ]
+)
 
 
 def decorator_name(mode, index):
@@ -60,9 +83,9 @@ def generate_parameter_list(input_item):
     params = []
     vjoy_required = gremlin.plugin_manager.ActionPlugins() \
         .plugins_requiring_parameter("vjoy")
-    for container in input_item.actions:
-        for entry in container.actions:
-            if type(entry) in vjoy_required:
+    for container in input_item.containers:
+        for action in container.actions:
+            if type(action) in vjoy_required:
                 params.append("vjoy")
     params = list(set(params))
     params.insert(0, "event")
@@ -121,68 +144,6 @@ def input_item_identifier_string(input_item):
         return ""
 
 
-# def format_condition(condition, data=None):
-#     """Returns code representing the button condition.
-#
-#     :param condition the condition to turn into textual python code
-#     :param data additional data that may be used to pass information
-#     :return python code representing the condition
-#     """
-#     if isinstance(condition, ButtonCondition):
-#         shift_term = ""
-#         if condition.shift_button is not None:
-#             # Keyboard key is being used as a shift button
-#             if condition.shift_button["hardware_id"] == 0:
-#                 shift_term = "keyboard.is_pressed(gremlin.macro.key_from_code({:d}, {}))".format(
-#                     condition.shift_button["id"][0],
-#                     condition.shift_button["id"][1]
-#                 )
-#             # Joystick button is being used as a shift button
-#             else:
-#                 shift_term = "joy[{:d}].button({:d}).is_pressed".format(
-#                     condition.shift_button["windows_id"],
-#                     condition.shift_button["id"]
-#                 )
-#
-#             shift_term = " and {}".format(shift_term)
-#
-#         if condition.on_press and condition.on_release:
-#             condition_term = "    if True"
-#         elif condition.on_press:
-#             condition_term = "    if is_pressed"
-#         elif condition.on_release:
-#             condition_term = "    if not is_pressed"
-#         else:
-#             condition_term = "    if False"
-#
-#         return "{}{}:".format(condition_term, shift_term)
-#     elif isinstance(condition, HatCondition):
-#         positive_instances = []
-#         if condition.on_n:
-#             positive_instances.append((0, 1))
-#         if condition.on_ne:
-#             positive_instances.append((1, 1))
-#         if condition.on_e:
-#             positive_instances.append((1, 0))
-#         if condition.on_se:
-#             positive_instances.append((1, -1))
-#         if condition.on_s:
-#             positive_instances.append((0, -1))
-#         if condition.on_sw:
-#             positive_instances.append((-1, -1))
-#         if condition.on_w:
-#             positive_instances.append((-1, 0))
-#         if condition.on_nw:
-#             positive_instances.append((-1, 1))
-#
-#         condition_text = ", ".join(
-#             ["({}, {})".format(v[0], v[1]) for v in positive_instances]
-#         )
-#         return "    if value in [{}]:".format(condition_text)
-#     else:
-#         return "    if True:"
-
-
 def list_to_string(params):
     """Returns a textual representing of a list.
 
@@ -230,6 +191,7 @@ class CodeGeneratorV2:
 
     def __init__(self, config_profile):
         self.decorators = {}
+        self.setup = []
         self.callbacks = {}
 
         self.code = ""
@@ -241,21 +203,25 @@ class CodeGeneratorV2:
     def generate_from_profile(self, config_profile):
         assert (isinstance(config_profile, profile.Profile))
 
+        # Reset the profile code cache
+        self._reset_code_cache(config_profile)
+
         # Device, mode, actions
         for device in config_profile.devices.values():
-            for i, mode in enumerate(device.modes.values()):
-                self._process_device_mode(mode, i)
+            self._process_device(device)
 
+        # Create output by rendering it via the template system
         tpl_lookup = TemplateLookup(directories=["."])
         tpl = Template(
-            filename="templates/everything.tpl",
+            filename="templates/gremlin_code.tpl",
             lookup=tpl_lookup
         )
         self.code = tpl.render(
             gremlin=gremlin,
             profile=config_profile,
             decorators=self.decorators,
-            callbacks=self.callbacks
+            callbacks=self.callbacks,
+            setup=self.setup
         )
 
     def write_code(self, fname):
@@ -263,7 +229,11 @@ class CodeGeneratorV2:
         with open(fname, "w") as out:
             out.write(code)
 
-    def _process_device_mode(self, mode, index):
+    def _process_device(self, device):
+        for i, mode in enumerate(device.modes.values()):
+            self._process_mode(mode, i)
+
+    def _process_mode(self, mode, index):
         device_id = util.device_id(mode.parent)
 
         # Ensure data storage is properly initialized
@@ -276,72 +246,71 @@ class CodeGeneratorV2:
 
         # Gather data required to generate decorator definitions
         if mode.parent.type != gremlin.common.DeviceType.Keyboard:
-            self.decorators[device_id][mode.name] = {
-                "decorator_name": decorator_name(mode, index),
-                "device_name": mode.parent.name
-            }
+            self.decorators[device_id][mode.name] = DecoratorData(
+                decorator_name(mode, index),
+                mode.parent.name
+            )
 
         # Gather data required to generate callback related code
         for input_type, input_items in mode.config.items():
             for input_item in input_items.values():
-                # self.generate_input_item(entry, mode, index)
+                self._process_input_item(input_item, index)
 
-        # def generate_input_item(self, input_item, mode, index):
-        #     assert (isinstance(input_item, profile.InputItem))
-        #     assert (isinstance(mode, profile.Mode))
-        #     assert (input_item.parent == mode)
+    def _process_input_item(self, input_item, index):
+        # Grab required information
+        mode = input_item.parent
+        device_id = util.device_id(mode.parent)
 
-                # Nothing to do if we have no associated actions
-                if len(input_item.actions) == 0:
-                    continue
+        # Abort if there are no actions associated with this item
+        if len(input_item.containers) == 0:
+            return
 
-                # input_type_templates = {
-                #     UiInputType.JoystickAxis: "templates/axis.tpl",
-                #     UiInputType.JoystickButton: "templates/button_callback.tpl",
-                #     UiInputType.JoystickHat: "templates/hat.tpl",
-                #     UiInputType.Keyboard: "templates/key.tpl",
-                # }
+        # Generate callback code
+        code_block = profile.CodeBlock()
+        # First process containers which contain response curve actions as
+        # those have to be executed before any remap can occur
+        skipped_containers = []
+        for container in input_item.containers:
+            skip_container = True
+            for action in container.actions:
+                if isinstance(action, action_plugins.response_curve.ResponseCurve):
+                    skip_container = False
+            if skip_container:
+                skipped_containers.append(container)
+            else:
+                code_block.combine(container.to_code())
+        for container in skipped_containers:
+            code_block.combine(container.to_code())
 
-                # Generate code for the actions associated with the item
-                # code = {
-                #     "body": [],
-                #     "global": [],
-                # }
-                # actions_to_code(input_item.actions, code)
-                # self.code["global"].extend(code["global"])
-                #
-                # tpl = Template(filename=input_type_templates[input_item.input_type])
+        # Store data required to integrate the code into the global file
+        self.callbacks[device_id][mode.name].append(CallbackData(
+            input_item,
+            decorator_name(mode, index),
+            index,
+            generate_parameter_list(input_item),
+            "{}{}".format(
+                util.format_name(mode.parent.name),
+                input_item_identifier_string(input_item)
+            ),
+            code_block
+        ))
 
-                code_block = profile.CodeBlock()
-                for container in input_item.actions:
-                    code_block.append(container.to_code())
+        # Generate action setup stuff
+        for container in input_item.containers:
+            for action in container.actions:
+                code = action.to_code()
+                if "setup" in code.keys():
+                    self.setup.append(action.to_code().setup)
 
-                self.callbacks[device_id][mode.name].append({
-                    "input_item": input_item,
-                    "decorator_name": decorator_name(mode, index),
-                    "mode_index": index,
-                    "parameter_list": generate_parameter_list(input_item),
-                    "device_name": "{}{}".format(
-                        util.format_name(mode.parent.name),
-                        input_item_identifier_string(input_item)
-                    ),
-                    "code_block": code_block
-                })
-                # helpers = {
-                #     "wid": input_item_identifier_string,
-                # }
-                # self.code["callback"].append(tpl.render(
-                #     device_name=util.format_name(mode.parent.name),
-                #     decorator=decorator_name(mode, index),
-                #     mode=mode.name,
-                #     mode_index=index,
-                #     input_item=input_item,
-                #     # code=code,
-                #     code_blocks=code["body"],
-                #     param_list=generate_parameter_list(input_item),
-                #     helpers=helpers,
-                #     gremlin=gremlin
-                # ))
+    def _reset_code_cache(self, config_profile):
+        for device in config_profile.devices.values():
+            for mode in device.modes.values():
+                for input_items in mode.config.values():
+                    for input_item in input_items.values():
+                        for container in input_item.containers:
+                            container.code = None
+                            for action in container.actions:
+                                action.code = None
 
 
 class CodeGenerator(object):

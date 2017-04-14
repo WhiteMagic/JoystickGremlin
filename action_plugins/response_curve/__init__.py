@@ -1159,7 +1159,8 @@ class ResponseCurve(AbstractAction):
             {
                 "entry": self,
                 "gremlin": gremlin,
-                "curve_name": "curve_{:d}".format(ResponseCurve.next_code_id)
+                "curve_name": "curve_{:d}".format(ResponseCurve.next_code_id),
+                "deadzone_name": "deadzone_{:d}".format(ResponseCurve.next_code_id)
             }
         )
 
