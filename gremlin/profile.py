@@ -902,21 +902,30 @@ class InputItem:
 
 class CodeBlock:
 
-    def __init__(self, body_code="", static_code=""):
-        self._body = body_code
-        self._static = static_code
+    def __init__(self):
+        self._storage = {}
 
-    @property
-    def body(self):
-        return self._body
+    def store(self, key, code):
+        if key not in self._storage:
+            self._storage[key] = ""
+        self._storage[key] += code
 
-    @property
-    def static(self):
-        return self._static
+    def retrieve(self, key):
+        if key not in self._storage:
+            raise error.GremlinError(
+                "Invalid code attribute '{}' requested".format(key)
+            )
+        return self._storage[key]
 
-    def append(self, other):
-        self._body += other.body
-        self._static += other.static
+    def keys(self):
+        return self._storage.keys()
+
+    def __getattr__(self, key):
+        return self.retrieve(key)
+
+    def combine(self, other):
+        for key in other.keys():
+            self.store(key, other.retrieve(key))
 
 
 class ProfileData(metaclass=ABCMeta):
@@ -936,6 +945,7 @@ class ProfileData(metaclass=ABCMeta):
         :param parent the parent item of this instance in the profile tree
         """
         self.parent = parent
+        self.code = None
 
     def from_xml(self, node):
         """Initializes this node's values based on the provided XML node.
@@ -956,21 +966,34 @@ class ProfileData(metaclass=ABCMeta):
 
         :return code representing this instance's behaviour
         """
-        code = self._generate_code()
-        assert isinstance(code, CodeBlock)
-        ProfileData.next_code_id += 1
-        return code
+        if self.code is None:
+            self.code = self._generate_code()
+            assert isinstance(self.code, CodeBlock)
+            ProfileData.next_code_id += 1
+        return self.code
 
     def is_valid(self):
+        """Returns whether or not an instance is fully specified.
+        
+        :return True if all required variables are set, False otherwise
+        """
         return self._is_valid()
 
     def get_input_type(self):
+        """Returns the InputType of this data entry.
+        
+        :return InputType of this entry
+        """
         item = self.parent
         while not isinstance(item, InputItem):
             item = item.parent
         return item.input_type
 
     def get_device_type(self):
+        """Returns the DeviceType of this data entry.
+        
+        :return DeviceType of this entry
+        """
         item = self.parent
         while not isinstance(item, Device):
             item = item.parent
@@ -1002,4 +1025,8 @@ class ProfileData(metaclass=ABCMeta):
 
     @abstractmethod
     def _is_valid(self):
+        """Returns whether or not an instance is fully specified.
+        
+        :return True if all required variables are set, False otherwise
+        """
         pass
