@@ -197,7 +197,7 @@ class ProfileConverter:
 
     """Handle converting and checking profiles."""
 
-    current_version = 3
+    current_version = 4
 
     def __init__(self):
         pass
@@ -234,8 +234,12 @@ class ProfileConverter:
         if old_version == 1:
             new_root = self._convert_from_v1(root)
             new_root = self._convert_from_v2(new_root)
+            new_root = self._convert_from_v3(new_root)
         if old_version == 2:
             new_root = self._convert_from_v2(root)
+            new_root = self._convert_from_v3(new_root)
+        if old_version == 3:
+            new_root = self._convert_from_v3(root)
 
         if new_root is not None:
             # Save converted version
@@ -264,6 +268,8 @@ class ProfileConverter:
             return 2
         elif root.tag == "profile" and int(root.get("version")) == 3:
             return 3
+        elif root.tag == "profile" and int(root.get("version")) == 4:
+            return 4
         else:
             raise error.ProfileError(
                 "Invalid profile version encountered"
@@ -320,6 +326,36 @@ class ProfileConverter:
                         "Device '{}' missing, no conversion performed, ID"
                         " will be incorrect.".format(device.get("name"))
                     )
+        return new_root
+
+    def _convert_from_v3(self, root):
+        """Converts v3 profiles to v4 profiles.
+        
+        The following operations are performed in this conversion:
+        - embed all actions in individual BasicContainer containers
+        
+        :param root the v3 profile
+        :return v4 representation of the profile
+        """
+        new_root = copy.deepcopy(root)
+        new_root.set("version", "4")
+        for mode in new_root.iter("mode"):
+            for input_item in mode:
+                containers = []
+                items_to_remove = []
+                for action in input_item:
+                    container = ElementTree.Element("container")
+                    container.set("type", "basic")
+                    container.append(action)
+                    containers.append(container)
+                    items_to_remove.append(action)
+
+                for action in items_to_remove:
+                    input_item.remove(action)
+
+                for container in containers:
+                    input_item.append(container)
+
         return new_root
 
 
