@@ -93,6 +93,7 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
 
     def _generate_code(self):
         code_id = gremlin.profile.ProfileData.next_code_id
+        gremlin.profile.ProfileData.next_code_id += 1
         tpl = Template(filename="container_plugins/basic/global.tpl")
         code = gremlin.profile.CodeBlock()
         code.store("container", tpl.render(

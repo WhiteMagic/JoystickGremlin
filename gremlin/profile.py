@@ -1005,7 +1005,7 @@ class ProfileData(metaclass=ABCMeta):
         if self.code is None:
             self.code = self._generate_code()
             assert isinstance(self.code, CodeBlock)
-            ProfileData.next_code_id += 1
+            # ProfileData.next_code_id += 1
         return self.code
 
     def is_valid(self):
