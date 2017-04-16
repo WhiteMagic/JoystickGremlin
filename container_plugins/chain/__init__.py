@@ -104,13 +104,23 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
         return node
 
     def _generate_code(self):
+        super()._generate_code()
+        code_id = gremlin.profile.ProfileData.next_code_id
+        gremlin.profile.ProfileData.next_code_id += 1
+
         tpl = Template(filename="container_plugins/chain/global.tpl")
-        code = gremlin.profile.CodeBlock(
-            static_code=tpl.render(
-                entry=self,
-                id=gremlin.profile.ProfileData.next_code_id
-            )
-        )
+        code = gremlin.profile.CodeBlock()
+        code.store("container", tpl.render(
+            entry=self,
+            id=code_id,
+            code=code
+        ))
+        tpl = Template(filename="container_plugins/chain/body.tpl")
+        code.store("body", tpl.render(
+            entry=self,
+            id=code_id,
+            code=code
+        ))
         return code
 
     def _is_valid(self):

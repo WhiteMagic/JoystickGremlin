@@ -17,7 +17,7 @@
 
 import time
 
-from . import control_action, error, fsm, input_devices, joystick_handling, macro, tts
+from . import common, control_action, error, fsm, input_devices, joystick_handling, macro, tts
 
 
 tts_instance = tts.TextToSpeech()
@@ -451,16 +451,18 @@ class Chain(AbstractActionContainer):
         self.timeout = timeout
         self.last_execution = 0.0
 
-    def __call__(self, value):
+    def __call__(self, event, value):
         # FIXME: reset via timeout not yet implemented
         if self.timeout > 0.0:
             if self.last_execution + self.timeout < time.time():
                 self.index = 0
                 self.last_execution = time.time()
 
-        self.actions[self.index](value)
-        if not value:
-            self.index = (self.index + 1) % len(self.actions)
+        # TODO: handle non button inputs
+        self.actions[self.index](event, value)
+        if event.event_type in [common.InputType.JoystickButton, common.InputType.Keyboard]:
+            if not event.is_pressed:
+                self.index = (self.index + 1) % len(self.actions)
 
 
 class SmartToggle(AbstractActionContainer):

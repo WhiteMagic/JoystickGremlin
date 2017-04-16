@@ -1,5 +1,6 @@
-action_${id} = gremlin.abstract_containers.Chain([
+<%namespace name="util" module="templates.functions"/>
+action_${id} = gremlin.actions.Chain([
 % for action in entry.actions:
-    ${action.to_code().static},
+    ${util.indent(action.to_code().container_action, 4, ",")}
 % endfor
 ])

@@ -6,13 +6,13 @@ def get_device_id(context, hardware_id, windows_id):
     return gremlin.util.get_device_id(hardware_id, windows_id)
 
 
-def indent(context, content, spaces):
+def indent(context, content, spaces, end="\n"):
     text = ""
     lines = [line for line in content.splitlines() if len(line) > 0]
     if len(lines) > 0:
-        text += "{}\n".format(lines[0])
+        text += "{}{}".format(lines[0], end)
         for line in lines[1:-1]:
-            text += "{}{}\n".format(" " * spaces, line)
+            text += "{}{}{}".format(" " * spaces, line, end)
         if len(lines) > 1:
             text += "{}{}".format(" " * spaces, lines[-1])
     return text
