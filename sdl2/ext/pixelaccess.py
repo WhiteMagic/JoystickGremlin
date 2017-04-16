@@ -87,37 +87,38 @@ class PixelView(MemoryView):
             if SDL_MUSTLOCK(self._surface):
                 SDL_UnlockSurface(self._surface)
 
-_HASNUMPY = True
-try:
-    import numpy
-
-    class SurfaceArray(numpy.ndarray):
-        """Wrapper class around numpy.ndarray.
-
-        Used to keep track of the original source object for pixels2d()
-        and pixels3d() to avoid the deletion of the source object.
-        """
-        def __new__(cls, shape, dtype=float, buffer_=None, offset=0,
-                    strides=None, order=None, source=None, surface=None):
-            sfarray = numpy.ndarray.__new__(cls, shape, dtype, buffer_,
-                                            offset, strides, order)
-            sfarray._source = source
-            sfarray._surface = surface
-            return sfarray
-
-        def __array_finalize__(self, sfarray):
-            if sfarray is None:
-                return
-            self._source = getattr(sfarray, '_source', None)
-            self._surface = getattr(sfarray, '_surface', None)
-
-        def __del__(self):
-            if self._surface:
-                if SDL_MUSTLOCK(self._surface):
-                    SDL_UnlockSurface(self._surface)
-
-except ImportError:
-    _HASNUMPY = False
+_HASNUMPY = False
+# _HASNUMPY = True
+# try:
+#     import numpy
+#
+#     class SurfaceArray(numpy.ndarray):
+#         """Wrapper class around numpy.ndarray.
+#
+#         Used to keep track of the original source object for pixels2d()
+#         and pixels3d() to avoid the deletion of the source object.
+#         """
+#         def __new__(cls, shape, dtype=float, buffer_=None, offset=0,
+#                     strides=None, order=None, source=None, surface=None):
+#             sfarray = numpy.ndarray.__new__(cls, shape, dtype, buffer_,
+#                                             offset, strides, order)
+#             sfarray._source = source
+#             sfarray._surface = surface
+#             return sfarray
+#
+#         def __array_finalize__(self, sfarray):
+#             if sfarray is None:
+#                 return
+#             self._source = getattr(sfarray, '_source', None)
+#             self._surface = getattr(sfarray, '_surface', None)
+#
+#         def __del__(self):
+#             if self._surface:
+#                 if SDL_MUSTLOCK(self._surface):
+#                     SDL_UnlockSurface(self._surface)
+#
+# except ImportError:
+#     _HASNUMPY = False
 
 
 @experimental
