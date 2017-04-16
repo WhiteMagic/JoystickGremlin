@@ -17,6 +17,8 @@
 
 from xml.etree import ElementTree
 
+from mako.template import Template
+
 from PyQt5 import QtWidgets
 
 import gremlin
@@ -111,7 +113,8 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
         self.delay = 0.5
 
     def _parse_xml(self, node):
-        pass
+        self.actions = []
+        super()._parse_xml(node)
 
     def _generate_xml(self):
         node = ElementTree.Element("container")
@@ -122,7 +125,24 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
         return node
 
     def _generate_code(self):
-        return gremlin.profile.CodeBlock()
+        super()._generate_code()
+        code_id = gremlin.profile.ProfileData.next_code_id
+        gremlin.profile.ProfileData.next_code_id += 1
+
+        tpl = Template(filename="container_plugins/tempo/global.tpl")
+        code = gremlin.profile.CodeBlock()
+        code.store("container", tpl.render(
+            entry=self,
+            id=code_id,
+            code=code
+        ))
+        tpl = Template(filename="container_plugins/tempo/body.tpl")
+        code.store("body", tpl.render(
+            entry=self,
+            id=code_id,
+            code=code
+        ))
+        return code
 
     def _is_valid(self):
         return len(self.actions) == 2 and None not in self.actions

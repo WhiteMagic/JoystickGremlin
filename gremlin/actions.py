@@ -410,6 +410,12 @@ class AbstractActionContainer:
     def __init__(self, actions):
         self.actions = actions
 
+    def _is_button_event(self, event):
+        return event.event_type in [
+            common.InputType.JoystickButton,
+            common.InputType.Keyboard
+        ]
+
     def __call__(self, value):
         raise error.GremlinError("Missing execute implementation")
 
@@ -433,14 +439,16 @@ class Tempo(AbstractActionContainer):
         self.duration = duration
         self.start_time = 0
 
-    def __call__(self, value):
-        if value:
-            self.start_time = time.time()
-        else:
-            if (self.start_time + self.duration) > time.time():
-                self.actions[0](value)
+    def __call__(self, event, value):
+        # TODO: handle non button inputs
+        if self._is_button_event(event):
+            if value.current:
+                self.start_time = time.time()
             else:
-                self.actions[1](value)
+                if (self.start_time + self.duration) > time.time():
+                    self.actions[0](event, value)
+                else:
+                    self.actions[1](event, value)
 
 
 class Chain(AbstractActionContainer):
@@ -460,8 +468,7 @@ class Chain(AbstractActionContainer):
 
         # TODO: handle non button inputs
         self.actions[self.index](event, value)
-        if event.event_type in [common.InputType.JoystickButton, common.InputType.Keyboard]:
-            if not event.is_pressed:
+        if self._is_button_event(event) and not event.is_pressed:
                 self.index = (self.index + 1) % len(self.actions)
 
 
