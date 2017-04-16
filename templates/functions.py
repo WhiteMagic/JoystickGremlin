@@ -40,7 +40,9 @@ def create_condition(context, condition):
         if condition.on_nw:
             valid_conditions.append((-1, 1))
         return "gremlin.actions.HatCondition({})".format(
-            ", ".join(["({:d}, {:d})".format(v[0], v[1]) for v in valid_conditions])
+            "[{}]".format(
+                ", ".join(["({:d}, {:d})".format(v[0], v[1]) for v in valid_conditions])
+            )
         )
 
 
