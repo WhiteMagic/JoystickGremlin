@@ -65,3 +65,14 @@ template_map = {
         % endfor
     % endfor
 % endfor
+
+% for i, merge_axis in enumerate(profile.merge_axes):
+<%include
+    file="merge_axis_callback.tpl"
+    args="
+        entry=merge_axis,
+        decorator_data=decorators,
+        index=i
+    "
+/>
+% endfor

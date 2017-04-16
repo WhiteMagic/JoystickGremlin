@@ -1,4 +1,9 @@
 import gremlin.base_classes
+import gremlin.util
+
+
+def get_device_id(context, hardware_id, windows_id):
+    return gremlin.util.get_device_id(hardware_id, windows_id)
 
 
 def indent(context, content, spaces):
