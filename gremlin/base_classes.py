@@ -142,6 +142,13 @@ class AbstractContainer(profile.ProfileData):
             entry.from_xml(child)
             self.actions.append(entry)
 
+    def _generate_code(self):
+        # Generate code for each of the actions so they are cached and have a
+        # unique code_id
+        for action in self.actions:
+            action.to_code()
+            gremlin.profile.ProfileData.next_code_id += 1
+
 
 class AxisCondition:
 

@@ -92,6 +92,7 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
         return node
 
     def _generate_code(self):
+        super()._generate_code()
         code_id = gremlin.profile.ProfileData.next_code_id
         gremlin.profile.ProfileData.next_code_id += 1
         tpl = Template(filename="container_plugins/basic/global.tpl")
