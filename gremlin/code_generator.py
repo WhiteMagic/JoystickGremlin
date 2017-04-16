@@ -26,7 +26,7 @@ import action_plugins.remap
 import action_plugins.response_curve
 import action_plugins.common
 import gremlin
-from . import common, error, joystick_handling, profile, util
+from . import error, profile, util
 
 
 CallbackData = collections.namedtuple(
@@ -92,45 +92,6 @@ def generate_parameter_list(input_item):
     return ", ".join(params)
 
 
-def sanitize_code(code):
-    """Returns a sanitized version of the code.
-
-    This removes extraneous line breaks while ensuring proper line
-    spacing.
-
-    :param code the code to sanitize
-    :return sanitized version of the provided code
-    """
-    code = re.sub("\r", "", code)
-    new_code = ""
-    for line in code.split("\n"):
-        if line == "#newline":
-            new_code += "\n"
-        elif len(line) > 0:
-            new_code += line + "\n"
-
-    return new_code
-
-
-def actions_to_code(actions, code):
-    """Generates code corresponding to a list of actions.
-
-    :param actions list of action instances from which to generate code
-    :param code output storage for the generated code
-    :return code corresponding to the provided list of actions
-    """
-    for entry in actions:
-        if not isinstance(entry, action_plugins.remap.Remap):
-            for key, value in entry.to_code().items():
-                assert(key in code)
-                code[key].append(value)
-    for entry in actions:
-        if isinstance(entry, action_plugins.remap.Remap):
-            for key, value in entry.to_code().items():
-                assert(key in code)
-                code[key].append(value)
-
-
 def input_item_identifier_string(input_item):
     """Returns the identifier string for a given InputItem.
 
@@ -142,49 +103,6 @@ def input_item_identifier_string(input_item):
         return "_{}".format(wid)
     else:
         return ""
-
-
-def list_to_string(params):
-    """Returns a textual representing of a list.
-
-    :param params the parameters to turn into a lists
-    :return textual representation of the parameters
-    """
-    if len(params) == 0:
-        return ""
-    elif len(params) == 1:
-        return "\"{0}\"".format(params[0])
-    else:
-        return "[" + ", ".join(["\"{0}\"".format(v) for v in params]) + "]"
-
-
-def string_to_bool(text):
-    """Returns text into a boolean variable.
-
-    :param text the text to convert
-    :return bool representing the text
-    """
-    return text.lower() in ["true", "yes", "t", "1"]
-
-
-def coords_to_string(container):
-    """Returns a textual representation of a sequence of coordinates.
-
-    :param container container holding the coordinates
-    :return textual representing of the coordinates
-    """
-    return "[{}]".format(", ".join(
-        ["({:.4f}, {:.4f})".format(e[0], e[1]) for e in container])
-    )
-
-
-# Dictionary containing template helper functions
-template_helpers = {
-    # "format_condition": format_condition,
-    "list_tostring": list_to_string,
-    "string_to_bool": string_to_bool,
-    "coords_to_string": coords_to_string,
-}
 
 
 class CodeGeneratorV2:
@@ -299,8 +217,8 @@ class CodeGeneratorV2:
         for container in input_item.containers:
             for action in container.actions:
                 code = action.to_code()
-                if "setup" in code.keys():
-                    self.setup.append(action.to_code().setup)
+                if "setup" in code.keys() and len(code.setup) > 0:
+                    self.setup.append(code.setup.strip())
 
     def _reset_code_cache(self, config_profile):
         profile.ProfileData.next_code_id = 0
@@ -312,201 +230,3 @@ class CodeGeneratorV2:
                             container.code = None
                             for action in container.actions:
                                 action.code = None
-
-
-class CodeGenerator(object):
-
-    """Generates python code corresponding to the provided XML data."""
-
-    def __init__(self, config_profile):
-        """Creates a new object.
-
-        :param config_profile the Profile object containing the
-            configuration
-        """
-        self.code = {
-            "import": [],
-            "decorator": [],
-            "global": [],
-            "callback": [],
-        }
-        self.decorator_map = {}
-        self.decorator_usage_counts = {}
-        self.decorator_templates = {}
-
-        try:
-            self.generate_from_profile(config_profile)
-        except error.GremlinError as err:
-            util.display_error(str(err))
-
-    def write_code(self, fname):
-        """Writes the generated code to the given file.
-
-        :param fname name of the file to write the generated code to
-        """
-        with open(fname, "w") as out:
-            for line in self.code["import"]:
-                out.write(sanitize_code(line))
-            out.write("\n")
-            for line in self.code["decorator"]:
-                out.write(sanitize_code(line))
-            out.write("\n")
-            for line in self.code["global"]:
-                out.write(sanitize_code(line))
-            out.write("\n")
-            for block in self.code["callback"]:
-                out.write(sanitize_code(block))
-                out.write("\n")
-
-    def generate_from_profile(self, config_profile):
-        """Turns the Profile object's contents into python code.
-
-        :param config_profile the Profile to turn into code
-        """
-        assert(isinstance(config_profile, profile.Profile))
-
-        # Custom modules
-        tpl = Template(filename="templates/import.tpl")
-        self.code["import"].append(tpl.render(
-            user_imports=config_profile.imports
-        ))
-
-        # Device, mode, actions
-        for device in config_profile.devices.values():
-            for i, mode in enumerate(device.modes.values()):
-                self.process_device_mode(mode, i)
-
-        # Merge axes
-        for i, entry in enumerate(config_profile.merge_axes):
-            self.process_merge_axis(i, entry)
-
-        # Add required decorator definitions into the code
-        for dev_id in self.decorator_usage_counts:
-            for mode, count in self.decorator_usage_counts[dev_id].items():
-                if count > 0:
-                    self.code["global"].append(
-                        self.decorator_templates[dev_id][mode]
-                    )
-
-        # Vjoy response curve switching
-        vjoy_ids = []
-        for joy in joystick_handling.joystick_devices():
-            if joy.is_virtual:
-                vjoy_ids.append(joy.vjoy_id)
-
-        tpl = Template(filename="templates/vjoy_curves.tpl")
-        self.code["global"].append(tpl.render(
-            vjoy_devices=config_profile.vjoy_devices,
-            vjoy_ids=vjoy_ids,
-            UiInputType=gremlin.common.InputType
-        ))
-
-    def process_merge_axis(self, idx, entry):
-        """Processes a merge axis entry.
-
-        :param idx the id of the entry
-        :param entry the entry to turn into code
-        """
-        tpl_main = Template(filename="templates/merge_axis_main.tpl")
-        tpl_cb = Template(filename="templates/merge_axis_callback.tpl")
-
-        self.code["global"].append(tpl_main.render(
-            entry=entry,
-            idx=idx
-        ))
-        self.code["callback"].append(tpl_cb.render(
-            entry=entry,
-            idx=idx,
-            decorator_map=self.decorator_map,
-            get_device_id=util.get_device_id
-        ))
-
-        # Account for axis merging needing certain decorators which otherwise
-        # might appear unused
-        dev_id_lower = util.get_device_id(
-            entry["lower"]["hardware_id"],
-            entry["lower"]["windows_id"]
-        )
-        dev_id_upper = util.get_device_id(
-            entry["upper"]["hardware_id"],
-            entry["upper"]["windows_id"]
-        )
-        self.decorator_usage_counts[dev_id_lower][entry["mode"]] += 1
-        self.decorator_usage_counts[dev_id_upper][entry["mode"]] += 1
-
-    def process_device_mode(self, mode, index):
-        """Processes a single Mode object and turns its contents into code.
-
-        :param mode the profile.Mode object to process
-        :param index the index to use in the decorator name
-        """
-        assert(isinstance(mode, profile.Mode))
-
-        dev_id = util.device_id(mode.parent)
-        if dev_id not in self.decorator_map:
-            self.decorator_map[dev_id] = {}
-            self.decorator_usage_counts[dev_id] = {}
-            self.decorator_templates[dev_id] = {}
-        self.decorator_map[dev_id][mode.name] = decorator_name(mode, index)
-
-        items_added = 0
-        for input_type, input_items in mode.config.items():
-            for entry in input_items.values():
-                self.generate_input_item(entry, mode, index)
-                items_added += len(entry.actions)
-
-        # Generate decorator code and keep track of how often they are used
-        # to later decide which ones to include in the final code
-        tpl = Template(filename="templates/mode.tpl")
-        self.decorator_templates[dev_id][mode.name] = tpl.render(
-            decorator=decorator_name(mode, index),
-            mode=mode
-        )
-        self.decorator_usage_counts[dev_id][mode.name] = items_added
-
-    def generate_input_item(self, input_item, mode, index):
-        """Generates code for the provided profile.InputItem object.
-
-        :param input_item profile.InputItem object to process into code
-        :param mode the profile.Mode object corresponding to
-            this input_item
-        :param index the index to use for the decorator name
-        """
-        assert(isinstance(input_item, profile.InputItem))
-        assert(isinstance(mode, profile.Mode))
-        assert(input_item.parent == mode)
-
-        if len(input_item.actions) == 0:
-            return {}
-
-        input_type_templates = {
-            common.InputType.JoystickAxis: "templates/axis.tpl",
-            common.InputType.JoystickButton: "templates/button_callback.tpl",
-            common.InputType.JoystickHat: "templates/hat.tpl",
-            common.InputType.Keyboard: "templates/keyboard_callback.tpl",
-        }
-
-        # Generate code for the actions associated with the item
-        code = {
-            "body": [],
-            "global": [],
-        }
-        actions_to_code(input_item.actions, code)
-        self.code["global"].extend(code["global"])
-
-        tpl = Template(filename=input_type_templates[input_item.input_type])
-        helpers = {
-            "wid": input_item_identifier_string,
-        }
-        self.code["callback"].append(tpl.render(
-            device_name=util.format_name(mode.parent.name),
-            decorator=decorator_name(mode, index),
-            mode=mode.name,
-            mode_index=index,
-            input_item=input_item,
-            #code=code,
-            code_blocks=code["body"],
-            param_list=generate_parameter_list(input_item),
-            helpers=helpers,
-            gremlin=gremlin
-        ))

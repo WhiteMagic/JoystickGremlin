@@ -88,7 +88,6 @@ class AbstractAction(profile.ProfileData):
         params["input_type"] = params["entry"].get_input_type()
         params["id"] = profile.ProfileData.next_code_id
         params["gremlin"] = gremlin
-
         tpl_lookup = TemplateLookup(directories=["."])
 
         code_block = profile.CodeBlock()
@@ -168,9 +167,6 @@ class AxisCondition:
         node.set("lower-limit", str(self.lower_limit))
         node.set("upper-limit", str(self.upper_limit))
 
-    def to_code(self, code):
-        return code
-
 
 class ButtonCondition:
 
@@ -210,18 +206,6 @@ class ButtonCondition:
         node.set("on-press", str(self.on_press))
         node.set("on-release", str(self.on_release))
 
-    def to_code(self, code):
-        tpl_lookup = TemplateLookup(directories=["."])
-        tpl = Template(
-            filename="templates/button_condition.tpl",
-            lookup=tpl_lookup
-        )
-        return tpl.render(
-            code=code,
-            on_press=self.on_press,
-            on_release=self.on_release
-        )
-
 
 class HatCondition:
 
@@ -259,7 +243,6 @@ class HatCondition:
         self.on_nw = profile.read_bool(node, "on-nw")
 
     def to_xml(self, node):
-        print(self.on_n)
         node.set("on-n", str(self.on_n))
         node.set("on-ne", str(self.on_ne))
         node.set("on-e", str(self.on_e))
@@ -268,6 +251,3 @@ class HatCondition:
         node.set("on-sw", str(self.on_sw))
         node.set("on-w", str(self.on_w))
         node.set("on-nw", str(self.on_nw))
-
-    def to_code(self, code):
-        return code
