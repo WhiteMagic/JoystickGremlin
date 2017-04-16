@@ -78,7 +78,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
                 event.identifier
             )
 
-            item.actions = copy.deepcopy(input_item.actions)
+            item.actions = copy.deepcopy(input_item.containers)
             item.always_execute = input_item.always_execute
             item.description = input_item.description
 
@@ -231,7 +231,7 @@ class ModeBindings(QtWidgets.QWidget):
             for input_type in all_input_types:
                 data = device.modes[self.mode].config[input_type]
                 for input_item in sorted(data.values(), key=lambda x: x.input_id):
-                    if len(input_item.actions) == 0:
+                    if len(input_item.containers) == 0:
                         continue
 
                     self._inputs.append(BindableAction(
@@ -344,9 +344,11 @@ class BindableAction(QtWidgets.QWidget):
         self.main_layout.addWidget(self.description)
         self.icon_layout = QtWidgets.QHBoxLayout()
         self.icon_layout.addStretch()
-        for action in input_item.actions:
-            self.icon_layout.addWidget(
-                gremlin.ui.input_item.ActionLabel(action))
+        # FIXME: this has to handle containers now
+        for container in input_item.containers:
+            for action in container.actions:
+                self.icon_layout.addWidget(
+                    gremlin.ui.input_item.ActionLabel(action))
         self.main_layout.addLayout(self.icon_layout)
         self.main_layout.addWidget(self.bound_action)
 
