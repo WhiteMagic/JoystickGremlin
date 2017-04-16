@@ -110,6 +110,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             vjoy_dev_id,
             vjoy_input_id
         )
+        self.save_changes()
 
     def save_changes(self):
         vjoy_data = self.vjoy_selector.get_selection()
@@ -138,15 +139,19 @@ class Remap(gremlin.base_classes.AbstractAction):
     def __init__(self, parent):
         super().__init__(parent)
 
-        # FIXME: this used to be None instead of 1 does this change cause
-        # bad side effects?
-        self.vjoy_device_id = 1
-        self.vjoy_input_id = 1
+        # Set vjoy ids to None so we know to pick the next best one
+        # automatically
+        self.vjoy_device_id = None
+        self.vjoy_input_id = None
         self.input_type = self.parent.parent.input_type
         if self.input_type in [InputType.JoystickButton, InputType.Keyboard]:
             self.condition = gremlin.base_classes.ButtonCondition(True, True)
 
     def icon(self):
+        # Do not return a valid icon if the input id itself is invalid
+        if self.vjoy_input_id is None:
+            return None
+
         input_string = "axis"
         if self.input_type == InputType.JoystickButton:
             input_string = "button"
