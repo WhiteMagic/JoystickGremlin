@@ -303,6 +303,7 @@ class CodeGeneratorV2:
                     self.setup.append(action.to_code().setup)
 
     def _reset_code_cache(self, config_profile):
+        profile.ProfileData.next_code_id = 0
         for device in config_profile.devices.values():
             for mode in device.modes.values():
                 for input_items in mode.config.values():
@@ -482,7 +483,7 @@ class CodeGenerator(object):
             common.InputType.JoystickAxis: "templates/axis.tpl",
             common.InputType.JoystickButton: "templates/button_callback.tpl",
             common.InputType.JoystickHat: "templates/hat.tpl",
-            common.InputType.Keyboard: "templates/key.tpl",
+            common.InputType.Keyboard: "templates/keyboard_callback.tpl",
         }
 
         # Generate code for the actions associated with the item

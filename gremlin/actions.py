@@ -23,6 +23,16 @@ from . import control_action, error, fsm, input_devices, joystick_handling, macr
 tts_instance = tts.TextToSpeech()
 
 
+
+class AxisCondition:
+
+    def __init__(self):
+        pass
+
+    def __call__(self, value):
+        return True
+
+
 class ButtonCondition:
 
     def __init__(self, on_press, on_release):
@@ -38,13 +48,17 @@ class ButtonCondition:
             return value.current is False
 
 
-class AxisCondition:
+class HatCondition:
 
-    def __init__(self):
-        pass
+    def __init__(self, valid_directions=[]):
+        self.valid_directions = valid_directions
 
     def __call__(self, value):
-        return True
+        # When no directions are selected we assume this is meant to trigger
+        # in all circumstances
+        if len(self.valid_directions) == 0:
+            return True
+        return value.current in self.valid_directions
 
 
 def axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
@@ -63,6 +77,12 @@ def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     if condition(value):
         vjoy = joystick_handling.VJoyProxy()
         vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+
+
+def hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
+    if condition(value):
+        vjoy = joystick_handling.VJoyProxy()
+        vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
 
 
 def pause(event, value, condition):
@@ -197,39 +217,43 @@ class Value:
 class Factory:
 
     @staticmethod
-    def axis_to_axis(vjoy_device_id, vjoy_button_id):
-        return lambda event: axis_to_axis(
-            vjoy_device_id,
-            vjoy_button_id,
-            event
-        )
-
-    @staticmethod
-    def button_to_button(condition, vjoy_device_id, vjoy_button_id):
-        return lambda event, value: button_to_button(
-            event,
-            value,
-            condition,
-            vjoy_device_id,
-            vjoy_button_id,
-        )
-
-    @staticmethod
-    def axis_to_axis(condition, vjoy_device_id, vjoy_button_id):
+    def axis_to_axis(condition, vjoy_device_id, vjoy_input_id):
         return lambda event, value: axis_to_axis(
             event,
             value,
             condition,
             vjoy_device_id,
-            vjoy_button_id,
+            vjoy_input_id,
         )
 
     @staticmethod
-    def remap_input(condition, vjoy_device_id, vjoy_button_id):
-        if isinstance(condition, ButtonCondition):
-            return Factory.button_to_button(condition, vjoy_device_id, vjoy_button_id)
-        elif isinstance(condition, AxisCondition):
-            return Factory.axis_to_axis(condition, vjoy_device_id, vjoy_button_id)
+    def button_to_button(condition, vjoy_device_id, vjoy_input_id):
+        return lambda event, value: button_to_button(
+            event,
+            value,
+            condition,
+            vjoy_device_id,
+            vjoy_input_id,
+        )
+
+    @staticmethod
+    def hat_to_hat(condition, vjoy_device_id, vjoy_input_id):
+        return lambda event, value: hat_to_hat(
+            event,
+            value,
+            condition,
+            vjoy_device_id,
+            vjoy_input_id,
+        )
+
+    @staticmethod
+    def remap_input(condition, vjoy_device_id, vjoy_input_id):
+        if isinstance(condition, AxisCondition):
+            return Factory.axis_to_axis(condition, vjoy_device_id, vjoy_input_id)
+        elif isinstance(condition, ButtonCondition):
+            return Factory.button_to_button(condition, vjoy_device_id, vjoy_input_id)
+        elif isinstance(condition, HatCondition):
+            return Factory.hat_to_hat(condition, vjoy_device_id, vjoy_input_id)
 
     # @staticmethod
     # def map_hat(vjoy_device_id, vjoy_button_id):

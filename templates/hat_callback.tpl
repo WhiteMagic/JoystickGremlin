@@ -3,5 +3,5 @@
 @${decorator_name}.hat(${input_item.input_id}, always_execute=${input_item.always_execute})
 def ${device_name}_${mode_index}_hat_${input_item.input_id}(${parameter_list}):
     """${input_item.description}"""
-    direction = event.is_pressed
+    value = gremlin.actions.Value(event.value)
     ${util.indent(code_block.body, 4)}
