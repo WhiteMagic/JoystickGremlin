@@ -499,7 +499,6 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def _create_recent_profiles(self):
         """Populates the Recent submenu entry with the most recent profiles."""
-        print("X")
         self.ui.menuRecent.clear()
         for entry in self.config.recent_profiles:
             action = self.ui.menuRecent.addAction(
