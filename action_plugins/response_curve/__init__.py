@@ -259,7 +259,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
             )
         )
 
-        for i in range(3, len(coordinates)-3):
+        for i in range(3, len(coordinates)-3, 3):
             self._control_points.append(
                 ControlPoint(
                     self,
@@ -934,7 +934,12 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         # Create all objects required for the response curve UI
         self.control_point_editor = ControlPointEditorWidget()
         # Response curve model used
-        self.curve_model = CubicSplineModel(self.action_data)
+        if self.action_data.mapping_type == "cubic-spline":
+            self.curve_model = CubicSplineModel(self.action_data)
+        elif self.action_data.mapping_type == "cubic-bezier-spline":
+            self.curve_model = CubicBezierSplineModel(self.action_data)
+        else:
+            raise gremlin.error.ProfileError("Invalid curve type")
         # Graphical curve editor
         self.curve_scene = CurveScene(
             self.curve_model,
@@ -958,6 +963,10 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.main_layout.addWidget(self.deadzone)
 
     def _populate_ui(self):
+        self.curve_type_selection.currentTextChanged.disconnect(
+            self._change_curve_type
+        )
+
         # Create mapping from XML name to ui name
         name_map = {}
         for key, value in ResponseCurve.curve_name_map.items():
@@ -971,6 +980,10 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         # Set deadzone values
         self.deadzone.set_values(self.action_data.deadzone)
+
+        self.curve_type_selection.currentTextChanged.connect(
+            self._change_curve_type
+        )
 
     def _change_curve_type(self, curve_type):
         """Changes the type of curve used.
@@ -1108,6 +1121,7 @@ class ResponseCurve(AbstractAction):
 
         :param node the XML node to parse
         """
+        self.control_points = []
         for child in node:
             if child.tag == "deadzone":
                 self.deadzone = [
