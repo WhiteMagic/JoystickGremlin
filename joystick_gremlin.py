@@ -38,7 +38,6 @@ import gremlin.ui.common
 import gremlin.ui.device_tab
 import gremlin.ui.dialogs
 import gremlin.ui.merge_axis
-import gremlin.ui.ui_widgets
 
 
 from gremlin.ui.ui_gremlin import Ui_Gremlin

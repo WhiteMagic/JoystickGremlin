@@ -23,7 +23,6 @@ from PyQt5 import QtWidgets
 from . import common, joystick_handling, macro, profile, util
 import gremlin.ui.common
 import gremlin.ui.input_item
-import gremlin.ui.ui_widgets
 
 
 class ProfileCreator(gremlin.ui.common.BaseDialogUi):
