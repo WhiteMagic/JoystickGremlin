@@ -107,6 +107,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         else:
             self.new_profile()
 
+        # Setup the recent files menu
+        self._create_recent_profiles()
+
         # Modal windows
         self.modal_windows = {}
 
@@ -370,6 +373,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         if fname != "":
             self._do_load_profile(fname)
             self.config.last_profile = fname
+            self._create_recent_profiles()
 
     def new_profile(self):
         """Creates a new empty profile."""
@@ -492,6 +496,16 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Tray icon
         self.ui.tray_icon.activated.connect(self._tray_icon_activated_cb)
+
+    def _create_recent_profiles(self):
+        """Populates the Recent submenu entry with the most recent profiles."""
+        print("X")
+        self.ui.menuRecent.clear()
+        for entry in self.config.recent_profiles:
+            action = self.ui.menuRecent.addAction(
+                gremlin.util.truncate(entry, 5, 40)
+            )
+            action.triggered.connect(self._create_load_profile_fuction(entry))
 
     def _create_statusbar(self):
         """Creates the ui widgets used in the status bar."""
@@ -798,6 +812,14 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile
         )
 
+    def _create_load_profile_fuction(self, fname):
+        """Creates a callback to load a specific profile.
+
+        :param fname path to the profile to load
+        :return function which will load the specified profile
+        """
+        return lambda: self._load_recent_profile(fname)
+
     def _do_load_profile(self, fname):
         """Load the profile with the given filename.
 
@@ -900,6 +922,16 @@ class GremlinUi(QtWidgets.QMainWindow):
             event_list[0].value = (0, 0)
 
         self.repeater.events = event_list
+
+    def _load_recent_profile(self, fname):
+        """Loads the provided profile and updates the list of recently used
+        profiles.
+
+        :param fname path to the profile to load
+        """
+        self.config.last_profile = fname
+        self._do_load_profile(fname)
+        self._create_recent_profiles()
 
     def _mode_configuration_changed(self):
         """Updates the mode configuration of the selector and profile."""

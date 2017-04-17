@@ -17,6 +17,7 @@
 
 import importlib
 import logging
+import math
 import os
 import re
 import sys
@@ -133,6 +134,20 @@ def create_calibration_function(minimum, center, maximum):
         return lambda x: slider_calibration(x, minimum, maximum)
     else:
         return lambda x: axis_calibration(x, minimum, center, maximum)
+
+
+def truncate(text, left_size, right_size):
+    """Returns a truncated string matching the specified character counts.
+
+    :param text the text to truncate
+    :param left_size number of characters on the left side
+    :param right_size number of characters on the right side
+    :return string truncated to the specified character counts if required
+    """
+    if len(text) < left_size + right_size:
+        return text
+
+    return "{}...{}".format(text[:left_size], text[-right_size:])
 
 
 def script_path():
