@@ -294,6 +294,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         if device_profile.type != gremlin.profile.DeviceType.Joystick:
             return
 
+        container_plugins = gremlin.plugin_manager.ContainerPlugins()
         action_plugins = gremlin.plugin_manager.ActionPlugins()
 
         vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
@@ -315,18 +316,21 @@ class GremlinUi(QtWidgets.QMainWindow):
                 item_list = main_profile.list_unused_vjoy_inputs(
                     vjoy_devices
                 )
-                act = action_plugins.repository["remap"](entry)
-                act.input_type = input_type
-                act.vjoy_device_id = 1
+
+                container = container_plugins.repository["basic"](entry)
+                action = action_plugins.repository["remap"](container)
+                action.input_type = input_type
+                action.vjoy_device_id = 1
                 if len(item_list[1][type_name[input_type]]) > 0:
-                    act.vjoy_input_id = item_list[1][type_name[input_type]][0]
+                    action.vjoy_input_id = item_list[1][type_name[input_type]][0]
                 else:
-                    act.vjoy_input_id = 1
-                act.is_valid = True
+                    action.vjoy_input_id = 1
+                action.is_valid = True
 
                 if input_type == gremlin.common.InputType.JoystickButton:
-                    act.condition = ButtonCondition(True, True)
-                entry.actions.append(act)
+                    action.condition = ButtonCondition(True, True)
+                container.add_action(action)
+                entry.containers.append(container)
         self._create_tabs()
 
     def generate(self):
