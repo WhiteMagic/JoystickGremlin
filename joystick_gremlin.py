@@ -1082,6 +1082,13 @@ if __name__ == "__main__":
     )
     sdl2.ext.init()
 
+    # Create user interface
+    app_id = u"joystick.gremlin"
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+    app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
+    app.setApplicationDisplayName("Joystick Gremlin")
+
     # Check if vJoy is properly setup and if not display an error
     # and terminate Gremlin
     vjoy_working = len([dev for dev in gremlin.joystick_handling.joystick_devices() if dev.is_virtual]) != 0
@@ -1093,13 +1100,6 @@ if __name__ == "__main__":
     # Initialize action plugins
     gremlin.plugin_manager.ActionPlugins()
     gremlin.plugin_manager.ContainerPlugins()
-
-    # Create user interface
-    app_id = u"joystick.gremlin"
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-    app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
-    app.setApplicationDisplayName("Joystick Gremlin")
 
     if not vjoy_working:
         gremlin.util.display_error(

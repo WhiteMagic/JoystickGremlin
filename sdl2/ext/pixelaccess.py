@@ -88,7 +88,6 @@ class PixelView(MemoryView):
                 SDL_UnlockSurface(self._surface)
 
 _HASNUMPY = False
-# _HASNUMPY = True
 # try:
 #     import numpy
 #

@@ -215,11 +215,12 @@ def create_document():
             # "Id": "447529e9-4f78-4baf-b51c-21db602a5f7b", # 4.0.1
             # "Id": "510CBEE4-3947-11E6-8BA5-2DD7CD7856CC", # 5.0.0
             # "Id": "a02bac10-af70-41c2-b109-34e80eb54902", # 6.0.0
-            "Id": "278cbeb5-9da1-4f82-8775-fd6f78f92283", # 7.0.0
+            # "Id": "278cbeb5-9da1-4f82-8775-fd6f78f92283", # 7.0.0
+            "Id": "{a84b71f4-90d4-44f6-a3d8-df7f47b60090}", # 7.1.0
             "UpgradeCode": "0464914b-97da-4889-8699-bcde4e767517",
             "Language": "1033",
             "Codepage": "1252",
-            "Version": "7.0.0"
+            "Version": "7.1.0"
         })
     mug = create_node("MajorUpgrade",
         {
