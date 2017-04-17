@@ -127,11 +127,15 @@ class OptionsUi(common.BaseDialogUi):
         self.executable_remove = QtWidgets.QPushButton()
         self.executable_remove.setIcon(QtGui.QIcon("gfx/button_delete.png"))
         self.executable_remove.clicked.connect(self._remove_executable)
+        self.executable_list = QtWidgets.QPushButton()
+        self.executable_list.setIcon(QtGui.QIcon("gfx/list_show.png"))
+        self.executable_list.clicked.connect(self._list_executables)
 
         self.executable_layout.addWidget(self.executable_label)
         self.executable_layout.addWidget(self.executable_selection)
         self.executable_layout.addWidget(self.executable_add)
         self.executable_layout.addWidget(self.executable_remove)
+        self.executable_layout.addWidget(self.executable_list)
         self.executable_layout.addStretch()
 
         self.profile_layout = QtWidgets.QHBoxLayout()
@@ -162,13 +166,21 @@ class OptionsUi(common.BaseDialogUi):
         self.config.save()
         super().closeEvent(event)
 
-    def populate_executables(self):
+    def populate_executables(self, executable_name=None):
         """Populates the profile drop down menu."""
         self.profile_field.textChanged.disconnect(self._update_profile)
         self.executable_selection.clear()
-        for path in self.config.get_executable_list():
+        executable_list = sorted(self.config.get_executable_list())
+        for path in executable_list:
             self.executable_selection.addItem(path)
         self.profile_field.textChanged.connect(self._update_profile)
+
+        # Select the provided executable if it exists, otherwise the first one
+        # in the list
+        index = 0
+        if executable_name is not None and executable_name in executable_list:
+            index = self.executable_selection.findText(executable_name)
+        self.executable_selection.setCurrentIndex(index)
 
     def _autoload_profiles(self, clicked):
         """Stores profile autoloading preference.
@@ -202,6 +214,21 @@ class OptionsUi(common.BaseDialogUi):
         self.config.highlight_input = clicked
         self.config.save()
 
+    def _list_executables(self):
+        """Shows a list of executables for the user to pick."""
+        self.executable_list_view = ProcessWindow()
+        self.executable_list_view.process_selected.connect(self._add_executable)
+        self.executable_list_view.show()
+
+    def _add_executable(self, fname):
+        """Adds the provided executable to the list of configurations.
+
+        :param fname the executable for which to add a mapping
+        """
+        if fname not in self.config.get_executable_list():
+            self.config.set_profile(fname, "")
+            self.populate_executables(fname)
+
     def _new_executable(self):
         """Prompts the user to select a new executable to add to the
         profile.
@@ -213,9 +240,7 @@ class OptionsUi(common.BaseDialogUi):
             "Executable (*.exe)"
         )
         if fname != "":
-            self.config.set_profile(fname, "")
-            self.populate_executables()
-            self._show_executable(fname)
+            self._add_executable(fname)
 
     def _remove_executable(self):
         """Removes the current executable from the configuration."""
@@ -280,6 +305,36 @@ class OptionsUi(common.BaseDialogUi):
         """
         self.config.default_action = value
         self.config.save()
+
+
+class ProcessWindow(common.BaseDialogUi):
+
+    # Signal emitted when the user selects a process
+    process_selected = QtCore.pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Process List")
+        self.setMinimumWidth(400)
+        self.setMinimumHeight(600)
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.list_model = QtCore.QStringListModel()
+        self.list_model.setStringList(
+            gremlin.process_monitor.list_current_processes()
+        )
+        self.list_view = QtWidgets.QListView()
+        self.list_view.setModel(self.list_model)
+        self.main_layout.addWidget(self.list_view)
+
+        self.select_button = QtWidgets.QPushButton("Select")
+        self.select_button.clicked.connect(self._select)
+        self.main_layout.addWidget(self.select_button)
+
+    def _select(self):
+        self.process_selected.emit(self.list_view.currentIndex().data())
+        self.close()
 
 
 class LogWindowUi(common.BaseDialogUi):

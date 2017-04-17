@@ -107,3 +107,19 @@ class ProcessMonitor(QtCore.QObject):
         :return path to the currently active executable
         """
         return self._current_path
+
+
+def list_current_processes():
+    """Returns a list of executable paths to currently active processes.
+
+    :return list of active process executable paths
+    """
+    from win32com.client import GetObject
+    wmi = GetObject('winmgmts:')
+    processes = wmi.InstancesOf("Win32_Process")
+    process_list = []
+    for entry in processes:
+        executable = entry.Properties_("ExecutablePath").Value
+        if executable is not None:
+            process_list.append(os.path.normpath(executable).replace("\\", "/"))
+    return sorted(set(process_list))
