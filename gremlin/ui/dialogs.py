@@ -326,6 +326,9 @@ class ProcessWindow(common.BaseDialogUi):
         )
         self.list_view = QtWidgets.QListView()
         self.list_view.setModel(self.list_model)
+        self.list_view.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
         self.main_layout.addWidget(self.list_view)
 
         self.select_button = QtWidgets.QPushButton("Select")
