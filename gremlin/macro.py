@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import ctypes
+from ctypes import wintypes
 import functools
 import logging
 import time
@@ -26,10 +28,141 @@ import win32api
 import gremlin
 
 
-# Default delay between subsequent message dispatch. This is to to get
+# Default delay between subsequent message dispatch. This is to get
 # around some games not picking up messages if they are sent in too
 # quick a succession.
 default_delay = 0.05
+
+
+def _create_function(lib_name, fn_name, param_types, return_type):
+    """Creates a handle to a windows dll library function.
+
+    :param lib_name name of the library to retrieve a function handle from
+    :param fn_name name of the function
+    :param param_types input parameter types
+    :param return_type retuyrn parameter type
+    :return function handle
+    """
+    fn = getattr(ctypes.WinDLL(lib_name), fn_name)
+    fn.argtypes = param_types
+    fn.restype = return_type
+    return fn
+
+
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms646296(v=vs.85).aspx
+_get_keyboard_layout = _create_function(
+    "user32",
+    "GetKeyboardLayout",
+    [wintypes.DWORD],
+    wintypes.HKL
+)
+
+
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms646299(v=vs.85).aspx
+_get_keyboard_state = _create_function(
+    "user32",
+    "GetKeyboardState",
+    [ctypes.POINTER(ctypes.c_char)],
+    wintypes.BOOL
+)
+
+
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms646307(v=vs.85).aspx
+_map_virtual_key_ex = _create_function(
+    "user32",
+    "MapVirtualKeyExW",
+    [ctypes.c_uint, ctypes.c_uint, wintypes.HKL],
+    ctypes.c_uint
+)
+
+
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms646322(v=vs.85).aspx
+_to_unicode_ex = _create_function(
+    "user32",
+    "ToUnicodeEx",
+    [
+        ctypes.c_uint,
+        ctypes.c_uint,
+        ctypes.POINTER(ctypes.c_char),
+        ctypes.POINTER(ctypes.c_wchar),
+        ctypes.c_int,
+        ctypes.c_uint,
+        ctypes.c_void_p
+    ],
+    ctypes.c_int
+)
+
+
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms646332(v=vs.85).aspx
+_vk_key_scan_ex = _create_function(
+    "user32",
+    "VkKeyScanExW",
+    [ctypes.c_wchar, wintypes.HKL],
+    ctypes.c_short
+)
+
+
+def _scan_code_to_virtual_code(scan_code, is_extended):
+    """Returns the virtual code corresponding to the given scan code.
+
+    :param scan_code scan code value to translate
+    :param is_extended whether or not the scan code is extended
+    :return virtual code corresponding to the given scan code
+    """
+    value = scan_code
+    if is_extended:
+        value = 0xe0 << 8 | scan_code
+
+    virtual_code = _map_virtual_key_ex(value, 3, _get_keyboard_layout(0))
+    return virtual_code
+
+
+def _virtual_input_to_unicode(virtual_code):
+    """Returns the unicode character corresponding to a given virtual code.
+
+    :param virtual_code virtual code for which to return a unicode character
+    :return unicode character corresponding to the given virtual code
+    """
+    output_buffer = ctypes.create_unicode_buffer(8)
+    state_buffer = ctypes.create_string_buffer(256)
+    _get_keyboard_state(state_buffer)
+    state = _to_unicode_ex(
+        virtual_code,
+        0x00,
+        state_buffer,
+        output_buffer,
+        8,
+        0,
+        _get_keyboard_layout(0)
+    )
+
+    if state != 1:
+        logging.getLogger("system").error(
+            "Name lookup for key {} failed".format(hex(virtual_code))
+        )
+        return None
+    return output_buffer.value
+
+
+def _unicode_to_key(character):
+    """Returns a Key instance corresponding to the given character.
+
+    :param character the character for which to generate a Key instance
+    :return Key instance for the given character, or None if an error occurred
+    """
+    if len(character) != 1:
+        return None
+
+    virtual_code = _vk_key_scan_ex(character, _get_keyboard_layout(0)) & 0x00FF
+    if virtual_code == 0xFF:
+        return None
+
+    code_value = _map_virtual_key_ex(virtual_code, 4, _get_keyboard_layout(0))
+    scan_code = code_value & 0xFF
+    is_extended = False
+    if code_value << 8 & 0xE0 or code_value << 8 & 0xE1:
+        is_extended = True
+    return Key(character, scan_code, is_extended, virtual_code)
 
 
 def _run_macro(sequence):
