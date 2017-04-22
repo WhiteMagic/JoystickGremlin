@@ -55,3 +55,19 @@ def coords_to_string(context, coordinates):
     return "[{}]".format(", ".join(
             ["({:.4f}, {:.4f})".format(e[0], e[1]) for e in coordinates])
         )
+
+
+def key_identifier(context, input_item):
+    key = gremlin.macro.key_from_code(
+        input_item.input_id[0],
+        input_item.input_id[1]
+    )
+    return "key_{}".format(hex(key.virtual_code))
+
+
+def key_lookup_name(context, input_item):
+    key = gremlin.macro.key_from_code(
+        input_item.input_id[0],
+        input_item.input_id[1]
+    )
+    return key.lookup_name
