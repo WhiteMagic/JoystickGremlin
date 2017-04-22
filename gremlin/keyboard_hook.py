@@ -22,7 +22,6 @@ from ctypes import wintypes
 import threading
 import time
 
-import gremlin
 import gremlin.common
 
 
@@ -33,8 +32,8 @@ class KeyEvent(object):
     def __init__(self, scan_code, is_extended, is_pressed, is_injected):
         """Creates a new instance with the given data.
 
-        :param scan_code the scan code of the key this event is for
-        :param is_extended flag indicating if the scan code is extended
+        :param scan_code the hardware scan code of this event
+        :param is_extended whether or not the scan code is an extended one
         :param is_pressed flag indicating if the key is pressed
         :param is_injected flag indicating if the event has been injected
         """
@@ -48,11 +47,11 @@ class KeyEvent(object):
 
         :return string representation of the event
         """
-        return "({:d} {:d}) {} {}".format(
-                self._scan_code,
-                self._is_extended,
-                "down" if self._is_pressed else "up",
-                "injected" if self.is_injected else ""
+        return "({} {}) {}, {} {}".format(
+            hex(self._scan_code),
+            self._is_extended,
+            "down" if self._is_pressed else "up",
+            "injected" if self.is_injected else ""
         )
 
     @property
@@ -86,6 +85,9 @@ class KeyboardHook(object):
     [3] KBDLLHOOKSTRUCT
         https://msdn.microsoft.com/en-us/library/windows/desktop/ms644967(v=vs.85).aspx
     """
+
+    # Event types which specify a key press event
+    key_press_types = [0x0100, 0x0104]
 
     def __init__(self):
         self._hook_id = None
@@ -125,13 +127,11 @@ class KeyboardHook(object):
         # Only handle events we're supposed to, see
         # https://msdn.microsoft.com/en-us/library/windows/desktop/ms644985(v=vs.85).aspx
         if n_code >= 0:
-            # Event types which specify a key press event
-            key_press_types = [0x0100, 0x0104]
-
             # Extract data from the message
+            # virtual_code = l_param[0]
             scan_code = l_param[1]
             is_extended = l_param[2] is not None and bool(l_param[2] & 0x0001)
-            is_pressed = w_param in key_press_types
+            is_pressed = w_param in self.key_press_types
             is_injected = l_param[2] is not None and bool(l_param[2] & 0x0010)
 
             # Create the event and pass it to all all registered callbacks

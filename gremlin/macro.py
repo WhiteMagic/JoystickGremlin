@@ -179,8 +179,8 @@ def _run_macro(sequence):
         elif isinstance(item, Macro.Pause):
             time.sleep(item.duration)
         else:
-            raise gremlin.error.KeyboardError("Invalid item in the sequence {}".format(
-                type(item))
+            raise gremlin.error.KeyboardError(
+                "Invalid item in the sequence {}".format(type(item))
             )
         time.sleep(default_delay)
 
@@ -191,7 +191,7 @@ def _send_key_down(key):
     :param key the key for which to send the KEYDOWN event
     """
     flags = win32con.KEYEVENTF_EXTENDEDKEY if key.is_extended else 0
-    win32api.keybd_event(key.virtual_key, key.scan_code, flags, 0)
+    win32api.keybd_event(key.virtual_code, key.scan_code, flags, 0)
 
 
 def _send_key_up(key):
@@ -201,7 +201,7 @@ def _send_key_up(key):
     """
     flags = win32con.KEYEVENTF_EXTENDEDKEY if key.is_extended else 0
     flags |= win32con.KEYEVENTF_KEYUP
-    win32api.keybd_event(key.virtual_key, key.scan_code, flags, 0)
+    win32api.keybd_event(key.virtual_code, key.scan_code, flags, 0)
 
 
 class Macro(object):
@@ -254,7 +254,7 @@ class Macro(object):
         """
         if isinstance(key, str):
             key = key_from_name(key)
-        elif isinstance(key, Keys.Key):
+        elif isinstance(key, Key):
             pass
         else:
             raise gremlin.error.KeyboardError("Invalid key specified")
@@ -272,7 +272,7 @@ class Macro(object):
             :param is_pressed True if the key should be pressed, False
                 otherwise
             """
-            if not isinstance(key, Keys.Key):
+            if not isinstance(key, Key):
                 raise gremlin.error.KeyboardError(
                     "Invalid Key instance provided"
                 )

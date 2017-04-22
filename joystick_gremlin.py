@@ -584,7 +584,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         device_profile = self._profile.get_device_modes(
             gremlin.util.device_id(
                 gremlin.event_handler.Event.from_key(
-                    gremlin.macro.Keys.A
+                    gremlin.macro.key_from_name("space")
                 )
             ),
             gremlin.profile.DeviceType.Keyboard,
