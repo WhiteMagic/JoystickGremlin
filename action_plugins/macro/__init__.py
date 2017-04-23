@@ -34,6 +34,16 @@ class MacroListModel(QtCore.QAbstractListModel):
     This model supports model modification.
     """
 
+    gfx_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "gfx"
+    )
+    icon_lookup = {
+        "press": QtGui.QIcon("{}/press".format(gfx_path)),
+        "release": QtGui.QIcon("{}/release".format(gfx_path)),
+        "pause": QtGui.QIcon("{}/pause".format(gfx_path))
+    }
+
     def __init__(self, data_storage, parent=None):
         """Creates a new instance.
 
@@ -59,7 +69,10 @@ class MacroListModel(QtCore.QAbstractListModel):
         :return data formatted for the given role at the given index
         """
         idx = index.row()
-        if role == QtCore.Qt.DisplayRole and idx < len(self.entries):
+        if idx >= len(self.entries):
+            return QtCore.QVariant()
+
+        if role == QtCore.Qt.DisplayRole:
             entry = self.entries[idx]
             if isinstance(entry, gremlin.macro.Macro.Pause):
                 return "Pause for {:.4f} s".format(entry.duration)
@@ -70,6 +83,17 @@ class MacroListModel(QtCore.QAbstractListModel):
                 )
             else:
                 return entry
+        elif role == QtCore.Qt.DecorationRole:
+            entry = self.entries[idx]
+            if isinstance(entry, gremlin.macro.Macro.Pause):
+                return MacroListModel.icon_lookup["pause"]
+            elif isinstance(entry, gremlin.macro.Macro.KeyAction):
+                action = "press" if entry.is_pressed else "release"
+                return MacroListModel.icon_lookup[action]
+            else:
+                return QtCore.QVariant()
+        else:
+            return QtCore.QVariant()
 
     def setData(self, index, value, role):
         """"Sets the data at the given index and role to the provided value.
