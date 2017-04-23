@@ -128,7 +128,6 @@ class KeyboardHook(object):
         # https://msdn.microsoft.com/en-us/library/windows/desktop/ms644985(v=vs.85).aspx
         if n_code >= 0:
             # Extract data from the message
-            # virtual_code = l_param[0]
             scan_code = l_param[1]
             is_extended = l_param[2] is not None and bool(l_param[2] & 0x0001)
             is_pressed = w_param in self.key_press_types
