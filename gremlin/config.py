@@ -261,3 +261,21 @@ class Configuration(object):
     def default_action(self, value):
         self._data["default_action"] = str(value)
         self.save()
+
+    @property
+    def window_size(self):
+        return self._data.get("window_size", None)
+
+    @window_size.setter
+    def window_size(self, value):
+        self._data["window_size"] = value
+        self.save()
+
+    @property
+    def window_location(self):
+        return self._data.get("window_location", None)
+
+    @window_location.setter
+    def window_location(self, value):
+        self._data["window_location"] = value
+        self.save()
