@@ -200,7 +200,6 @@ class Configuration(object):
         current.insert(0, value)
         current = current[0:5]
         self._data["recent_profiles"] = current
-
         self.save()
 
     @property
@@ -234,6 +233,7 @@ class Configuration(object):
     @mode_change_message.setter
     def mode_change_message(self, value):
         self._data["mode_change_message"] = bool(value)
+        self.save()
 
     @property
     def close_to_tray(self):
@@ -242,6 +242,7 @@ class Configuration(object):
     @close_to_tray.setter
     def close_to_tray(self, value):
         self._data["close_to_tray"] = bool(value)
+        self.save()
 
     @property
     def start_minimized(self):
@@ -250,6 +251,7 @@ class Configuration(object):
     @start_minimized.setter
     def start_minimized(self, value):
         self._data["start_minimized"] = bool(value)
+        self.save()
 
     @property
     def default_action(self):
@@ -258,3 +260,4 @@ class Configuration(object):
     @default_action.setter
     def default_action(self, value):
         self._data["default_action"] = str(value)
+        self.save()
