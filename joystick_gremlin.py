@@ -121,6 +121,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         el.device_change_event.connect(self._device_change_cb)
 
         self.apply_user_settings()
+        self.apply_window_settings()
 
     def closeEvent(self, evt):
         """Terminate the entire application if the main window is closed.
@@ -138,6 +139,22 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Terminate file watcher thread
         if "log" in self.modal_windows:
             self.modal_windows["log"].watcher.stop()
+
+    def resizeEvent(self, evt):
+        """Handling changing the size of the window.
+
+        :param evt event information
+        """
+        if evt.size().width() != 800 and evt.size().height() != 600:
+            self.config.window_size = [evt.size().width(), evt.size().height()]
+
+    def moveEvent(self, evt):
+        """Handle changing the position of the window.
+
+        :param evt event information
+        """
+        if evt.pos().x() != 0 and evt.pos().y() != 0:
+            self.config.window_location = [evt.pos().x(), evt.pos().y()]
 
     # +---------------------------------------------------------------
     # | Modal window creation
@@ -793,6 +810,15 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.process_monitor.start()
         else:
             self.process_monitor.stop()
+
+    def apply_window_settings(self):
+        """Restores the stored window geometry settings."""
+        window_size = self.config.window_size
+        window_location = self.config.window_location
+        if window_size:
+            self.resize(window_size[0], window_size[1])
+        if window_location:
+            self.move(window_location[0], window_location[1])
 
     def _create_cheatsheet(self, file_format):
         """Creates the cheatsheet and stores it in the desired place.
