@@ -204,7 +204,7 @@ def _send_key_up(key):
     win32api.keybd_event(key.virtual_code, key.scan_code, flags, 0)
 
 
-class Macro(object):
+class Macro:
 
     """Represents a macro which can be executed."""
 
@@ -221,7 +221,7 @@ class Macro(object):
 
         :param duration the duration of the pause in seconds
         """
-        self._sequence.append(Macro.Pause(duration))
+        self._sequence.append(PauseAction(duration))
 
     def press(self, key):
         """Presses the specified key down.
@@ -259,36 +259,38 @@ class Macro(object):
         else:
             raise gremlin.error.KeyboardError("Invalid key specified")
 
-        self._sequence.append(Macro.KeyAction(key, is_pressed))
+        self._sequence.append(KeyAction(key, is_pressed))
 
-    class KeyAction(object):
 
-        """Key to press or release by a macro."""
+class KeyAction:
 
-        def __init__(self, key, is_pressed):
-            """Creates a new Key object for use in a macro.
+    """Key to press or release by a macro."""
 
-            :param key the key to use in the action
-            :param is_pressed True if the key should be pressed, False
-                otherwise
-            """
-            if not isinstance(key, Key):
-                raise gremlin.error.KeyboardError(
-                    "Invalid Key instance provided"
-                )
-            self.key = key
-            self.is_pressed = is_pressed
+    def __init__(self, key, is_pressed):
+        """Creates a new Key object for use in a macro.
 
-    class Pause(object):
+        :param key the key to use in the action
+        :param is_pressed True if the key should be pressed, False
+            otherwise
+        """
+        if not isinstance(key, Key):
+            raise gremlin.error.KeyboardError(
+                "Invalid Key instance provided"
+            )
+        self.key = key
+        self.is_pressed = is_pressed
 
-        """Represents the pause in a macro between pressed."""
 
-        def __init__(self, duration):
-            """Creates a new Pause object for use in a macro.
+class PauseAction:
 
-            :param duration the duration in seconds of the pause
-            """
-            self.duration = duration
+    """Represents the pause in a macro between pressed."""
+
+    def __init__(self, duration):
+        """Creates a new Pause object for use in a macro.
+
+        :param duration the duration in seconds of the pause
+        """
+        self.duration = duration
 
 
 class Key:
