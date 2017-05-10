@@ -352,6 +352,30 @@ class MacroListModel(QtCore.QAbstractListModel):
         self.dataChanged.emit(index, index)
 
 
+class MacroListView(QtWidgets.QListView):
+
+    """Implements a specialized list view.
+
+    The purpose of this class is to properly emit a "clicked" event when
+    the selected index is changed via keyboard interaction.
+
+    The reason this is needed is that for some reason the correct way,
+    i.e. using the QItemSelectionModel signals is not working.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def keyPressEvent(self, evt):
+        """Process key events and emit a clicked signal if the selection
+        changes."""
+        old_index = self.currentIndex()
+        super().keyPressEvent(evt)
+        new_index = self.currentIndex()
+        if old_index.row() != new_index.row():
+            self.clicked.emit(new_index)
+
+
 class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget which allows creating and editing of macros."""
@@ -365,14 +389,21 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         # self.model = MacroListModelV2()
         #self._connect_signals()
 
-        self.list_view = QtWidgets.QListView()
+        self.list_view = MacroListView()
+        self.list_view.setSelectionMode(
+            QtWidgets.QAbstractItemView.SingleSelection
+        )
+        self.list_view.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectItems
+        )
         self.list_view.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.list_view.setMovement(QtWidgets.QListView.Snap)
         self.list_view.setDefaultDropAction(QtCore.Qt.MoveAction)
 
         self.list_view.setModel(self.model)
         self.list_view.setCurrentIndex(self.model.index(0, 0))
-        self.list_view.doubleClicked.connect(self._edit_action)
+
+        self.list_view.clicked.connect(self._edit_action)
 
         self.editor_widget = QtWidgets.QTextEdit("Some text")
 
