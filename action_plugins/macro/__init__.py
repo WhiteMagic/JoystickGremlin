@@ -19,7 +19,6 @@
 import logging
 import os
 import pickle
-import threading
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
@@ -32,7 +31,15 @@ import gremlin.ui.input_item
 
 class MacroActionEditor(QtWidgets.QWidget):
 
+    """Widget displaying macro action settings and permitting their change."""
+
     def __init__(self, model, index, parent=None):
+        """Creates a new editor widget.
+
+        :param model the model storing the content
+        :param index the index of the model entry being edited
+        :param parent the parent of this widget
+        """
         super().__init__(parent)
         self.model = model
         self.index = index
@@ -40,20 +47,21 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.action_types = {
             "Keyboard": self._keyboard_ui,
             "Pause": self._pause_ui,
-            "Mouse": self._mouse_ui,
-            "Joystick": self._joystick_ui
+            # The following two devices are yet to be implemented
+            # "Mouse": self._mouse_ui,
+            # "Joystick": self._joystick_ui
         }
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.ui_elements = {}
         self._create_ui()
         self._populate_ui()
-        # self.main_layout.addWidget(QtWidgets.QLabel(str(self.index.row())))
 
     def _create_ui(self):
+        """Creates the editor UI."""
         self.action_selector = QtWidgets.QComboBox()
-        for name in sorted(self.action_types):
-            self.action_selector.addItem(name)
+        for action_name in sorted(self.action_types):
+            self.action_selector.addItem(action_name)
         self.action_selector.currentTextChanged.connect(self._change_action)
 
         self.main_layout.addWidget(self.action_selector)
@@ -63,34 +71,50 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.main_layout.addStretch(1)
 
     def _populate_ui(self):
-        entry = self.model.get_entry(self.index.row())
+        """Populate the UI elements with data from the model."""
         self.action_selector.currentTextChanged.disconnect(self._change_action)
-        if isinstance(entry, gremlin.macro.PauseAction):
-            self.action_selector.setCurrentText("Pause")
-            self._pause_ui()
+
+        entry = self.model.get_entry(self.index.row())
         if isinstance(entry, gremlin.macro.KeyAction):
             self.action_selector.setCurrentText("Keyboard")
             self._keyboard_ui()
+        elif isinstance(entry, gremlin.macro.PauseAction):
+            self.action_selector.setCurrentText("Pause")
+            self._pause_ui()
 
         self.action_selector.currentTextChanged.connect(self._change_action)
 
     def _change_action(self, value):
+        """Handle changing the action type.
+
+        :param value the name of the new action type for the currently selected
+            entry
+        """
+        # Clear the current editor widget ui components
         gremlin.ui.common.clear_layout(self.action_layout)
         self.ui_elements = {}
 
-        # Update the object stored in the model to match the new type
-        if value == "Pause":
+        # Update the model data to match the new type
+        if value == "Keyboard":
+            self.model.set_entry(
+                gremlin.macro.KeyAction(
+                    gremlin.macro.key_from_name("enter"),
+                    True
+                ),
+                self.index.row()
+            )
+        elif value == "Pause":
             self.model.set_entry(
                 gremlin.macro.PauseAction(0.2),
                 self.index.row()
             )
 
+        # Update the UI elements
         self._update_model()
-
-        # Display the editor widget for the particular action
         self.action_types[value]()
 
     def _pause_ui(self):
+        """Creates and populates the PauseAction editor UI."""
         self.ui_elements["duration_label"] = QtWidgets.QLabel("Duration")
         self.ui_elements["duration_spinbox"] = QtWidgets.QDoubleSpinBox()
         self.ui_elements["duration_spinbox"].setSingleStep(0.1)
@@ -106,9 +130,12 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.action_layout.addWidget(self.ui_elements["duration_spinbox"])
 
     def _keyboard_ui(self):
+        """Creates and populates the KeyAction editor UI."""
         action = self.model.get_entry(self.index.row())
         self.ui_elements["key_label"] = QtWidgets.QLabel("Key")
-        self.ui_elements["key_input"] = QtWidgets.QPushButton(action.key.name)
+        self.ui_elements["key_input"] = \
+            gremlin.ui.common.NoKeyboardPushButton(action.key.name)
+        self.ui_elements["key_input"].clicked.connect(self._request_user_input)
         self.ui_elements["key_press"] = QtWidgets.QRadioButton("Press")
         self.ui_elements["key_release"] = QtWidgets.QRadioButton("Release")
         if action.is_pressed:
@@ -116,8 +143,8 @@ class MacroActionEditor(QtWidgets.QWidget):
         else:
             self.ui_elements["key_release"].setChecked(True)
 
-        self.ui_elements["key_press"].toggled.connect(self._update_keyboard)
-        self.ui_elements["key_release"].toggled.connect(self._update_keyboard)
+        self.ui_elements["key_press"].toggled.connect(self._modify_key_state)
+        self.ui_elements["key_release"].toggled.connect(self._modify_key_state)
 
         self.action_layout.addWidget(self.ui_elements["key_label"])
         self.action_layout.addWidget(self.ui_elements["key_input"])
@@ -125,22 +152,66 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.action_layout.addWidget(self.ui_elements["key_release"])
 
     def _mouse_ui(self):
+        """Creates and populates the MouseAction editor UI."""
         pass
 
     def _joystick_ui(self):
+        """Creates and populates the JoystickAction editor UI."""
         pass
 
-    def _update_keyboard(self, state):
+    def _modify_key_state(self, state):
+        """Updates the key activation state, i.e. press or release of a key.
+
+        :param state the radio button state
+        """
         action = self.model.get_entry(self.index.row())
         action.is_pressed = self.ui_elements["key_press"].isChecked()
         self._update_model()
 
     def _update_pause(self, value):
+        """Update the model data when editor changes occur.
+
+        :param value the pause duration in seconds
+        """
         self.model.get_entry(self.index.row()).duration = value
         self._update_model()
 
     def _update_model(self):
         self.model.update(self.index)
+
+    def _request_user_input(self):
+        """Prompts the user for the input to bind to this item."""
+        self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
+            self._modify_key,
+            [gremlin.common.InputType.Keyboard],
+            True
+        )
+
+        # Display the dialog centered in the middle of the UI
+        root = self
+        while root.parent():
+            root = root.parent()
+        geom = root.geometry()
+
+        self.button_press_dialog.setGeometry(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+            300,
+            150
+        )
+        self.button_press_dialog.show()
+
+    def _modify_key(self, event):
+        """Changes which key is mapped.
+
+        :param event the event containing information about the key to use
+        """
+        self.model.get_entry(self.index.row()).key = \
+            gremlin.macro.key_from_code(*event.identifier)
+        self._update_model()
+        gremlin.ui.common.clear_layout(self.action_layout)
+        self.ui_elements = {}
+        self._keyboard_ui()
 
 
 class MacroListModel(QtCore.QAbstractListModel):
@@ -304,10 +375,10 @@ class MacroListModel(QtCore.QAbstractListModel):
         :param entry the new entry object to store
         :param index the index at which to store the entry
         """
-        print("X")
         if not 0 <= index < len(self._data):
             logging.getLogger("system").error(
-                "Attempted to set an entry with index greater then number of elements"
+                "Attempted to set an entry with index greater "
+                "then number of elements"
             )
             return
 
@@ -357,7 +428,8 @@ class MacroListView(QtWidgets.QListView):
     """Implements a specialized list view.
 
     The purpose of this class is to properly emit a "clicked" event when
-    the selected index is changed via keyboard interaction.
+    the selected index is changed via keyboard interaction. In addition to
+    this the view also handles item deletion via the keyboard.
 
     The reason this is needed is that for some reason the correct way,
     i.e. using the QItemSelectionModel signals is not working.
@@ -367,12 +439,27 @@ class MacroListView(QtWidgets.QListView):
         super().__init__(parent)
 
     def keyPressEvent(self, evt):
-        """Process key events and emit a clicked signal if the selection
-        changes."""
+        """Process key events.
+
+        :param evt the keyboard event
+        """
+        # Check if the active index changed, and if so emit the clicked signal
         old_index = self.currentIndex()
         super().keyPressEvent(evt)
         new_index = self.currentIndex()
         if old_index.row() != new_index.row():
+            self.clicked.emit(new_index)
+
+        # Handle deleting entries via the keyboard
+        if evt.matches(QtGui.QKeySequence.Delete):
+            self.model().remove_entry(new_index.row())
+            if new_index.row() >= self.model().rowCount():
+                new_index = self.model().index(
+                    self.model().rowCount()-1,
+                    0,
+                    QtCore.QModelIndex()
+                )
+            self.setCurrentIndex(new_index)
             self.clicked.emit(new_index)
 
 
@@ -385,26 +472,18 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         assert(isinstance(action_data, Macro))
 
     def _create_ui(self):
+        """Creates the UI of this widget."""
         self.model = MacroListModel(self.action_data.sequence)
-        # self.model = MacroListModelV2()
-        #self._connect_signals()
 
+        # Create list view for macro actions and setup drag & drop support
         self.list_view = MacroListView()
-        self.list_view.setSelectionMode(
-            QtWidgets.QAbstractItemView.SingleSelection
-        )
-        self.list_view.setSelectionBehavior(
-            QtWidgets.QAbstractItemView.SelectItems
-        )
         self.list_view.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.list_view.setMovement(QtWidgets.QListView.Snap)
         self.list_view.setDefaultDropAction(QtCore.Qt.MoveAction)
-
         self.list_view.setModel(self.model)
         self.list_view.setCurrentIndex(self.model.index(0, 0))
-
         self.list_view.clicked.connect(self._edit_action)
 
+        # Create widget in which the action editor will be shown
         self.editor_widget = QtWidgets.QTextEdit("Some text")
 
         gfx_path = os.path.join(
@@ -412,20 +491,16 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             "gfx"
         )
 
-        # Buttons
-        self.button_layout = QtWidgets.QGridLayout()
-        self.button_up = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/list_up"), "Up"
+        # Create buttons used to modify and interact with the macro actions
+        self.button_layout = QtWidgets.QVBoxLayout()
+        self.button_new_entry = QtWidgets.QPushButton(
+            QtGui.QIcon("gfx/list_add"), ""
         )
-        self.button_up.clicked.connect(self._up_cb)
-        self.button_down = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/list_down"), "Down"
-        )
+        self.button_new_entry.clicked.connect(self._pause_cb)
         self.button_delete = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/list_delete"), "Delete"
+            QtGui.QIcon("gfx/list_delete"), ""
         )
         self.button_delete.clicked.connect(self._delete_cb)
-        self.button_down.clicked.connect(self._down_cb)
         record_icon = QtGui.QIcon()
         record_icon.addPixmap(
             QtGui.QPixmap("{}/macro_record".format(gfx_path)),
@@ -437,45 +512,54 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             QtGui.QIcon.On
         )
 
-        self.button_record = NoKeyboardPushButton(record_icon, "Record")
+        self.button_record = NoKeyboardPushButton(record_icon, "")
         self.button_record.setCheckable(True)
         self.button_record.clicked.connect(self._record_cb)
         self.button_pause = QtWidgets.QPushButton(
-            QtGui.QIcon("{}/macro_add_pause".format(gfx_path)), "Add Pause"
+            QtGui.QIcon("{}/macro_add_pause".format(gfx_path)), ""
         )
         self.button_pause.clicked.connect(self._pause_cb)
-        self.button_layout.addWidget(self.button_up, 0, 0)
-        self.button_layout.addWidget(self.button_down, 0, 1)
-        self.button_layout.addWidget(self.button_delete, 0, 2)
-        self.button_layout.addWidget(self.button_record, 1, 0)
-        self.button_layout.addWidget(self.button_pause, 1, 1)
+        self.button_layout.addWidget(self.button_new_entry)
+        self.button_layout.addWidget(self.button_delete)
+        self.button_layout.addWidget(self.button_record)
+        self.button_layout.addWidget(self.button_pause)
+        self.button_layout.addStretch(1)
 
+        # Assemble the entire widget
         self.action_edit_layout = QtWidgets.QHBoxLayout()
         self.action_edit_layout.addWidget(self.list_view)
+        self.action_edit_layout.addLayout(self.button_layout)
         self.action_edit_layout.addWidget(self.editor_widget)
 
         self.main_layout.addLayout(self.action_edit_layout)
-        self.main_layout.addLayout(self.button_layout)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
+    def _populate_ui(self):
+        """Populate the UI with content from the data."""
+        self.model = MacroListModel(self.action_data.sequence)
+        self.list_view.setModel(self.model)
+
     def _edit_action(self, model_index):
+        """Enable editing of the current action via a editor widget.
+
+        :param model_index the index of the model entry to edit
+        """
         self.editor_widget = MacroActionEditor(self.model, model_index)
-        old_item = self.action_edit_layout.takeAt(1)
+        old_item = self.action_edit_layout.takeAt(2)
         old_item.widget().hide()
         old_item.widget().deleteLater()
         self.action_edit_layout.addWidget(self.editor_widget)
 
-    def _populate_ui(self):
-        # Replace existing model with an empty one which is filled from
-        # the profile data.
-        # This needs to stay otherwise the code breaks.
-        self.model = MacroListModel(self.action_data.sequence)
-        # self.model.clear()
-        # self.model.populate(self.action_data.sequence)
-        self.list_view.setModel(self.model)
+    def _refresh_editor_ui(self):
+        """Forcibly refresh the editor widget content."""
+        self.list_view.clicked.emit(self.list_view.currentIndex())
 
-    def key_event_cb(self, event):
-        action = gremlin.macro.Macro.KeyAction(
+    def _create_key_action(self, event):
+        """Creates a new macro.KeyAction instance from the given event.
+
+        :param event the event for which to create a KeyAction object
+        """
+        action = gremlin.macro.KeyAction(
             gremlin.macro.key_from_code(
                 event.identifier[0],
                 event.identifier[1]
@@ -484,53 +568,34 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         )
         self._append_entry(action)
 
-    def _up_cb(self):
-        """Moves the currently selected entry upwards."""
-        idx = self.list_view.currentIndex().row()
-        if idx > 0:
-            self._swap_entries(idx, idx-1)
-
-    def _down_cb(self):
-        """Moves the currently selected entry downwards."""
-        idx = self.list_view.currentIndex().row()
-        if idx < len(self.model.entries)-1:
-            self._swap_entries(idx, idx+1)
-
     def _record_cb(self):
         """Starts the recording of key presses."""
         if self.button_record.isChecked():
             # Record keystrokes
             self._recording = True
             el = gremlin.event_handler.EventListener()
-            el.keyboard_event.connect(self.key_event_cb)
+            el.keyboard_event.connect(self._create_key_action)
         else:
             # Stop recording keystrokes
             self._recording = False
             el = gremlin.event_handler.EventListener()
-            el.keyboard_event.disconnect(self.key_event_cb)
+            el.keyboard_event.disconnect(self._create_key_action)
 
     def _pause_cb(self):
         """Adds a pause macro action to the list."""
-        self._append_entry(gremlin.macro.Macro.Pause(0.01))
+        self._append_entry(gremlin.macro.PauseAction(0.01))
+        self._refresh_editor_ui()
 
     def _delete_cb(self):
         """Callback executed when the delete button is pressed."""
         idx = self.list_view.currentIndex().row()
-        del self.action_data.sequence[idx]
-        new_idx = min(len(self.action_data.sequence), max(0, idx - 1))
-        self.model.populate(self.action_data.sequence)
-        self.list_view.setCurrentIndex(
-            self.model.index(new_idx, 0, QtCore.QModelIndex())
-        )
-
-    def _swap_entries(self, id1, id2):
-        """Swaps the two model items with the given indices.
-
-        :param id1 the first index
-        :param id2 the second index
-        """
-        self.model.swap(id1, id2)
-        self.list_view.setCurrentIndex(self.model.index(id2, 0))
+        if 0 <= idx < len(self.action_data.sequence):
+            del self.action_data.sequence[idx]
+            new_idx = min(len(self.action_data.sequence), max(0, idx - 1))
+            self.list_view.setCurrentIndex(
+                self.model.index(new_idx, 0, QtCore.QModelIndex())
+            )
+            self._refresh_editor_ui()
 
     def _append_entry(self, entry):
         """Adds the given entry after current selection.
@@ -538,15 +603,9 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param entry the entry to add to the model
         """
         cur_index = self.list_view.currentIndex().row()
-        self.model.add_entry(
-            cur_index,
-            entry
-        )
-        # self.action_data.sequence.insert(cur_index+1, entry)
-        # self.model.populate(self.action_data.sequence)
-        self.list_view.setCurrentIndex(
-            self.model.index(cur_index+1, 0)
-        )
+        self.model.add_entry(cur_index, entry)
+        self.list_view.setCurrentIndex(self.model.index(cur_index+1, 0))
+        self._refresh_editor_ui()
 
 
 class Macro(AbstractAction):
