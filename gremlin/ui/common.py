@@ -937,13 +937,13 @@ class InputListenerWidget(QtWidgets.QFrame):
         )
 
         if gremlin.common.InputType.Keyboard in self._event_types and \
-                key != gremlin.macro.Keys.Esc:
+                key != gremlin.macro.key_from_name("esc"):
             if not self._return_kb_event:
                 self.callback(key)
             else:
                 self.callback(event)
             self._close_window()
-        elif key == gremlin.macro.Keys.Esc:
+        elif key == gremlin.macro.key_from_name("esc"):
             self._close_window()
 
     def _joy_event_cb(self, event):
