@@ -17,10 +17,11 @@
 
 import ctypes
 from ctypes import wintypes
+import enum
 import functools
 import logging
 import time
-from threading import Thread
+from threading import Event, Thread
 
 import win32con
 import win32api
@@ -165,26 +166,6 @@ def _unicode_to_key(character):
     return Key(character, scan_code, is_extended, virtual_code)
 
 
-def _run_macro(sequence):
-    """Executes the provided macro.
-
-    :param sequence the sequence of commands to execute
-    """
-    for item in sequence:
-        if isinstance(item, Macro.KeyAction):
-            if item.is_pressed:
-                _send_key_down(item.key)
-            else:
-                _send_key_up(item.key)
-        elif isinstance(item, Macro.Pause):
-            time.sleep(item.duration)
-        else:
-            raise gremlin.error.KeyboardError(
-                "Invalid item in the sequence {}".format(type(item))
-            )
-        time.sleep(default_delay)
-
-
 def _send_key_down(key):
     """Sends the KEYDOWN event for a single key.
 
@@ -204,17 +185,155 @@ def _send_key_up(key):
     win32api.keybd_event(key.virtual_code, key.scan_code, flags, 0)
 
 
+@gremlin.common.SingletonDecorator
+class MacroManager:
+
+    """Manages the proper dispatching and scheduling of macros."""
+
+    def __init__(self):
+        """Initializes the instance."""
+        self._queue = []
+        self._active = {}
+        self._execution_id = 0
+
+        self._is_running = False
+        self._schedule_event = Event()
+
+        self._run_scheduler_thread = None
+
+    def start(self):
+        """Starts the scheduler."""
+        self._is_running = True
+        if self._run_scheduler_thread is None:
+            self._run_scheduler_thread = Thread(target=self._run_scheduler)
+        if not self._run_scheduler_thread.is_alive():
+            self._run_scheduler_thread.start()
+
+    def stop(self):
+        """Stops the scheduler."""
+        self._is_running = False
+        if self._run_scheduler_thread is not None and \
+                self._run_scheduler_thread.is_alive():
+            self._schedule_event.set()
+            self._run_scheduler_thread.join()
+            self._run_scheduler_thread = None
+
+    def add_macro(self, macro):
+        """Adds a macro to the scheduler.
+
+        :param macro the macro to add to the scheduler
+        """
+        # Add the new macro the the queue and force the scheduler to run
+        self._queue.append((self._execution_id, macro))
+        self._execution_id += 1
+        # Prevent execution ids to grow without bounds
+        if self._execution_id > 1000000000000:
+            self._execution_id = 0
+        self._schedule_event.set()
+
+    def _run_scheduler(self):
+        """Dispatches macros as required."""
+        while self._is_running:
+            # Wake up when the event triggers and reset it
+            self._schedule_event.wait()
+            self._schedule_event.clear()
+
+            # Run scheduled macros and ensure exclusive ones are run separately
+            # from all other macros
+            items_to_remove = 0
+            for entry in self._queue:
+                if MacroMode.Exclusive in entry[1].modes:
+                    if len(self._active) == 0:
+                        items_to_remove += 1
+                        self._dispatch_macro(*entry)
+                    break
+                else:
+                    items_to_remove += 1
+                    self._dispatch_macro(*entry)
+
+            # Remove all macros that were queued and we've kicked off
+            for _ in range(items_to_remove):
+                del self._queue[0]
+
+            print(len(self._queue), len(self._active))
+
+    def _dispatch_macro(self, execution_id, macro):
+        """Dispatches a single macro to be run.
+
+        :param execution_id the id of the macro to dispatch
+        :param macro the macro to dispatch
+        """
+        self._active[execution_id] = macro
+        Thread(target=functools.partial(
+            self._execute_macro,
+            macro.sequence,
+            execution_id
+        )).start()
+
+    def _execute_macro(self, sequence, execution_id):
+        """Executes a given macro in a separate thread.
+
+        This method will run all provided actions and once they all have been
+        executed will remove the macro from the set of active macros and
+        inform the scheduler of the completion.
+
+        :param sequence the sequence of macro actions to execute
+        :param execution_id the id of the macro being executed
+        """
+        for action in sequence:
+            action()
+            time.sleep(default_delay)
+        del self._active[execution_id]
+        self._schedule_event.set()
+
+
+class MacroMode(enum.Enum):
+
+    """Possible special modes for macro execution."""
+
+    Exclusive = 1
+    RepeatingCount = 2
+    RepeatingHold = 3
+    RepeatingToggle = 4
+
+
 class Macro:
 
     """Represents a macro which can be executed."""
 
+    # Unique identifier for each macro
+    _next_macro_id = 0
+
     def __init__(self):
         """Creates a new macro instance."""
         self._sequence = []
+        self._id = Macro._next_macro_id
+        Macro._next_macro_id += 1
+        self._modes = []
 
-    def run(self):
-        """Executes the macro in a separate thread."""
-        Thread(target=functools.partial(_run_macro, self._sequence)).start()
+    @property
+    def id(self):
+        """Returns the unique id of this macro.
+
+        :return unique id of this macro
+        """
+        return self._id
+
+    @property
+    def modes(self):
+        """Returns the modes for this macro.
+
+        :return modes of this macro
+        """
+        return self._modes
+
+    @property
+    def sequence(self):
+        """Returns the action sequence of this macro.
+
+        :return action sequence
+        """
+        return self._sequence
 
     def pause(self, duration):
         """Adds a pause of the given duration to the macro.
@@ -262,7 +381,17 @@ class Macro:
         self._sequence.append(KeyAction(key, is_pressed))
 
 
-class KeyAction:
+class AbstractAction:
+
+    """Base class for all macro action."""
+
+    def __call__(self):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractAction::__call__ not implemented in derived class."
+        )
+
+
+class KeyAction(AbstractAction):
 
     """Key to press or release by a macro."""
 
@@ -280,8 +409,14 @@ class KeyAction:
         self.key = key
         self.is_pressed = is_pressed
 
+    def __call__(self):
+        if self.is_pressed:
+            _send_key_down(self.key)
+        else:
+            _send_key_up(self.key)
 
-class PauseAction:
+
+class PauseAction(AbstractAction):
 
     """Represents the pause in a macro between pressed."""
 
@@ -291,6 +426,9 @@ class PauseAction:
         :param duration the duration in seconds of the pause
         """
         self.duration = duration
+
+    def __call__(self):
+        time.sleep(self.duration)
 
 
 class Key:
