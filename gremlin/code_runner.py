@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from gremlin import event_handler, input_devices, joystick_handling, util
+from gremlin import event_handler, input_devices, joystick_handling, macro, util
 
 
 class CodeRunner(object):
@@ -82,6 +82,7 @@ class CodeRunner(object):
             evt_listener.keyboard_event.connect(kb.keyboard_event)
 
             input_devices.periodic_registry.start()
+            macro.MacroManager().start()
 
             self.event_handler.change_mode(
                 list(self._inheritance_tree.keys())[0]
@@ -112,6 +113,8 @@ class CodeRunner(object):
         # Stop periodic events and clear registry
         input_devices.periodic_registry.stop()
         input_devices.periodic_registry.clear()
+
+        macro.MacroManager().stop()
 
         # Remove all claims on VJoy devices
         joystick_handling.VJoyProxy.reset()
