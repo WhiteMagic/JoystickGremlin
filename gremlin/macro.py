@@ -287,16 +287,6 @@ class MacroManager:
         self._schedule_event.set()
 
 
-class MacroMode(enum.Enum):
-
-    """Possible special modes for macro execution."""
-
-    Exclusive = 1
-    RepeatingCount = 2
-    RepeatingHold = 3
-    RepeatingToggle = 4
-
-
 class Macro:
 
     """Represents a macro which can be executed."""
@@ -309,7 +299,8 @@ class Macro:
         self._sequence = []
         self._id = Macro._next_macro_id
         Macro._next_macro_id += 1
-        self._modes = []
+        self.repeat = None
+        self.exclusive = False
 
     @property
     def id(self):

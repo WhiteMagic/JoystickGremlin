@@ -52,7 +52,12 @@ class MacroActionEditor(QtWidgets.QWidget):
             # "Joystick": self._joystick_ui
         }
 
+        self.setMinimumWidth(200)
+
         self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.group_box = QtWidgets.QGroupBox("Action Settings")
+        self.group_layout = QtWidgets.QVBoxLayout(self.group_box)
+        self.main_layout.addWidget(self.group_box)
         self.ui_elements = {}
         self._create_ui()
         self._populate_ui()
@@ -64,11 +69,11 @@ class MacroActionEditor(QtWidgets.QWidget):
             self.action_selector.addItem(action_name)
         self.action_selector.currentTextChanged.connect(self._change_action)
 
-        self.main_layout.addWidget(self.action_selector)
+        self.group_layout.addWidget(self.action_selector)
 
         self.action_layout = QtWidgets.QVBoxLayout()
-        self.main_layout.addLayout(self.action_layout)
-        self.main_layout.addStretch(1)
+        self.group_layout.addLayout(self.action_layout)
+        self.group_layout.addStretch(1)
 
     def _populate_ui(self):
         """Populate the UI elements with data from the model."""
@@ -463,9 +468,272 @@ class MacroListView(QtWidgets.QListView):
             self.clicked.emit(new_index)
 
 
+class AbstractRepeatMacroWidget(QtWidgets.QWidget):
+
+    def __init__(self, data, parent=None):
+        super().__init__(parent)
+        self.data = data
+        self.main_layout = QtWidgets.QGridLayout(self)
+
+        self._create_ui()
+        self._populate_ui()
+
+    def _create_ui(self):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeatMacroWidget::_create_ui not implemented in subclass"
+        )
+
+    def _populate_ui(self):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeatMacroWidget::_populate_ui not implemented in subclass"
+        )
+
+    def _update_data(self):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeatMacroWidget::_populate_ui not implemented in subclass"
+        )
+
+
+class CountRepeatMacroWidget(AbstractRepeatMacroWidget):
+
+    def __init__(self, data, parent=None):
+        super().__init__(data, parent)
+
+    def _create_ui(self):
+        self.delay = QtWidgets.QDoubleSpinBox()
+        self.delay.setMaximum(3600)
+        self.delay.setSingleStep(0.1)
+        self.delay.setValue(0.1)
+
+        self.count = QtWidgets.QSpinBox()
+        self.count.setMaximum(1e9)
+        self.count.setSingleStep(1)
+        self.count.setValue(1)
+
+        self.main_layout.addWidget(QtWidgets.QLabel("Delay"), 0, 0)
+        self.main_layout.addWidget(self.delay, 0, 1)
+        self.main_layout.addWidget(QtWidgets.QLabel("Count"), 1, 0)
+        self.main_layout.addWidget(self.count, 1, 1)
+
+    def _populate_ui(self):
+        self.delay.setValue(self.data.delay)
+        self.count.setValue(self.data.count)
+
+        self.delay.valueChanged.connect(self._update_data)
+        self.count.valueChanged.connect(self._update_data)
+
+    def _update_data(self):
+        self.data.delay = self.delay.value()
+        self.data.count = self.count.value()
+
+
+class ToggleRepeatMacroWidget(AbstractRepeatMacroWidget):
+
+    def __init__(self, data, parent=None):
+        super().__init__(data, parent)
+
+    def _create_ui(self):
+        self.delay = QtWidgets.QDoubleSpinBox()
+        self.delay.setMaximum(3600)
+        self.delay.setSingleStep(0.1)
+        self.delay.setValue(0.1)
+
+        self.main_layout.addWidget(QtWidgets.QLabel("Delay"), 0, 0)
+        self.main_layout.addWidget(self.delay, 0, 1)
+
+    def _populate_ui(self):
+        self.delay.setValue(self.data.delay)
+        self.delay.valueChanged.connect(self._update_data)
+
+    def _update_data(self):
+        self.data.delay = self.delay.value()
+
+
+class HoldRepeatMacroWidget(AbstractRepeatMacroWidget):
+
+    def __init__(self, data, parent=None):
+        super().__init__(data, parent)
+
+    def _create_ui(self):
+        self.delay = QtWidgets.QDoubleSpinBox()
+        self.delay.setMaximum(3600)
+        self.delay.setSingleStep(0.1)
+        self.delay.setValue(0.1)
+
+        self.main_layout.addWidget(QtWidgets.QLabel("Delay"), 0, 0)
+        self.main_layout.addWidget(self.delay, 0, 1)
+
+    def _populate_ui(self):
+        self.delay.setValue(self.data.delay)
+        self.delay.valueChanged.connect(self._update_data)
+
+    def _update_data(self):
+        self.data.delay = self.delay.value()
+
+
+class AbstractRepeat:
+
+    def __init__(self, delay):
+        self.delay = delay
+
+    def to_xml(self):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeat::to_xml not implemented in subclass."
+        )
+
+    def from_xml(self, node):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeat::from_xml not implemented in subclass"
+        )
+
+
+class CountRepeat(AbstractRepeat):
+
+    def __init__(self, count=1, delay=0.1):
+        super().__init__(delay)
+        self.count = count
+
+    def to_xml(self):
+        pass
+
+    def from_xml(self, node):
+        pass
+
+
+class ToggleRepeat(AbstractRepeat):
+
+    def __init__(self, delay=0.1):
+        super().__init__(delay)
+
+    def to_xml(self):
+        pass
+
+    def from_xml(self, node):
+        pass
+
+
+class HoldRepeat(AbstractRepeat):
+    def __init__(self, delay=0.1):
+        super().__init__(delay)
+
+    def to_xml(self):
+        pass
+
+    def from_xml(self, node):
+        pass
+
+
+class MacroSettingsWidget(QtWidgets.QWidget):
+
+    # Lookup tables mapping between display name and enum name
+    name_to_widget = {
+        "Count": CountRepeatMacroWidget,
+        "Toggle": ToggleRepeatMacroWidget,
+        "Hold": HoldRepeatMacroWidget
+    }
+    name_to_storage = {
+        "Count": CountRepeat,
+        "Toggle": ToggleRepeat,
+        "Hold": HoldRepeat
+    }
+    storage_to_name = {
+        CountRepeat: "Count",
+        ToggleRepeat: "Toggle",
+        HoldRepeat: "Hold"
+    }
+
+    def __init__(self, action_data, parent=None):
+        super().__init__(parent)
+
+        self.action_data = action_data
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        self.group_box = QtWidgets.QGroupBox("Macro Settings")
+        self.group_layout = QtWidgets.QVBoxLayout()
+        self.group_box.setLayout(self.group_layout)
+        self.main_layout.addWidget(self.group_box)
+
+        self._create_ui()
+
+    def _create_ui(self):
+        # Create UI elements
+        self.exclusive_checkbox = QtWidgets.QCheckBox("Exclusive")
+        self.repeat_dropdown = QtWidgets.QComboBox()
+        self.repeat_dropdown.addItems(["None", "Count", "Toggle", "Hold"])
+        # self.repeat_delay = QtWidgets.QDoubleSpinBox()
+        # self.repeat_delay.setMaximum(3600)
+        # self.repeat_delay.setSingleStep(0.1)
+        # self.repeat_delay.setValue(0.1)
+        self.repeat_widget = None
+        if type(self.action_data.repeat) in MacroSettingsWidget.storage_to_name:
+            mode_name = MacroSettingsWidget.storage_to_name[
+                type(self.action_data.repeat)
+            ]
+            self.repeat_widget = MacroSettingsWidget.name_to_widget[mode_name](
+                self.action_data.repeat
+            )
+
+        # Populate UI elements
+        self.exclusive_checkbox.setChecked(self.action_data.exclusive)
+        if self.action_data.repeat is not None:
+            mode_name = MacroSettingsWidget.storage_to_name[
+                type(self.action_data.repeat)
+            ]
+            self.repeat_widget = MacroSettingsWidget.name_to_widget[mode_name](
+                self.action_data.repeat
+            )
+            self.repeat_dropdown.setCurrentText(mode_name)
+
+        # Connect signals
+        self.exclusive_checkbox.clicked.connect(self._update_settings)
+        self.repeat_dropdown.currentTextChanged.connect(self._update_settings)
+        # self.repeat_delay.valueChanged.connect(self._update_settings)
+
+        # Place UI elements
+        self.group_layout.addWidget(self.exclusive_checkbox)
+        self.group_layout.addWidget(self.repeat_dropdown)
+        if self.repeat_widget is not None:
+            self.group_layout.addWidget(self.repeat_widget)
+
+    def _update_settings(self, value):
+        self.action_data.exclusive = self.exclusive_checkbox.isChecked()
+
+        # Only create a new repeat widget if it changed
+        widget_type = MacroSettingsWidget.name_to_widget[
+            self.repeat_dropdown.currentText()
+        ]
+        storage_type = MacroSettingsWidget.name_to_storage[
+            self.repeat_dropdown.currentText()
+        ]
+        if not isinstance(self.repeat_widget, widget_type):
+            self.action_data.repeat = storage_type()
+            self.repeat_widget = widget_type(self.action_data.repeat)
+
+            old_item = self.group_layout.takeAt(2)
+            if old_item is not None:
+                old_item.widget().hide()
+                old_item.widget().deleteLater()
+            self.group_layout.addWidget(self.repeat_widget)
+        # mode = MacroSettingsWidget.name_to_mode.get(
+        #     self.repeat_dropdown.currentText(),
+        #     None
+        # )
+        # if mode is not None:
+        #     self.action_data.repeat = RepeatMacro(
+        #         mode,
+        #         self.repeat_delay.value()
+        #     )
+
+
 class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget which allows creating and editing of macros."""
+
+    # Path to graphics
+    gfx_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "gfx"
+    )
 
     def __init__(self, action_data, parent=None):
         super().__init__(action_data, parent)
@@ -475,6 +743,21 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         """Creates the UI of this widget."""
         self.model = MacroListModel(self.action_data.sequence)
 
+        # HBox holing the two main parts
+        # 1. action list
+        #    - fixed size the rest takes as much space as it can
+        # 2. editor and modes
+        # VBox for the 2. ui components
+        # 1. action editor
+        # 2. mode configuration
+
+        # Replace the default vertical with a horizontal layout
+        QtWidgets.QWidget().setLayout(self.layout())
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+
+        self.editor_settings_layout = QtWidgets.QVBoxLayout()
+        self.buttons_layout = QtWidgets.QVBoxLayout()
+
         # Create list view for macro actions and setup drag & drop support
         self.list_view = MacroListView()
         self.list_view.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
@@ -483,16 +766,13 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.list_view.setCurrentIndex(self.model.index(0, 0))
         self.list_view.clicked.connect(self._edit_action)
 
-        # Create widget in which the action editor will be shown
-        self.editor_widget = QtWidgets.QTextEdit("Some text")
-
-        gfx_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "gfx"
-        )
+        # Create editor as well as settings place holder widgets
+        self.editor_widget = QtWidgets.QWidget()
+        self.settings_widget = MacroSettingsWidget(self.action_data)
+        self.editor_settings_layout.addWidget(self.editor_widget)
+        self.editor_settings_layout.addWidget(self.settings_widget)
 
         # Create buttons used to modify and interact with the macro actions
-        self.button_layout = QtWidgets.QVBoxLayout()
         self.button_new_entry = QtWidgets.QPushButton(
             QtGui.QIcon("gfx/list_add"), ""
         )
@@ -503,11 +783,11 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.button_delete.clicked.connect(self._delete_cb)
         record_icon = QtGui.QIcon()
         record_icon.addPixmap(
-            QtGui.QPixmap("{}/macro_record".format(gfx_path)),
+            QtGui.QPixmap("{}/macro_record".format(MacroWidget.gfx_path)),
             QtGui.QIcon.Normal
         )
         record_icon.addPixmap(
-            QtGui.QPixmap("{}/macro_record_on".format(gfx_path)),
+            QtGui.QPixmap("{}/macro_record_on".format(MacroWidget.gfx_path)),
             QtGui.QIcon.Active,
             QtGui.QIcon.On
         )
@@ -516,28 +796,32 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.button_record.setCheckable(True)
         self.button_record.clicked.connect(self._record_cb)
         self.button_pause = QtWidgets.QPushButton(
-            QtGui.QIcon("{}/macro_add_pause".format(gfx_path)), ""
+            QtGui.QIcon("{}/macro_add_pause".format(MacroWidget.gfx_path)), ""
         )
         self.button_pause.clicked.connect(self._pause_cb)
-        self.button_layout.addWidget(self.button_new_entry)
-        self.button_layout.addWidget(self.button_delete)
-        self.button_layout.addWidget(self.button_record)
-        self.button_layout.addWidget(self.button_pause)
-        self.button_layout.addStretch(1)
+        self.buttons_layout.addWidget(self.button_new_entry)
+        self.buttons_layout.addWidget(self.button_delete)
+        self.buttons_layout.addWidget(self.button_record)
+        self.buttons_layout.addWidget(self.button_pause)
+        self.buttons_layout.addStretch()
 
         # Assemble the entire widget
-        self.action_edit_layout = QtWidgets.QHBoxLayout()
-        self.action_edit_layout.addWidget(self.list_view)
-        self.action_edit_layout.addLayout(self.button_layout)
-        self.action_edit_layout.addWidget(self.editor_widget)
+        # self.action_edit_layout = QtWidgets.QHBoxLayout()
+        # self.action_edit_layout.addWidget(self.list_view)
+        # self.action_edit_layout.addLayout(self.button_layout)
+        # self.action_edit_layout.addWidget(self.editor_widget)
+        self.main_layout.addWidget(self.list_view)
+        self.main_layout.addLayout(self.buttons_layout)
+        self.main_layout.addLayout(self.editor_settings_layout)
 
-        self.main_layout.addLayout(self.action_edit_layout)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _populate_ui(self):
         """Populate the UI with content from the data."""
         self.model = MacroListModel(self.action_data.sequence)
         self.list_view.setModel(self.model)
+        self.list_view.setCurrentIndex(self.model.index(0, 0))
+        self._edit_action(self.model.index(0, 0))
 
     def _edit_action(self, model_index):
         """Enable editing of the current action via a editor widget.
@@ -545,10 +829,10 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param model_index the index of the model entry to edit
         """
         self.editor_widget = MacroActionEditor(self.model, model_index)
-        old_item = self.action_edit_layout.takeAt(2)
+        old_item = self.editor_settings_layout.takeAt(0)
         old_item.widget().hide()
         old_item.widget().deleteLater()
-        self.action_edit_layout.addWidget(self.editor_widget)
+        self.editor_settings_layout.insertWidget(0, self.editor_widget)
 
     def _refresh_editor_ui(self):
         """Forcibly refresh the editor widget content."""
@@ -630,6 +914,8 @@ class Macro(AbstractAction):
         """
         super().__init__(parent)
         self.sequence = []
+        self.exclusive = False
+        self.repeat = None
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
