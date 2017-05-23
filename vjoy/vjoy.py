@@ -336,12 +336,22 @@ class VJoy(object):
         self.vjoy_id = None
 
         if not VJoyInterface.vJoyEnabled():
+            logging.getLogger("system").error("vJoy is not currently running")
             raise VJoyError("vJoy is not currently running")
         if VJoyInterface.GetvJoyVersion() != 0x218:
+            logging.getLogger("system").error(
+                "Running incompatible vJoy version, 2.1.8 required"
+            )
             raise VJoyError("Running incompatible vJoy version, 2.1.8 required")
         elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
+            logging.getLogger("system").error(
+                "Requested vJoy device is not available"
+            )
             raise VJoyError("Requested vJoy device is not available")
         elif not VJoyInterface.AcquireVJD(vjoy_id):
+            logging.getLogger("system").error(
+                "Failed to acquire the vJoy device"
+            )
             raise VJoyError("Failed to acquire the vJoy device")
 
         self.vjoy_id = vjoy_id
