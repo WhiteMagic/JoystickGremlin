@@ -318,7 +318,6 @@ class MacroListModel(QtCore.QAbstractListModel):
         :return True if data was processed, False otherwise
         """
         if action != QtCore.Qt.MoveAction:
-            print("!!! Incorrect action type")
             return False
 
         if row == -1:
@@ -571,58 +570,6 @@ class HoldRepeatMacroWidget(AbstractRepeatMacroWidget):
         self.data.delay = self.delay.value()
 
 
-class AbstractRepeat:
-
-    def __init__(self, delay):
-        self.delay = delay
-
-    def to_xml(self):
-        raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat::to_xml not implemented in subclass."
-        )
-
-    def from_xml(self, node):
-        raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat::from_xml not implemented in subclass"
-        )
-
-
-class CountRepeat(AbstractRepeat):
-
-    def __init__(self, count=1, delay=0.1):
-        super().__init__(delay)
-        self.count = count
-
-    def to_xml(self):
-        pass
-
-    def from_xml(self, node):
-        pass
-
-
-class ToggleRepeat(AbstractRepeat):
-
-    def __init__(self, delay=0.1):
-        super().__init__(delay)
-
-    def to_xml(self):
-        pass
-
-    def from_xml(self, node):
-        pass
-
-
-class HoldRepeat(AbstractRepeat):
-    def __init__(self, delay=0.1):
-        super().__init__(delay)
-
-    def to_xml(self):
-        pass
-
-    def from_xml(self, node):
-        pass
-
-
 class MacroSettingsWidget(QtWidgets.QWidget):
 
     # Lookup tables mapping between display name and enum name
@@ -632,14 +579,14 @@ class MacroSettingsWidget(QtWidgets.QWidget):
         "Hold": HoldRepeatMacroWidget
     }
     name_to_storage = {
-        "Count": CountRepeat,
-        "Toggle": ToggleRepeat,
-        "Hold": HoldRepeat
+        "Count": gremlin.macro.CountRepeat,
+        "Toggle": gremlin.macro.ToggleRepeat,
+        "Hold": gremlin.macro.HoldRepeat
     }
     storage_to_name = {
-        CountRepeat: "Count",
-        ToggleRepeat: "Toggle",
-        HoldRepeat: "Hold"
+        gremlin.macro.CountRepeat: "Count",
+        gremlin.macro.ToggleRepeat: "Toggle",
+        gremlin.macro.HoldRepeat: "Hold"
     }
 
     def __init__(self, action_data, parent=None):
@@ -699,13 +646,23 @@ class MacroSettingsWidget(QtWidgets.QWidget):
         self.action_data.exclusive = self.exclusive_checkbox.isChecked()
 
         # Only create a new repeat widget if it changed
-        widget_type = MacroSettingsWidget.name_to_widget[
-            self.repeat_dropdown.currentText()
-        ]
-        storage_type = MacroSettingsWidget.name_to_storage[
-            self.repeat_dropdown.currentText()
-        ]
-        if not isinstance(self.repeat_widget, widget_type):
+        widget_type = MacroSettingsWidget.name_to_widget.get(
+            self.repeat_dropdown.currentText(),
+            None
+        )
+        storage_type = MacroSettingsWidget.name_to_storage.get(
+            self.repeat_dropdown.currentText(),
+            None
+        )
+        if widget_type is None and self.repeat_widget is not None:
+            self.action_data.repeat = None
+            self.repeat_widget = None
+
+            old_item = self.group_layout.takeAt(2)
+            if old_item is not None:
+                old_item.widget().hide()
+                old_item.widget().deleteLater()
+        elif widget_type is not None and not isinstance(self.repeat_widget, widget_type):
             self.action_data.repeat = storage_type()
             self.repeat_widget = widget_type(self.action_data.repeat)
 
@@ -771,6 +728,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.settings_widget = MacroSettingsWidget(self.action_data)
         self.editor_settings_layout.addWidget(self.editor_widget)
         self.editor_settings_layout.addWidget(self.settings_widget)
+        self.editor_settings_layout.addStretch()
 
         # Create buttons used to modify and interact with the macro actions
         self.button_new_entry = QtWidgets.QPushButton(
@@ -925,8 +883,33 @@ class Macro(AbstractAction):
 
         :param node the XML node to parse.
         """
+        # Reset storage
         self.sequence = []
-        for child in node:
+        self.exclusive = False
+        self.repeat = None
+
+        # Read properties
+        for child in node.find("properties"):
+            if child.tag == "exclusive":
+                self.exclusive = True
+            elif child.tag == "repeat":
+                repeat_type = child.get("type")
+                if repeat_type == "count":
+                    self.repeat = gremlin.macro.CountRepeat()
+                elif repeat_type == "toggle":
+                    self.repeat = gremlin.macro.ToggleRepeat()
+                elif repeat_type == "hold":
+                    self.repeat = gremlin.macro.HoldRepeat()
+                else:
+                    logging.getLogger("system").warning(
+                        "Invalid macro repeat type: {}".format(repeat_type)
+                    )
+
+                if self.repeat:
+                    self.repeat.from_xml(child)
+
+        # Read macro actions
+        for child in node.find("actions"):
             if child.tag == "key":
                 key_action = gremlin.macro.KeyAction(
                     gremlin.macro.key_from_code(
@@ -947,17 +930,27 @@ class Macro(AbstractAction):
         :return XML node representing the object's data
         """
         node = ElementTree.Element("macro")
+        properties = ElementTree.Element("properties")
+        if self.exclusive:
+            prop_node = ElementTree.Element("exclusive")
+            properties.append(prop_node)
+        if self.repeat:
+            properties.append(self.repeat.to_xml())
+        node.append(properties)
+
+        action_list = ElementTree.Element("actions")
         for entry in self.sequence:
             if isinstance(entry, gremlin.macro.KeyAction):
                 action_node = ElementTree.Element("key")
                 action_node.set("scan_code", str(entry.key.scan_code))
                 action_node.set("extended", str(entry.key.is_extended))
                 action_node.set("press", str(entry.is_pressed))
-                node.append(action_node)
+                action_list.append(action_node)
             elif isinstance(entry, gremlin.macro.PauseAction):
                 pause_node = ElementTree.Element("pause")
                 pause_node.set("duration", str(entry.duration))
-                node.append(pause_node)
+                action_list.append(pause_node)
+        node.append(action_list)
         return node
 
     def _generate_code(self):
