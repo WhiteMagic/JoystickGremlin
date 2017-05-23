@@ -108,13 +108,17 @@ class ButtonConditionWidget(AbstractConditionWidget):
         super().__init__(action_data, parent)
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.main_layout.addWidget(QtWidgets.QLabel("Activate on:"))
+        self.group = QtWidgets.QGroupBox("Activation condition")
+        self.group_layout = QtWidgets.QVBoxLayout()
+        self.group.setLayout(self.group_layout)
+        self.main_layout.addWidget(self.group)
+
         self.press = QtWidgets.QCheckBox("press")
         self.press.stateChanged.connect(self._press_cb)
         self.release = QtWidgets.QCheckBox("release")
         self.release.stateChanged.connect(self._release_cb)
-        self.main_layout.addWidget(self.press)
-        self.main_layout.addWidget(self.release)
+        self.group_layout.addWidget(self.press)
+        self.group_layout.addWidget(self.release)
 
         self.main_layout.addStretch()
         self.main_layout.setContentsMargins(0, 0, 5, 0)
