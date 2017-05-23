@@ -22,6 +22,7 @@ import functools
 import logging
 import time
 from threading import Event, Thread
+from xml.etree import ElementTree
 
 import win32con
 import win32api
@@ -242,7 +243,7 @@ class MacroManager:
             # from all other macros
             items_to_remove = 0
             for entry in self._queue:
-                if MacroMode.Exclusive in entry[1].modes:
+                if entry[1].exclusive:
                     if len(self._active) == 0:
                         items_to_remove += 1
                         self._dispatch_macro(*entry)
@@ -266,23 +267,32 @@ class MacroManager:
         self._active[execution_id] = macro
         Thread(target=functools.partial(
             self._execute_macro,
-            macro.sequence,
+            macro,
             execution_id
         )).start()
 
-    def _execute_macro(self, sequence, execution_id):
+    def _execute_macro(self, macro, execution_id):
         """Executes a given macro in a separate thread.
 
         This method will run all provided actions and once they all have been
         executed will remove the macro from the set of active macros and
         inform the scheduler of the completion.
 
-        :param sequence the sequence of macro actions to execute
+        :param macro the macro object to be executed
         :param execution_id the id of the macro being executed
         """
-        for action in sequence:
-            action()
-            time.sleep(default_delay)
+        # Handle various repeat modes
+        count = 1
+        delay = 0.0
+        if macro.repeat is not None and isinstance(macro.repeat, CountRepeat):
+            count = macro.repeat.count
+            delay = macro.repeat.delay
+
+        for _ in range(count):
+            for action in macro.sequence:
+                action()
+                time.sleep(default_delay)
+            time.sleep(delay)
         del self._active[execution_id]
         self._schedule_event.set()
 
@@ -309,14 +319,6 @@ class Macro:
         :return unique id of this macro
         """
         return self._id
-
-    @property
-    def modes(self):
-        """Returns the modes for this macro.
-
-        :return modes of this macro
-        """
-        return self._modes
 
     @property
     def sequence(self):
@@ -482,6 +484,77 @@ class Key:
             return (0x0E << 8) + self._scan_code
         else:
             return self._scan_code
+
+
+class AbstractRepeat:
+
+    def __init__(self, delay):
+        self.delay = delay
+
+    def to_xml(self):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeat::to_xml not implemented in subclass."
+        )
+
+    def from_xml(self, node):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeat::from_xml not implemented in subclass"
+        )
+
+    def to_code(self):
+        raise gremlin.error.MissingImplementationError(
+            "AbstractRepeat::to_code not implemented in subclass"
+        )
+
+
+class CountRepeat(AbstractRepeat):
+
+    def __init__(self, count=1, delay=0.1):
+        super().__init__(delay)
+        self.count = count
+
+    def to_xml(self):
+        node = ElementTree.Element("repeat")
+        node.set("type", "count")
+        node.set("count", str(self.count))
+        node.set("delay", str(self.delay))
+        return node
+
+    def from_xml(self, node):
+        self.delay = float(node.get("delay"))
+        self.count = int(node.get("count"))
+
+    def to_code(self):
+        return "gremlin.macro.CountRepeat({:d}, {:.2f})".format(self.count, self.delay)
+
+
+class ToggleRepeat(AbstractRepeat):
+
+    def __init__(self, delay=0.1):
+        super().__init__(delay)
+
+    def to_xml(self):
+        node = ElementTree.Element("repeat")
+        node.set("type", "toggle")
+        node.set("delay", str(self.delay))
+        return node
+
+    def from_xml(self, node):
+        self.delay = float(node.get("delay"))
+
+
+class HoldRepeat(AbstractRepeat):
+    def __init__(self, delay=0.1):
+        super().__init__(delay)
+
+    def to_xml(self):
+        node = ElementTree.Element("repeat")
+        node.set("type", "hold")
+        node.set("delay", str(self.delay))
+        return node
+
+    def from_xml(self, node):
+        self.delay = float(node.get("delay"))
 
 
 def key_from_name(name):
