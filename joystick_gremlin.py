@@ -1150,6 +1150,9 @@ if __name__ == "__main__":
     app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
     app.setApplicationDisplayName("Joystick Gremlin")
 
+    # Ensure SDL has enough time to detect all joystick devices
+    time.sleep(0.1)
+
     # Check if vJoy is properly setup and if not display an error
     # and terminate Gremlin
     vjoy_working = len([dev for dev in gremlin.joystick_handling.joystick_devices() if dev.is_virtual]) != 0
