@@ -21,7 +21,6 @@ from . import common, control_action, error, fsm, input_devices, joystick_handli
 
 
 tts_instance = tts.TextToSpeech()
-macro_manager = macro.MacroManager()
 
 
 class AxisCondition:
@@ -122,7 +121,7 @@ def cycle_modes(event, value, condition, mode_list):
 
 def run_macro(event, value, condition, macro_fn):
     if condition(value):
-        macro_manager.add_macro(macro_fn)
+        macro.MacroManager().add_macro(macro_fn, event)
 
 
 def response_curve(event, value, condition, curve_fn, deadzone_fn):
