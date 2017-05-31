@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import collections
 import ctypes
 from ctypes import wintypes
 import enum
@@ -34,6 +35,9 @@ import gremlin
 # around some games not picking up messages if they are sent in too
 # quick a succession.
 default_delay = 0.05
+
+
+MacroEntry = collections.namedtuple("MacroEntry", ["execution_id", "macro", "event"])
 
 
 def _create_function(lib_name, fn_name, param_types, return_type):
@@ -197,6 +201,12 @@ class MacroManager:
         self._active = {}
         self._execution_id = 0
 
+        el = gremlin.event_handler.EventListener()
+        el.keyboard_event.connect(self._handle_events)
+        el.joystick_event.connect(self._handle_events)
+
+        self._macro_flags = {}
+
         self._is_running = False
         self._schedule_event = Event()
 
@@ -219,13 +229,13 @@ class MacroManager:
             self._run_scheduler_thread.join()
             self._run_scheduler_thread = None
 
-    def add_macro(self, macro):
+    def add_macro(self, macro, event):
         """Adds a macro to the scheduler.
 
         :param macro the macro to add to the scheduler
         """
         # Add the new macro the the queue and force the scheduler to run
-        self._queue.append((self._execution_id, macro))
+        self._queue.append(MacroEntry(self._execution_id, macro, event.clone()))
         self._execution_id += 1
         # Prevent execution ids to grow without bounds
         if self._execution_id > 1000000000000:
@@ -243,35 +253,33 @@ class MacroManager:
             # from all other macros
             items_to_remove = 0
             for entry in self._queue:
-                if entry[1].exclusive:
+                if entry.macro.exclusive:
                     if len(self._active) == 0:
                         items_to_remove += 1
-                        self._dispatch_macro(*entry)
+                        self._dispatch_macro(entry)
                     break
                 else:
                     items_to_remove += 1
-                    self._dispatch_macro(*entry)
+                    self._dispatch_macro(entry)
 
             # Remove all macros that were queued and we've kicked off
             for _ in range(items_to_remove):
                 del self._queue[0]
 
-            print(len(self._queue), len(self._active))
-
-    def _dispatch_macro(self, execution_id, macro):
+    def _dispatch_macro(self, macro_entry):
         """Dispatches a single macro to be run.
 
-        :param execution_id the id of the macro to dispatch
-        :param macro the macro to dispatch
+        :param macro_entry object containing all required information
         """
-        self._active[execution_id] = macro
+        self._active[macro_entry.execution_id] = macro_entry.macro
         Thread(target=functools.partial(
             self._execute_macro,
-            macro,
-            execution_id
+            macro_entry.macro,
+            macro_entry.execution_id,
+            macro_entry.event
         )).start()
 
-    def _execute_macro(self, macro, execution_id):
+    def _execute_macro(self, macro, execution_id, event):
         """Executes a given macro in a separate thread.
 
         This method will run all provided actions and once they all have been
@@ -280,21 +288,84 @@ class MacroManager:
 
         :param macro the macro object to be executed
         :param execution_id the id of the macro being executed
+        :param event the event that triggered this macro execution
         """
-        # Handle various repeat modes
-        count = 1
-        delay = 0.0
-        if macro.repeat is not None and isinstance(macro.repeat, CountRepeat):
-            count = macro.repeat.count
+        # Handle repeat cases
+        if macro.repeat is not None:
             delay = macro.repeat.delay
 
-        for _ in range(count):
+            # Handle count repeat mode
+            if isinstance(macro.repeat, CountRepeat):
+                count = macro.repeat.count
+                for _ in range(count):
+                    for action in macro.sequence:
+                        action()
+                        time.sleep(default_delay)
+                    time.sleep(delay)
+
+            # Handle hold repeat mode
+            elif isinstance(macro.repeat, HoldRepeat):
+                self._macro_flags[execution_id] = (
+                    True, self._create_stop_event(event, HoldRepeat)
+                )
+                while self._macro_flags[execution_id][0]:
+                    for action in macro.sequence:
+                        action()
+                        time.sleep(default_delay)
+                    time.sleep(delay)
+
+            elif isinstance(macro.repeat, ToggleRepeat):
+                # Check if the activation is supposed to start or stop the macro
+                matching_macros = []
+                for key, value in self._active.items():
+                    if value.id == macro.id and key != execution_id:
+                        matching_macros.append((key, value))
+
+                # Terminate all running macros and do not start a new instance
+                if len(matching_macros) > 0:
+                    for entry in matching_macros:
+                        self._macro_flags[entry[0]] = (False, event)
+                # Start a new macro
+                else:
+                    self._macro_flags[execution_id] = (
+                        True, self._create_stop_event(event, ToggleRepeat)
+                    )
+                    while self._macro_flags[execution_id][0]:
+                        for action in macro.sequence:
+                            action()
+                            time.sleep(default_delay)
+                        time.sleep(delay)
+
+        # Handle non-repeat cases
+        else:
             for action in macro.sequence:
                 action()
                 time.sleep(default_delay)
-            time.sleep(delay)
+
+        # Remove macro from active set, notify manager, and remove any
+        # potential callbacks
         del self._active[execution_id]
+        if execution_id in self._macro_flags:
+            del self._macro_flags[execution_id]
         self._schedule_event.set()
+
+    def _handle_events(self, event):
+        for eid, data in self._macro_flags.items():
+            if data[1] == event:
+                if event.event_type == gremlin.common.InputType.JoystickButton:
+                    if event.is_pressed == data[1].is_pressed:
+                        self._macro_flags[eid] = (False, event)
+
+    def _create_stop_event(self, event, repeat_class):
+        evt = event.clone()
+        if repeat_class == HoldRepeat:
+            if evt.event_type == gremlin.common.InputType.JoystickButton:
+                evt.is_pressed = not evt.is_pressed
+        elif repeat_class == ToggleRepeat:
+            pass
+
+        return evt
+
 
 
 class Macro:
@@ -542,6 +613,9 @@ class ToggleRepeat(AbstractRepeat):
     def from_xml(self, node):
         self.delay = float(node.get("delay"))
 
+    def to_code(self):
+        return "gremlin.macro.ToggleRepeat({:.2f})".format(self.delay)
+
 
 class HoldRepeat(AbstractRepeat):
     def __init__(self, delay=0.1):
@@ -555,6 +629,9 @@ class HoldRepeat(AbstractRepeat):
 
     def from_xml(self, node):
         self.delay = float(node.get("delay"))
+
+    def to_code(self):
+        return "gremlin.macro.HoldRepeat({:.2f})".format(self.delay)
 
 
 def key_from_name(name):
