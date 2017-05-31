@@ -225,9 +225,15 @@ class MacroManager:
         self._is_running = False
         if self._run_scheduler_thread is not None and \
                 self._run_scheduler_thread.is_alive():
+
+            # Terminate the scheduler
             self._schedule_event.set()
             self._run_scheduler_thread.join()
             self._run_scheduler_thread = None
+
+            # Terminate any possibly running macros
+            for key, value in self._macro_flags.items():
+                self._macro_flags[key] = (False, value[1])
 
     def add_macro(self, macro, event):
         """Adds a macro to the scheduler.
