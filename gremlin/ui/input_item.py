@@ -20,7 +20,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
 from gremlin.common import DeviceType, InputType
-from . import common, conditions
+from . import common
 
 
 class InputIdentifier(object):
@@ -1015,37 +1015,18 @@ class ActionWrapper(QtWidgets.QWidget):
         Edit = 4
         Count = 5
 
-    condition_map = {
-        InputType.JoystickAxis: conditions.AxisConditionWidget,
-        InputType.JoystickButton: conditions.ButtonConditionWidget,
-        InputType.JoystickHat: conditions.HatConditionWidget,
-        InputType.Keyboard: conditions.ButtonConditionWidget
-    }
-
     interacted = QtCore.pyqtSignal(Interactions)
 
     def __init__(self, action_widget, allowed_interactions, parent=None):
         super().__init__(parent)
         self.action_widget = action_widget
-        self.condition_widget = self._create_condition()
-        self.condition_widget.modified.connect(
-            lambda: self.action_widget.modified.emit()
-        )
         self._create_edit_controls(allowed_interactions)
 
         self.main_layout = QtWidgets.QGridLayout(self)
         self.main_layout.addWidget(self.action_widget, 0, 0)
-        self.main_layout.addWidget(self.condition_widget, 0, 1)
-        self.main_layout.addLayout(self.controls_layout, 0, 2)
+        self.main_layout.addLayout(self.controls_layout, 0, 1)
         self.main_layout.setColumnStretch(0, 2)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
-
-    def _create_condition(self):
-        # Determine type of input we're dealing with
-        input_type = self.action_widget.action_data.parent.parent.input_type
-        return ActionWrapper.condition_map[input_type](
-            self.action_widget.action_data
-        )
 
     def _create_edit_controls(self, allowed_interactions):
         palette = QtGui.QPalette()

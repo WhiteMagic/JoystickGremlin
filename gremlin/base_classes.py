@@ -19,7 +19,6 @@ import logging
 from mako.template import Template
 from mako.lookup import TemplateLookup
 
-#from gremlin.code_generator import template_helpers
 import gremlin
 from . import common, error, plugin_manager, profile
 
@@ -36,7 +35,6 @@ class AbstractAction(profile.ProfileData):
         """
         assert isinstance(parent, AbstractContainer)
         super().__init__(parent)
-        self.condition = self._create_condition()
 
     def from_xml(self, node):
         """Populates the instance with data from the given XML node.
@@ -44,7 +42,6 @@ class AbstractAction(profile.ProfileData):
         :param node the XML node to populate fields with
         """
         super().from_xml(node)
-        self.condition.from_xml(node)
 
     def to_xml(self):
         """Returns a XML node representing the instance's contents.
@@ -52,7 +49,6 @@ class AbstractAction(profile.ProfileData):
         :return XML node representing the state of this instance
         """
         node = super().to_xml()
-        self.condition.to_xml(node)
         return node
 
     def icon(self):
@@ -63,18 +59,6 @@ class AbstractAction(profile.ProfileData):
         raise error.MissingImplementationError(
             "AbstractAction.icon not implemented in subclass"
         )
-
-    def _create_condition(self):
-        input_type = self.get_input_type()
-        if input_type in [
-                common.InputType.JoystickButton,
-                common.InputType.Keyboard
-        ]:
-            return ButtonCondition()
-        elif input_type == common.InputType.JoystickAxis:
-            return AxisCondition()
-        elif input_type == common.InputType.JoystickHat:
-            return HatCondition()
 
     def _code_generation(self, template_name, params):
         """Generates the code using the provided data.
@@ -148,113 +132,3 @@ class AbstractContainer(profile.ProfileData):
         for action in self.actions:
             action.to_code()
             gremlin.profile.ProfileData.next_code_id += 1
-
-
-class AxisCondition:
-
-    """Indicates when an action associated with an axis is to be run."""
-
-    def __init__(self, is_active=False, lower_limit=0.0, upper_limit=0.0):
-        """Creates a new instance.
-
-        :param lower_limit lower axis limit of the activation range
-        :param upper_limit upper axis limit of the activation range
-        """
-        self.is_active = is_active
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
-
-    def from_xml(self, node):
-        self.is_active = profile.parse_bool(node.get("is-active"))
-        self.lower_limit = profile.parse_float(node.get("lower-limit"))
-        self.upper_limit = profile.parse_float(node.get("upper-limit"))
-
-    def to_xml(self, node):
-        node.set("is-active", str(self.is_active))
-        node.set("lower-limit", str(self.lower_limit))
-        node.set("upper-limit", str(self.upper_limit))
-
-
-class ButtonCondition:
-
-    """Indicates when an action associated with a button is to be run"""
-
-    def __init__(self, on_press=True, on_release=False):
-        """Creates a new instance.
-
-        :param on_press when True the action is executed when the button
-            is pressed
-        :param on_release when True the action is execute when the
-            button is released
-        """
-        self.on_press = on_press
-        self.on_release = on_release
-
-    def from_xml(self, node):
-        try:
-            on_press = profile.parse_bool(node.get("on-press"))
-        except error.ProfileError:
-            on_press = None
-        try:
-            on_release = profile.parse_bool(node.get("on-release"))
-        except error.ProfileError:
-            on_release = None
-
-        # No valid data at all, set default values
-        if on_press is None and on_release is None:
-            self.on_press = True
-            self.on_release = False
-        # Some valid data handle it
-        else:
-            self.on_press = False if on_press is None else on_press
-            self.on_release = False if on_release is None else on_release
-
-    def to_xml(self, node):
-        node.set("on-press", str(self.on_press))
-        node.set("on-release", str(self.on_release))
-
-
-class HatCondition:
-
-    """Indicates when an action associated with a hat is to be run."""
-
-    def __init__(
-            self,
-            on_n=False,
-            on_ne=False,
-            on_e=False,
-            on_se=False,
-            on_s=False,
-            on_sw=False,
-            on_w=False,
-            on_nw=False
-    ):
-        """Creates a new instance."""
-        self.on_n = on_n
-        self.on_ne = on_ne
-        self.on_e = on_e
-        self.on_se = on_se
-        self.on_s = on_s
-        self.on_sw = on_sw
-        self.on_w = on_w
-        self.on_nw = on_nw
-
-    def from_xml(self, node):
-        self.on_n = profile.read_bool(node, "on-n")
-        self.on_ne = profile.read_bool(node, "on-ne")
-        self.on_e = profile.read_bool(node, "on-e")
-        self.on_se = profile.read_bool(node, "on-se")
-        self.on_s = profile.read_bool(node, "on-s")
-        self.on_sw = profile.read_bool(node, "on-sw")
-        self.on_w = profile.read_bool(node, "on-w")
-        self.on_nw = profile.read_bool(node, "on-nw")
-
-    def to_xml(self, node):
-        node.set("on-n", str(self.on_n))
-        node.set("on-ne", str(self.on_ne))
-        node.set("on-e", str(self.on_e))
-        node.set("on-se", str(self.on_se))
-        node.set("on-s", str(self.on_s))
-        node.set("on-sw", str(self.on_sw))
-        node.set("on-w", str(self.on_w))
-        node.set("on-nw", str(self.on_nw))

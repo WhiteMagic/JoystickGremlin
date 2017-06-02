@@ -23,115 +23,65 @@ from . import common, control_action, error, fsm, input_devices, joystick_handli
 tts_instance = tts.TextToSpeech()
 
 
-class AxisCondition:
 
-    def __init__(self):
-        pass
-
-    def __call__(self, value):
-        return True
+def axis_to_axis(event, value, vjoy_device_id, vjoy_input_id):
+    vjoy = joystick_handling.VJoyProxy()
+    vjoy[vjoy_device_id].axis(vjoy_input_id).value = value.current
 
 
-class ButtonCondition:
+def button_to_button(event, value, vjoy_device_id, vjoy_input_id):
+    if event.is_pressed:
+        input_devices.AutomaticButtonRelease().register(
+            (vjoy_device_id, vjoy_input_id), event
+        )
 
-    def __init__(self, on_press, on_release):
-        self.on_press = on_press
-        self.on_release = on_release
-
-    def __call__(self, value):
-        if self.on_press and self.on_release:
-            return True
-        elif self.on_press:
-            return value.current is True
-        elif self.on_release:
-            return value.current is False
+    vjoy = joystick_handling.VJoyProxy()
+    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
 
 
-class HatCondition:
-
-    def __init__(self, valid_directions=[]):
-        self.valid_directions = valid_directions
-
-    def __call__(self, value):
-        # When no directions are selected we assume this is meant to trigger
-        # in all circumstances
-        if len(self.valid_directions) == 0:
-            return True
-        return value.current in self.valid_directions
+def hat_to_hat(event, value, vjoy_device_id, vjoy_input_id):
+    vjoy = joystick_handling.VJoyProxy()
+    vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
 
 
-def axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
-    if condition(value):
-        vjoy = joystick_handling.VJoyProxy()
-        vjoy[vjoy_device_id].axis(vjoy_input_id).value = value.current
+def pause(event, value):
+    control_action.pause()
 
 
-def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
-    if condition.on_press and condition.on_release:
-        if event.is_pressed:
-            input_devices.AutomaticButtonRelease().register(
-                (vjoy_device_id, vjoy_input_id), event
-            )
-
-    if condition(value):
-        vjoy = joystick_handling.VJoyProxy()
-        vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+def resume(event, value,):
+    control_action.resume()
 
 
-def hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
-    if condition(value):
-        vjoy = joystick_handling.VJoyProxy()
-        vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
+def toggle_pause_resume(event, value):
+    control_action.toggle_pause_resume()
 
 
-def pause(event, value, condition):
-    if condition(value):
-        control_action.pause()
+def text_to_speech(event, value, text):
+    tts_instance.speak(tts.text_substitution(text))
 
 
-def resume(event, value, condition):
-    if condition(value):
-        control_action.resume()
+def switch_mode(event, value, mode):
+    control_action.switch_mode(mode)
 
 
-def toggle_pause_resume(event, value, condition):
-    if condition(value):
-        control_action.toggle_pause_resume()
+def switch_to_previous_mode(event, value):
+    control_action.switch_to_previous_mode()
 
 
-def text_to_speech(event, value, condition, text):
-    if condition(value):
-        tts_instance.speak(tts.text_substitution(text))
+def cycle_modes(event, value, mode_list):
+    control_action.cycle_modes(mode_list)
 
 
-def switch_mode(event, value, condition, mode):
-    if condition(value):
-        control_action.switch_mode(mode)
+def run_macro(event, value, macro_fn):
+    macro.MacroManager().add_macro(macro_fn, event)
 
 
-def switch_to_previous_mode(event, value, condition):
-    if condition(value):
-        control_action.switch_to_previous_mode()
+def response_curve(event, value, curve_fn, deadzone_fn):
+    value.current = curve_fn(deadzone_fn(value.current))
 
 
-def cycle_modes(event, value, condition, mode_list):
-    if condition(value):
-        control_action.cycle_modes(mode_list)
-
-
-def run_macro(event, value, condition, macro_fn):
-    if condition(value):
-        macro.MacroManager().add_macro(macro_fn, event)
-
-
-def response_curve(event, value, condition, curve_fn, deadzone_fn):
-    if condition(value):
-        value.current = curve_fn(deadzone_fn(value.current))
-
-
-def split_axis(event, value, condition, split_fn):
-    if condition(value):
-        split_fn(value.current)
+def split_axis(event, value, split_fn):
+    split_fn(value.current)
 
 
 def map_hat(vjoy_device_id, vjoy_input_id, data):
@@ -162,13 +112,6 @@ def tap_button(vjoy_device, vjoy_input, delay=0.1):
     vjoy[vjoy_device].button(vjoy_input).is_pressed = False
 
 
-def tap_key(key):
-    assert isinstance(key, macro.Keys.Key)
-    macro._send_key_down(key)
-    time.sleep(macro.default_delay)
-    macro._send_key_up(key)
-
-
 def run_on_press(function, is_pressed):
     if is_pressed:
         return function(is_pressed)
@@ -177,21 +120,6 @@ def run_on_press(function, is_pressed):
 def run_on_release(function, is_pressed):
     if not is_pressed:
         return function(is_pressed)
-
-
-# def map_button(vjoy_device_id, vjoy_input_id, event, on_press=True, on_release=True):
-#     vjoy = joystick_handling.VJoyProxy()
-#
-#     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = event.is_pressed
-
-
-# def run_function(function, on_press, on_release, condition_value):
-#     if on_press and on_release:
-#         return function
-#     elif on_press and not on_release:
-#         return lambda data: run_on_press(function, data)
-#     elif not on_press and on_release:
-#         return lambda data: run_on_release(function, data)
 
 
 class Value:
@@ -216,43 +144,47 @@ class Value:
 class Factory:
 
     @staticmethod
-    def axis_to_axis(condition, vjoy_device_id, vjoy_input_id):
+    def axis_to_axis(vjoy_device_id, vjoy_input_id):
         return lambda event, value: axis_to_axis(
             event,
             value,
-            condition,
             vjoy_device_id,
             vjoy_input_id,
         )
 
     @staticmethod
-    def button_to_button(condition, vjoy_device_id, vjoy_input_id):
+    def button_to_button(vjoy_device_id, vjoy_input_id):
         return lambda event, value: button_to_button(
             event,
             value,
-            condition,
             vjoy_device_id,
             vjoy_input_id,
         )
 
     @staticmethod
-    def hat_to_hat(condition, vjoy_device_id, vjoy_input_id):
+    def hat_to_hat(vjoy_device_id, vjoy_input_id):
         return lambda event, value: hat_to_hat(
             event,
             value,
-            condition,
             vjoy_device_id,
             vjoy_input_id,
         )
 
     @staticmethod
-    def remap_input(condition, vjoy_device_id, vjoy_input_id):
-        if isinstance(condition, AxisCondition):
-            return Factory.axis_to_axis(condition, vjoy_device_id, vjoy_input_id)
-        elif isinstance(condition, ButtonCondition):
-            return Factory.button_to_button(condition, vjoy_device_id, vjoy_input_id)
-        elif isinstance(condition, HatCondition):
-            return Factory.hat_to_hat(condition, vjoy_device_id, vjoy_input_id)
+    def remap_input(from_type, to_type, vjoy_device_id, vjoy_input_id):
+        remap_lookup = {
+            (common.InputType.JoystickAxis,
+             common.InputType.JoystickAxis): Factory.axis_to_axis,
+            (common.InputType.JoystickButton,
+             common.InputType.JoystickButton): Factory.button_to_button,
+            (common.InputType.JoystickHat,
+             common.InputType.JoystickHat): Factory.hat_to_hat,
+        }
+
+        remap_fn = remap_lookup.get((from_type, to_type), None)
+
+        if remap_fn is not None:
+            remap_fn(vjoy_device_id, vjoy_input_id)
 
     # @staticmethod
     # def map_hat(vjoy_device_id, vjoy_button_id):
@@ -277,89 +209,79 @@ class Factory:
     #     )
 
     @staticmethod
-    def split_axis(condition, split_fn):
+    def split_axis(split_fn):
         return lambda event, value: split_axis(
             event,
             value,
-            condition,
             split_fn
         )
 
     @staticmethod
-    def response_curve(condition, curve_fn, deadzone_fn):
+    def response_curve(curve_fn, deadzone_fn):
         return lambda event, value: response_curve(
             event,
             value,
-            condition,
             curve_fn,
             deadzone_fn
         )
 
     @staticmethod
-    def run_macro(condition, macro_fn):
+    def run_macro(macro_fn):
         return lambda event, value: run_macro(
             event,
             value,
-            condition,
             macro_fn
         )
 
     @staticmethod
-    def switch_mode(condition, mode):
+    def switch_mode(mode):
         return lambda event, value: switch_mode(
             event,
             value,
-            condition,
             mode
         )
 
     @staticmethod
-    def previous_mode(condition):
+    def previous_mode():
         return lambda event, value: switch_to_previous_mode(
             event,
-            value,
-            condition
+            value
         )
 
     @staticmethod
-    def cycle_modes(condition, mode_list):
+    def cycle_modes(mode_list):
         return lambda event, value: cycle_modes(
             event,
             value,
-            condition,
             mode_list
         )
 
     @staticmethod
-    def pause(condition):
+    def pause():
         return lambda event, value: pause(
             event,
-            value,
-            condition
+            value
         )
 
     @staticmethod
-    def resume(condition):
+    def resume():
         return lambda event, value: resume(
             event,
-            value,
-            condition
+            value
         )
 
     @staticmethod
-    def toggle_pause_resume(condition):
+    def toggle_pause_resume():
         return lambda event, value: toggle_pause_resume(
             event,
-            value,
-            condition
+            value
         )
 
     @staticmethod
-    def text_to_speech(condition, text):
+    def text_to_speech(text):
         return lambda event, value: text_to_speech(
             event,
             value,
-            condition,
             text
         )
 
@@ -415,7 +337,7 @@ class AbstractActionContainer:
             common.InputType.Keyboard
         ]
 
-    def __call__(self, value):
+    def __call__(self, event, value):
         raise error.GremlinError("Missing execute implementation")
 
 

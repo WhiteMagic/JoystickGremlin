@@ -330,7 +330,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             gremlin.common.InputType.JoystickHat: "hat",
         }
         main_profile = device_profile.parent
-        from gremlin.base_classes import ButtonCondition
         for input_type in input_types:
             for entry in mode.config[input_type].values():
                 item_list = main_profile.list_unused_vjoy_inputs(
@@ -347,8 +346,6 @@ class GremlinUi(QtWidgets.QMainWindow):
                     action.vjoy_input_id = 1
                 action.is_valid = True
 
-                if input_type == gremlin.common.InputType.JoystickButton:
-                    action.condition = ButtonCondition(True, True)
                 container.add_action(action)
                 entry.containers.append(container)
         self._create_tabs()

@@ -73,15 +73,6 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _populate_ui(self):
-        # If this is a new item, i.e. no vjoy device and vjoy input set
-        # force the condition for buttons to trigger both on release and
-        # press
-        if self.action_data.vjoy_device_id is None and \
-                self.action_data.vjoy_input_id is None and \
-                self.action_data.get_input_type() == InputType.JoystickButton:
-            self.action_data.condition.on_press = True
-            self.action_data.condition.on_release = True
-
         # Get the appropriate vjoy device identifier
         vjoy_dev_id = 0
         if self.action_data.vjoy_device_id not in [0, None]:
@@ -144,8 +135,6 @@ class Remap(gremlin.base_classes.AbstractAction):
         self.vjoy_device_id = None
         self.vjoy_input_id = None
         self.input_type = self.parent.parent.input_type
-        if self.input_type in [InputType.JoystickButton, InputType.Keyboard]:
-            self.condition = gremlin.base_classes.ButtonCondition(True, True)
 
     def icon(self):
         # Do not return a valid icon if the input id itself is invalid
