@@ -231,7 +231,7 @@ class MacroManager:
             self._run_scheduler_thread.join()
             self._run_scheduler_thread = None
 
-            # Terminate any possibly running macros
+            # Terminate any macro that is still active
             for key, value in self._macro_flags.items():
                 self._macro_flags[key] = (False, value[1])
 
