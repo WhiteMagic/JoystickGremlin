@@ -281,7 +281,7 @@ class ActionContainerView(common.AbstractView):
             )
             widget.modified.connect(self.model.data_changed.emit)
             self.scroll_layout.addWidget(widget)
-        self.scroll_layout.addStretch()
+        self.scroll_layout.addStretch(1)
 
 
 class DeviceTabWidget(QtWidgets.QWidget):
