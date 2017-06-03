@@ -446,22 +446,40 @@ class VJoy(object):
         hat_states = {}
 
         for axis_name in AxisName:
-            axis_states[axis_name] = self._axis[axis_name].value
+            try:
+                axis_states[axis_name] = self._axis[axis_name].value
+            except VJoyError:
+                pass
         for id, button in self._button.items():
-            button_states[id] = button.is_pressed
+            try:
+                button_states[id] = button.is_pressed
+            except VJoyError:
+                pass
         for id, hat in self._hat.items():
-            hat_states[id] = hat.direction
+            try:
+                hat_states[id] = hat.direction
+            except VJoyError:
+                pass
 
         # Perform reset using default vJoy functionality
         VJoyInterface.ResetVJD(self.vjoy_id)
 
         # Restore input states based on what we recorded
         for axis_name, value in axis_states.items():
-            self._axis[axis_name].set_absolute_value(value)
+            try:
+                self._axis[axis_name].set_absolute_value(value)
+            except VJoyError:
+                pass
         for id in self._button:
-            self._button[id].is_pressed = button_states[id]
+            try:
+                self._button[id].is_pressed = button_states[id]
+            except VJoyError:
+                pass
         for id in self._hat:
-            self._hat[id].direction = hat_states[id]
+            try:
+                self._hat[id].direction = hat_states[id]
+            except VJoyError:
+                pass
 
     def used(self):
         """Updates the timestamp of the last time the device has been used."""
