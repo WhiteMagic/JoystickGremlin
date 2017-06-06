@@ -16,3 +16,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import container_plugins.basic
+import container_plugins.chain
+import container_plugins.tempo

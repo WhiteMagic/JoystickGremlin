@@ -34,7 +34,9 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             action_widget = self.profile_data.actions[0].widget(
                 self.profile_data.actions[0]
             )
-            self.main_layout.addWidget(self._add_action_widget(action_widget))
+            self.main_layout.addWidget(
+                self._add_action_widget(action_widget, "Action")
+            )
         else:
             if self.profile_data.get_device_type() == gremlin.common.DeviceType.VJoy:
                 action_selector = gremlin.ui.common.ActionSelector(
@@ -110,7 +112,7 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
         ))
         return code
 
-    def _is_valid(self):
+    def _is_container_valid(self):
         return len(self.actions) == 1
 
 

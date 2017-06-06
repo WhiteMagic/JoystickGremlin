@@ -125,7 +125,7 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
         ))
         return code
 
-    def _is_valid(self):
+    def _is_container_valid(self):
         return len(self.actions) > 0
 
 
