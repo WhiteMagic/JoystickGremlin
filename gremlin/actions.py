@@ -286,15 +286,17 @@ class Factory:
         )
 
 
-class AxisButton:
+class VirtualButton:
 
-    def __init__(self, lower_limit, upper_limit):
-        self._lower_limit = min(lower_limit, upper_limit)
-        self._upper_limit = max(lower_limit, upper_limit)
+    """Implements a button like interface."""
+
+    def __init__(self):
+        """Creates a new instance."""
         self.callback = None
         self._fsm = self._initialize_fsm()
 
     def _initialize_fsm(self):
+        """Initializes the state of the button FSM."""
         states = ["up", "down"]
         actions = ["press", "release"]
         transitions = {
@@ -305,25 +307,77 @@ class AxisButton:
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
+    def _press(self):
+        """Executes the "press" action."""
+        self.callback(True)
+
+    def _release(self):
+        """Executes the "release" action."""
+        self.callback(False)
+
+    def _noop(self):
+        """Performs no action."""
+        pass
+
+    @property
+    def is_pressed(self):
+        """Returns whether or not the virtual button is pressed.
+
+        :return True if the button is pressed, False otherwise
+        """
+        return self._fsm.current_state == "down"
+
+
+class AxisButton(VirtualButton):
+
+    """Virtual button based around an axis."""
+
+    def __init__(self, lower_limit, upper_limit):
+        """Creates a new instance.
+
+        :param lower_limit lower axis value where the button range starts
+        :param upper_limit upper axis value where the button range stops
+        """
+        super().__init__()
+        self._lower_limit = min(lower_limit, upper_limit)
+        self._upper_limit = max(lower_limit, upper_limit)
+
     def process(self, value, callback):
+        """Processes events for the virtual axis button.
+
+        :param value axis position
+        :param callback function to call with button events
+        """
         self.callback = callback
         if self._lower_limit <= value <= self._upper_limit:
             self._fsm.perform("press")
         else:
             self._fsm.perform("release")
 
-    def _press(self):
-        self.callback(True)
 
-    def _release(self):
-        self.callback(False)
+class HatButton(VirtualButton):
 
-    def _noop(self):
-        pass
+    """Virtual button based around a hat."""
 
-    @property
-    def is_pressed(self):
-        return self._fsm.current_state == "down"
+    def __init__(self, directions):
+        """Creates a new instance.
+
+        :param directions hat directions used with this button
+        """
+        super().__init__()
+        self._directions = directions
+
+    def process(self, value, callback):
+        """Process events for the virtual hat button.
+
+        :param value hat direction
+        :param callback function to call with button events
+        """
+        self.callback = callback
+        if value in self._directions:
+            self._fsm.perform("press")
+        else:
+            self._fsm.perform("release")
 
 
 class AbstractActionContainer:
