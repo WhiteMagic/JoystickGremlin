@@ -692,9 +692,10 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
                 index = i
         return index
 
-    def _add_action_widget(self, widget):
+    def _add_action_widget(self, widget, label):
         wrapped_widget = ActionWrapper(
             widget,
+            label,
             self.profile_data.interaction_types
         )
         self.action_widgets.append(wrapped_widget)
@@ -790,7 +791,9 @@ class AbstractActionWidget(QtWidgets.QFrame):
         return root
 
 
-class ActionWrapper(QtWidgets.QWidget):
+class ActionWrapper(QtWidgets.QGroupBox):
+
+    """Wraps the widget associated with a single action inside a container."""
 
     class Interactions(enum.Enum):
         """Enumeration of possible interactions."""
@@ -802,16 +805,18 @@ class ActionWrapper(QtWidgets.QWidget):
 
     interacted = QtCore.pyqtSignal(Interactions)
 
-    def __init__(self, action_widget, allowed_interactions, parent=None):
+    def __init__(self, action_widget, label, allowed_interactions, parent=None):
         super().__init__(parent)
         self.action_widget = action_widget
         self._create_edit_controls(allowed_interactions)
+
+        self.setTitle(label)
 
         self.main_layout = QtWidgets.QGridLayout(self)
         self.main_layout.addWidget(self.action_widget, 0, 0)
         self.main_layout.addLayout(self.controls_layout, 0, 1)
         self.main_layout.setColumnStretch(0, 2)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        # self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _create_edit_controls(self, allowed_interactions):
         palette = QtGui.QPalette()

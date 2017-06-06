@@ -43,28 +43,40 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.delay_layout.addStretch()
         self.main_layout.addLayout(self.delay_layout)
 
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Short Press</b>"))
         if self.profile_data.actions[0] is None:
-            self._add_action_selector(lambda x: self._add_action(0, x))
+            self._add_action_selector(
+                lambda x: self._add_action(0, x),
+                "Short Press"
+            )
         else:
-            self._create_action_widget(0)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Long Press</b>"))
-        if self.profile_data.actions[1] is None:
-            self._add_action_selector(lambda x: self._add_action(1, x))
-        else:
-            self._create_action_widget(1)
+            self._create_action_widget(0, "Short Press")
 
-    def _add_action_selector(self, add_action_cb):
+        if self.profile_data.actions[1] is None:
+            self._add_action_selector(
+                lambda x: self._add_action(1, x),
+                "Long Press"
+            )
+        else:
+            self._create_action_widget(1, "Long Press")
+
+    def _add_action_selector(self, add_action_cb, label):
         action_selector = gremlin.ui.common.ActionSelector(
             self.profile_data.get_input_type()
         )
         action_selector.action_added.connect(add_action_cb)
-        self.main_layout.addWidget(action_selector)
 
-    def _create_action_widget(self, index):
+        group_layout = QtWidgets.QVBoxLayout()
+        group_layout.addWidget(action_selector)
+        group_layout.addStretch(1)
+        group_box = QtWidgets.QGroupBox(label)
+        group_box.setLayout(group_layout)
+
+        self.main_layout.addWidget(group_box)
+
+    def _create_action_widget(self, index, label):
         action_item = self.profile_data.actions[index]
         self.main_layout.addWidget(
-            self._add_action_widget(action_item.widget(action_item))
+            self._add_action_widget(action_item.widget(action_item), label)
         )
 
     def _add_action(self, index, action_name):

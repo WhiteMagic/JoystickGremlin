@@ -35,10 +35,12 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.action_selector.action_added.connect(self._add_action)
         self.main_layout.addWidget(self.action_selector)
 
-        for action in self.profile_data.actions:
-            self._add_separator()
+        for i, action in enumerate(self.profile_data.actions):
             self.main_layout.addWidget(
-                self._add_action_widget(action.widget(action))
+                self._add_action_widget(
+                    action.widget(action),
+                    "Action {:d}".format(i)
+                )
             )
 
     def _add_action(self, action_name):
