@@ -86,3 +86,60 @@ class AxisActivationConditionWidget(AbstractActivationConditionWidget):
     def _upper_limit_cb(self, value):
         self.condition_data.upper_limit = value
         self.modified.emit()
+
+
+class HatActivationConditionWidget(AbstractActivationConditionWidget):
+
+    def __init__(self, condition_data, parent=None):
+        self._widgets = {}
+        super().__init__(condition_data, parent, "horizontal")
+
+    def _create_ui(self):
+        self.setTitle("Activate on")
+
+        directions = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
+
+        for dir in directions:
+            self._widgets[dir] = QtWidgets.QCheckBox()
+            self._widgets[dir].setIcon(QtGui.QIcon("gfx/hat_{}.png".format(dir)))
+            self._widgets[dir].toggled.connect(self._create_state_changed_cb(dir))
+            self.main_layout.addWidget(self._widgets[dir])
+
+        self.main_layout.addStretch(1)
+
+    def _populate_ui(self):
+        direction_map = {
+            "north": "n",
+            "north-east": "ne",
+            "east": "e",
+            "south-east": "se",
+            "south": "s",
+            "south-west": "sw",
+            "west": "w",
+            "north-west": "nw"
+        }
+
+        for dir in self.condition_data.directions:
+            self._widgets[direction_map[dir]].setCheckState(QtCore.Qt.Checked)
+
+    def _state_changed(self, direction, state):
+        direction_map = {
+            "n": "north",
+            "ne": "north-east",
+            "e": "east",
+            "se": "south-east",
+            "s": "south",
+            "sw": "south-west",
+            "w": "west",
+            "nw": "north-west"
+        }
+
+        name = direction_map[direction]
+        if state is False and name in self.condition_data.directions:
+            idx = self.condition_data.directions.index(name)
+            del self.condition_data.directions[idx]
+        elif state is True and name not in self.condition_data.directions:
+            self.condition_data.directions.append(name)
+
+    def _create_state_changed_cb(self, direction):
+        return lambda x: self._state_changed(direction, x)
