@@ -75,7 +75,7 @@ class AxisActivationConditionWidget(AbstractActivationConditionWidget):
         self.lower_limit.valueChanged.connect(self._lower_limit_cb)
         self.upper_limit.valueChanged.connect(self._upper_limit_cb)
 
-    def _popuplate_ui(self):
+    def _populate_ui(self):
         self.lower_limit.setValue(self.condition_data.lower_limit)
         self.upper_limit.setValue(self.condition_data.upper_limit)
 
