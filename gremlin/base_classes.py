@@ -26,7 +26,6 @@ import gremlin
 from . import common, error, plugin_manager, profile
 
 
-
 class AbstractActivationCondition(metaclass=ABCMeta):
 
     def __init__(self):
@@ -92,15 +91,14 @@ class HatActivationCondition(AbstractActivationCondition):
         for key, value in node.items():
             if key in HatActivationCondition.name_to_direction and \
                             int(value) == 1:
-                self.directions.append(
-                    HatActivationCondition.name_to_direction[key]
-                )
+                self.directions.append(key)
 
     def to_xml(self):
         node = ElementTree.Element("activation-condition")
         for dir in self.directions:
-            if dir in HatActivationCondition.direction_to_name:
-                node.set(HatActivationCondition.direction_to_name[dir], "1")
+            if dir in HatActivationCondition.name_to_direction:
+                node.set(dir, "1")
+        return node
 
 
 class AbstractAction(profile.ProfileData):
