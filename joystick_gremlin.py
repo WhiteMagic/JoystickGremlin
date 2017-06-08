@@ -27,6 +27,7 @@ import sys
 import time
 import traceback
 
+import PyQt5
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -1113,6 +1114,13 @@ if __name__ == "__main__":
 
     sys.path.insert(0, gremlin.util.userprofile_path())
     gremlin.util.setup_userprofile()
+
+
+    # Fix some dumb Qt bugs
+    QtWidgets.QApplication.addLibraryPath(os.path.join(
+        os.path.dirname(PyQt5.__file__),
+        "plugins"
+    ))
 
     # Configure logging for system and user events
     configure_logger({
