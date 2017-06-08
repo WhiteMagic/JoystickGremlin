@@ -37,13 +37,13 @@ class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
         self._populate_ui()
 
     def _create_ui(self):
-        gremlin.error.MissingImplementationError(
+        raise gremlin.error.MissingImplementationError(
             "AbstractActivationConditionWidget._create_ui not "
             "implemented in subclass."
         )
 
     def _populate_ui(self):
-        gremlin.error.MissingImplementationError(
+        raise gremlin.error.MissingImplementationError(
             "AbstractActivationConditionWidget._populate_ui not "
             "implemented in subclass."
         )
