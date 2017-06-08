@@ -25,10 +25,13 @@ class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
 
     modified = QtCore.pyqtSignal()
 
-    def __init__(self, condition_data, parent=None):
+    def __init__(self, condition_data, parent=None, layout_direction="vertical"):
         super().__init__(parent)
         self.condition_data = condition_data
-        self.main_layout = QtWidgets.QVBoxLayout(self)
+        if layout_direction == "vertical":
+            self.main_layout = QtWidgets.QVBoxLayout(self)
+        else:
+            self.main_layout = QtWidgets.QHBoxLayout(self)
 
         self._create_ui()
         self._populate_ui()
