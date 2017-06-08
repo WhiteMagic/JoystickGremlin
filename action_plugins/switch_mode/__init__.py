@@ -63,6 +63,10 @@ class SwitchMode(AbstractAction):
         InputType.JoystickHat,
         InputType.Keyboard
     ]
+    activation_conditions = [
+        InputType.JoystickAxis,
+        InputType.JoystickHat
+    ]
     callback_params = []
 
     def __init__(self, parent):

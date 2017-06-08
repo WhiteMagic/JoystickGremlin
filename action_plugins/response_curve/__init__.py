@@ -1095,6 +1095,7 @@ class ResponseCurve(AbstractAction):
     input_types = [
         InputType.JoystickAxis,
     ]
+    activation_conditions = []
     callback_params = []
 
     curve_name_map = {

@@ -125,6 +125,7 @@ class Remap(gremlin.base_classes.AbstractAction):
         InputType.JoystickHat,
         InputType.Keyboard
     ]
+    activation_conditions = []
     callback_params = ["vjoy"]
 
     def __init__(self, parent):

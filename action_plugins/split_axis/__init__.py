@@ -122,6 +122,7 @@ class SplitAxis(AbstractAction):
     input_types = [
         InputType.JoystickAxis
     ]
+    activation_conditions = []
     callback_params = ["vjoy"]
 
     def __init__(self, parent):

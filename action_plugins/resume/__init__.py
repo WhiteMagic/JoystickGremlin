@@ -54,6 +54,14 @@ class ResumeAction(AbstractAction):
         InputType.JoystickHat,
         InputType.Keyboard
     ]
+    activation_conditions = [
+        InputType.JoystickAxis,
+        InputType.JoystickHat
+    ]
+    activation_conditions = [
+        InputType.JoystickAxis,
+        InputType.JoystickHat
+    ]
     callback_params = []
 
     def icon(self):
