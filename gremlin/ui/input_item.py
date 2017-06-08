@@ -666,8 +666,8 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     condition_to_widget = {
         gremlin.base_classes.AxisActivationCondition:
             gremlin.ui.activation_condition.AxisActivationConditionWidget,
-        # gremlin.base_classes.HatActivationCondition:
-        #     gremlin.ui.activation_condition.HatActivationConditionWidget
+        gremlin.base_classes.HatActivationCondition:
+            gremlin.ui.activation_condition.HatActivationConditionWidget
     }
 
     def __init__(self, profile_data, parent=None):
@@ -697,9 +697,6 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
                     type(self.profile_data.activation_condition)
                 ](self.profile_data.activation_condition)
             self.main_layout.addWidget(self.activation_condition_widget)
-        # self.main_layout.addWidget(
-        #     activation_condition.AxisActivationConditionWidget({})
-        # )
 
         # Create the actual UI
         self._create_ui()
