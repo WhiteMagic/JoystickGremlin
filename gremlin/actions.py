@@ -23,7 +23,6 @@ from . import common, control_action, error, fsm, input_devices, joystick_handli
 tts_instance = tts.TextToSpeech()
 
 
-
 def axis_to_axis(event, value, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].axis(vjoy_input_id).value = value.current
@@ -44,36 +43,44 @@ def hat_to_hat(event, value, vjoy_device_id, vjoy_input_id):
     vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
 
 
-def pause(event, value):
-    control_action.pause()
+def pause(event, value, condition):
+    if value.current:
+        control_action.pause()
 
 
-def resume(event, value,):
-    control_action.resume()
+def resume(event, value, condition):
+    if value.current:
+        control_action.resume()
 
 
-def toggle_pause_resume(event, value):
-    control_action.toggle_pause_resume()
+def toggle_pause_resume(event, value, condition):
+    if value.current:
+        control_action.toggle_pause_resume()
 
 
-def text_to_speech(event, value, text):
-    tts_instance.speak(tts.text_substitution(text))
+def text_to_speech(event, value, condition, text):
+    if value.current:
+        tts_instance.speak(tts.text_substitution(text))
 
 
-def switch_mode(event, value, mode):
-    control_action.switch_mode(mode)
+def switch_mode(event, value, condition, mode):
+    if value.current:
+        control_action.switch_mode(mode)
 
 
-def switch_to_previous_mode(event, value):
-    control_action.switch_to_previous_mode()
+def switch_to_previous_mode(event, value, condition):
+    if value.current:
+        control_action.switch_to_previous_mode()
 
 
-def cycle_modes(event, value, mode_list):
-    control_action.cycle_modes(mode_list)
+def cycle_modes(event, value, condition, mode_list):
+    if value.current:
+        control_action.cycle_modes(mode_list)
 
 
-def run_macro(event, value, macro_fn):
-    macro.MacroManager().add_macro(macro_fn, event)
+def run_macro(event, value, condition, macro_fn):
+    if value.current:
+        macro.MacroManager().add_macro(macro_fn, condition, event)
 
 
 def response_curve(event, value, curve_fn, deadzone_fn):
@@ -110,16 +117,6 @@ def tap_button(vjoy_device, vjoy_input, delay=0.1):
     vjoy[vjoy_device].button(vjoy_input).is_pressed = True
     time.sleep(delay)
     vjoy[vjoy_device].button(vjoy_input).is_pressed = False
-
-
-def run_on_press(function, is_pressed):
-    if is_pressed:
-        return function(is_pressed)
-
-
-def run_on_release(function, is_pressed):
-    if not is_pressed:
-        return function(is_pressed)
 
 
 class Value:
@@ -227,61 +224,69 @@ class Factory:
 
     @staticmethod
     def run_macro(macro_fn):
-        return lambda event, value: run_macro(
+        return lambda event, value, condition: run_macro(
             event,
             value,
+            condition,
             macro_fn
         )
 
     @staticmethod
     def switch_mode(mode):
-        return lambda event, value: switch_mode(
+        return lambda event, value, condition: switch_mode(
             event,
             value,
+            condition,
             mode
         )
 
     @staticmethod
     def previous_mode():
-        return lambda event, value: switch_to_previous_mode(
+        return lambda event, value, condition: switch_to_previous_mode(
             event,
-            value
+            value,
+            condition
         )
 
     @staticmethod
     def cycle_modes(mode_list):
-        return lambda event, value: cycle_modes(
+        return lambda event, value, condition: cycle_modes(
             event,
             value,
+            condition,
             mode_list
         )
 
     @staticmethod
     def pause():
-        return lambda event, value: pause(
+        return lambda event, value, condition: pause(
             event,
-            value
+            value,
+            condition
         )
 
     @staticmethod
     def resume():
-        return lambda event, value: resume(
+        return lambda event, value, condition: resume(
             event,
-            value
+            value,
+            condition
         )
 
     @staticmethod
     def toggle_pause_resume():
-        return lambda event, value: toggle_pause_resume(
+        return lambda event, value, condition: toggle_pause_resume(
             event,
-            value
+            value,
+            condition
         )
 
     @staticmethod
     def text_to_speech(text):
-        return lambda event, value: text_to_speech(
+        return lambda event, value, condition: text_to_speech(
             event,
             value,
+            condition,
             text
         )
 
@@ -292,8 +297,9 @@ class VirtualButton:
 
     def __init__(self):
         """Creates a new instance."""
-        self.callback = None
         self._fsm = self._initialize_fsm()
+        self._callback = None
+        self._is_pressed = False
 
     def _initialize_fsm(self):
         """Initializes the state of the button FSM."""
@@ -309,11 +315,13 @@ class VirtualButton:
 
     def _press(self):
         """Executes the "press" action."""
-        self.callback(True)
+        self._is_pressed = True
+        self._callback(Value(self.is_pressed))
 
     def _release(self):
         """Executes the "release" action."""
-        self.callback(False)
+        self._is_pressed = False
+        self._callback(Value(self.is_pressed))
 
     def _noop(self):
         """Performs no action."""
@@ -325,7 +333,7 @@ class VirtualButton:
 
         :return True if the button is pressed, False otherwise
         """
-        return self._fsm.current_state == "down"
+        return self._is_pressed
 
 
 class AxisButton(VirtualButton):
@@ -346,9 +354,8 @@ class AxisButton(VirtualButton):
         """Processes events for the virtual axis button.
 
         :param value axis position
-        :param callback function to call with button events
         """
-        self.callback = callback
+        self._callback = callback
         if self._lower_limit <= value <= self._upper_limit:
             self._fsm.perform("press")
         else:
@@ -371,9 +378,8 @@ class HatButton(VirtualButton):
         """Process events for the virtual hat button.
 
         :param value hat direction
-        :param callback function to call with button events
         """
-        self.callback = callback
+        self._callback = callback
         if value in self._directions:
             self._fsm.perform("press")
         else:
@@ -382,69 +388,76 @@ class HatButton(VirtualButton):
 
 class AbstractActionContainer:
 
-    def __init__(self, actions):
+    def __init__(self, actions, activation_condition):
         self.actions = actions
+        self.activation_condition = activation_condition
 
-    def _is_button_event(self, event):
-        return event.event_type in [
-            common.InputType.JoystickButton,
-            common.InputType.Keyboard
-        ]
+    def _process_value(self, value):
+        use_value = value
+        if self.activation_condition is not None:
+            use_value = Value(self.activation_condition.is_pressed)
+        return use_value
 
     def __call__(self, event, value):
-        raise error.GremlinError("Missing execute implementation")
+        if self.activation_condition is not None:
+            self.activation_condition.process(
+                event.value,
+                lambda x: self._execute_call(event, x)
+            )
+        else:
+            self._execute_call(event, value)
+
+    def _execute_call(self, event, value):
+        raise error.GremlinError("Missing _execute_call implementation")
 
 
 class Basic(AbstractActionContainer):
 
-    def __init__(self, actions):
+    def __init__(self, actions, activation_condition=None):
         if not isinstance(actions, list):
             actions = [actions]
-        super().__init__(actions)
+        super().__init__(actions, activation_condition)
         assert len(self.actions) == 1
 
-    def __call__(self, event, value):
-        self.actions[0](event, value)
+    def _execute_call(self, event, value):
+        self.actions[0](event, value, self.activation_condition)
 
 
 class Tempo(AbstractActionContainer):
 
-    def __init__(self, actions, duration):
-        super().__init__(actions)
+    def __init__(self, actions, activation_condition, duration):
+        super().__init__(actions, activation_condition)
         self.duration = duration
         self.start_time = 0
 
-    def __call__(self, event, value):
-        # TODO: handle non button inputs
-        if self._is_button_event(event):
-            if value.current:
-                self.start_time = time.time()
+    def _execute_call(self, event, value):
+        if value.current:
+            self.start_time = time.time()
+        else:
+            if (self.start_time + self.duration) > time.time():
+                self.actions[0](event, value, self.activation_condition)
             else:
-                if (self.start_time + self.duration) > time.time():
-                    self.actions[0](event, value)
-                else:
-                    self.actions[1](event, value)
+                self.actions[1](event, value, self.activation_condition)
 
 
 class Chain(AbstractActionContainer):
 
-    def __init__(self, actions, timeout=0.0):
-        super().__init__(actions)
+    def __init__(self, actions, activation_condition, timeout=0.0):
+        super().__init__(actions, activation_condition)
         self.index = 0
         self.timeout = timeout
         self.last_execution = 0.0
 
-    def __call__(self, event, value):
+    def _execute_call(self, event, value):
         # FIXME: reset via timeout not yet implemented
         if self.timeout > 0.0:
             if self.last_execution + self.timeout < time.time():
                 self.index = 0
                 self.last_execution = time.time()
 
-        # TODO: handle non button inputs
-        self.actions[self.index](event, value)
-        if self._is_button_event(event) and not event.is_pressed:
-                self.index = (self.index + 1) % len(self.actions)
+        self.actions[self.index](event, value, self.activation_condition)
+        if not value.current:
+            self.index = (self.index + 1) % len(self.actions)
 
 
 class SmartToggle(AbstractActionContainer):
@@ -458,7 +471,7 @@ class SmartToggle(AbstractActionContainer):
         self._init_time = 0
         self._is_toggled = False
 
-    def __call__(self, value):
+    def _execute_call(self, value):
         # FIXME: breaks when held while toggle is active
         if value:
             self._init_time = time.time()
@@ -486,7 +499,7 @@ class DoubleTap(AbstractActionContainer):
         self._init_time = 0
         self._triggered = False
 
-    def __call__(self, value):
+    def _execute_call(self, value):
         if value:
             if time.time() > self._init_time + self.timeout:
                 self._init_time = time.time()
