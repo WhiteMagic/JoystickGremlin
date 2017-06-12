@@ -634,6 +634,12 @@ class GremlinUi(QtWidgets.QMainWindow):
                 "{} #{:d}".format(device.name, device.vjoy_id)
             )
 
+        # Add profile configuration tab
+        widget = gremlin.ui.profile_settings.ProfileSettingsWidget(
+            self._profile.settings
+        )
+        self.ui.devices.addTab(widget, "Settings")
+
         # Add the getting started tab
         # widget = QtWidgets.QTextEdit()
         # widget.setReadOnly(True)
@@ -711,7 +717,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Only handle events for the currently active device
         widget = self.ui.devices.currentWidget()
-        if isinstance(widget, QtWidgets.QTextEdit):
+        if isinstance(widget, gremlin.ui.profile_settings.ProfileSettingsWidget):
             return
 
         # If we want to act on the given even figure out which button

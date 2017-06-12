@@ -359,6 +359,54 @@ class ProfileConverter:
         return new_root
 
 
+class Settings:
+
+    def __init__(self):
+        self.vjoy_initial_values = {}
+
+    def to_xml(self):
+        node = ElementTree.Element("settings")
+
+        # Process vJoy axis initial values
+        for vid, data in self.vjoy_initial_values.items():
+            vjoy_node = ElementTree.Element("vjoy")
+            vjoy_node.set("id", str(vid))
+            for aid, value in data.items():
+                axis_node = ElementTree.Element("axis")
+                axis_node.set("id", str(aid))
+                axis_node.set("value", str(value))
+                vjoy_node.append(axis_node)
+            node.append(vjoy_node)
+
+        return node
+
+    def from_xml(self, node):
+        if not node:
+            return
+
+        self.vjoy_initial_values = {}
+        for vjoy_node in node.findall("vjoy"):
+            vid = int(vjoy_node.get("id"))
+            self.vjoy_initial_values[vid] = {}
+            for axis_node in vjoy_node.findall("axis"):
+                print(axis_node.items())
+                self.vjoy_initial_values[vid][int(axis_node.get("id"))] = \
+                    float(axis_node.get("value"))
+
+    def get_initial_vjoy_axis_value(self, vid, aid):
+        value = 0.0
+        print(self.vjoy_initial_values)
+        if vid in self.vjoy_initial_values:
+            if aid in self.vjoy_initial_values[vid]:
+                value = self.vjoy_initial_values[vid][aid]
+        return value
+
+    def set_initial_vjoy_axis_value(self, vid, aid, value):
+        if vid not in self.vjoy_initial_values:
+            self.vjoy_initial_values[vid] = {}
+        self.vjoy_initial_values[vid][aid] = value
+
+
 class Profile:
 
     """Stores the contents of an entire configuration profile.
@@ -372,6 +420,7 @@ class Profile:
         self.vjoy_devices = {}
         self.imports = []
         self.merge_axes = []
+        self.settings = Settings()
         self.parent = None
 
     def initialize_joystick_device(self, device, modes):
@@ -550,6 +599,9 @@ class Profile:
         for child in root.iter("merge-axis"):
             self.merge_axes.append(self._parse_merge_axis(child))
 
+        # Parse settings entries
+        self.settings.from_xml(root.find("settings"))
+
     def to_xml(self, fname):
         """Generates XML code corresponding to this profile.
 
@@ -595,6 +647,9 @@ class Profile:
                 sub_node.set("axis", str(entry[tag]["axis_id"]))
                 node.append(sub_node)
             root.append(node)
+
+        # Settings data
+        root.append(self.settings.to_xml())
 
         # Serialize XML document
         ugly_xml = ElementTree.tostring(root, encoding="unicode")
