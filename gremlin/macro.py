@@ -37,7 +37,10 @@ import gremlin
 default_delay = 0.05
 
 
-MacroEntry = collections.namedtuple("MacroEntry", ["execution_id", "macro", "event"])
+MacroEntry = collections.namedtuple(
+    "MacroEntry",
+    ["execution_id", "macro", "condition", "event"]
+)
 
 
 def _create_function(lib_name, fn_name, param_types, return_type):
@@ -235,13 +238,18 @@ class MacroManager:
             for key, value in self._macro_flags.items():
                 self._macro_flags[key] = (False, value[1])
 
-    def add_macro(self, macro, event):
+    def add_macro(self, macro, condition, event):
         """Adds a macro to the scheduler.
 
         :param macro the macro to add to the scheduler
         """
         # Add the new macro the the queue and force the scheduler to run
-        self._queue.append(MacroEntry(self._execution_id, macro, event.clone()))
+        self._queue.append(MacroEntry(
+            self._execution_id,
+            macro,
+            condition,
+            event.clone()
+        ))
         self._execution_id += 1
         # Prevent execution ids to grow without bounds
         if self._execution_id > 1000000000000:
@@ -277,15 +285,16 @@ class MacroManager:
 
         :param macro_entry object containing all required information
         """
-        self._active[macro_entry.execution_id] = macro_entry.macro
+        self._active[macro_entry.execution_id] = macro_entry
         Thread(target=functools.partial(
             self._execute_macro,
             macro_entry.macro,
             macro_entry.execution_id,
-            macro_entry.event
+            macro_entry.event,
+            macro_entry.condition
         )).start()
 
-    def _execute_macro(self, macro, execution_id, event):
+    def _execute_macro(self, macro, execution_id, event, condition):
         """Executes a given macro in a separate thread.
 
         This method will run all provided actions and once they all have been
@@ -312,7 +321,7 @@ class MacroManager:
             # Handle hold repeat mode
             elif isinstance(macro.repeat, HoldRepeat):
                 self._macro_flags[execution_id] = (
-                    True, self._create_stop_event(event, HoldRepeat)
+                    True, self._create_stop_event(event, HoldRepeat, condition)
                 )
                 while self._macro_flags[execution_id][0]:
                     for action in macro.sequence:
@@ -320,21 +329,23 @@ class MacroManager:
                         time.sleep(default_delay)
                     time.sleep(delay)
 
+            # Handle toggle repeat mode
             elif isinstance(macro.repeat, ToggleRepeat):
                 # Check if the activation is supposed to start or stop the macro
                 matching_macros = []
                 for key, value in self._active.items():
-                    if value.id == macro.id and key != execution_id:
-                        matching_macros.append((key, value))
+                    if value.macro.id == macro.id and key != execution_id:
+                        matching_macros.append((key, value.macro))
 
                 # Terminate all running macros and do not start a new instance
                 if len(matching_macros) > 0:
                     for entry in matching_macros:
                         self._macro_flags[entry[0]] = (False, event)
+
                 # Start a new macro
                 else:
                     self._macro_flags[execution_id] = (
-                        True, self._create_stop_event(event, ToggleRepeat)
+                        True, self._create_stop_event(event, ToggleRepeat, condition)
                     )
                     while self._macro_flags[execution_id][0]:
                         for action in macro.sequence:
@@ -358,17 +369,41 @@ class MacroManager:
     def _handle_events(self, event):
         for eid, data in self._macro_flags.items():
             if data[1] == event:
+                # Handle proper buttons
                 if event.event_type == gremlin.common.InputType.JoystickButton:
                     if event.is_pressed == data[1].is_pressed:
                         self._macro_flags[eid] = (False, event)
 
-    def _create_stop_event(self, event, repeat_class):
+                # Handle inputs that act like a button through conditions
+                elif event.event_type in [
+                    gremlin.common.InputType.JoystickAxis,
+                    gremlin.common.InputType.JoystickHat
+                ]:
+                    self._active[eid].condition.process(
+                        event.value,
+                        lambda x: self._handle_event_with_condition(x, data[1].is_pressed, eid)
+                    )
+
+    def _handle_event_with_condition(self, value, desired_state, eid):
+        """
+        :param value Value object provided by the FSM
+        :param desired_state if equal to the input perform action
+        :param eid execution id of the macro this is handling
+        """
+        if value.current == desired_state:
+            self._macro_flags[eid] = (False, self._macro_flags[eid][1])
+
+    def _create_stop_event(self, event, repeat_class, condition):
         evt = event.clone()
+
         if repeat_class == HoldRepeat:
             if evt.event_type == gremlin.common.InputType.JoystickButton:
                 evt.is_pressed = not evt.is_pressed
+            elif condition:
+                evt.is_pressed = not condition.is_pressed
         elif repeat_class == ToggleRepeat:
-            pass
+            if condition:
+                evt.is_pressed = condition.is_pressed
 
         return evt
 
