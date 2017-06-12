@@ -276,12 +276,13 @@ class ActionContainerView(common.AbstractView):
         common.clear_layout(self.scroll_layout)
         for index in range(self.model.rows()):
             widget = self.model.data(index).widget(self.model.data(index))
-            widget.closed.connect(
-                lambda: self.model.remove_container(widget.profile_data)
-            )
+            widget.closed.connect(self._create_closed_cb(widget))
             widget.modified.connect(self.model.data_changed.emit)
             self.scroll_layout.addWidget(widget)
         self.scroll_layout.addStretch(1)
+
+    def _create_closed_cb(self, widget):
+        return lambda: self.model.remove_container(widget.profile_data)
 
 
 class DeviceTabWidget(QtWidgets.QWidget):
