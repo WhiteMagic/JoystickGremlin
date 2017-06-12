@@ -25,6 +25,7 @@ from vjoy import vjoy
 # List of all joystick devices
 _joystick_devices = []
 
+
 class VJoyProxy:
 
     """Manages the usage of vJoy and allows shared access all callbacks."""
