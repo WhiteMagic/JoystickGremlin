@@ -85,7 +85,7 @@ class HatActivationCondition(AbstractActivationCondition):
 
     def __init__(self, directions=[]):
         super().__init__()
-        self.directions = directions
+        self.directions = list(set(directions))
 
     def from_xml(self, node):
         for key, value in node.items():
