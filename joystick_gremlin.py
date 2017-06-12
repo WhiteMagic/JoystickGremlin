@@ -39,6 +39,7 @@ import gremlin.ui.common
 import gremlin.ui.device_tab
 import gremlin.ui.dialogs
 import gremlin.ui.merge_axis
+import gremlin.ui.profile_settings
 
 
 from gremlin.ui.ui_gremlin import Ui_Gremlin
@@ -291,7 +292,10 @@ class GremlinUi(QtWidgets.QMainWindow):
             # Generate the code for the profile and run it
             self._profile_auto_activated = False
             self.generate()
-            self.runner.start(self._profile.build_inheritance_tree())
+            self.runner.start(
+                self._profile.build_inheritance_tree(),
+                self._profile.settings
+            )
             # Retrieve last active profile and switch to it
             eh = gremlin.event_handler.EventHandler()
             eh.change_mode(self.config.get_last_mode(self._profile_fname))

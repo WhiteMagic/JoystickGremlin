@@ -40,11 +40,12 @@ class CodeRunner(object):
         """
         return self._running
 
-    def start(self, inheritance_tree):
+    def start(self, inheritance_tree, settings):
         """Starts listening to events and loads all existing callbacks.
 
         :param inheritance_tree tree encoding inheritance between the
             different modes
+        :param settings profile settings to apply at launch
         """
         # Reset states to their default values
         self._inheritance_tree = inheritance_tree
@@ -69,6 +70,12 @@ class CodeRunner(object):
                             )
                             callback_count += 1
             self.event_handler.build_event_lookup(inheritance_tree)
+
+            # Set vJoy axis default values
+            for vid, data in settings.vjoy_initial_values.items():
+                vjoy_proxy = joystick_handling.VJoyProxy()[vid]
+                for aid, value in data.items():
+                    vjoy_proxy.axis(aid).set_absolute_value(value)
 
             # Connect signals
             evt_listener = event_handler.EventListener()
