@@ -38,3 +38,30 @@ def key_lookup_name(context, input_item):
         input_item.input_id[1]
     )
     return key.lookup_name
+
+
+def condition(context, cond):
+    direction_to_tuple = {
+        "center": "(0, 0)",
+        "north": "(0, 1)",
+        "north-east": "(1, 1)",
+        "east": "(1, 0)",
+        "south-east": "(1, -1)",
+        "south": "(0, -1)",
+        "south-west": "(-1, -1)",
+        "west": "(-1, 0)",
+        "north-west": "(-1, 1)"
+    }
+
+    if cond is None:
+        return "None"
+    else:
+        if isinstance(cond, gremlin.base_classes.AxisActivationCondition):
+            return "gremlin.actions.AxisButton({}, {})".format(
+                cond.lower_limit,
+                cond.upper_limit
+            )
+        elif isinstance(cond, gremlin.base_classes.HatActivationCondition):
+            return "gremlin.actions.HatButton([{}])".format(
+                ", ".join([direction_to_tuple[v] for v in cond.directions])
+            )
