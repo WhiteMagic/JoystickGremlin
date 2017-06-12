@@ -23,12 +23,12 @@ from . import common, control_action, error, fsm, input_devices, joystick_handli
 tts_instance = tts.TextToSpeech()
 
 
-def axis_to_axis(event, value, vjoy_device_id, vjoy_input_id):
+def axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].axis(vjoy_input_id).value = value.current
 
 
-def button_to_button(event, value, vjoy_device_id, vjoy_input_id):
+def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     if event.is_pressed:
         input_devices.AutomaticButtonRelease().register(
             (vjoy_device_id, vjoy_input_id), event
@@ -38,7 +38,7 @@ def button_to_button(event, value, vjoy_device_id, vjoy_input_id):
     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
 
 
-def hat_to_hat(event, value, vjoy_device_id, vjoy_input_id):
+def hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
 
@@ -83,11 +83,11 @@ def run_macro(event, value, condition, macro_fn):
         macro.MacroManager().add_macro(macro_fn, condition, event)
 
 
-def response_curve(event, value, curve_fn, deadzone_fn):
+def response_curve(event, value, condition, curve_fn, deadzone_fn):
     value.current = curve_fn(deadzone_fn(value.current))
 
 
-def split_axis(event, value, split_fn):
+def split_axis(event, value, condition, split_fn):
     split_fn(value.current)
 
 
@@ -142,27 +142,30 @@ class Factory:
 
     @staticmethod
     def axis_to_axis(vjoy_device_id, vjoy_input_id):
-        return lambda event, value: axis_to_axis(
+        return lambda event, value, condition: axis_to_axis(
             event,
             value,
+            condition,
             vjoy_device_id,
             vjoy_input_id,
         )
 
     @staticmethod
     def button_to_button(vjoy_device_id, vjoy_input_id):
-        return lambda event, value: button_to_button(
+        return lambda event, value, condition: button_to_button(
             event,
             value,
+            condition,
             vjoy_device_id,
             vjoy_input_id,
         )
 
     @staticmethod
     def hat_to_hat(vjoy_device_id, vjoy_input_id):
-        return lambda event, value: hat_to_hat(
+        return lambda event, value, condition: hat_to_hat(
             event,
             value,
+            condition,
             vjoy_device_id,
             vjoy_input_id,
         )
@@ -181,7 +184,7 @@ class Factory:
         remap_fn = remap_lookup.get((from_type, to_type), None)
 
         if remap_fn is not None:
-            remap_fn(vjoy_device_id, vjoy_input_id)
+            return remap_fn(vjoy_device_id, vjoy_input_id)
 
     # @staticmethod
     # def map_hat(vjoy_device_id, vjoy_button_id):
@@ -207,17 +210,19 @@ class Factory:
 
     @staticmethod
     def split_axis(split_fn):
-        return lambda event, value: split_axis(
+        return lambda event, value, condition: split_axis(
             event,
             value,
+            condition,
             split_fn
         )
 
     @staticmethod
     def response_curve(curve_fn, deadzone_fn):
-        return lambda event, value: response_curve(
+        return lambda event, value, condition: response_curve(
             event,
             value,
+            condition,
             curve_fn,
             deadzone_fn
         )
