@@ -886,12 +886,16 @@ class InputListenerWidget(QtWidgets.QFrame):
     """Widget overlaying the main gui while waiting for the user
     to press a key."""
 
-    def __init__(self, callback, event_types, return_kb_event=False, parent=None):
+    def __init__(self, callback, event_types, return_kb_event=False, multi_keys=False, parent=None):
         """Creates a new instance.
 
         :param callback the function to pass the key pressed by the
             user to
         :param event_types the events to capture and return
+        :param return_kb_event whether or not to return the kb event (True) or
+            the key itself (False)
+        :param multi_keys whether or not to return multiple key presses (True)
+            or return after the first initial press (False)
         :param parent the parent widget of this widget
         """
         super().__init__(parent)
@@ -899,6 +903,9 @@ class InputListenerWidget(QtWidgets.QFrame):
         self.callback = callback
         self._event_types = event_types
         self._return_kb_event = return_kb_event
+        self._multi_keys = multi_keys
+
+        self._multi_key_storage = []
 
         # Create and configure the ui overlay
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -936,15 +943,31 @@ class InputListenerWidget(QtWidgets.QFrame):
                 event.identifier[1]
         )
 
-        if gremlin.common.InputType.Keyboard in self._event_types and \
-                key != gremlin.macro.key_from_name("esc"):
-            if not self._return_kb_event:
-                self.callback(key)
+        # Return immediately once the first key press is detected
+        if not self._multi_keys:
+            if gremlin.common.InputType.Keyboard in self._event_types and \
+                    key != gremlin.macro.key_from_name("esc"):
+                if not self._return_kb_event:
+                    self.callback(key)
+                else:
+                    self.callback(event)
+                self._close_window()
+            elif key == gremlin.macro.key_from_name("esc"):
+                self._close_window()
+        # Record all key presses and return on the first key release
+        else:
+            if event.is_pressed:
+                if gremlin.common.InputType.Keyboard in self._event_types and \
+                                key != gremlin.macro.key_from_name("esc"):
+                    if not self._return_kb_event:
+                        self._multi_key_storage.append(key)
+                    else:
+                        self._multi_key_storage.append(event)
+                elif key == gremlin.macro.key_from_name("esc"):
+                    self._close_window()
             else:
-                self.callback(event)
-            self._close_window()
-        elif key == gremlin.macro.key_from_name("esc"):
-            self._close_window()
+                self.callback(self._multi_key_storage)
+                self._close_window()
 
     def _joy_event_cb(self, event):
         """Passes the pressed joystick event to the provided callback
