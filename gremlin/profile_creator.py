@@ -356,7 +356,7 @@ class BindableAction(QtWidgets.QWidget):
         self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
             self.input_cb,
             BindableAction.valid_bind_types[self.input_type],
-            True
+            return_kb_event=True
         )
 
         # Display the dialog centered in the middle of the UI

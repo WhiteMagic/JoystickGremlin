@@ -189,7 +189,7 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
             self._modify_key,
             [gremlin.common.InputType.Keyboard],
-            True
+            return_kb_event=True
         )
 
         # Display the dialog centered in the middle of the UI
