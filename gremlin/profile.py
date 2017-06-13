@@ -389,13 +389,11 @@ class Settings:
             vid = int(vjoy_node.get("id"))
             self.vjoy_initial_values[vid] = {}
             for axis_node in vjoy_node.findall("axis"):
-                print(axis_node.items())
                 self.vjoy_initial_values[vid][int(axis_node.get("id"))] = \
                     float(axis_node.get("value"))
 
     def get_initial_vjoy_axis_value(self, vid, aid):
         value = 0.0
-        print(self.vjoy_initial_values)
         if vid in self.vjoy_initial_values:
             if aid in self.vjoy_initial_values[vid]:
                 value = self.vjoy_initial_values[vid][aid]

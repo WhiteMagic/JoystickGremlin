@@ -56,13 +56,20 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     def _create_ui(self):
         input_types = {
-            InputType.Keyboard: [InputType.JoystickButton],
+            InputType.Keyboard: [
+                InputType.JoystickButton
+            ],
             InputType.JoystickAxis: [
                 InputType.JoystickAxis,
                 InputType.JoystickButton
             ],
-            InputType.JoystickButton: [InputType.JoystickButton],
-            InputType.JoystickHat: [InputType.JoystickHat]
+            InputType.JoystickButton: [
+                InputType.JoystickButton
+            ],
+            InputType.JoystickHat: [
+                InputType.JoystickButton,
+                InputType.JoystickHat
+            ]
         }
         self.vjoy_selector = gremlin.ui.common.VJoySelector(
             self.vjoy_devices,
