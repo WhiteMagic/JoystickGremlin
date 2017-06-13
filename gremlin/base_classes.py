@@ -214,6 +214,8 @@ class AbstractContainer(profile.ProfileData):
     def _parse_action_xml(self, node):
         action_name_map = plugin_manager.ActionPlugins().tag_map
         for child in node:
+            if child.tag == "activation-condition":
+                continue
             if child.tag not in action_name_map:
                 logging.getLogger("system").warning(
                     "Unknown node present: {}".format(child.tag)
