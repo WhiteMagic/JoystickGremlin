@@ -140,6 +140,7 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
             del self.condition_data.directions[idx]
         elif state is True and name not in self.condition_data.directions:
             self.condition_data.directions.append(name)
+        self.condition_data.directions = list(set(self.condition_data.directions))
 
     def _create_state_changed_cb(self, direction):
         return lambda x: self._state_changed(direction, x)

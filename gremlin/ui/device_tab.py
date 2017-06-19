@@ -238,13 +238,13 @@ class ActionContainerModel(common.AbstractModel):
 
     """Stores action containers for display using the corresponding view."""
 
-    def __init__(self, actions, parent=None):
+    def __init__(self, containers, parent=None):
         """Creates a new instance.
 
-        :param actions the action instances of this model
+        :param containers the container instances of this model
         """
         super().__init__(parent)
-        self._containers = actions
+        self._containers = containers
 
     def rows(self):
         return len(self._containers)

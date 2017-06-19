@@ -108,6 +108,8 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
 class TempoContainer(gremlin.base_classes.AbstractContainer):
 
+    # FIXME: add timeout / release based triggering of short vs. long press
+
     name = "Tempo"
     tag = "tempo"
     widget = TempoContainerWidget
