@@ -138,6 +138,16 @@ class AbstractAction(profile.ProfileData):
             "AbstractAction.icon not implemented in subclass"
         )
 
+    def requires_activation_condition(self):
+        """Returns whether or not the action requires the use of an
+        activation condition.
+
+        :return True if an activation condition is to be used, False otherwise
+        """
+        raise error.MissingImplementationError(
+            "AbstractAction.requires_activation_condition not implemented"
+        )
+
     def _code_generation(self, template_name, params):
         """Generates the code using the provided data.
 
@@ -188,16 +198,27 @@ class AbstractContainer(profile.ProfileData):
         assert isinstance(action, AbstractAction)
         self.actions.append(action)
 
-        # Check if activation condition is needed
-        need_activation_condition = False
-        for action in self.actions:
-            need_activation_condition = need_activation_condition or \
-                (self.parent.input_type in action.activation_conditions)
-
         # Create activation condition data if needed
+        self.create_or_delete_activation_condition()
+
+    def create_or_delete_activation_condition(self):
+        """Creates activation condition data as required."""
+        need_activation_condition = any(
+            [a.requires_activation_condition() for a in self.actions]
+        )
+
         if need_activation_condition:
-            self.activation_condition = \
-                AbstractContainer.condition_data[self.parent.input_type]()
+            if self.activation_condition is None:
+                self.activation_condition = \
+                    AbstractContainer.condition_data[self.parent.input_type]()
+            elif not isinstance(
+                    self.activation_condition,
+                    AbstractContainer.condition_data[self.parent.input_type]
+            ):
+                self.activation_condition = \
+                    AbstractContainer.condition_data[self.parent.input_type]()
+        else:
+            self.activation_condition = None
 
     def from_xml(self, node):
         super().from_xml(node)

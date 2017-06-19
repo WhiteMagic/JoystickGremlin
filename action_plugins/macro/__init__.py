@@ -863,10 +863,6 @@ class Macro(AbstractAction):
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    activation_conditions = [
-        InputType.JoystickAxis,
-        InputType.JoystickHat
-    ]
     callback_params = []
 
     def __init__(self, parent):
@@ -881,6 +877,12 @@ class Macro(AbstractAction):
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
+
+    def requires_activation_condition(self):
+        return self.get_input_type() in [
+            InputType.JoystickAxis,
+            InputType.JoystickHat
+        ]
 
     def _parse_xml(self, node):
         """Parses the XML node corresponding to a macro action.

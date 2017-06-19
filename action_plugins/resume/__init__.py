@@ -54,14 +54,6 @@ class ResumeAction(AbstractAction):
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    activation_conditions = [
-        InputType.JoystickAxis,
-        InputType.JoystickHat
-    ]
-    activation_conditions = [
-        InputType.JoystickAxis,
-        InputType.JoystickHat
-    ]
     callback_params = []
 
     def icon(self):
@@ -69,6 +61,12 @@ class ResumeAction(AbstractAction):
 
     def __init__(self, parent):
         super().__init__(parent)
+
+    def requires_activation_condition(self):
+        return self.get_input_type() in [
+            InputType.JoystickAxis,
+            InputType.JoystickHat
+        ]
 
     def _parse_xml(self, node):
         pass

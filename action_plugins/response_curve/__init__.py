@@ -1095,7 +1095,6 @@ class ResponseCurve(AbstractAction):
     input_types = [
         InputType.JoystickAxis,
     ]
-    activation_conditions = []
     callback_params = []
 
     curve_name_map = {
@@ -1116,6 +1115,9 @@ class ResponseCurve(AbstractAction):
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
+
+    def requires_activation_condition(self):
+        return False
 
     def _parse_xml(self, node):
         """Parses the XML corresponding to a response curve.
