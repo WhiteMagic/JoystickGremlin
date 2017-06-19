@@ -28,12 +28,22 @@ def axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy[vjoy_device_id].axis(vjoy_input_id).value = value.current
 
 
+def axis_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+    vjoy = joystick_handling.VJoyProxy()
+    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+
+
 def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     if event.is_pressed:
         input_devices.AutomaticButtonRelease().register(
             (vjoy_device_id, vjoy_input_id), event
         )
 
+    vjoy = joystick_handling.VJoyProxy()
+    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+
+
+def hat_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
 
@@ -141,72 +151,29 @@ class Value:
 class Factory:
 
     @staticmethod
-    def axis_to_axis(vjoy_device_id, vjoy_input_id):
-        return lambda event, value, condition: axis_to_axis(
-            event,
-            value,
-            condition,
-            vjoy_device_id,
-            vjoy_input_id,
-        )
-
-    @staticmethod
-    def button_to_button(vjoy_device_id, vjoy_input_id):
-        return lambda event, value, condition: button_to_button(
-            event,
-            value,
-            condition,
-            vjoy_device_id,
-            vjoy_input_id,
-        )
-
-    @staticmethod
-    def hat_to_hat(vjoy_device_id, vjoy_input_id):
-        return lambda event, value, condition: hat_to_hat(
-            event,
-            value,
-            condition,
-            vjoy_device_id,
-            vjoy_input_id,
-        )
-
-    @staticmethod
     def remap_input(from_type, to_type, vjoy_device_id, vjoy_input_id):
         remap_lookup = {
             (common.InputType.JoystickAxis,
-             common.InputType.JoystickAxis): Factory.axis_to_axis,
+             common.InputType.JoystickAxis): axis_to_axis,
+            (common.InputType.JoystickAxis,
+             common.InputType.JoystickButton): axis_to_button,
             (common.InputType.JoystickButton,
-             common.InputType.JoystickButton): Factory.button_to_button,
+             common.InputType.JoystickButton): button_to_button,
             (common.InputType.JoystickHat,
-             common.InputType.JoystickHat): Factory.hat_to_hat,
+             common.InputType.JoystickHat): hat_to_hat,
+            (common.InputType.JoystickHat,
+             common.InputType.JoystickButton): hat_to_button
         }
 
         remap_fn = remap_lookup.get((from_type, to_type), None)
-
         if remap_fn is not None:
-            return remap_fn(vjoy_device_id, vjoy_input_id)
-
-    # @staticmethod
-    # def map_hat(vjoy_device_id, vjoy_button_id):
-    #     return lambda direction: map_hat(
-    #         vjoy_device_id,
-    #         vjoy_button_id,
-    #         direction
-    #     )
-    #
-    # @staticmethod
-    # def tap_button(vjoy_device_id, vjoy_button_id):
-    #     return lambda is_pressed: run_on_press(
-    #         lambda: tap_button(vjoy_device_id, vjoy_button_id),
-    #         is_pressed
-    #     )
-    #
-    # @staticmethod
-    # def tap_key(key):
-    #     return lambda is_pressed: run_on_press(
-    #         lambda: tap_key(key),
-    #         is_pressed
-    #     )
+            return lambda event, value, condition: remap_fn(
+                event,
+                value,
+                condition,
+                vjoy_device_id,
+                vjoy_input_id,
+            )
 
     @staticmethod
     def split_axis(split_fn):

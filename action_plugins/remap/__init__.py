@@ -108,13 +108,20 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             vjoy_dev_id,
             vjoy_input_id
         )
-        self.save_changes()
+        # FIXME: why is this needed?
+        # self.save_changes()
 
     def save_changes(self):
+        # Store remap data
         vjoy_data = self.vjoy_selector.get_selection()
         self.action_data.vjoy_device_id = vjoy_data["device_id"]
         self.action_data.vjoy_input_id = vjoy_data["input_id"]
         self.action_data.input_type = vjoy_data["input_type"]
+
+        # Check if this requires an activation condition
+        self.action_data.parent.create_or_delete_activation_condition()
+
+        # Signal changes
         self.modified.emit()
 
 
@@ -132,7 +139,6 @@ class Remap(gremlin.base_classes.AbstractAction):
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    activation_conditions = []
     callback_params = ["vjoy"]
 
     def __init__(self, parent):
@@ -158,6 +164,22 @@ class Remap(gremlin.base_classes.AbstractAction):
                 input_string,
                 self.vjoy_input_id
             )
+
+    def requires_activation_condition(self):
+        input_type = self.get_input_type()
+
+        if input_type in [InputType.JoystickButton, InputType.Keyboard]:
+            return False
+        elif input_type == InputType.JoystickAxis:
+            if self.input_type == InputType.JoystickAxis:
+                return False
+            else:
+                return True
+        elif input_type == InputType.JoystickHat:
+            if self.input_type == InputType.JoystickHat:
+                return False
+            else:
+                return True
 
     def _parse_xml(self, node):
         if "axis" in node.attrib:
