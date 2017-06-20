@@ -1036,7 +1036,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         if event.event_type == gremlin.common.InputType.JoystickButton:
             process_input = event.is_pressed
         elif event.event_type == gremlin.common.InputType.JoystickAxis:
-            process_input = abs(event.value) > 0.25
+            process_input = abs(event.value) > 0.5
         elif event.event_type == gremlin.common.InputType.JoystickHat:
             process_input = event.value != (0, 0)
         else:
