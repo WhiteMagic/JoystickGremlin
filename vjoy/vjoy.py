@@ -547,8 +547,11 @@ class VJoy(object):
         hats = {}
         # We can't use discrete hats as such their existence is considered
         # an error
-        # if VJoyInterface.GetVJDContPovNumber() > 0:
-        #     raise VJoyError("Discrete POVs cannot be used")
+        if VJoyInterface.GetVJDContPovNumber(self.vjoy_id) > 0:
+            error_msg = "vJoy configured incorrectly. Please ensure hats are " \
+                        "configured as 'Continuous' rather then '4 Directions'."
+            logging.getLogger("system").error(error_msg)
+            raise VJoyError(error_msg)
         # for hat_id in range(1, VJoyInterface.GetVJDDiscPovNumber(self.vjoy_id)+1):
         #     hats[hat_id] = Hat(self, hat_id, HatType.Discrete)
         for hat_id in range(1, VJoyInterface.GetVJDContPovNumber(self.vjoy_id)+1):
