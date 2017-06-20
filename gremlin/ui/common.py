@@ -705,7 +705,8 @@ class ActionSelector(QtWidgets.QWidget):
         self.action_dropdown = QtWidgets.QComboBox()
         for name in self._valid_action_list():
             self.action_dropdown.addItem(name)
-        self.action_dropdown.setCurrentText("Remap")
+        cfg = gremlin.config.Configuration()
+        self.action_dropdown.setCurrentText(cfg.default_action)
         self.add_button = QtWidgets.QPushButton("Add")
         self.add_button.clicked.connect(self._add_action)
 
