@@ -174,7 +174,10 @@ def joystick_devices():
         hash_value = (dev.axes, dev.buttons, dev.hats)
         if hash_value in vjoy_lookup:
             raise error.GremlinError(
-                "Indistinguishable vJoy devices present"
+                "Indistinguishable vJoy devices present.\n\n"
+                "vJoy devices have to differ in the number of "
+                "(at least one of) axis, buttons, or hats in order to work "
+                "properly with Joystick Gremlin."
             )
         vjoy_lookup[hash_value] = i
 
@@ -198,10 +201,11 @@ def joystick_devices():
 
             if hash_value not in vjoy_lookup:
                 raise error.GremlinError(
-                    "Unable to match vJoy device to windows device data"
+                    "Unable to match vJoy devices to windows devices."
                 )
-        except error.VJoyError:
-            pass
+        except error.VJoyError as e:
+            if e.value != "Requested vJoy device is not available":
+                raise error.GremlinError(e.value)
 
     # Reset all devices so we don't hog the ones we aren't actually using
     VJoyProxy.reset()

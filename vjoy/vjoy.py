@@ -546,9 +546,10 @@ class VJoy:
         hats = {}
         # We can't use discrete hats as such their existence is considered
         # an error
-        if VJoyInterface.GetVJDContPovNumber(self.vjoy_id) > 0:
-            error_msg = "vJoy configured incorrectly. Please ensure hats are " \
-                        "configured as 'Continuous' rather then '4 Directions'."
+        if VJoyInterface.GetVJDDiscPovNumber(self.vjoy_id) > 0:
+            error_msg = "vJoy is configured incorrectly. \n\n" \
+                    "Please ensure hats are configured as 'Continuous' " \
+                    "rather then '4 Directions'."
             logging.getLogger("system").error(error_msg)
             raise VJoyError(error_msg)
         # for hat_id in range(1, VJoyInterface.GetVJDDiscPovNumber(self.vjoy_id)+1):

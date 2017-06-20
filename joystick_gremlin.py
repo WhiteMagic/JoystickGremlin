@@ -1170,7 +1170,32 @@ if __name__ == "__main__":
 
     # Check if vJoy is properly setup and if not display an error
     # and terminate Gremlin
-    vjoy_working = len([dev for dev in gremlin.joystick_handling.joystick_devices() if dev.is_virtual]) != 0
+    try:
+        vjoy_working = len([
+            dev for dev in gremlin.joystick_handling.joystick_devices()
+            if dev.is_virtual
+        ]) != 0
+
+        if not vjoy_working:
+            logging.getLogger("system").error(
+                "vJoy is not present or incorrectly setup."
+            )
+            raise gremlin.error.GremlinError(
+                "vJoy is not present or incorrectly setup."
+            )
+
+    except gremlin.error.GremlinError as e:
+        error_display = QtWidgets.QMessageBox(
+            QtWidgets.QMessageBox.Critical,
+            "Error",
+            e.value,
+            QtWidgets.QMessageBox.Ok
+        )
+        error_display.show()
+        app.exec_()
+
+        gremlin.joystick_handling.VJoyProxy.reset()
+        sys.exit(0)
 
     # Setup device key generator based on whether or not we have
     # duplicate devices connected.
@@ -1180,20 +1205,16 @@ if __name__ == "__main__":
     gremlin.plugin_manager.ActionPlugins()
     gremlin.plugin_manager.ContainerPlugins()
 
-    if not vjoy_working:
-        gremlin.util.display_error(
-            "vJoy is not present or incorrectly setup, terminating."
-        )
-    else:
-        ui = GremlinUi()
-        ui.show()
+    # Create Gremlin UI
+    ui = GremlinUi()
+    ui.show()
 
-        # Handle user provided command line arguments
-        if args.profile is not None and os.path.isfile(args.profile):
-            ui._do_load_profile(args.profile)
-        if args.enable:
-            ui.ui.actionActivate.setChecked(True)
-            ui.activate(True)
+    # Handle user provided command line arguments
+    if args.profile is not None and os.path.isfile(args.profile):
+        ui._do_load_profile(args.profile)
+    if args.enable:
+        ui.ui.actionActivate.setChecked(True)
+        ui.activate(True)
 
     # Run UI
     app.exec_()
