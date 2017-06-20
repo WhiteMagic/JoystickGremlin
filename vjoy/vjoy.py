@@ -49,7 +49,7 @@ class HatType(enum.Enum):
     Continuous = 1
 
 
-class Axis(object):
+class Axis:
 
     """Represents an analog axis in vJoy, allows setting the value
     of the axis."""
@@ -181,8 +181,7 @@ class Axis(object):
         self.vjoy_dev.used()
 
 
-
-class Button(object):
+class Button:
 
     """Represents a button in vJoy, allows pressing and releasing it."""
 
@@ -223,7 +222,7 @@ class Button(object):
         self.vjoy_dev.used()
 
 
-class Hat(object):
+class Hat:
 
     """Represents a discrete hat in vJoy, allows setting the direction
     of the hat."""
@@ -321,7 +320,7 @@ class Hat(object):
             raise VJoyError("Failed to set hat direction")
 
 
-class VJoy(object):
+class VJoy:
 
     """Represents a vJoy device present in the system."""
 
