@@ -32,6 +32,9 @@ class InputItemConfiguration(QtWidgets.QFrame):
     input item such as an axis, button, hat, or key.
     """
 
+    # Signal emitted when the description changes
+    description_changed = QtCore.pyqtSignal(str)
+
     def __init__(self, vjoy_devices, item_data, parent=None):
         """Creates a new object instance.
 
@@ -206,6 +209,7 @@ class InputItemConfiguration(QtWidgets.QFrame):
 
     def _edit_description_cb(self, text):
         self.item_data.description = text
+        self.description_changed.emit(text)
 
     def _always_execute_cb(self, state):
         self.item_data.always_execute = self.always_execute.isChecked()
@@ -371,11 +375,14 @@ class DeviceTabWidget(QtWidgets.QWidget):
             self.vjoy_devices,
             item_data
         )
-        widget.action_model.data_changed.connect(
-            self.input_item_list_view.redraw
-        )
+        change_cb = self._create_change_cb(index)
+        widget.action_model.data_changed.connect(change_cb)
+        widget.description_changed.connect(change_cb)
 
         self.main_layout.addWidget(widget)
+
+    def _create_change_cb(self, index):
+        return lambda: self.input_item_list_view.redraw_index(index)
 
     def mode_changed_cb(self, mode):
         self.current_mode = mode

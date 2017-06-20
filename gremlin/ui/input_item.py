@@ -171,9 +171,19 @@ class InputItemListView(common.AbstractView):
             )
             widget = InputItemButton(label, identifier)
             widget.create_action_icons(data)
+            widget.update_description(data.description)
             widget.selected.connect(self._create_selection_callback(index))
             self.scroll_layout.addWidget(widget)
         self.scroll_layout.addStretch()
+
+    def redraw_index(self, index):
+        if self.model is None:
+            return
+
+        data = self.model.data(index)
+        widget = self.scroll_layout.itemAt(index).widget()
+        widget.create_action_icons(data)
+        widget.update_description(data.description)
 
     def _create_selection_callback(self, index):
         return lambda x: self.select_item(index)
@@ -216,15 +226,27 @@ class InputItemButton(QtWidgets.QFrame):
         QtWidgets.QFrame.__init__(self, parent)
         self.identifier = identifier
         self.label = str(label)
+
+        self._label_widget = QtWidgets.QLabel(self._create_button_label())
+        self._description_widget = QtWidgets.QLabel("")
+        self._icon_layout = QtWidgets.QHBoxLayout()
         self._icons = []
 
         self.setFrameShape(QtWidgets.QFrame.Box)
-        self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.addWidget(
-            QtWidgets.QLabel(self._create_button_label())
-        )
-        self.main_layout.addStretch(0)
+        self.main_layout = QtWidgets.QGridLayout(self)
+        self.main_layout.addWidget(self._label_widget, 0, 0)
+        self.main_layout.addWidget(self._description_widget, 0, 1)
+        self.main_layout.addLayout(self._icon_layout, 0, 2)
+        self.main_layout.setColumnMinimumWidth(0, 50)
+
         self.setMinimumSize(100, 40)
+
+    def update_description(self, description):
+        """Updates the description of the button.
+
+        :param description the description to use
+        """
+        self._description_widget.setText("<i>{}</i>".format(description))
 
     def create_action_icons(self, profile_data):
         """Creates the label of this instance.
@@ -235,18 +257,15 @@ class InputItemButton(QtWidgets.QFrame):
         :param profile_data the profile.InputItem object associated
             with this instance
         """
-        # Clear any potentially existing labels before adding labels
-        while self.main_layout.count() > 2:
-            item = self.main_layout.takeAt(2)
-            item.widget().deleteLater()
-            self.main_layout.removeItem(item)
+        common.clear_layout(self._icon_layout)
 
         # Create the actual icons
         # FIXME: this currently ignores the containers themselves
+        self._icon_layout.addStretch(1)
         for container in profile_data.containers:
             for action in container.actions:
                 if action is not None:
-                    self.main_layout.addWidget(ActionLabel(action))
+                    self._icon_layout.addWidget(ActionLabel(action))
 
     def mousePressEvent(self, event):
         """Emits the input_item_changed event when this instance is
