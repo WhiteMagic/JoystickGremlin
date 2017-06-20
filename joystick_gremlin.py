@@ -1207,7 +1207,6 @@ if __name__ == "__main__":
 
     # Create Gremlin UI
     ui = GremlinUi()
-    ui.show()
 
     # Handle user provided command line arguments
     if args.profile is not None and os.path.isfile(args.profile):
