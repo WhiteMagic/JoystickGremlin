@@ -129,6 +129,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
     def _parse_xml(self, node):
         self.actions = []
         super()._parse_xml(node)
+        self.delay = float(node.get("delay", 0.5))
 
     def _generate_xml(self):
         node = ElementTree.Element("container")
