@@ -108,8 +108,9 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             vjoy_dev_id,
             vjoy_input_id
         )
-        # FIXME: why is this needed?
-        # self.save_changes()
+
+        # Save changes so the UI updates properly
+        self.save_changes()
 
     def save_changes(self):
         # Store remap data
