@@ -53,6 +53,13 @@ def hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
 
 
+def remap_to_keyboard(event, value, condition, macro_press, macro_release):
+    if value.current:
+        macro.MacroManager().add_macro(macro_press, condition, event)
+    else:
+        macro.MacroManager().add_macro(macro_release, condition, event)
+
+
 def pause(event, value, condition):
     if value.current:
         control_action.pause()
@@ -174,6 +181,16 @@ class Factory:
                 vjoy_device_id,
                 vjoy_input_id,
             )
+
+    @staticmethod
+    def remap_to_keyboard(macro_press, macro_release):
+        return lambda event, value, condition: remap_to_keyboard(
+            event,
+            value,
+            condition,
+            macro_press,
+            macro_release
+        )
 
     @staticmethod
     def split_axis(split_fn):

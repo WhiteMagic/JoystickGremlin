@@ -1,8 +1,9 @@
-macro_${id} = gremlin.macro.Macro()
+macro_${id}_press = gremlin.macro.Macro()
 % for key in entry.keys:
-macro_${id}.action(gremlin.macro.key_from_code(${key[0]}, ${key[1]}), True)
+macro_${id}_press.action(gremlin.macro.key_from_code(${key[0]}, ${key[1]}), True)
 % endfor
-macro_${id}.pause(0.05)
+
+macro_${id}_release = gremlin.macro.Macro()
 % for key in entry.keys:
-macro_${id}.action(gremlin.macro.key_from_code(${key[0]}, ${key[1]}), False)
+macro_${id}_release.action(gremlin.macro.key_from_code(${key[0]}, ${key[1]}), False)
 % endfor

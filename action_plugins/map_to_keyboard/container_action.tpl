@@ -1,2 +1,2 @@
 <%namespace name="util" module="templates.functions"/>
-gremlin.actions.Factory.run_macro(macro_${id})
+gremlin.actions.Factory.remap_to_keyboard(macro_${id}_press, macro_${id}_release)
