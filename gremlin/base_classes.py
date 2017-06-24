@@ -204,7 +204,7 @@ class AbstractContainer(profile.ProfileData):
     def create_or_delete_activation_condition(self):
         """Creates activation condition data as required."""
         need_activation_condition = any(
-            [a.requires_activation_condition() for a in self.actions]
+            [a.requires_activation_condition() for a in self.actions if a is not None]
         )
 
         if need_activation_condition:
