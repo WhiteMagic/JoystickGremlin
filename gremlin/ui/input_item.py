@@ -127,6 +127,9 @@ class InputItemListView(common.AbstractView):
             InputType.Keyboard
         ]
 
+        # Storage for the currently selected index
+        self.current_index = None
+
         # Create required UI items
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.scroll_area = QtWidgets.QScrollArea()
@@ -164,6 +167,9 @@ class InputItemListView(common.AbstractView):
             if data.input_type not in self.shown_input_types:
                 continue
             label = str(data.input_id)
+            if data.input_type == gremlin.common.InputType.Keyboard:
+                key = gremlin.macro.key_from_code(*data.input_id)
+                label = key.name.capitalize()
             identifier = InputIdentifier(
                 data.input_type,
                 data.input_id,
@@ -188,9 +194,10 @@ class InputItemListView(common.AbstractView):
     def _create_selection_callback(self, index):
         return lambda x: self.select_item(index)
 
-    def select_item(self, index):
+    def select_item(self, index, emit_signal=True):
         if isinstance(index, gremlin.event_handler.Event):
             index = self.model.event_to_index(index)
+        self.current_index = index
 
         for i in range(self.scroll_layout.count()):
             item = self.scroll_layout.itemAt(i)
@@ -202,7 +209,8 @@ class InputItemListView(common.AbstractView):
                 item.widget().setAutoFillBackground(True)
                 item.widget().setPalette(palette)
 
-        self.item_selected.emit(index)
+        if emit_signal:
+            self.item_selected.emit(index)
 
 
 class InputItemButton(QtWidgets.QFrame):

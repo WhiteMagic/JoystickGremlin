@@ -24,7 +24,7 @@ input_type_to_name = {
     gremlin.common.InputType.JoystickAxis: "Axis",
     gremlin.common.InputType.JoystickButton: "Button",
     gremlin.common.InputType.JoystickHat: "Hat",
-    gremlin.common.InputType.Keyboard: "Button",
+    gremlin.common.InputType.Keyboard: "",
 }
 name_to_input_type = {
     "Axis": gremlin.common.InputType.JoystickAxis,

@@ -71,7 +71,6 @@ class InputItemConfiguration(QtWidgets.QFrame):
         container.add_action(
             plugin_manager.get_class(action_name)(container)
         )
-        # container.closed.connect(lambda: self._remove_container(container))
         self.action_model.add_container(container)
 
     def _add_container(self, container_name):
@@ -227,7 +226,7 @@ class ActionContainerView(common.AbstractView):
         return lambda: self.model.remove_container(widget.profile_data)
 
 
-class DeviceTabWidget(QtWidgets.QWidget):
+class JoystickDeviceTabWidget(QtWidgets.QWidget):
 
     """Widget used to configure a single device."""
 
@@ -257,6 +256,7 @@ class DeviceTabWidget(QtWidgets.QWidget):
         self.device = device
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.left_panel_layout = QtWidgets.QVBoxLayout()
         self.device_profile.ensure_mode_exists(self.current_mode, self.device)
 
         # List of inputs
@@ -265,10 +265,13 @@ class DeviceTabWidget(QtWidgets.QWidget):
             current_mode
         )
         self.input_item_list_view = input_item.InputItemListView()
+
+        # Input type specific setups
         # Only show axis values for vJoy devices
         if device is not None and device.hardware_id == 305446573:
             self.input_item_list_view.limit_input_types([InputType.JoystickAxis])
         self.input_item_list_view.set_model(self.input_item_list_model)
+
         # TODO: make this saner
         self.input_item_list_view.redraw()
 
@@ -276,7 +279,9 @@ class DeviceTabWidget(QtWidgets.QWidget):
         self.input_item_list_view.item_selected.connect(
             self.input_item_selected_cb
         )
-        self.main_layout.addWidget(self.input_item_list_view)
+
+        self.left_panel_layout.addWidget(self.input_item_list_view)
+        self.main_layout.addLayout(self.left_panel_layout)
 
     def input_item_selected_cb(self, index):
         item_data = input_item_index_lookup(
@@ -307,6 +312,167 @@ class DeviceTabWidget(QtWidgets.QWidget):
     def mode_changed_cb(self, mode):
         self.current_mode = mode
         self.device_profile.ensure_mode_exists(self.current_mode, self.device)
+        self.input_item_list_model.mode = mode
+
+        # Remove the existing widget, if there is one
+        item = self.main_layout.takeAt(1)
+        if item is not None and item.widget():
+            item.widget().hide()
+            item.widget().deleteLater()
+        self.main_layout.removeItem(item)
+
+
+class KeyboardDeviceTabWidget(QtWidgets.QWidget):
+
+    """Widget used to configure a single device."""
+
+    def __init__(
+            self,
+            vjoy_devices,
+            device_profile,
+            current_mode,
+            parent=None
+    ):
+        """Creates a new object instance.
+
+        :param vjoy_devices list of vJoy devices
+        :param device_profile profile data of the entire device
+        :param current_mode currently active mode
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+
+        # Store parameters
+        self.device_profile = device_profile
+        self.current_mode = current_mode
+
+        self.vjoy_devices = vjoy_devices
+
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.left_panel_layout = QtWidgets.QVBoxLayout()
+        self.device_profile.ensure_mode_exists(self.current_mode)
+        self.widget_storage = {}
+
+        # List of inputs
+        self.input_item_list_model = input_item.InputItemListModel(
+            device_profile,
+            current_mode
+        )
+        self.input_item_list_view = input_item.InputItemListView()
+
+        # Input type specific setups
+        self.input_item_list_view.set_model(self.input_item_list_model)
+
+        # TODO: make this saner
+        self.input_item_list_view.redraw()
+
+        # Handle user interaction
+        self.input_item_list_view.item_selected.connect(
+            self.input_item_selected_cb
+        )
+
+        self.left_panel_layout.addWidget(self.input_item_list_view)
+        self.main_layout.addLayout(self.left_panel_layout)
+
+        # Key add button
+        button = common.NoKeyboardPushButton("Add Key")
+        button.clicked.connect(self._record_keyboard_key_cb)
+        self.left_panel_layout.addWidget(button)
+
+    def input_item_selected_cb(self, index):
+        # Assumption is that the entries are sorted by their scancode and
+        # extended flag identification
+        sorted_keys = sorted(
+            self.device_profile.modes[self.current_mode].config[InputType.Keyboard]
+        )
+        index_key = sorted_keys[index]
+        item_data = self.device_profile.modes[self.current_mode]. \
+            config[InputType.Keyboard][index_key]
+
+        # Remove the existing widget, if there is one
+        item = self.main_layout.takeAt(1)
+        if item is not None and item.widget():
+            item.widget().hide()
+            item.widget().deleteLater()
+        self.main_layout.removeItem(item)
+
+        # Create new configuration widget
+        widget = InputItemConfiguration(
+            self.vjoy_devices,
+            item_data
+        )
+        change_cb = self._create_change_cb(index)
+        widget.action_model.data_changed.connect(change_cb)
+        widget.description_changed.connect(change_cb)
+
+        self.main_layout.addWidget(widget)
+
+        # Remove any, non selected, invalid input items
+        for i, key in enumerate(sorted_keys):
+            if i == index:
+                continue
+            data = self.device_profile.modes[self.current_mode]. \
+                config[InputType.Keyboard][key]
+            is_valid = False
+            for container in data.containers:
+                is_valid = True if container.is_valid() else is_valid
+            if not is_valid:
+                self.device_profile.modes[self.current_mode].delete_data(
+                    InputType.Keyboard,
+                    key
+                )
+
+        # Refresh item list view and select correct entry
+        self.input_item_list_view.redraw()
+        self.input_item_list_view.select_item(
+            self._index_for_key(index_key),
+            False
+        )
+
+    def _record_keyboard_key_cb(self):
+        self.button_press_dialog = common.InputListenerWidget(
+            self._add_keyboard_key_cb,
+            [gremlin.common.InputType.Keyboard],
+            return_kb_event=False,
+            multi_keys=False
+        )
+
+        # Display the dialog centered in the middle of the UI
+        root = self
+        while root.parent():
+            root = root.parent()
+        geom = root.geometry()
+
+        self.button_press_dialog.setGeometry(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+            300,
+            150
+        )
+        self.button_press_dialog.show()
+
+    def _add_keyboard_key_cb(self, key):
+        self.device_profile.modes[self.current_mode].get_data(
+                gremlin.common.InputType.Keyboard,
+                (key.scan_code, key.is_extended)
+        )
+        self.input_item_list_view.redraw()
+        self.input_item_list_view.select_item(
+            self._index_for_key((key.scan_code, key.is_extended)),
+            True
+        )
+
+    def _index_for_key(self, key):
+        mode = self.device_profile.modes[self.current_mode]
+        sorted_keys = sorted(mode.config[InputType.Keyboard])
+        return sorted_keys.index(key)
+
+    def _create_change_cb(self, index):
+        return lambda: self.input_item_list_view.redraw_index(index)
+
+    def mode_changed_cb(self, mode):
+        self.current_mode = mode
+        self.device_profile.ensure_mode_exists(self.current_mode)
         self.input_item_list_model.mode = mode
 
         # Remove the existing widget, if there is one

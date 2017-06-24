@@ -590,7 +590,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device.name
             )
 
-            widget = gremlin.ui.device_tab.DeviceTabWidget(
+            widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
                 vjoy_devices,
                 device,
                 device_profile,
@@ -609,9 +609,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             gremlin.profile.DeviceType.Keyboard,
             "keyboard"
         )
-        widget = gremlin.ui.device_tab.DeviceTabWidget(
+        widget = gremlin.ui.device_tab.KeyboardDeviceTabWidget(
             vjoy_devices,
-            None,
             device_profile,
             self._current_mode
         )
@@ -626,7 +625,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device.name
             )
 
-            widget = gremlin.ui.device_tab.DeviceTabWidget(
+            widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
                 vjoy_devices,
                 device,
                 device_profile,
