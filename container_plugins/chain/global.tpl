@@ -5,5 +5,6 @@ action_${id} = gremlin.actions.Chain(
         ${util.indent(action.to_code().container_action, 8, ",")}
 % endfor
     ],
-    ${util.indent(util.condition(entry.activation_condition), 4, "")}
+    ${util.indent(util.condition(entry.activation_condition), 4, "")},
+    ${entry.timeout}
 )

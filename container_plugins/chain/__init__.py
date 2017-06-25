@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from PyQt5 import QtWidgets
+
 from xml.etree import ElementTree
 
 from mako.template import Template
@@ -29,12 +31,28 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         super().__init__(profile_data, parent)
 
     def _create_ui(self):
+        self.widget_layout = QtWidgets.QHBoxLayout()
+
         self.action_selector = gremlin.ui.common.ActionSelector(
             self.profile_data.get_input_type()
         )
         self.action_selector.action_added.connect(self._add_action)
-        self.main_layout.addWidget(self.action_selector)
+        self.widget_layout.addWidget(self.action_selector)
 
+        self.widget_layout.addStretch(1)
+
+        self.widget_layout.addWidget(QtWidgets.QLabel("<b>Timeout:</b> "))
+        self.timeout_input = QtWidgets.QDoubleSpinBox()
+        self.timeout_input.setRange(0.0, 3600.0)
+        self.timeout_input.setSingleStep(0.5)
+        self.timeout_input.setValue(0)
+        self.timeout_input.setValue(self.profile_data.timeout)
+        self.timeout_input.valueChanged.connect(self._timeout_changed_cb)
+        self.widget_layout.addWidget(self.timeout_input)
+
+        self.main_layout.addLayout(self.widget_layout)
+
+        # Insert action widgets
         for i, action in enumerate(self.profile_data.actions):
             self.main_layout.addWidget(
                 self._add_action_widget(
@@ -48,6 +66,9 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         action_item = plugin_manager.get_class(action_name)(self.profile_data)
         self.profile_data.add_action(action_item)
         self.modified.emit()
+
+    def _timeout_changed_cb(self, value):
+        self.profile_data.timeout = value
 
     def _handle_interaction(self, widget, action):
         # Find the index of the widget that gets modified
@@ -94,13 +115,15 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.timeout = 0.0
 
     def _parse_xml(self, node):
-        pass
+        self.timeout = float(node.get("timeout", 0.0))
 
     def _generate_xml(self):
         node = ElementTree.Element("container")
         node.set("type", ChainContainer.tag)
+        node.set("timeout", str(self.timeout))
         for action in self.actions:
             node.append(action.to_xml())
         return node
