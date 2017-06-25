@@ -734,7 +734,7 @@ def key_from_code(scan_code, is_extended):
         )
         raise gremlin.error.KeyboardError(
             "Invalid scan code specified ({}, {})".format(
-                scan_code, is_extended
+                    scan_code, is_extended
             )
         )
     else:

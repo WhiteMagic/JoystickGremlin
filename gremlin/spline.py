@@ -41,6 +41,8 @@ class CubicSpline(object):
 
     def _fit(self):
         """Computes the second derivatives for the control points."""
+        # FIXME: if handles are colinear along the y axis this results in a
+        #   division by 0 exception
         n = len(self.x)-1
 
         if n < 2:

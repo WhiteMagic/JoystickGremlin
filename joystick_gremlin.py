@@ -33,7 +33,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
 import sdl2.hints
 
-#import gremlin
 import gremlin.ui.axis_calibration
 import gremlin.ui.common
 import gremlin.ui.device_tab
