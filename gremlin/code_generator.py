@@ -179,7 +179,11 @@ class CodeGeneratorV2:
         mode = input_item.parent
         device_id = util.device_id(mode.parent)
 
-        # Abort if there are no actions associated with this item
+        # Discard any container that is not valid, i.e. contains not enough
+        # or invalid actions.
+        input_item.containers = [c for c in input_item.containers if c.is_valid()]
+
+        # Abort if there are no valid actions associated with this item
         if len(input_item.containers) == 0:
             return
 
