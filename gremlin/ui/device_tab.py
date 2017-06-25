@@ -265,6 +265,7 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             current_mode
         )
         self.input_item_list_view = input_item.InputItemListView()
+        self.input_item_list_view.setMinimumWidth(350)
 
         # Input type specific setups
         # Only show axis values for vJoy devices
@@ -282,6 +283,9 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
 
         self.left_panel_layout.addWidget(self.input_item_list_view)
         self.main_layout.addLayout(self.left_panel_layout)
+
+        # Select first entry by default
+        self.input_item_selected_cb(0)
 
     def input_item_selected_cb(self, index):
         item_data = input_item_index_lookup(
@@ -359,6 +363,7 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
             current_mode
         )
         self.input_item_list_view = input_item.InputItemListView()
+        self.input_item_list_view.setMinimumWidth(350)
 
         # Input type specific setups
         self.input_item_list_view.set_model(self.input_item_list_model)
@@ -379,12 +384,17 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         button.clicked.connect(self._record_keyboard_key_cb)
         self.left_panel_layout.addWidget(button)
 
+        # Select first entry by default
+        self.input_item_selected_cb(0)
+
     def input_item_selected_cb(self, index):
         # Assumption is that the entries are sorted by their scancode and
         # extended flag identification
         sorted_keys = sorted(
             self.device_profile.modes[self.current_mode].config[InputType.Keyboard]
         )
+        if len(sorted_keys) <= index:
+            return
         index_key = sorted_keys[index]
         item_data = self.device_profile.modes[self.current_mode]. \
             config[InputType.Keyboard][index_key]

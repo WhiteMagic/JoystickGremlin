@@ -137,15 +137,9 @@ class InputItemListView(common.AbstractView):
         self.scroll_layout = QtWidgets.QVBoxLayout()
 
         # Configure the widget holding the layout with all the buttons
-        self.scroll_widget.setMaximumWidth(350)
         self.scroll_widget.setLayout(self.scroll_layout)
-        self.scroll_widget.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Expanding
-        )
 
         # Configure the scroll area
-        self.scroll_area.setMinimumWidth(300)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
 
@@ -247,7 +241,7 @@ class InputItemButton(QtWidgets.QFrame):
         self.main_layout.addLayout(self._icon_layout, 0, 2)
         self.main_layout.setColumnMinimumWidth(0, 50)
 
-        self.setMinimumSize(100, 40)
+        self.setMinimumWidth(300)
 
     def update_description(self, description):
         """Updates the description of the button.
