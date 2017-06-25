@@ -360,7 +360,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         profile.
         """
         # generator = CodeGenerator(self._profile)
-        generator = gremlin.code_generator.CodeGeneratorV2(self._profile)
+        generator = gremlin.code_generator.CodeGenerator(self._profile)
         generator.write_code(
             os.path.join(
                 gremlin.util.userprofile_path(),

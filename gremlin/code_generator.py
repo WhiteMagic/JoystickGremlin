@@ -105,7 +105,7 @@ def input_item_identifier_string(input_item):
         return ""
 
 
-class CodeGeneratorV2:
+class CodeGenerator:
 
     def __init__(self, config_profile):
         self.decorators = {}
