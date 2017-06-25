@@ -5,6 +5,6 @@ action_${id} = gremlin.actions.Tempo(
         ${util.indent(action.to_code().container_action, 8, ",")}
 % endfor
     ],
-    ${entry.delay},
-    ${util.indent(util.condition(entry.activation_condition), 4, "")}
+    ${util.indent(util.condition(entry.activation_condition), 4, "")},
+    ${entry.delay}
 )

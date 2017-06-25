@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
+import logging
+import threading
 import time
 
 from . import common, control_action, error, fsm, input_devices, joystick_handling, macro, tts
@@ -34,6 +37,7 @@ def axis_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
 
 
 def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+    print(event.is_pressed)
     if event.is_pressed:
         input_devices.AutomaticButtonRelease().register(
             (vjoy_device_id, vjoy_input_id), event
@@ -414,19 +418,52 @@ class Basic(AbstractActionContainer):
 
 class Tempo(AbstractActionContainer):
 
+    # This entire container only makes sense for button like inputs
+
     def __init__(self, actions, activation_condition, duration):
         super().__init__(actions, activation_condition)
         self.duration = duration
         self.start_time = 0
+        self.timer = None
+        self.value_press = None
+        self.event_press = None
 
     def _execute_call(self, event, value):
+        # Has to change and use timers internally probably
+        # 1. both press and release have to be sent for some actions, such
+        #   as macro or remap
+        # 2. want to be able to do things where long is being held down and
+        #   start doing it as soon as the delay has expired
+
+        if isinstance(value.current, bool) and value.current:
+            self.value_press = copy.deepcopy(value)
+            self.event_press = event.clone()
+
         if value.current:
             self.start_time = time.time()
+            self.timer = threading.Timer(self.duration, self._long_press)
+            self.timer.start()
         else:
             if (self.start_time + self.duration) > time.time():
+                self.timer.cancel()
+                self.actions[0](
+                    self.event_press,
+                    self.value_press,
+                    self.activation_condition
+                )
+                time.sleep(0.1)
                 self.actions[0](event, value, self.activation_condition)
             else:
                 self.actions[1](event, value, self.activation_condition)
+
+            self.timer = None
+
+    def _long_press(self):
+        self.actions[1](
+            self.event_press,
+            self.value_press,
+            self.activation_condition
+        )
 
 
 class Chain(AbstractActionContainer):
@@ -436,17 +473,51 @@ class Chain(AbstractActionContainer):
         self.index = 0
         self.timeout = timeout
         self.last_execution = 0.0
+        self.last_value = None
 
     def _execute_call(self, event, value):
-        # FIXME: reset via timeout not yet implemented
         if self.timeout > 0.0:
             if self.last_execution + self.timeout < time.time():
                 self.index = 0
                 self.last_execution = time.time()
 
+        # TODO: This behaves somewhat odd with hats and axes. Axes do nothing
+        #   as they make no sense while hats only switch to the next element
+        #   if the hat is let go.
+
+        # FIXME: Currently this allows the use of "hat as button" and
+        #   "hat as hat" in the same chain which is entirely useless and
+        #   shouldn't be done but can't truly be prevented.
+
+        # FIXME: Currently this behaves oddly with axis macros due to them only
+        #   entering this section when the "button" is pressed and not on
+        #   release.
+
+        # Execute action
         self.actions[self.index](event, value, self.activation_condition)
-        if not value.current:
-            self.index = (self.index + 1) % len(self.actions)
+
+        # Decide how to switch to next action
+        if event.event_type in [
+            common.InputType.JoystickAxis,
+            common.InputType.JoystickHat
+        ]:
+            if self.activation_condition is not None:
+                if not value.current:
+                    self.index = (self.index + 1) % len(self.actions)
+            else:
+                if event.event_type == common.InputType.JoystickHat:
+                    if event.value == (0, 0):
+                        self.index = (self.index + 1) % len(self.actions)
+                    self.last_value = event.value
+                else:
+                    logging.getLogger("system").warning(
+                        "Trying to use chain container with an axis, this is "
+                        "not a sensible thing."
+                    )
+                    return
+        else:
+            if not value.current:
+                self.index = (self.index + 1) % len(self.actions)
 
 
 class SmartToggle(AbstractActionContainer):
