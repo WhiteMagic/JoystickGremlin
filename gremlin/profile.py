@@ -333,6 +333,10 @@ class ProfileConverter:
         
         The following operations are performed in this conversion:
         - embed all actions in individual BasicContainer containers
+        - remove button and keyboard conditions
+        - move hat and axis condition from actions to containers
+        - replace double macros for keyboard remaps with the new map to
+          keyboard action
         
         :param root the v3 profile
         :return v4 representation of the profile
@@ -341,11 +345,71 @@ class ProfileConverter:
         new_root.set("version", "4")
         for mode in new_root.iter("mode"):
             for input_item in mode:
+
+                # Wrap each existing action into a basic container
                 containers = []
                 items_to_remove = []
                 for action in input_item:
                     container = ElementTree.Element("container")
                     container.set("type", "basic")
+
+                    # Move conditions to the container and remove them from
+                    # the action
+                    if input_item.tag == "axis":
+                        copy_condition = False
+                        if action.tag == "remap":
+                            if "button" in action.keys() or "hat" in action.keys():
+                                copy_condition = True
+                            else:
+                                print("ASd")
+                        elif action.tag == "response-curve":
+                            pass
+                        else:
+                            copy_condition = True
+                        if copy_condition:
+                            cond = ElementTree.Element("activation-condition")
+                            cond.set("lower-limit", action.get("lower-limit"))
+                            cond.set("upper-limit", action.get("upper-limit"))
+                            container.append(cond)
+                        del action.attrib["lower-limit"]
+                        del action.attrib["upper-limit"]
+                        del action.attrib["is-active"]
+                    elif input_item.tag == "button":
+                        del action.attrib["on-press"]
+                        del action.attrib["on-release"]
+                    elif input_item.tag == "hat":
+                        if "on-n" in action.keys():
+                            cond = ElementTree.Element("activation-condition")
+                            keys = [
+                                ("on-n", "north"),
+                                ("on-ne", "north-east"),
+                                ("on-e", "east"),
+                                ("on-se", "south-east"),
+                                ("on-s", "south"),
+                                ("on-sw", "south-west"),
+                                ("on-w", "west"),
+                                ("on-nw", "north-west")
+                            ]
+                            for names in keys:
+                                if action.get(names[0]) == "True":
+                                    cond.set(names[1], "True")
+                                del action.attrib[names[0]]
+                            container.append(cond)
+
+                    # Macro actions have changed, update their layout
+                    if action.tag == "macro":
+                        actions_node = ElementTree.Element("actions")
+                        remove_key_nodes = []
+                        for key_node in action:
+                            actions_node.append(key_node)
+                            remove_key_nodes.append(key_node)
+
+                        for key_node in remove_key_nodes:
+                            action.remove(key_node)
+
+                        action.append(actions_node)
+                        action.append(ElementTree.Element("properties"))
+
                     container.append(action)
                     containers.append(container)
                     items_to_remove.append(action)
