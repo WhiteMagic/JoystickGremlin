@@ -15,28 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gremlin.actions
-import gremlin.base_classes
-import gremlin.code_generator
-import gremlin.code_runner
-import gremlin.common
-import gremlin.config
-import gremlin.control_action
-import gremlin.documenter
-import gremlin.error
-import gremlin.event_handler
-import gremlin.fsm
-import gremlin.hints
-import gremlin.input_devices
-import gremlin.joystick_handling
-import gremlin.keyboard_hook
-import gremlin.macro
-import gremlin.plugin_manager
-import gremlin.process_monitor
-import gremlin.profile
-import gremlin.profile_creator
-import gremlin.repeater
-import gremlin.shared_state
-import gremlin.spline
-import gremlin.tts
-import gremlin.util
+import csv
+
+hint = {}
+
+with open("doc/hints.csv") as csv_stream:
+    reader = csv.reader(csv_stream, delimiter=",", quotechar="\"")
+    for row in reader:
+        hint[row[0]] = row[1]

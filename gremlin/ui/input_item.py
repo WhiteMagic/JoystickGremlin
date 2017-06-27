@@ -555,4 +555,14 @@ class ActionWrapper(QtWidgets.QGroupBox):
             )
             self.controls_layout.addWidget(self.control_edit)
 
-        self.controls_layout.addStretch()
+        self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
+        self.help_button.clicked.connect(self._show_hint)
+        self.controls_layout.addWidget(self.help_button)
+
+        self.controls_layout.addStretch(1)
+
+    def _show_hint(self):
+        QtWidgets.QWhatsThis.showText(
+            self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
+            gremlin.hints.hint.get(self.action_widget.action_data.tag, "")
+        )

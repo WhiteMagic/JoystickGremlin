@@ -70,6 +70,10 @@ class AxisActivationConditionWidget(AbstractActivationConditionWidget):
         self.range_layout.addWidget(self.upper_limit)
         self.range_layout.addStretch(1)
 
+        self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
+        self.help_button.clicked.connect(self._show_hint)
+        self.range_layout.addWidget(self.help_button)
+
         self.main_layout.addLayout(self.range_layout)
 
         self.lower_limit.valueChanged.connect(self._lower_limit_cb)
@@ -86,6 +90,12 @@ class AxisActivationConditionWidget(AbstractActivationConditionWidget):
     def _upper_limit_cb(self, value):
         self.condition_data.upper_limit = value
         self.modified.emit()
+
+    def _show_hint(self):
+        QtWidgets.QWhatsThis.showText(
+            self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
+            gremlin.hints.hint.get("axis-condition", "")
+        )
 
 
 class HatActivationConditionWidget(AbstractActivationConditionWidget):
@@ -106,6 +116,10 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
             self.main_layout.addWidget(self._widgets[dir])
 
         self.main_layout.addStretch(1)
+
+        self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
+        self.help_button.clicked.connect(self._show_hint)
+        self.main_layout.addWidget(self.help_button)
 
     def _populate_ui(self):
         direction_map = {
@@ -144,3 +158,9 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
 
     def _create_state_changed_cb(self, direction):
         return lambda x: self._state_changed(direction, x)
+
+    def _show_hint(self):
+        QtWidgets.QWhatsThis.showText(
+            self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
+            gremlin.hints.hint.get("hat-condition", "")
+        )

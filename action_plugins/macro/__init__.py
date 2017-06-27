@@ -700,14 +700,6 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         """Creates the UI of this widget."""
         self.model = MacroListModel(self.action_data.sequence)
 
-        # HBox holing the two main parts
-        # 1. action list
-        #    - fixed size the rest takes as much space as it can
-        # 2. editor and modes
-        # VBox for the 2. ui components
-        # 1. action editor
-        # 2. mode configuration
-
         # Replace the default vertical with a horizontal layout
         QtWidgets.QWidget().setLayout(self.layout())
         self.main_layout = QtWidgets.QHBoxLayout(self)
@@ -734,11 +726,13 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.button_new_entry = QtWidgets.QPushButton(
             QtGui.QIcon("gfx/list_add"), ""
         )
+        self.button_new_entry.setToolTip("Add a new action")
         self.button_new_entry.clicked.connect(self._pause_cb)
         self.button_delete = QtWidgets.QPushButton(
             QtGui.QIcon("gfx/list_delete"), ""
         )
         self.button_delete.clicked.connect(self._delete_cb)
+        self.button_delete.setToolTip("Delete currently selected entry")
         record_icon = QtGui.QIcon()
         record_icon.addPixmap(
             QtGui.QPixmap("{}/macro_record".format(MacroWidget.gfx_path)),
@@ -753,10 +747,15 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.button_record = NoKeyboardPushButton(record_icon, "")
         self.button_record.setCheckable(True)
         self.button_record.clicked.connect(self._record_cb)
+        self.button_record.setToolTip("Start / stop recording keyboard input")
         self.button_pause = QtWidgets.QPushButton(
             QtGui.QIcon("{}/macro_add_pause".format(MacroWidget.gfx_path)), ""
         )
         self.button_pause.clicked.connect(self._pause_cb)
+        self.button_pause.setToolTip(
+            "Add pause after the currently selected entry"
+        )
+
         self.buttons_layout.addWidget(self.button_new_entry)
         self.buttons_layout.addWidget(self.button_delete)
         self.buttons_layout.addWidget(self.button_record)
