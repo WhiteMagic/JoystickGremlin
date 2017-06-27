@@ -90,7 +90,7 @@ class HatActivationCondition(AbstractActivationCondition):
     def from_xml(self, node):
         for key, value in node.items():
             if key in HatActivationCondition.name_to_direction and \
-                            int(value) == 1:
+                            profile.parse_bool(value):
                 self.directions.append(key)
 
     def to_xml(self):
