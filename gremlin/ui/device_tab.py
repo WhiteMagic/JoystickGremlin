@@ -282,6 +282,21 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         )
 
         self.left_panel_layout.addWidget(self.input_item_list_view)
+
+        # Add a help text for the purpose of the vJoy tab
+        if device is not None and device.hardware_id == 305446573:
+            label = QtWidgets.QLabel(
+                "This tab allows assigning a response curve to virtual axis. "
+                "The purpose of this is to enable split and merge axis to be "
+                "customized to a user's needs with regards to dead zone and "
+                "response curve."
+            )
+            label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+            label.setWordWrap(True)
+            label.setFrameShape(QtWidgets.QFrame.Box)
+            label.setMargin(10)
+            self.left_panel_layout.addWidget(label)
+
         self.main_layout.addLayout(self.left_panel_layout)
 
         # Select first entry by default

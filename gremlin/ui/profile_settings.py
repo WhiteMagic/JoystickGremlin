@@ -63,6 +63,16 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
 
         self.main_layout.addStretch(1)
 
+        label = QtWidgets.QLabel(
+            "This tab allows setting default initialization of vJoy axis "
+            "values. These values  will be used when activating Gremlin."
+        )
+        label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+        label.setWordWrap(True)
+        label.setFrameShape(QtWidgets.QFrame.Box)
+        label.setMargin(10)
+        self.main_layout.addWidget(label)
+
 
 class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
 
