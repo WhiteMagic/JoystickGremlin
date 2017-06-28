@@ -163,7 +163,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def about(self):
         """Opens the about window."""
-        self.modal_windows["about"] = gremlin.ui_dialogs.AboutUi()
+        self.modal_windows["about"] = gremlin.ui.dialogs.AboutUi()
         self.modal_windows["about"].show()
         self.modal_windows["about"].closed.connect(
             lambda: self._remove_modal_window("about")
