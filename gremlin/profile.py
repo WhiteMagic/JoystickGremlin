@@ -346,81 +346,127 @@ class ProfileConverter:
         for mode in new_root.iter("mode"):
             for input_item in mode:
 
-                # Wrap each existing action into a basic container
-                containers = []
-                items_to_remove = []
+                # Check if macros are used to create what is now a
+                # "map to keyboard" action
+                press_and_release = [False, False]
+                count = sum([1 for v in input_item])
                 for action in input_item:
+                    if input_item.tag == "button":
+                        if action.tag == "macro":
+                            if "on-press" in action.keys():
+                                press_and_release[0] = press_and_release[0] or \
+                                    parse_bool(action.get("on-press"))
+                            if "on-release" in action.keys():
+                                press_and_release[1] = press_and_release[1] or \
+                                    parse_bool(action.get("on-release"))
+
+                # If this widget is purely a map to keyboard action then
+                # replace the two macro widgets with a single one
+                if count == 2 and all(press_and_release):
                     container = ElementTree.Element("container")
                     container.set("type", "basic")
 
-                    # Move conditions to the container and remove them from
-                    # the action
-                    if input_item.tag == "axis":
-                        copy_condition = False
-                        if action.tag == "remap":
-                            if "button" in action.keys() or "hat" in action.keys():
-                                copy_condition = True
-                            else:
-                                print("ASd")
-                        elif action.tag == "response-curve":
-                            pass
-                        else:
-                            copy_condition = True
-                        if copy_condition:
-                            cond = ElementTree.Element("activation-condition")
-                            cond.set("lower-limit", action.get("lower-limit"))
-                            cond.set("upper-limit", action.get("upper-limit"))
-                            container.append(cond)
-                        del action.attrib["lower-limit"]
-                        del action.attrib["upper-limit"]
-                        del action.attrib["is-active"]
-                    elif input_item.tag == "button":
-                        del action.attrib["on-press"]
-                        del action.attrib["on-release"]
-                    elif input_item.tag == "hat":
-                        if "on-n" in action.keys():
-                            cond = ElementTree.Element("activation-condition")
-                            keys = [
-                                ("on-n", "north"),
-                                ("on-ne", "north-east"),
-                                ("on-e", "east"),
-                                ("on-se", "south-east"),
-                                ("on-s", "south"),
-                                ("on-sw", "south-west"),
-                                ("on-w", "west"),
-                                ("on-nw", "north-west")
-                            ]
-                            for names in keys:
-                                if action.get(names[0]) == "True":
-                                    cond.set(names[1], "True")
-                                del action.attrib[names[0]]
-                            container.append(cond)
-
-                    # Macro actions have changed, update their layout
-                    if action.tag == "macro":
-                        actions_node = ElementTree.Element("actions")
-                        remove_key_nodes = []
-                        for key_node in action:
-                            actions_node.append(key_node)
-                            remove_key_nodes.append(key_node)
-
-                        for key_node in remove_key_nodes:
-                            action.remove(key_node)
-
-                        action.append(actions_node)
-                        action.append(ElementTree.Element("properties"))
-
-                    container.append(action)
-                    containers.append(container)
-                    items_to_remove.append(action)
-
-                for action in items_to_remove:
-                    input_item.remove(action)
-
-                for container in containers:
+                    container.append(
+                        self._p3_extract_map_to_keyboard(input_item)
+                    )
+                    for action in input_item[:]:
+                        input_item.remove(action)
                     input_item.append(container)
 
+                # The item contains a variety of actions simply convert one
+                # after the other
+                else:
+                    # Wrap each existing action into a basic container
+                    containers = []
+                    items_to_remove = []
+                    for action in input_item:
+                        container = ElementTree.Element("container")
+                        container.set("type", "basic")
+
+                        # Move conditions to the container and remove them from
+                        # the action
+                        if input_item.tag == "axis":
+                            copy_condition = False
+                            if action.tag == "remap":
+                                if "button" in action.keys() or "hat" in action.keys():
+                                    copy_condition = True
+                                else:
+                                    print("ASd")
+                            elif action.tag == "response-curve":
+                                pass
+                            else:
+                                copy_condition = True
+                            if copy_condition:
+                                cond = ElementTree.Element("activation-condition")
+                                cond.set("lower-limit", action.get("lower-limit"))
+                                cond.set("upper-limit", action.get("upper-limit"))
+                                container.append(cond)
+                            del action.attrib["lower-limit"]
+                            del action.attrib["upper-limit"]
+                            del action.attrib["is-active"]
+                        elif input_item.tag == "button":
+                            del action.attrib["on-press"]
+                            del action.attrib["on-release"]
+                        elif input_item.tag == "hat":
+                            if "on-n" in action.keys():
+                                cond = ElementTree.Element("activation-condition")
+                                keys = [
+                                    ("on-n", "north"),
+                                    ("on-ne", "north-east"),
+                                    ("on-e", "east"),
+                                    ("on-se", "south-east"),
+                                    ("on-s", "south"),
+                                    ("on-sw", "south-west"),
+                                    ("on-w", "west"),
+                                    ("on-nw", "north-west")
+                                ]
+                                for names in keys:
+                                    if action.get(names[0]) == "True":
+                                        cond.set(names[1], "True")
+                                    del action.attrib[names[0]]
+                                container.append(cond)
+
+                        # Macro actions have changed, update their layout
+                        if action.tag == "macro":
+                            actions_node = ElementTree.Element("actions")
+                            remove_key_nodes = []
+                            for key_node in action:
+                                actions_node.append(key_node)
+                                remove_key_nodes.append(key_node)
+
+                            for key_node in remove_key_nodes:
+                                action.remove(key_node)
+
+                            action.append(actions_node)
+                            action.append(ElementTree.Element("properties"))
+
+                        container.append(action)
+                        containers.append(container)
+                        items_to_remove.append(action)
+
+                    for action in items_to_remove:
+                        input_item.remove(action)
+
+                    for container in containers:
+                        input_item.append(container)
+
         return new_root
+
+    def _p3_extract_map_to_keyboard(self, input_item):
+        node = ElementTree.Element("map-to-keyboard")
+
+        for action in input_item:
+            assert action.tag == "macro"
+
+            for key in action:
+                if key.tag == "key":
+                    key_node = ElementTree.Element("key")
+                    key_node.set("scan_code", key.get("scan_code"))
+                    key_node.set("extended", key.get("extended"))
+                    node.append(key_node)
+            break
+
+        return node
 
 
 class Settings:
