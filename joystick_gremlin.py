@@ -260,7 +260,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         profile_data.from_xml(fname)
 
         self.modal_windows["profile_creator"] = \
-            gremlin.profile_creator.ProfileCreator(profile_data)
+            gremlin.ui.profile_creator.ProfileCreator(profile_data)
         self.modal_windows["profile_creator"].show()
         gremlin.shared_state.set_suspend_input_highlighting(True)
         self.modal_windows["profile_creator"].closed.connect(
