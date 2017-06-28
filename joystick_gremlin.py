@@ -348,7 +348,6 @@ class GremlinUi(QtWidgets.QMainWindow):
                     action.vjoy_input_id = item_list[1][type_name[input_type]][0]
                 else:
                     action.vjoy_input_id = 1
-                action.is_valid = True
 
                 container.add_action(action)
                 entry.containers.append(container)
