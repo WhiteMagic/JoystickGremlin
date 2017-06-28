@@ -577,7 +577,10 @@ class Key:
 
     @property
     def lookup_name(self):
-        return self._lookup_name
+        if self._lookup_name is not None:
+            return self._lookup_name
+        else:
+            return self._name
 
     @lookup_name.setter
     def lookup_name(self, name):
