@@ -22,7 +22,7 @@ class VJoyCurves(QtCore.QObject):
 
         % for name, mode in device.modes.items():
         if new_mode == "${name}":
-            % for aid, entry in mode.config[UiInputType.JoystickAxis].items():
+            % for aid, entry in mode.config[InputType.JoystickAxis].items():
             % if len(entry.actions) > 0:
             if vjoy.is_axis_valid(${aid}):
                 % for action in entry.actions:
