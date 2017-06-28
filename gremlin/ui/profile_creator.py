@@ -20,7 +20,7 @@ import copy
 
 from PyQt5 import QtWidgets
 
-from . import common, joystick_handling, macro, profile, util
+from gremlin import common, joystick_handling, macro, profile, util
 import gremlin.ui.common
 import gremlin.ui.input_item
 
@@ -61,7 +61,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
         # Handle the removal of a binding if one exists
         if event is None and input_item in self._binding_registry:
             item = self._binding_registry[input_item]
-            item.actions = []
+            item.containers = []
             item.always_execute = False
             item.description = None
 
@@ -77,7 +77,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
                 event.identifier
             )
 
-            item.actions = copy.deepcopy(input_item.containers)
+            item.containers = copy.deepcopy(input_item.containers)
             item.always_execute = input_item.always_execute
             item.description = input_item.description
 
@@ -134,6 +134,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
         self.help_text.setWordWrap(True)
         self.help_text.setFrameShape(QtWidgets.QFrame.Box)
         self.help_text.setStyleSheet("QLabel {background-color : #FFF4B0;}")
+        self.help_text.setMargin(10)
         self.main_layout.addWidget(self.help_text)
 
         # Button to save the new profile
@@ -170,7 +171,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
             for mode in device.modes.values():
                 for input_items in mode.config.values():
                     for input_item in input_items.values():
-                        input_item.actions = []
+                        input_item.containers = []
                         input_item.description = []
                         input_item.always_execute = False
 
