@@ -57,6 +57,11 @@ def hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
 
 
+def key_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+    vjoy = joystick_handling.VJoyProxy()
+    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+
+
 def remap_to_keyboard(event, value, condition, macro_press, macro_release):
     if value.current:
         macro.MacroManager().add_macro(macro_press, condition, event)
@@ -173,7 +178,9 @@ class Factory:
             (common.InputType.JoystickHat,
              common.InputType.JoystickHat): hat_to_hat,
             (common.InputType.JoystickHat,
-             common.InputType.JoystickButton): hat_to_button
+             common.InputType.JoystickButton): hat_to_button,
+            (common.InputType.Keyboard,
+             common.InputType.JoystickButton): key_to_button,
         }
 
         remap_fn = remap_lookup.get((from_type, to_type), None)
