@@ -49,6 +49,16 @@ input_type_to_name = {
     InputType.JoystickHat: "Hat"
 }
 
+vjoy_axis_names = [
+    "X",
+    "Y",
+    "Z",
+    "X Rotation",
+    "Y Rotation",
+    "Z Rotation",
+    "Slider",
+    "Dial"
+]
 
 class SingletonDecorator:
 

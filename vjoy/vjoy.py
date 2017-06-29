@@ -24,6 +24,7 @@ import time
 
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 from gremlin.error import VJoyError
+import gremlin.common
 import gremlin.spline
 
 
@@ -356,6 +357,7 @@ class VJoy:
         self.vjoy_id = vjoy_id
 
         # Initialize all controls
+        self._axis_names = {}
         self._axis = self._init_axes()
         self._button = self._init_buttons()
         self._hat = self._init_hats()
@@ -373,7 +375,7 @@ class VJoy:
 
     @property
     def axis_count(self):
-        return len(self._axis)
+        return int(len(self._axis) / 2)
 
     @property
     def button_count(self):
@@ -382,6 +384,21 @@ class VJoy:
     @property
     def hat_count(self):
         return len(self._hat)
+
+    def axis_name_by_index(self, index):
+        """Returns the name of the axis based on linear enumeration.
+
+        This will return the name of the axis by converting a simple counting
+        index into the vJoy axis id / name combo.
+
+        :param index index of the axis
+        :return name of the axis
+        """
+        keys = sorted(self._axis_names.keys())
+        return self._axis_names[keys[index]]
+
+    def axis_name_by_id(self, index):
+        return self._axis_names[index]
 
     def axis(self, index):
         """Returns the axis object associated with the provided index.
@@ -445,40 +462,23 @@ class VJoy:
         hat_states = {}
 
         for axis_name in AxisName:
-            try:
+            if self.is_axis_valid(axis_name):
                 axis_states[axis_name] = self._axis[axis_name].value
-            except VJoyError:
-                pass
         for id, button in self._button.items():
-            try:
-                button_states[id] = button.is_pressed
-            except VJoyError:
-                pass
+            button_states[id] = button.is_pressed
         for id, hat in self._hat.items():
-            try:
-                hat_states[id] = hat.direction
-            except VJoyError:
-                pass
+            hat_states[id] = hat.direction
 
         # Perform reset using default vJoy functionality
         VJoyInterface.ResetVJD(self.vjoy_id)
 
         # Restore input states based on what we recorded
         for axis_name, value in axis_states.items():
-            try:
-                self._axis[axis_name].set_absolute_value(value)
-            except VJoyError:
-                pass
+            self._axis[axis_name].set_absolute_value(value)
         for id in self._button:
-            try:
-                self._button[id].is_pressed = button_states[id]
-            except VJoyError:
-                pass
+            self._button[id].is_pressed = button_states[id]
         for id in self._hat:
-            try:
-                self._hat[id].direction = hat_states[id]
-            except VJoyError:
-                pass
+            self._hat[id].direction = hat_states[id]
 
     def used(self):
         """Updates the timestamp of the last time the device has been used."""
@@ -510,17 +510,6 @@ class VJoy:
         )
         self._keep_alive_timer.start()
 
-    def _init_buttons(self):
-        """Retrieves all buttons present on the vJoy device and creates their
-        control objects.
-
-        :returns list of Button objects
-        """
-        buttons = {}
-        for btn_id in range(1, VJoyInterface.GetVJDButtonNumber(self.vjoy_id)+1):
-            buttons[btn_id] = Button(self, btn_id)
-        return buttons
-
     def _init_axes(self):
         """Retrieves all axes present on the vJoy device and creates their
         control objects.
@@ -532,7 +521,19 @@ class VJoy:
             if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value) > 0:
                 axes[axis] = Axis(self, axis.value)
                 axes[i+1] = axes[axis]
+                self._axis_names[i+1] = gremlin.common.vjoy_axis_names[i]
         return axes
+
+    def _init_buttons(self):
+        """Retrieves all buttons present on the vJoy device and creates their
+        control objects.
+
+        :returns list of Button objects
+        """
+        buttons = {}
+        for btn_id in range(1, VJoyInterface.GetVJDButtonNumber(self.vjoy_id)+1):
+            buttons[btn_id] = Button(self, btn_id)
+        return buttons
 
     def _init_hats(self):
         """Retrieves all hats present on the vJoy device and creates their

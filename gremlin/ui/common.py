@@ -582,7 +582,12 @@ class VJoySelector(QtWidgets.QWidget):
 
         arr = input_selection.split()
         vjoy_input_type = name_to_input_type[arr[0]]
-        vjoy_input_id = int(arr[1])
+        if vjoy_input_type == gremlin.common.InputType.JoystickAxis:
+            vjoy_input_id = gremlin.common.vjoy_axis_names.index(
+                " ".join(arr[1:])
+            ) + 1
+        else:
+            vjoy_input_id = int(arr[1])
 
         return {
             "device_id": vjoy_device_id,
@@ -606,10 +611,17 @@ class VJoySelector(QtWidgets.QWidget):
             )
 
         # Retrieve the index of the correct entry in the combobox
-        input_name = "{} {:d}".format(
-            input_type_to_name[input_type],
-            vjoy_input_id
-        )
+        vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
+        if input_type == gremlin.common.InputType.JoystickAxis:
+            input_name = "{} {}".format(
+                input_type_to_name[input_type],
+                vjoy_proxy[vjoy_dev_id].axis_name_by_id(vjoy_input_id)
+            )
+        else:
+            input_name = "{} {:d}".format(
+                input_type_to_name[input_type],
+                vjoy_input_id
+            )
         try:
             btn_id = self.input_item_dropdowns[vjoy_dev_id].findText(input_name)
         except KeyError:
@@ -647,6 +659,8 @@ class VJoySelector(QtWidgets.QWidget):
 
         self.input_item_dropdowns = {}
 
+        vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
+
         # Create input item selections for the vjoy devices, each
         # selection will be invisible unless it is selected as the
         # active device
@@ -657,10 +671,16 @@ class VJoySelector(QtWidgets.QWidget):
             # Add items based on the input type
             for input_type in self.valid_types:
                 for i in range(1, count_map[input_type](dev)+1):
-                    selection.addItem("{} {:d}".format(
-                        input_type_to_name[input_type],
-                        i
-                    ))
+                    if input_type == gremlin.common.InputType.JoystickAxis:
+                        selection.addItem("{} {}".format(
+                            input_type_to_name[input_type],
+                            vjoy_proxy[dev.vjoy_id].axis_name_by_index(i-1)
+                        ))
+                    else:
+                        selection.addItem("{} {:d}".format(
+                            input_type_to_name[input_type],
+                            i
+                        ))
 
             # Add the selection and hide it
             selection.setVisible(False)

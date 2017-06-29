@@ -192,7 +192,7 @@ def joystick_devices():
             vjoy_dev = vjoy_proxy[i]
             hash_value = (
                 # This is needed as we have two names for each axis
-                int(vjoy_dev.axis_count / 2),
+                int(vjoy_dev.axis_count),
                 vjoy_dev.button_count,
                 vjoy_dev.hat_count
             )
