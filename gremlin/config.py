@@ -194,12 +194,13 @@ class Configuration(object):
         self._data["last_profile"] = value
 
         # Update recent profiles
-        current = self.recent_profiles
-        if value in current:
-            del current[current.index(value)]
-        current.insert(0, value)
-        current = current[0:5]
-        self._data["recent_profiles"] = current
+        if value is not None:
+            current = self.recent_profiles
+            if value in current:
+                del current[current.index(value)]
+            current.insert(0, value)
+            current = current[0:5]
+            self._data["recent_profiles"] = current
         self.save()
 
     @property

@@ -889,6 +889,15 @@ class GremlinUi(QtWidgets.QMainWindow):
                 "Invalid profile content:\n{}".format(e)
             )
             self.new_profile()
+        except gremlin.error.ProfileError as e:
+            # Parsing the profile went wrong, stop loading and start with an
+            # empty profile
+            cfg = gremlin.config.Configuration()
+            cfg.last_profile = None
+            self.new_profile()
+            gremlin.util.display_error(
+                "Failed to load the profile {} due to:\n\n{}".format(fname, e)
+            )
 
     def _force_close(self):
         """Forces the closure of the program."""
