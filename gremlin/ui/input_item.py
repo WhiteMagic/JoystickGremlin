@@ -86,11 +86,21 @@ class InputItemListModel(common.AbstractModel):
             return input_items.config[InputType.Keyboard][sorted_keys[index]]
         else:
             if index < axis_count:
-                return input_items.config[InputType.JoystickAxis][index + 1]
+                # Handle non continuous axis setups
+                axis_keys = sorted(
+                    input_items.config[InputType.JoystickAxis].keys()
+                )
+                return input_items.config[InputType.JoystickAxis][
+                    axis_keys[index]
+                ]
             elif index < axis_count + button_count:
-                return input_items.config[InputType.JoystickButton][index - axis_count + 1]
+                return input_items.config[InputType.JoystickButton][
+                    index - axis_count + 1
+                ]
             elif index < axis_count + button_count + hat_count:
-                return input_items.config[InputType.JoystickHat][index - axis_count - button_count + 1]
+                return input_items.config[InputType.JoystickHat][
+                    index - axis_count - button_count + 1
+                ]
 
     def event_to_index(self, event):
         input_items = self._device_data.modes[self._mode]
@@ -161,9 +171,12 @@ class InputItemListView(common.AbstractView):
             if data.input_type not in self.shown_input_types:
                 continue
             label = str(data.input_id)
-            if data.input_type == gremlin.common.InputType.Keyboard:
+            if data.input_type == InputType.Keyboard:
                 key = gremlin.macro.key_from_code(*data.input_id)
                 label = key.name.capitalize()
+            elif data.parent.parent.type == DeviceType.VJoy:
+                assert(data.input_type == InputType.JoystickAxis)
+                label = gremlin.common.vjoy_axis_names[data.input_id-1]
             identifier = InputIdentifier(
                 data.input_type,
                 data.input_id,

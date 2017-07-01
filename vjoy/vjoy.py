@@ -357,6 +357,7 @@ class VJoy:
         self.vjoy_id = vjoy_id
 
         # Initialize all controls
+        self._axis_lookup = {}
         self._axis_names = {}
         self._axis = self._init_axes()
         self._button = self._init_buttons()
@@ -375,7 +376,7 @@ class VJoy:
 
     @property
     def axis_count(self):
-        return int(len(self._axis) / 2)
+        return int(len(self._axis))
 
     @property
     def button_count(self):
@@ -385,30 +386,51 @@ class VJoy:
     def hat_count(self):
         return len(self._hat)
 
-    def axis_name_by_index(self, index):
-        """Returns the name of the axis based on linear enumeration.
+    def axis_name(self, axis_id=None, linear_index=None):
+        if axis_id is not None:
+            if not self.is_axis_valid(axis_id=axis_id):
+                raise VJoyError(
+                    "Invalid axis index requested: {:d}".format(axis_id)
+                )
+            return self._axis_names[axis_id]
+        elif linear_index is not None:
+            if not self.is_axis_valid(linear_index=linear_index):
+                raise VJoyError(
+                    "Invalid linear index for axis lookup provided."
+                )
+            return self._axis_names[self._axis_lookup[linear_index]]
+        else:
+            raise VJoyError("No vjoy_id or linear_index provided")
 
-        This will return the name of the axis by converting a simple counting
-        index into the vJoy axis id / name combo.
+    def axis_id(self, linear_index):
+        if not self.is_axis_valid(linear_index=linear_index):
+            raise VJoyError(
+                "Invalid linear index for axis lookup provided."
+            )
 
-        :param index index of the axis
-        :return name of the axis
-        """
-        keys = sorted(self._axis_names.keys())
-        return self._axis_names[keys[index]]
+        return self._axis_lookup[linear_index]
 
-    def axis_name_by_id(self, index):
-        return self._axis_names[index]
-
-    def axis(self, index):
+    def axis(self, axis_id=None, linear_index=None):
         """Returns the axis object associated with the provided index.
 
-        :param index the index of the axis to return
+        :param axis_id actual id of the axis which may not be contiguous
+        :param linear_index linear index of the axis independent of true ids
         :return Axis object corresponding to the provided index
         """
-        if index not in self._axis:
-            raise VJoyError("Invalid axis index requested: {:d}".format(index))
-        return self._axis[index]
+        if axis_id is not None:
+            if not self.is_axis_valid(axis_id=axis_id):
+                raise VJoyError(
+                    "Invalid axis index requested: {:d}".format(axis_id)
+                )
+            return self._axis[axis_id]
+        elif linear_index is not None:
+            if not self.is_axis_valid(linear_index=linear_index):
+                raise VJoyError(
+                    "Invalid linear index for axis lookup provided."
+                )
+            return self._axis[self._axis_lookup[linear_index]]
+        else:
+            raise VJoyError("No vjoy_id or linear_index provided")
 
     def button(self, index):
         """Returns the axis object associated with the provided index.
@@ -430,13 +452,19 @@ class VJoy:
             raise VJoyError("Invalid hat index requested: {:d}".format(index))
         return self._hat[index]
 
-    def is_axis_valid(self, index):
+    def is_axis_valid(self, axis_id=None, linear_index=None):
         """Returns whether or not an axis is valid.
 
-        :param index the index of the axis to test
+        :param axis_id actual id of the axis which may not be contiguous
+        :param linear_index linear index of the axis independent of true ids
         :return True if the axis is valid, False otherwise
         """
-        return index in self._axis
+        if axis_id is not None:
+            return axis_id in self._axis
+        elif linear_index is not None:
+            return linear_index in self._axis_lookup
+        else:
+            raise VJoyError("No vjoy_id or linear_index provided")
 
     def is_button_valid(self, index):
         """Returns whether or not the provided button index is valid.
@@ -461,9 +489,8 @@ class VJoy:
         button_states = {}
         hat_states = {}
 
-        for axis_name in AxisName:
-            if self.is_axis_valid(axis_name):
-                axis_states[axis_name] = self._axis[axis_name].value
+        for id, axis in self._axis.items():
+            axis_states[id] = axis.value
         for id, button in self._button.items():
             button_states[id] = button.is_pressed
         for id, hat in self._hat.items():
@@ -473,8 +500,8 @@ class VJoy:
         VJoyInterface.ResetVJD(self.vjoy_id)
 
         # Restore input states based on what we recorded
-        for axis_name, value in axis_states.items():
-            self._axis[axis_name].set_absolute_value(value)
+        for id in self._axis:
+            self._axis[id].value = axis_states[id]
         for id in self._button:
             self._button[id].is_pressed = button_states[id]
         for id in self._hat:
@@ -519,9 +546,10 @@ class VJoy:
         axes = {}
         for i, axis in enumerate(AxisName):
             if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value) > 0:
-                axes[axis] = Axis(self, axis.value)
-                axes[i+1] = axes[axis]
+                axes[i+1] = Axis(self, axis.value)
                 self._axis_names[i+1] = gremlin.common.vjoy_axis_names[i]
+                self._axis_lookup[len(self._axis_names)] = i+1
+                self._axis_lookup[axis] = i+1
         return axes
 
     def _init_buttons(self):

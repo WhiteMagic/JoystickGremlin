@@ -88,18 +88,24 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
 
         self.joy_data = joy_data
         self.profile_data = profile_data
-        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout = QtWidgets.QGridLayout(self)
+        self.main_layout.setColumnMinimumWidth(0, 100)
+        self.main_layout.setColumnStretch(2, 1)
 
         self._spin_boxes = []
         self._create_ui()
 
     def _create_ui(self):
         """Creates the UI elements."""
-        # FIXME: this assumes sequential axis are present and is a limitation
-        #       of SDL2
-        for i in range(self.joy_data.axes):
-            layout = QtWidgets.QHBoxLayout()
-            layout.addWidget(QtWidgets.QLabel("Axis {:d}".format(i+1)))
+        vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
+        for i in range(self.joy_data.axis_count):
+            self.main_layout.addWidget(
+                QtWidgets.QLabel("Axis {}".format(
+                    vjoy_proxy[self.joy_data.vjoy_id].axis_name(linear_index=i+1)
+                )),
+                i,
+                0
+            )
 
             box = QtWidgets.QDoubleSpinBox()
             box.setRange(-1, 1)
@@ -110,10 +116,7 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
             ))
             box.valueChanged.connect(self._create_value_cb(i+1))
 
-            layout.addWidget(box)
-            layout.addStretch(1)
-            self.main_layout.addLayout(layout)
-        self.main_layout.addStretch(1)
+            self.main_layout.addWidget(box, i, 1)
 
     def _create_value_cb(self, axis_id):
         """Creates a callback function which updates axis values.

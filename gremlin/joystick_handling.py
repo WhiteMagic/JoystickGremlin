@@ -76,7 +76,9 @@ class JoystickDeviceData:
         else:
             self._name = name_object.decode("utf-8")
         self._is_virtual = self._name == "vJoy Device"
-        self._axes = sdl2.SDL_JoystickNumAxes(device)
+        self._axes = []
+        for i in range(sdl2.SDL_JoystickNumAxes(device)):
+            self._axes.append((i+1, i+1))
         self._buttons = sdl2.SDL_JoystickNumButtons(device)
         self._hats = sdl2.SDL_JoystickNumHats(device)
         self._vjoy_id = 0
@@ -97,9 +99,15 @@ class JoystickDeviceData:
     def is_virtual(self):
         return self._is_virtual
 
+    def axis(self, index):
+        return self._axes[index]
+
     @property
-    def axes(self):
-        return self._axes
+    def axis_count(self):
+        return len(self._axes)
+
+    def set_axis_mapping(self, mapping):
+        self._axes = mapping
 
     @property
     def buttons(self):
@@ -171,7 +179,7 @@ def joystick_devices():
     for i, dev in enumerate(devices):
         if not dev.is_virtual:
             continue
-        hash_value = (dev.axes, dev.buttons, dev.hats)
+        hash_value = (dev.axis_count, dev.buttons, dev.hats)
         if hash_value in vjoy_lookup:
             raise error.GremlinError(
                 "Indistinguishable vJoy devices present.\n\n"
@@ -191,13 +199,17 @@ def joystick_devices():
         try:
             vjoy_dev = vjoy_proxy[i]
             hash_value = (
-                # This is needed as we have two names for each axis
-                int(vjoy_dev.axis_count),
+                vjoy_dev.axis_count,
                 vjoy_dev.button_count,
                 vjoy_dev.hat_count
             )
             if hash_value in vjoy_lookup:
+                # Set vJoy id and correctly setup the axis id mapping
                 devices[vjoy_lookup[hash_value]]._vjoy_id = vjoy_dev.vjoy_id
+                axis_mapping = []
+                for i in range(vjoy_dev.axis_count):
+                    axis_mapping.append((i+1, vjoy_dev.axis_id(i+1)))
+                devices[vjoy_lookup[hash_value]].set_axis_mapping(axis_mapping)
 
             if hash_value not in vjoy_lookup:
                 raise error.GremlinError(

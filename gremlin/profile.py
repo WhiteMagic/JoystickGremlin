@@ -865,8 +865,8 @@ class Device:
             self.modes[mode.name] = mode
 
         if device is not None:
-            for id in range(1, device.axes + 1):
-                mode.get_data(InputType.JoystickAxis, id)
+            for i in range(device.axis_count):
+                mode.get_data(InputType.JoystickAxis, device.axis(i)[1])
             for id in range(1, device.buttons + 1):
                 mode.get_data(InputType.JoystickButton, id)
             for id in range(1, device.hats + 1):
@@ -940,12 +940,26 @@ class Mode:
 
         :param node XML node to parse
         """
+        vjoy_device = None
+        if self.parent.name == "vJoy Device":
+            vjoy_proxy = joystick_handling.VJoyProxy()
+            try:
+                vjoy_device = vjoy_proxy[self.parent.hardware_id]
+            except error.VJoyError:
+                pass
+
         self.name = node.get("name")
         self.inherit = node.get("inherit", None)
         for child in node:
             item = InputItem(self)
             item.from_xml(child)
-            self.config[item.input_type][item.input_id] = item
+
+            store_item = True
+            if vjoy_device is not None and item.input_type == InputType.JoystickAxis:
+                store_item = vjoy_device.is_axis_valid(axis_id=item.input_id)
+
+            if store_item:
+                self.config[item.input_type][item.input_id] = item
 
     def to_xml(self):
         """Generates XML code for this DeviceConfiguration.
@@ -981,6 +995,8 @@ class Mode:
             type and id
         """
         assert(input_type in self.config)
+        if input_id == 1 and input_type == InputType.JoystickAxis:
+            pass
         if input_id not in self.config[input_type]:
             entry = InputItem(self)
             entry.input_type = input_type

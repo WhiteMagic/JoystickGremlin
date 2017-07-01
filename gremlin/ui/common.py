@@ -615,7 +615,7 @@ class VJoySelector(QtWidgets.QWidget):
         if input_type == gremlin.common.InputType.JoystickAxis:
             input_name = "{} {}".format(
                 input_type_to_name[input_type],
-                vjoy_proxy[vjoy_dev_id].axis_name_by_id(vjoy_input_id)
+                vjoy_proxy[vjoy_dev_id].axis_name(axis_id=vjoy_input_id)
             )
         else:
             input_name = "{} {:d}".format(
@@ -652,7 +652,7 @@ class VJoySelector(QtWidgets.QWidget):
     def _create_input_dropdown(self):
         """Creates the vJoy input item selection drop downs."""
         count_map = {
-            gremlin.common.InputType.JoystickAxis: lambda x: x.axes,
+            gremlin.common.InputType.JoystickAxis: lambda x: x.axis_count,
             gremlin.common.InputType.JoystickButton: lambda x: x.buttons,
             gremlin.common.InputType.JoystickHat: lambda x: x.hats
         }
@@ -674,7 +674,7 @@ class VJoySelector(QtWidgets.QWidget):
                     if input_type == gremlin.common.InputType.JoystickAxis:
                         selection.addItem("{} {}".format(
                             input_type_to_name[input_type],
-                            vjoy_proxy[dev.vjoy_id].axis_name_by_index(i-1)
+                            vjoy_proxy[dev.vjoy_id].axis_name(linear_index=i)
                         ))
                     else:
                         selection.addItem("{} {:d}".format(
