@@ -542,8 +542,8 @@ class Profile:
         for mode in modes:
             new_device.ensure_mode_exists(mode)
             new_mode = new_device.modes[mode]
-            for id in range(1, device.axes+1):
-                new_mode.get_data(InputType.JoystickAxis, id)
+            for i in range(device.axis_count):
+                new_mode.get_data(InputType.JoystickAxis, device.axis(i)[1])
             for id in range(1, device.buttons+1):
                 new_mode.get_data(InputType.JoystickButton, id)
             for id in range(1, device.hats+1):
@@ -650,6 +650,7 @@ class Profile:
         if not profile_converter.is_current(fname):
             logging.getLogger("system").warning("Outdated profile, converting")
             profile_converter.convert_profile(fname)
+
 
         tree = ElementTree.parse(fname)
         root = tree.getroot()
