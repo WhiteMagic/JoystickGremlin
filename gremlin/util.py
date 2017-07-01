@@ -17,7 +17,6 @@
 
 import importlib
 import logging
-import math
 import os
 import re
 import sys
@@ -27,7 +26,7 @@ import time
 from PyQt5 import QtCore, QtWidgets
 
 import sdl2
-from . import error, fsm, joystick_handling
+from . import error, joystick_handling
 
 # Flag indicating that multiple physical devices with the same name exist
 g_duplicate_devices = False
@@ -321,10 +320,10 @@ def setup_duplicate_joysticks():
 
     # Create appropriate device_id generator
     if duplicate_devices:
-        device_id = device_id_duplicates
+        device_id_fn = device_id_duplicates
     else:
-        device_id = device_id_unique
-    setup_duplicate_devices(device_id, duplicate_devices)
+        device_id_fn = device_id_unique
+    setup_duplicate_devices(device_id_fn, duplicate_devices)
 
 
 def clear_layout(layout):

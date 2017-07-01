@@ -22,7 +22,8 @@ from abc import abstractmethod, ABCMeta
 from xml.dom import minidom
 from xml.etree import ElementTree
 
-import action_plugins
+import action_plugins.common
+import action_plugins.remap
 from gremlin.common import DeviceType, InputType
 from . import error, joystick_handling, plugin_manager, util
 
@@ -388,10 +389,9 @@ class ProfileConverter:
                         if input_item.tag == "axis":
                             copy_condition = False
                             if action.tag == "remap":
-                                if "button" in action.keys() or "hat" in action.keys():
+                                if "button" in action.keys() or \
+                                        "hat" in action.keys():
                                     copy_condition = True
-                                else:
-                                    print("ASd")
                             elif action.tag == "response-curve":
                                 pass
                             else:
@@ -650,7 +650,6 @@ class Profile:
         if not profile_converter.is_current(fname):
             logging.getLogger("system").warning("Outdated profile, converting")
             profile_converter.convert_profile(fname)
-
 
         tree = ElementTree.parse(fname)
         root = tree.getroot()
@@ -956,7 +955,8 @@ class Mode:
             item.from_xml(child)
 
             store_item = True
-            if vjoy_device is not None and item.input_type == InputType.JoystickAxis:
+            if vjoy_device is not None and \
+                    item.input_type == InputType.JoystickAxis:
                 store_item = vjoy_device.is_axis_valid(axis_id=item.input_id)
 
             if store_item:

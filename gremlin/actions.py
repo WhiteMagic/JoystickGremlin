@@ -20,7 +20,8 @@ import logging
 import threading
 import time
 
-from . import common, control_action, error, fsm, input_devices, joystick_handling, macro, tts
+from . import common, control_action, error, fsm, input_devices, \
+    joystick_handling, macro, tts
 
 
 tts_instance = tts.TextToSpeech()
@@ -37,7 +38,6 @@ def axis_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
 
 
 def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
-    print(event.is_pressed)
     if event.is_pressed:
         input_devices.AutomaticButtonRelease().register(
             (vjoy_device_id, vjoy_input_id), event
@@ -354,6 +354,7 @@ class AxisButton(VirtualButton):
         """Processes events for the virtual axis button.
 
         :param value axis position
+        :param callback the function to call when the state changes
         """
         self._callback = callback
         if self._lower_limit <= value <= self._upper_limit:
@@ -378,6 +379,7 @@ class HatButton(VirtualButton):
         """Process events for the virtual hat button.
 
         :param value hat direction
+        :param callback the function to call when the state changes
         """
         self._callback = callback
         if value in self._directions:
@@ -525,54 +527,54 @@ class Chain(AbstractActionContainer):
         else:
             if not value.current:
                 self.index = (self.index + 1) % len(self.actions)
-
-
-class SmartToggle(AbstractActionContainer):
-
-    def __init__(self, actions, duration=0.25):
-        if not isinstance(actions, list):
-            actions = [actions]
-        super().__init__(actions)
-        self.duration = duration
-
-        self._init_time = 0
-        self._is_toggled = False
-
-    def _execute_call(self, value):
-        # FIXME: breaks when held while toggle is active
-        if value:
-            self._init_time = time.time()
-            if not self._is_toggled:
-                self.actions[0](value)
-        else:
-            if time.time() < self._init_time + self.duration:
-                # Toggle action
-                if self._is_toggled:
-                    self.actions[0](value)
-                self._is_toggled = not self._is_toggled
-            else:
-                # Tap action
-                self.actions[0](value)
-
-
-class DoubleTap(AbstractActionContainer):
-
-    def __init__(self, actions, timeout=0.5):
-        if not isinstance(actions, list):
-            actions = [actions]
-        super().__init__(actions)
-        self.timeout = timeout
-
-        self._init_time = 0
-        self._triggered = False
-
-    def _execute_call(self, value):
-        if value:
-            if time.time() > self._init_time + self.timeout:
-                self._init_time = time.time()
-            else:
-                self.actions[0](value)
-                self._triggered = True
-        elif not value and self._triggered:
-            self.actions[0](value)
-            self._triggered = False
+#
+#
+# class SmartToggle(AbstractActionContainer):
+#
+#     def __init__(self, actions, duration=0.25):
+#         if not isinstance(actions, list):
+#             actions = [actions]
+#         super().__init__(actions)
+#         self.duration = duration
+#
+#         self._init_time = 0
+#         self._is_toggled = False
+#
+#     def _execute_call(self, value):
+#         # FIXME: breaks when held while toggle is active
+#         if value:
+#             self._init_time = time.time()
+#             if not self._is_toggled:
+#                 self.actions[0](value)
+#         else:
+#             if time.time() < self._init_time + self.duration:
+#                 # Toggle action
+#                 if self._is_toggled:
+#                     self.actions[0](value)
+#                 self._is_toggled = not self._is_toggled
+#             else:
+#                 # Tap action
+#                 self.actions[0](value)
+#
+#
+# class DoubleTap(AbstractActionContainer):
+#
+#     def __init__(self, actions, timeout=0.5):
+#         if not isinstance(actions, list):
+#             actions = [actions]
+#         super().__init__(actions)
+#         self.timeout = timeout
+#
+#         self._init_time = 0
+#         self._triggered = False
+#
+#     def _execute_call(self, value):
+#         if value:
+#             if time.time() > self._init_time + self.timeout:
+#                 self._init_time = time.time()
+#             else:
+#                 self.actions[0](value)
+#                 self._triggered = True
+#         elif not value and self._triggered:
+#             self.actions[0](value)
+#             self._triggered = False

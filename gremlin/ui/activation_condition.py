@@ -109,11 +109,15 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
 
         directions = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
 
-        for dir in directions:
-            self._widgets[dir] = QtWidgets.QCheckBox()
-            self._widgets[dir].setIcon(QtGui.QIcon("gfx/hat_{}.png".format(dir)))
-            self._widgets[dir].toggled.connect(self._create_state_changed_cb(dir))
-            self.main_layout.addWidget(self._widgets[dir])
+        for direction in directions:
+            self._widgets[direction] = QtWidgets.QCheckBox()
+            self._widgets[direction].setIcon(
+                QtGui.QIcon("gfx/hat_{}.png".format(direction))
+            )
+            self._widgets[direction].toggled.connect(
+                self._create_state_changed_cb(direction)
+            )
+            self.main_layout.addWidget(self._widgets[direction])
 
         self.main_layout.addStretch(1)
 
@@ -133,8 +137,10 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
             "north-west": "nw"
         }
 
-        for dir in self.condition_data.directions:
-            self._widgets[direction_map[dir]].setCheckState(QtCore.Qt.Checked)
+        for direction in self.condition_data.directions:
+            self._widgets[direction_map[direction]].setCheckState(
+                QtCore.Qt.Checked
+            )
 
     def _state_changed(self, direction, state):
         direction_map = {
@@ -154,7 +160,8 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
             del self.condition_data.directions[idx]
         elif state is True and name not in self.condition_data.directions:
             self.condition_data.directions.append(name)
-        self.condition_data.directions = list(set(self.condition_data.directions))
+        self.condition_data.directions = \
+            list(set(self.condition_data.directions))
 
     def _create_state_changed_cb(self, direction):
         return lambda x: self._state_changed(direction, x)

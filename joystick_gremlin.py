@@ -641,12 +641,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         self.ui.devices.addTab(widget, "Settings")
 
-        # Add the getting started tab
-        # widget = QtWidgets.QTextEdit()
-        # widget.setReadOnly(True)
-        # widget.setHtml(open("doc/getting_started.html").read())
-        # self.ui.devices.addTab(widget, "Getting Started")
-
     def _setup_icons(self):
         """Sets the icons of all QAction items."""
         # Menu actions
@@ -723,7 +717,8 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # If we want to act on the given even figure out which button
         # needs to be pressed and press is
-        if gremlin.util.device_id(event) == gremlin.util.device_id(widget.device_profile):
+        if gremlin.util.device_id(event) == \
+                gremlin.util.device_id(widget.device_profile):
             if self._should_process_input(event):
                 widget.input_item_list_view.select_item(event)
 
@@ -882,21 +877,23 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.mode_selector.populate_selector(
                 self._profile, self._current_mode
             )
-        except (KeyError, TypeError) as e:
+        except (KeyError, TypeError) as error:
             # An error occurred while parsing an existing profile,
             # creating an empty profile instead
             logging.getLogger("system").exception(
-                "Invalid profile content:\n{}".format(e)
+                "Invalid profile content:\n{}".format(error)
             )
             self.new_profile()
-        except gremlin.error.ProfileError as e:
+        except gremlin.error.ProfileError as error:
             # Parsing the profile went wrong, stop loading and start with an
             # empty profile
             cfg = gremlin.config.Configuration()
             cfg.last_profile = None
             self.new_profile()
             gremlin.util.display_error(
-                "Failed to load the profile {} due to:\n\n{}".format(fname, e)
+                "Failed to load the profile {} due to:\n\n{}".format(
+                    fname, error
+                )
             )
 
     def _force_close(self):
@@ -931,10 +928,12 @@ class GremlinUi(QtWidgets.QMainWindow):
         if self.repeater.is_running or event.hardware_id == vjoy_device_id:
             return
         # Ignore small joystick movements
-        elif event.event_type == gremlin.common.InputType.JoystickAxis and abs(event.value) < 0.25:
+        elif event.event_type == gremlin.common.InputType.JoystickAxis and \
+                abs(event.value) < 0.25:
             return
         # Ignore neutral hat positions
-        if event.event_type == gremlin.common.InputType.JoystickHat and event.value == (0, 0):
+        if event.event_type == gremlin.common.InputType.JoystickHat and \
+                event.value == (0, 0):
             return
 
         event_list = []

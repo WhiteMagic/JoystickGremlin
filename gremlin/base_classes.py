@@ -95,9 +95,9 @@ class HatActivationCondition(AbstractActivationCondition):
 
     def to_xml(self):
         node = ElementTree.Element("activation-condition")
-        for dir in self.directions:
-            if dir in HatActivationCondition.name_to_direction:
-                node.set(dir, "1")
+        for direction in self.directions:
+            if direction in HatActivationCondition.name_to_direction:
+                node.set(direction, "1")
         return node
 
 
@@ -164,7 +164,9 @@ class AbstractAction(profile.ProfileData):
 
         code_block = profile.CodeBlock()
         code_block.store("container_action", Template(
-            filename="action_plugins/{}/container_action.tpl".format(template_name),
+            filename="action_plugins/{}/container_action.tpl".format(
+                template_name
+            ),
             lookup=tpl_lookup
         ).render(
             **params
@@ -204,7 +206,8 @@ class AbstractContainer(profile.ProfileData):
     def create_or_delete_activation_condition(self):
         """Creates activation condition data as required."""
         need_activation_condition = any(
-            [a.requires_activation_condition() for a in self.actions if a is not None]
+            [a.requires_activation_condition()
+             for a in self.actions if a is not None]
         )
 
         if need_activation_condition:

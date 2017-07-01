@@ -617,7 +617,10 @@ class CurveScene(QtWidgets.QGraphicsScene):
         for item in self.items():
             if isinstance(item, QtWidgets.QGraphicsPathItem):
                 self.removeItem(item)
-            elif type(item) in [ControlPointGraphicsItem, CurveHandleGraphicsItem]:
+            elif type(item) in [
+                ControlPointGraphicsItem,
+                CurveHandleGraphicsItem
+            ]:
                 item.redraw()
 
         # Redraw response curve
@@ -1177,7 +1180,9 @@ class ResponseCurve(AbstractAction):
                 "entry": self,
                 "gremlin": gremlin,
                 "curve_name": "curve_{:d}".format(ResponseCurve.next_code_id),
-                "deadzone_name": "deadzone_{:d}".format(ResponseCurve.next_code_id)
+                "deadzone_name": "deadzone_{:d}".format(
+                    ResponseCurve.next_code_id
+                )
             }
         )
 

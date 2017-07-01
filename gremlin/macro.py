@@ -18,7 +18,6 @@
 import collections
 import ctypes
 from ctypes import wintypes
-import enum
 import functools
 import logging
 import time
@@ -242,6 +241,8 @@ class MacroManager:
         """Adds a macro to the scheduler.
 
         :param macro the macro to add to the scheduler
+        :param condition the condition under which this macro is triggered
+        :param event the even which is associated with this macro
         """
         # Add the new macro the the queue and force the scheduler to run
         self._queue.append(MacroEntry(
@@ -345,7 +346,8 @@ class MacroManager:
                 # Start a new macro
                 else:
                     self._macro_flags[execution_id] = (
-                        True, self._create_stop_event(event, ToggleRepeat, condition)
+                        True,
+                        self._create_stop_event(event, ToggleRepeat, condition)
                     )
                     while self._macro_flags[execution_id][0]:
                         for action in macro.sequence:
@@ -381,7 +383,9 @@ class MacroManager:
                 ]:
                     self._active[eid].condition.process(
                         event.value,
-                        lambda x: self._handle_event_with_condition(x, data[1].is_pressed, eid)
+                        lambda x: self._handle_event_with_condition(
+                            x, data[1].is_pressed, eid
+                        )
                     )
 
     def _handle_event_with_condition(self, value, desired_state, eid):
@@ -406,7 +410,6 @@ class MacroManager:
                 evt.is_pressed = condition.is_pressed
 
         return evt
-
 
 
 class Macro:
@@ -640,7 +643,10 @@ class CountRepeat(AbstractRepeat):
         self.count = int(node.get("count"))
 
     def to_code(self):
-        return "gremlin.macro.CountRepeat({:d}, {:.2f})".format(self.count, self.delay)
+        return "gremlin.macro.CountRepeat({:d}, {:.2f})".format(
+            self.count,
+            self.delay
+        )
 
 
 class ToggleRepeat(AbstractRepeat):

@@ -16,9 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import logging
-
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 
 import container_plugins.basic
 import gremlin
@@ -299,9 +297,6 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
 
         self.main_layout.addLayout(self.left_panel_layout)
 
-        # Select first entry by default
-        self.input_item_selected_cb(0)
-
     def input_item_selected_cb(self, index):
         item_data = input_item_index_lookup(
             index,
@@ -518,6 +513,7 @@ def input_item_index_lookup(index, input_items):
         return input_items.get_data(InputType.Keyboard, index)
     else:
         if index < axis_count:
+
             return input_items.get_data(InputType.JoystickAxis, index + 1)
         elif index < axis_count + button_count:
             return input_items.get_data(

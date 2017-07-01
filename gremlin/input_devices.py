@@ -446,7 +446,7 @@ class Keyboard(QtCore.QObject):
         """
         if isinstance(key, str):
             key = macro.key_from_name(key)
-        elif isinstance(key, macro.Keys.Key):
+        elif isinstance(key, macro.Key):
             pass
         return self._keyboard_state.get(key, False)
 
@@ -472,7 +472,7 @@ class KeyboardPlugin(object):
         :param partial_fn function to create the partial function / method
         :return callback with the plugin parameter bound
         """
-        return partial_fn(callback, keyboard=KeyboardPlugin.keyword)
+        return partial_fn(callback, keyboard=KeyboardPlugin.keyboard)
 
 
 class JoystickDecorator(object):
@@ -684,7 +684,7 @@ def periodic(interval):
     return wrap
 
 
-def squash(value, function):
+def squash(value, func):
     """Returns the appropriate function value when the function is
     squashed to [-1, 1].
 
@@ -692,7 +692,7 @@ def squash(value, function):
     :param function the function to be squashed
     :return function value at value after squashing
     """
-    return (2 * function(value)) / abs(function(-1) - function(1))
+    return (2 * func(value)) / abs(func(-1) - func(1))
 
 
 def deadzone(value, low, low_center, high_center, high):

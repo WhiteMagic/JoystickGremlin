@@ -47,7 +47,7 @@ class KeyEvent(object):
 
         :return string representation of the event
         """
-        return "({} {}) {}, {} {}".format(
+        return "({} {}) {}, {}".format(
             hex(self._scan_code),
             self._is_extended,
             "down" if self._is_pressed else "up",

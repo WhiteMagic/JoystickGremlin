@@ -265,6 +265,7 @@ class DualSlider(QtWidgets.QWidget):
             self._get_common_option(),
             QtWidgets.QStyle.SC_SliderGroove
         )
+
         return QtWidgets.QStyle.sliderValueFromPosition(
             self._range[0],
             self._range[1],
@@ -423,7 +424,9 @@ class JoystickSelector(QtWidgets.QWidget):
 
         self._device_id_to_index_map = {}
         self._index_to_device_map = {}
-        for i, device in enumerate(sorted(self.devices, key=lambda x: x.windows_id)):
+        for i, device in enumerate(
+                sorted(self.devices, key=lambda x: x.windows_id)
+        ):
             self._device_id_to_index_map[gremlin.util.device_id(device)] = i
             self._index_to_device_map[i] = device
 
@@ -578,7 +581,8 @@ class VJoySelector(QtWidgets.QWidget):
         """
         device_selection = self.device_dropdown.currentText()
         vjoy_device_id = int(device_selection.split()[-1])
-        input_selection = self.input_item_dropdowns[vjoy_device_id].currentText()
+        input_selection = \
+            self.input_item_dropdowns[vjoy_device_id].currentText()
 
         arr = input_selection.split()
         vjoy_input_type = name_to_input_type[arr[0]]
@@ -907,7 +911,14 @@ class InputListenerWidget(QtWidgets.QFrame):
     """Widget overlaying the main gui while waiting for the user
     to press a key."""
 
-    def __init__(self, callback, event_types, return_kb_event=False, multi_keys=False, parent=None):
+    def __init__(
+            self,
+            callback,
+            event_types,
+            return_kb_event=False,
+            multi_keys=False,
+            parent=None
+    ):
         """Creates a new instance.
 
         :param callback the function to pass the key pressed by the

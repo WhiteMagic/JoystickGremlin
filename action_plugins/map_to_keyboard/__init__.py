@@ -52,7 +52,9 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.key_combination.setText(text)
 
     def _update_keys(self, keys):
-        self.action_data.keys = [(key.scan_code, key.is_extended) for key in keys]
+        self.action_data.keys = [
+            (key.scan_code, key.is_extended) for key in keys
+        ]
         self.modified.emit()
 
     def _record_keys_cb(self):
@@ -80,7 +82,6 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
 
 class MapToKeyboard(gremlin.base_classes.AbstractAction):
 
-    icon = None
     name = "Map to Keyboard"
     tag = "map-to-keyboard"
     widget = MapToKeyboardWidget

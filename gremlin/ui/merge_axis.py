@@ -206,8 +206,14 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         joy1_id = data["lower"]["hardware_id"]
         joy2_id = data["upper"]["hardware_id"]
         if gremlin.util.g_duplicate_devices:
-            joy1_id = (data["lower"]["hardware_id"], data["lower"]["windows_id"])
-            joy2_id = (data["upper"]["hardware_id"], data["upper"]["windows_id"])
+            joy1_id = (
+                data["lower"]["hardware_id"],
+                data["lower"]["windows_id"]
+            )
+            joy2_id = (
+                data["upper"]["hardware_id"],
+                data["upper"]["windows_id"]
+            )
 
         self.joy1_selector.set_selection(
             gremlin.common.InputType.JoystickAxis,

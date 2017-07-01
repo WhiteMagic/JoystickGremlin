@@ -484,12 +484,14 @@ class AbstractRepeatMacroWidget(QtWidgets.QWidget):
 
     def _populate_ui(self):
         raise gremlin.error.MissingImplementationError(
-            "AbstractRepeatMacroWidget::_populate_ui not implemented in subclass"
+            "AbstractRepeatMacroWidget::_populate_ui not "
+            "implemented in subclass"
         )
 
     def _update_data(self):
         raise gremlin.error.MissingImplementationError(
-            "AbstractRepeatMacroWidget::_populate_ui not implemented in subclass"
+            "AbstractRepeatMacroWidget::_populate_ui not "
+            "implemented in subclass"
         )
 
 
@@ -662,7 +664,8 @@ class MacroSettingsWidget(QtWidgets.QWidget):
             if old_item is not None:
                 old_item.widget().hide()
                 old_item.widget().deleteLater()
-        elif widget_type is not None and not isinstance(self.repeat_widget, widget_type):
+        elif widget_type is not None and \
+                not isinstance(self.repeat_widget, widget_type):
             self.action_data.repeat = storage_type()
             self.repeat_widget = widget_type(self.action_data.repeat)
 
@@ -671,15 +674,6 @@ class MacroSettingsWidget(QtWidgets.QWidget):
                 old_item.widget().hide()
                 old_item.widget().deleteLater()
             self.group_layout.addWidget(self.repeat_widget)
-        # mode = MacroSettingsWidget.name_to_mode.get(
-        #     self.repeat_dropdown.currentText(),
-        #     None
-        # )
-        # if mode is not None:
-        #     self.action_data.repeat = RepeatMacro(
-        #         mode,
-        #         self.repeat_delay.value()
-        #     )
 
 
 class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):

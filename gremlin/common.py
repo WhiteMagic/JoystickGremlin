@@ -60,6 +60,7 @@ vjoy_axis_names = [
     "Dial"
 ]
 
+
 class SingletonDecorator:
 
     """Decorator turning a class into a singleton."""

@@ -42,7 +42,9 @@ class VJoyProxy:
             return VJoyProxy.vjoy_devices[key]
         else:
             if not isinstance(key, int):
-                raise error.GremlinError("Integer ID for vjoy device ID expected")
+                raise error.GremlinError(
+                    "Integer ID for vjoy device ID expected"
+                )
 
             device = vjoy.VJoy(key)
             VJoyProxy.vjoy_devices[key] = device
@@ -207,8 +209,8 @@ def joystick_devices():
                 # Set vJoy id and correctly setup the axis id mapping
                 devices[vjoy_lookup[hash_value]]._vjoy_id = vjoy_dev.vjoy_id
                 axis_mapping = []
-                for i in range(vjoy_dev.axis_count):
-                    axis_mapping.append((i+1, vjoy_dev.axis_id(i+1)))
+                for j in range(vjoy_dev.axis_count):
+                    axis_mapping.append((j+1, vjoy_dev.axis_id(j+1)))
                 devices[vjoy_lookup[hash_value]].set_axis_mapping(axis_mapping)
 
             if hash_value not in vjoy_lookup:

@@ -90,7 +90,8 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             free_inputs = self._get_profile_root().list_unused_vjoy_inputs(
                 self.vjoy_devices
             )
-            input_type = self.type_to_name_map[self.action_data.input_type].lower()
+            input_type = \
+                self.type_to_name_map[self.action_data.input_type].lower()
             if vjoy_dev_id == 0:
                 vjoy_dev_id = sorted(free_inputs.keys())[0]
             input_list = free_inputs[vjoy_dev_id][input_type]
@@ -130,7 +131,6 @@ class Remap(gremlin.base_classes.AbstractAction):
 
     """Action remapping physical joystick inputs to vJoy inputs."""
 
-    icon = None
     name = "Remap"
     tag = "remap"
     widget = RemapWidget

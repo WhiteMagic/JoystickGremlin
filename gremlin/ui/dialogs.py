@@ -840,7 +840,7 @@ class DeviceInformationUi(common.BaseDialogUi):
                 QtWidgets.QLabel(entry.name), i+1, 0
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.axes)), i+1, 1
+                QtWidgets.QLabel(str(entry.axis_count)), i+1, 1
             )
             self.main_layout.addWidget(
                 QtWidgets.QLabel(str(entry.buttons)), i+1, 2

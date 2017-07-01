@@ -22,6 +22,7 @@ from mako.template import Template
 from PyQt5 import QtWidgets
 
 import gremlin
+import gremlin.ui.common
 import gremlin.ui.input_item
 
 
@@ -32,7 +33,9 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
     def _create_ui(self):
         self.delay_layout = QtWidgets.QHBoxLayout()
-        self.delay_layout.addWidget(QtWidgets.QLabel("<b>Long press delay: </b>"))
+        self.delay_layout.addWidget(
+            QtWidgets.QLabel("<b>Long press delay: </b>")
+        )
         self.delay_input = QtWidgets.QDoubleSpinBox()
         self.delay_input.setRange(0.1, 2.0)
         self.delay_input.setSingleStep(0.1)
