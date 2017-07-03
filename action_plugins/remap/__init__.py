@@ -46,8 +46,8 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
     def __init__(self, action_data, parent=None):
         """Creates a new RemapWidget.
 
-        :param action_data profile.InputItem data for this widget
-        :param parent of this widget
+        :param action_data profile data managed by this widget
+        :param parent the parent of this widget
         """
         devices = gremlin.joystick_handling.joystick_devices()
         self.vjoy_devices = [dev for dev in devices if dev.is_virtual]
@@ -55,6 +55,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         assert(isinstance(action_data, Remap))
 
     def _create_ui(self):
+        """Creates the UI components."""
         input_types = {
             InputType.Keyboard: [
                 InputType.JoystickButton
@@ -80,6 +81,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _populate_ui(self):
+        """Populates the UI components."""
         # Get the appropriate vjoy device identifier
         vjoy_dev_id = 0
         if self.action_data.vjoy_device_id not in [0, None]:
@@ -114,6 +116,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.save_changes()
 
     def save_changes(self):
+        """Saves UI contents to the profile data storage."""
         # Store remap data
         vjoy_data = self.vjoy_selector.get_selection()
         self.action_data.vjoy_device_id = vjoy_data["device_id"]
@@ -143,6 +146,10 @@ class Remap(gremlin.base_classes.AbstractAction):
     callback_params = ["vjoy"]
 
     def __init__(self, parent):
+        """Creates a new instance.
+
+        :param parent the container to which this action belongs
+        """
         super().__init__(parent)
 
         # Set vjoy ids to None so we know to pick the next best one
@@ -152,6 +159,10 @@ class Remap(gremlin.base_classes.AbstractAction):
         self.input_type = self.parent.parent.input_type
 
     def icon(self):
+        """Returns the icon corresponding to the remapped input.
+
+        :return icon representing the remap action
+        """
         # Do not return a valid icon if the input id itself is invalid
         if self.vjoy_input_id is None:
             return None
@@ -167,6 +178,10 @@ class Remap(gremlin.base_classes.AbstractAction):
             )
 
     def requires_activation_condition(self):
+        """Returns whether or not the action requires an activation condition.
+
+        :return True if an activation condition is required, False otherwise
+        """
         input_type = self.get_input_type()
 
         if input_type in [InputType.JoystickButton, InputType.Keyboard]:
@@ -183,6 +198,10 @@ class Remap(gremlin.base_classes.AbstractAction):
                 return True
 
     def _parse_xml(self, node):
+        """Populates the data storage with data from the XML node.
+
+        :param node XML node with which to populate the storage
+        """
         if "axis" in node.attrib:
             self.input_type = InputType.JoystickAxis
             self.vjoy_input_id = int(node.get("axis"))
@@ -203,6 +222,10 @@ class Remap(gremlin.base_classes.AbstractAction):
         self.vjoy_device_id = int(node.get("vjoy"))
 
     def _generate_xml(self):
+        """Returns an XML node encoding this action's data.
+
+        :return XML node containing the action's data
+        """
         node = ElementTree.Element("remap")
         node.set("vjoy", str(self.vjoy_device_id))
         if self.input_type == InputType.Keyboard:
@@ -218,6 +241,10 @@ class Remap(gremlin.base_classes.AbstractAction):
         return node
 
     def _generate_code(self):
+        """Returns Python code for this action.
+
+        :return Python code related to this action
+        """
         return self._code_generation(
             "remap",
             {
@@ -226,6 +253,10 @@ class Remap(gremlin.base_classes.AbstractAction):
         )
 
     def _is_valid(self):
+        """Returns whether or not the action is configured properly.
+
+        :return True if the action is configured correctly, False otherwise
+        """
         return True
 
 version = 1

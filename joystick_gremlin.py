@@ -400,13 +400,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         # in the new profile
         for device in [entry for entry in self.devices if not entry.is_virtual]:
             self._profile.initialize_joystick_device(device, ["Default"])
-            # new_device = gremlin.profile.Device(self._profile)
-            # new_device.name = device.name
-            # new_device.hardware_id = device.hardware_id
-            # new_device.windows_id = device.windows_id
-            # new_device.type = gremlin.profile.DeviceType.Joystick
-            # self._profile.devices[gremlin.util.device_id(new_device)] = \
-            #     new_device
 
         # Create keyboard device entry
         keyboard_device = gremlin.profile.Device(self._profile)
@@ -425,9 +418,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Create a default mode
         for device in self._profile.devices.values():
             device.ensure_mode_exists("Default")
-            # new_mode = profile.Mode(device)
-            # new_mode.name = "Default"
-            # device.modes["Default"] = new_mode
         self._current_mode = "Default"
 
         # Create device tabs
@@ -435,9 +425,6 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Update everything to the new mode
         self._mode_configuration_changed()
-
-        # Select the last tab which contains the Getting started guide
-        # self.ui.devices.setCurrentIndex(len(self.tabs))
 
     def save_profile(self):
         """Saves the current profile to the hard drive.
@@ -1011,7 +998,11 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def _set_joystick_input_highlighting(self, is_enabled):
         """Enables / disables the highlighting of the current input
-        when used."""
+        when used.
+
+        :param is_enabled if True the input highlighting is enabled and
+            disabled otherwise
+        """
         el = gremlin.event_handler.EventListener()
         if is_enabled:
             el.joystick_event.connect(
@@ -1129,7 +1120,6 @@ if __name__ == "__main__":
 
     sys.path.insert(0, gremlin.util.userprofile_path())
     gremlin.util.setup_userprofile()
-
 
     # Fix some dumb Qt bugs
     QtWidgets.QApplication.addLibraryPath(os.path.join(

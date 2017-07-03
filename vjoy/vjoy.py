@@ -228,7 +228,7 @@ class Hat:
     """Represents a discrete hat in vJoy, allows setting the direction
     of the hat."""
 
-    # Recognized direction names
+    # Discrete directions, mapping (x, y) coordinates to vJoy values
     to_discrete_direction = {
         (0, 1): 0,
         (1, 0): 1,
@@ -237,6 +237,7 @@ class Hat:
         (0, 0): -1
     }
 
+    # Continuous directions, mapping 8-way *(x, y) coordinates to vJoy values
     to_continuous_direction = {
         (0, 0): -1,
         (0, 1): 0,
@@ -254,6 +255,7 @@ class Hat:
 
         :param vjoy_dev the vJoy device this hat belongs to
         :param hat_id the id of the hat this object controls
+        :param hat_type the type of hat being used, discrete or continuous
         """
         self.vjoy_dev = vjoy_dev
         self.vjoy_id = vjoy_dev.vjoy_id
@@ -376,17 +378,40 @@ class VJoy:
 
     @property
     def axis_count(self):
+        """Returns the number of axes present in this device.
+
+        :return number of axes on this device
+        """
         return int(len(self._axis))
 
     @property
     def button_count(self):
+        """Returns the number of buttons present in this device.
+
+        :return number of buttons on this device
+        """
         return len(self._button)
 
     @property
     def hat_count(self):
+        """Returns the number of hats present in this device.
+
+        :return number of hats on this device
+        """
         return len(self._hat)
 
     def axis_name(self, axis_id=None, linear_index=None):
+        """Returns the textual name of the requested axis.
+
+        As there are two ways to refer to an axis, absolute in terms of the
+        AxisName enum and relative, i.e. number based on the total number of
+        axes present. This method deals with both methods and the user
+        needs to request the correct one.
+
+        :param axis_id absolute index of the axis whose name to return
+        :param linear_index relative index of the axis whose name to return
+        :return name of the provided axis
+        """
         if axis_id is not None:
             if not self.is_axis_valid(axis_id=axis_id):
                 raise VJoyError(
@@ -403,6 +428,11 @@ class VJoy:
             raise VJoyError("No vjoy_id or linear_index provided")
 
     def axis_id(self, linear_index):
+        """Returns the absolute axis id corresponding to the relative one.
+
+        :param linear_index the relative index of the desired axis
+        :return absolute id of the axis
+        """
         if not self.is_axis_valid(linear_index=linear_index):
             raise VJoyError(
                 "Invalid linear index for axis lookup provided."

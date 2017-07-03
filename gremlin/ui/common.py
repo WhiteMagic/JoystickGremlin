@@ -35,47 +35,91 @@ name_to_input_type = {
 
 class AbstractModel(QtCore.QObject):
 
+    """Base class for MVC models."""
+
     data_changed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
+        """Creates a new model.
+
+        :param parent the parent of this model
+        """
         super().__init__(parent)
 
     def rows(self):
+        """Returns the number of rows in the model.
+
+        :return number of rows
+        """
         pass
 
     def data(self, index):
+        """Returns the data entry stored at the provided index.
+
+        :param index the index for which to return data
+        :return data storead at the given index
+        """
         pass
 
 
 class AbstractView(QtWidgets.QWidget):
 
+    """Base class for MVC views."""
+
+    # Signal emitted when a entry is selected
     item_selected = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
+        """Creates a new view instance.
+
+        :param parent the parent of this view widget
+        """
         super().__init__(parent)
         self.model = None
 
     def set_model(self, model):
+        """Sets the model to display with this view.
+
+        :param model the model to visualize
+        """
         if self.model is not None:
             self.model.data_changed.disconnect(self.redraw)
         self.model = model
         self.model.data_changed.connect(self.redraw)
 
     def select_item(self, index):
+        """Selects the item at the provided index
+
+        :param index the index of the item to select
+        """
         pass
 
     def redraw(self):
+        """Redraws the view."""
         pass
 
 
 class LeftRightPushButton(QtWidgets.QPushButton):
 
+    """Implements a push button that distinguishes between left and right
+    mouse clicks."""
+
+    # Signal emitted when the button is pressed using the right mouse button
     clicked_right = QtCore.pyqtSignal()
 
     def __init__(self, label, parent=None):
+        """Creates a new button instance.
+
+        :param label the text to display on the button
+        :param parent the parent of this button
+        """
         super().__init__(label, parent)
 
     def mousePressEvent(self, event):
+        """Handles mouse press events.
+
+        :param event the mouse press event to handle
+        """
         if event.button() == QtCore.Qt.RightButton:
             self.clicked_right.emit()
         else:
@@ -87,9 +131,14 @@ class NoKeyboardPushButton(QtWidgets.QPushButton):
     """Standard PushButton which does not react to keyboard input."""
 
     def __init__(self, *args, **kwargs):
+        """Creates a new instance."""
         super().__init__(*args, **kwargs)
 
     def keyPressEvent(self, event):
+        """Handles key press events by ignoring them.
+
+        :param event the key event to handle
+        """
         pass
 
 
@@ -545,8 +594,6 @@ class JoystickSelector(QtWidgets.QWidget):
         self.change_cb()
 
 
-# FIXME: stop repeating type to name maps everywhere
-
 class VJoySelector(QtWidgets.QWidget):
 
     """Widget allowing the selection of vJoy inputs."""
@@ -717,9 +764,18 @@ class VJoySelector(QtWidgets.QWidget):
 
 class ActionSelector(QtWidgets.QWidget):
 
+    """Widget permitting the selection of actions."""
+
+    # Signal emitted when an action is going to be added
     action_added = QtCore.pyqtSignal(str)
 
     def __init__(self, input_type, parent=None):
+        """Creates a new selector instance.
+
+        :param input_type the input type for which the action selector is
+            being created
+        :param parent the parent of this widget
+        """
         super().__init__(parent)
 
         self.input_type = input_type
@@ -752,6 +808,11 @@ class ActionSelector(QtWidgets.QWidget):
         return sorted(action_list)
 
     def _add_action(self, clicked=False):
+        """Handles selecting of an acition to be added.
+
+        :param clicked flag indicating whether or not the action resulted from
+            a click
+        """
         self.action_added.emit(self.action_dropdown.currentText())
 
 

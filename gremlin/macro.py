@@ -369,6 +369,10 @@ class MacroManager:
         self._schedule_event.set()
 
     def _handle_events(self, event):
+        """Callback function processing keyboard and joystick events.
+
+        :param event the event to process
+        """
         for eid, data in self._macro_flags.items():
             if data[1] == event:
                 # Handle proper buttons
@@ -398,6 +402,14 @@ class MacroManager:
             self._macro_flags[eid] = (False, self._macro_flags[eid][1])
 
     def _create_stop_event(self, event, repeat_class, condition):
+        """Creates an event to which to react in order to stop macro execution.
+
+        :param event the event that started the execution of a macro
+        :param repeat_class the repeat type of the macro
+        :param condition the activation condition of the macro
+        :return evt the event to which to react in order to stop the execution
+            of the macro
+        """
         evt = event.clone()
 
         if repeat_class == HoldRepeat:
@@ -495,7 +507,7 @@ class AbstractAction:
 
     def __call__(self):
         raise gremlin.error.MissingImplementationError(
-            "AbstractAction::__call__ not implemented in derived class."
+            "AbstractAction.__call__ not implemented in derived class."
         )
 
 
@@ -606,20 +618,38 @@ class Key:
 
 class AbstractRepeat:
 
+    """Base class for all macro repeat modes."""
+
     def __init__(self, delay):
+        """Creates a new instance.
+
+        :param delay the delay between repetitions
+        """
         self.delay = delay
 
     def to_xml(self):
+        """Returns an XML node encoding the repeat information.
+
+        :return XML node containing the instance's information
+        """
         raise gremlin.error.MissingImplementationError(
             "AbstractRepeat::to_xml not implemented in subclass."
         )
 
     def from_xml(self, node):
+        """Populates the instance's data from the provided XML node.
+
+        :param node XML node containing data with which to populate the instance
+        """
         raise gremlin.error.MissingImplementationError(
             "AbstractRepeat::from_xml not implemented in subclass"
         )
 
     def to_code(self):
+        """Generates Python code for this repeat mode.
+
+        :return Python code for this repeat mode
+        """
         raise gremlin.error.MissingImplementationError(
             "AbstractRepeat::to_code not implemented in subclass"
         )
@@ -627,11 +657,22 @@ class AbstractRepeat:
 
 class CountRepeat(AbstractRepeat):
 
+    "Repeat mode which repeats the macro a fixed number of times."
+
     def __init__(self, count=1, delay=0.1):
+        """Creates a new instance.
+
+        :param count the number of times to repeat the macro
+        :param delay the delay between repetitions
+        """
         super().__init__(delay)
         self.count = count
 
     def to_xml(self):
+        """Returns an XML node encoding the repeat information.
+
+        :return XML node containing the instance's information
+        """
         node = ElementTree.Element("repeat")
         node.set("type", "count")
         node.set("count", str(self.count))
@@ -639,10 +680,18 @@ class CountRepeat(AbstractRepeat):
         return node
 
     def from_xml(self, node):
+        """Populates the instance's data from the provided XML node.
+
+        :param node XML node containing data with which to populate the instance
+        """
         self.delay = float(node.get("delay"))
         self.count = int(node.get("count"))
 
     def to_code(self):
+        """Generates Python code for this repeat mode.
+
+        :return Python code for this repeat mode
+        """
         return "gremlin.macro.CountRepeat({:d}, {:.2f})".format(
             self.count,
             self.delay
@@ -651,36 +700,75 @@ class CountRepeat(AbstractRepeat):
 
 class ToggleRepeat(AbstractRepeat):
 
+    """Repeat mode which repeats the macro as long as it hasn't been toggled
+    off again after being toggled on."""
+
     def __init__(self, delay=0.1):
+        """Creates a new instance.
+
+        :param delay the delay between repetitions
+        """
         super().__init__(delay)
 
     def to_xml(self):
+        """Returns an XML node encoding the repeat information.
+
+        :return XML node containing the instance's information
+        """
         node = ElementTree.Element("repeat")
         node.set("type", "toggle")
         node.set("delay", str(self.delay))
         return node
 
     def from_xml(self, node):
+        """Populates the instance's data from the provided XML node.
+
+        :param node XML node containing data with which to populate the instance
+        """
         self.delay = float(node.get("delay"))
 
     def to_code(self):
+        """Generates Python code for this repeat mode.
+
+        :return Python code for this repeat mode
+        """
         return "gremlin.macro.ToggleRepeat({:.2f})".format(self.delay)
 
 
 class HoldRepeat(AbstractRepeat):
+
+    """Repeat mode which repeats the macro as long as the activation condition
+    is being fulfilled or held down."""
+
     def __init__(self, delay=0.1):
+        """Creates a new instance.
+
+        :param delay the delay between repetitions
+        """
         super().__init__(delay)
 
     def to_xml(self):
+        """Returns an XML node encoding the repeat information.
+
+        :return XML node containing the instance's information
+        """
         node = ElementTree.Element("repeat")
         node.set("type", "hold")
         node.set("delay", str(self.delay))
         return node
 
     def from_xml(self, node):
+        """Populates the instance's data from the provided XML node.
+
+        :param node XML node containing data with which to populate the instance
+        """
         self.delay = float(node.get("delay"))
 
     def to_code(self):
+        """Generates Python code for this repeat mode.
+
+        :return Python code for this repeat mode
+        """
         return "gremlin.macro.HoldRepeat({:.2f})".format(self.delay)
 
 

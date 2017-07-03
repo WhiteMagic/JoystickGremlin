@@ -28,30 +28,56 @@ from . import common, error, plugin_manager, profile
 
 class AbstractActivationCondition(metaclass=ABCMeta):
 
+    """Base class of all activation conditions."""
+
     def __init__(self):
+        """Creates a new instance."""
         pass
 
     @abstractmethod
     def from_xml(self, node):
+        """Populates the activation condition based on the node's data.
+
+        :param node the node containing data for this instance
+        """
         pass
 
     @abstractmethod
     def to_xml(self):
+        """Returns an XML node representing the data of this instance.
+
+        :return XML node containing the instance's data
+        """
         pass
 
 
 class AxisActivationCondition(AbstractActivationCondition):
 
+    """Activation condition for an axis, turning it into a button."""
+
     def __init__(self, lower_limit=0.0, upper_limit=0.0):
+        """Creates a new instance.
+
+        :param lower_limit the lower limit of the virtual button
+        :param upper_limit the upper limit of the virtual button
+        """
         super().__init__()
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
 
     def from_xml(self, node):
+        """Populates the activation condition based on the node's data.
+
+        :param node the node containing data for this instance
+        """
         self.lower_limit = profile.parse_float(node.get("lower-limit"))
         self.upper_limit = profile.parse_float(node.get("upper-limit"))
 
     def to_xml(self):
+        """Returns an XML node representing the data of this instance.
+
+        :return XML node containing the instance's data
+        """
         node = ElementTree.Element("activation-condition")
         node.set("lower-limit", str(self.lower_limit))
         node.set("upper-limit", str(self.upper_limit))
@@ -60,6 +86,9 @@ class AxisActivationCondition(AbstractActivationCondition):
 
 class HatActivationCondition(AbstractActivationCondition):
 
+    """Activatio condition which combines hat directions into a button."""
+
+    # Mapping from event directions to names
     direction_to_name = {
         ( 0,  0): "center",
         ( 0,  1): "north",
@@ -71,6 +100,8 @@ class HatActivationCondition(AbstractActivationCondition):
         (-1,  0): "west",
         (-1,  1): "north-west"
     }
+
+    # Mapping from names to event directions
     name_to_direction = {
         "center": (0, 0),
         "north": (0, 1),
@@ -83,17 +114,29 @@ class HatActivationCondition(AbstractActivationCondition):
         "north-west": (-1, 1)
     }
 
-    def __init__(self, directions=[]):
+    def __init__(self, directions=()):
+        """Creates a instance.
+
+        :param directions list of direction that form the virtual button
+        """
         super().__init__()
         self.directions = list(set(directions))
 
     def from_xml(self, node):
+        """Populates the activation condition based on the node's data.
+
+        :param node the node containing data for this instance
+        """
         for key, value in node.items():
             if key in HatActivationCondition.name_to_direction and \
                             profile.parse_bool(value):
                 self.directions.append(key)
 
     def to_xml(self):
+        """Returns an XML node representing the data of this instance.
+
+        :return XML node containing the instance's data
+        """
         node = ElementTree.Element("activation-condition")
         for direction in self.directions:
             if direction in HatActivationCondition.name_to_direction:
@@ -109,7 +152,7 @@ class AbstractAction(profile.ProfileData):
     def __init__(self, parent):
         """Creates a new instance.
 
-        :parent the InputItem which is the parent to this action
+        :parent the container which is the parent to this action
         """
         assert isinstance(parent, AbstractContainer)
         super().__init__(parent)
@@ -192,11 +235,19 @@ class AbstractContainer(profile.ProfileData):
     }
 
     def __init__(self, parent):
+        """Creates a new instance.
+
+        :parent the InputItem which is the parent to this action
+        """
         super().__init__(parent)
         self.actions = []
         self.activation_condition = None
 
     def add_action(self, action):
+        """Adds an action to this container.
+
+        :param action the action to add
+        """
         assert isinstance(action, AbstractAction)
         self.actions.append(action)
 
@@ -224,11 +275,19 @@ class AbstractContainer(profile.ProfileData):
             self.activation_condition = None
 
     def from_xml(self, node):
+        """Populates the instance with data from the given XML node.
+
+        :param node the XML node to populate fields with
+        """
         super().from_xml(node)
         self._parse_action_xml(node)
         self._parse_activation_condition_xml(node)
 
     def to_xml(self):
+        """Returns a XML node representing the instance's contents.
+
+        :return XML node representing the state of this instance
+        """
         node = super().to_xml()
         # Add activation condition if needed
         if self.activation_condition:
@@ -236,6 +295,10 @@ class AbstractContainer(profile.ProfileData):
         return node
 
     def _parse_action_xml(self, node):
+        """Parses the XML content related to actions.
+
+        :param node the XML node to process
+        """
         action_name_map = plugin_manager.ActionPlugins().tag_map
         for child in node:
             if child.tag == "activation-condition":
@@ -250,6 +313,10 @@ class AbstractContainer(profile.ProfileData):
             self.actions.append(entry)
 
     def _parse_activation_condition_xml(self, node):
+        """Parses the activation condition part of the XML data.
+
+        :param node the XML node to process
+        """
         ac_node = node.find("activation-condition")
 
         if ac_node is not None:
@@ -259,6 +326,7 @@ class AbstractContainer(profile.ProfileData):
             self.activation_condition.from_xml(ac_node)
 
     def _generate_code(self):
+        """Generates Python code for this container."""
         # Generate code for each of the actions so they are cached and have a
         # unique code_id
         for action in self.actions:
@@ -266,6 +334,10 @@ class AbstractContainer(profile.ProfileData):
             gremlin.profile.ProfileData.next_code_id += 1
 
     def _is_valid(self):
+        """Returns whether or not this container is configured properly.
+
+        :return True if configured properly, False otherwise
+        """
         # Check state of the container
         state = self._is_container_valid()
         # Check state of all linked actions

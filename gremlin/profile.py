@@ -22,8 +22,7 @@ from abc import abstractmethod, ABCMeta
 from xml.dom import minidom
 from xml.etree import ElementTree
 
-import action_plugins.common
-import action_plugins.remap
+import action_plugins
 from gremlin.common import DeviceType, InputType
 from . import error, joystick_handling, plugin_manager, util
 
@@ -187,6 +186,11 @@ def parse_float(value):
 
 
 def extract_remap_actions(action_list):
+    """Returns a list of remap actions from a list of actions.
+
+    :param action_list list of actions from which to extract Remap actions
+    :return list of Remap actions contained in the provided list of actions
+    """
     remap_actions = []
     for entry in action_list:
         if isinstance(entry, action_plugins.remap.Remap):
@@ -198,6 +202,7 @@ class ProfileConverter:
 
     """Handle converting and checking profiles."""
 
+    # Current profile version number
     current_version = 4
 
     def __init__(self):
@@ -453,6 +458,15 @@ class ProfileConverter:
         return new_root
 
     def _p3_extract_map_to_keyboard(self, input_item):
+        """Converts an old macro setup to a map to keyboard action.
+
+        Previously a certain pattern was used to achieve a keyboard press
+        forwarding. With the introduction of a dedicated action for this,
+        actions following this pattern are being converted.
+
+        :param input_item the InputItem containing the old macro definitions
+        :return map to keyboard node representing the old macros
+        """
         node = ElementTree.Element("map-to-keyboard")
 
         for action in input_item:
@@ -471,10 +485,17 @@ class ProfileConverter:
 
 class Settings:
 
+    """Stores general profile specific settings."""
+
     def __init__(self):
+        """Creates a new instance."""
         self.vjoy_initial_values = {}
 
     def to_xml(self):
+        """Returns an XML node containing the settings.
+
+        :return XML node containing the settings
+        """
         node = ElementTree.Element("settings")
 
         # Process vJoy axis initial values
@@ -491,6 +512,10 @@ class Settings:
         return node
 
     def from_xml(self, node):
+        """Populates the data storage with the XML node's contents.
+
+        :param node the node containing the settings data
+        """
         if not node:
             return
 
@@ -503,6 +528,12 @@ class Settings:
                     float(axis_node.get("value"))
 
     def get_initial_vjoy_axis_value(self, vid, aid):
+        """Returns the initial value a vJoy axis should use.
+
+        :param vid the id of the virtual joystick
+        :param aid the id of the axis
+        :return default value for the specified axis
+        """
         value = 0.0
         if vid in self.vjoy_initial_values:
             if aid in self.vjoy_initial_values[vid]:
@@ -510,6 +541,12 @@ class Settings:
         return value
 
     def set_initial_vjoy_axis_value(self, vid, aid, value):
+        """Sets the default value for a particular vJoy axis.
+
+        :param vid the id of the virtual joystick
+        :param aid the id of the axis
+        :param value the default value to use with the specified axis
+        """
         if vid not in self.vjoy_initial_values:
             self.vjoy_initial_values[vid] = {}
         self.vjoy_initial_values[vid][aid] = value
@@ -532,6 +569,11 @@ class Profile:
         self.parent = None
 
     def initialize_joystick_device(self, device, modes):
+        """Ensures a joystick is properly initialized in the profile.
+
+        :param device the device to initialize
+        :param modes the list of modes to be present
+        """
         new_device = Device(self)
         new_device.name = device.name
         new_device.hardware_id = device.hardware_id
@@ -857,6 +899,11 @@ class Device:
         self.type = None
 
     def ensure_mode_exists(self, mode_name, device=None):
+        """Ensures that a specified mode exists, creating it if needed.
+
+        :param mode_name the name of the mode being checked
+        :param device a device to initialize for this mode if specified
+        """
         if mode_name in self.modes:
             mode = self.modes[mode_name]
         else:
@@ -1054,13 +1101,6 @@ class InputItem:
         if self.input_type == InputType.Keyboard:
             self.input_id = (self.input_id, parse_bool(node.get("extended")))
         for child in node:
-            # if child.tag not in action_name_map:
-            #     logging.getLogger("system").warning(
-            #         "Unknown node present: {}".format(child.tag)
-            #     )
-            #     continue
-            # entry = action_name_map[child.tag](self)
-            # entry.from_xml(child)
             container_type = child.attrib["type"]
             if container_type not in container_name_map:
                 logging.getLogger("system").warning(
@@ -1100,6 +1140,10 @@ class InputItem:
         return node
 
     def __eq__(self, other):
+        """Checks whether or not two InputItem instances are identical.
+
+        :return True if they are identical, False otherwise
+        """
         return self.__hash__() == other.__hash__()
 
     def __hash__(self):
@@ -1118,15 +1162,31 @@ class InputItem:
 
 class CodeBlock:
 
+    """Storage for arbitrary code blocks generated from profile data."""
+
     def __init__(self):
+        """Creates a new empty instance."""
         self._storage = {}
 
     def store(self, key, code):
+        """Stores the provided code in a named block.
+
+        If there is already a block with an identical name the new code is
+        appended to the already existing code.
+
+        :param key the name of the block in which to store the code
+        :param code the code to store in the named block
+        """
         if key not in self._storage:
             self._storage[key] = ""
         self._storage[key] += code
 
     def retrieve(self, key):
+        """Returns the code stored in a named block.
+
+        :param key the name of the block to return
+        :return the code stored in the given block
+        """
         if key not in self._storage:
             raise error.GremlinError(
                 "Invalid code attribute '{}' requested".format(key)
@@ -1134,12 +1194,28 @@ class CodeBlock:
         return self._storage[key]
 
     def keys(self):
+        """Returns a list of all block names.
+
+        :return list of all block names
+        """
         return self._storage.keys()
 
     def __getattr__(self, key):
+        """Returns the code stored in a named block.
+
+        :param key the name of the block to return
+        :return the code stored in the given block
+        """
         return self.retrieve(key)
 
     def combine(self, other):
+        """Combines two CodeBlock instances.
+
+        The other CodeBlock is merged into the current one, appending code
+        from identical blocks to the already existing ones.
+
+        :param other the CodeBlock instance to merge into this one
+        """
         for key in other.keys():
             self.store(key, other.retrieve(key))
 
@@ -1185,7 +1261,6 @@ class ProfileData(metaclass=ABCMeta):
         if self.code is None:
             self.code = self._generate_code()
             assert isinstance(self.code, CodeBlock)
-            # ProfileData.next_code_id += 1
         return self.code
 
     def is_valid(self):

@@ -53,21 +53,40 @@ class InputIdentifier(object):
 
 class InputItemListModel(common.AbstractModel):
 
+    """Model storing a device's input item list."""
+
     def __init__(self, device_data, mode):
+        """Creates a new instance.
+
+        :param device_data the profile data managed by this model
+        :param mode the mode this model manages
+        """
         super().__init__()
         self._device_data = device_data
         self._mode = mode
 
     @property
     def mode(self):
+        """Returns the mode handled by this model.
+
+        :return the mode managed by the model
+        """
         return self._mode
 
     @mode.setter
     def mode(self, mode):
+        """Sets the mode managed by the model.
+
+        :param mode the mode handled by the model
+        """
         self._mode = mode
         self.data_changed.emit()
 
     def rows(self):
+        """Returns the number of rows in the model.
+
+        :return number of rows in the model
+        """
         input_items = self._device_data.modes[self._mode]
         return len(input_items.config[InputType.JoystickAxis]) + \
             len(input_items.config[InputType.JoystickButton]) + \
@@ -75,6 +94,11 @@ class InputItemListModel(common.AbstractModel):
             len(input_items.config[InputType.Keyboard])
 
     def data(self, index):
+        """Returns the data stored at the provided index.
+
+        :param index the index for which to return the data
+        :return data stored at the provided index
+        """
         input_items = self._device_data.modes[self._mode]
         axis_count = len(input_items.config[InputType.JoystickAxis])
         button_count = len(input_items.config[InputType.JoystickButton])
@@ -103,6 +127,11 @@ class InputItemListModel(common.AbstractModel):
                 ]
 
     def event_to_index(self, event):
+        """Converts an event to a model index.
+
+        :param event the event to convert
+        :return index corresponding to the event's input
+        """
         input_items = self._device_data.modes[self._mode]
         offset_map = dict()
         offset_map[InputType.Keyboard] = 0
@@ -120,6 +149,9 @@ class InputItemListModel(common.AbstractModel):
 
 class InputItemListView(common.AbstractView):
 
+    """View displaying the contents of an InputItemListModel."""
+
+    # Conversion from input type to a display name
     type_to_string = {
         InputType.JoystickAxis: "Axis",
         InputType.JoystickButton: "Button",
@@ -128,6 +160,10 @@ class InputItemListView(common.AbstractView):
     }
 
     def __init__(self, parent=None):
+        """Creates a new view instance.
+
+        :param parent the parent of the widget
+        """
         super().__init__(parent)
 
         self.shown_input_types = [
@@ -157,10 +193,15 @@ class InputItemListView(common.AbstractView):
         self.main_layout.addWidget(self.scroll_area)
 
     def limit_input_types(self, types):
+        """Limits the items shown to the given types.
+
+        :param types list of input types to display
+        """
         self.shown_input_types = types
         self.redraw()
 
     def redraw(self):
+        """Redraws the entire model."""
         common.clear_layout(self.scroll_layout)
 
         if self.model is None:
@@ -190,6 +231,10 @@ class InputItemListView(common.AbstractView):
         self.scroll_layout.addStretch()
 
     def redraw_index(self, index):
+        """Redraws the view entry at the given index.
+
+        :param index the index of the entry to redraw
+        """
         if self.model is None:
             return
 
@@ -199,9 +244,21 @@ class InputItemListView(common.AbstractView):
         widget.update_description(data.description)
 
     def _create_selection_callback(self, index):
+        """Creates a callback handling the selection of items.
+
+        :param index the index of the item to create the callback for
+        :return callback to be triggered when the item at the provided index
+            is selected
+        """
         return lambda x: self.select_item(index)
 
     def select_item(self, index, emit_signal=True):
+        """Handles selecting a specific item.
+
+        :param index the index of the item being selected
+        :param emit_signal flag indicating whether or not a signal is to be
+            emitted when the item is being selected
+        """
         if isinstance(index, gremlin.event_handler.Event):
             index = self.model.event_to_index(index)
         self.current_index = index
@@ -317,9 +374,16 @@ class ActionLabel(QtWidgets.QLabel):
 
 class ContainerSelector(QtWidgets.QWidget):
 
+    """Allows the selection of a container type."""
+
+    # Signal emitted when a container type is selected
     container_added = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
+        """Creates a new selector instance.
+
+        :param parent the parent of this widget
+        """
         super().__init__(parent)
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
@@ -344,10 +408,16 @@ class ContainerSelector(QtWidgets.QWidget):
         return sorted(container_list)
 
     def _add_container(self, clicked=False):
+        """Handles add button events.
+
+        :param clicked flag indicating whether or not the button was pressed
+        """
         self.container_added.emit(self.container_dropdown.currentText())
 
 
 class AbstractContainerWidget(QtWidgets.QDockWidget):
+
+    """Base class for container widgets."""
 
     # Signal which is emitted whenever the widget is closed
     closed = QtCore.pyqtSignal(QtWidgets.QWidget)
@@ -359,6 +429,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     palette = QtGui.QPalette()
     palette.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
 
+    # Maps activation condition data to activation condition widgets
     condition_to_widget = {
         gremlin.base_classes.AxisActivationCondition:
             gremlin.ui.activation_condition.AxisActivationConditionWidget,
@@ -367,6 +438,11 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     }
 
     def __init__(self, profile_data, parent=None):
+        """Creates a new container widget object.
+
+        :param profile_data the data the container handles
+        :param parent the parent of the widget
+        """
         assert isinstance(profile_data, gremlin.base_classes.AbstractContainer)
         super().__init__(parent)
         self.profile_data = profile_data
@@ -398,6 +474,11 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self._create_ui()
 
     def _get_widget_index(self, widget):
+        """Returns the index of the provided widget.
+
+        :param widget the widget for which to return the index
+        :return the index of the provided widget, -1 if not present
+        """
         index = -1
         for i, entry in enumerate(self.action_widgets):
             if entry.action_widget == widget:
@@ -405,6 +486,12 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         return index
 
     def _add_action_widget(self, widget, label):
+        """Adds an action widget to the container.
+
+        :param widget the widget to be added
+        :param label the label to show in the title
+        :return wrapped widget
+        """
         wrapped_widget = ActionWrapper(
             widget,
             label,
@@ -417,12 +504,6 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         )
         return wrapped_widget
 
-    def _add_separator(self):
-        line = QtWidgets.QFrame()
-        line.setFrameShape(QtWidgets.QFrame.HLine)
-        line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.main_layout.addWidget(line)
-
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
 
@@ -432,18 +513,25 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.closed.emit(self)
 
     def _handle_interaction(self, widget, action):
+        """Handles interaction with widgets inside the container.
+
+        :param widget the widget on which the interaction is being carried out
+        :param action the action being applied
+        """
         raise gremlin.error.MissingImplementationError(
             "AbstractContainerWidget._handle_interaction not "
             "implemented in subclass"
         )
 
     def _create_ui(self):
+        """Creates the UI elements for the widget."""
         raise gremlin.error.MissingImplementationError(
             "AbstractContainerWidget._create_ui not "
             "implemented in subclass"
         )
 
     def _get_window_title(self):
+        """Returns the title to show on the widget."""
         return self.profile_data.name
 
 
@@ -515,9 +603,17 @@ class ActionWrapper(QtWidgets.QGroupBox):
         Edit = 4
         Count = 5
 
+    # Signal emitted when an interaction is triggered on an action
     interacted = QtCore.pyqtSignal(Interactions)
 
     def __init__(self, action_widget, label, allowed_interactions, parent=None):
+        """Wraps an existing action widget.
+
+        :param action_widget the action widget to wrap
+        :param label the label of the action widget
+        :param allowed_interactions list of allowed interaction types
+        :param parent the parent of the widget
+        """
         super().__init__(parent)
         self.action_widget = action_widget
         self._create_edit_controls(allowed_interactions)
@@ -531,6 +627,10 @@ class ActionWrapper(QtWidgets.QGroupBox):
         # self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _create_edit_controls(self, allowed_interactions):
+        """Creates interaction controls based on the allowed interactions.
+
+        :param allowed_interactions list of allowed interactions
+        """
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Background, QtCore.Qt.red)
 
@@ -575,6 +675,7 @@ class ActionWrapper(QtWidgets.QGroupBox):
         self.controls_layout.addStretch(1)
 
     def _show_hint(self):
+        """Displays a hint, explaining the purpose of the action."""
         QtWidgets.QWhatsThis.showText(
             self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
             gremlin.hints.hint.get(self.action_widget.action_data.tag, "")

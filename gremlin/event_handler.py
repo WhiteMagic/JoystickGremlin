@@ -221,6 +221,9 @@ class EventListener(QtCore.QObject):
 
         :param event the joystick event
         """
+        # FIXME: this currently prevents forwarding of vJoy inputs to other
+        #   vJoy inputs which might be needed for certain applications, see:
+        #   https://github.com/WhiteMagic/JoystickGremlin/issues/53
         if event.type == sdl2.SDL_JOYAXISMOTION:
             if self._joystick_guid_map[event.jaxis.which] != 873639358:
                 calib_id = (
@@ -310,7 +313,7 @@ class EventHandler(QtCore.QObject):
     is_active = QtCore.pyqtSignal(bool)
 
     def __init__(self):
-        """Creates a new instance."""
+        """Initializes the EventHandler instance."""
         QtCore.QObject.__init__(self)
         self.process_callbacks = True
         self.plugins = {}
@@ -321,10 +324,18 @@ class EventHandler(QtCore.QObject):
 
     @property
     def active_mode(self):
+        """Returns the currently active mode.
+
+        :return name of the currently active mode
+        """
         return self._active_mode
 
     @property
     def previous_mode(self):
+        """Returns the previously active mode.
+
+        :return name of the previously active mode
+        """
         return self._previous_mode
 
     def add_plugin(self, plugin):

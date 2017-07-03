@@ -28,9 +28,18 @@ _suspend_input_highlighting = False
 
 
 def suspend_input_highlighting():
+    """Returns whether or not input highlighting is suspended.
+
+    :return True if input's are not automatically selected, False otherwise
+    """
     return _suspend_input_highlighting
 
 
 def set_suspend_input_highlighting(value):
+    """Sets the input highlighting behaviour.
+
+    :param value if True disables automatic selection of used inputs, if False
+        inputs will automatically be selected upon use
+    """
     global _suspend_input_highlighting
     _suspend_input_highlighting = value

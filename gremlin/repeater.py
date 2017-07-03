@@ -39,6 +39,7 @@ class Repeater(QtCore.QObject):
         """Creates a new instance.
 
         :param events the list of events to emit
+        :param update_func function used to communicate updates to the UI
         """
         QtCore.QObject.__init__(self)
         self.is_running = False

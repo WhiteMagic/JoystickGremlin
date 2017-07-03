@@ -23,9 +23,18 @@ import gremlin
 
 class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
 
+    """Base class for activation condition widgets."""
+
     modified = QtCore.pyqtSignal()
 
     def __init__(self, condition_data, parent=None, layout_direction="vertical"):
+        """Creates a new activation condition widget.
+
+        :param condition_data the data managed by the widget
+        :param parent the parent of the widget
+        :param layout_direction which layout direction to use, vertical or
+            horizontal
+        """
         super().__init__(parent)
         self.condition_data = condition_data
         if layout_direction == "vertical":
@@ -37,12 +46,14 @@ class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
         self._populate_ui()
 
     def _create_ui(self):
+        """Creates all required UI elements."""
         raise gremlin.error.MissingImplementationError(
             "AbstractActivationConditionWidget._create_ui not "
             "implemented in subclass."
         )
 
     def _populate_ui(self):
+        """Populates the UI elements with data."""
         raise gremlin.error.MissingImplementationError(
             "AbstractActivationConditionWidget._populate_ui not "
             "implemented in subclass."
@@ -51,10 +62,18 @@ class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
 
 class AxisActivationConditionWidget(AbstractActivationConditionWidget):
 
+    """Condition widget for axis, turning an axis area into a button."""
+
     def __init__(self, condition_data, parent=None):
+        """Creates a new axis activation condition widget.
+
+        :param condition_data the data managed by the widget
+        :param parent the parent of the widget
+        """
         super().__init__(condition_data, parent)
 
     def _create_ui(self):
+        """Creates all required UI elements."""
         self.range_layout = QtWidgets.QHBoxLayout()
         self.lower_limit = QtWidgets.QDoubleSpinBox()
         self.lower_limit.setRange(-1.0, 1.0)
@@ -80,18 +99,28 @@ class AxisActivationConditionWidget(AbstractActivationConditionWidget):
         self.upper_limit.valueChanged.connect(self._upper_limit_cb)
 
     def _populate_ui(self):
+        """Populates the UI elements with data."""
         self.lower_limit.setValue(self.condition_data.lower_limit)
         self.upper_limit.setValue(self.condition_data.upper_limit)
 
     def _lower_limit_cb(self, value):
+        """Updates the lower limit value.
+
+        :param value the new value of the virtual button's lower limit
+        """
         self.condition_data.lower_limit = value
         self.modified.emit()
 
     def _upper_limit_cb(self, value):
+        """Updates the upper limit value.
+
+        :param value the new value of the virtual button's upper limit
+        """
         self.condition_data.upper_limit = value
         self.modified.emit()
 
     def _show_hint(self):
+        """Displays a hint explaining the activation condition."""
         QtWidgets.QWhatsThis.showText(
             self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
             gremlin.hints.hint.get("axis-condition", "")
@@ -100,11 +129,19 @@ class AxisActivationConditionWidget(AbstractActivationConditionWidget):
 
 class HatActivationConditionWidget(AbstractActivationConditionWidget):
 
+    """Condition widget for hats, turning a set of directions into a button."""
+
     def __init__(self, condition_data, parent=None):
+        """Creates a new hat activation condition widget.
+
+        :param condition_data the data managed by the widget
+        :param parent the parent of the widget
+        """
         self._widgets = {}
         super().__init__(condition_data, parent, "horizontal")
 
     def _create_ui(self):
+        """Creates all required UI elements."""
         self.setTitle("Activate on")
 
         directions = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
@@ -126,6 +163,7 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
         self.main_layout.addWidget(self.help_button)
 
     def _populate_ui(self):
+        """Populates the UI elements with data."""
         direction_map = {
             "north": "n",
             "north-east": "ne",
@@ -143,6 +181,11 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
             )
 
     def _state_changed(self, direction, state):
+        """Updates the set of directions making up the button.
+
+        :param direction the direction being modified
+        :param state the change being performed
+        """
         direction_map = {
             "n": "north",
             "ne": "north-east",
@@ -164,9 +207,15 @@ class HatActivationConditionWidget(AbstractActivationConditionWidget):
             list(set(self.condition_data.directions))
 
     def _create_state_changed_cb(self, direction):
+        """Creates a state change callback.
+
+        :param direction the direction for which to customize the callback
+        :retuyrn callback function to update the state of a direction
+        """
         return lambda x: self._state_changed(direction, x)
 
     def _show_hint(self):
+        """Displays a hint explaining the activation condition."""
         QtWidgets.QWhatsThis.showText(
             self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
             gremlin.hints.hint.get("hat-condition", "")

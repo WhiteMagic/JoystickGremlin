@@ -34,7 +34,7 @@ class VJoyState(enum.Enum):
     Unknown = 4     # Unknown type of error
 
 
-class VJoyInterface(object):
+class VJoyInterface:
 
     """Allows low level interaction with VJoy devices via ctypes."""
 

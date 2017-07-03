@@ -187,10 +187,18 @@ class Configuration(object):
 
     @property
     def last_profile(self):
+        """Returns the last used profile.
+
+        :return path to the most recently used profile
+        """
         return self._data.get("last_profile", None)
 
     @last_profile.setter
     def last_profile(self, value):
+        """Sets the last used profile.
+
+        :param value path to the most recently used profile
+        """
         self._data["last_profile"] = value
 
         # Update recent profiles
@@ -205,78 +213,158 @@ class Configuration(object):
 
     @property
     def recent_profiles(self):
+        """Returns a list of recently used profiles.
+
+        :return list of recently used profiles
+        """
         return self._data.get("recent_profiles", [])
 
     @property
     def autoload_profiles(self):
+        """Returns whether or not to automatically load profiles.
+
+        This enables / disables the process based profile autoloading.
+
+        :return True if auto profile loading is active, False otherwise
+        """
         return self._data.get("autoload_profiles", False)
 
     @autoload_profiles.setter
     def autoload_profiles(self, value):
+        """Sets whether or not to automatically load profiles.
+
+        This enables / disables the process based profile autoloading.
+
+        :param value Flag indicating whether or not to enable / disable the
+            feature
+        """
         if type(value) == bool:
             self._data["autoload_profiles"] = value
             self.save()
 
     @property
     def highlight_input(self):
+        """Returns whether or not to highlight inputs.
+
+        This enable / disables the feature where using a physical input
+        automatically selects it in the UI.
+
+        :return True if the feature is enabled, False otherwise
+        """
         return self._data.get("highlight_input", True)
 
     @highlight_input.setter
     def highlight_input(self, value):
+        """Sets whether or not to highlight inputs.
+
+        This enable / disables the feature where using a physical input
+        automatically selects it in the UI.
+
+        :param value Flag indicating whether or not to enable / disable the
+            feature
+        """
         if type(value) == bool:
             self._data["highlight_input"] = value
             self.save()
 
     @property
     def mode_change_message(self):
+        """Returns whether or not to show a windows notification on mode change.
+
+        :return True if the feature is enabled, False otherwise
+        """
         return self._data.get("mode_change_message", False)
 
     @mode_change_message.setter
     def mode_change_message(self, value):
+        """Sets whether or not to show a windows notification on mode change.
+
+        :param value True to enable the feature, False to disable
+        """
         self._data["mode_change_message"] = bool(value)
         self.save()
 
     @property
     def close_to_tray(self):
+        """Returns whether or not to minimze the application when closing it.
+
+        :return True if closing minimizes to tray, False otherwise
+        """
         return self._data.get("close_to_tray", False)
 
     @close_to_tray.setter
     def close_to_tray(self, value):
+        """Sets whether or not to minimize to tray instead of closing.
+
+        :param value minimize to tray if True, close if False
+        """
         self._data["close_to_tray"] = bool(value)
         self.save()
 
     @property
     def start_minimized(self):
+        """Returns whether or not to start Gremlin minimized.
+
+        :return True if starting minimized, False otherwise
+        """
         return self._data.get("start_minimized", False)
 
     @start_minimized.setter
     def start_minimized(self, value):
+        """Sets whether or not to start Gremlin minimized.
+
+        :param value start minimized if True and normal if False
+        """
         self._data["start_minimized"] = bool(value)
         self.save()
 
     @property
     def default_action(self):
+        """Returns the default action to show in action drop downs.
+
+        :return default action to show in action selection drop downs
+        """
         return self._data.get("default_action", "Remap")
 
     @default_action.setter
     def default_action(self, value):
+        """Sets the default action to show in action drop downs.
+
+        :param value the name of the default action to show
+        """
         self._data["default_action"] = str(value)
         self.save()
 
     @property
     def window_size(self):
+        """Returns the size of the main Gremlin window.
+
+        :return size of the main Gremlin window
+        """
         return self._data.get("window_size", None)
 
     @window_size.setter
     def window_size(self, value):
+        """Sets the size of the main Gremlin window.
+
+        :param value the size of the main Gremlin window
+        """
         self._data["window_size"] = value
         self.save()
 
     @property
     def window_location(self):
+        """Returns the position of the main Gremlin window.
+
+        :return position of the main Gremlin window
+        """
         return self._data.get("window_location", None)
 
     @window_location.setter
     def window_location(self, value):
+        """Sets the position of the main Gremlin window.
+
+        :param value the position of the main Gremlin window
+        """
         self._data["window_location"] = value
         self.save()

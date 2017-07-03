@@ -179,11 +179,11 @@ callback_registry = CallbackRegistry()
 periodic_registry = PeriodicRegistry()
 
 
-class JoystickWrapper(object):
+class JoystickWrapper:
 
     """Wraps SDL2 joysticks and presents an API similar to vjoy."""
 
-    class Input(object):
+    class Input:
 
         """Represents a joystick input."""
 
@@ -689,7 +689,7 @@ def squash(value, func):
     squashed to [-1, 1].
 
     :param value the function value to compute
-    :param function the function to be squashed
+    :param func the function to be squashed
     :return function value at value after squashing
     """
     return (2 * func(value)) / abs(func(-1) - func(1))

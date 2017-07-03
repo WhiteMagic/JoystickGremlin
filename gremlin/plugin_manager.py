@@ -24,71 +24,12 @@ from . import common, error
 
 
 @common.SingletonDecorator
-class PluginManager:
-
-    """Responsible for handling all plugins."""
-
-    def __init__(self):
-        """Creates a new instance loading plugins from the given location.
-        """
-        self._repositories = {}
-
-    def register(self, category, folder):
-        self._repositories[category] = PluginList(folder)
-
-    def __getitem__(self, key):
-        return self._repositories[key]
-
-
-class PluginList:
-
-    def __init__(self, folder):
-        self._plugin_folder = folder
-        self._repository = {}
-
-        self._discover_plugins()
-
-    @property
-    def repository(self):
-        return self._repository
-
-    def _discover_plugins(self):
-        for root, dirs, files in os.walk(self._plugin_folder):
-            for fname in files:
-                try:
-                    name, ext = os.path.splitext(fname)
-                    # Disregard any files that aren't python code
-                    if ext != ".py":
-                        continue
-                    # Attempt to load the file and if it looks like a proper
-                    # action_plugins store it in the registry
-                    # TODO: this module name generation needs to be more robust
-                    plugin = importlib.import_module("{}.{}".format(
-                        self._plugin_folder,
-                        name
-                    ))
-                    if "version" in plugin.__dict__:
-                        self._repository[plugin.name] = plugin.create
-                        logging.getLogger("system").debug(
-                            "Loaded: {}".format(plugin.name)
-                        )
-                    else:
-                        del plugin
-                except Exception as e:
-                    # Log an error and ignore the action_plugins if
-                    # anything is wrong with it
-                    logging.getLogger("system").warning(
-                        "Loading action_plugins '{}' failed due to: {}".format(
-                            fname,
-                            e
-                        )
-                    )
-
-
-@common.SingletonDecorator
 class ContainerPlugins:
 
+    """Handles discovery and handling of container plugins."""
+
     def __init__(self):
+        """Initializes the container plugin manager."""
         self._plugins = {}
         self._discover_plugins()
 
@@ -98,14 +39,27 @@ class ContainerPlugins:
         self._create_maps()
 
     @property
-    def tag_map(self):
-        return self._tag_to_type_map
-
-    @property
     def repository(self):
+        """Returns the dictionary of all found plugins.
+
+        :return dictionary containing all plugins found
+        """
         return self._plugins
 
+    @property
+    def tag_map(self):
+        """Returns the mapping from a container tag to the container plugin.
+
+        :return mapping from container name to container plugin
+        """
+        return self._tag_to_type_map
+
     def get_class(self, name):
+        """Returns the class object corresponding to the given name.
+
+        :param name of the container class to return
+        :return class object corresponding to the provided name
+        """
         if name not in self._name_to_type_map:
             raise error.GremlinError(
                 "No container with name '{}' exists".format(name)
@@ -195,6 +149,11 @@ class ActionPlugins:
         return self._tag_to_type_map
 
     def get_class(self, name):
+        """Returns the class object corresponding to the given name.
+
+        :param name of the action class to return
+        :return class object corresponding to the provided name
+        """
         if name not in self._name_to_type_map:
             raise error.GremlinError(
                 "No action with name '{}' exists".format(name)
@@ -239,7 +198,7 @@ class ActionPlugins:
     def _discover_plugins(self):
         """Processes known plugin folders for action plugins."""
         for root, dirs, files in os.walk("action_plugins"):
-            for fname in [v for v in files if v == "__init__.py"]:
+            for _ in [v for v in files if v == "__init__.py"]:
                 try:
                     folder, module = os.path.split(root)
                     if folder != "action_plugins":

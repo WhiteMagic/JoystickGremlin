@@ -41,6 +41,7 @@ class ProcessMonitor(QtCore.QObject):
 
     # Definition of the flags for limited information queries
     PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+
     # kernel32.dll library handle
     kernel32 = ctypes.windll.kernel32
 

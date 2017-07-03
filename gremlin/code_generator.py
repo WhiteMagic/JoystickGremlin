@@ -107,7 +107,13 @@ def input_item_identifier_string(input_item):
 
 class CodeGenerator:
 
+    """Generates a Python script representing the entire configuration."""
+
     def __init__(self, config_profile):
+        """Creates a new code generator for the given configuration.
+
+        :param config_profile profile for which to generate code
+        """
         self.decorators = {}
         self.setup = []
         self.callbacks = {}
@@ -119,6 +125,10 @@ class CodeGenerator:
             util.display_error(str(err))
 
     def generate_from_profile(self, config_profile):
+        """Generates the code for the given configuration.
+
+        :param config_profile the profile for which to generate the code
+        """
         assert (isinstance(config_profile, profile.Profile))
 
         # Reset the profile code cache
@@ -143,15 +153,28 @@ class CodeGenerator:
         )
 
     def write_code(self, fname):
+        """Writes the generated code to the given file.
+
+        :param fname path to the file into which to write the code
+        """
         code = re.sub("\r", "", self.code)
         with open(fname, "w") as out:
             out.write(code)
 
     def _process_device(self, device):
+        """Processes the profile data of a single device.
+
+        :param device the device profile to process
+        """
         for i, mode in enumerate(device.modes.values()):
             self._process_mode(mode, i)
 
     def _process_mode(self, mode, index):
+        """Processes a single mode's profile.
+
+        :param mode the mode profile to process
+        :param index the index associated with this mode
+        """
         device_id = util.device_id(mode.parent)
 
         # Ensure data storage is properly initialized
@@ -175,6 +198,11 @@ class CodeGenerator:
                 self._process_input_item(input_item, index)
 
     def _process_input_item(self, input_item, index):
+        """Process an individual input item's profile data.
+
+        :param input_item the input item profile to process
+        :param index the index associated with this input item
+        """
         # Grab required information
         mode = input_item.parent
         device_id = util.device_id(mode.parent)
@@ -226,6 +254,10 @@ class CodeGenerator:
                     self.setup.append(code.setup.strip())
 
     def _reset_code_cache(self, config_profile):
+        """Empties the code cache of a profile.
+
+        :param config_profile the profile whose cache is to be reset
+        """
         profile.ProfileData.next_code_id = 0
         for device in config_profile.devices.values():
             for mode in device.modes.values():

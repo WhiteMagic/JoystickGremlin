@@ -182,6 +182,7 @@ class MacroActionEditor(QtWidgets.QWidget):
         self._update_model()
 
     def _update_model(self):
+        """Forces an update of the model at the current intex."""
         self.model.update(self.index)
 
     def _request_user_input(self):
@@ -424,6 +425,10 @@ class MacroListModel(QtCore.QAbstractListModel):
             self.dataChanged.emit(self.index(id1, 0), self.index(id2, 0))
 
     def update(self, index):
+        """Emits a signal indicating the given index was updated.
+
+        :param index the index which has been updated
+        """
         self.dataChanged.emit(index, index)
 
 
@@ -469,7 +474,14 @@ class MacroListView(QtWidgets.QListView):
 
 class AbstractRepeatMacroWidget(QtWidgets.QWidget):
 
+    """Abstract base class for all repeat UI widgets."""
+
     def __init__(self, data, parent=None):
+        """Creates a new instance.
+
+        :param data the data shown and managed by the widget
+        :param parent the parent of this widget
+        """
         super().__init__(parent)
         self.data = data
         self.main_layout = QtWidgets.QGridLayout(self)
@@ -478,17 +490,20 @@ class AbstractRepeatMacroWidget(QtWidgets.QWidget):
         self._populate_ui()
 
     def _create_ui(self):
+        """Creates the UI components."""
         raise gremlin.error.MissingImplementationError(
             "AbstractRepeatMacroWidget::_create_ui not implemented in subclass"
         )
 
     def _populate_ui(self):
+        """Populates the UI components."""
         raise gremlin.error.MissingImplementationError(
             "AbstractRepeatMacroWidget::_populate_ui not "
             "implemented in subclass"
         )
 
     def _update_data(self):
+        """Updates the managed data based on the UI contents."""
         raise gremlin.error.MissingImplementationError(
             "AbstractRepeatMacroWidget::_populate_ui not "
             "implemented in subclass"
@@ -496,6 +511,8 @@ class AbstractRepeatMacroWidget(QtWidgets.QWidget):
 
 
 class CountRepeatMacroWidget(AbstractRepeatMacroWidget):
+
+    """Repeat UI to specify a number of times to repeat a macro."""
 
     def __init__(self, data, parent=None):
         super().__init__(data, parent)
@@ -530,6 +547,8 @@ class CountRepeatMacroWidget(AbstractRepeatMacroWidget):
 
 class ToggleRepeatMacroWidget(AbstractRepeatMacroWidget):
 
+    """Repeat UI for a toggle repetition."""
+
     def __init__(self, data, parent=None):
         super().__init__(data, parent)
 
@@ -551,6 +570,8 @@ class ToggleRepeatMacroWidget(AbstractRepeatMacroWidget):
 
 
 class HoldRepeatMacroWidget(AbstractRepeatMacroWidget):
+
+    """Repeat UI for a hold repetition."""
 
     def __init__(self, data, parent=None):
         super().__init__(data, parent)
@@ -574,6 +595,8 @@ class HoldRepeatMacroWidget(AbstractRepeatMacroWidget):
 
 class MacroSettingsWidget(QtWidgets.QWidget):
 
+    """Widget presenting macro settings."""
+
     # Lookup tables mapping between display name and enum name
     name_to_widget = {
         "Count": CountRepeatMacroWidget,
@@ -592,6 +615,11 @@ class MacroSettingsWidget(QtWidgets.QWidget):
     }
 
     def __init__(self, action_data, parent=None):
+        """Creates a new UI widget instance.
+
+        :param action_data the data presented by the UI
+        :param parent the parent of this widget
+        """
         super().__init__(parent)
 
         self.action_data = action_data
@@ -605,14 +633,11 @@ class MacroSettingsWidget(QtWidgets.QWidget):
         self._create_ui()
 
     def _create_ui(self):
+        """Creates the UI elements"""
         # Create UI elements
         self.exclusive_checkbox = QtWidgets.QCheckBox("Exclusive")
         self.repeat_dropdown = QtWidgets.QComboBox()
         self.repeat_dropdown.addItems(["None", "Count", "Toggle", "Hold"])
-        # self.repeat_delay = QtWidgets.QDoubleSpinBox()
-        # self.repeat_delay.setMaximum(3600)
-        # self.repeat_delay.setSingleStep(0.1)
-        # self.repeat_delay.setValue(0.1)
         self.repeat_widget = None
         if type(self.action_data.repeat) in MacroSettingsWidget.storage_to_name:
             mode_name = MacroSettingsWidget.storage_to_name[
@@ -636,7 +661,6 @@ class MacroSettingsWidget(QtWidgets.QWidget):
         # Connect signals
         self.exclusive_checkbox.clicked.connect(self._update_settings)
         self.repeat_dropdown.currentTextChanged.connect(self._update_settings)
-        # self.repeat_delay.valueChanged.connect(self._update_settings)
 
         # Place UI elements
         self.group_layout.addWidget(self.exclusive_checkbox)
@@ -645,6 +669,10 @@ class MacroSettingsWidget(QtWidgets.QWidget):
             self.group_layout.addWidget(self.repeat_widget)
 
     def _update_settings(self, value):
+        """Updates the action data based on UI content.
+
+        :param value the value of a change (ignored)
+        """
         self.action_data.exclusive = self.exclusive_checkbox.isChecked()
 
         # Only create a new repeat widget if it changed
@@ -687,6 +715,11 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
     )
 
     def __init__(self, action_data, parent=None):
+        """Creates a new UI widget.
+
+        :param action_data the data of the macro action
+        :param parent the parent of the widget
+        """
         super().__init__(action_data, parent)
         assert(isinstance(action_data, Macro))
 
@@ -757,10 +790,6 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.buttons_layout.addStretch()
 
         # Assemble the entire widget
-        # self.action_edit_layout = QtWidgets.QHBoxLayout()
-        # self.action_edit_layout.addWidget(self.list_view)
-        # self.action_edit_layout.addLayout(self.button_layout)
-        # self.action_edit_layout.addWidget(self.editor_widget)
         self.main_layout.addWidget(self.list_view)
         self.main_layout.addLayout(self.buttons_layout)
         self.main_layout.addLayout(self.editor_settings_layout)

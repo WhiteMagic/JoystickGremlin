@@ -240,6 +240,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
         return is_valid
 
     def _init_from_profile_data(self):
+        """Initializes the spline with profile data."""
         # If the data appears to be invalid insert a valid default
         if len(self._profile_data.control_points) < 4:
             self._profile_data.control_points = []
@@ -279,6 +280,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
         )
 
     def synchronize_data(self):
+        """Ensure that UI and profile data are in sync."""
         control_points = sorted(
             self._control_points,
             key=lambda entry: entry.center.x
@@ -560,6 +562,7 @@ class CurveScene(QtWidgets.QGraphicsScene):
         self._populate_from_model()
 
     def _populate_from_model(self):
+        """Populates the UI based on content stored in the model."""
         for cp in self.model.get_control_points():
             self.addItem(ControlPointGraphicsItem(cp))
         self.redraw_scene()
@@ -966,6 +969,7 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.main_layout.addWidget(self.deadzone)
 
     def _populate_ui(self):
+        """Populates the UI elements."""
         self.curve_type_selection.currentTextChanged.disconnect(
             self._change_curve_type
         )
@@ -1015,21 +1019,6 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
         self._configure_response_curve_view()
 
-        # if curve_type == "Cubic Spline":
-        #     self.curve_scene.add_control_point(Point2D(-1.0, -1.0))
-        #     self.curve_scene.add_control_point(Point2D(1.0, 1.0))
-        #     self.action_data.mapping_type = "cubic-spline"
-        # elif curve_type == "Cubic Bezier Spline":
-        #     self.curve_scene.add_control_point(
-        #         Point2D(-1.0, -1.0),
-        #         (Point2D(-0.95, -1.0),)
-        #     )
-        #     self.curve_scene.add_control_point(
-        #         Point2D(1.0, 1.0),
-        #         (Point2D(0.95, 1.0),)
-        #     )
-        #     self.action_data.mapping_type = "cubic-bezier-spline"
-
     def _configure_response_curve_view(self):
         """Initializes the response curve view components."""
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
@@ -1045,47 +1034,6 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.curve_view_layout.addStretch()
         self.curve_view_layout.addWidget(self.curve_view)
         self.curve_view_layout.addStretch()
-
-    # def to_profile(self):
-    #     self.action_data.mapping_type = \
-    #         ResponseCurve.curve_name_map[self.curve_type_selection.currentText()]
-    #     self.action_data.deadzone = self.deadzone.get_values()
-    #     self.action_data.control_points = []
-    #     if self.action_data.mapping_type == "cubic-spline":
-    #         for cp in self.curve_model.get_control_points():
-    #             self.action_data.control_points.append(
-    #                 [cp.center.x, cp.center.y]
-    #             )
-    #     elif self.action_data.mapping_type == "cubic-bezier-spline":
-    #         control_points = sorted(
-    #             self.curve_model.get_control_points(),
-    #             key=lambda entry: entry.center.x
-    #         )
-    #         for cp in control_points:
-    #             if cp.center.x == -1:
-    #                 self.action_data.control_points.append(
-    #                     [cp.center.x, cp.center.y]
-    #                 )
-    #                 self.action_data.control_points.append(
-    #                     [cp.handles[0].x, cp.handles[0].y]
-    #                 )
-    #             elif cp.center.x == 1:
-    #                 self.action_data.control_points.append(
-    #                     [cp.handles[0].x, cp.handles[0].y]
-    #                 )
-    #                 self.action_data.control_points.append(
-    #                     [cp.center.x, cp.center.y]
-    #                 )
-    #             else:
-    #                 self.action_data.control_points.append(
-    #                     [cp.handles[0].x, cp.handles[0].y]
-    #                 )
-    #                 self.action_data.control_points.append(
-    #                     [cp.center.x, cp.center.y]
-    #                 )
-    #                 self.action_data.control_points.append(
-    #                     [cp.handles[1].x, cp.handles[1].y]
-    #                 )
 
 
 class ResponseCurve(AbstractAction):
@@ -1117,9 +1065,14 @@ class ResponseCurve(AbstractAction):
         self.control_points = [(-1.0, -1.0), (1.0, 1.0)]
 
     def icon(self):
+        """Returns the icon representing the action."""
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def requires_activation_condition(self):
+        """Returns whether or not an activation condition is needed.
+
+        :return True if an activation condition is needed, False otherwise
+        """
         return False
 
     def _parse_xml(self, node):
@@ -1187,6 +1140,10 @@ class ResponseCurve(AbstractAction):
         )
 
     def _is_valid(self):
+        """Returns whether or not the action is configured correctly.
+
+        :return True if the action is configured correctly, False otherwise
+        """
         return True
 
 version = 1

@@ -29,10 +29,18 @@ import gremlin.ui.input_item
 
 class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
 
+    """UI widget for mapping inputs to keyboard key combinations."""
+
     def __init__(self, action_data, parent=None):
+        """Creates a new instance.
+
+        :param action_data the data managed by this widget
+        :param parent the parent of this widget
+        """
         super().__init__(action_data, parent)
 
     def _create_ui(self):
+        """Creates the UI components."""
         self.key_combination = QtWidgets.QLabel()
         self.record_button = QtWidgets.QPushButton("Record keys")
 
@@ -43,6 +51,7 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.main_layout.addStretch(1)
 
     def _populate_ui(self):
+        """Populates the UI components."""
         text = "<b>Current key combination:</b> "
         names = []
         for key in self.action_data.keys:
@@ -52,12 +61,18 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.key_combination.setText(text)
 
     def _update_keys(self, keys):
+        """Updates the storage with a new set of keys.
+
+        :param keys the keys to use in the key combination
+        """
         self.action_data.keys = [
             (key.scan_code, key.is_extended) for key in keys
         ]
         self.modified.emit()
 
     def _record_keys_cb(self):
+        """Shows a dialog prompint the user to press the desired key
+        combination."""
         self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
             self._update_keys,
             [common.InputType.Keyboard],
@@ -82,6 +97,12 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
 
 class MapToKeyboard(gremlin.base_classes.AbstractAction):
 
+    """Action data for the map to keyboard action.
+
+    Map to keyboard presses and releases a set of keys in sync with another
+    physical input being pressed or released.
+    """
+
     name = "Map to Keyboard"
     tag = "map-to-keyboard"
     widget = MapToKeyboardWidget
@@ -93,19 +114,37 @@ class MapToKeyboard(gremlin.base_classes.AbstractAction):
     callback_params = []
 
     def __init__(self, parent):
+        """Creates a new instance.
+
+        :param parent the container this action is part of
+        """
         super().__init__(parent)
         self.keys = []
 
     def icon(self):
+        """Returns the icon to use for this action.
+
+        :return icon representing this action
+        """
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
     def requires_activation_condition(self):
+        """Returns whether or not an activation condition is needed.
+
+        :return True if an activation condition is required for this particular
+            action instance, False otherwise
+        """
         return self.get_input_type() in [
             InputType.JoystickAxis,
             InputType.JoystickHat
         ]
 
     def _parse_xml(self, node):
+        """Reads the contents of an XML node to populate this instance.
+
+        :param node the node whose content should be used to populate this
+            instance
+        """
         self.keys = []
 
         for child in node.findall("key"):
@@ -115,6 +154,10 @@ class MapToKeyboard(gremlin.base_classes.AbstractAction):
             ))
 
     def _generate_xml(self):
+        """Returns an XML node containing this instance's information.
+
+        :return XML node containing the information of this  instance
+        """
         node = ElementTree.Element("map-to-keyboard")
         for key in self.keys:
             key_node = ElementTree.Element("key")
@@ -124,9 +167,17 @@ class MapToKeyboard(gremlin.base_classes.AbstractAction):
         return node
 
     def _generate_code(self):
+        """Generates python code related.
+
+        :return python code related to this action
+        """
         return self._code_generation("map_to_keyboard", {"entry": self})
 
     def _is_valid(self):
+        """Returns whether or not this action is valid.
+
+        :return True if the action is configured correctly, False otherwise
+        """
         return len(self.keys) > 0
 
 

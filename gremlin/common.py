@@ -30,6 +30,11 @@ class InputType(enum.Enum):
 
 
 def index_to_direction(direction):
+    """Returns a direction index to a direction name.
+
+    :param direction index of the direction to convert
+    :return text representation of the direction index
+    """
     lookup = {
         1: "Up",
         2: "Up & Right",
@@ -42,6 +47,8 @@ def index_to_direction(direction):
     }
     return lookup[int(direction)]
 
+
+# Mapping from InputType values to their textual representation
 input_type_to_name = {
     InputType.Keyboard: "Keyboard",
     InputType.JoystickAxis: "Axis",
@@ -49,6 +56,8 @@ input_type_to_name = {
     InputType.JoystickHat: "Hat"
 }
 
+
+# Names of vJoy axis according to their index
 vjoy_axis_names = [
     "X",
     "Y",

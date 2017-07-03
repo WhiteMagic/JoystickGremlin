@@ -344,7 +344,7 @@ class BindableAction(QtWidgets.QWidget):
         self.main_layout.addWidget(self.description)
         self.icon_layout = QtWidgets.QHBoxLayout()
         self.icon_layout.addStretch()
-        # FIXME: this has to handle containers now
+
         for container in input_item.containers:
             for action in container.actions:
                 self.icon_layout.addWidget(

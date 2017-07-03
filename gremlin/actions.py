@@ -24,6 +24,7 @@ from . import common, control_action, error, fsm, input_devices, \
     joystick_handling, macro, tts
 
 
+# Text to speech instance used by the tts action
 tts_instance = tts.TextToSpeech()
 
 
@@ -137,34 +138,46 @@ def release_button(vjoy_device, vjoy_input):
     vjoy[vjoy_device].button(vjoy_input).is_pressed = False
 
 
-# FIXME: make this somehow use the actual macro default
-def tap_button(vjoy_device, vjoy_input, delay=0.1):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device].button(vjoy_input).is_pressed = True
-    time.sleep(delay)
-    vjoy[vjoy_device].button(vjoy_input).is_pressed = False
-
-
 class Value:
 
+    """Represents an input value, keeping track of raw and "seen" value."""
+
     def __init__(self, raw):
+        """Creates a new value and initializes it.
+
+        :param raw the initial raw data
+        """
         self._raw = raw
         self._current = raw
 
     @property
     def raw(self):
+        """Returns the raw unmodified value.
+
+        :return raw unmodified value
+        """
         return self._raw
 
     @property
     def current(self):
+        """Returns the current, potentially, modified value.
+
+        :return current and potentially modified value
+        """
         return self._current
 
     @current.setter
     def current(self, current):
+        """Sets the current value which may differ from the raw one.
+
+        :param current the new current value
+        """
         self._current = current
 
 
 class Factory:
+
+    """Contains methods to create a variety of actions."""
 
     @staticmethod
     def remap_input(from_type, to_type, vjoy_device_id, vjoy_input_id):
@@ -390,17 +403,39 @@ class HatButton(VirtualButton):
 
 class AbstractActionContainer:
 
+    """Code implementation used by containers."""
+
     def __init__(self, actions, activation_condition):
+        """Creates a new instance.
+
+        :param actions the actions that are part of the container
+        :param activation_condition the condition which governs when to activate
+            the actions
+        """
         self.actions = actions
         self.activation_condition = activation_condition
 
     def _process_value(self, value):
+        """Processes a value through the container, handling activation etc.
+
+        :param value the original input value
+        :return value once processed by the activation condition, if present
+        """
         use_value = value
         if self.activation_condition is not None:
             use_value = Value(self.activation_condition.is_pressed)
         return use_value
 
     def __call__(self, event, value):
+        """Executes the container.
+
+        This will run the appropriate action contained in the container if
+        activation condition and other checks are passed successfully.
+
+        :param event the event triggering the execution
+        :param value the even'ts value with potential modifications from other
+            prior executions
+        """
         if self.activation_condition is not None:
             self.activation_condition.process(
                 event.value,
@@ -410,26 +445,58 @@ class AbstractActionContainer:
             self._execute_call(event, value)
 
     def _execute_call(self, event, value):
+        """Performs the actual execution of the container.
+
+        This method is called by __call__ and has to be implemented by
+        derived classes to implement the actual execution functionality.
+
+        :param event the event triggering the execution
+        :param value the even'ts value with potential modifications from other
+            prior executions
+        """
         raise error.GremlinError("Missing _execute_call implementation")
 
 
 class Basic(AbstractActionContainer):
 
+    """Implements the execution logic of basic containers."""
+
     def __init__(self, actions, activation_condition=None):
+        """Creates a new instance.
+
+        :param actions the actions that are part of the container
+        :param activation_condition the condition which governs when to activate
+            the actions
+        """
         if not isinstance(actions, list):
             actions = [actions]
         super().__init__(actions, activation_condition)
         assert len(self.actions) == 1
 
     def _execute_call(self, event, value):
+        """Executes the action stored within the container.
+
+        :param event the event triggering the execution
+        :param value the even'ts value with potential modifications from other
+            prior executions
+        """
         self.actions[0](event, value, self.activation_condition)
 
 
 class Tempo(AbstractActionContainer):
 
+    """Implements the execution logic of tempo containers."""
+
     # This entire container only makes sense for button like inputs
 
     def __init__(self, actions, activation_condition, duration):
+        """Creates a new instance.
+
+        :param actions the actions that are part of the container
+        :param activation_condition the condition which governs when to activate
+            the actions
+        :param duration time after which the long press action is used
+        """
         super().__init__(actions, activation_condition)
         self.duration = duration
         self.start_time = 0
@@ -438,6 +505,12 @@ class Tempo(AbstractActionContainer):
         self.event_press = None
 
     def _execute_call(self, event, value):
+        """Executes the action stored within the container.
+
+        :param event the event triggering the execution
+        :param value the even'ts value with potential modifications from other
+            prior executions
+        """
         # Has to change and use timers internally probably
         # 1. both press and release have to be sent for some actions, such
         #   as macro or remap
@@ -468,6 +541,7 @@ class Tempo(AbstractActionContainer):
             self.timer = None
 
     def _long_press(self):
+        """Callback executed, when the delay expires."""
         self.actions[1](
             self.event_press,
             self.value_press,
@@ -477,7 +551,16 @@ class Tempo(AbstractActionContainer):
 
 class Chain(AbstractActionContainer):
 
+    """Implements the execution logic of the chain container."""
+
     def __init__(self, actions, activation_condition, timeout=0.0):
+        """Creates a new instance.
+
+        :param actions the actions that are part of the container
+        :param activation_condition the condition which governs when to activate
+            the actions
+        :param timeout duration after which the chain resets to the first entry
+        """
         super().__init__(actions, activation_condition)
         self.index = 0
         self.timeout = timeout
@@ -485,6 +568,12 @@ class Chain(AbstractActionContainer):
         self.last_value = None
 
     def _execute_call(self, event, value):
+        """Executes the action stored within the container.
+
+        :param event the event triggering the execution
+        :param value the even'ts value with potential modifications from other
+            prior executions
+        """
         if self.timeout > 0.0:
             if self.last_execution + self.timeout < time.time():
                 self.index = 0
@@ -527,8 +616,8 @@ class Chain(AbstractActionContainer):
         else:
             if not value.current:
                 self.index = (self.index + 1) % len(self.actions)
-#
-#
+
+
 # class SmartToggle(AbstractActionContainer):
 #
 #     def __init__(self, actions, duration=0.25):

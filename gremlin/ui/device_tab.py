@@ -63,7 +63,10 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.main_layout.addWidget(self.action_view)
 
     def _add_action(self, action_name):
-        """Adds a new action to the input item."""
+        """Adds a new action to the input item.
+
+        :param action_name name of the action to be added
+        """
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
         container = container_plugins.basic.BasicContainer(self.item_data)
         container.add_action(
@@ -72,12 +75,20 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.action_model.add_container(container)
 
     def _add_container(self, container_name):
+        """Adds a new contained to the input item.
+
+        :param container_name name of the container to be added
+        """
         plugin_manager = gremlin.plugin_manager.ContainerPlugins()
         self.action_model.add_container(
             plugin_manager.get_class(container_name)(self.item_data)
         )
 
     def _remove_container(self, container):
+        """Removes an existing container from the InputItem.
+
+        :param container the container instance to be removed
+        """
         self.action_model.remove_container(container)
 
     def _create_description(self):
@@ -115,6 +126,7 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.main_layout.addLayout(self.action_layout)
 
     def _create_vjoy_dropdowns(self):
+        """Creates the action drop down selection for vJoy devices."""
         self.action_layout = QtWidgets.QHBoxLayout()
 
         self.action_selector = gremlin.ui.common.ActionSelector(
@@ -125,10 +137,18 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.main_layout.addLayout(self.action_layout)
 
     def _edit_description_cb(self, text):
+        """Handles changes to the description text field.
+
+        :param text the new contents of the text field
+        """
         self.item_data.description = text
         self.description_changed.emit(text)
 
     def _always_execute_cb(self, state):
+        """Handles changes to the always execute checkbox.
+
+        :param state the new state of the checkbox
+        """
         self.item_data.always_execute = self.always_execute.isChecked()
 
     def _valid_action_names(self):
@@ -163,21 +183,39 @@ class ActionContainerModel(common.AbstractModel):
         """Creates a new instance.
 
         :param containers the container instances of this model
+        :param parent the parent of this widget
         """
         super().__init__(parent)
         self._containers = containers
 
     def rows(self):
+        """Returns the number of rows in the model.
+
+        :return number of rows in the model
+        """
         return len(self._containers)
 
     def data(self, index):
+        """Returns the data stored at the given location.
+
+        :param index the location for which to return data
+        :return the data stored at the requested location
+        """
         return self._containers[index]
 
     def add_container(self, container):
+        """Adds a container to the model.
+
+        :param container the container instance to be added
+        """
         self._containers.append(container)
         self.data_changed.emit()
 
     def remove_container(self, container):
+        """Removes an existing container from the model.
+
+        :param container the container instance to remove
+        """
         if container in self._containers:
             del self._containers[self._containers.index(container)]
         self.data_changed.emit()
@@ -188,6 +226,10 @@ class ActionContainerView(common.AbstractView):
     """View class used to display ActionContainerModel contents."""
 
     def __init__(self, parent=None):
+        """Creates a new view instance.
+
+        :param parent the parent of the widget
+        """
         super().__init__(parent)
 
         # Create required UI items
@@ -212,6 +254,7 @@ class ActionContainerView(common.AbstractView):
         self.main_layout.addWidget(self.scroll_area)
 
     def redraw(self):
+        """Redraws the entire view."""
         common.clear_layout(self.scroll_layout)
         for index in range(self.model.rows()):
             widget = self.model.data(index).widget(self.model.data(index))
@@ -221,6 +264,12 @@ class ActionContainerView(common.AbstractView):
         self.scroll_layout.addStretch(1)
 
     def _create_closed_cb(self, widget):
+        """Create callbacks to remove individual containers from the model.
+
+        :param widget the container widget to be removed
+        :return callback function to remove the provided widget from the
+            model
+        """
         return lambda: self.model.remove_container(widget.profile_data)
 
 
@@ -298,6 +347,10 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         self.main_layout.addLayout(self.left_panel_layout)
 
     def input_item_selected_cb(self, index):
+        """Handles the selection of an input item.
+
+        :param index the index of the selected item
+        """
         item_data = input_item_index_lookup(
             index,
             self.device_profile.modes[self.current_mode]
@@ -321,9 +374,18 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(widget)
 
     def _create_change_cb(self, index):
+        """Creates a callback handling content changes.
+
+        :param index the index of the content being changed
+        :return callback function redrawing changed content
+        """
         return lambda: self.input_item_list_view.redraw_index(index)
 
     def mode_changed_cb(self, mode):
+        """Handles mode change.
+
+        :param mode the new mode
+        """
         self.current_mode = mode
         self.device_profile.ensure_mode_exists(self.current_mode, self.device)
         self.input_item_list_model.mode = mode
@@ -398,6 +460,10 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         self.input_item_selected_cb(0)
 
     def input_item_selected_cb(self, index):
+        """Handles the selection of an input item.
+
+        :param index the index of the selected item
+        """
         # Assumption is that the entries are sorted by their scancode and
         # extended flag identification
         sorted_keys = sorted(
@@ -450,6 +516,10 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         )
 
     def _record_keyboard_key_cb(self):
+        """Handles adding of new keyboard keys to the list.
+
+        Asks the user to press the key they wish to add bindings for.
+        """
         self.button_press_dialog = common.InputListenerWidget(
             self._add_keyboard_key_cb,
             [gremlin.common.InputType.Keyboard],
@@ -472,6 +542,10 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         self.button_press_dialog.show()
 
     def _add_keyboard_key_cb(self, key):
+        """Adds the provided key to the list of keys.
+
+        :param key the new key to add
+        """
         self.device_profile.modes[self.current_mode].get_data(
                 gremlin.common.InputType.Keyboard,
                 (key.scan_code, key.is_extended)
@@ -483,14 +557,28 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         )
 
     def _index_for_key(self, key):
+        """Returns the index into the key list based on the key itself.
+
+        :param key the keyboard key being queried
+        :return index of the provided key
+        """
         mode = self.device_profile.modes[self.current_mode]
         sorted_keys = sorted(mode.config[InputType.Keyboard])
         return sorted_keys.index(key)
 
     def _create_change_cb(self, index):
+        """Creates a callback handling content changes.
+
+        :param index the index of the content being changed
+        :return callback function redrawing changed content
+        """
         return lambda: self.input_item_list_view.redraw_index(index)
 
     def mode_changed_cb(self, mode):
+        """Handles mode change.
+
+        :param mode the new mode
+        """
         self.current_mode = mode
         self.device_profile.ensure_mode_exists(self.current_mode)
         self.input_item_list_model.mode = mode
@@ -504,6 +592,15 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
 
 
 def input_item_index_lookup(index, input_items):
+    """Returns the profile data belonding to the provided index.
+
+    This function determines which actual input item a given index refers to
+    and then returns the content for it.
+
+    :param index the index for which to return the data
+    :param input_items the profile data from which to return the data
+    :return profile data corresponding to the provided index
+    """
     axis_count = len(input_items.config[InputType.JoystickAxis])
     button_count = len(input_items.config[InputType.JoystickButton])
     hat_count = len(input_items.config[InputType.JoystickHat])

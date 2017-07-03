@@ -82,7 +82,8 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
         """Creates a new UI widget.
 
         :param joy_data JoystickDeviceData object containing device information
-        :param profile_data profile settings
+        :param profile_data profile settings managed by the widget
+        :param parent the parent of this widget
         """
         super().__init__(parent)
 

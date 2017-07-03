@@ -167,7 +167,10 @@ class OptionsUi(common.BaseDialogUi):
         super().closeEvent(event)
 
     def populate_executables(self, executable_name=None):
-        """Populates the profile drop down menu."""
+        """Populates the profile drop down menu.
+
+        :param executable_name name of the executable to pre select
+        """
         self.profile_field.textChanged.disconnect(self._update_profile)
         self.executable_selection.clear()
         executable_list = sorted(self.config.get_executable_list())
@@ -309,10 +312,16 @@ class OptionsUi(common.BaseDialogUi):
 
 class ProcessWindow(common.BaseDialogUi):
 
+    """Displays active processes in a window for the user to select."""
+
     # Signal emitted when the user selects a process
     process_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
+        """Creates a new instance.
+
+        :param parent the parent of the widget
+        """
         super().__init__(parent)
 
         self.setWindowTitle("Process List")
@@ -336,6 +345,7 @@ class ProcessWindow(common.BaseDialogUi):
         self.main_layout.addWidget(self.select_button)
 
     def _select(self):
+        """Emits the process_signal when the select button is pressed."""
         self.process_selected.emit(self.list_view.currentIndex().data())
         self.close()
 
@@ -478,7 +488,7 @@ class ModeManagerUi(common.BaseDialogUi):
 
         :param profile_data the data being profile whose modes are being
             configured
-        :param parent the parent of this wideget
+        :param parent the parent of this widget
         """
         super().__init__(parent)
         self._profile = profile_data
@@ -638,6 +648,8 @@ class ModeManagerUi(common.BaseDialogUi):
 
         If the user provided name for the mode is invalid the
         renaming is aborted and no change made.
+
+        :param mode_name new name for the mode
         """
         # Retrieve new name from the user
         name, user_input = QtWidgets.QInputDialog.getText(
@@ -702,6 +714,8 @@ class ModeManagerUi(common.BaseDialogUi):
 
         If the user provided name for the mode is invalid no mode is
         added.
+
+        :param checked flag indicating whether or not the checkbox is active
         """
         name, user_input = QtWidgets.QInputDialog.getText(None, "Mode name", "")
         if user_input:
@@ -735,6 +749,7 @@ class ModuleManagerUi(common.BaseDialogUi):
         self.setWindowTitle("User Module Manager")
 
         self._create_ui()
+
         # Disable keyboard event handler
         el = gremlin.event_handler.EventListener()
         el.keyboard_hook.stop()

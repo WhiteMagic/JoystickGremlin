@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Reads hints from a CSV file and makes them available to Gremlin for use."""
+
 import csv
 
+# Stores the hints and allows Gremlin to grab the ones it needs for display
 hint = {}
 
 with open("doc/hints.csv") as csv_stream:

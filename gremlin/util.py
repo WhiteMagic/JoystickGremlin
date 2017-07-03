@@ -44,7 +44,7 @@ g_loaded_modules = {}
 
 class FileWatcher(QtCore.QObject):
 
-    """Watches files for change."""
+    """Watches files in the filesystem for changes."""
 
     # Signal emitted when the watched file is modified
     file_changed = QtCore.pyqtSignal(str)
@@ -83,6 +83,16 @@ class FileWatcher(QtCore.QObject):
 
 
 def setup_duplicate_devices(device_id_fn, duplicate_devices):
+    """Configures the device id generation method.
+
+    Depending on whether or not multiple identical devices are present on the
+    system the function used to generate device IDs have to be swapped. This
+    function does all the handling and setting of information for this.
+
+    :param device_id_fn the function to use in order to generate device IDs
+    :param duplicate_devices flag indicating if multiple identical devices
+        are present in the system or not
+    """
     global device_id
     global g_duplicate_devices
 
