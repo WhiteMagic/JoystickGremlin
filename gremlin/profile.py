@@ -643,9 +643,10 @@ class Profile:
         vjoy = {}
         for entry in vjoy_data:
             vjoy[entry.vjoy_id] = {"axis": [], "button": [], "hat": []}
-            # TODO: the axis need not be sequential
-            for i in range(entry.axes):
-                vjoy[entry.vjoy_id]["axis"].append(i+1)
+            for i in range(entry.axis_count):
+                vjoy[entry.vjoy_id]["axis"].append(
+                    entry.axis(i)[1]
+                )
             for i in range(entry.buttons):
                 vjoy[entry.vjoy_id]["button"].append(i+1)
             for i in range(entry.hats):
