@@ -303,6 +303,12 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.runner.stop()
             self._update_statusbar_active(False)
             self._profile_auto_activated = False
+            current_tab = self.ui.devices.currentWidget()
+            if type(current_tab) in [
+                gremlin.ui.device_tab.JoystickDeviceTabWidget,
+                gremlin.ui.device_tab.KeyboardDeviceTabWidget
+            ]:
+                self.ui.devices.currentWidget().refresh()
 
     def create_1to1_mapping(self):
         """Creates a 1 to 1 mapping of the given device to the first

@@ -397,6 +397,10 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             item.widget().deleteLater()
         self.main_layout.removeItem(item)
 
+    def refresh(self):
+        """Refreshes the current selection, ensuring proper synchronization."""
+        self.input_item_selected_cb(self.input_item_list_view.current_index)
+
 
 class KeyboardDeviceTabWidget(QtWidgets.QWidget):
 
@@ -589,6 +593,10 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
             item.widget().hide()
             item.widget().deleteLater()
         self.main_layout.removeItem(item)
+
+    def refresh(self):
+        """Refreshes the current selection, ensuring proper synchronization."""
+        self.input_item_selected_cb(self.input_item_list_view.current_index)
 
 
 def input_item_index_lookup(index, input_items):
