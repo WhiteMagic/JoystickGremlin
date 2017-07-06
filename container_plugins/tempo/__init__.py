@@ -108,6 +108,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
         action_item = plugin_manager.get_class(action_name)(self.profile_data)
         self.profile_data.actions[index] = action_item
+        self.profile_data.create_or_delete_activation_condition()
         self.modified.emit()
 
     def _delay_changed_cb(self, value):
