@@ -480,24 +480,6 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         item_data = self.device_profile.modes[self.current_mode]. \
             config[InputType.Keyboard][index_key]
 
-        # Remove the existing widget, if there is one
-        item = self.main_layout.takeAt(1)
-        if item is not None and item.widget():
-            item.widget().hide()
-            item.widget().deleteLater()
-        self.main_layout.removeItem(item)
-
-        # Create new configuration widget
-        widget = InputItemConfiguration(
-            self.vjoy_devices,
-            item_data
-        )
-        change_cb = self._create_change_cb(index)
-        widget.action_model.data_changed.connect(change_cb)
-        widget.description_changed.connect(change_cb)
-
-        self.main_layout.addWidget(widget)
-
         # Remove any, non selected, invalid input items
         for i, key in enumerate(sorted_keys):
             if i == index:
@@ -512,6 +494,25 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
                     InputType.Keyboard,
                     key
                 )
+
+        # Remove the existing widget, if there is one
+        item = self.main_layout.takeAt(1)
+        if item is not None and item.widget():
+            item.widget().hide()
+            item.widget().deleteLater()
+        self.main_layout.removeItem(item)
+
+        # Create new configuration widget
+        widget = InputItemConfiguration(
+            self.vjoy_devices,
+            item_data
+        )
+        change_cb = self._create_change_cb(self._index_for_key(index_key))
+        widget.action_model.data_changed.connect(change_cb)
+        widget.description_changed.connect(change_cb)
+
+        self.main_layout.addWidget(widget)
+
 
         # Refresh item list view and select correct entry
         self.input_item_list_view.redraw()
