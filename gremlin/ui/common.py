@@ -654,7 +654,7 @@ class VJoySelector(QtWidgets.QWidget):
         :param vjoy_input_id the id of the input
         """
         # Get the appropriate vjoy device identifier
-        if vjoy_dev_id is None:
+        if vjoy_dev_id is None or vjoy_dev_id <= 0:
             dev_id = -1
         else:
             dev_id = self.device_dropdown.findText(
@@ -662,21 +662,22 @@ class VJoySelector(QtWidgets.QWidget):
             )
 
         # Retrieve the index of the correct entry in the combobox
-        vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
-        if input_type == gremlin.common.InputType.JoystickAxis:
-            input_name = "{} {}".format(
-                input_type_to_name[input_type],
-                vjoy_proxy[vjoy_dev_id].axis_name(axis_id=vjoy_input_id)
-            )
-        else:
-            input_name = "{} {:d}".format(
-                input_type_to_name[input_type],
-                vjoy_input_id
-            )
-        try:
-            btn_id = self.input_item_dropdowns[vjoy_dev_id].findText(input_name)
-        except KeyError:
-            btn_id = -1
+        if dev_id != -1:
+            vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
+            if input_type == gremlin.common.InputType.JoystickAxis:
+                input_name = "{} {}".format(
+                    input_type_to_name[input_type],
+                    vjoy_proxy[vjoy_dev_id].axis_name(axis_id=vjoy_input_id)
+                )
+            else:
+                input_name = "{} {:d}".format(
+                    input_type_to_name[input_type],
+                    vjoy_input_id
+                )
+            try:
+                btn_id = self.input_item_dropdowns[vjoy_dev_id].findText(input_name)
+            except KeyError:
+                btn_id = -1
 
         # If either of the provided entries results in an invalid selection
         # we simply select the first valid thing we come across
