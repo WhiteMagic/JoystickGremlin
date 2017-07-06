@@ -399,7 +399,8 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
 
     def refresh(self):
         """Refreshes the current selection, ensuring proper synchronization."""
-        self.input_item_selected_cb(self.input_item_list_view.current_index)
+        if self.input_item_list_view.current_index is not None:
+            self.input_item_selected_cb(self.input_item_list_view.current_index)
 
 
 class KeyboardDeviceTabWidget(QtWidgets.QWidget):
