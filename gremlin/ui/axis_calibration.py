@@ -125,7 +125,7 @@ class CalibrationUi(common.BaseDialogUi):
         common.clear_layout(self.axes_layout)
         self.axes = []
         self.current_selection_id = index
-        for i in range(self.devices[index].axes):
+        for i in range(self.devices[index].axis_count):
             self.axes.append(AxisCalibrationWidget())
             self.axes_layout.addWidget(self.axes[-1])
 
