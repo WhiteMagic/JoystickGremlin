@@ -126,7 +126,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
 class ChainContainer(gremlin.base_classes.AbstractContainer):
 
-    """Represents a container which holds multipler actions.
+    """Represents a container which holds multiplier actions.
 
     The actions will trigger one after the other with subsequent activations.
     A timeout, if set, will reset the sequence to the beginning.
