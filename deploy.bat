@@ -18,4 +18,6 @@ del joystick_gremlin.msi
 "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" joystick_gremlin.wxs
 "C:\Program Files (x86)\WiX Toolset v3.11\bin\light.exe" -ext WixUiExtension joystick_gremlin.wixobj
 
+cd ..
+
 @pause
