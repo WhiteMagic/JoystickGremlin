@@ -406,12 +406,17 @@ class ProfileConverter:
                                 cond.set("lower-limit", action.get("lower-limit"))
                                 cond.set("upper-limit", action.get("upper-limit"))
                                 container.append(cond)
-                            del action.attrib["lower-limit"]
-                            del action.attrib["upper-limit"]
-                            del action.attrib["is-active"]
+                            if "lower-limit" in action.keys():
+                                del action.attrib["lower-limit"]
+                            if "upper-limit" in action.keys():
+                                del action.attrib["upper-limit"]
+                            if "is-active" in action.keys():
+                                del action.attrib["is-active"]
                         elif input_item.tag == "button":
-                            del action.attrib["on-press"]
-                            del action.attrib["on-release"]
+                            if "on-press" in action.keys():
+                                del action.attrib["on-press"]
+                            if "on-release" in action.keys():
+                                del action.attrib["on-release"]
                         elif input_item.tag == "hat":
                             if "on-n" in action.keys():
                                 cond = ElementTree.Element("activation-condition")
@@ -428,7 +433,8 @@ class ProfileConverter:
                                 for names in keys:
                                     if action.get(names[0]) == "True":
                                         cond.set(names[1], "True")
-                                    del action.attrib[names[0]]
+                                    if names[0] in action.keys():
+                                        del action.attrib[names[0]]
                                 container.append(cond)
 
                         # Macro actions have changed, update their layout
