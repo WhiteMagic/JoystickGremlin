@@ -38,6 +38,7 @@ import gremlin.ui.common
 import gremlin.ui.device_tab
 import gremlin.ui.dialogs
 import gremlin.ui.merge_axis
+import gremlin.ui.profile_creator
 import gremlin.ui.profile_settings
 
 
@@ -1148,8 +1149,8 @@ if __name__ == "__main__":
     })
 
     # Unhandled exception traceback
-    # TODO: Reenable for release
-    #sys.excepthook = exception_hook
+    # TODO: Re-enable for release
+    sys.excepthook = exception_hook
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
