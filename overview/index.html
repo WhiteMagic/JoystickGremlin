@@ -28,8 +28,8 @@ layout: default
         <li>Merging of multiple physical devices into a single virtual device</li>
         <li>Axis response curve and dead zone configuration</li>
         <li>Arbitrary number of modes with inheritance and customizable mode switching</li>
-        <li>Keyboard macros for joystick buttons and keyboard keys</li>
-        <li>Python scripting</li>
+        <li>Keyboard macros</li>
+        <li>Python scripting support</li>
     </ul>
 </p>
 
@@ -89,7 +89,7 @@ layout: default
 
     <div class="row bottom-gap">
         <div class="col-md-7">
-            <img class="img-responsive center-block" src="{{ site.baseurl }}/images/vjoy_configuration.jpg">
+            <img class="img-responsive center-block" src="{{ site.baseurl }}/images/vjoy_configuration.png">
         </div>
         <div class="col-md-5">
             <em>VJoy configuration dialog with settings required for proper
@@ -117,6 +117,14 @@ layout: default
     executed. For buttons the conditions are the state of the button, i.e.
     pressed or released as well as an optional shift modifier which has be be
     pressed in order for the action to be run.
+</p>
+
+<h4 class="subsection">Container</h4>
+<p class="text-justify">
+    A container holds one or more actions and uses them in an interesting way.
+    In the most simple case it simply executes the action. More complex cases
+    are where the container decides which action to execute based on the
+    duration a button is held down.
 </p>
 
 <h4 class="subsection">Input</h4>
@@ -167,71 +175,116 @@ layout: default
     <ul>
         <li><strong>Profile:</strong> star_citizen.xml
             <ul>
-                <li><strong>Mode:</strong>Default
+                <li><strong>Device:</strong>Thrustmaster Warthog Stick
                     <ul>
-                        <li><strong>Device:</strong>Thrustmaster Warthog Stick
+                        <li><strong>Mode:</strong>Default
                             <ul>
                                 <li><strong>Input:</strong>Axis X
                                     <ul>
-                                        <li><strong>Action:</strong>Map to vJoy Axis X</li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Map to vJoy Axis X</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                                 <li><strong>Input:</strong>Button 1
                                     <ul>
-                                        <li><strong>Action:</strong>Map to vJoy Button 1</li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Map to vJoy Button 1</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                             </ul>
                         </li>
-                        <li><strong>Device:</strong>CH Pro Throttle
+                        
+                        <li><strong>Mode:</strong>Landing
                             <ul>
                                 <li><strong>Input:</strong>Axis X
                                     <ul>
-                                        <li><strong>Action:</strong>Map to vJoy Axis Z</li>
-                                        <li><strong>Action:</strong>Apply response curve</li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Map to vJoy Axis X</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Apply response curve with deadzone</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                                 <li><strong>Input:</strong>Button 1
                                     <ul>
-                                        <li><strong>Action:</strong>Run chaff &amp; Flare macro</li>
+                                        <li><strong>Container:</strong>Tempo
+                                            <ul>
+                                                <li><strong>Action:</strong>Map to vJoy Button 10</li>
+                                                <li><strong>Action:</strong>Map to vJoy Button 12</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                             </ul>
                         </li>
                     </ul>
                 </li>
-                <li><strong>Mode:</strong>Landing
+                    
+                <li><strong>Device:</strong>CH Pro Throttle
                     <ul>
-                        <li><strong>Device:</strong>Thrustmaster Warthog Stick
+                        <li><strong>Mode:</strong>Default
                             <ul>
                                 <li><strong>Input:</strong>Axis X
                                     <ul>
-                                        <li><strong>Action:</strong>Map to vJoy Axis X</li>
-                                        <li><strong>Action:</strong>Apply response curve with deadzone</li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Map to vJoy Axis Z</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Apply response curve</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                                 <li><strong>Input:</strong>Button 1
                                     <ul>
-                                        <li><strong>Action:</strong>Map to vJoy Button 10</li>
+                                        <li><strong>Action:</strong>Run chaff &amp; flare macro</li>
                                     </ul>
                                 </li>
                             </ul>
                         </li>
-                        <li><strong>Device:</strong>CH Pro Throttle
+
+                        <li><strong>Mode:</strong>Landing
                             <ul>
                                 <li><strong>Input:</strong>Axis X
                                     <ul>
-                                        <li><strong>Action:</strong>Map to vJoy Axis Z</li>
-                                        <li><strong>Action:</strong>Apply response curve</li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Map to vJoy Axis Z</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Apply response curve</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                                 <li><strong>Input:</strong>Button 1
                                     <ul>
-                                        <li><strong>Action:</strong>Map to vJoy Button 21</li>
+                                        <li><strong>Container:</strong>Basic
+                                            <ul>
+                                                <li><strong>Action:</strong>Map to vJoy Button 21</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
                             </ul>
                         </li>
+                            
                     </ul>
                 </li>
             </ul>

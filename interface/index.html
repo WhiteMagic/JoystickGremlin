@@ -33,27 +33,31 @@ layout: default
     up the main user interface, shown in the following image.
 
     <div class="text-center">
-        <img class="img-responsive" src="{{ site.baseurl }}/images/main_window_annotated.jpg">
+        <img class="img-responsive" src="{{ site.baseurl }}/images/main_window_annotated.png">
         <em>Joystick Gremlin UI</em>
     </div>
     </br>
 
     <ol class="text-justify">
-        <li>Overview of all the inputs available for a given device. The
-            small icons on the far right of each input indicate the type
-            of actions associated with the input. The icons and their
-            meaning are summarised in the table below.</li>
-        <li>The right hand portion of the UI shows the list of actions
-            associated with the currently selected input. This panel
-            allows the customisation of existing actions and the
-            addition of new ones.</li>
+        <li>Overview of all the inputs available for a given device. The small
+            icons on the far right of each input indicate the type of actions
+            associated with the input. The icons and their meaning are
+            summarised in the table below.</li>
+        <li>The right hand portion of the UI shows the list of containers and
+            actions associated with the currently selected input. This panel
+            allows the customisation of existing containers and their actions
+            as well as adding new ones.</li>
+        <li>This drop down lists all available actions for this type of input.
+            Pressing the "Add" button will embed the selected action in a basic
+            container.</li>
+        <li>This drop down contains the available containers for the currently
+            selected input. Pressing the "Add" button inserts an empty
+            container of the desired type.</li>
         <li>The mode section allows changing the mode currently being
             configured.</li>
-        <li>The status bar shows whether or not the program is currently
-            running a profile. If the program is running the currently
-            active mode is shown as well if code execution is
-            paused. If the input repeater is active it's status is also
-            shown in the far right.</li>
+        <li>Each tab represents an individual device that is currently
+            connected to the computer. The "Settings" tab allows configuring
+            properties for the entire profile.</li>
         <li>Tool bar which holds the most commonly used actions, from
             left to right:
             <ul>
@@ -65,8 +69,11 @@ layout: default
                     Gremlin is running will disabled it again.</li>
             </ul>
         </li>
-        <li>Each tab represents an individual device that is currently
-            connected to the computer.</li>
+        <li>The status bar shows whether or not the program is currently
+            running a profile. If the program is running the currently
+            active mode is shown as well if code execution is
+            paused. If the input repeater is active it's status is also
+            shown in the far right.</li>
     </ol>
 </p>
 
@@ -74,46 +81,48 @@ layout: default
     The following table shows the different icons and the actions they represent.
     <table class="table">
         <tr>
-            <td width="50px"><img class="img-responsive" src="{{ site.baseurl }}/images/action_cycle_modes.png"></td>
+            <td width="50px"><img class="img-responsive" src="{{ site.baseurl }}/images/icon_cycle_modes.png"></td>
             <td width="40%">Cycle modes</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_macro.png"></td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_macro.png"></td>
             <td>Macro</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_pause.png"></td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_map_to_keyboard.png"></td>
+            <td>Map to keyboard</td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_pause.png"></td>
             <td>Pause</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_remap_axis_001.png"></td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_axis_001.png"></td>
             <td>Remap axis</td>
-        </tr>
-        <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_remap_button_001.png"></td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_button_001.png"></td>
             <td>Remap button</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_remap_hat_001.png"></td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_hat_001.png"></td>
             <td>Remap hat</td>
-        </tr>
-        <tr>
-            <td width="50px"><img class="img-responsive" src="{{ site.baseurl }}/images/action_response_curve.png"></td>
+            <td width="50px"><img class="img-responsive" src="{{ site.baseurl }}/images/icon_response_curve.png"></td>
             <td>Response curve</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_resume.png"></td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_resume.png"></td>
             <td>Resume</td>
-        </tr>
-        <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_split_axis.png"></td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_split_axis.png"></td>
             <td>Split axis</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_switch_mode.png"></td>
-            <td>Switch mode</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_previous_mode.png"></td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_switch_mode.png"></td>
+            <td>Switch mode</td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_previous_mode.png"></td>
             <td>Switch to previous mode</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_text_to_speech.png"></td>
+        </tr>
+        <tr>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_text_to_speech.png"></td>
             <td>Text-to-speech</td>
-        </tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/action_pause_resume.png"></td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_pause_resume.png"></td>
             <td>Toggle pause &amp; resume</td>
-            <td></td>
-            <td></td>
         </tr>
+        <tr><td></td><td></td><td></td><td></td></tr>
     </table>
 </p>
 
@@ -122,46 +131,35 @@ layout: default
 <h3><a name="2_2">2.2 Conditions</a></h3>
 
 <p class="text-justify">
-    Each action has a set of conditions, based on the input type, that
-    can be used to further restrict when the action is executed. These
-    constraints are explained next.
+    Each input has a natural behaviour or type of states it can be in. Certain
+    actions, however, require a binary state reflecting that of buttons, i.e.
+    <em>pressed</em> and <em>released</em>. In order for axis and hat inputs to
+    support this they require an activation condition to be specified when an
+    action requires such binary input. The details of these activation
+    conditions is covered next.
 </p>
 
 <h4 class="subsection">Button and Keyboard Key</h4>
+    As these inputs are already binary there is no activation condition
+    associated with them.
 <p class="text-justify">
-    Actions associated with button like inputs have three constraints:
-    <dl class="dl-horizontal text-justify">
-        <dt>on_press</dt>
-        <dd>execute the action when the key or button is being
-        pressed</dd>
-        <dt>on_release</dt>
-        <dd>execute the action when the key or button is being
-        released</dd>
-        <dt>shift key</dt>
-        <dd>execute the action when the specified key or button is being
-        pressed</dd>
-    </dl>
-    These conditions work together, so for example if a <em>shift
-    key</em> is defined the <em>on_press</em> and <em>on_release</em>
-    conditions still have to be met in order for the action to be executed.
 </p>
 
 <h4 class="subsection">Axis</h4>
 <p class="text-justify">
-    Actions associated with axis inputs have a range based constraint
-    which allows to treat the axis as a button when it enters and leaves
-    the specified range. This works by considering a virtual button
-    being pressed when the axis enters the range and releasing the
-    virtual button when leaving the range.
+    Actions associated with axis inputs have a range based activation condition
+    which allows to treat the axis as a button when it enters and leaves the
+    specified range. This works by considering a virtual button being pressed
+    when the axis enters the range and releasing the virtual button when
+    leaving the range.
 </p>
 
 <h4 class="subsection">Hat</h4>
 <p class="text-justify">
     The eight directions of POV hats can be treated a simple activation
-    actions to trigger any action that typically would fire on an
-    <em>on_press</em> event. As such all actions available to buttons
-    with the exception of remapping are available using these
-    conditions.
+    condition. It is possible to select multiple directions at once and any of
+    the selected directions will be considered as part of a single virtual
+    button.
 </p>
 
 
@@ -190,7 +188,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_axis.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_axis.png">
     </div>
     <div class="col-md-5">
         <em>Axis remapping dialogue</em>
@@ -198,7 +196,7 @@ layout: default
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_button.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_button.png">
     </div>
     <div class="col-md-5">
         <em>Button remapping dialogue</em>
@@ -206,10 +204,18 @@ layout: default
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_hat.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_hat.png">
     </div>
     <div class="col-md-5">
         <em>Hat remapping dialogue</em>
+    </div>
+</div>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_hat_to_button.png">
+    </div>
+    <div class="col-md-5">
+        <em>Hat remapping to button dialogue</em>
     </div>
 </div>
 </br>
@@ -239,7 +245,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_response_curve.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_response_curve.png">
     </div>
     <div class="col-md-5">
         <em>Response curve action dialogue which allows the customisation
@@ -307,7 +313,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_macro.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_macro.png">
     </div>
     <div class="col-md-5">
         <em>Macro action dialogue allowing the recording of key press
@@ -338,11 +344,32 @@ layout: default
 </p>
 
 
+<h4 class="subsection">Map to Keyboard</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_map_to_keyboard.png">
+    </div>
+    <div class="col-md-5">
+        <em>Map to Keyboard dialogue which allows mapping of a physical key to
+            an arbitrary keyboard key combination.</em>
+    </div>
+</div>
+</br>
+
+<p class="text-justify">
+    The map to keyboard action allows an arbitrary keyboard key sequence to be
+    linked to a single physical input, such as a button. The specified keyboard
+    sequence is pressed when the physical button is pressed and released when
+    it is released.
+</p>
+
+
 <h4 class="subsection">Pause, Resume &amp; Toggle</h4>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_pause.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_pause.png">
     </div>
     <div class="col-md-5">
         <em>Pause dialogue which allows to temporarily stop the execution of
@@ -351,7 +378,7 @@ layout: default
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_resume.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_resume.png">
     </div>
     <div class="col-md-5">
         <em>Resume dialogue which allows Joystick Gremlin to execute
@@ -360,7 +387,7 @@ layout: default
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_toggle_pause_resume.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_toggle_pause_resume.png">
     </div>
     <div class="col-md-5">
         <em>Toggle between pause and resume dialogue, which toggles
@@ -386,7 +413,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_switch_mode.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_switch_mode.png">
     </div>
     <div class="col-md-5">
         <em>Change mode action dialogue which allows to select the mode
@@ -404,7 +431,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_switch_to_previous_mode.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_switch_to_previous_mode.png">
     </div>
     <div class="col-md-5">
         <em>Dialogue of the action that switches to the previously active
@@ -421,7 +448,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_cycle_modes.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_cycle_modes.png">
     </div>
     <div class="col-md-5">
         <em>The dialogue of the cycle modes action allows adding various
@@ -450,7 +477,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_split_axis.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_split_axis.png">
     </div>
     <div class="col-md-5">
         <em>Split axis dialog which allows splitting a single axis into two
@@ -468,7 +495,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_text_to_speech.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_text_to_speech.png">
     </div>
     <div class="col-md-5">
         <em>Text to speech action dialogue which allows entering text to
@@ -514,7 +541,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/mode_manager.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_mode_manager.png">
     </div>
     <div class="col-md-5">
         <em>The mode manager allows the creation, deletion, and renaming
@@ -538,7 +565,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/user_module_manager.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_user_module_manager.png">
     </div>
     <div class="col-md-5">
         <em>The user module manager dialogue lists the custom modules Joystick
@@ -569,7 +596,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/merge_axis.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_merge_axis.png">
     </div>
     <div class="col-md-5">
         <em>This dialog allows the specification of two physical axis that
@@ -600,7 +627,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/device_information.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_device_information.png">
     </div>
     <div class="col-md-5">
         <em>The device information dialogue provides an overview of the
@@ -631,7 +658,7 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/calibration.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_calibration.png">
     </div>
     <div class="col-md-5">
         <em>The calibration tool allows the calibration of all connected
@@ -694,7 +721,7 @@ layout: default
     </div>
 
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/create_profile.png">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_profile_creator.png">
     </div>
 </div>
 
@@ -707,7 +734,7 @@ layout: default
 <h4 class="subsection">Log viewer</h4>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/log_viewer.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_log_viewer.png">
     </div>
     <div class="col-md-5">
         <em>The log viewer allows the user to easily check the content of the
@@ -725,9 +752,9 @@ layout: default
 <h4 class="subsection">Options</h4>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/options_tab1.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_options_general.png">
         </br>
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/options_tab2.jpg">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_options_profiles.png">
     </div>
     <div class="col-md-5">
         <em>The options dialogue which is used to set some default
@@ -756,6 +783,9 @@ layout: default
             opening the main window.</dd>
         <dt>Show message when changing mode</dt>
         <dd>Displays a windows notification when the mode is changed.</dd>
+        <dt>Default action<dt>
+        <dd>Sets the action to be pre-selected in action selection drop down
+            menus</dd>
     </dl>
 </p>
 
