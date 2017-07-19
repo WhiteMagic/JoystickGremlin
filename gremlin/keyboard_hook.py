@@ -128,7 +128,7 @@ class KeyboardHook:
         # https://msdn.microsoft.com/en-us/library/windows/desktop/ms644985(v=vs.85).aspx
         if n_code >= 0:
             # Extract data from the message
-            scan_code = l_param[1]
+            scan_code = l_param[1] & 0xFF
             is_extended = l_param[2] is not None and bool(l_param[2] & 0x0001)
             is_pressed = w_param in self.key_press_types
             is_injected = l_param[2] is not None and bool(l_param[2] & 0x0010)
@@ -142,7 +142,7 @@ class KeyboardHook:
             # RCtrl key press.
 
             # Create the event and pass it to all all registered callbacks
-            if scan_code != 541:
+            if l_param[1] != 541:
                 evt = KeyEvent(scan_code, is_extended, is_pressed, is_injected)
                 for cb in self._callbacks:
                     cb(evt)
