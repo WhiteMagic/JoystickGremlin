@@ -16,10 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from gremlin import event_handler, input_devices, joystick_handling, macro, util
+from gremlin import config, event_handler, input_devices, joystick_handling, \
+    macro, util
 
 
-class CodeRunner(object):
+class CodeRunner:
 
     """Runs the actual profile code."""
 
@@ -40,7 +41,7 @@ class CodeRunner(object):
         """
         return self._running
 
-    def start(self, inheritance_tree, settings):
+    def start(self, inheritance_tree, settings, start_mode):
         """Starts listening to events and loads all existing callbacks.
 
         :param inheritance_tree tree encoding inheritance between the
@@ -91,9 +92,7 @@ class CodeRunner(object):
             input_devices.periodic_registry.start()
             macro.MacroManager().start()
 
-            self.event_handler.change_mode(
-                list(self._inheritance_tree.keys())[0]
-            )
+            self.event_handler.change_mode(start_mode)
             self.event_handler.resume()
             self._running = True
         except ImportError as e:

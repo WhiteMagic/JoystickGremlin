@@ -418,11 +418,12 @@ class EventHandler(QtCore.QObject):
         if mode_exists:
             if self._active_mode != new_mode:
                 self._previous_mode = self._active_mode
-            self._active_mode = new_mode
-            self.mode_changed.emit(self._active_mode)
 
             cfg = config.Configuration()
-            cfg.set_last_mode(cfg.last_profile, self._active_mode)
+            cfg.set_last_mode(cfg.last_profile, new_mode)
+
+            self._active_mode = new_mode
+            self.mode_changed.emit(self._active_mode)
 
     def resume(self):
         """Resumes the processing of callbacks."""

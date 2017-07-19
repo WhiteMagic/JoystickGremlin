@@ -294,11 +294,9 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.generate()
             self.runner.start(
                 self._profile.build_inheritance_tree(),
-                self._profile.settings
+                self._profile.settings,
+                self._last_active_mode()
             )
-            # Retrieve last active profile and switch to it
-            eh = gremlin.event_handler.EventHandler()
-            eh.change_mode(self.config.get_last_mode(self._profile_fname))
         else:
             # Stop running the code
             self.runner.stop()
@@ -954,6 +952,20 @@ class GremlinUi(QtWidgets.QMainWindow):
             event_list[0].value = (0, 0)
 
         self.repeater.events = event_list
+
+    def _last_active_mode(self):
+        """Returns the name of the mode last active.
+
+        :return name of the mode that was the last to be active, or the
+            first top level mode if none was ever used before
+        """
+        last_mode = self.config.get_last_mode(self._profile_fname)
+        mode_list = gremlin.profile.mode_list(self._profile)
+
+        if last_mode in mode_list:
+            return last_mode
+        else:
+            return sorted(self._profile.build_inheritance_tree().keys())[0]
 
     def _load_recent_profile(self, fname):
         """Loads the provided profile and updates the list of recently used
