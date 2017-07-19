@@ -770,7 +770,7 @@ class Profile:
 
         # Device settings
         devices = ElementTree.Element("devices")
-        for device in self.devices.values():
+        for device in sorted(self.devices.values(), key=lambda x: x.hardware_id):
             devices.append(device.to_xml())
         root.append(devices)
 
@@ -964,7 +964,7 @@ class Device:
         node.set("id", str(self.hardware_id))
         node.set("windows_id", str(self.windows_id))
         node.set("type", device_type_to_type_name(self.type))
-        for mode in self.modes.values():
+        for mode in sorted(self.modes.values(), key=lambda x: x.name):
             node.append(mode.to_xml())
         return node
 
@@ -1025,8 +1025,18 @@ class Mode:
         node.set("name", self.name)
         if self.inherit is not None:
             node.set("inherit", self.inherit)
-        for input_items in self.config.values():
-            for item in input_items.values():
+        input_types = [
+            InputType.JoystickAxis,
+            InputType.JoystickButton,
+            InputType.JoystickHat,
+            InputType.Keyboard
+        ]
+        for input_type in input_types:
+            item_list = sorted(
+                self.config[input_type].values(),
+                key=lambda x: x.input_id
+            )
+            for item in item_list:
                 node.append(item.to_xml())
         return node
 
