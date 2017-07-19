@@ -21,6 +21,7 @@ Main UI of JoystickGremlin.
 
 import argparse
 import ctypes
+import hashlib
 import logging
 import os
 import sys
@@ -386,6 +387,9 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def load_profile(self):
         """Prompts the user to select a profile file to load."""
+        if not self._save_changes_request():
+            return
+
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             "Load Profile",
@@ -399,6 +403,9 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def new_profile(self):
         """Creates a new empty profile."""
+        if not self._save_changes_request():
+            return
+
         self._profile = gremlin.profile.Profile()
 
         # For each connected device create a new empty device entry
@@ -558,15 +565,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Creates the tabs of the configuration dialog representing
         the different connected devices.
         """
-        # Disconnect the old tabs before deleting them (eventually)
-        # FIXME: re-enable this
-        # for widget in self.tabs.values():
-        #     self.mode_selector.mode_changed.disconnect(
-        #         widget.input_item_list.mode_changed_cb
-        #     )
-        #     self.mode_selector.mode_changed.disconnect(
-        #         widget.configuration_panel.mode_changed_cb
-        #     )
         self.ui.devices.clear()
         self.tabs = {}
 
@@ -953,6 +951,53 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         self.repeater.events = event_list
 
+    def _save_changes_request(self):
+        """Asks the user what to do in case of a profile change.
+
+        Presents the user with a dialog asking whether or not to save or
+        discard changes to a profile or entirely abort the process.
+
+        :return True continue with the intended action, False abort
+        """
+        continue_process = True
+        if self._has_profile_changed():
+            message_box = QtWidgets.QMessageBox()
+            message_box.setText("The profile has been modified.")
+            message_box.setInformativeText("Do you want to save your changes?")
+            message_box.setStandardButtons(
+                QtWidgets.QMessageBox.Save |
+                QtWidgets.QMessageBox.Discard |
+                QtWidgets.QMessageBox.Cancel
+            )
+            message_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+
+            response = message_box.exec()
+            if response == QtWidgets.QMessageBox.Save:
+                self.save_profile()
+            elif response == QtWidgets.QMessageBox.Cancel:
+                continue_process = False
+        return continue_process
+
+    def _has_profile_changed(self):
+        """Returns whether or not the profile has changed.
+
+        :return True if the profile has changed, false otherwise
+        """
+        if self._profile_fname is None:
+            return True
+        else:
+            tmp_path = os.path.join(os.getenv("temp"), "gremlin.xml")
+            self._profile.to_xml(tmp_path)
+            current_sha = hashlib.sha256(
+                open(tmp_path).read().encode("utf-8")
+            ).hexdigest()
+            profile_sha = hashlib.sha256(
+                open(self._profile_fname).read().encode("utf-8")
+            ).hexdigest()
+
+            print(current_sha, profile_sha)
+            return current_sha != profile_sha
+
     def _last_active_mode(self):
         """Returns the name of the mode last active.
 
@@ -973,6 +1018,9 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param fname path to the profile to load
         """
+        if not self._save_changes_request():
+            return
+
         self.config.last_profile = fname
         self._do_load_profile(fname)
         self._create_recent_profiles()
