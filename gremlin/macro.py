@@ -133,7 +133,6 @@ def _virtual_input_to_unicode(virtual_code):
     """
     output_buffer = ctypes.create_unicode_buffer(8)
     state_buffer = ctypes.create_string_buffer(256)
-    _get_keyboard_state(state_buffer)
     state = _to_unicode_ex(
         virtual_code,
         0x00,
@@ -149,7 +148,7 @@ def _virtual_input_to_unicode(virtual_code):
             "Name lookup for key {} failed".format(hex(virtual_code))
         )
         return None
-    return output_buffer.value
+    return output_buffer.value.upper()
 
 
 def _unicode_to_key(character):
