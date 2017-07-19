@@ -25,7 +25,7 @@ import time
 import gremlin.common
 
 
-class KeyEvent(object):
+class KeyEvent:
 
     """Structure containing details about a key event."""
 
@@ -72,7 +72,7 @@ class KeyEvent(object):
 
 
 @gremlin.common.SingletonDecorator
-class KeyboardHook(object):
+class KeyboardHook:
 
     """Hooks into the event stream and grabs keyboard related events
     and passes them on to registered callback functions.
