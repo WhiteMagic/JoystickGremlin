@@ -1287,6 +1287,16 @@ class ProfileData(metaclass=ABCMeta):
             item = item.parent
         return item.input_type
 
+    def get_mode(self):
+        """Returns the Mode this data entry belongs to.
+
+        :return Mode instance this object belongs to
+        """
+        item = self.parent
+        while not isinstance(item, Mode):
+            item = item.parent
+        return item
+
     def get_device_type(self):
         """Returns the DeviceType of this data entry.
         

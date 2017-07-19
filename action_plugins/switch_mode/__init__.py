@@ -67,7 +67,7 @@ class SwitchMode(AbstractAction):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.mode_name = None
+        self.mode_name = self.get_mode().name
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
