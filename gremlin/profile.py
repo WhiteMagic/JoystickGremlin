@@ -622,7 +622,6 @@ class Profile:
                         if entry not in branch:
                             branch[entry] = {}
                         branch = branch[entry]
-
         return tree
 
     def get_root_modes(self):
@@ -770,7 +769,11 @@ class Profile:
 
         # Device settings
         devices = ElementTree.Element("devices")
-        for device in sorted(self.devices.values(), key=lambda x: x.hardware_id):
+        device_list = sorted(
+            self.devices.values(),
+            key=lambda x: (x.hardware_id, x.windows_id)
+        )
+        for device in device_list:
             devices.append(device.to_xml())
         root.append(devices)
 
@@ -782,7 +785,7 @@ class Profile:
 
         # Module imports
         import_node = ElementTree.Element("import")
-        for entry in self.imports:
+        for entry in sorted(self.imports):
             node = ElementTree.Element("module")
             node.set("name", entry)
             import_node.append(node)
