@@ -90,6 +90,15 @@ def text_to_speech(event, value, condition, text):
         tts_instance.speak(tts.text_substitution(text))
 
 
+def temporary_mode_switch(event, value, condition, mode):
+    if value.current:
+        input_devices.ButtonReleaseActions().register_callback(
+            control_action.switch_to_previous_mode,
+            event
+        )
+        control_action.switch_mode(mode)
+
+
 def switch_mode(event, value, condition, mode):
     if value.current:
         control_action.switch_mode(mode)
@@ -242,6 +251,15 @@ class Factory:
             value,
             condition,
             macro_fn
+        )
+
+    @staticmethod
+    def temporary_mode_switch(mode):
+        return lambda event, value, conditition: temporary_mode_switch(
+            event,
+            value,
+            conditition,
+            mode
         )
 
     @staticmethod
