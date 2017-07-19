@@ -133,10 +133,19 @@ class KeyboardHook(object):
             is_pressed = w_param in self.key_press_types
             is_injected = l_param[2] is not None and bool(l_param[2] & 0x0010)
 
+            # A scan code of 541 indicates AltGr being pressed. AltGr is sent
+            # as a combination of RAlt + RCtrl to the system and as such
+            # generates two key events, one for RAlt and one for RCtrl. The
+            # RCtrl one is being modified due to RAlt being pressed.
+            #
+            # In this application we want the RAlt key press and ignore the
+            # RCtrl key press.
+
             # Create the event and pass it to all all registered callbacks
-            evt = KeyEvent(scan_code, is_extended, is_pressed, is_injected)
-            for cb in self._callbacks:
-                cb(evt)
+            if scan_code != 541:
+                evt = KeyEvent(scan_code, is_extended, is_pressed, is_injected)
+                for cb in self._callbacks:
+                    cb(evt)
 
         # Pass the event on to the next callback in the chain
         return ctypes.windll.user32.CallNextHookEx(
