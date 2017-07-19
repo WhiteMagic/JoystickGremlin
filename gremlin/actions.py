@@ -40,7 +40,7 @@ def axis_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
 
 def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     if event.is_pressed:
-        input_devices.AutomaticButtonRelease().register(
+        input_devices.ButtonReleaseActions().register_button_release(
             (vjoy_device_id, vjoy_input_id), event
         )
 
