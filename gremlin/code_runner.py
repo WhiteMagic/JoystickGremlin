@@ -16,8 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from gremlin import config, event_handler, input_devices, joystick_handling, \
-    macro, util
+from gremlin import actions, config, event_handler, input_devices, \
+    joystick_handling, macro, util
 
 
 class CodeRunner:
@@ -110,6 +110,7 @@ class CodeRunner:
             evt_lst.keyboard_event.disconnect(self.event_handler.process_event)
             evt_lst.joystick_event.disconnect(self.event_handler.process_event)
             evt_lst.keyboard_event.disconnect(kb.keyboard_event)
+            actions.media_player.stop()
         self._running = False
 
         # Empty callback registry

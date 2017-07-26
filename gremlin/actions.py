@@ -20,12 +20,17 @@ import logging
 import threading
 import time
 
+from PyQt5 import QtCore, QtMultimedia
+
 from . import common, control_action, error, fsm, input_devices, \
     joystick_handling, macro, tts
 
 
 # Text to speech instance used by the tts action
 tts_instance = tts.TextToSpeech()
+
+# Qt media player instance
+media_player = QtMultimedia.QMediaPlayer()
 
 
 def axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
@@ -73,6 +78,14 @@ def remap_to_keyboard(event, value, condition, macro_press, macro_release):
 def pause(event, value, condition):
     if value.current:
         control_action.pause()
+
+
+def play_sound(event, value, condition, fname, volume):
+    if value.current:
+        media_player.setMedia(
+            QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(fname)))
+        media_player.setVolume(volume)
+        media_player.play()
 
 
 def resume(event, value, condition):
@@ -187,6 +200,16 @@ class Value:
 class Factory:
 
     """Contains methods to create a variety of actions."""
+
+    @staticmethod
+    def play_sound(fname, volume):
+        return lambda event, value, condition: play_sound(
+            event,
+            value,
+            condition,
+            fname,
+            volume
+        )
 
     @staticmethod
     def remap_input(from_type, to_type, vjoy_device_id, vjoy_input_id):
