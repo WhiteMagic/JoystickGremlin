@@ -29,7 +29,7 @@ import sdl2
 from . import common, error, event_handler, joystick_handling, macro, util
 
 
-class CallbackRegistry(object):
+class CallbackRegistry:
 
     """Registry of all callbacks known to the system."""
 
@@ -79,7 +79,7 @@ class CallbackRegistry(object):
         self._registry = {}
 
 
-class PeriodicRegistry(object):
+class PeriodicRegistry:
 
     """Registry for periodically executed functions."""
 
@@ -329,7 +329,7 @@ class JoystickWrapper:
         return hats
 
 
-class JoystickProxy(object):
+class JoystickProxy:
 
     """Allows read access to joystick state information."""
 
@@ -362,7 +362,7 @@ class JoystickProxy(object):
             return JoystickProxy.joystick_devices[key]
 
 
-class VJoyPlugin(object):
+class VJoyPlugin:
 
     """Plugin providing automatic access to the VJoyProxy object.
 
@@ -389,7 +389,7 @@ class VJoyPlugin(object):
         return partial_fn(callback, vjoy=VJoyPlugin.vjoy)
 
 
-class JoystickPlugin(object):
+class JoystickPlugin:
 
     """Plugin providing automatic access to the JoystickProxy object.
 
@@ -451,7 +451,7 @@ class Keyboard(QtCore.QObject):
         return self._keyboard_state.get(key, False)
 
 
-class KeyboardPlugin(object):
+class KeyboardPlugin:
 
     """Plugin providing automatic access to the Keyboard object.
 
@@ -475,7 +475,7 @@ class KeyboardPlugin(object):
         return partial_fn(callback, keyboard=KeyboardPlugin.keyboard)
 
 
-class JoystickDecorator(object):
+class JoystickDecorator:
 
     """Creates customized decorators for physical joystick devices."""
 
