@@ -1004,10 +1004,12 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         # Create new model
         if curve_type == "Cubic Spline":
             self.action_data.control_points = [(-1.0, -1.0), (1.0, 1.0)]
+            self.action_data.mapping_type = "cubic-spline"
         elif curve_type == "Cubic Bezier Spline":
             self.action_data.control_points = [
                 (-1.0, -1.0), (-0.8, -0.8), (0.8, 0.8), (1.0, 1.0)
             ]
+            self.action_data.mapping_type = "cubic-bezier-spline"
 
         self.curve_model = model_map[curve_type](self.action_data)
 
