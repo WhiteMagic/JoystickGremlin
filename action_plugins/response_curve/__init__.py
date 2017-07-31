@@ -26,7 +26,7 @@ from gremlin.common import InputType
 from gremlin.ui.common import DualSlider
 import gremlin.ui.input_item
 
-g_scene_size = 200.0
+g_scene_size = 250.0
 
 
 class AbstractCurveModel:
@@ -1024,7 +1024,7 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
     def _configure_response_curve_view(self):
         """Initializes the response curve view components."""
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
-        self.curve_view.setFixedSize(QtCore.QSize(410, 410))
+        self.curve_view.setFixedSize(QtCore.QSize(510, 510))
         self.curve_view.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.curve_view.setSceneRect(QtCore.QRectF(
             -g_scene_size,
