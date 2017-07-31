@@ -16,6 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import collections
+import gremlin.util
+
+
+# Named tuple to facilitate working with 2D coordinates
+Point2D = collections.namedtuple("Point2D", ["x", "y"])
+
+
 class CubicSpline(object):
 
     """Creates a new cubic spline based interpolation.
@@ -41,8 +49,6 @@ class CubicSpline(object):
 
     def _fit(self):
         """Computes the second derivatives for the control points."""
-        # FIXME: if handles are colinear along the y axis this results in a
-        #   division by 0 exception
         n = len(self.x)-1
 
         if n < 2:
@@ -104,29 +110,93 @@ class CubicBezierSpline(object):
 
         self.knots = [pt for pt in points[::3]]
 
+        self._lookup = []
+        self._generate_lookup()
+
+    def _generate_lookup(self):
+        """Generates the lookup table mapping x to t values."""
+        assert len(self.x) == len(self.y)
+        assert (len(self.x) - 4) % 3 == 0
+
+        # Iterate over all spline groups part of the curve
+        for i in range(int((len(self.x) - 4) / 3) + 1):
+            offset = i * 3
+            points = [
+                Point2D(self.x[offset], self.y[offset]),
+                Point2D(self.x[offset + 1], self.y[offset + 1]),
+                Point2D(self.x[offset + 2], self.y[offset + 2]),
+                Point2D(self.x[offset + 3], self.y[offset + 3])
+            ]
+
+            # Get t -> coordinate mappings
+            step_size = 1.0 / 100
+            self._lookup.append([])
+            for i in range(0, 101):
+                t = i * step_size
+                self._lookup[-1].append((t, self._value_at_t(points, t)))
+
+    def _value_at_t(self, points, t):
+        """Returns the x and y coordinate for the spline at time t.
+
+        :param points the control points of the curve
+        :param t the time point
+        :return x and y coordinate corresponding to the given time point
+        """
+        t2 = t * t
+        t3 = t2 * t
+        mt = 1 - t
+        mt2 = mt * mt
+        mt3 = mt2 * mt
+
+        return Point2D(
+            points[0].x * mt3
+                + 3 * points[1].x * mt2 * t
+                + 3 * points[2].x * mt * t2
+                + points[3].x * t3,
+            points[0][1] * mt3
+                + 3 * points[1].y * mt2 * t
+                + 3 * points[2].y * mt * t2
+                + points[3].y * t3
+        )
+
     def __call__(self, x):
         """Returns the function value at the desired position.
 
         :param x the location at which to evaluate the function
         :return function value at the provided position
         """
+        # Ensure we have a valid value for x
+        x = gremlin.util.clamp(x, -1.0, 1.0)
+
+        # Determine spline group to use
         if self.knots[0][0] > x:
             index = 0
-            t = 0
         elif self.knots[-1][0] <= x:
-            index = len(self.knots)-2
-            t = 1
+            index = len(self._lookup)-1
         else:
-            index = len(self.knots)-1
-            for i, pt in enumerate(self.knots[::-1]):
-                if x >= pt[0]:
+            segment_count = int((len(self.x) - 4) / 3) + 1
+            for i in range(segment_count):
+                offset = i * 3
+                if self.x[offset] <= x <= self.x[offset+3]:
+                    index = i
                     break
-                index -= 1
-            t = (x - self.knots[index][0]) / \
-                (self.knots[index+1][0] - self.knots[index][0])
 
-        offset = index * 3
-        return (1-t)**3 * self.y[offset] \
-            + 3*(1-t)**2 * t * self.y[offset+1] \
-            + 3*(1-t) * t**2 * self.y[offset+2] \
-            + t**3 * self.y[offset+3]
+        # Linearly intepolate the lookup table data
+        interval = [0, len(self._lookup[index])]
+        searching = True
+        while searching:
+            distance = interval[1] - interval[0]
+            if distance == 1:
+                searching = False
+                break
+
+            center_index = interval[0] + int(distance / 2.0)
+            if self._lookup[index][center_index][1][0] < x:
+                interval[0] = center_index
+            else:
+                interval[1] = center_index
+
+        low = self._lookup[index][interval[0]][1]
+        high = self._lookup[index][interval[1]][1]
+
+        return low.y + (x - low.x) * ((high.y - low.y) / (high.x - low.x))
