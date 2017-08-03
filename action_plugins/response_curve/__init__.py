@@ -376,6 +376,10 @@ class ControlPoint:
         """
         if len(self.handles) > index:
             self.handles[index] = point
+            if len(self.handles) == 2:
+                alt_point = self._center + (self._center - point)
+                alt_index = 1 if index == 0 else 0
+                self.handles[alt_index] = alt_point
 
     def __eq__(self, other):
         """Compares two control points for identity.
