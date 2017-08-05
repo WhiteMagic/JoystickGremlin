@@ -474,7 +474,7 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         sorted_keys = sorted(
             self.device_profile.modes[self.current_mode].config[InputType.Keyboard]
         )
-        if len(sorted_keys) <= index:
+        if index is None or len(sorted_keys) <= index:
             return
         index_key = sorted_keys[index]
         item_data = self.device_profile.modes[self.current_mode]. \
