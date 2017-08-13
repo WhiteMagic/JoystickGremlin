@@ -873,7 +873,7 @@ g_name_to_key = {
     "down": Key("Down", 0x50, True, win32con.VK_DOWN),
     "right": Key("Right", 0x4d, True, win32con.VK_RIGHT),
     # Numpad
-    "numlock": Key("NumLock", 0x45, False, win32con.VK_NUMLOCK),
+    "numlock": Key("NumLock", 0x45, True, win32con.VK_NUMLOCK),
     "npdivide": Key("Numpad /", 0x35, True, win32con.VK_DIVIDE),
     "npmultiply": Key("Numpad *", 0x37, False, win32con.VK_MULTIPLY),
     "npminus": Key("Numpad -", 0x4a, False, win32con.VK_SUBTRACT),
