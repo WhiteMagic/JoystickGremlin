@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import enum
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
@@ -27,6 +28,15 @@ from gremlin.ui.common import DualSlider
 import gremlin.ui.input_item
 
 g_scene_size = 250.0
+
+
+
+class SymmetryMode(enum.Enum):
+
+    """Symmetry modes for response curves."""
+
+    NoSymmetry = 1
+    Diagonal = 2
 
 
 class AbstractCurveModel:
@@ -41,6 +51,7 @@ class AbstractCurveModel:
         self._control_points = []
         self._profile_data = profile_data
         self._init_from_profile_data()
+        self.symmetry_mode = SymmetryMode.NoSymmetry
 
     def get_curve_function(self):
         """Returns the curve function corresponding to the model.
@@ -115,6 +126,15 @@ class AbstractCurveModel:
             "AbstractCurveModel::_update_profile_data not implemented"
         )
 
+    def set_symmetry_mode(self, mode):
+        """Sets the symmetry mode of the curve model.
+
+        :param mode the symmetry mode to use
+        """
+        raise gremlin.error.MissingImplementationError(
+            "AbstractCurveModel::set_symmetry_mode not implemented"
+        )
+
 
 class CubicSplineModel(AbstractCurveModel):
 
@@ -175,6 +195,25 @@ class CubicSplineModel(AbstractCurveModel):
         self._profile_data.control_points = []
         for cp in self._control_points:
             self._profile_data.control_points.append((cp.center.x, cp.center.y))
+
+    def set_symmetry_mode(self, mode):
+        """Sets the symmetry mode of the curve model.
+
+        :param mode the symmetry mode to use
+        """
+        self.symmetry_mode = mode
+        if mode == SymmetryMode.Diagonal:
+            # Decide whether or not to move the "middle" point to (0, 0)
+            if len(self._control_points) % 2 == 1:
+                self._symmetry_with_center_point()
+            else:
+                self._symmetry_without_center_point()
+
+    def _symmetry_with_center_point(self):
+        pass
+
+    def _symmetry_without_center_point(self):
+        pass
 
 
 class CubicBezierSplineModel(AbstractCurveModel):
@@ -311,6 +350,13 @@ class CubicBezierSplineModel(AbstractCurveModel):
                 self._profile_data.control_points.append(
                     [cp.handles[1].x, cp.handles[1].y]
                 )
+
+    def set_symmetry_mode(self, mode):
+        """Sets the symmetry mode of the curve model.
+
+        :param mode the symmetry mode to use
+        """
+        pass
 
 
 class ControlPoint:
@@ -941,6 +987,16 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
             self._change_curve_type
         )
 
+        # Curve manipulation options
+        self.curve_symmetry = QtWidgets.QCheckBox("Symmetry")
+        self.curve_symmetry.stateChanged.connect(self._curve_symmetry_cb)
+
+        self.curve_settings_layout = QtWidgets.QHBoxLayout()
+        self.curve_settings_layout.addWidget(QtWidgets.QLabel("Curve Type:"))
+        self.curve_settings_layout.addWidget(self.curve_type_selection)
+        self.curve_settings_layout.addStretch(1)
+        self.curve_settings_layout.addWidget(self.curve_symmetry)
+
         # Create all objects required for the response curve UI
         self.control_point_editor = ControlPointEditorWidget()
         # Response curve model used
@@ -966,7 +1022,8 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.deadzone = DeadzoneWidget(self.action_data)
 
         # Add all widgets to the layout
-        self.main_layout.addWidget(self.curve_type_selection)
+        # self.main_layout.addWidget(self.curve_type_selection)
+        self.main_layout.addLayout(self.curve_settings_layout)
         self.main_layout.addLayout(self.curve_view_layout)
         self.main_layout.addWidget(self.control_point_editor)
         self.main_layout.addWidget(self.deadzone_label)
@@ -1024,6 +1081,13 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         )
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
         self._configure_response_curve_view()
+
+    def _curve_symmetry_cb(self, state):
+        if state == QtCore.Qt.Checked:
+
+            self.curve_model.set_symmetry_mode(SymmetryMode.Diagonal)
+        else:
+            self.curve_model.set_symmetry_mode(SymmetryMode.NoSymmetry)
 
     def _configure_response_curve_view(self):
         """Initializes the response curve view components."""
