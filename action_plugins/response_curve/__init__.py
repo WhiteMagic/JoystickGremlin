@@ -201,18 +201,6 @@ class CubicSplineModel(AbstractCurveModel):
 
         :param mode the symmetry mode to use
         """
-        self.symmetry_mode = mode
-        if mode == SymmetryMode.Diagonal:
-            # Decide whether or not to move the "middle" point to (0, 0)
-            if len(self._control_points) % 2 == 1:
-                self._symmetry_with_center_point()
-            else:
-                self._symmetry_without_center_point()
-
-    def _symmetry_with_center_point(self):
-        pass
-
-    def _symmetry_without_center_point(self):
         pass
 
 
@@ -223,6 +211,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
     def __init__(self, profile_data):
         """Creates a new model."""
         super().__init__(profile_data)
+        self._is_handle_symmetry_enabled = False
 
     def get_curve_function(self):
         """Returns the curve function corresponding to the model.
@@ -248,6 +237,17 @@ class CubicBezierSplineModel(AbstractCurveModel):
             return None
         else:
             return gremlin.spline.CubicBezierSpline(points)
+
+    def set_handle_symmetry(self, is_enabled):
+        """Enables and disables the handle symmetry mode.
+
+        :param is_enabled whether or not the handle symmetry should be enabled
+        """
+        self._is_handle_symmetry_enabled = is_enabled
+
+    @property
+    def handle_symmetry_enabled(self):
+        return self._is_handle_symmetry_enabled
 
     def _create_control_point(self, point, handles=()):
         """Adds a new control point to the model.
@@ -422,7 +422,9 @@ class ControlPoint:
         """
         if len(self.handles) > index:
             self.handles[index] = point
-            if len(self.handles) == 2:
+            if len(self.handles) == 2 and \
+                    isinstance(self._model, CubicBezierSplineModel) and \
+                    self._model.handle_symmetry_enabled:
                 alt_point = self._center + (self._center - point)
                 alt_index = 1 if index == 0 else 0
                 self.handles[alt_index] = alt_point
@@ -996,6 +998,12 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.curve_settings_layout.addWidget(self.curve_type_selection)
         self.curve_settings_layout.addStretch(1)
         self.curve_settings_layout.addWidget(self.curve_symmetry)
+        # Check if we need to add a symmetry mode for handles
+        self.handle_symmetry = None
+        if self.action_data.mapping_type == "cubic-bezier-spline":
+            self.handle_symmetry = QtWidgets.QCheckBox("Handle symmetry")
+            self.handle_symmetry.stateChanged.connect(self._handle_symmetry_cb)
+            self.curve_settings_layout.addWidget(self.handle_symmetry)
 
         # Create all objects required for the response curve UI
         self.control_point_editor = ControlPointEditorWidget()
@@ -1074,6 +1082,19 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         self.curve_model = model_map[curve_type](self.action_data)
 
+        # Update curve settings UI
+        if self.action_data.mapping_type == "cubic-spline":
+            if self.handle_symmetry is not None:
+                self.handle_symmetry.hide()
+                self.handle_symmetry = None
+        elif self.action_data.mapping_type == "cubic-bezier-spline":
+            if self.handle_symmetry is None:
+                self.handle_symmetry = QtWidgets.QCheckBox("Handle symmetry")
+                self.handle_symmetry.stateChanged.connect(
+                    self._handle_symmetry_cb
+                )
+                self.curve_settings_layout.addWidget(self.handle_symmetry)
+
         # Recreate the UI components
         self.curve_scene = CurveScene(
             self.curve_model,
@@ -1082,12 +1103,22 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
         self._configure_response_curve_view()
 
-    def _curve_symmetry_cb(self, state):
-        if state == QtCore.Qt.Checked:
+    # def _curve_symmetry_cb(self, state):
+    #     if state == QtCore.Qt.Checked:
+    #
+    #         self.curve_model.set_symmetry_mode(SymmetryMode.Diagonal)
+    #     else:
+    #         self.curve_model.set_symmetry_mode(SymmetryMode.NoSymmetry)
 
-            self.curve_model.set_symmetry_mode(SymmetryMode.Diagonal)
-        else:
-            self.curve_model.set_symmetry_mode(SymmetryMode.NoSymmetry)
+    def _handle_symmetry_cb(self, state):
+        if not isinstance(self.curve_model, CubicBezierSplineModel):
+            logging.getLogger("system").error(
+                "Handle symmetry callback in non bezier curve attempted."
+            )
+            return
+
+        self.curve_model.set_handle_symmetry(state == QtCore.Qt.Checked)
+
 
     def _configure_response_curve_view(self):
         """Initializes the response curve view components."""
