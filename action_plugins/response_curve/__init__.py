@@ -990,14 +990,15 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         )
 
         # Curve manipulation options
-        self.curve_symmetry = QtWidgets.QCheckBox("Symmetry")
-        self.curve_symmetry.stateChanged.connect(self._curve_symmetry_cb)
+        # self.curve_symmetry = QtWidgets.QCheckBox("Symmetry")
+        # self.curve_symmetry.stateChanged.connect(self._curve_symmetry_cb)
 
         self.curve_settings_layout = QtWidgets.QHBoxLayout()
         self.curve_settings_layout.addWidget(QtWidgets.QLabel("Curve Type:"))
         self.curve_settings_layout.addWidget(self.curve_type_selection)
         self.curve_settings_layout.addStretch(1)
-        self.curve_settings_layout.addWidget(self.curve_symmetry)
+        # self.curve_settings_layout.addWidget(self.curve_symmetry)
+
         # Check if we need to add a symmetry mode for handles
         self.handle_symmetry = None
         if self.action_data.mapping_type == "cubic-bezier-spline":
