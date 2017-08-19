@@ -118,6 +118,7 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
             box.valueChanged.connect(self._create_value_cb(i+1))
 
             self.main_layout.addWidget(box, i, 1)
+        vjoy_proxy.reset()
 
     def _create_value_cb(self, axis_id):
         """Creates a callback function which updates axis values.
