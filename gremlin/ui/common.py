@@ -679,6 +679,8 @@ class VJoySelector(QtWidgets.QWidget):
             except KeyError:
                 btn_id = -1
 
+            vjoy_proxy.reset()
+
         # If either of the provided entries results in an invalid selection
         # we simply select the first valid thing we come across
         if dev_id == -1 or btn_id == -1:
@@ -739,6 +741,8 @@ class VJoySelector(QtWidgets.QWidget):
             selection.activated.connect(self.change_cb)
             self.main_layout.addWidget(selection)
             self.input_item_dropdowns[dev.vjoy_id] = selection
+
+        vjoy_proxy.reset()
 
         # Show the "None" selection entry
         first_key = sorted(self.input_item_dropdowns.keys())[0]
