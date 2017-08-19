@@ -20,7 +20,7 @@
 import gremlin.event_handler
 
 
-class ModeList(object):
+class ModeList:
 
     """Represents a list of modes to cycle through."""
 

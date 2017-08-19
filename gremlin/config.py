@@ -25,7 +25,7 @@ from . import common, util
 
 
 @common.SingletonDecorator
-class Configuration(object):
+class Configuration:
 
     """Responsible for loading and saving configuration data."""
 

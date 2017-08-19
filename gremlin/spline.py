@@ -24,7 +24,7 @@ import gremlin.util
 Point2D = collections.namedtuple("Point2D", ["x", "y"])
 
 
-class CubicSpline(object):
+class CubicSpline:
 
     """Creates a new cubic spline based interpolation.
     
@@ -96,7 +96,7 @@ class CubicSpline(object):
         return self.y[i] + (x - self.x[i]) * tmp
 
 
-class CubicBezierSpline(object):
+class CubicBezierSpline:
 
     """Implementation of cubic Bezier splines."""
 

@@ -23,7 +23,7 @@ from gremlin.common import DeviceType, InputType
 from . import activation_condition, common
 
 
-class InputIdentifier(object):
+class InputIdentifier:
 
     """Represents the identifier of a single input item."""
 

@@ -20,7 +20,7 @@
 import logging
 
 
-class Transition(object):
+class Transition:
 
     """Represents a single transition in the finite state machine."""
 
@@ -35,7 +35,7 @@ class Transition(object):
         self.new_state = new_state
 
 
-class FiniteStateMachine(object):
+class FiniteStateMachine:
 
     """Simple finite state machine."""
 
