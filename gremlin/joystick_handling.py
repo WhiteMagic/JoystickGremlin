@@ -222,7 +222,7 @@ def joystick_devices():
                 raise error.GremlinError(e.value)
 
     # Reset all devices so we don't hog the ones we aren't actually using
-    VJoyProxy.reset()
+    vjoy_proxy.reset()
 
     _joystick_devices = devices
     return _joystick_devices

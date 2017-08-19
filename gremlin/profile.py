@@ -1003,7 +1003,7 @@ class Mode:
             try:
                 vjoy_device = vjoy_proxy[self.parent.hardware_id]
             except error.VJoyError:
-                pass
+                joystick_handling.VJoyProxy().reset()
 
         self.name = node.get("name")
         self.inherit = node.get("inherit", None)
@@ -1018,6 +1018,9 @@ class Mode:
 
             if store_item:
                 self.config[item.input_type][item.input_id] = item
+
+        joystick_handling.VJoyProxy().reset()
+
 
     def to_xml(self):
         """Generates XML code for this DeviceConfiguration.
