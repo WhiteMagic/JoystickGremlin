@@ -1154,7 +1154,7 @@ def configure_logger(config):
 
     logger.debug("-" * 80)
     logger.debug(time.strftime("%Y-%m-%d %H:%M"))
-    logger.debug("Starting Joystick Gremlin R8")
+    logger.debug("Starting Joystick Gremlin R8.1")
     logger.debug("-" * 80)
 
 
@@ -1209,7 +1209,7 @@ if __name__ == "__main__":
 
     # Unhandled exception traceback
     # TODO: Re-enable for release
-    # sys.excepthook = exception_hook
+    sys.excepthook = exception_hook
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
