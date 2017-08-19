@@ -995,7 +995,6 @@ class GremlinUi(QtWidgets.QMainWindow):
                 open(self._profile_fname).read().encode("utf-8")
             ).hexdigest()
 
-            print(current_sha, profile_sha)
             return current_sha != profile_sha
 
     def _last_active_mode(self):
@@ -1210,7 +1209,7 @@ if __name__ == "__main__":
 
     # Unhandled exception traceback
     # TODO: Re-enable for release
-    sys.excepthook = exception_hook
+    # sys.excepthook = exception_hook
 
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
