@@ -102,7 +102,7 @@ class PlaySound(AbstractAction):
 
     def _parse_xml(self, node):
         self.sound_file = node.get("file")
-        self.volume = int(node.get("volume"))
+        self.volume = int(node.get("volume", 50))
 
     def _generate_xml(self):
         node = ElementTree.Element("play-sound")
