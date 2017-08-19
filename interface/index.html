@@ -93,28 +93,34 @@ layout: default
             <td>Pause</td>
         </tr>
         <tr>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_play_sound.png"></td>
+            <td>Play sound</td>
             <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_axis_001.png"></td>
             <td>Remap axis</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_button_001.png"></td>
             <td>Remap button</td>
-        </tr>
-        <tr>
             <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_hat_001.png"></td>
             <td>Remap hat</td>
+        </tr>
+        <tr>
             <td width="50px"><img class="img-responsive" src="{{ site.baseurl }}/images/icon_response_curve.png"></td>
             <td>Response curve</td>
-        </tr>
-        <tr>
             <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_resume.png"></td>
             <td>Resume</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_split_axis.png"></td>
-            <td>Split axis</td>
         </tr>
         <tr>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_split_axis.png"></td>
+            <td>Split axis</td>
             <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_switch_mode.png"></td>
             <td>Switch mode</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_previous_mode.png"></td>
             <td>Switch to previous mode</td>
+            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_temporary_mode_switch.png"></td>
+            <td>Temporary mode switch</td>
         </tr>
         <tr>
             <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_text_to_speech.png"></td>
@@ -427,6 +433,25 @@ layout: default
 </p>
 
 
+<h4 class="subsection">Temporary Mode Switch</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_temporary_mode_switch.png">
+    </div>
+    <div class="col-md-5">
+        <em>Temporary mode switch dialogue which allows specifying a mode to
+            switch to as long as the action is triggered, i.e. the "button" is
+            held down.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    This action will change the current mode to the one specified when the
+    button or button-like input is pressed. When the input is released the mode
+    will automatically be changed back to the previous one.
+</p>
+
 <h4 class="subsection">Switch to Previous Mode</h4>
 
 <div class="row bottom-gap">
@@ -488,6 +513,25 @@ layout: default
 <p class="text-justify">
     This action allows splitting a single physical axis into two virtual ones.
     The value at which the physical axis is split can be adjusted by the user.
+</p>
+
+
+<h4 class="subsection">Play Sound</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_play_sound.png">
+    </div>
+    <div class="col-md-5">
+        <em>Plays the sound file specified at the given volume when the action
+            is triggered.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    This action allows the specification of a sound to be played with the
+    desired volume when the action is triggered. Only one sound can be played
+    at a time and new sounds will interrupt currently running ones.
 </p>
 
 
