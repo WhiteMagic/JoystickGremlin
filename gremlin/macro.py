@@ -131,8 +131,12 @@ def _virtual_input_to_unicode(virtual_code):
     :param virtual_code virtual code for which to return a unicode character
     :return unicode character corresponding to the given virtual code
     """
+    keyboard_layout = _get_keyboard_layout(0)
     output_buffer = ctypes.create_unicode_buffer(8)
     state_buffer = ctypes.create_string_buffer(256)
+
+    # Translate three times to get around dead keys showing up in funny ways
+    # as the translation takes them into account for future keys
     state = _to_unicode_ex(
         virtual_code,
         0x00,
@@ -140,7 +144,25 @@ def _virtual_input_to_unicode(virtual_code):
         output_buffer,
         8,
         0,
-        _get_keyboard_layout(0)
+        keyboard_layout
+    )
+    state = _to_unicode_ex(
+        virtual_code,
+        0x00,
+        state_buffer,
+        output_buffer,
+        8,
+        0,
+        keyboard_layout
+    )
+    state = _to_unicode_ex(
+        virtual_code,
+        0x00,
+        state_buffer,
+        output_buffer,
+        8,
+        0,
+        keyboard_layout
     )
 
     if state == 0:
