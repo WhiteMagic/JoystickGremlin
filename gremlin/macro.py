@@ -143,11 +143,11 @@ def _virtual_input_to_unicode(virtual_code):
         _get_keyboard_layout(0)
     )
 
-    if state != 1:
+    if state == 0:
         logging.getLogger("system").error(
-            "Name lookup for key {} failed".format(hex(virtual_code))
+            "No translation for key {} available".format(hex(virtual_code))
         )
-        return None
+        return str(hex(virtual_code))
     return output_buffer.value.upper()
 
 
