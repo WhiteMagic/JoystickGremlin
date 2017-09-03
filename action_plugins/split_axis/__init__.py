@@ -134,7 +134,7 @@ class SplitAxis(AbstractAction):
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
-    def requires_activation_condition(self):
+    def requires_virtual_button(self):
         return False
 
     def _parse_xml(self, node):

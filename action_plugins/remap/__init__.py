@@ -124,7 +124,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_data.input_type = vjoy_data["input_type"]
 
         # Check if this requires an activation condition
-        self.action_data.parent.create_or_delete_activation_condition()
+        self.action_data.parent.create_or_delete_virtual_button()
 
         # Signal changes
         self.modified.emit()
@@ -177,7 +177,7 @@ class Remap(gremlin.base_classes.AbstractAction):
                 self.vjoy_input_id
             )
 
-    def requires_activation_condition(self):
+    def requires_virtual_button(self):
         """Returns whether or not the action requires an activation condition.
 
         :return True if an activation condition is required, False otherwise
