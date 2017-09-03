@@ -277,6 +277,62 @@ class InputItemListView(common.AbstractView):
             self.item_selected.emit(index)
 
 
+class ActionSetModel(common.AbstractModel):
+
+    """Model storing a set of actions."""
+
+    def __init__(self, action_set=[]):
+        super().__init__()
+        self._action_set = action_set
+
+    def rows(self):
+        return len(self._action_set)
+
+    def data(self, index):
+        return self._action_set[index]
+
+    def add_action(self, action):
+        self._action_set.append(action)
+        self.data_changed.emit()
+
+    def remove_action(self, action):
+        if action in self._action_set:
+            del self._action_set[self._action_set.index(action)]
+        self.data_changed.emit()
+
+
+class ActionSetView(common.AbstractView):
+
+    """View displaying the action set content."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+    def redraw(self):
+        common.clear_layout(self.main_layout)
+
+        if self.model is None:
+            return
+
+        for index in range(self.model.rows()):
+            data = self.model.data(index)
+            widget = data.widget(data)
+            wrapped_widget = ActionWrapper(widget)
+            wrapped_widget.closed.connect(self._create_closed_cb(widget))
+            self.main_layout.addWidget(wrapped_widget)
+        self.main_layout.addStretch()
+
+    def _create_closed_cb(self, widget):
+        """Create callbacks to remove individual containers from the model.
+
+        :param widget the container widget to be removed
+        :return callback function to remove the provided widget from the
+            model
+        """
+        return lambda: self.model.remove_action(widget.action_data)
+
+
 class InputItemButton(QtWidgets.QFrame):
 
     """Creates a button like widget which emits an event when pressed.
@@ -335,9 +391,10 @@ class InputItemButton(QtWidgets.QFrame):
         # FIXME: this currently ignores the containers themselves
         self._icon_layout.addStretch(1)
         for container in profile_data.containers:
-            for action in container.actions:
-                if action is not None:
-                    self._icon_layout.addWidget(ActionLabel(action))
+            for actions in container.action_sets:
+                for action in actions:
+                    if action is not None:
+                        self._icon_layout.addWidget(ActionLabel(action))
 
     def mousePressEvent(self, event):
         """Emits the input_item_changed event when this instance is
@@ -485,24 +542,31 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
                 index = i
         return index
 
-    def _add_action_widget(self, widget, label):
+    def _create_action_set_widget(self, action_set_data, label):
         """Adds an action widget to the container.
 
         :param widget the widget to be added
         :param label the label to show in the title
         :return wrapped widget
         """
-        wrapped_widget = ActionWrapper(
-            widget,
-            label,
-            self.profile_data.interaction_types
-        )
-        self.action_widgets.append(wrapped_widget)
-        widget.modified.connect(lambda: self.modified.emit())
-        wrapped_widget.interacted.connect(
-            lambda x: self._handle_interaction(widget, x)
-        )
-        return wrapped_widget
+        action_set_model = ActionSetModel(action_set_data)
+        action_set_view = ActionSetView()
+        action_set_view.set_model(action_set_model)
+
+        # action_set_widget = ActionSetWrapper(
+        #     label,
+        #     self.profile_data.interaction_types
+        # )
+        # action_set_widget.add_action_widget(widget)
+        # widget.modified.connect(lambda: self.modified.emit())
+        # action_set_widget.interacted.connect(
+        #     lambda x: self._handle_interaction(widget, x)
+        # )
+        # action_set_widget.modified.connect(lambda: self.modified.emit())
+        # self.action_widgets.append(action_set_widget)
+        # return action_set_widget
+
+        return action_set_view
 
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
@@ -591,9 +655,9 @@ class AbstractActionWidget(QtWidgets.QFrame):
         return root
 
 
-class ActionWrapper(QtWidgets.QGroupBox):
+class ActionSetWrapper(QtWidgets.QGroupBox):
 
-    """Wraps the widget associated with a single action inside a container."""
+    """Wraps a set of widgets, and handles interactions on the entire group."""
 
     class Interactions(enum.Enum):
         """Enumeration of possible interactions."""
@@ -606,7 +670,10 @@ class ActionWrapper(QtWidgets.QGroupBox):
     # Signal emitted when an interaction is triggered on an action
     interacted = QtCore.pyqtSignal(Interactions)
 
-    def __init__(self, action_widget, label, allowed_interactions, parent=None):
+    # Signal emitted when the content of the container changes
+    modified = QtCore.pyqtSignal()
+
+    def __init__(self, label, allowed_interactions, parent=None):
         """Wraps an existing action widget.
 
         :param action_widget the action widget to wrap
@@ -615,16 +682,37 @@ class ActionWrapper(QtWidgets.QGroupBox):
         :param parent the parent of the widget
         """
         super().__init__(parent)
-        self.action_widget = action_widget
+        self.action_widgets = []
         self._create_edit_controls(allowed_interactions)
 
         self.setTitle(label)
 
         self.main_layout = QtWidgets.QGridLayout(self)
-        self.main_layout.addWidget(self.action_widget, 0, 0)
+
+        self.widget_layout = QtWidgets.QVBoxLayout()
+
+        self.main_layout.addLayout(self.widget_layout, 0, 0)
         self.main_layout.addLayout(self.controls_layout, 0, 1)
         self.main_layout.setColumnStretch(0, 2)
         # self.main_layout.setContentsMargins(0, 0, 0, 0)
+
+    def add_action_widget(self, widget):
+        assert isinstance(widget, AbstractActionWidget)
+
+        wrapped_widget = ActionWrapper(widget)
+        wrapped_widget.closed.connect(
+            lambda: self._delete_widget(wrapped_widget)
+        )
+
+        self.widget_layout.addWidget(wrapped_widget)
+        self.action_widgets.append(wrapped_widget)
+
+    def _delete_widget(self, widget):
+        idx = self.action_widgets.index(widget)
+        if idx > 0:
+            del self.action_widgets[idx]
+            print("rem")
+            self.modified.emit()
 
     def _create_edit_controls(self, allowed_interactions):
         """Creates interaction controls based on the allowed interactions.
@@ -635,44 +723,79 @@ class ActionWrapper(QtWidgets.QGroupBox):
         palette.setColor(QtGui.QPalette.Background, QtCore.Qt.red)
 
         self.controls_layout = QtWidgets.QVBoxLayout()
-        if ActionWrapper.Interactions.Up in allowed_interactions:
+        if ActionSetWrapper.Interactions.Up in allowed_interactions:
             self.control_move_up = QtWidgets.QPushButton(
                 QtGui.QIcon("gfx/button_up"), ""
             )
             self.control_move_up.clicked.connect(
-                lambda: self.interacted.emit(ActionWrapper.Interactions.Up)
+                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Up)
             )
             self.controls_layout.addWidget(self.control_move_up)
-        if ActionWrapper.Interactions.Down in allowed_interactions:
+        if ActionSetWrapper.Interactions.Down in allowed_interactions:
             self.control_move_down = QtWidgets.QPushButton(
                 QtGui.QIcon("gfx/button_down"), ""
             )
             self.control_move_down.clicked.connect(
-                lambda: self.interacted.emit(ActionWrapper.Interactions.Down)
+                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Down)
             )
             self.controls_layout.addWidget(self.control_move_down)
-        if ActionWrapper.Interactions.Delete in allowed_interactions:
+        if ActionSetWrapper.Interactions.Delete in allowed_interactions:
             self.control_delete = QtWidgets.QPushButton(
                 QtGui.QIcon("gfx/button_delete"), ""
             )
             self.control_delete.clicked.connect(
-                lambda: self.interacted.emit(ActionWrapper.Interactions.Delete)
+                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Delete)
             )
             self.controls_layout.addWidget(self.control_delete)
-        if ActionWrapper.Interactions.Edit in allowed_interactions:
+        if ActionSetWrapper.Interactions.Edit in allowed_interactions:
             self.control_edit = QtWidgets.QPushButton(
                 QtGui.QIcon("gfx/button_edit"), ""
             )
             self.control_edit.clicked.connect(
-                lambda: self.interacted.emit(ActionWrapper.Interactions.Edit)
+                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Edit)
             )
             self.controls_layout.addWidget(self.control_edit)
 
-        self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
-        self.help_button.clicked.connect(self._show_hint)
-        self.controls_layout.addWidget(self.help_button)
-
         self.controls_layout.addStretch(1)
+
+
+class ActionWrapper(QtWidgets.QDockWidget):
+
+    """Wraps the widget associated with a single action inside a container."""
+
+    # Signal which is emitted whenever the widget is closed
+    closed = QtCore.pyqtSignal(QtWidgets.QWidget)
+
+    def __init__(self, action_widget, parent=None):
+        """Wraps an existing action widget.
+
+        :param action_widget the action widget to wrap
+        :param label the label of the action widget
+        :param allowed_interactions list of allowed interaction types
+        :param parent the parent of the widget
+        """
+        super().__init__(parent)
+        self.action_widget = action_widget
+
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
+        self.setWindowTitle(action_widget.action_data.name)
+
+        # Create root widget of the dock element
+        self.dock_widget = QtWidgets.QFrame()
+        self.dock_widget.setFrameShape(QtWidgets.QFrame.Box)
+        self.dock_widget.setObjectName("frame");
+        self.dock_widget.setStyleSheet(
+            "#frame { border: 1px solid #949494; background-color: #afafaf; }"
+        );
+        self.setWidget(self.dock_widget)
+
+        # self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
+        # self.help_button.clicked.connect(self._show_hint)
+        # self.controls_layout.addWidget(self.help_button)
+
+        self.main_layout = QtWidgets.QVBoxLayout(self.dock_widget)
+        self.main_layout.addWidget(self.action_widget)
+        # self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _show_hint(self):
         """Displays a hint, explaining the purpose of the action."""
@@ -680,3 +803,11 @@ class ActionWrapper(QtWidgets.QGroupBox):
             self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
             gremlin.hints.hint.get(self.action_widget.action_data.tag, "")
         )
+
+    def closeEvent(self, event):
+        """Emits the closed event when this widget is being closed.
+
+        :param event the close event details
+        """
+        QtWidgets.QDockWidget.closeEvent(self, event)
+        self.closed.emit(self)

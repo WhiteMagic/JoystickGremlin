@@ -38,14 +38,17 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
     def _create_ui(self):
         """Creates the UI components."""
-        if len(self.profile_data.actions) > 0:
-            assert len(self.profile_data.actions) == 1
-            action_widget = self.profile_data.actions[0].widget(
-                self.profile_data.actions[0]
+        if len(self.profile_data.action_sets) > 0:
+            assert len(self.profile_data.action_sets) == 1
+
+            widget = self._create_action_set_widget(
+                self.profile_data.action_sets[0],
+                "Action"
             )
-            self.main_layout.addWidget(
-                self._add_action_widget(action_widget, "Action")
-            )
+            self.main_layout.addWidget(widget)
+            widget.redraw()
+            # widget.model.data_changed.connect(lambda: self.modified.emit())
+            widget.model.data_changed.connect(self._action_set_changed)
         else:
             if self.profile_data.get_device_type() == gremlin.common.DeviceType.VJoy:
                 action_selector = gremlin.ui.common.ActionSelector(
@@ -57,6 +60,18 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                 )
             action_selector.action_added.connect(self._add_action)
             self.main_layout.addWidget(action_selector)
+
+    def _action_set_changed(self):
+        action_sets_to_delete = []
+        for action_set in self.profile_data.action_sets:
+            if len(action_set) == 0:
+                action_sets_to_delete.append(action_set)
+        for action_set in action_sets_to_delete:
+            idx = self.profile_data.action_sets.index(action_set)
+            del self.profile_data.action_sets[idx]
+
+        if len(action_sets_to_delete) > 0:
+            self.modified.emit()
 
     def _add_action(self, action_name):
         """Adds a new action to the container.
@@ -74,8 +89,8 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :param widget the action widget on which an action was invoked
         :param action the type of action being invoked
         """
-        if action == gremlin.ui.input_item.ActionWrapper.Interactions.Edit:
-            self.profile_data.actions = []
+        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Edit:
+            self.profile_data.action_sets = []
             self.modified.emit()
 
     def _get_window_title(self):
@@ -83,8 +98,8 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
         :return title to use for the container
         """
-        if len(self.profile_data.actions) > 0:
-            return self.profile_data.actions[0].name
+        if len(self.profile_data.action_sets) > 0:
+            return ", ".join(a.name for a in self.profile_data.action_sets[0])
         else:
             return "Basic"
 
@@ -101,7 +116,8 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
         gremlin.common.InputType.Keyboard
     ]
     interaction_types = [
-        gremlin.ui.input_item.ActionWrapper.Interactions.Edit,
+        gremlin.ui.input_item.ActionSetWrapper.Interactions.Edit,
+        gremlin.ui.input_item.ActionSetWrapper.Interactions.Delete,
     ]
 
     def __init__(self, parent=None):
@@ -125,8 +141,10 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
         """
         node = ElementTree.Element("container")
         node.set("type", "basic")
-        for action in self.actions:
-            node.append(action.to_xml())
+        as_node = ElementTree.Element("action-set")
+        for action in self.action_sets[0]:
+            as_node.append(action.to_xml())
+        node.append(as_node)
         return node
 
     def _generate_code(self):
@@ -157,7 +175,7 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
 
         :return True if the container is configured properly, False otherwise
         """
-        return len(self.actions) == 1
+        return len(self.action_sets) == 1
 
 
 # Plugin definitions

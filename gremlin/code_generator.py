@@ -84,9 +84,10 @@ def generate_parameter_list(input_item):
     vjoy_required = gremlin.plugin_manager.ActionPlugins() \
         .plugins_requiring_parameter("vjoy")
     for container in input_item.containers:
-        for action in container.actions:
-            if type(action) in vjoy_required:
-                params.append("vjoy")
+        for action_set in container.action_sets:
+            for action in action_set:
+                if type(action) in vjoy_required:
+                    params.append("vjoy")
     params = list(set(params))
     params.insert(0, "event")
     return ", ".join(params)
@@ -223,9 +224,10 @@ class CodeGenerator:
         skipped_containers = []
         for container in input_item.containers:
             skip_container = True
-            for action in container.actions:
-                if isinstance(action, action_plugins.response_curve.ResponseCurve):
-                    skip_container = False
+            for action_set in container.action_sets:
+                for action in action_set:
+                    if isinstance(action, action_plugins.response_curve.ResponseCurve):
+                        skip_container = False
             if skip_container:
                 skipped_containers.append(container)
             else:
@@ -248,10 +250,11 @@ class CodeGenerator:
 
         # Generate action setup stuff
         for container in input_item.containers:
-            for action in container.actions:
-                code = action.to_code()
-                if "setup" in code.keys() and len(code.setup) > 0:
-                    self.setup.append(code.setup.strip())
+            for action_set in container.action_sets:
+                for action in action_set:
+                    code = action.to_code()
+                    if "setup" in code.keys() and len(code.setup) > 0:
+                        self.setup.append(code.setup.strip())
 
     def _reset_code_cache(self, config_profile):
         """Empties the code cache of a profile.
@@ -265,5 +268,6 @@ class CodeGenerator:
                     for input_item in input_items.values():
                         for container in input_item.containers:
                             container.code = None
-                            for action in container.actions:
-                                action.code = None
+                            for action_set in container.action_sets:
+                                for action in action_set:
+                                    action.code = None
