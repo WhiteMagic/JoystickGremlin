@@ -201,6 +201,7 @@ class ActionContainerModel(common.AbstractModel):
         :param index the location for which to return data
         :return the data stored at the requested location
         """
+        assert len(self._containers) > index
         return self._containers[index]
 
     def add_container(self, container):

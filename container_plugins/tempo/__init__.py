@@ -97,7 +97,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         action_item = self.profile_data.actions[index]
         self.main_layout.addWidget(
-            self._add_action_widget(action_item.widget(action_item), label)
+            self._create_action_widget(action_item.widget(action_item), label)
         )
 
     def _add_action(self, index, action_name):
@@ -162,7 +162,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
         gremlin.common.InputType.Keyboard
     ]
     interaction_types = [
-        gremlin.ui.input_item.ActionWrapper.Interactions.Edit,
+        gremlin.ui.input_item.ActionSetWrapper.Interactions.Edit,
     ]
 
     def __init__(self, parent=None):
@@ -191,8 +191,11 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
         node = ElementTree.Element("container")
         node.set("type", TempoContainer.tag)
         node.set("delay", str(self.delay))
-        for action in self.actions:
-            node.append(action.to_xml())
+        for actions in self.action_sets:
+            as_node = ElementTree.Element("action-set")
+            for action in actions:
+                as_node.append(action.to_xml())
+            node.append(as_node)
         return node
 
     def _generate_code(self):

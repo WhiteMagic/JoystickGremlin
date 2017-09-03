@@ -240,16 +240,22 @@ class AbstractContainer(profile.ProfileData):
         :parent the InputItem which is the parent to this action
         """
         super().__init__(parent)
-        self.actions = []
+        self.action_sets = []
         self.virtual_button = None
 
-    def add_action(self, action):
+    def add_action(self, action, index=-1):
         """Adds an action to this container.
 
         :param action the action to add
+        :param index the index of the action_set into which to insert the
+            action. A value of -1 indicates that a new set should be
+            created.
         """
         assert isinstance(action, AbstractAction)
-        self.actions.append(action)
+        if index == -1:
+            self.action_sets.append([])
+            index = len(self.action_sets) - 1
+        self.action_sets[index].append(action)
 
         # Create activation condition data if needed
         self.create_or_delete_virtual_button()
@@ -280,8 +286,7 @@ class AbstractContainer(profile.ProfileData):
         :param node the XML node to populate fields with
         """
         super().from_xml(node)
-        self._parse_action_xml(node)
-        self._parse_activation_condition_xml(node)
+        self._parse_action_set_xml(node)
         self._parse_virtual_button_xml(node)
 
     def to_xml(self):
@@ -291,27 +296,44 @@ class AbstractContainer(profile.ProfileData):
         """
         node = super().to_xml()
         # Add activation condition if needed
-        if self.activation_condition:
-            node.append(self.activation_condition.to_xml())
+        if self.virtual_button:
+            node.append(self.virtual_button.to_xml())
         return node
 
-    def _parse_action_xml(self, node):
+    def _parse_action_set_xml(self, node):
         """Parses the XML content related to actions.
 
         :param node the XML node to process
         """
+        for child in node:
+            if child.tag == "virtual-button":
+                continue
+            elif child.tag == "action-set":
+                action_set = []
+                self._parse_action_xml(child, action_set)
+                self.action_sets.append(action_set)
+            else:
+                logging.getLogger("system").warning(
+                    "Unknown node present: {}".format(child.tag)
+                )
+
+    def _parse_action_xml(self, node, action_set):
+        """Parses the XML content related to actions in an action-set.
+
+        :param node the XML node to process
+        :param action_set storage for the processed action nodes
+        """
         action_name_map = plugin_manager.ActionPlugins().tag_map
         for child in node:
-            if child.tag == "activation-condition":
-                continue
             if child.tag not in action_name_map:
                 logging.getLogger("system").warning(
                     "Unknown node present: {}".format(child.tag)
                 )
                 continue
+
             entry = action_name_map[child.tag](self)
             entry.from_xml(child)
-            self.actions.append(entry)
+            action_set.append(entry)
 
     def _parse_virtual_button_xml(self, node):
         """Parses the virtual button part of the XML data.
@@ -329,11 +351,12 @@ class AbstractContainer(profile.ProfileData):
 
     def _generate_code(self):
         """Generates Python code for this container."""
-        # Generate code for each of the actions so they are cached and have a
-        # unique code_id
-        for action in self.actions:
-            action.to_code()
-            gremlin.profile.ProfileData.next_code_id += 1
+        # Generate code for each of the actions inside the action sets such
+        # that they are cached and have a unique code_id
+        for actions in self.action_sets:
+            for action in actions:
+                action.to_code()
+                gremlin.profile.ProfileData.next_code_id += 1
 
     def _is_valid(self):
         """Returns whether or not this container is configured properly.
@@ -343,11 +366,12 @@ class AbstractContainer(profile.ProfileData):
         # Check state of the container
         state = self._is_container_valid()
         # Check state of all linked actions
-        for action in self.actions:
-            if action is None:
-                state = False
-            else:
-                state = state & action.is_valid()
+        for actions in self.action_sets:
+            for action in actions:
+                if action is None:
+                    state = False
+                else:
+                    state = state & action.is_valid()
         return state
 
     @abstractmethod

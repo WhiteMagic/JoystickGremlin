@@ -185,16 +185,17 @@ def parse_float(value):
         )
 
 
-def extract_remap_actions(action_list):
+def extract_remap_actions(action_sets):
     """Returns a list of remap actions from a list of actions.
 
-    :param action_list list of actions from which to extract Remap actions
+    :param action_sets set of actions from which to extract Remap actions
     :return list of Remap actions contained in the provided list of actions
     """
     remap_actions = []
-    for entry in action_list:
-        if isinstance(entry, action_plugins.remap.Remap):
-            remap_actions.append(entry)
+    for actions in action_sets:
+        for action in actions:
+            if isinstance(action, action_plugins.remap.Remap):
+                remap_actions.append(action)
     return remap_actions
 
 
@@ -673,7 +674,7 @@ class Profile:
                     for item in mode.config[input_type].values():
                         for container in item.containers:
                             remap_actions.extend(
-                                extract_remap_actions(container.actions)
+                                extract_remap_actions(container.action_sets)
                             )
 
         # Remove all remap actions from the list of available inputs

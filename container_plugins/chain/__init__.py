@@ -64,7 +64,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         # Insert action widgets
         for i, action in enumerate(self.profile_data.actions):
             self.main_layout.addWidget(
-                self._add_action_widget(
+                self._create_action_set_widget(
                     action.widget(action),
                     "Action {:d}".format(i)
                 )
@@ -97,19 +97,19 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         index = self._get_widget_index(widget)
 
         # Perform action
-        if action == gremlin.ui.input_item.ActionWrapper.Interactions.Up:
+        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Up:
             if index > 0:
                 self.profile_data.actions[index],\
                     self.profile_data.actions[index-1] = \
                     self.profile_data.actions[index-1],\
                     self.profile_data.actions[index]
-        if action == gremlin.ui.input_item.ActionWrapper.Interactions.Down:
+        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Down:
             if index < len(self.profile_data.actions) - 1:
                 self.profile_data.actions[index], \
                     self.profile_data.actions[index + 1] = \
                     self.profile_data.actions[index + 1], \
                     self.profile_data.actions[index]
-        if action == gremlin.ui.input_item.ActionWrapper.Interactions.Delete:
+        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Delete:
             del self.profile_data.actions[index]
 
         self.modified.emit()
@@ -120,7 +120,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :return title to use for the container
         """
         return "Chain: {}".format(" -> ".join(
-            [item.name for item in self.profile_data.actions])
+            [", ".join([a.name for a in actions]) for actions in self.profile_data.action_sets])
         )
 
 
@@ -140,9 +140,9 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
         gremlin.common.InputType.Keyboard
     ]
     interaction_types = [
-        gremlin.ui.input_item.ActionWrapper.Interactions.Up,
-        gremlin.ui.input_item.ActionWrapper.Interactions.Down,
-        gremlin.ui.input_item.ActionWrapper.Interactions.Delete,
+        gremlin.ui.input_item.ActionSetWrapper.Interactions.Up,
+        gremlin.ui.input_item.ActionSetWrapper.Interactions.Down,
+        gremlin.ui.input_item.ActionSetWrapper.Interactions.Delete,
     ]
 
     def __init__(self, parent=None):
@@ -168,8 +168,11 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
         node = ElementTree.Element("container")
         node.set("type", ChainContainer.tag)
         node.set("timeout", str(self.timeout))
-        for action in self.actions:
-            node.append(action.to_xml())
+        for actions in self.action_sets:
+            as_node = ElementTree.Element("action-set")
+            for action in actions:
+                as_node.append(action.to_xml())
+            node.append(as_node)
         return node
 
     def _generate_code(self):
