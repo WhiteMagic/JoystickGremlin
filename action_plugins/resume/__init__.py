@@ -62,7 +62,7 @@ class ResumeAction(AbstractAction):
     def __init__(self, parent):
         super().__init__(parent)
 
-    def requires_activation_condition(self):
+    def requires_virtual_button(self):
         return self.get_input_type() in [
             InputType.JoystickAxis,
             InputType.JoystickHat

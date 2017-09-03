@@ -40,7 +40,7 @@ def key_lookup_name(context, input_item):
     return key.lookup_name
 
 
-def condition(context, cond):
+def virtual_button(context, virt_button):
     direction_to_tuple = {
         "center": "(0, 0)",
         "north": "(0, 1)",
@@ -53,15 +53,15 @@ def condition(context, cond):
         "north-west": "(-1, 1)"
     }
 
-    if cond is None:
+    if virt_button is None:
         return "None"
     else:
-        if isinstance(cond, gremlin.base_classes.AxisActivationCondition):
+        if isinstance(virt_button, gremlin.base_classes.VirtualAxisButton):
             return "gremlin.actions.AxisButton({}, {})".format(
                 cond.lower_limit,
                 cond.upper_limit
             )
-        elif isinstance(cond, gremlin.base_classes.HatActivationCondition):
+        elif isinstance(virt_button, gremlin.base_classes.VirtualHatButton):
             return "gremlin.actions.HatButton([{}])".format(
-                ", ".join([direction_to_tuple[v] for v in cond.directions])
+                ", ".join([direction_to_tuple[v] for v in virt_button.directions])
             )

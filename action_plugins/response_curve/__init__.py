@@ -1170,7 +1170,7 @@ class ResponseCurve(AbstractAction):
         """Returns the icon representing the action."""
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 
-    def requires_activation_condition(self):
+    def requires_virtual_button(self):
         """Returns whether or not an activation condition is needed.
 
         :return True if an activation condition is needed, False otherwise

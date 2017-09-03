@@ -26,9 +26,9 @@ import gremlin
 from . import common, error, plugin_manager, profile
 
 
-class AbstractActivationCondition(metaclass=ABCMeta):
+class AbstractVirtualButton(metaclass=ABCMeta):
 
-    """Base class of all activation conditions."""
+    """Base class of all virtual buttons."""
 
     def __init__(self):
         """Creates a new instance."""
@@ -36,7 +36,7 @@ class AbstractActivationCondition(metaclass=ABCMeta):
 
     @abstractmethod
     def from_xml(self, node):
-        """Populates the activation condition based on the node's data.
+        """Populates the virtual button based on the node's data.
 
         :param node the node containing data for this instance
         """
@@ -51,9 +51,9 @@ class AbstractActivationCondition(metaclass=ABCMeta):
         pass
 
 
-class AxisActivationCondition(AbstractActivationCondition):
+class VirtualAxisButton(AbstractVirtualButton):
 
-    """Activation condition for an axis, turning it into a button."""
+    """Virtual button which turns an axis range into a button."""
 
     def __init__(self, lower_limit=0.0, upper_limit=0.0):
         """Creates a new instance.
@@ -66,7 +66,7 @@ class AxisActivationCondition(AbstractActivationCondition):
         self.upper_limit = upper_limit
 
     def from_xml(self, node):
-        """Populates the activation condition based on the node's data.
+        """Populates the virtual button based on the node's data.
 
         :param node the node containing data for this instance
         """
@@ -78,15 +78,15 @@ class AxisActivationCondition(AbstractActivationCondition):
 
         :return XML node containing the instance's data
         """
-        node = ElementTree.Element("activation-condition")
+        node = ElementTree.Element("virtual-button")
         node.set("lower-limit", str(self.lower_limit))
         node.set("upper-limit", str(self.upper_limit))
         return node
 
 
-class HatActivationCondition(AbstractActivationCondition):
+class VirtualHatButton(AbstractVirtualButton):
 
-    """Activatio condition which combines hat directions into a button."""
+    """Virtual button which combines hat directions into a button."""
 
     # Mapping from event directions to names
     direction_to_name = {
@@ -128,7 +128,7 @@ class HatActivationCondition(AbstractActivationCondition):
         :param node the node containing data for this instance
         """
         for key, value in node.items():
-            if key in HatActivationCondition.name_to_direction and \
+            if key in VirtualHatButton.name_to_direction and \
                             profile.parse_bool(value):
                 self.directions.append(key)
 
@@ -137,9 +137,9 @@ class HatActivationCondition(AbstractActivationCondition):
 
         :return XML node containing the instance's data
         """
-        node = ElementTree.Element("activation-condition")
+        node = ElementTree.Element("virtual-button")
         for direction in self.directions:
-            if direction in HatActivationCondition.name_to_direction:
+            if direction in VirtualHatButton.name_to_direction:
                 node.set(direction, "1")
         return node
 
@@ -181,14 +181,14 @@ class AbstractAction(profile.ProfileData):
             "AbstractAction.icon not implemented in subclass"
         )
 
-    def requires_activation_condition(self):
-        """Returns whether or not the action requires the use of an
-        activation condition.
+    def requires_virtual_button(self):
+        """Returns whether or not the action requires the use of a
+        virtual button.
 
-        :return True if an activation condition is to be used, False otherwise
+        :return True if a virtual button has to be used, False otherwise
         """
         raise error.MissingImplementationError(
-            "AbstractAction.requires_activation_condition not implemented"
+            "AbstractAction.requires_virtual_button not implemented"
         )
 
     def _code_generation(self, template_name, params):
@@ -228,10 +228,10 @@ class AbstractContainer(profile.ProfileData):
 
     """Base class for action container related information storage."""
 
-    condition_data = {
-        common.InputType.JoystickAxis: AxisActivationCondition,
+    virtual_button_lut = {
+        common.InputType.JoystickAxis: VirtualAxisButton,
         common.InputType.JoystickButton: None,
-        common.InputType.JoystickHat: HatActivationCondition
+        common.InputType.JoystickHat: VirtualHatButton
     }
 
     def __init__(self, parent):
@@ -241,7 +241,7 @@ class AbstractContainer(profile.ProfileData):
         """
         super().__init__(parent)
         self.actions = []
-        self.activation_condition = None
+        self.virtual_button = None
 
     def add_action(self, action):
         """Adds an action to this container.
@@ -252,27 +252,27 @@ class AbstractContainer(profile.ProfileData):
         self.actions.append(action)
 
         # Create activation condition data if needed
-        self.create_or_delete_activation_condition()
+        self.create_or_delete_virtual_button()
 
-    def create_or_delete_activation_condition(self):
+    def create_or_delete_virtual_button(self):
         """Creates activation condition data as required."""
-        need_activation_condition = any(
-            [a.requires_activation_condition()
-             for a in self.actions if a is not None]
-        )
+        need_virtual_button = False
+        for actions in self.action_sets:
+            need_virtual_button = need_virtual_button or \
+                any([a.requires_virtual_button() for a in actions if a is not None])
 
-        if need_activation_condition:
-            if self.activation_condition is None:
-                self.activation_condition = \
-                    AbstractContainer.condition_data[self.parent.input_type]()
+        if need_virtual_button:
+            if self.virtual_button is None:
+                self.virtual_button = \
+                    AbstractContainer.virtual_button_lut[self.parent.input_type]()
             elif not isinstance(
-                    self.activation_condition,
-                    AbstractContainer.condition_data[self.parent.input_type]
+                    self.virtual_button,
+                    AbstractContainer.virtual_button_lut[self.parent.input_type]
             ):
-                self.activation_condition = \
-                    AbstractContainer.condition_data[self.parent.input_type]()
+                self.virtual_button = \
+                    AbstractContainer.virtual_button_lut[self.parent.input_type]()
         else:
-            self.activation_condition = None
+            self.virtual_button = None
 
     def from_xml(self, node):
         """Populates the instance with data from the given XML node.
@@ -282,6 +282,7 @@ class AbstractContainer(profile.ProfileData):
         super().from_xml(node)
         self._parse_action_xml(node)
         self._parse_activation_condition_xml(node)
+        self._parse_virtual_button_xml(node)
 
     def to_xml(self):
         """Returns a XML node representing the instance's contents.
@@ -312,18 +313,19 @@ class AbstractContainer(profile.ProfileData):
             entry.from_xml(child)
             self.actions.append(entry)
 
-    def _parse_activation_condition_xml(self, node):
-        """Parses the activation condition part of the XML data.
+    def _parse_virtual_button_xml(self, node):
+        """Parses the virtual button part of the XML data.
 
         :param node the XML node to process
         """
-        ac_node = node.find("activation-condition")
+        vb_node = node.find("virtual-button")
 
-        if ac_node is not None:
-            self.activation_condition = AbstractContainer.condition_data[
+        self.virtual_button = None
+        if vb_node is not None:
+            self.virtual_button = AbstractContainer.virtual_button_lut[
                 self.get_input_type()
             ]()
-            self.activation_condition.from_xml(ac_node)
+            self.virtual_button.from_xml(vb_node)
 
     def _generate_code(self):
         """Generates Python code for this container."""

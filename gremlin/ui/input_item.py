@@ -430,11 +430,11 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     palette.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
 
     # Maps activation condition data to activation condition widgets
-    condition_to_widget = {
-        gremlin.base_classes.AxisActivationCondition:
-            gremlin.ui.activation_condition.AxisActivationConditionWidget,
-        gremlin.base_classes.HatActivationCondition:
-            gremlin.ui.activation_condition.HatActivationConditionWidget
+    virtual_axis_to_widget = {
+        gremlin.base_classes.VirtualAxisButton:
+            gremlin.ui.activation_condition.VirtualAxisButtonWidget,
+        gremlin.base_classes.VirtualHatButton:
+            gremlin.ui.activation_condition.VirtualHatButtonWidget
     }
 
     def __init__(self, profile_data, parent=None):
@@ -463,11 +463,11 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
         # Add condition widget
         self.activation_condition_widget = None
-        if self.profile_data.activation_condition:
+        if self.profile_data.virtual_button:
             self.activation_condition_widget = \
-                AbstractContainerWidget.condition_to_widget[
-                    type(self.profile_data.activation_condition)
-                ](self.profile_data.activation_condition)
+                AbstractContainerWidget.virtual_axis_to_widget[
+                    type(self.profile_data.virtual_button)
+                ](self.profile_data.virtual_button)
             self.main_layout.addWidget(self.activation_condition_widget)
 
         # Create the actual UI

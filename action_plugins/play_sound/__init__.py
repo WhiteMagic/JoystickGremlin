@@ -94,7 +94,7 @@ class PlaySound(AbstractAction):
         self.sound_file = None
         self.volume = 50
 
-    def requires_activation_condition(self):
+    def requires_virtual_button(self):
         return self.get_input_type() in [
             InputType.JoystickAxis,
             InputType.JoystickHat

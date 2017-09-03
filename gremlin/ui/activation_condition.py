@@ -60,7 +60,7 @@ class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
         )
 
 
-class AxisActivationConditionWidget(AbstractActivationConditionWidget):
+class VirtualAxisButtonWidget(AbstractActivationConditionWidget):
 
     """Condition widget for axis, turning an axis area into a button."""
 
@@ -127,7 +127,7 @@ class AxisActivationConditionWidget(AbstractActivationConditionWidget):
         )
 
 
-class HatActivationConditionWidget(AbstractActivationConditionWidget):
+class VirtualHatButtonWidget(AbstractActivationConditionWidget):
 
     """Condition widget for hats, turning a set of directions into a button."""
 
