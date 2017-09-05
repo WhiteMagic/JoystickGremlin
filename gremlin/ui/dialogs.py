@@ -231,6 +231,10 @@ class OptionsUi(common.BaseDialogUi):
         if fname not in self.config.get_executable_list():
             self.config.set_profile(fname, "")
             self.populate_executables(fname)
+        else:
+            self.executable_selection.setCurrentIndex(
+                self.executable_selection.findText(fname)
+            )
 
     def _new_executable(self):
         """Prompts the user to select a new executable to add to the
