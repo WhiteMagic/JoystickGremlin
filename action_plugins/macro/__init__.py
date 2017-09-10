@@ -124,9 +124,10 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.ui_elements["duration_spinbox"] = QtWidgets.QDoubleSpinBox()
         self.ui_elements["duration_spinbox"].setSingleStep(0.1)
         self.ui_elements["duration_spinbox"].setMaximum(3600)
-        self.ui_elements["duration_spinbox"].setValue(
-            self.model.get_entry(self.index.row()).duration
-        )
+        duration = 0.5
+        if self.model.get_entry(self.index.row()) is not None:
+            duration = self.model.get_entry(self.index.row()).duration
+        self.ui_elements["duration_spinbox"].setValue(duration)
         self.ui_elements["duration_spinbox"].valueChanged.connect(
             self._update_pause
         )
