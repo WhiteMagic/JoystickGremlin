@@ -43,12 +43,11 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[0],
-                "Action"
+                "Basic"
             )
             self.main_layout.addWidget(widget)
             widget.redraw()
-            # widget.model.data_changed.connect(lambda: self.modified.emit())
-            widget.model.data_changed.connect(self._action_set_changed)
+            widget.model.data_changed.connect(lambda: self.modified.emit())
         else:
             if self.profile_data.get_device_type() == gremlin.common.DeviceType.VJoy:
                 action_selector = gremlin.ui.common.ActionSelector(
@@ -60,18 +59,6 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                 )
             action_selector.action_added.connect(self._add_action)
             self.main_layout.addWidget(action_selector)
-
-    def _action_set_changed(self):
-        action_sets_to_delete = []
-        for action_set in self.profile_data.action_sets:
-            if len(action_set) == 0:
-                action_sets_to_delete.append(action_set)
-        for action_set in action_sets_to_delete:
-            idx = self.profile_data.action_sets.index(action_set)
-            del self.profile_data.action_sets[idx]
-
-        if len(action_sets_to_delete) > 0:
-            self.modified.emit()
 
     def _add_action(self, action_name):
         """Adds a new action to the container.
@@ -89,9 +76,7 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :param widget the action widget on which an action was invoked
         :param action the type of action being invoked
         """
-        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Edit:
-            self.profile_data.action_sets = []
-            self.modified.emit()
+        pass
 
     def _get_window_title(self):
         """Returns the title to use for this container.
@@ -115,10 +100,7 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
         gremlin.common.InputType.JoystickButton,
         gremlin.common.InputType.Keyboard
     ]
-    interaction_types = [
-        gremlin.ui.input_item.ActionSetWrapper.Interactions.Edit,
-        gremlin.ui.input_item.ActionSetWrapper.Interactions.Delete,
-    ]
+    interaction_types = []
 
     def __init__(self, parent=None):
         """Creates a new instance.

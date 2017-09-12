@@ -192,7 +192,7 @@ def extract_remap_actions(action_sets):
     :return list of Remap actions contained in the provided list of actions
     """
     remap_actions = []
-    for actions in action_sets:
+    for actions in [a for a in action_sets if a is not None]:
         for action in actions:
             if isinstance(action, action_plugins.remap.Remap):
                 remap_actions.append(action)

@@ -305,12 +305,49 @@ class ActionSetView(common.AbstractView):
 
     """View displaying the action set content."""
 
-    def __init__(self, parent=None):
+    class Interactions(enum.Enum):
+        """Enumeration of possible interactions."""
+        Up = 1
+        Down = 2
+        Delete = 3
+        Edit = 4
+        Add = 5
+        Count = 6
+
+
+    # Signal emitted when an interaction is triggered on an action
+    interacted = QtCore.pyqtSignal(Interactions)
+
+    def __init__(self, profile_data, label, parent=None):
         super().__init__(parent)
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
+        self.profile_data = profile_data
+        self.allowed_interactions = profile_data.interaction_types
+        self.label = label
+
+        # Create a group box widget in which everything else will be placed
+        self.group_widget = QtWidgets.QGroupBox(self.label)
+        self.main_layout.addWidget(self.group_widget)
+
+        # Create group box contents
+        self.group_layout = QtWidgets.QGridLayout()
+        self.group_widget.setLayout(self.group_layout)
+        self.action_layout = QtWidgets.QVBoxLayout()
+        self._create_edit_controls()
+
+        self.action_selector = gremlin.ui.common.ActionSelector(
+            profile_data.parent.input_type
+        )
+        self.action_selector.action_added.connect(self._add_action)
+
+        self.group_layout.addLayout(self.action_layout, 0, 0)
+        self.group_layout.addLayout(self.controls_layout, 0, 1)
+        self.group_layout.setColumnStretch(0, 2)
+        self.group_layout.addWidget(self.action_selector, 1, 0)
+
     def redraw(self):
-        common.clear_layout(self.main_layout)
+        common.clear_layout(self.action_layout)
 
         if self.model is None:
             return
@@ -318,10 +355,15 @@ class ActionSetView(common.AbstractView):
         for index in range(self.model.rows()):
             data = self.model.data(index)
             widget = data.widget(data)
+            widget.modified.connect(lambda: self.model.data_changed.emit())
             wrapped_widget = ActionWrapper(widget)
             wrapped_widget.closed.connect(self._create_closed_cb(widget))
-            self.main_layout.addWidget(wrapped_widget)
-        self.main_layout.addStretch()
+            self.action_layout.addWidget(wrapped_widget)
+
+    def _add_action(self, action_name):
+        plugin_manager = gremlin.plugin_manager.ActionPlugins()
+        action_item = plugin_manager.get_class(action_name)(self.profile_data)
+        self.model.add_action(action_item)
 
     def _create_closed_cb(self, widget):
         """Create callbacks to remove individual containers from the model.
@@ -331,6 +373,50 @@ class ActionSetView(common.AbstractView):
             model
         """
         return lambda: self.model.remove_action(widget.action_data)
+
+    def _create_edit_controls(self):
+        """Creates interaction controls based on the allowed interactions.
+
+        :param allowed_interactions list of allowed interactions
+        """
+        palette = QtGui.QPalette()
+        palette.setColor(QtGui.QPalette.Background, QtCore.Qt.red)
+
+        self.controls_layout = QtWidgets.QVBoxLayout()
+        if ActionSetView.Interactions.Up in self.allowed_interactions:
+            self.control_move_up = QtWidgets.QPushButton(
+                QtGui.QIcon("gfx/button_up"), ""
+            )
+            self.control_move_up.clicked.connect(
+                lambda: self.interacted.emit(ActionSetView.Interactions.Up)
+            )
+            self.controls_layout.addWidget(self.control_move_up)
+        if ActionSetView.Interactions.Down in self.allowed_interactions:
+            self.control_move_down = QtWidgets.QPushButton(
+                QtGui.QIcon("gfx/button_down"), ""
+            )
+            self.control_move_down.clicked.connect(
+                lambda: self.interacted.emit(ActionSetView.Interactions.Down)
+            )
+            self.controls_layout.addWidget(self.control_move_down)
+        if ActionSetView.Interactions.Delete in self.allowed_interactions:
+            self.control_delete = QtWidgets.QPushButton(
+                QtGui.QIcon("gfx/button_delete"), ""
+            )
+            self.control_delete.clicked.connect(
+                lambda: self.interacted.emit(ActionSetView.Interactions.Delete)
+            )
+            self.controls_layout.addWidget(self.control_delete)
+        if ActionSetView.Interactions.Edit in self.allowed_interactions:
+            self.control_edit = QtWidgets.QPushButton(
+                QtGui.QIcon("gfx/button_edit"), ""
+            )
+            self.control_edit.clicked.connect(
+                lambda: self.interacted.emit(ActionSetView.Interactions.Edit)
+            )
+            self.controls_layout.addWidget(self.control_edit)
+
+        self.controls_layout.addStretch(1)
 
 
 class InputItemButton(QtWidgets.QFrame):
@@ -391,7 +477,7 @@ class InputItemButton(QtWidgets.QFrame):
         # FIXME: this currently ignores the containers themselves
         self._icon_layout.addStretch(1)
         for container in profile_data.containers:
-            for actions in container.action_sets:
+            for actions in [a for a in container.action_sets if a is not None]:
                 for action in actions:
                     if action is not None:
                         self._icon_layout.addWidget(ActionLabel(action))
@@ -538,7 +624,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         """
         index = -1
         for i, entry in enumerate(self.action_widgets):
-            if entry.action_widget == widget:
+            if entry == widget:
                 index = i
         return index
 
@@ -550,8 +636,17 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         :return wrapped widget
         """
         action_set_model = ActionSetModel(action_set_data)
-        action_set_view = ActionSetView()
+        action_set_view = ActionSetView(
+            self.profile_data,
+            label
+        )
         action_set_view.set_model(action_set_model)
+        action_set_view.interacted.connect(
+            lambda x: self._handle_interaction(action_set_view, x)
+        )
+
+        # Store the view widget so we can use it for interactions later on
+        self.action_widgets.append(action_set_view)
 
         # action_set_widget = ActionSetWrapper(
         #     label,
@@ -653,110 +748,6 @@ class AbstractActionWidget(QtWidgets.QFrame):
         while not isinstance(root, gremlin.profile.Profile):
             root = root.parent
         return root
-
-
-class ActionSetWrapper(QtWidgets.QGroupBox):
-
-    """Wraps a set of widgets, and handles interactions on the entire group."""
-
-    class Interactions(enum.Enum):
-        """Enumeration of possible interactions."""
-        Up = 1
-        Down = 2
-        Delete = 3
-        Edit = 4
-        Count = 5
-
-    # Signal emitted when an interaction is triggered on an action
-    interacted = QtCore.pyqtSignal(Interactions)
-
-    # Signal emitted when the content of the container changes
-    modified = QtCore.pyqtSignal()
-
-    def __init__(self, label, allowed_interactions, parent=None):
-        """Wraps an existing action widget.
-
-        :param action_widget the action widget to wrap
-        :param label the label of the action widget
-        :param allowed_interactions list of allowed interaction types
-        :param parent the parent of the widget
-        """
-        super().__init__(parent)
-        self.action_widgets = []
-        self._create_edit_controls(allowed_interactions)
-
-        self.setTitle(label)
-
-        self.main_layout = QtWidgets.QGridLayout(self)
-
-        self.widget_layout = QtWidgets.QVBoxLayout()
-
-        self.main_layout.addLayout(self.widget_layout, 0, 0)
-        self.main_layout.addLayout(self.controls_layout, 0, 1)
-        self.main_layout.setColumnStretch(0, 2)
-        # self.main_layout.setContentsMargins(0, 0, 0, 0)
-
-    def add_action_widget(self, widget):
-        assert isinstance(widget, AbstractActionWidget)
-
-        wrapped_widget = ActionWrapper(widget)
-        wrapped_widget.closed.connect(
-            lambda: self._delete_widget(wrapped_widget)
-        )
-
-        self.widget_layout.addWidget(wrapped_widget)
-        self.action_widgets.append(wrapped_widget)
-
-    def _delete_widget(self, widget):
-        idx = self.action_widgets.index(widget)
-        if idx > 0:
-            del self.action_widgets[idx]
-            print("rem")
-            self.modified.emit()
-
-    def _create_edit_controls(self, allowed_interactions):
-        """Creates interaction controls based on the allowed interactions.
-
-        :param allowed_interactions list of allowed interactions
-        """
-        palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Background, QtCore.Qt.red)
-
-        self.controls_layout = QtWidgets.QVBoxLayout()
-        if ActionSetWrapper.Interactions.Up in allowed_interactions:
-            self.control_move_up = QtWidgets.QPushButton(
-                QtGui.QIcon("gfx/button_up"), ""
-            )
-            self.control_move_up.clicked.connect(
-                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Up)
-            )
-            self.controls_layout.addWidget(self.control_move_up)
-        if ActionSetWrapper.Interactions.Down in allowed_interactions:
-            self.control_move_down = QtWidgets.QPushButton(
-                QtGui.QIcon("gfx/button_down"), ""
-            )
-            self.control_move_down.clicked.connect(
-                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Down)
-            )
-            self.controls_layout.addWidget(self.control_move_down)
-        if ActionSetWrapper.Interactions.Delete in allowed_interactions:
-            self.control_delete = QtWidgets.QPushButton(
-                QtGui.QIcon("gfx/button_delete"), ""
-            )
-            self.control_delete.clicked.connect(
-                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Delete)
-            )
-            self.controls_layout.addWidget(self.control_delete)
-        if ActionSetWrapper.Interactions.Edit in allowed_interactions:
-            self.control_edit = QtWidgets.QPushButton(
-                QtGui.QIcon("gfx/button_edit"), ""
-            )
-            self.control_edit.clicked.connect(
-                lambda: self.interacted.emit(ActionSetWrapper.Interactions.Edit)
-            )
-            self.controls_layout.addWidget(self.control_edit)
-
-        self.controls_layout.addStretch(1)
 
 
 class ActionWrapper(QtWidgets.QDockWidget):

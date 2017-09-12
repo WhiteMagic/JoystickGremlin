@@ -17,6 +17,7 @@
 
 from PyQt5 import QtWidgets
 
+import logging
 from xml.etree import ElementTree
 
 from mako.template import Template
@@ -62,13 +63,14 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.main_layout.addLayout(self.widget_layout)
 
         # Insert action widgets
-        for i, action in enumerate(self.profile_data.actions):
-            self.main_layout.addWidget(
-                self._create_action_set_widget(
-                    action.widget(action),
-                    "Action {:d}".format(i)
-                )
+        for i, action in enumerate(self.profile_data.action_sets):
+            widget = self._create_action_set_widget(
+                self.profile_data.action_sets[i],
+                "Action {:d}".format(i)
             )
+            self.main_layout.addWidget(widget)
+            widget.redraw()
+            widget.model.data_changed.connect(lambda: self.modified.emit())
 
     def _add_action(self, action_name):
         """Adds a new action to the container.
@@ -96,21 +98,28 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         # Find the index of the widget that gets modified
         index = self._get_widget_index(widget)
 
+        if index == -1:
+            logging.getLogger("system").warning(
+                "Unable to find widget specified for interaction, not doing "
+                "anything."
+            )
+            return
+
         # Perform action
-        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Up:
+        if action == gremlin.ui.input_item.ActionSetView.Interactions.Up:
             if index > 0:
-                self.profile_data.actions[index],\
-                    self.profile_data.actions[index-1] = \
-                    self.profile_data.actions[index-1],\
-                    self.profile_data.actions[index]
-        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Down:
-            if index < len(self.profile_data.actions) - 1:
-                self.profile_data.actions[index], \
-                    self.profile_data.actions[index + 1] = \
-                    self.profile_data.actions[index + 1], \
-                    self.profile_data.actions[index]
-        if action == gremlin.ui.input_item.ActionSetWrapper.Interactions.Delete:
-            del self.profile_data.actions[index]
+                self.profile_data.action_sets[index],\
+                    self.profile_data.action_sets[index-1] = \
+                    self.profile_data.action_sets[index-1],\
+                    self.profile_data.action_sets[index]
+        if action == gremlin.ui.input_item.ActionSetView.Interactions.Down:
+            if index < len(self.profile_data.action_sets) - 1:
+                self.profile_data.action_sets[index], \
+                    self.profile_data.action_sets[index + 1] = \
+                    self.profile_data.action_sets[index + 1], \
+                    self.profile_data.action_sets[index]
+        if action == gremlin.ui.input_item.ActionSetView.Interactions.Delete:
+            del self.profile_data.action_sets[index]
 
         self.modified.emit()
 
@@ -140,9 +149,9 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
         gremlin.common.InputType.Keyboard
     ]
     interaction_types = [
-        gremlin.ui.input_item.ActionSetWrapper.Interactions.Up,
-        gremlin.ui.input_item.ActionSetWrapper.Interactions.Down,
-        gremlin.ui.input_item.ActionSetWrapper.Interactions.Delete,
+        gremlin.ui.input_item.ActionSetView.Interactions.Up,
+        gremlin.ui.input_item.ActionSetView.Interactions.Down,
+        gremlin.ui.input_item.ActionSetView.Interactions.Delete,
     ]
 
     def __init__(self, parent=None):

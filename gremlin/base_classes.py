@@ -263,7 +263,7 @@ class AbstractContainer(profile.ProfileData):
     def create_or_delete_virtual_button(self):
         """Creates activation condition data as required."""
         need_virtual_button = False
-        for actions in self.action_sets:
+        for actions in [a for a in self.action_sets if a is not None]:
             need_virtual_button = need_virtual_button or \
                 any([a.requires_virtual_button() for a in actions if a is not None])
 
@@ -366,7 +366,7 @@ class AbstractContainer(profile.ProfileData):
         # Check state of the container
         state = self._is_container_valid()
         # Check state of all linked actions
-        for actions in self.action_sets:
+        for actions in [a for a in self.action_sets if a is not None]:
             for action in actions:
                 if action is None:
                     state = False
