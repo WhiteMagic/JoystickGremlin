@@ -21,7 +21,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import gremlin
 
 
-class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
+class AbstractVirtualButtonWidget(QtWidgets.QGroupBox):
 
     """Base class for activation condition widgets."""
 
@@ -48,19 +48,19 @@ class AbstractActivationConditionWidget(QtWidgets.QGroupBox):
     def _create_ui(self):
         """Creates all required UI elements."""
         raise gremlin.error.MissingImplementationError(
-            "AbstractActivationConditionWidget._create_ui not "
+            "AbstractVirtualButtonWidget._create_ui not "
             "implemented in subclass."
         )
 
     def _populate_ui(self):
         """Populates the UI elements with data."""
         raise gremlin.error.MissingImplementationError(
-            "AbstractActivationConditionWidget._populate_ui not "
+            "AbstractVirtualButtonWidget._populate_ui not "
             "implemented in subclass."
         )
 
 
-class VirtualAxisButtonWidget(AbstractActivationConditionWidget):
+class VirtualAxisButtonWidget(AbstractVirtualButtonWidget):
 
     """Condition widget for axis, turning an axis area into a button."""
 
@@ -127,7 +127,7 @@ class VirtualAxisButtonWidget(AbstractActivationConditionWidget):
         )
 
 
-class VirtualHatButtonWidget(AbstractActivationConditionWidget):
+class VirtualHatButtonWidget(AbstractVirtualButtonWidget):
 
     """Condition widget for hats, turning a set of directions into a button."""
 
