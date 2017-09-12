@@ -268,6 +268,6 @@ class CodeGenerator:
                     for input_item in input_items.values():
                         for container in input_item.containers:
                             container.code = None
-                            for action_set in container.action_sets:
+                            for action_set in [a for a in container.action_sets if a is not None]:
                                 for action in action_set:
                                     action.code = None

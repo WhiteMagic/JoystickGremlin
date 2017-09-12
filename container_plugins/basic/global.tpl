@@ -1,7 +1,9 @@
 <%namespace name="util" module="templates.functions"/>
-% for i, action in enumerate(entry.action_sets[0]):
-action_${id}_${i} = gremlin.actions.Basic(
-    ${util.indent(action.to_code().container_action, 4, "")},
+action_${id} = gremlin.actions.Basic(
+    [[
+    % for action in entry.action_sets[0]:
+        ${util.indent(action.to_code().container_action, 8, "")},
+    % endfor
+    ]],
     ${util.indent(util.virtual_button(entry.virtual_button), 4, "")}
 )
-%endfor
