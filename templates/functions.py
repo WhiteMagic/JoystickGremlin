@@ -58,8 +58,8 @@ def virtual_button(context, virt_button):
     else:
         if isinstance(virt_button, gremlin.base_classes.VirtualAxisButton):
             return "gremlin.actions.AxisButton({}, {})".format(
-                cond.lower_limit,
-                cond.upper_limit
+                virt_button.lower_limit,
+                virt_button.upper_limit
             )
         elif isinstance(virt_button, gremlin.base_classes.VirtualHatButton):
             return "gremlin.actions.HatButton([{}])".format(

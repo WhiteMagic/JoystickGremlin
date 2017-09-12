@@ -20,7 +20,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
 from gremlin.common import DeviceType, InputType
-from . import activation_condition, common
+from . import common, virtual_button
 
 
 class InputIdentifier:
@@ -575,9 +575,9 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     # Maps activation condition data to activation condition widgets
     virtual_axis_to_widget = {
         gremlin.base_classes.VirtualAxisButton:
-            gremlin.ui.activation_condition.VirtualAxisButtonWidget,
+            gremlin.ui.virtual_button.VirtualAxisButtonWidget,
         gremlin.base_classes.VirtualHatButton:
-            gremlin.ui.activation_condition.VirtualHatButtonWidget
+            gremlin.ui.virtual_button.VirtualHatButtonWidget
     }
 
     def __init__(self, profile_data, parent=None):
