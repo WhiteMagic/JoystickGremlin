@@ -54,7 +54,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.delay_layout.addStretch()
         self.main_layout.addLayout(self.delay_layout)
 
-        if self.profile_data.actions[0] is None:
+        if self.profile_data.action_sets[0] is None:
             self._add_action_selector(
                 lambda x: self._add_action(0, x),
                 "Short Press"
@@ -62,7 +62,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         else:
             self._create_action_widget(0, "Short Press")
 
-        if self.profile_data.actions[1] is None:
+        if self.profile_data.action_sets[1] is None:
             self._add_action_selector(
                 lambda x: self._add_action(1, x),
                 "Long Press"
@@ -95,10 +95,13 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :param index the index at which to store the created action
         :param label the name of the action to create
         """
-        action_item = self.profile_data.actions[index]
-        self.main_layout.addWidget(
-            self._create_action_widget(action_item.widget(action_item), label)
+        widget = self._create_action_set_widget(
+            self.profile_data.action_sets[index],
+            label
         )
+        self.main_layout.addWidget(widget)
+        widget.redraw()
+        widget.model.data_changed.connect(lambda: self.modified.emit())
 
     def _add_action(self, index, action_name):
         """Adds a new action to the container.
@@ -107,7 +110,9 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
         action_item = plugin_manager.get_class(action_name)(self.profile_data)
-        self.profile_data.actions[index] = action_item
+        if self.profile_data.action_sets[index] is None:
+            self.profile_data.action_sets[index] = []
+        self.profile_data.action_sets[index].append(action_item)
         self.profile_data.create_or_delete_virtual_button()
         self.modified.emit()
 
@@ -126,9 +131,9 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         index = self._get_widget_index(widget)
         if index != -1:
-            if index == 0 and self.profile_data.actions[0] is None:
+            if index == 0 and self.profile_data.action_sets[0] is None:
                 index = 1
-            self.profile_data.actions[index] = None
+            self.profile_data.action_sets[index] = None
             self.modified.emit()
 
     def _get_window_title(self):
@@ -137,9 +142,9 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :return title to use for the container
         """
         if self.profile_data.is_valid():
-            return "Tempo: {} / {}".format(
-                self.profile_data.actions[0].name,
-                self.profile_data.actions[1].name
+            return "Tempo: ({}) / ({})".format(
+                ", ".join([a.name for a in self.profile_data.action_sets[0]]),
+                ", ".join([a.name for a in self.profile_data.action_sets[1]])
             )
         else:
             return "Tempo"
@@ -162,7 +167,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
         gremlin.common.InputType.Keyboard
     ]
     interaction_types = [
-        gremlin.ui.input_item.ActionSetWrapper.Interactions.Edit,
+        gremlin.ui.input_item.ActionSetView.Interactions.Edit,
     ]
 
     def __init__(self, parent=None):
@@ -171,7 +176,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
         :param parent the InputItem this container is linked to
         """
         super().__init__(parent)
-        self.actions = [None, None]
+        self.action_sets = [None, None]
         self.delay = 0.5
 
     def _parse_xml(self, node):
@@ -227,7 +232,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
 
         :return True if the container is configured properly, False otherwise
         """
-        return len(self.actions) == 2 and None not in self.actions
+        return len(self.action_sets) == 2 and None not in self.action_sets
 
 
 # Plugin definitions
