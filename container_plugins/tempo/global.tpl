@@ -1,10 +1,14 @@
 <%namespace name="util" module="templates.functions"/>
 action_${id} = gremlin.actions.Tempo(
     [
-% for action in entry.actions:
-        ${util.indent(action.to_code().container_action, 8, ",")}
+% for actions in entry.action_sets:
+        [
+    % for action in actions:
+            ${util.indent(action.to_code().container_action, 8, ",")}
+    % endfor
+        ],
 % endfor
     ],
-    ${util.indent(util.condition(entry.activation_condition), 4, "")},
+    ${util.indent(util.virtual_button(entry.virtual_button), 4, "")},
     ${entry.delay}
 )

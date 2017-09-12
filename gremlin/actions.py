@@ -446,15 +446,14 @@ class AbstractActionContainer:
 
     """Code implementation used by containers."""
 
-    def __init__(self, actions, activation_condition):
+    def __init__(self, action_sets, virtual_button):
         """Creates a new instance.
 
-        :param actions the actions that are part of the container
-        :param activation_condition the condition which governs when to activate
-            the actions
+        :param action_sets the actions that are part of the container
+        :param virtual_button virtual button instance used with this container
         """
-        self.actions = actions
-        self.activation_condition = activation_condition
+        self.action_sets = action_sets
+        self.virtual_button = virtual_button
 
     def _process_value(self, value):
         """Processes a value through the container, handling activation etc.
@@ -463,8 +462,8 @@ class AbstractActionContainer:
         :return value once processed by the activation condition, if present
         """
         use_value = value
-        if self.activation_condition is not None:
-            use_value = Value(self.activation_condition.is_pressed)
+        if self.virtual_button is not None:
+            use_value = Value(self.virtual_button.is_pressed)
         return use_value
 
     def __call__(self, event, value):
@@ -477,8 +476,8 @@ class AbstractActionContainer:
         :param value the even'ts value with potential modifications from other
             prior executions
         """
-        if self.activation_condition is not None:
-            self.activation_condition.process(
+        if self.virtual_button is not None:
+            self.virtual_button.process(
                 event.value,
                 lambda x: self._execute_call(event, x)
             )
@@ -502,17 +501,14 @@ class Basic(AbstractActionContainer):
 
     """Implements the execution logic of basic containers."""
 
-    def __init__(self, actions, activation_condition=None):
+    def __init__(self, action_sets, virtual_button=None):
         """Creates a new instance.
 
-        :param actions the actions that are part of the container
-        :param activation_condition the condition which governs when to activate
-            the actions
+        :param action_sets the actions that are part of the container
+        :param virtual_button virtual button instance used with this container
         """
-        if not isinstance(actions, list):
-            actions = [actions]
-        super().__init__(actions, activation_condition)
-        assert len(self.actions) == 1
+        super().__init__(action_sets, virtual_button)
+        assert len(self.action_sets) == 1
 
     def _execute_call(self, event, value):
         """Executes the action stored within the container.
@@ -521,7 +517,8 @@ class Basic(AbstractActionContainer):
         :param value the even'ts value with potential modifications from other
             prior executions
         """
-        self.actions[0](event, value, self.activation_condition)
+        for action in self.action_sets[0]:
+            action(event, value, self.virtual_button)
 
 
 class Tempo(AbstractActionContainer):
@@ -530,15 +527,14 @@ class Tempo(AbstractActionContainer):
 
     # This entire container only makes sense for button like inputs
 
-    def __init__(self, actions, activation_condition, duration):
+    def __init__(self, action_sets, virtual_button, duration):
         """Creates a new instance.
 
-        :param actions the actions that are part of the container
-        :param activation_condition the condition which governs when to activate
-            the actions
+        :param action_sets the actions that are part of the container
+        :param virtual_button virtual button instance used with this container
         :param duration time after which the long press action is used
         """
-        super().__init__(actions, activation_condition)
+        super().__init__(action_sets, virtual_button)
         self.duration = duration
         self.start_time = 0
         self.timer = None
@@ -569,40 +565,43 @@ class Tempo(AbstractActionContainer):
         else:
             if (self.start_time + self.duration) > time.time():
                 self.timer.cancel()
-                self.actions[0](
-                    self.event_press,
-                    self.value_press,
-                    self.activation_condition
-                )
+                for action in self.action_sets[0]:
+                    action(
+                        self.event_press,
+                        self.value_press,
+                        self.virtual_button
+                    )
                 time.sleep(0.1)
-                self.actions[0](event, value, self.activation_condition)
+                for action in self.action_sets[0]:
+                    action(event, value, self.virtual_button)
             else:
-                self.actions[1](event, value, self.activation_condition)
+                for action in self.action_sets[1]:
+                    action(event, value, self.virtual_button)
 
             self.timer = None
 
     def _long_press(self):
         """Callback executed, when the delay expires."""
-        self.actions[1](
-            self.event_press,
-            self.value_press,
-            self.activation_condition
-        )
+        for action in self.action_sets[1]:
+            action(
+                self.event_press,
+                self.value_press,
+                self.virtual_button
+            )
 
 
 class Chain(AbstractActionContainer):
 
     """Implements the execution logic of the chain container."""
 
-    def __init__(self, actions, activation_condition, timeout=0.0):
+    def __init__(self, action_sets, virtual_button, timeout=0.0):
         """Creates a new instance.
 
-        :param actions the actions that are part of the container
-        :param activation_condition the condition which governs when to activate
-            the actions
+        :param action_sets the actions that are part of the container
+        :param virtual_button virtual button instance used with this container
         :param timeout duration after which the chain resets to the first entry
         """
-        super().__init__(actions, activation_condition)
+        super().__init__(action_sets, virtual_button)
         self.index = 0
         self.timeout = timeout
         self.last_execution = 0.0
@@ -633,20 +632,21 @@ class Chain(AbstractActionContainer):
         #   release.
 
         # Execute action
-        self.actions[self.index](event, value, self.activation_condition)
+        for action in self.action_sets[self.index]:
+            action(event, value, self.virtual_button)
 
         # Decide how to switch to next action
         if event.event_type in [
             common.InputType.JoystickAxis,
             common.InputType.JoystickHat
         ]:
-            if self.activation_condition is not None:
+            if self.virtual_button is not None:
                 if not value.current:
-                    self.index = (self.index + 1) % len(self.actions)
+                    self.index = (self.index + 1) % len(self.action_sets)
             else:
                 if event.event_type == common.InputType.JoystickHat:
                     if event.value == (0, 0):
-                        self.index = (self.index + 1) % len(self.actions)
+                        self.index = (self.index + 1) % len(self.action_sets)
                     self.last_value = event.value
                 else:
                     logging.getLogger("system").warning(
@@ -656,7 +656,7 @@ class Chain(AbstractActionContainer):
                     return
         else:
             if not value.current:
-                self.index = (self.index + 1) % len(self.actions)
+                self.index = (self.index + 1) % len(self.action_sets)
 
 
 # class SmartToggle(AbstractActionContainer):

@@ -213,7 +213,7 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
 
         :return True if the container is configured properly, False otherwise
         """
-        return len(self.actions) > 0
+        return len(self.action_sets) > 0
 
 
 # Plugin definitions
