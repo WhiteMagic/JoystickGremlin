@@ -20,7 +20,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
 from gremlin.common import DeviceType, InputType
-from . import common, virtual_button
+from . import activation_condition, common, virtual_button
 
 
 class InputIdentifier:
@@ -572,7 +572,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     palette = QtGui.QPalette()
     palette.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
 
-    # Maps activation condition data to activation condition widgets
+    # Maps virtual button data to virtual button widgets
     virtual_axis_to_widget = {
         gremlin.base_classes.VirtualAxisButton:
             gremlin.ui.virtual_button.VirtualAxisButtonWidget,
@@ -604,17 +604,25 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         # Create layout and place it inside the dock widget
         self.main_layout = QtWidgets.QVBoxLayout(self.dock_widget)
 
-        # Add condition widget
-        self.activation_condition_widget = None
+        # Create the actual UI
+        self._create_ui()
+
+        # Add virtual button widget
+        self.virtual_button_widget = None
         if self.profile_data.virtual_button:
-            self.activation_condition_widget = \
+            self.virtual_button_widget = \
                 AbstractContainerWidget.virtual_axis_to_widget[
                     type(self.profile_data.virtual_button)
                 ](self.profile_data.virtual_button)
-            self.main_layout.addWidget(self.activation_condition_widget)
+            self.main_layout.addWidget(self.virtual_button_widget)
 
-        # Create the actual UI
-        self._create_ui()
+        # Add activation condition widget
+        self.activation_condition_widget = \
+            activation_condition.ActivationConditionWidget(self.profile_data)
+        self.activation_condition_widget.modified.connect(
+            lambda: self.modified.emit()
+        )
+        self.main_layout.addWidget(self.activation_condition_widget)
 
     def _get_widget_index(self, widget):
         """Returns the index of the provided widget.
@@ -786,6 +794,28 @@ class ActionWrapper(QtWidgets.QDockWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout(self.dock_widget)
         self.main_layout.addWidget(self.action_widget)
+
+        action_data = self.action_widget.action_data
+        if action_data.parent.activation_condition_type == "action":
+            if action_data.activation_condition is None:
+                action_data.activation_condition = \
+                    gremlin.base_classes.ActivationCondition()
+
+            self.condition_model = activation_condition.ConditionModel(
+                action_data.activation_condition
+            )
+            self.condition_view = activation_condition.ConditionView()
+            self.condition_view.set_model(self.condition_model)
+            self.condition_view.redraw()
+
+            self.condition_widget = QtWidgets.QGroupBox("Activation Condition")
+            self.condition_layout = QtWidgets.QVBoxLayout()
+            self.condition_layout.addWidget(self.condition_view)
+            self.condition_widget.setLayout(self.condition_layout)
+            self.main_layout.addWidget(self.condition_widget)
+        else:
+            action_data.activation_condition = None
+
         # self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _show_hint(self):

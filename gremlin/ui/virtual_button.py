@@ -142,7 +142,7 @@ class VirtualHatButtonWidget(AbstractVirtualButtonWidget):
 
     def _create_ui(self):
         """Creates all required UI elements."""
-        self.setTitle("Activate on")
+        self.setTitle("Virtual Button")
 
         directions = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
 
