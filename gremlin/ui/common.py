@@ -142,6 +142,33 @@ class NoKeyboardPushButton(QtWidgets.QPushButton):
         pass
 
 
+class DynamicDoubleSpinBox(QtWidgets.QDoubleSpinBox):
+
+    """Implements a double spin box which dynamically overwrite entries."""
+
+    def __init__(self, parent=None):
+        """Create a new instance with the specified parent.
+
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+
+    def validate(self, text, pos):
+        """Validates the provided string.
+
+        This takes the pre-validation string and formats it as a float of fixed
+        length before submitting it for validation.
+
+        :param text the input to be validated
+        :param pos the position in the string
+        """
+        try:
+            fmt = "{{:.{:d}f}}".format(self.decimals())
+            return super().validate(fmt.format(float(text)), pos)
+        except ValueError:
+            return super().validate(text, pos)
+
+
 class DualSlider(QtWidgets.QWidget):
 
     """Slider widget which provides two sliders to define a range. The
