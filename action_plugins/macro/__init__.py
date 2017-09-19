@@ -121,7 +121,7 @@ class MacroActionEditor(QtWidgets.QWidget):
     def _pause_ui(self):
         """Creates and populates the PauseAction editor UI."""
         self.ui_elements["duration_label"] = QtWidgets.QLabel("Duration")
-        self.ui_elements["duration_spinbox"] = QtWidgets.QDoubleSpinBox()
+        self.ui_elements["duration_spinbox"] = gremlin.ui.common.DynamicDoubleSpinBox()
         self.ui_elements["duration_spinbox"].setSingleStep(0.1)
         self.ui_elements["duration_spinbox"].setMaximum(3600)
         duration = 0.5
@@ -519,7 +519,7 @@ class CountRepeatMacroWidget(AbstractRepeatMacroWidget):
         super().__init__(data, parent)
 
     def _create_ui(self):
-        self.delay = QtWidgets.QDoubleSpinBox()
+        self.delay = gremlin.ui.common.DynamicDoubleSpinBox()
         self.delay.setMaximum(3600)
         self.delay.setSingleStep(0.1)
         self.delay.setValue(0.1)
@@ -554,7 +554,7 @@ class ToggleRepeatMacroWidget(AbstractRepeatMacroWidget):
         super().__init__(data, parent)
 
     def _create_ui(self):
-        self.delay = QtWidgets.QDoubleSpinBox()
+        self.delay = gremlin.ui.common.DynamicDoubleSpinBox()
         self.delay.setMaximum(3600)
         self.delay.setSingleStep(0.1)
         self.delay.setValue(0.1)
@@ -578,7 +578,7 @@ class HoldRepeatMacroWidget(AbstractRepeatMacroWidget):
         super().__init__(data, parent)
 
     def _create_ui(self):
-        self.delay = QtWidgets.QDoubleSpinBox()
+        self.delay = gremlin.ui.common.DynamicDoubleSpinBox()
         self.delay.setMaximum(3600)
         self.delay.setSingleStep(0.1)
         self.delay.setValue(0.1)

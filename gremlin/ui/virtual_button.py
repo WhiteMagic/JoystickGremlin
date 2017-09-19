@@ -75,15 +75,15 @@ class VirtualAxisButtonWidget(AbstractVirtualButtonWidget):
     def _create_ui(self):
         """Creates all required UI elements."""
         self.range_layout = QtWidgets.QHBoxLayout()
-        self.lower_limit = QtWidgets.QDoubleSpinBox()
+        self.lower_limit = gremlin.ui.common.DynamicDoubleSpinBox()
         self.lower_limit.setRange(-1.0, 1.0)
         self.lower_limit.setSingleStep(0.05)
-        self.upper_limit = QtWidgets.QDoubleSpinBox()
+        self.upper_limit = gremlin.ui.common.DynamicDoubleSpinBox()
         self.upper_limit.setRange(-1.0, 1.0)
         self.upper_limit.setSingleStep(0.05)
 
-        self.setTitle("Activate when")
-        self.range_layout.addWidget(QtWidgets.QLabel("Axis value is between: "))
+        self.setTitle("Virtual Button")
+        self.range_layout.addWidget(QtWidgets.QLabel("Activate when axis is between: "))
         self.range_layout.addWidget(self.lower_limit)
         self.range_layout.addWidget(QtWidgets.QLabel("and"))
         self.range_layout.addWidget(self.upper_limit)

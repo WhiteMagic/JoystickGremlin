@@ -24,7 +24,7 @@ from xml.etree import ElementTree
 import gremlin
 from gremlin.base_classes import AbstractAction
 from gremlin.common import InputType
-from gremlin.ui.common import DualSlider
+from gremlin.ui.common import DualSlider, DynamicDoubleSpinBox
 import gremlin.ui.input_item
 
 g_scene_size = 250.0
@@ -789,12 +789,12 @@ class ControlPointEditorWidget(QtWidgets.QWidget):
         self.x_label = QtWidgets.QLabel("X")
         self.y_label = QtWidgets.QLabel("Y")
 
-        self.x_input = QtWidgets.QDoubleSpinBox()
+        self.x_input = DynamicDoubleSpinBox()
         self.x_input.setRange(-1, 1)
         self.x_input.setDecimals(3)
         self.x_input.setSingleStep(0.1)
 
-        self.y_input = QtWidgets.QDoubleSpinBox()
+        self.y_input = DynamicDoubleSpinBox()
         self.y_input.setRange(-1, 1)
         self.y_input.setSingleStep(0.1)
         self.y_input.setDecimals(3)
@@ -838,20 +838,20 @@ class DeadzoneWidget(QtWidgets.QWidget):
         self.right_slider.setRange(0, 100)
 
         # Create spin boxes for the left slider
-        self.left_lower = QtWidgets.QDoubleSpinBox()
+        self.left_lower = DynamicDoubleSpinBox()
         self.left_lower.setMinimum(-1.0)
         self.left_lower.setMaximum(0.0)
         self.left_lower.setSingleStep(0.05)
-        self.left_upper = QtWidgets.QDoubleSpinBox()
+        self.left_upper = DynamicDoubleSpinBox()
         self.left_upper.setMinimum(-1.0)
         self.left_upper.setMaximum(0.0)
         self.left_upper.setSingleStep(0.05)
         # Create spin boxes for the right slider
-        self.right_lower = QtWidgets.QDoubleSpinBox()
+        self.right_lower = DynamicDoubleSpinBox()
         self.right_lower.setSingleStep(0.05)
         self.right_lower.setMinimum(0.0)
         self.right_lower.setMaximum(1.0)
-        self.right_upper = QtWidgets.QDoubleSpinBox()
+        self.right_upper = DynamicDoubleSpinBox()
         self.right_upper.setSingleStep(0.05)
         self.right_upper.setMinimum(0.0)
         self.right_upper.setMaximum(1.0)

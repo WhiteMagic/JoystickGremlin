@@ -52,7 +52,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.widget_layout.addStretch(1)
 
         self.widget_layout.addWidget(QtWidgets.QLabel("<b>Timeout:</b> "))
-        self.timeout_input = QtWidgets.QDoubleSpinBox()
+        self.timeout_input = gremlin.ui.common.DynamicDoubleSpinBox()
         self.timeout_input.setRange(0.0, 3600.0)
         self.timeout_input.setSingleStep(0.5)
         self.timeout_input.setValue(0)

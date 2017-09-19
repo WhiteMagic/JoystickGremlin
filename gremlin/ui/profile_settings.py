@@ -19,6 +19,7 @@
 from PyQt5 import QtWidgets
 
 import gremlin.joystick_handling
+import gremlin.ui.common
 
 
 class ProfileSettingsWidget(QtWidgets.QWidget):
@@ -108,7 +109,7 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
                 0
             )
 
-            box = QtWidgets.QDoubleSpinBox()
+            box = gremlin.ui.common.DynamicDoubleSpinBox()
             box.setRange(-1, 1)
             box.setSingleStep(0.05)
             box.setValue(self.profile_data.get_initial_vjoy_axis_value(

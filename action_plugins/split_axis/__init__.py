@@ -23,6 +23,7 @@ from xml.etree import ElementTree
 
 from gremlin.base_classes import AbstractAction
 from gremlin.common import InputType
+import gremlin.ui.common
 import gremlin.ui.input_item
 
 
@@ -47,7 +48,7 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.split_slider.setRange(-1e5, 1e5)
         self.split_slider.setTickInterval(1e4)
         self.split_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
-        self.split_readout = QtWidgets.QDoubleSpinBox()
+        self.split_readout = gremlin.ui.common.DynamicDoubleSpinBox()
         self.split_readout.setRange(-1, 1)
         self.split_readout.setSingleStep(0.1)
         self.split_slider_layout.addWidget(self.split_slider)
