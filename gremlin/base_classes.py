@@ -17,6 +17,7 @@
 
 
 from abc import abstractmethod, ABCMeta
+import enum
 import logging
 from mako.template import Template
 from mako.lookup import TemplateLookup
@@ -24,6 +25,100 @@ from xml.etree import ElementTree
 
 import gremlin
 from . import common, error, plugin_manager, profile
+
+
+class ActivationCondition:
+
+    class Rules(enum.Enum):
+        All = 1
+        Any = 2
+
+    def __init__(self):
+        self.conditions = []
+        self.rule = ActivationCondition.Rules.All
+
+    def from_xml(self, node):
+        pass
+
+    def to_xml(self):
+        rule_lookup = {
+            ActivationCondition.Rules.All: "all",
+            ActivationCondition.Rules.Any: "any"
+        }
+
+        node = ElementTree.Element("activation-condition")
+        node.set("rule", rule_lookup[self.rule])
+
+        for condition in self.conditions:
+            node.append(condition.to_xml())
+
+        return node
+
+
+class AbstractCondition(metaclass=ABCMeta):
+
+    def __init__(self):
+        self.comparison = None
+        self.value = None
+
+    @abstractmethod
+    def from_xml(self, node):
+        pass
+
+    @abstractmethod
+    def to_xml(self):
+        pass
+
+
+class KeyboardCondition(AbstractCondition):
+
+    def __init__(self):
+        super().__init__()
+        self.scan_code = None
+        self.is_extended = None
+
+    def from_xml(self, node):
+        self.comparison = node.get("comparison")
+
+        self.scan_code = int(node.get("scan_code"))
+        self.is_extended = profile.parse_bool(node.get("extended"))
+
+    def to_xml(self):
+        node = ElementTree.Element("condition")
+        node.set("input", "keyboard")
+        node.set("comparison", str(self.comparison))
+        node.set("scan_code", str(self.scan_code))
+        node.set("extended", str(self.is_extended))
+        return node
+
+
+class JoystickCondition(AbstractCondition):
+
+    def __init__(self):
+        super().__init__()
+        self.device_id = 0
+        self.windows_id = 0
+        self.input_type = None
+        self.input_id = 0
+
+    def from_xml(self, node):
+        self.comparison = node.get("comparison")
+        self.value = profile.parse_float(node.get("value"))
+
+        self.input_type = profile.tag_to_input_type(node.get("input"))
+        self.input_id = int(node.get("id"))
+        self.device_id = int(node.get("device_id"))
+        self.windows_id = int(node.get("windows_id"))
+
+    def to_xml(self):
+        node = ElementTree.Element("comparison")
+        node.set("comparison", str(self.comparison))
+        node.set("value", str(self.value))
+        node.set("input", profile.input_type_to_tag(self.input_type))
+        node.set("id", str(self.input_id))
+        node.set("device_id", str(self.device_id))
+        node.set("windows_id", str(self.windows_id))
+        return node
 
 
 class AbstractVirtualButton(metaclass=ABCMeta):
@@ -157,6 +252,8 @@ class AbstractAction(profile.ProfileData):
         assert isinstance(parent, AbstractContainer)
         super().__init__(parent)
 
+        self.activation_condition = None
+
     def from_xml(self, node):
         """Populates the instance with data from the given XML node.
 
@@ -241,6 +338,8 @@ class AbstractContainer(profile.ProfileData):
         """
         super().__init__(parent)
         self.action_sets = []
+        self.activation_condition_type = None
+        self.activation_condition = None
         self.virtual_button = None
 
     def add_action(self, action, index=-1):
@@ -288,6 +387,7 @@ class AbstractContainer(profile.ProfileData):
         super().from_xml(node)
         self._parse_action_set_xml(node)
         self._parse_virtual_button_xml(node)
+        self._parse_activation_condition_xml(node)
 
     def to_xml(self):
         """Returns a XML node representing the instance's contents.
@@ -298,6 +398,8 @@ class AbstractContainer(profile.ProfileData):
         # Add activation condition if needed
         if self.virtual_button:
             node.append(self.virtual_button.to_xml())
+        if self.activation_condition:
+            node.append(self.activation_condition.to_xml())
         return node
 
     def _parse_action_set_xml(self, node):
@@ -348,6 +450,9 @@ class AbstractContainer(profile.ProfileData):
                 self.get_input_type()
             ]()
             self.virtual_button.from_xml(vb_node)
+
+    def _parse_activation_condition_xml(self, nopde):
+        pass
 
     def _generate_code(self):
         """Generates Python code for this container."""
