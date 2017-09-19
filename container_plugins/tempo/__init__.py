@@ -44,7 +44,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.delay_layout.addWidget(
             QtWidgets.QLabel("<b>Long press delay: </b>")
         )
-        self.delay_input = QtWidgets.QDoubleSpinBox()
+        self.delay_input = gremlin.ui.common.DynamicDoubleSpinBox()
         self.delay_input.setRange(0.1, 2.0)
         self.delay_input.setSingleStep(0.1)
         self.delay_input.setValue(0.5)
