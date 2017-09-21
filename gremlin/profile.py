@@ -185,6 +185,33 @@ def parse_float(value):
         )
 
 
+def safe_read(node, key, type_cast=None):
+    """Safely reads an attribute from an XML node.
+
+    If the attempt at reading the attribute fails, due to the attribute not
+    being present, an exception will be thrown.
+
+    :param node the XML node from which to read an attribute
+    :param key the attribute to read
+    """
+    if key not in node.keys():
+        msg = "Attempted to read attribute '{}' which does not exist.".format(key)
+        logging.getLogger("system").error(msg)
+        raise error.ProfileError(msg)
+
+    value = node.get(key)
+    if type_cast is not None:
+        try:
+            value = type_cast(value)
+        except ValueError:
+            msg = "Failed casting '{}' to type '{}'".format(
+                value, str(type_cast)
+            )
+            logging.getLogger("system").error(msg)
+            raise error.ProfileError(msg)
+    return value
+
+
 def extract_remap_actions(action_sets):
     """Returns a list of remap actions from a list of actions.
 
