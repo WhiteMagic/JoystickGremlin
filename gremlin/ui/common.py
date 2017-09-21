@@ -85,6 +85,7 @@ class AbstractView(QtWidgets.QWidget):
         if self.model is not None:
             self.model.data_changed.disconnect(self.redraw)
         self.model = model
+        self._model_changed()
         self.model.data_changed.connect(self.redraw)
 
     def select_item(self, index):
@@ -96,6 +97,10 @@ class AbstractView(QtWidgets.QWidget):
 
     def redraw(self):
         """Redraws the view."""
+        pass
+
+    def _model_changed(self):
+        """Called when a model is added or updated to allow user code to run."""
         pass
 
 

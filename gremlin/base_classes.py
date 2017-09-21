@@ -25,6 +25,7 @@ from xml.etree import ElementTree
 
 import gremlin
 from . import common, error, plugin_manager, profile
+from gremlin.profile import safe_read
 
 
 class ActivationCondition:
@@ -34,11 +35,29 @@ class ActivationCondition:
         Any = 2
 
     def __init__(self):
-        self.conditions = []
         self.rule = ActivationCondition.Rules.All
+        self.conditions = []
 
     def from_xml(self, node):
-        pass
+        rule_map = {
+            "all": ActivationCondition.Rules.All,
+            "any": ActivationCondition.Rules.Any
+        }
+
+        condition_map = {
+            "keyboard": KeyboardCondition,
+            "axis": JoystickCondition,
+            "button": JoystickCondition,
+            "hat": JoystickCondition,
+        }
+
+        self.rule = rule_map[safe_read(node, "rule")]
+        for cond_node in node.findall("condition"):
+            input_type = safe_read(cond_node, "input")
+            print(input_type)
+            condition = condition_map[input_type]()
+            condition.from_xml(cond_node)
+            self.conditions.append(condition)
 
     def to_xml(self):
         rule_lookup = {
@@ -59,7 +78,6 @@ class AbstractCondition(metaclass=ABCMeta):
 
     def __init__(self):
         self.comparison = None
-        self.value = None
 
     @abstractmethod
     def from_xml(self, node):
@@ -78,10 +96,9 @@ class KeyboardCondition(AbstractCondition):
         self.is_extended = None
 
     def from_xml(self, node):
-        self.comparison = node.get("comparison")
-
-        self.scan_code = int(node.get("scan_code"))
-        self.is_extended = profile.parse_bool(node.get("extended"))
+        self.comparison = safe_read(node, "comparison")
+        self.scan_code = safe_read(node, "scan_code", int)
+        self.is_extended = profile.parse_bool(safe_read(node, "extended"))
 
     def to_xml(self):
         node = ElementTree.Element("condition")
@@ -100,24 +117,31 @@ class JoystickCondition(AbstractCondition):
         self.windows_id = 0
         self.input_type = None
         self.input_id = 0
+        self.range = [0.0, 0.0]
 
     def from_xml(self, node):
-        self.comparison = node.get("comparison")
-        self.value = profile.parse_float(node.get("value"))
+        self.comparison = safe_read(node, "comparison")
 
-        self.input_type = profile.tag_to_input_type(node.get("input"))
-        self.input_id = int(node.get("id"))
-        self.device_id = int(node.get("device_id"))
-        self.windows_id = int(node.get("windows_id"))
+        self.input_type = profile.tag_to_input_type(safe_read(node, "input"))
+        self.input_id = safe_read(node, "id", int)
+        self.device_id = safe_read(node, "device_id", int)
+        self.windows_id = safe_read(node, "windows_id", int)
+        if self.input_type == common.InputType.JoystickAxis:
+            self.range = [
+                safe_read(node, "range_low", float),
+                safe_read(node, "range_high", float)
+            ]
 
     def to_xml(self):
-        node = ElementTree.Element("comparison")
+        node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
-        node.set("value", str(self.value))
         node.set("input", profile.input_type_to_tag(self.input_type))
         node.set("id", str(self.input_id))
         node.set("device_id", str(self.device_id))
         node.set("windows_id", str(self.windows_id))
+        if self.input_type == common.InputType.JoystickAxis:
+            node.set("range_low", str(self.range[0]))
+            node.set("range_high", str(self.range[1]))
         return node
 
 
@@ -165,8 +189,8 @@ class VirtualAxisButton(AbstractVirtualButton):
 
         :param node the node containing data for this instance
         """
-        self.lower_limit = profile.parse_float(node.get("lower-limit"))
-        self.upper_limit = profile.parse_float(node.get("upper-limit"))
+        self.lower_limit = safe_read(node, "lower-limit", float)
+        self.upper_limit = safe_read(node, "upper-limit", float)
 
     def to_xml(self):
         """Returns an XML node representing the data of this instance.
@@ -451,8 +475,13 @@ class AbstractContainer(profile.ProfileData):
             ]()
             self.virtual_button.from_xml(vb_node)
 
-    def _parse_activation_condition_xml(self, nopde):
-        pass
+    def _parse_activation_condition_xml(self, node):
+        for child in node.findall("activation-condition"):
+            self.activation_condition_type = "container"
+            self.activation_condition = gremlin.base_classes.ActivationCondition()
+            cond_node = node.find("activation-condition")
+            if cond_node is not None:
+                self.activation_condition.from_xml(cond_node)
 
     def _generate_code(self):
         """Generates Python code for this container."""

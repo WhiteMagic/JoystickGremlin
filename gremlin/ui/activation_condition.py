@@ -117,31 +117,42 @@ class KeyboardConditionWidget(AbstractConditionWidget):
             self.key_label.setText("<b>{}</b>".format(
                 macro.key_from_code(
                     self.condition_data.scan_code,
-                    self.condition_data.extended
+                    self.condition_data.is_extended
                 ).name
             ))
         self.record_button = QtWidgets.QPushButton("Change")
         self.record_button.clicked.connect(self._request_user_input)
 
-        self.state_dropdown = QtWidgets.QComboBox()
-        self.state_dropdown.addItem("Pressed")
-        self.state_dropdown.addItem("Released")
+        self.comparison_dropdown = QtWidgets.QComboBox()
+        self.comparison_dropdown.addItem("Pressed")
+        self.comparison_dropdown.addItem("Released")
+        if self.condition_data.comparison:
+            self.comparison_dropdown.setCurrentText(
+                self.condition_data.comparison.capitalize()
+            )
+        self.comparison_dropdown.currentTextChanged.connect(
+            self._comparison_changed_cb
+        )
 
         self.main_layout.addWidget(QtWidgets.QLabel("Activate if"))
         self.main_layout.addWidget(self.key_label)
         self.main_layout.addWidget(QtWidgets.QLabel("is"))
-        self.main_layout.addWidget(self.state_dropdown)
+        self.main_layout.addWidget(self.comparison_dropdown)
         self.main_layout.addWidget(self.record_button)
 
     def _key_pressed_cb(self, key):
         self.condition_data.scan_code = key.identifier[0]
-        self.condition_data.extended = key.identifier[1]
+        self.condition_data.is_extended = key.identifier[1]
+        self.condition_data.comparison = self.comparison_dropdown.currentText().lower()
         self.key_label.setText("<b>{}</b>".format(
             macro.key_from_code(
                 self.condition_data.scan_code,
-                self.condition_data.extended
+                self.condition_data.is_extended
             ).name
         ))
+
+    def _comparison_changed_cb(self, text):
+        self.condition_data.comparison = text.lower()
 
     def _request_user_input(self):
         """Prompts the user for the input to bind to this item."""
@@ -170,9 +181,9 @@ class KeyboardConditionWidget(AbstractConditionWidget):
 class JoystickConditionWidget(AbstractConditionWidget):
 
     def __init__(self, condition_data, parent=None):
-        super().__init__(condition_data, parent)
         self.input_event = None
         self._name = ""
+        super().__init__(condition_data, parent)
 
     def _create_ui(self):
         common.clear_layout(self.main_layout)
@@ -194,15 +205,25 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.lower.setMaximum(1.0)
         self.lower.setSingleStep(0.05)
         self.lower.setDecimals(4)
+        self.lower.setValue(self.condition_data.range[0])
+        self.lower.valueChanged.connect(self._range_lower_changed_cb)
         self.upper = common.DynamicDoubleSpinBox()
         self.upper.setMinimum(-1.0)
         self.upper.setMaximum(1.0)
         self.upper.setDecimals(4)
         self.upper.setSingleStep(0.05)
+        self.upper.setValue(self.condition_data.range[0])
+        self.upper.valueChanged.connect(self._range_upper_changed_cb)
 
-        self.state_dropdown = QtWidgets.QComboBox()
-        self.state_dropdown.addItem("Inside")
-        self.state_dropdown.addItem("Outside")
+        self.comparison_dropdown = QtWidgets.QComboBox()
+        self.comparison_dropdown.addItem("Inside")
+        self.comparison_dropdown.addItem("Outside")
+        self.comparison_dropdown.setCurrentText(
+            self.condition_data.comparison.capitalize()
+        )
+        self.comparison_dropdown.currentTextChanged.connect(
+            self._comparison_changed_cb
+        )
 
         self.main_layout.addWidget(QtWidgets.QLabel(
             "Activate if {} Axis {:d} is".format(
@@ -210,15 +231,15 @@ class JoystickConditionWidget(AbstractConditionWidget):
                 self.condition_data.input_id
             )
         ))
-        self.main_layout.addWidget(self.state_dropdown)
+        self.main_layout.addWidget(self.comparison_dropdown)
         self.main_layout.addWidget(self.lower)
         self.main_layout.addWidget(QtWidgets.QLabel("and"))
         self.main_layout.addWidget(self.upper)
 
     def _button_ui(self):
-        self.state_dropdown = QtWidgets.QComboBox()
-        self.state_dropdown.addItem("Pressed")
-        self.state_dropdown.addItem("Released")
+        self.comparison_dropdown = QtWidgets.QComboBox()
+        self.comparison_dropdown.addItem("Pressed")
+        self.comparison_dropdown.addItem("Released")
 
         self.main_layout.addWidget(QtWidgets.QLabel(
             "Activate if {} Button {:d} is".format(
@@ -226,7 +247,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
                 self.condition_data.input_id
             )
         ))
-        self.main_layout.addWidget(self.state_dropdown)
+        self.main_layout.addWidget(self.comparison_dropdown)
 
     def _hat_ui(self):
         pass
@@ -267,6 +288,15 @@ class JoystickConditionWidget(AbstractConditionWidget):
         )
         self.input_dialog.show()
 
+    def _range_lower_changed_cb(self, value):
+        self.condition_data.range[0] = value
+
+    def _range_upper_changed_cb(self, value):
+        self.condition_data.range[1] = value
+
+    def _comparison_changed_cb(self, text):
+        self.condition_data.comparison = text.lower()
+
 
 class PressReleaseConditionWidget(AbstractConditionWidget):
 
@@ -293,6 +323,14 @@ class ConditionModel(common.AbstractModel):
         self.condition_data.conditions.append(condition_data)
         self.data_changed.emit()
 
+    @property
+    def rule(self):
+        return self.condition_data.rule
+
+    @rule.setter
+    def rule(self, rule):
+        self.condition_data.rule = rule
+
 
 class ConditionView(common.AbstractView):
 
@@ -301,6 +339,13 @@ class ConditionView(common.AbstractView):
                      KeyboardConditionWidget],
         "Joystick": [base_classes.JoystickCondition,
                      JoystickConditionWidget]
+    }
+
+    rules_map = {
+        "All": base_classes.ActivationCondition.Rules.All,
+        "Any": base_classes.ActivationCondition.Rules.Any,
+        base_classes.ActivationCondition.Rules.All: "All",
+        base_classes.ActivationCondition.Rules.Any: "Any"
     }
 
     def __init__(self, parent=None):
@@ -316,6 +361,7 @@ class ConditionView(common.AbstractView):
         self.rule_selector = QtWidgets.QComboBox()
         self.rule_selector.addItem("All")
         self.rule_selector.addItem("Any")
+        self.rule_selector.currentTextChanged.connect(self._rule_changed_cb)
         self.controls_layout.addWidget(QtWidgets.QLabel("Execute if"))
         self.controls_layout.addWidget(self.rule_selector)
         self.controls_layout.addWidget(QtWidgets.QLabel("condition(s) are met"))
@@ -348,4 +394,10 @@ class ConditionView(common.AbstractView):
         ][0]
         self.model.add_condition(data_type())
 
+    def _rule_changed_cb(self, text):
+        self.model.rule = ConditionView.rules_map[text]
 
+    def _model_changed(self):
+        self.rule_selector.setCurrentText(
+            ConditionView.rules_map[self.model.rule]
+        )
