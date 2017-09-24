@@ -126,7 +126,7 @@ class KeyboardHook:
         """
         # Only handle events we're supposed to, see
         # https://msdn.microsoft.com/en-us/library/windows/desktop/ms644985(v=vs.85).aspx
-        if n_code >= 0:
+        if n_code >= 0 and l_param[1]:
             # Extract data from the message
             scan_code = l_param[1] & 0xFF
             is_extended = l_param[2] is not None and bool(l_param[2] & 0x0001)
