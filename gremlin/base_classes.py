@@ -285,12 +285,21 @@ class AbstractAction(profile.ProfileData):
         """
         super().from_xml(node)
 
+        for child in node.findall("activation-condition"):
+            self.parent.activation_condition_type = "action"
+            self.activation_condition = gremlin.base_classes.ActivationCondition()
+            cond_node = node.find("activation-condition")
+            if cond_node is not None:
+                self.activation_condition.from_xml(cond_node)
+
     def to_xml(self):
         """Returns a XML node representing the instance's contents.
 
         :return XML node representing the state of this instance
         """
         node = super().to_xml()
+        if self.activation_condition:
+            node.append(self.activation_condition.to_xml())
         return node
 
     def icon(self):
