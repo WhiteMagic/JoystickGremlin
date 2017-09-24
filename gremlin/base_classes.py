@@ -77,7 +77,7 @@ class ActivationCondition:
 class AbstractCondition(metaclass=ABCMeta):
 
     def __init__(self):
-        self.comparison = None
+        self.comparison = ""
 
     @abstractmethod
     def from_xml(self, node):
