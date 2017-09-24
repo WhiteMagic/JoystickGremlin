@@ -30,20 +30,29 @@ from gremlin.profile import safe_read
 
 class ActivationCondition:
 
+    """Dictates under what circumstances an associated code can be executed."""
+
+    # Activation rules, all is equivalent to logical and while any is
+    # equivalent to logical or
     class Rules(enum.Enum):
         All = 1
         Any = 2
 
     def __init__(self):
+        """Creates a new instance."""
         self.rule = ActivationCondition.Rules.All
         self.conditions = []
 
     def from_xml(self, node):
+        """Extracts activation condition data from an XML node.
+
+        :param node the XML node to parse
+        """
+        # FIXME: these maps inside the function are ugly
         rule_map = {
             "all": ActivationCondition.Rules.All,
             "any": ActivationCondition.Rules.Any
         }
-
         condition_map = {
             "keyboard": KeyboardCondition,
             "axis": JoystickCondition,
@@ -54,12 +63,16 @@ class ActivationCondition:
         self.rule = rule_map[safe_read(node, "rule")]
         for cond_node in node.findall("condition"):
             input_type = safe_read(cond_node, "input")
-            print(input_type)
             condition = condition_map[input_type]()
             condition.from_xml(cond_node)
             self.conditions.append(condition)
 
     def to_xml(self):
+        """Returns an XML node containing the activation condition information.
+
+        :return XML node containing information about the activation condition
+        """
+        # FIXME: these maps inside the function are ugly
         rule_lookup = {
             ActivationCondition.Rules.All: "all",
             ActivationCondition.Rules.Any: "any"
@@ -76,31 +89,57 @@ class ActivationCondition:
 
 class AbstractCondition(metaclass=ABCMeta):
 
+    """Base class of all individual condition representations."""
+
     def __init__(self):
+        """Creates a new condition."""
         self.comparison = ""
 
     @abstractmethod
     def from_xml(self, node):
+        """Populates the object with data from an XML node.
+
+        :param node the XML node to parse for data
+        """
         pass
 
     @abstractmethod
     def to_xml(self):
+        """Returns an XML node containing the obejcts data.
+
+        :return XML node containing the object's data
+        """
         pass
 
 
 class KeyboardCondition(AbstractCondition):
 
+    """Keyboard state based condition.
+
+    The condition is for a single key and as such contains the key's scan
+    code as well as the extended flag.
+    """
+
     def __init__(self):
+        """Creates a new instance."""
         super().__init__()
         self.scan_code = None
         self.is_extended = None
 
     def from_xml(self, node):
+        """Populates the object with data from an XML node.
+
+        :param node the XML node to parse for data
+        """
         self.comparison = safe_read(node, "comparison")
         self.scan_code = safe_read(node, "scan_code", int)
         self.is_extended = profile.parse_bool(safe_read(node, "extended"))
 
     def to_xml(self):
+        """Returns an XML node containing the obejcts data.
+
+        :return XML node containing the object's data
+        """
         node = ElementTree.Element("condition")
         node.set("input", "keyboard")
         node.set("comparison", str(self.comparison))
@@ -111,7 +150,13 @@ class KeyboardCondition(AbstractCondition):
 
 class JoystickCondition(AbstractCondition):
 
+    """Joystick state based condition.
+
+    This condition is based on the state of a joystick axis, button, or hat.
+    """
+
     def __init__(self):
+        """Creates a new instace."""
         super().__init__()
         self.device_id = 0
         self.windows_id = 0
@@ -121,6 +166,10 @@ class JoystickCondition(AbstractCondition):
         self.device_name = ""
 
     def from_xml(self, node):
+        """Populates the object with data from an XML node.
+
+        :param node the XML node to parse for data
+        """
         self.comparison = safe_read(node, "comparison")
 
         self.input_type = profile.tag_to_input_type(safe_read(node, "input"))
@@ -135,6 +184,10 @@ class JoystickCondition(AbstractCondition):
             ]
 
     def to_xml(self):
+        """Returns an XML node containing the obejcts data.
+
+        :return XML node containing the object's data
+        """
         node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
         node.set("input", profile.input_type_to_tag(self.input_type))
