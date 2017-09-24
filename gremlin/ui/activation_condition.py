@@ -124,7 +124,7 @@ class KeyboardConditionWidget(AbstractConditionWidget):
             ))
         self.record_button = QtWidgets.QPushButton("Change")
         self.record_button.clicked.connect(self._request_user_input)
-        self.delete_button = QtWidgets.QPushButton("Remove")
+        self.delete_button = QtWidgets.QPushButton("Delete")
         self.delete_button.clicked.connect(
             lambda: self.deleted.emit(self.condition_data)
         )
@@ -197,6 +197,10 @@ class JoystickConditionWidget(AbstractConditionWidget):
 
         self.record_button = QtWidgets.QPushButton("Change")
         self.record_button.clicked.connect(self._request_user_input)
+        self.delete_button = QtWidgets.QPushButton("Delete")
+        self.delete_button.clicked.connect(
+            lambda: self.deleted.emit(self.condition_data)
+        )
 
         if self.condition_data.input_type == InputType.JoystickAxis:
             self._axis_ui()
@@ -205,6 +209,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
         elif self.condition_data.input_type == InputType.JoystickHat:
             self._hat_ui()
         self.main_layout.addWidget(self.record_button)
+        self.main_layout.addWidget(self.delete_button)
 
     def _axis_ui(self):
         self.lower = common.DynamicDoubleSpinBox()
@@ -335,7 +340,7 @@ class ConditionModel(common.AbstractModel):
         self.condition_data.conditions.append(condition_data)
         self.data_changed.emit()
 
-    def remove_condition(self, condition_data):
+    def delete_condition(self, condition_data):
         idx = self.condition_data.conditions.index(condition_data)
         if idx != -1:
             del self.condition_data.conditions[idx]
@@ -403,7 +408,9 @@ class ConditionView(common.AbstractView):
         for i in range(self.model.rows()):
             data = self.model.data(i)
             condition_widget = lookup[type(data)](data)
-            condition_widget.deleted.connect(lambda x: self._remove_condition(x))
+            condition_widget.deleted.connect(
+                lambda data: self.model.delete_condition(data)
+            )
             self.conditions_layout.addWidget(condition_widget)
 
     def _add_condition(self):
@@ -411,9 +418,6 @@ class ConditionView(common.AbstractView):
             self.condition_selector.currentText()
         ][0]
         self.model.add_condition(data_type())
-
-    def _remove_condition(self, condition_data):
-        self.model.remove_condition(condition_data)
 
     def _rule_changed_cb(self, text):
         self.model.rule = ConditionView.rules_map[text]
