@@ -118,6 +118,7 @@ class JoystickCondition(AbstractCondition):
         self.input_type = None
         self.input_id = 0
         self.range = [0.0, 0.0]
+        self.device_name = ""
 
     def from_xml(self, node):
         self.comparison = safe_read(node, "comparison")
@@ -126,6 +127,7 @@ class JoystickCondition(AbstractCondition):
         self.input_id = safe_read(node, "id", int)
         self.device_id = safe_read(node, "device_id", int)
         self.windows_id = safe_read(node, "windows_id", int)
+        self.device_name = safe_read(node, "device_name")
         if self.input_type == common.InputType.JoystickAxis:
             self.range = [
                 safe_read(node, "range_low", float),
@@ -139,6 +141,7 @@ class JoystickCondition(AbstractCondition):
         node.set("id", str(self.input_id))
         node.set("device_id", str(self.device_id))
         node.set("windows_id", str(self.windows_id))
+        node.set("device_name", str(self.device_name))
         if self.input_type == common.InputType.JoystickAxis:
             node.set("range_low", str(self.range[0]))
             node.set("range_high", str(self.range[1]))

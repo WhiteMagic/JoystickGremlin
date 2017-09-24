@@ -182,7 +182,6 @@ class JoystickConditionWidget(AbstractConditionWidget):
 
     def __init__(self, condition_data, parent=None):
         self.input_event = None
-        self._name = ""
         super().__init__(condition_data, parent)
 
     def _create_ui(self):
@@ -227,7 +226,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
 
         self.main_layout.addWidget(QtWidgets.QLabel(
             "Activate if {} Axis {:d} is".format(
-                self._name,
+                self.condition_data.device_name,
                 self.condition_data.input_id
             )
         ))
@@ -249,7 +248,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
 
         self.main_layout.addWidget(QtWidgets.QLabel(
             "Activate if {} Button {:d} is".format(
-                self._name,
+                self.condition_data.device_name,
                 self.condition_data.input_id
             )
         ))
@@ -263,8 +262,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.condition_data.windows_id = event.windows_id
         self.condition_data.input_type = event.event_type
         self.condition_data.input_id = event.identifier
-
-        self._name = input_devices.JoystickProxy()[event.windows_id].name
+        self.condition_data.device_name = input_devices.JoystickProxy()[event.windows_id].name
         self._create_ui()
 
     def _request_user_input(self):
