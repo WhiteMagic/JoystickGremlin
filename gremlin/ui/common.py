@@ -1054,6 +1054,9 @@ class InputListenerWidget(QtWidgets.QFrame):
         palette.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
         self.setPalette(palette)
 
+        # Disable ui input selection on joystick input
+        gremlin.shared_state.set_suspend_input_highlighting(True)
+
         # Start listening to user key presses
         event_listener = gremlin.event_handler.EventListener()
         event_listener.keyboard_event.connect(self._kb_event_cb)
@@ -1081,9 +1084,9 @@ class InputListenerWidget(QtWidgets.QFrame):
                     self.callback(key)
                 else:
                     self.callback(event)
-                self._close_window()
+                self.close()
             elif key == gremlin.macro.key_from_name("esc"):
-                self._close_window()
+                self.close()
         # Record all key presses and return on the first key release
         else:
             if event.is_pressed:
@@ -1094,10 +1097,10 @@ class InputListenerWidget(QtWidgets.QFrame):
                     else:
                         self._multi_key_storage.append(event)
                 elif key == gremlin.macro.key_from_name("esc"):
-                    self._close_window()
+                    self.close()
             else:
                 self.callback(self._multi_key_storage)
-                self._close_window()
+                self.close()
 
     def _joy_event_cb(self, event):
         """Passes the pressed joystick event to the provided callback
@@ -1114,17 +1117,17 @@ class InputListenerWidget(QtWidgets.QFrame):
         if event.event_type == gremlin.common.InputType.JoystickButton and \
                 not event.is_pressed:
             self.callback(event)
-            self._close_window()
+            self.close()
         elif event.event_type == gremlin.common.InputType.JoystickAxis and \
                 abs(event.value) > 0.5:
             self.callback(event)
-            self._close_window()
+            self.close()
         elif event.event_type == gremlin.common.InputType.JoystickHat and \
                 event.value != (0, 0):
             self.callback(event)
-            self._close_window()
+            self.close()
 
-    def _close_window(self):
+    def closeEvent(self, evt):
         """Closes the overlay window."""
         event_listener = gremlin.event_handler.EventListener()
         event_listener.keyboard_event.disconnect(self._kb_event_cb)
@@ -1132,7 +1135,9 @@ class InputListenerWidget(QtWidgets.QFrame):
                 gremlin.common.InputType.JoystickButton in self._event_types or \
                 gremlin.common.InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.disconnect(self._joy_event_cb)
-        self.close()
+
+        gremlin.shared_state.set_suspend_input_highlighting(False)
+        super().closeEvent(evt)
 
     def _valid_event_types_string(self):
         """Returns a formatted string containing the valid event types.
