@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import threading
+
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
@@ -1136,7 +1138,13 @@ class InputListenerWidget(QtWidgets.QFrame):
                 gremlin.common.InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.disconnect(self._joy_event_cb)
 
-        gremlin.shared_state.set_suspend_input_highlighting(False)
+        # Delay unsuspending input highlighting to allow an axis that's being
+        # moved to return to its center without triggering an input highligh
+        threading.Timer(
+            2,
+            lambda: gremlin.shared_state.set_suspend_input_highlighting(False)
+        ).start()
+
         super().closeEvent(evt)
 
     def _valid_event_types_string(self):
