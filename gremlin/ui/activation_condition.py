@@ -95,6 +95,8 @@ class ActivationConditionWidget(QtWidgets.QGroupBox):
 
 class AbstractConditionWidget(QtWidgets.QWidget):
 
+    deleted = QtCore.pyqtSignal(base_classes.AbstractCondition)
+
     def __init__(self, condition_data, parent=None):
         super().__init__(parent)
         self.condition_data = condition_data
@@ -122,6 +124,10 @@ class KeyboardConditionWidget(AbstractConditionWidget):
             ))
         self.record_button = QtWidgets.QPushButton("Change")
         self.record_button.clicked.connect(self._request_user_input)
+        self.delete_button = QtWidgets.QPushButton("Remove")
+        self.delete_button.clicked.connect(
+            lambda: self.deleted.emit(self.condition_data)
+        )
 
         self.comparison_dropdown = QtWidgets.QComboBox()
         self.comparison_dropdown.addItem("Pressed")
@@ -138,7 +144,9 @@ class KeyboardConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.key_label)
         self.main_layout.addWidget(QtWidgets.QLabel("is"))
         self.main_layout.addWidget(self.comparison_dropdown)
+        self.main_layout.addStretch()
         self.main_layout.addWidget(self.record_button)
+        self.main_layout.addWidget(self.delete_button)
 
     def _key_pressed_cb(self, key):
         self.condition_data.scan_code = key.identifier[0]
@@ -327,6 +335,12 @@ class ConditionModel(common.AbstractModel):
         self.condition_data.conditions.append(condition_data)
         self.data_changed.emit()
 
+    def remove_condition(self, condition_data):
+        idx = self.condition_data.conditions.index(condition_data)
+        if idx != -1:
+            del self.condition_data.conditions[idx]
+        self.data_changed.emit()
+
     @property
     def rule(self):
         return self.condition_data.rule
@@ -388,15 +402,18 @@ class ConditionView(common.AbstractView):
 
         for i in range(self.model.rows()):
             data = self.model.data(i)
-            self.conditions_layout.addWidget(
-                lookup[type(data)](data)
-            )
+            condition_widget = lookup[type(data)](data)
+            condition_widget.deleted.connect(lambda x: self._remove_condition(x))
+            self.conditions_layout.addWidget(condition_widget)
 
     def _add_condition(self):
         data_type = ConditionView.condition_map[
             self.condition_selector.currentText()
         ][0]
         self.model.add_condition(data_type())
+
+    def _remove_condition(self, condition_data):
+        self.model.remove_condition(condition_data)
 
     def _rule_changed_cb(self, text):
         self.model.rule = ConditionView.rules_map[text]
