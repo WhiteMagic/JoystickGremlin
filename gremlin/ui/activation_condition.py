@@ -240,6 +240,12 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.comparison_dropdown = QtWidgets.QComboBox()
         self.comparison_dropdown.addItem("Pressed")
         self.comparison_dropdown.addItem("Released")
+        self.comparison_dropdown.setCurrentText(
+            self.condition_data.comparison.capitalize()
+        )
+        self.comparison_dropdown.currentTextChanged.connect(
+            self._comparison_changed_cb
+        )
 
         self.main_layout.addWidget(QtWidgets.QLabel(
             "Activate if {} Button {:d} is".format(
