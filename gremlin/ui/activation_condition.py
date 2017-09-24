@@ -212,7 +212,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.upper.setMaximum(1.0)
         self.upper.setDecimals(4)
         self.upper.setSingleStep(0.05)
-        self.upper.setValue(self.condition_data.range[0])
+        self.upper.setValue(self.condition_data.range[1])
         self.upper.valueChanged.connect(self._range_upper_changed_cb)
 
         self.comparison_dropdown = QtWidgets.QComboBox()
