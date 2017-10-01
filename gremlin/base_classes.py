@@ -58,6 +58,7 @@ class ActivationCondition:
             "axis": JoystickCondition,
             "button": JoystickCondition,
             "hat": JoystickCondition,
+            "action": InputActionCondition,
         }
 
         self.rule = rule_map[safe_read(node, "rule")]
@@ -198,6 +199,36 @@ class JoystickCondition(AbstractCondition):
         if self.input_type == common.InputType.JoystickAxis:
             node.set("range_low", str(self.range[0]))
             node.set("range_high", str(self.range[1]))
+        return node
+
+
+class InputActionCondition(AbstractCondition):
+
+    """Input item press / release state based condition.
+
+    The condition is for the current input item, triggering based on whether
+    or not the input item is being pressed or released.
+    """
+
+    def __init__(self):
+        """Creates a new instance."""
+        super().__init__()
+
+    def from_xml(self, node):
+        """Populates the object with data from an XML node.
+
+        :param node the XML node to parse for data
+        """
+        self.comparison = safe_read(node, "comparison")
+
+    def to_xml(self):
+        """Returns an XML node containing the obejcts data.
+
+        :return XML node containing the object's data
+        """
+        node = ElementTree.Element("condition")
+        node.set("input", "action")
+        node.set("comparison", str(self.comparison))
         return node
 
 
@@ -430,6 +461,10 @@ class AbstractContainer(profile.ProfileData):
         self.activation_condition_type = None
         self.activation_condition = None
         self.virtual_button = None
+        # Storage for the currently active view in the UI
+        # FIXME: This is ugly and shouldn't be done but for now the least
+        #   terrible option
+        self.current_view_type = None
 
     def add_action(self, action, index=-1):
         """Adds an action to this container.

@@ -24,7 +24,7 @@ from gremlin.common import InputType
 from . import common
 
 
-class ActivationConditionWidget(QtWidgets.QGroupBox):
+class ActivationConditionWidget(QtWidgets.QWidget):
 
     # Signal which is emitted whenever the widget's contents change
     activation_condition_modified = QtCore.pyqtSignal()
@@ -40,7 +40,7 @@ class ActivationConditionWidget(QtWidgets.QGroupBox):
         super().__init__(parent)
         self.profile_data = profile_data
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.setTitle("Activation Condition")
+        # self.setTitle("Activation Condition")
         self._create_ui()
 
     def _create_ui(self):
@@ -315,13 +315,30 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.condition_data.comparison = text.lower()
 
 
-class PressReleaseConditionWidget(AbstractConditionWidget):
+class InputActionConditionWidget(AbstractConditionWidget):
 
     def __init__(self, condition_data, parent=None):
         super().__init__(condition_data, parent)
 
     def _create_ui(self):
-        pass
+        self.state_dropdown = QtWidgets.QComboBox()
+        self.state_dropdown.addItem("Pressed")
+        self.state_dropdown.addItem("Released")
+        if self.condition_data.comparison:
+            self.state_dropdown.setCurrentText(
+                self.condition_data.comparison.capitalize()
+            )
+        self.state_dropdown.currentTextChanged.connect(
+            self._state_selection_changed
+        )
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("Activate when (virtual) button is")
+        )
+        self.main_layout.addWidget(self.state_dropdown)
+        self.main_layout.addStretch()
+
+    def _state_selection_changed(self, label):
+        self.condition_data.comparison = label.lower()
 
 
 class ConditionModel(common.AbstractModel):
@@ -361,7 +378,9 @@ class ConditionView(common.AbstractView):
         "Keyboard": [base_classes.KeyboardCondition,
                      KeyboardConditionWidget],
         "Joystick": [base_classes.JoystickCondition,
-                     JoystickConditionWidget]
+                     JoystickConditionWidget],
+        "Action": [base_classes.InputActionCondition,
+                         InputActionConditionWidget]
     }
 
     rules_map = {
@@ -392,6 +411,7 @@ class ConditionView(common.AbstractView):
         self.condition_selector = QtWidgets.QComboBox()
         self.condition_selector.addItem("Keyboard")
         self.condition_selector.addItem("Joystick")
+        self.condition_selector.addItem("Action")
         self.condition_add_button = QtWidgets.QPushButton("Add")
         self.condition_add_button.clicked.connect(self._add_condition)
         self.controls_layout.addWidget(QtWidgets.QLabel("Add condition"))
