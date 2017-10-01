@@ -39,7 +39,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         super().__init__(profile_data, parent)
 
-    def _create_ui(self):
+    def _create_basic_ui(self):
         """Creates the UI components."""
         self.widget_layout = QtWidgets.QHBoxLayout()
 
@@ -60,17 +60,30 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.timeout_input.valueChanged.connect(self._timeout_changed_cb)
         self.widget_layout.addWidget(self.timeout_input)
 
-        self.main_layout.addLayout(self.widget_layout)
+        self.basic_layout.addLayout(self.widget_layout)
 
         # Insert action widgets
         for i, action in enumerate(self.profile_data.action_sets):
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[i],
-                "Action {:d}".format(i)
+                "Action {:d}".format(i),
+                gremlin.ui.common.ContainerViewTypes.Basic
             )
-            self.main_layout.addWidget(widget)
+            self.basic_layout.addWidget(widget)
             widget.redraw()
             widget.model.data_changed.connect(self.container_modified.emit)
+
+    def _create_condition_ui(self):
+        if self.profile_data.activation_condition_type == "action":
+            for i, action in enumerate(self.profile_data.action_sets):
+                widget = self._create_action_set_widget(
+                    self.profile_data.action_sets[i],
+                    "Action {:d}".format(i),
+                    gremlin.ui.common.ContainerViewTypes.Condition
+                )
+                self.activation_condition_layout.addWidget(widget)
+                widget.redraw()
+                widget.model.data_changed.connect(self.container_modified.emit)
 
     def _add_action(self, action_name):
         """Adds a new action to the container.
