@@ -38,7 +38,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         super().__init__(profile_data, parent)
 
-    def _create_ui(self):
+    def _create_basic_ui(self):
         """Creates the UI components."""
         self.delay_layout = QtWidgets.QHBoxLayout()
         self.delay_layout.addWidget(
@@ -52,7 +52,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.delay_input.valueChanged.connect(self._delay_changed_cb)
         self.delay_layout.addWidget(self.delay_input)
         self.delay_layout.addStretch()
-        self.main_layout.addLayout(self.delay_layout)
+        self.basic_layout.addLayout(self.delay_layout)
 
         if self.profile_data.action_sets[0] is None:
             self._add_action_selector(
@@ -60,7 +60,12 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                 "Short Press"
             )
         else:
-            self._create_action_widget(0, "Short Press")
+            self._create_action_widget(
+                0,
+                "Short Press",
+                self.basic_layout,
+                gremlin.ui.common.ContainerViewTypes.Basic
+            )
 
         if self.profile_data.action_sets[1] is None:
             self._add_action_selector(
@@ -68,7 +73,30 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                 "Long Press"
             )
         else:
-            self._create_action_widget(1, "Long Press")
+            self._create_action_widget(
+                1,
+                "Long Press",
+                self.basic_layout,
+                gremlin.ui.common.ContainerViewTypes.Basic
+            )
+
+    def _create_condition_ui(self):
+        if self.profile_data.activation_condition_type == "action":
+            if self.profile_data.action_sets[0] is not None:
+                self._create_action_widget(
+                    0,
+                    "Short Press",
+                    self.activation_condition_layout,
+                    gremlin.ui.common.ContainerViewTypes.Condition
+                )
+
+            if self.profile_data.action_sets[1] is not None:
+                self._create_action_widget(
+                    1,
+                    "Long Press",
+                    self.activation_condition_layout,
+                    gremlin.ui.common.ContainerViewTypes.Condition
+                )
 
     def _add_action_selector(self, add_action_cb, label):
         """Adds an action selection UI widget.
@@ -87,9 +115,9 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         group_box = QtWidgets.QGroupBox(label)
         group_box.setLayout(group_layout)
 
-        self.main_layout.addWidget(group_box)
+        self.basic_layout.addWidget(group_box)
 
-    def _create_action_widget(self, index, label):
+    def _create_action_widget(self, index, label, layout, view_type):
         """Creates a new action widget.
 
         :param index the index at which to store the created action
@@ -97,9 +125,10 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         widget = self._create_action_set_widget(
             self.profile_data.action_sets[index],
-            label
+            label,
+            view_type
         )
-        self.main_layout.addWidget(widget)
+        layout.addWidget(widget)
         widget.redraw()
         widget.model.data_changed.connect(self.container_modified.emit)
 

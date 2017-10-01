@@ -36,16 +36,17 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         super().__init__(profile_data, parent)
 
-    def _create_ui(self):
+    def _create_basic_ui(self):
         """Creates the UI components."""
         if len(self.profile_data.action_sets) > 0:
             assert len(self.profile_data.action_sets) == 1
 
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[0],
-                "Basic"
+                "Basic",
+                gremlin.ui.common.ContainerViewTypes.Basic
             )
-            self.main_layout.addWidget(widget)
+            self.basic_layout.addWidget(widget)
             widget.redraw()
             widget.model.data_changed.connect(self.container_modified.emit)
         else:
@@ -58,7 +59,21 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                     self.profile_data.parent.input_type
                 )
             action_selector.action_added.connect(self._add_action)
-            self.main_layout.addWidget(action_selector)
+            self.basic_layout.addWidget(action_selector)
+
+    def _create_condition_ui(self):
+        if len(self.profile_data.action_sets) > 0 and \
+                self.profile_data.activation_condition_type == "action":
+            assert len(self.profile_data.action_sets) == 1
+
+            widget = self._create_action_set_widget(
+                self.profile_data.action_sets[0],
+                "Basic",
+                gremlin.ui.common.ContainerViewTypes.Condition
+            )
+            self.activation_condition_layout.addWidget(widget)
+            widget.redraw()
+            widget.model.data_changed.connect(self.container_modified.emit)
 
     def _add_action(self, action_name):
         """Adds a new action to the container.

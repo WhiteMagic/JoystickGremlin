@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import enum
+import logging
+
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
@@ -318,8 +320,15 @@ class ActionSetView(common.AbstractView):
     # Signal emitted when an interaction is triggered on an action
     interacted = QtCore.pyqtSignal(Interactions)
 
-    def __init__(self, profile_data, label, parent=None):
+    def __init__(
+            self,
+            profile_data,
+            label,
+            view_type=common.ContainerViewTypes.Basic,
+            parent=None
+    ):
         super().__init__(parent)
+        self.view_type = view_type
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         self.profile_data = profile_data
@@ -334,17 +343,23 @@ class ActionSetView(common.AbstractView):
         self.group_layout = QtWidgets.QGridLayout()
         self.group_widget.setLayout(self.group_layout)
         self.action_layout = QtWidgets.QVBoxLayout()
-        self._create_edit_controls()
 
-        self.action_selector = gremlin.ui.common.ActionSelector(
-            profile_data.parent.input_type
-        )
-        self.action_selector.action_added.connect(self._add_action)
-
-        self.group_layout.addLayout(self.action_layout, 0, 0)
-        self.group_layout.addLayout(self.controls_layout, 0, 1)
+        # Only show edit controls in the basic tab
+        if self.view_type == common.ContainerViewTypes.Basic:
+            self._create_edit_controls()
+            self.group_layout.addLayout(self.action_layout, 0, 0)
+            self.group_layout.addLayout(self.controls_layout, 0, 1)
+        else:
+            self.group_layout.addLayout(self.action_layout, 0, 0)
         self.group_layout.setColumnStretch(0, 2)
-        self.group_layout.addWidget(self.action_selector, 1, 0)
+
+        # Only permit adding actions from the basic tab
+        if self.view_type == common.ContainerViewTypes.Basic:
+            self.action_selector = gremlin.ui.common.ActionSelector(
+                profile_data.parent.input_type
+            )
+            self.action_selector.action_added.connect(self._add_action)
+            self.group_layout.addWidget(self.action_selector, 1, 0)
 
     def redraw(self):
         common.clear_layout(self.action_layout)
@@ -352,13 +367,21 @@ class ActionSetView(common.AbstractView):
         if self.model is None:
             return
 
-        for index in range(self.model.rows()):
-            data = self.model.data(index)
-            widget = data.widget(data)
-            widget.modified.connect(lambda: self.model.data_changed.emit())
-            wrapped_widget = ActionWrapper(widget)
-            wrapped_widget.closed.connect(self._create_closed_cb(widget))
-            self.action_layout.addWidget(wrapped_widget)
+        if self.view_type == common.ContainerViewTypes.Basic:
+            for index in range(self.model.rows()):
+                data = self.model.data(index)
+                widget = data.widget(data)
+                widget.action_modified.connect(self.model.data_changed.emit)
+                wrapped_widget = BasicActionWrapper(widget)
+                wrapped_widget.closed.connect(self._create_closed_cb(widget))
+                self.action_layout.addWidget(wrapped_widget)
+        elif self.view_type == common.ContainerViewTypes.Condition:
+            for index in range(self.model.rows()):
+                data = self.model.data(index)
+                widget = data.widget(data)
+                widget.action_modified.connect(self.model.data_changed.emit)
+                wrapped_widget = ConditionActionWrapper(widget)
+                self.action_layout.addWidget(wrapped_widget)
 
     def _add_action(self, action_name):
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
@@ -596,34 +619,116 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.setWindowTitle(self._get_window_title())
         self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
 
+        # Create tab widget to display various UI controls in
+        self.dock_tabs = QtWidgets.QTabWidget()
+        self.dock_tabs.setTabPosition(QtWidgets.QTabWidget.East)
+        self.setWidget(self.dock_tabs)
+
+        # Create the individual tabs
+        self._create_basic_tab()
+        self._create_activation_condition_tab()
+        self._create_virtual_button_tab()
+
+        self.dock_tabs.currentChanged.connect(self._tab_changed)
+
+        # Select appropriate tab
+        self._select_tab(self.profile_data.current_view_type)
+
+    def _create_basic_tab(self):
         # Create root widget of the dock element
-        self.dock_widget = QtWidgets.QWidget()
-        self.dock_widget.setAutoFillBackground(True)
-        self.dock_widget.setPalette(self.palette)
-        self.setWidget(self.dock_widget)
+        self.basic_tab_widget = QtWidgets.QWidget()
+        # self.basic_tab_widget.setAutoFillBackground(True)
+        # self.basic_tab_widget.setPalette(self.palette)
 
         # Create layout and place it inside the dock widget
-        self.main_layout = QtWidgets.QVBoxLayout(self.dock_widget)
+        self.basic_layout = QtWidgets.QVBoxLayout(self.basic_tab_widget)
 
         # Create the actual UI
-        self._create_ui()
+        self.dock_tabs.addTab(self.basic_tab_widget, "Basic")
+        self._create_basic_ui()
+        self.basic_layout.addStretch(10)
 
-        # Add virtual button widget
-        self.virtual_button_widget = None
-        if self.profile_data.virtual_button:
-            self.virtual_button_widget = \
-                AbstractContainerWidget.virtual_axis_to_widget[
-                    type(self.profile_data.virtual_button)
-                ](self.profile_data.virtual_button)
-            self.main_layout.addWidget(self.virtual_button_widget)
+    def _create_activation_condition_tab(self):
+        # Create widget to place inside the tab
+        self.activation_condition_tab_widget = QtWidgets.QWidget()
+        self.activation_condition_layout = QtWidgets.QVBoxLayout(
+            self.activation_condition_tab_widget
+        )
 
-        # Add activation condition widget
+        # Create activation condition UI widget
         self.activation_condition_widget = \
             activation_condition.ActivationConditionWidget(self.profile_data)
-        self.activation_condition_widget.modified.connect(
-            lambda: self.modified.emit()
+        self.activation_condition_widget.activation_condition_modified.connect(
+            self.container_modified.emit
         )
-        self.main_layout.addWidget(self.activation_condition_widget)
+        # self.activation_condition_widget.setAutoFillBackground(True)
+        # self.activation_condition_widget.setPalette(self.palette)
+
+        # Put everything together
+        self.activation_condition_layout.addWidget(
+            self.activation_condition_widget
+        )
+        self.dock_tabs.addTab(
+            self.activation_condition_tab_widget,
+            "Condition"
+        )
+
+        self._create_condition_ui()
+        self.activation_condition_layout.addStretch(10)
+
+    def _create_virtual_button_tab(self):
+        # Return if nothing is to be done
+        if not self.profile_data.virtual_button:
+            return
+
+        # Create widget to place inside the tab
+        self.virtual_button_tab_widget = QtWidgets.QWidget()
+        self.virtual_button_layout = QtWidgets.QVBoxLayout(
+            self.virtual_button_tab_widget
+        )
+
+        # Create actual virtual button UI
+        self.virtual_button_widget = \
+            AbstractContainerWidget.virtual_axis_to_widget[
+                type(self.profile_data.virtual_button)
+            ](self.profile_data.virtual_button)
+
+        # Put everything together
+        self.virtual_button_layout.addWidget(self.virtual_button_widget)
+        self.dock_tabs.addTab(self.virtual_button_tab_widget, "Virtual Button")
+        self.virtual_button_layout.addStretch(10)
+
+    def _select_tab(self, view_type):
+        tab_title_map = {
+            common.ContainerViewTypes.Basic: "Basic",
+            common.ContainerViewTypes.Condition: "Condition",
+            common.ContainerViewTypes.VirtualButton: "Virtual Button"
+        }
+
+        if view_type not in tab_title_map:
+            return
+
+        tab_title = tab_title_map[view_type]
+        for i in range(self.dock_tabs.count()):
+            if self.dock_tabs.tabText(i) == tab_title:
+                self.dock_tabs.setCurrentIndex(i)
+
+    def _tab_changed(self, index):
+        view_type_map = {
+            "Basic": common.ContainerViewTypes.Basic,
+            "Condition": common.ContainerViewTypes.Condition,
+            "Virtual Button": common.ContainerViewTypes.VirtualButton
+        }
+
+        tab_text = self.dock_tabs.tabText(index)
+        if tab_text not in view_type_map:
+            logging.getLogger("system").error(
+                "Invalid tab name encountered, {}".format(tab_text)
+            )
+            print("BAD TAB NAME")
+            return
+
+        self.profile_data.current_view_type = view_type_map[tab_text]
 
     def _get_widget_index(self, widget):
         """Returns the index of the provided widget.
@@ -637,7 +742,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
                 index = i
         return index
 
-    def _create_action_set_widget(self, action_set_data, label):
+    def _create_action_set_widget(self, action_set_data, label, view_type):
         """Adds an action widget to the container.
 
         :param widget the widget to be added
@@ -647,7 +752,8 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         action_set_model = ActionSetModel(action_set_data)
         action_set_view = ActionSetView(
             self.profile_data,
-            label
+            label,
+            view_type
         )
         action_set_view.set_model(action_set_model)
         action_set_view.interacted.connect(
@@ -656,19 +762,6 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
         # Store the view widget so we can use it for interactions later on
         self.action_widgets.append(action_set_view)
-
-        # action_set_widget = ActionSetWrapper(
-        #     label,
-        #     self.profile_data.interaction_types
-        # )
-        # action_set_widget.add_action_widget(widget)
-        # widget.modified.connect(lambda: self.modified.emit())
-        # action_set_widget.interacted.connect(
-        #     lambda x: self._handle_interaction(widget, x)
-        # )
-        # action_set_widget.modified.connect(lambda: self.modified.emit())
-        # self.action_widgets.append(action_set_widget)
-        # return action_set_widget
 
         return action_set_view
 
@@ -691,10 +784,17 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
             "implemented in subclass"
         )
 
-    def _create_ui(self):
+    def _create_basic_ui(self):
         """Creates the UI elements for the widget."""
         raise gremlin.error.MissingImplementationError(
-            "AbstractContainerWidget._create_ui not "
+            "AbstractContainerWidget._create_basic_ui not "
+            "implemented in subclass"
+        )
+
+    def _create_condition_ui(self):
+        """Creates the UI elements for the widget."""
+        raise gremlin.error.MissingImplementationError(
+            "AbstractContainerWidget._create_condition_ui not "
             "implemented in subclass"
         )
 
@@ -759,9 +859,39 @@ class AbstractActionWidget(QtWidgets.QFrame):
         return root
 
 
-class ActionWrapper(QtWidgets.QDockWidget):
+class AbstractActionWrapper(QtWidgets.QDockWidget):
 
-    """Wraps the widget associated with a single action inside a container."""
+    """Base class for all action widget wrappers.
+
+    The specializations of this class will be used to contain an action
+    widget while rendering the UI components needed for a specific view.
+    """
+
+    def __init__(self, action_widget, parent=None):
+        """Wrapes a widget inside a docking container.
+
+        :param action_widget the action widget to wrap
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+        self.action_widget = action_widget
+
+        # Create widget sitting in the root of the dock element
+        self.dock_widget = QtWidgets.QFrame()
+        self.dock_widget.setFrameShape(QtWidgets.QFrame.Box)
+        self.dock_widget.setObjectName("frame");
+        self.dock_widget.setStyleSheet(
+            "#frame { border: 1px solid #949494; background-color: #afafaf; }"
+        )
+        self.setWidget(self.dock_widget)
+
+        # Create default layout
+        self.main_layout = QtWidgets.QVBoxLayout(self.dock_widget)
+
+
+class BasicActionWrapper(AbstractActionWrapper):
+
+    """Wraps an action widget and displays the basic config dialog."""
 
     # Signal which is emitted whenever the widget is closed
     closed = QtCore.pyqtSignal(QtWidgets.QWidget)
@@ -770,54 +900,19 @@ class ActionWrapper(QtWidgets.QDockWidget):
         """Wraps an existing action widget.
 
         :param action_widget the action widget to wrap
-        :param label the label of the action widget
-        :param allowed_interactions list of allowed interaction types
         :param parent the parent of the widget
         """
-        super().__init__(parent)
-        self.action_widget = action_widget
+        super().__init__(action_widget, parent)
 
+        # Enable closing of the widget and give it a title
         self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
         self.setWindowTitle(action_widget.action_data.name)
-
-        # Create root widget of the dock element
-        self.dock_widget = QtWidgets.QFrame()
-        self.dock_widget.setFrameShape(QtWidgets.QFrame.Box)
-        self.dock_widget.setObjectName("frame");
-        self.dock_widget.setStyleSheet(
-            "#frame { border: 1px solid #949494; background-color: #afafaf; }"
-        );
-        self.setWidget(self.dock_widget)
 
         # self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
         # self.help_button.clicked.connect(self._show_hint)
         # self.controls_layout.addWidget(self.help_button)
 
-        self.main_layout = QtWidgets.QVBoxLayout(self.dock_widget)
         self.main_layout.addWidget(self.action_widget)
-
-        action_data = self.action_widget.action_data
-        if action_data.parent.activation_condition_type == "action":
-            if action_data.activation_condition is None:
-                action_data.activation_condition = \
-                    gremlin.base_classes.ActivationCondition()
-
-            self.condition_model = activation_condition.ConditionModel(
-                action_data.activation_condition
-            )
-            self.condition_view = activation_condition.ConditionView()
-            self.condition_view.set_model(self.condition_model)
-            self.condition_view.redraw()
-
-            self.condition_widget = QtWidgets.QGroupBox("Activation Condition")
-            self.condition_layout = QtWidgets.QVBoxLayout()
-            self.condition_layout.addWidget(self.condition_view)
-            self.condition_widget.setLayout(self.condition_layout)
-            self.main_layout.addWidget(self.condition_widget)
-        else:
-            action_data.activation_condition = None
-
-        # self.main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _show_hint(self):
         """Displays a hint, explaining the purpose of the action."""
@@ -833,3 +928,43 @@ class ActionWrapper(QtWidgets.QDockWidget):
         """
         QtWidgets.QDockWidget.closeEvent(self, event)
         self.closed.emit(self)
+
+
+class ConditionActionWrapper(AbstractActionWrapper):
+
+    """Wraps an action widget and displays the condition config dialog."""
+
+    def __init__(self, action_widget, parent=None):
+        """Wraps an existing action widget.
+
+        :param action_widget the action widget to wrap
+        :param parent the parent of the widget
+        """
+        super().__init__(action_widget, parent)
+
+        # Disable all dock features and give it a title
+        self.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
+        self.setWindowTitle(action_widget.action_data.name)
+
+        # Setup activation condition UI
+        action_data = self.action_widget.action_data
+        if action_data.parent.activation_condition_type == "action":
+            if action_data.activation_condition is None:
+                action_data.activation_condition = \
+                    gremlin.base_classes.ActivationCondition()
+
+            self.condition_model = activation_condition.ConditionModel(
+                action_data.activation_condition
+            )
+            self.condition_view = activation_condition.ConditionView()
+            self.condition_view.set_model(self.condition_model)
+            self.condition_view.redraw()
+            self.main_layout.addWidget(self.condition_view)
+
+            # self.condition_widget = QtWidgets.QGroupBox("Activation Condition")
+            # self.condition_layout = QtWidgets.QVBoxLayout()
+            # self.condition_layout.addWidget(self.condition_view)
+            # self.condition_widget.setLayout(self.condition_layout)
+            # self.main_layout.addWidget(self.condition_widget)
+        else:
+            action_data.activation_condition = None

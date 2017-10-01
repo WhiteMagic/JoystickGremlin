@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import enum
 import threading
 
 from PyQt5 import QtWidgets, QtCore, QtGui
@@ -33,6 +34,15 @@ name_to_input_type = {
     "Button": gremlin.common.InputType.JoystickButton,
     "Hat": gremlin.common.InputType.JoystickHat
 }
+
+
+class ContainerViewTypes(enum.Enum):
+
+    """Enumeration of view types used by containers."""
+
+    Basic = 1
+    Condition = 2
+    VirtualButton = 3
 
 
 class AbstractModel(QtCore.QObject):
