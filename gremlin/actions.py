@@ -33,17 +33,17 @@ tts_instance = tts.TextToSpeech()
 media_player = QtMultimedia.QMediaPlayer()
 
 
-def axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].axis(vjoy_input_id).value = value.current
 
 
-def axis_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _axis_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
 
 
-def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     if event.is_pressed:
         input_devices.ButtonReleaseActions().register_button_release(
             (vjoy_device_id, vjoy_input_id), event
@@ -53,34 +53,34 @@ def button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
 
 
-def hat_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _hat_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
 
 
-def hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
 
 
-def key_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _key_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
 
 
-def remap_to_keyboard(event, value, condition, macro_press, macro_release):
+def _remap_to_keyboard(event, value, condition, macro_press, macro_release):
     if value.current:
         macro.MacroManager().add_macro(macro_press, condition, event)
     else:
         macro.MacroManager().add_macro(macro_release, condition, event)
 
 
-def pause(event, value, condition):
+def _pause(event, value, condition):
     if value.current:
         control_action.pause()
 
 
-def play_sound(event, value, condition, fname, volume):
+def _play_sound(event, value, condition, fname, volume):
     if value.current:
         media_player.setMedia(
             QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(fname)))
@@ -88,22 +88,22 @@ def play_sound(event, value, condition, fname, volume):
         media_player.play()
 
 
-def resume(event, value, condition):
+def _resume(event, value, condition):
     if value.current:
         control_action.resume()
 
 
-def toggle_pause_resume(event, value, condition):
+def _toggle_pause_resume(event, value, condition):
     if value.current:
         control_action.toggle_pause_resume()
 
 
-def text_to_speech(event, value, condition, text):
+def _text_to_speech(event, value, condition, text):
     if value.current:
         tts_instance.speak(tts.text_substitution(text))
 
 
-def temporary_mode_switch(event, value, condition, mode):
+def _temporary_mode_switch(event, value, condition, mode):
     if value.current:
         input_devices.ButtonReleaseActions().register_callback(
             control_action.switch_to_previous_mode,
@@ -112,52 +112,42 @@ def temporary_mode_switch(event, value, condition, mode):
         control_action.switch_mode(mode)
 
 
-def switch_mode(event, value, condition, mode):
+def _switch_mode(event, value, condition, mode):
     if value.current:
         control_action.switch_mode(mode)
 
 
-def switch_to_previous_mode(event, value, condition):
+def _switch_to_previous_mode(event, value, condition):
     if value.current:
         control_action.switch_to_previous_mode()
 
 
-def cycle_modes(event, value, condition, mode_list):
+def _cycle_modes(event, value, condition, mode_list):
     if value.current:
         control_action.cycle_modes(mode_list)
 
 
-def run_macro(event, value, condition, macro_fn):
+def _run_macro(event, value, condition, macro_fn):
     if value.current:
         macro.MacroManager().add_macro(macro_fn, condition, event)
 
 
-def response_curve(event, value, condition, curve_fn, deadzone_fn):
+def _response_curve(event, value, condition, curve_fn, deadzone_fn):
     value.current = curve_fn(deadzone_fn(value.current))
 
 
-def split_axis(event, value, condition, split_fn):
+def _split_axis(event, value, condition, split_fn):
     split_fn(value.current)
 
 
-def map_hat(vjoy_device_id, vjoy_input_id, data):
+def _map_hat(vjoy_device_id, vjoy_input_id, data):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].hat(vjoy_input_id).direction = data
 
 
-def map_key(vjoy_device_id, vjoy_input_id, data):
+def _map_key(vjoy_device_id, vjoy_input_id, data):
     vjoy = joystick_handling.VJoyProxy()
     vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = data
-
-
-def press_button(vjoy_device, vjoy_input):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device].button(vjoy_input).is_pressed = True
-
-
-def release_button(vjoy_device, vjoy_input):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device].button(vjoy_input).is_pressed = False
 
 
 class Value:
@@ -203,7 +193,7 @@ class Factory:
 
     @staticmethod
     def play_sound(fname, volume):
-        return lambda event, value, condition: play_sound(
+        return lambda event, value, condition: _play_sound(
             event,
             value,
             condition,
@@ -215,17 +205,17 @@ class Factory:
     def remap_input(from_type, to_type, vjoy_device_id, vjoy_input_id):
         remap_lookup = {
             (common.InputType.JoystickAxis,
-             common.InputType.JoystickAxis): axis_to_axis,
+             common.InputType.JoystickAxis): _axis_to_axis,
             (common.InputType.JoystickAxis,
-             common.InputType.JoystickButton): axis_to_button,
+             common.InputType.JoystickButton): _axis_to_button,
             (common.InputType.JoystickButton,
-             common.InputType.JoystickButton): button_to_button,
+             common.InputType.JoystickButton): _button_to_button,
             (common.InputType.JoystickHat,
-             common.InputType.JoystickHat): hat_to_hat,
+             common.InputType.JoystickHat): _hat_to_hat,
             (common.InputType.JoystickHat,
-             common.InputType.JoystickButton): hat_to_button,
+             common.InputType.JoystickButton): _hat_to_button,
             (common.InputType.Keyboard,
-             common.InputType.JoystickButton): key_to_button,
+             common.InputType.JoystickButton): _key_to_button,
         }
 
         remap_fn = remap_lookup.get((from_type, to_type), None)
@@ -240,7 +230,7 @@ class Factory:
 
     @staticmethod
     def remap_to_keyboard(macro_press, macro_release):
-        return lambda event, value, condition: remap_to_keyboard(
+        return lambda event, value, condition: _remap_to_keyboard(
             event,
             value,
             condition,
@@ -250,7 +240,7 @@ class Factory:
 
     @staticmethod
     def split_axis(split_fn):
-        return lambda event, value, condition: split_axis(
+        return lambda event, value, condition: _split_axis(
             event,
             value,
             condition,
@@ -259,7 +249,7 @@ class Factory:
 
     @staticmethod
     def response_curve(curve_fn, deadzone_fn):
-        return lambda event, value, condition: response_curve(
+        return lambda event, value, condition: _response_curve(
             event,
             value,
             condition,
@@ -269,7 +259,7 @@ class Factory:
 
     @staticmethod
     def run_macro(macro_fn):
-        return lambda event, value, condition: run_macro(
+        return lambda event, value, condition: _run_macro(
             event,
             value,
             condition,
@@ -278,7 +268,7 @@ class Factory:
 
     @staticmethod
     def temporary_mode_switch(mode):
-        return lambda event, value, conditition: temporary_mode_switch(
+        return lambda event, value, conditition: _temporary_mode_switch(
             event,
             value,
             conditition,
@@ -287,7 +277,7 @@ class Factory:
 
     @staticmethod
     def switch_mode(mode):
-        return lambda event, value, condition: switch_mode(
+        return lambda event, value, condition: _switch_mode(
             event,
             value,
             condition,
@@ -296,7 +286,7 @@ class Factory:
 
     @staticmethod
     def previous_mode():
-        return lambda event, value, condition: switch_to_previous_mode(
+        return lambda event, value, condition: _switch_to_previous_mode(
             event,
             value,
             condition
@@ -304,7 +294,7 @@ class Factory:
 
     @staticmethod
     def cycle_modes(mode_list):
-        return lambda event, value, condition: cycle_modes(
+        return lambda event, value, condition: _cycle_modes(
             event,
             value,
             condition,
@@ -313,7 +303,7 @@ class Factory:
 
     @staticmethod
     def pause():
-        return lambda event, value, condition: pause(
+        return lambda event, value, condition: _pause(
             event,
             value,
             condition
@@ -321,7 +311,7 @@ class Factory:
 
     @staticmethod
     def resume():
-        return lambda event, value, condition: resume(
+        return lambda event, value, condition: _resume(
             event,
             value,
             condition
@@ -329,7 +319,7 @@ class Factory:
 
     @staticmethod
     def toggle_pause_resume():
-        return lambda event, value, condition: toggle_pause_resume(
+        return lambda event, value, condition: _toggle_pause_resume(
             event,
             value,
             condition
@@ -337,7 +327,7 @@ class Factory:
 
     @staticmethod
     def text_to_speech(text):
-        return lambda event, value, condition: text_to_speech(
+        return lambda event, value, condition: _text_to_speech(
             event,
             value,
             condition,
