@@ -184,7 +184,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
 
         :param node the XML node with which to populate the container
         """
-        self.actions = []
+        self.action_sets = []
         super()._parse_xml(node)
         self.delay = float(node.get("delay", 0.5))
 
