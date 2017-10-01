@@ -43,7 +43,7 @@ class SwitchModeWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     def _mode_list_changed_cb(self):
         self.action_data.mode_name = self.mode_list.currentText()
-        self.modified.emit()
+        self.action_modified.emit()
 
     def _populate_ui(self):
         mode_id = self.mode_list.findText(self.action_data.mode_name)

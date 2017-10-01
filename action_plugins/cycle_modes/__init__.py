@@ -78,7 +78,7 @@ class CycleModesWidget(gremlin.ui.input_item.AbstractActionWidget):
         """Saves UI state to the profile."""
         mode_list = self.model.stringList()
         self.action_data.mode_list = mode_list
-        self.modified.emit()
+        self.action_modified.emit()
 
     def _add_cb(self):
         """Adds the currently selected mode to the list of modes."""

@@ -25,7 +25,7 @@ class AbstractVirtualButtonWidget(QtWidgets.QGroupBox):
 
     """Base class for activation condition widgets."""
 
-    modified = QtCore.pyqtSignal()
+    virtual_button_modified = QtCore.pyqtSignal()
 
     def __init__(self, condition_data, parent=None, layout_direction="vertical"):
         """Creates a new activation condition widget.
@@ -109,7 +109,7 @@ class VirtualAxisButtonWidget(AbstractVirtualButtonWidget):
         :param value the new value of the virtual button's lower limit
         """
         self.condition_data.lower_limit = value
-        self.modified.emit()
+        self.virtual_button_modified.emit()
 
     def _upper_limit_cb(self, value):
         """Updates the upper limit value.
@@ -117,7 +117,7 @@ class VirtualAxisButtonWidget(AbstractVirtualButtonWidget):
         :param value the new value of the virtual button's upper limit
         """
         self.condition_data.upper_limit = value
-        self.modified.emit()
+        self.virtual_button_modified.emit()
 
     def _show_hint(self):
         """Displays a hint explaining the activation condition."""

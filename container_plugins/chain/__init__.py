@@ -70,7 +70,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             )
             self.main_layout.addWidget(widget)
             widget.redraw()
-            widget.model.data_changed.connect(lambda: self.modified.emit())
+            widget.model.data_changed.connect(self.container_modified.emit)
 
     def _add_action(self, action_name):
         """Adds a new action to the container.
@@ -80,7 +80,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
         action_item = plugin_manager.get_class(action_name)(self.profile_data)
         self.profile_data.add_action(action_item)
-        self.modified.emit()
+        self.container_modified.emit()
 
     def _timeout_changed_cb(self, value):
         """Stores changes to the timeout element.
@@ -121,7 +121,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         if action == gremlin.ui.input_item.ActionSetView.Interactions.Delete:
             del self.profile_data.action_sets[index]
 
-        self.modified.emit()
+        self.container_modified.emit()
 
     def _get_window_title(self):
         """Returns the title to use for this container.

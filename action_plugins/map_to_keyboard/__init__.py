@@ -68,7 +68,7 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_data.keys = [
             (key.scan_code, key.is_extended) for key in keys
         ]
-        self.modified.emit()
+        self.action_modified.emit()
 
     def _record_keys_cb(self):
         """Shows a dialog prompint the user to press the desired key
