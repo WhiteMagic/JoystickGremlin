@@ -27,7 +27,7 @@ from . import common
 class ActivationConditionWidget(QtWidgets.QGroupBox):
 
     # Signal which is emitted whenever the widget's contents change
-    modified = QtCore.pyqtSignal()
+    activation_condition_modified = QtCore.pyqtSignal()
 
     # Maps activation type name to index
     activation_type_to_index = {
@@ -90,7 +90,7 @@ class ActivationConditionWidget(QtWidgets.QGroupBox):
             else:
                 self.profile_data.activation_condition = None
 
-        self.modified.emit()
+        self.activation_condition_modified.emit()
 
 
 class AbstractConditionWidget(QtWidgets.QWidget):

@@ -565,8 +565,9 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     # Signal which is emitted whenever the widget is closed
     closed = QtCore.pyqtSignal(QtWidgets.QWidget)
 
-    # Signal which is emitted whenever the widget's contents change
-    modified = QtCore.pyqtSignal()
+    # Signal which is emitted whenever the widget's contents change as well as
+    # the UI tab that was active when the event was emitted
+    container_modified = QtCore.pyqtSignal()
 
     # Palette used to render widgets
     palette = QtGui.QPalette()
@@ -708,7 +709,7 @@ class AbstractActionWidget(QtWidgets.QFrame):
     module."""
 
     # Signal which is emitted whenever the widget's contents change
-    modified = QtCore.pyqtSignal()
+    action_modified = QtCore.pyqtSignal()
 
     def __init__(self, action_data, parent=None):
         """Creates a new instance.

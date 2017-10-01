@@ -127,7 +127,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_data.parent.create_or_delete_virtual_button()
 
         # Signal changes
-        self.modified.emit()
+        self.action_modified.emit()
 
 
 class Remap(gremlin.base_classes.AbstractAction):

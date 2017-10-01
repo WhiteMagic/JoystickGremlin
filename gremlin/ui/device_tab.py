@@ -260,7 +260,7 @@ class ActionContainerView(common.AbstractView):
         for index in range(self.model.rows()):
             widget = self.model.data(index).widget(self.model.data(index))
             widget.closed.connect(self._create_closed_cb(widget))
-            widget.modified.connect(self.model.data_changed.emit)
+            widget.container_modified.connect(self.model.data_changed.emit)
             self.scroll_layout.addWidget(widget)
         self.scroll_layout.addStretch(1)
 

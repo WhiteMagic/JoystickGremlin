@@ -101,7 +101,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         )
         self.main_layout.addWidget(widget)
         widget.redraw()
-        widget.model.data_changed.connect(lambda: self.modified.emit())
+        widget.model.data_changed.connect(self.container_modified.emit)
 
     def _add_action(self, index, action_name):
         """Adds a new action to the container.
@@ -114,7 +114,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             self.profile_data.action_sets[index] = []
         self.profile_data.action_sets[index].append(action_item)
         self.profile_data.create_or_delete_virtual_button()
-        self.modified.emit()
+        self.container_modified.emit()
 
     def _delay_changed_cb(self, value):
         """Updates the activation delay value.
@@ -134,7 +134,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             if index == 0 and self.profile_data.action_sets[0] is None:
                 index = 1
             self.profile_data.action_sets[index] = None
-            self.modified.emit()
+            self.container_modified.emit()
 
     def _get_window_title(self):
         """Returns the title to use for this container.
