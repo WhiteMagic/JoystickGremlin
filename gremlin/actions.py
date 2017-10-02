@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+from functools import partial
 import logging
 import threading
 import time
@@ -33,121 +34,132 @@ tts_instance = tts.TextToSpeech()
 media_player = QtMultimedia.QMediaPlayer()
 
 
-def _axis_to_axis(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _axis_to_axis(event, value, **kwargs):
     vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].axis(vjoy_input_id).value = value.current
+    vjoy[kwargs["vjoy_device_id"]].axis(kwargs["vjoy_input_id"]).value = \
+        value.current
 
 
-def _axis_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _axis_to_button(event, value, **kwargs):
     vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
+        value.current
 
 
-def _button_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _button_to_button(event, value, **kwargs):
     if event.is_pressed:
         input_devices.ButtonReleaseActions().register_button_release(
-            (vjoy_device_id, vjoy_input_id), event
+            (kwargs["vjoy_device_id"], kwargs["vjoy_input_id"]), event
         )
 
     vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
+        value.current
 
 
-def _hat_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _hat_to_button(event, value, **kwargs):
     vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
+        value.current
 
 
-def _hat_to_hat(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _hat_to_hat(event, value, **kwargs):
     vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].hat(vjoy_input_id).direction = value.current
+    vjoy[kwargs["vjoy_device_id"]].hat(kwargs["vjoy_input_id"]).direction = \
+    value.current
 
 
-def _key_to_button(event, value, condition, vjoy_device_id, vjoy_input_id):
+def _key_to_button(event, value, **kwargs):
     vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = value.current
+    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
+        value.current
 
 
-def _remap_to_keyboard(event, value, condition, macro_press, macro_release):
+def _remap_to_keyboard(event, value, **kwargs):
     if value.current:
-        macro.MacroManager().add_macro(macro_press, condition, event)
+        macro.MacroManager().add_macro(
+            kwargs["macro_press"],
+            kwargs["virtual_button"],
+            event
+        )
     else:
-        macro.MacroManager().add_macro(macro_release, condition, event)
+        macro.MacroManager().add_macro(
+            kwargs["macro_release"],
+            kwargs["virtual_button"],
+            event
+        )
 
 
-def _pause(event, value, condition):
+def _pause(event, value, **kwargs):
     if value.current:
         control_action.pause()
 
 
-def _play_sound(event, value, condition, fname, volume):
+def _play_sound(event, value, **kwargs):
     if value.current:
         media_player.setMedia(
-            QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(fname)))
-        media_player.setVolume(volume)
+            QtMultimedia.QMediaContent(
+                QtCore.QUrl.fromLocalFile(kwargs["fname"])
+            ))
+        media_player.setVolume(kwargs["volume"])
         media_player.play()
 
 
-def _resume(event, value, condition):
+def _resume(event, value, **kwargs):
     if value.current:
         control_action.resume()
 
 
-def _toggle_pause_resume(event, value, condition):
+def _toggle_pause_resume(event, value, **kwargs):
     if value.current:
         control_action.toggle_pause_resume()
 
 
-def _text_to_speech(event, value, condition, text):
+def _text_to_speech(event, value, **kwargs):
     if value.current:
-        tts_instance.speak(tts.text_substitution(text))
+        tts_instance.speak(tts.text_substitution(kwargs["text"]))
 
 
-def _temporary_mode_switch(event, value, condition, mode):
+def _temporary_mode_switch(event, value, **kwargs):
     if value.current:
         input_devices.ButtonReleaseActions().register_callback(
             control_action.switch_to_previous_mode,
             event
         )
-        control_action.switch_mode(mode)
+        control_action.switch_mode(kwargs["mode"])
 
 
-def _switch_mode(event, value, condition, mode):
+def _switch_mode(event, value, **kwargs):
     if value.current:
-        control_action.switch_mode(mode)
+        control_action.switch_mode(kwargs["mode"])
 
 
-def _switch_to_previous_mode(event, value, condition):
+def _switch_to_previous_mode(event, value, **kwargs):
     if value.current:
         control_action.switch_to_previous_mode()
 
 
-def _cycle_modes(event, value, condition, mode_list):
+def _cycle_modes(event, value, **kwargs):
     if value.current:
-        control_action.cycle_modes(mode_list)
+        control_action.cycle_modes(kwargs["mode_list"])
 
 
-def _run_macro(event, value, condition, macro_fn):
+def _run_macro(event, value, **kwargs):
     if value.current:
-        macro.MacroManager().add_macro(macro_fn, condition, event)
+        macro.MacroManager().add_macro(
+            kwargs["macro_fn"],
+            kwargs["virtual_button"],
+            event
+        )
 
 
-def _response_curve(event, value, condition, curve_fn, deadzone_fn):
-    value.current = curve_fn(deadzone_fn(value.current))
+def _response_curve(event, value, **kwargs):
+    value.current = kwargs["curve_fn"](kwargs["deadzone_fn"](value.current))
 
 
-def _split_axis(event, value, condition, split_fn):
-    split_fn(value.current)
+def _split_axis(event, value, **kwargs):
+    kwargs["split_fn"](value.current)
 
-
-def _map_hat(vjoy_device_id, vjoy_input_id, data):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].hat(vjoy_input_id).direction = data
-
-
-def _map_key(vjoy_device_id, vjoy_input_id, data):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[vjoy_device_id].button(vjoy_input_id).is_pressed = data
 
 
 class Value:
@@ -192,16 +204,6 @@ class Factory:
     """Contains methods to create a variety of actions."""
 
     @staticmethod
-    def play_sound(fname, volume):
-        return lambda event, value, condition: _play_sound(
-            event,
-            value,
-            condition,
-            fname,
-            volume
-        )
-
-    @staticmethod
     def remap_input(from_type, to_type, vjoy_device_id, vjoy_input_id):
         remap_lookup = {
             (common.InputType.JoystickAxis,
@@ -220,119 +222,71 @@ class Factory:
 
         remap_fn = remap_lookup.get((from_type, to_type), None)
         if remap_fn is not None:
-            return lambda event, value, condition: remap_fn(
-                event,
-                value,
-                condition,
-                vjoy_device_id,
-                vjoy_input_id,
+            return partial(
+                remap_fn,
+                vjoy_device_id=vjoy_device_id,
+                vjoy_input_id=vjoy_input_id
             )
 
     @staticmethod
     def remap_to_keyboard(macro_press, macro_release):
-        return lambda event, value, condition: _remap_to_keyboard(
-            event,
-            value,
-            condition,
-            macro_press,
-            macro_release
+        return partial(
+            _remap_to_keyboard,
+            macro_press=macro_press,
+            macro_release=macro_release
         )
 
     @staticmethod
     def split_axis(split_fn):
-        return lambda event, value, condition: _split_axis(
-            event,
-            value,
-            condition,
-            split_fn
-        )
+        return partial(_split_axis, split_fn=split_fn)
 
     @staticmethod
     def response_curve(curve_fn, deadzone_fn):
-        return lambda event, value, condition: _response_curve(
-            event,
-            value,
-            condition,
-            curve_fn,
-            deadzone_fn
+        return partial(
+            _response_curve,
+            curve_fn=curve_fn,
+            deadzone_fn=deadzone_fn
         )
 
     @staticmethod
     def run_macro(macro_fn):
-        return lambda event, value, condition: _run_macro(
-            event,
-            value,
-            condition,
-            macro_fn
-        )
+        return partial(_run_macro, macro_fn=macro_fn)
 
     @staticmethod
     def temporary_mode_switch(mode):
-        return lambda event, value, conditition: _temporary_mode_switch(
-            event,
-            value,
-            conditition,
-            mode
-        )
+        return partial(_temporary_mode_switch, mode=mode)
 
     @staticmethod
     def switch_mode(mode):
-        return lambda event, value, condition: _switch_mode(
-            event,
-            value,
-            condition,
-            mode
-        )
+        return partial(_switch_mode, mode=mode)
 
     @staticmethod
     def previous_mode():
-        return lambda event, value, condition: _switch_to_previous_mode(
-            event,
-            value,
-            condition
-        )
+        return partial(_switch_to_previous_mode)
 
     @staticmethod
     def cycle_modes(mode_list):
-        return lambda event, value, condition: _cycle_modes(
-            event,
-            value,
-            condition,
-            mode_list
-        )
+        return partial(_cycle_modes, mode_list=mode_list)
 
     @staticmethod
     def pause():
-        return lambda event, value, condition: _pause(
-            event,
-            value,
-            condition
-        )
+        return partial(_pause)
 
     @staticmethod
     def resume():
-        return lambda event, value, condition: _resume(
-            event,
-            value,
-            condition
-        )
+        return partial(_resume)
 
     @staticmethod
     def toggle_pause_resume():
-        return lambda event, value, condition: _toggle_pause_resume(
-            event,
-            value,
-            condition
-        )
+        return partial(_toggle_pause_resume)
 
     @staticmethod
     def text_to_speech(text):
-        return lambda event, value, condition: _text_to_speech(
-            event,
-            value,
-            condition,
-            text
-        )
+        return partial(_text_to_speech, text=text)
+
+    @staticmethod
+    def play_sound(fname, volume):
+        return partial(_play_sound, fname=fname, volume=volume)
 
 
 class VirtualButton:
@@ -481,7 +435,7 @@ class AbstractActionContainer:
         derived classes to implement the actual execution functionality.
 
         :param event the event triggering the execution
-        :param value the even'ts value with potential modifications from other
+        :param value the event's value with potential modifications from other
             prior executions
         """
         raise error.GremlinError("Missing _execute_call implementation")
@@ -508,7 +462,7 @@ class Basic(AbstractActionContainer):
             prior executions
         """
         for action in self.action_sets[0]:
-            action(event, value, self.virtual_button)
+            action(event, value, virtual_button=self.virtual_button)
 
 
 class Tempo(AbstractActionContainer):
@@ -559,14 +513,14 @@ class Tempo(AbstractActionContainer):
                     action(
                         self.event_press,
                         self.value_press,
-                        self.virtual_button
+                        virtual_button=self.virtual_button
                     )
                 time.sleep(0.1)
                 for action in self.action_sets[0]:
-                    action(event, value, self.virtual_button)
+                    action(event, value, virtual_button=self.virtual_button)
             else:
                 for action in self.action_sets[1]:
-                    action(event, value, self.virtual_button)
+                    action(event, value, virtual_button=self.virtual_button)
 
             self.timer = None
 
@@ -576,7 +530,7 @@ class Tempo(AbstractActionContainer):
             action(
                 self.event_press,
                 self.value_press,
-                self.virtual_button
+                virtual_button=self.virtual_button
             )
 
 
@@ -623,7 +577,7 @@ class Chain(AbstractActionContainer):
 
         # Execute action
         for action in self.action_sets[self.index]:
-            action(event, value, self.virtual_button)
+            action(event, value, virtual_button=self.virtual_button)
 
         # Decide how to switch to next action
         if event.event_type in [
