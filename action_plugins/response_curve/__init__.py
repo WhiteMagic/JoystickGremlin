@@ -646,6 +646,7 @@ class CurveScene(QtWidgets.QGraphicsScene):
             if abs(self.current_item.control_point.center.x) == 1.0:
                 new_point.x = self.current_item.control_point.center.x
             self.current_item.control_point.set_center(new_point)
+            self.model.synchronize_data()
             self.redraw_scene()
 
     def _select_item(self, item):
