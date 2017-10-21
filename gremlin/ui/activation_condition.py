@@ -40,7 +40,6 @@ class ActivationConditionWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.profile_data = profile_data
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        # self.setTitle("Activation Condition")
         self._create_ui()
 
     def _create_ui(self):
@@ -63,14 +62,16 @@ class ActivationConditionWidget(QtWidgets.QWidget):
         self.controls_layout.addStretch()
 
         self.main_layout.addLayout(self.controls_layout)
-
         if self.profile_data.activation_condition_type == "container":
+
+
             self.condition_model = ConditionModel(
                 self.profile_data.activation_condition
             )
             self.condition_view = ConditionView()
             self.condition_view.set_model(self.condition_model)
             self.condition_view.redraw()
+
             self.main_layout.addWidget(self.condition_view)
 
         self.main_layout.addStretch()
@@ -84,11 +85,13 @@ class ActivationConditionWidget(QtWidgets.QWidget):
         self.profile_data.activation_condition_type = index_to_type[index]
 
         if self.profile_data.activation_condition_type == "container":
-            if self.profile_data.activation_condition is None:
-                self.profile_data.activation_condition = \
-                    base_classes.ActivationCondition()
-            else:
-                self.profile_data.activation_condition = None
+            self.profile_data.activation_condition = \
+                base_classes.ActivationCondition(
+                    [],
+                    base_classes.ActivationRule.All
+                )
+        else:
+            self.profile_data.activation_condition = None
 
         self.activation_condition_modified.emit()
 
@@ -208,6 +211,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
             self._button_ui()
         elif self.condition_data.input_type == InputType.JoystickHat:
             self._hat_ui()
+        self.main_layout.addStretch()
         self.main_layout.addWidget(self.record_button)
         self.main_layout.addWidget(self.delete_button)
 
@@ -275,7 +279,9 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.condition_data.windows_id = event.windows_id
         self.condition_data.input_type = event.event_type
         self.condition_data.input_id = event.identifier
-        self.condition_data.device_name = input_devices.JoystickProxy()[event.windows_id].name
+        self.condition_data.device_name = \
+            input_devices.JoystickProxy()[event.windows_id].name
+        self.condition_data.comparison = "pressed"
         self._create_ui()
 
     def _request_user_input(self):
@@ -331,11 +337,17 @@ class InputActionConditionWidget(AbstractConditionWidget):
         self.state_dropdown.currentTextChanged.connect(
             self._state_selection_changed
         )
+        self.delete_button = QtWidgets.QPushButton("Delete")
+        self.delete_button.clicked.connect(
+            lambda: self.deleted.emit(self.condition_data)
+        )
+
         self.main_layout.addWidget(
             QtWidgets.QLabel("Activate when (virtual) button is")
         )
         self.main_layout.addWidget(self.state_dropdown)
         self.main_layout.addStretch()
+        self.main_layout.addWidget(self.delete_button)
 
     def _state_selection_changed(self, label):
         self.condition_data.comparison = label.lower()
@@ -384,10 +396,10 @@ class ConditionView(common.AbstractView):
     }
 
     rules_map = {
-        "All": base_classes.ActivationCondition.Rules.All,
-        "Any": base_classes.ActivationCondition.Rules.Any,
-        base_classes.ActivationCondition.Rules.All: "All",
-        base_classes.ActivationCondition.Rules.Any: "Any"
+        "All": base_classes.ActivationRule.All,
+        "Any": base_classes.ActivationRule.Any,
+        base_classes.ActivationRule.All: "All",
+        base_classes.ActivationRule.Any: "Any"
     }
 
     def __init__(self, parent=None):
