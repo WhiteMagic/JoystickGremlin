@@ -1,2 +1,0 @@
-<%namespace name="util" module="templates.functions"/>
-gremlin.actions.Factory.remap_input(gremlin.common.${input_type}, gremlin.common.${entry.input_type}, ${entry.vjoy_device_id}, ${entry.vjoy_input_id})
