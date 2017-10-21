@@ -951,7 +951,10 @@ class ConditionActionWrapper(AbstractActionWrapper):
         if action_data.parent.activation_condition_type == "action":
             if action_data.activation_condition is None:
                 action_data.activation_condition = \
-                    gremlin.base_classes.ActivationCondition()
+                    gremlin.base_classes.ActivationCondition(
+                        [],
+                        gremlin.base_classes.ActivationRule.All
+                    )
 
             self.condition_model = activation_condition.ConditionModel(
                 action_data.activation_condition
