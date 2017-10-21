@@ -122,7 +122,6 @@ class ActionPlugins:
 
         self._create_type_action_map()
         self._create_action_name_map()
-        self._create_parameter_requirements()
 
     @property
     def repository(self):
@@ -187,14 +186,6 @@ class ActionPlugins:
             self._name_to_type_map[entry.name] = entry
             self._tag_to_type_map[entry.tag] = entry
 
-    def _create_parameter_requirements(self):
-        """Creates a mapping from parameter names to actions."""
-        for entry in self._plugins.values():
-            for name in entry.callback_params:
-                if name not in self._parameter_requirements:
-                    self._parameter_requirements[name] = []
-                self._parameter_requirements[name].append(entry)
-
     def _discover_plugins(self):
         """Processes known plugin folders for action plugins."""
         for root, dirs, files in os.walk("action_plugins"):
@@ -219,6 +210,7 @@ class ActionPlugins:
                 except Exception as e:
                     # Log an error and ignore the action_plugins if
                     # anything is wrong with it
+                    raise(e) # TODO: REMOVE ME
                     logging.getLogger("system").warning(
                         "Loading action_plugins '{}' failed due to: {}".format(
                             root.split("\\")[-1],
