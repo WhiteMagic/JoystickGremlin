@@ -28,64 +28,16 @@ from . import common, error, plugin_manager, profile
 from gremlin.profile import safe_read
 
 
-class ActivationCondition:
+class ActivationRule(enum.Enum):
 
-    """Dictates under what circumstances an associated code can be executed."""
+    """Activation rules for collections of conditions.
 
-    # Activation rules, all is equivalent to logical and while any is
-    # equivalent to logical or
-    class Rules(enum.Enum):
-        All = 1
-        Any = 2
+    All requires all the conditions in a collection to evaluate to True while
+    Any only requires a single condition to be True.
+    """
 
-    def __init__(self):
-        """Creates a new instance."""
-        self.rule = ActivationCondition.Rules.All
-        self.conditions = []
-
-    def from_xml(self, node):
-        """Extracts activation condition data from an XML node.
-
-        :param node the XML node to parse
-        """
-        # FIXME: these maps inside the function are ugly
-        rule_map = {
-            "all": ActivationCondition.Rules.All,
-            "any": ActivationCondition.Rules.Any
-        }
-        condition_map = {
-            "keyboard": KeyboardCondition,
-            "axis": JoystickCondition,
-            "button": JoystickCondition,
-            "hat": JoystickCondition,
-            "action": InputActionCondition,
-        }
-
-        self.rule = rule_map[safe_read(node, "rule")]
-        for cond_node in node.findall("condition"):
-            input_type = safe_read(cond_node, "input")
-            condition = condition_map[input_type]()
-            condition.from_xml(cond_node)
-            self.conditions.append(condition)
-
-    def to_xml(self):
-        """Returns an XML node containing the activation condition information.
-
-        :return XML node containing information about the activation condition
-        """
-        # FIXME: these maps inside the function are ugly
-        rule_lookup = {
-            ActivationCondition.Rules.All: "all",
-            ActivationCondition.Rules.Any: "any"
-        }
-
-        node = ElementTree.Element("activation-condition")
-        node.set("rule", rule_lookup[self.rule])
-
-        for condition in self.conditions:
-            node.append(condition.to_xml())
-
-        return node
+    All = 1
+    Any = 2
 
 
 class AbstractCondition(metaclass=ABCMeta):
@@ -232,6 +184,58 @@ class InputActionCondition(AbstractCondition):
         return node
 
 
+class ActivationCondition:
+
+    """Dictates under what circumstances an associated code can be executed."""
+
+    rule_lookup = {
+        # String to enum
+        "all": ActivationRule.All,
+        "any": ActivationRule.Any,
+        # Enum to string
+        ActivationRule.All: "all",
+        ActivationRule.Any: "any",
+    }
+
+    condition_lookup = {
+        "keyboard": KeyboardCondition,
+        "axis": JoystickCondition,
+        "button": JoystickCondition,
+        "hat": JoystickCondition,
+        "action": InputActionCondition,
+    }
+
+    def __init__(self, conditions, rule):
+        """Creates a new instance."""
+        self.rule = rule
+        self.conditions = conditions
+
+    def from_xml(self, node):
+        """Extracts activation condition data from an XML node.
+
+        :param node the XML node to parse
+        """
+        self.rule = ActivationCondition.rule_lookup[safe_read(node, "rule")]
+        for cond_node in node.findall("condition"):
+            input_type = safe_read(cond_node, "input")
+            condition = ActivationCondition.condition_lookup[input_type]()
+            condition.from_xml(cond_node)
+            self.conditions.append(condition)
+
+    def to_xml(self):
+        """Returns an XML node containing the activation condition information.
+
+        :return XML node containing information about the activation condition
+        """
+        node = ElementTree.Element("activation-condition")
+        node.set("rule", ActivationCondition.rule_lookup[self.rule])
+
+        for condition in self.conditions:
+            node.append(condition.to_xml())
+
+        return node
+
+
 class AbstractVirtualButton(metaclass=ABCMeta):
 
     """Base class of all virtual buttons."""
@@ -350,6 +354,32 @@ class VirtualHatButton(AbstractVirtualButton):
         return node
 
 
+
+class AbstractFunctor(metaclass=ABCMeta):
+
+    """Abstract base class defining the interface for functor like classes.
+
+    These classes are used in the internal code execution system.
+    """
+
+    def __init__(self, object):
+        """Creates a new instance, extracting needed information.
+
+        :param object the object which contains the information needed to
+            execute it later on
+        """
+        pass
+
+    @abstractmethod
+    def process_event(self, event, value):
+        """Processes the functor using the provided event and value data.
+
+        :param event the raw event that caused the functor to be executed
+        :param value the possibly modified value
+        """
+        pass
+
+
 class AbstractAction(profile.ProfileData):
 
     """Base class for all actions that can be encoded via the XML and
@@ -374,7 +404,11 @@ class AbstractAction(profile.ProfileData):
 
         for child in node.findall("activation-condition"):
             self.parent.activation_condition_type = "action"
-            self.activation_condition = gremlin.base_classes.ActivationCondition()
+            self.activation_condition = \
+                gremlin.base_classes.ActivationCondition(
+                    [],
+                    ActivationRule.All
+                )
             cond_node = node.find("activation-condition")
             if cond_node is not None:
                 self.activation_condition.from_xml(cond_node)
@@ -580,7 +614,8 @@ class AbstractContainer(profile.ProfileData):
     def _parse_activation_condition_xml(self, node):
         for child in node.findall("activation-condition"):
             self.activation_condition_type = "container"
-            self.activation_condition = gremlin.base_classes.ActivationCondition()
+            self.activation_condition = \
+                gremlin.base_classes.ActivationCondition([], ActivationRule.All)
             cond_node = node.find("activation-condition")
             if cond_node is not None:
                 self.activation_condition.from_xml(cond_node)
