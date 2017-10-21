@@ -20,7 +20,7 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.profile
 import gremlin.ui.input_item
@@ -50,20 +50,38 @@ class TemporaryModeSwitchWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.mode_list.setCurrentIndex(mode_id)
 
 
+class TemporaryModeSwitchFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.mode_name = action.mode_name
+
+    def process_event(self, event, value):
+        gremlin.input_devices.ButtonReleaseActions().register_callback(
+            gremlin.control_action.switch_to_previous_mode,
+            event
+        )
+        gremlin.control_action.switch_mode(self.mode_name)
+        return True
+
+
 class TemporaryModeSwitch(AbstractAction):
 
     """Action representing the change of mode."""
 
     name = "Temporary Mode Switch"
     tag = "temporary-mode-switch"
-    widget = TemporaryModeSwitchWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    widget = TemporaryModeSwitchWidget
+    functor = TemporaryModeSwitchFunctor
 
     def __init__(self, parent):
         super().__init__(parent)

@@ -20,7 +20,7 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.input_item
 
@@ -45,20 +45,36 @@ class TextToSpeechWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.text_field.setPlainText(self.action_data.text)
 
 
+class TextToSpeechFunctor(AbstractFunctor):
+
+    tts = gremlin.tts.TextToSpeech()
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.text = action.text
+
+    def process_event(self, event, value):
+        TextToSpeechFunctor.tts.speak(self.text)
+        return True
+
+
 class TextToSpeech(AbstractAction):
 
     """Action representing a single TTS entry."""
 
     name = "Text to Speech"
     tag = "text-to-speech"
-    widget = TextToSpeechWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    functor = TextToSpeechFunctor
+    widget = TextToSpeechWidget
 
     def __init__(self, parent):
         super().__init__(parent)

@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
 import gremlin
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 from gremlin.ui.common import DualSlider, DynamicDoubleSpinBox
 import gremlin.ui.input_item
@@ -1137,6 +1137,30 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.curve_view_layout.addStretch()
         self.curve_view_layout.addWidget(self.curve_view)
         self.curve_view_layout.addStretch()
+
+
+class ResponseCurveFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.deadzone_fn = lambda value: gremlin.input_devices.deadzone(
+            value,
+            action.deadzone[0],
+            action.deadzone[1],
+            action.deadzone[2],
+            action.deadzone[3]
+        )
+        if action.mapping_type == "cubic-spline":
+            self.response_fn = gremlin.spline.CubicSpline(action.control_points)
+        elif action.mapping_type == "cubic-bezier-spline":
+            self.response_fn = \
+                gremlin.spline.CubicBezierSpline(action.control_points)
+        else:
+            raise gremlin.error.GremlinError("Invalid curve type")
+
+    def process_event(self, event, value):
+        value.current = self.response_fn(self.deadzone_fn(value.current))
+        return True
 
 
 class ResponseCurve(AbstractAction):

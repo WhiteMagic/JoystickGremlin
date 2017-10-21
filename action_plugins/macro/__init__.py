@@ -22,7 +22,7 @@ import pickle
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.macro
 from gremlin.ui.common import NoKeyboardPushButton
@@ -873,20 +873,56 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self._refresh_editor_ui()
 
 
+class MacroFunctor(AbstractFunctor):
+
+    manager = gremlin.macro.MacroManager()
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.macro = gremlin.macro.Macro()
+        for seq in action.sequence:
+            if isinstance(seq, gremlin.macro.PauseAction):
+                self.macro.pause(seq.duration)
+            elif isinstance(seq, gremlin.macro.KeyAction):
+                self.macro.action(
+                    gremlin.macro.key_from_code(
+                        seq.key._scan_code,
+                        seq.key._is_extended
+                    ),
+                    seq.is_pressed
+                )
+            else:
+                raise gremlin.error.GremlinError("Invalid macro action")
+        self.macro.exclusive = action.exclusive
+        self.macro.repeat = action.repeat
+
+    def process_event(self, event, value):
+        MacroFunctor.manager.queue_macro(self.macro)
+        if isinstance(self.macro.repeat, gremlin.macro.HoldRepeat):
+            gremlin.input_devices.ButtonReleaseActions().register_callback(
+                lambda: MacroFunctor.manager.terminate_macro(self.macro),
+                event
+            )
+        return True
+
+
 class Macro(AbstractAction):
 
     """Represents a macro action."""
 
     name = "Macro"
     tag = "macro"
-    widget = MacroWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    functor = MacroFunctor
+    widget = MacroWidget
 
     def __init__(self, parent):
         """Creates a new Macro instance.

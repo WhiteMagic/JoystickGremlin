@@ -21,7 +21,7 @@ from PyQt5 import QtCore, QtWidgets
 from xml.etree import ElementTree
 
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -113,6 +113,30 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
     def _update_slider(self, value):
         self.split_slider.setValue(value * 1e5)
         self.save_changes()
+
+
+class SplitAxisFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.center_point = action.center_point
+        self.axis1 = action.axis1
+        self.axis2 = action.axis2
+        self.vjoy = gremlin.joystick_handling.VJoyProxy()
+
+    def process_event(self, event, value):
+        if value.current < self.center_point:
+            range = -1.0 - self.center_point
+            vjoy[self.axis1[0]].axis(self.axis1[1]).value = \
+                ((value - self.center_point) / range) * 2.0 - 1.0
+            vjoy[self.axis2[0]].axis(self.axis2[1]).value = -1.0
+        else:
+            range = 1.0 - self.center_point
+            vjoy[self.axis2[0]].axis(self.axis2[1]).value = \
+                ((value - self.center_point) / range) * 2.0 - 1.0
+            vjoy[self.axis1[0]].axis(self.axis1[1]).value = -1.0
+
+        return True
 
 
 class SplitAxis(AbstractAction):
