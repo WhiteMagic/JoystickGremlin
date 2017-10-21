@@ -20,6 +20,7 @@ from xml.etree import ElementTree
 
 from .. import common
 from gremlin.common import InputType
+from gremlin import input_devices, joystick_handling
 import gremlin.ui.common
 import gremlin.ui.input_item
 
@@ -130,20 +131,73 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_modified.emit()
 
 
+class RemapFunctor(gremlin.base_classes.AbstractFunctor):
+
+    def __init__(self, action):
+        self.vjoy_device_id = action.vjoy_device_id
+        self.vjoy_input_id = action.vjoy_input_id
+        self.input_type = action.input_type
+        self.needs_auto_release = self._check_for_auto_release(action)
+
+    def process_event(self, event, value):
+        if self.input_type == InputType.JoystickAxis:
+            joystick_handling.VJoyProxy()[self.vjoy_device_id] \
+                .axis(self.vjoy_input_id).value = value.current
+
+        elif self.input_type == InputType.JoystickButton:
+            if event.event_type == InputType.JoystickButton \
+                    and event.is_pressed \
+                    and self.needs_auto_release:
+                input_devices.ButtonReleaseActions().register_button_release(
+                    (self.vjoy_device_id, self.vjoy_input_id),
+                    event
+                )
+
+            joystick_handling.VJoyProxy()[self.vjoy_device_id] \
+                .button(self.vjoy_input_id).is_pressed = value.current
+        elif self.input_type == InputType.JoystickHat:
+            joystick_handling.VJoyProxy()[self.vjoy_device_id] \
+                .hat(self.vjoy_input_id).direction = value.current
+
+        return True
+
+    def _check_for_auto_release(self, action):
+        activation_condition = None
+        if action.parent.activation_condition:
+            activation_condition = action.parent.activation_condition
+        elif action.activation_condition:
+            activation_condition = action.activation_condition
+
+        # If an input action activation condition is present the auto release
+        # may have to be disabled
+        needs_auto_release = True
+        if activation_condition:
+            for condition in activation_condition.conditions:
+                if isinstance(condition, gremlin.base_classes.InputActionCondition):
+                    if condition.comparison != "always":
+                        needs_auto_release = False
+
+        return needs_auto_release
+
+
 class Remap(gremlin.base_classes.AbstractAction):
 
     """Action remapping physical joystick inputs to vJoy inputs."""
 
     name = "Remap"
     tag = "remap"
-    widget = RemapWidget
+
+    default_button_activation = (True, True)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = ["vjoy"]
+
+    functor = RemapFunctor
+    widget = RemapWidget
+
 
     def __init__(self, parent):
         """Creates a new instance.

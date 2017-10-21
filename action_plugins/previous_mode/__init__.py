@@ -20,7 +20,7 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.input_item
 
@@ -41,20 +41,33 @@ class PreviousModeWidget(gremlin.ui.input_item.AbstractActionWidget):
         pass
 
 
+class PreviousModeFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+
+    def process_event(self, event, value):
+        gremlin.control_action.switch_to_previous_mode()
+        return True
+
+
 class PreviousMode(AbstractAction):
 
     """Action that switches to the previously active mode."""
 
     name = "Switch to previous Mode"
     tag = "previous-mode"
-    widget = PreviousModeWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    functor = PreviousModeFunctor
+    widget = PreviousModeWidget
 
     def __init__(self, parent):
         super().__init__(parent)

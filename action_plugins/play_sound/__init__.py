@@ -17,10 +17,10 @@
 
 
 import os
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.input_item
 
@@ -71,20 +71,43 @@ class PlaySoundWidget(gremlin.ui.input_item.AbstractActionWidget):
             self._populate_ui()
 
 
+class PlaySoundFunctor(AbstractFunctor):
+
+    player = QtMultimedia.QMediaPlayer()
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.sound_file = action.sound_file
+        self.volume = action.volume
+
+    def process_event(self, event, value):
+        PlaySoundFunctor.player.setMedia(
+            QtMultimedia.QMediaContent(
+                QtCore.QUrl.fromLocalFile(self.sound_file)
+            ))
+        PlaySoundFunctor.player.setVolume(self.volume)
+        PlaySoundFunctor.player.play()
+        return True
+
+
 class PlaySound(AbstractAction):
 
     """Action to resume callback execution."""
 
     name = "Play Sound"
     tag = "play-sound"
-    widget = PlaySoundWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    functor = PlaySoundFunctor
+    widget = PlaySoundWidget
+
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))

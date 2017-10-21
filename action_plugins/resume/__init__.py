@@ -20,7 +20,7 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.input_item
 
@@ -41,20 +41,33 @@ class ResumeActionWidget(gremlin.ui.input_item.AbstractActionWidget):
         pass
 
 
+class ResumeActionFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+
+    def process_event(self, event, value):
+        gremlin.control_action.resume()
+        return True
+
+
 class ResumeAction(AbstractAction):
 
     """Action to resume callback execution."""
 
     name = "Resume"
     tag = "resume"
-    widget = ResumeActionWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    functor = ResumeActionFunctor
+    widget = ResumeActionWidget
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))

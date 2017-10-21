@@ -20,7 +20,7 @@ import os
 from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.input_item
 
@@ -41,20 +41,33 @@ class TogglePauseActionWidget(gremlin.ui.input_item.AbstractActionWidget):
         pass
 
 
+class TogglePauseActionFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+
+    def process_event(self, event, value):
+        gremlin.control_action.toggle_pause_resume()
+        return True
+
+
 class TogglePauseAction(AbstractAction):
 
     """Action to resume callback execution."""
 
     name = "Toggle Pause & Resume"
     tag = "toggle-pause"
-    widget = TogglePauseActionWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    functor = TogglePauseActionFunctor
+    widget = TogglePauseActionWidget
 
     def __init__(self, parent):
         super().__init__(parent)

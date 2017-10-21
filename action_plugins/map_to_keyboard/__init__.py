@@ -22,6 +22,7 @@ from xml.etree import ElementTree
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .. import common
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -95,7 +96,27 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.button_press_dialog.show()
 
 
-class MapToKeyboard(gremlin.base_classes.AbstractAction):
+class MapToKeyboardFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.press = gremlin.macro.Macro()
+        for key in action.keys:
+            self.press.press(gremlin.macro.key_from_code(key[0], key[1]))
+
+        self.release = gremlin.macro.Macro()
+        for key in action.keys:
+            self.release.release(gremlin.macro.key_from_code(key[0], key[1]))
+
+    def process_event(self, event, value):
+        if value.current:
+            gremlin.macro.MacroManager().add_macro(self.press, None, event)
+        else:
+            gremlin.macro.MacroManager().add_macro(self.release, None, event)
+        return True
+
+
+class MapToKeyboard(AbstractAction):
 
     """Action data for the map to keyboard action.
 
@@ -105,13 +126,16 @@ class MapToKeyboard(gremlin.base_classes.AbstractAction):
 
     name = "Map to Keyboard"
     tag = "map-to-keyboard"
-    widget = MapToKeyboardWidget
+
+    default_button_activation = (True, True)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat
     ]
-    callback_params = []
+
+    functor = MapToKeyboardFunctor
+    widget = MapToKeyboardWidget
 
     def __init__(self, parent):
         """Creates a new instance.

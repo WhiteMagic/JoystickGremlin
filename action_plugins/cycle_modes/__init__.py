@@ -20,7 +20,7 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction
+from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.input_item
 
@@ -122,20 +122,34 @@ class CycleModesWidget(gremlin.ui.input_item.AbstractActionWidget):
             self.save_changes()
 
 
+class CycleModesFunctor(AbstractFunctor):
+
+    def __init__(self, action):
+        super().__init__(action)
+        self.mode_list = gremlin.control_action.ModeList(action.mode_list)
+
+    def process_event(self, event, value):
+        gremlin.control_action.cycle_modes(self.mode_list)
+        return True
+
+
 class CycleModes(AbstractAction):
 
     """Action allowing the switching through a list of modes."""
 
     name = "Cycle Modes"
     tag = "cycle-modes"
-    widget = CycleModesWidget
+
+    default_button_activation = (True, False)
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
     ]
-    callback_params = []
+
+    functor = CycleModesFunctor
+    widget = CycleModesWidget
 
     def __init__(self, parent):
         super().__init__(parent)
