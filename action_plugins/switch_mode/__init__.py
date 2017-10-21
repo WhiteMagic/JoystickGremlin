@@ -100,12 +100,6 @@ class SwitchMode(AbstractAction):
         node.set("name", self.mode_name)
         return node
 
-    def _generate_code(self):
-        return self._code_generation(
-            "switch_mode",
-            {"entry": self}
-        )
-
     def _is_valid(self):
         return len(self.mode_name) > 0
 

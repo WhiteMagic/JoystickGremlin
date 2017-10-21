@@ -87,9 +87,6 @@ class PauseAction(AbstractAction):
     def _generate_xml(self):
         return ElementTree.Element("pause")
 
-    def _generate_code(self):
-        return self._code_generation("pause", {"entry": self})
-
     def _is_valid(self):
         return True
 

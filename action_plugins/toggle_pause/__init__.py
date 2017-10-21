@@ -87,9 +87,6 @@ class TogglePauseAction(AbstractAction):
     def _generate_xml(self):
         return ElementTree.Element("toggle-pause")
 
-    def _generate_code(self):
-        return self._code_generation("toggle_pause", {"entry": self})
-
     def _is_valid(self):
         return True
 

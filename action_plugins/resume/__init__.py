@@ -87,9 +87,6 @@ class ResumeAction(AbstractAction):
     def _generate_xml(self):
         return ElementTree.Element("resume")
 
-    def _generate_code(self):
-        return self._code_generation("resume", {"entry": self})
-
     def _is_valid(self):
         return True
 

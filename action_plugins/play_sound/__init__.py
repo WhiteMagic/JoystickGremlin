@@ -133,9 +133,6 @@ class PlaySound(AbstractAction):
         node.set("volume", str(self.volume))
         return node
 
-    def _generate_code(self):
-        return self._code_generation("play_sound", {"entry": self})
-
     def _is_valid(self):
         return True
 

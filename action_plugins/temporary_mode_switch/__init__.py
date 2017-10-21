@@ -104,12 +104,6 @@ class TemporaryModeSwitch(AbstractAction):
         node.set("name", self.mode_name)
         return node
 
-    def _generate_code(self):
-        return self._code_generation(
-            "temporary_mode_switch",
-            {"entry": self}
-        )
-
     def _is_valid(self):
         return len(self.mode_name) > 0
 
