@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from abc import abstractmethod, ABCMeta
 import copy
 from functools import partial
 import logging
@@ -23,143 +24,35 @@ import time
 
 from PyQt5 import QtCore, QtMultimedia
 
-from . import common, control_action, error, fsm, input_devices, \
-    joystick_handling, macro, tts
+from . import base_classes, common, error, fsm, input_devices, macro
 
 
-# Text to speech instance used by the tts action
-tts_instance = tts.TextToSpeech()
+def smart_all(conditions):
+    """Returns True if all conditions are True, False otherwise.
 
-# Qt media player instance
-media_player = QtMultimedia.QMediaPlayer()
+    Employs short circuiting in order to prevent unnecessary evalutions.
 
-
-def _axis_to_axis(event, value, **kwargs):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[kwargs["vjoy_device_id"]].axis(kwargs["vjoy_input_id"]).value = \
-        value.current
-
-
-def _axis_to_button(event, value, **kwargs):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
-        value.current
+    :param conditions the conditions to check
+    :return True if all conditions are True, False otherwise
+    """
+    for condition in conditions:
+        if not condition():
+            return False
+    return True
 
 
-def _button_to_button(event, value, **kwargs):
-    if event.is_pressed:
-        input_devices.ButtonReleaseActions().register_button_release(
-            (kwargs["vjoy_device_id"], kwargs["vjoy_input_id"]), event
-        )
+def smart_any(conditions):
+    """Returns True if any conditions is True, False if none is True.
 
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
-        value.current
+    Employs short circuiting in order to prevent unnecessary evalutions.
 
-
-def _hat_to_button(event, value, **kwargs):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
-        value.current
-
-
-def _hat_to_hat(event, value, **kwargs):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[kwargs["vjoy_device_id"]].hat(kwargs["vjoy_input_id"]).direction = \
-    value.current
-
-
-def _key_to_button(event, value, **kwargs):
-    vjoy = joystick_handling.VJoyProxy()
-    vjoy[kwargs["vjoy_device_id"]].button(kwargs["vjoy_input_id"]).is_pressed = \
-        value.current
-
-
-def _remap_to_keyboard(event, value, **kwargs):
-    if value.current:
-        macro.MacroManager().add_macro(
-            kwargs["macro_press"],
-            kwargs["virtual_button"],
-            event
-        )
-    else:
-        macro.MacroManager().add_macro(
-            kwargs["macro_release"],
-            kwargs["virtual_button"],
-            event
-        )
-
-
-def _pause(event, value, **kwargs):
-    if value.current:
-        control_action.pause()
-
-
-def _play_sound(event, value, **kwargs):
-    if value.current:
-        media_player.setMedia(
-            QtMultimedia.QMediaContent(
-                QtCore.QUrl.fromLocalFile(kwargs["fname"])
-            ))
-        media_player.setVolume(kwargs["volume"])
-        media_player.play()
-
-
-def _resume(event, value, **kwargs):
-    if value.current:
-        control_action.resume()
-
-
-def _toggle_pause_resume(event, value, **kwargs):
-    if value.current:
-        control_action.toggle_pause_resume()
-
-
-def _text_to_speech(event, value, **kwargs):
-    if value.current:
-        tts_instance.speak(tts.text_substitution(kwargs["text"]))
-
-
-def _temporary_mode_switch(event, value, **kwargs):
-    if value.current:
-        input_devices.ButtonReleaseActions().register_callback(
-            control_action.switch_to_previous_mode,
-            event
-        )
-        control_action.switch_mode(kwargs["mode"])
-
-
-def _switch_mode(event, value, **kwargs):
-    if value.current:
-        control_action.switch_mode(kwargs["mode"])
-
-
-def _switch_to_previous_mode(event, value, **kwargs):
-    if value.current:
-        control_action.switch_to_previous_mode()
-
-
-def _cycle_modes(event, value, **kwargs):
-    if value.current:
-        control_action.cycle_modes(kwargs["mode_list"])
-
-
-def _run_macro(event, value, **kwargs):
-    if value.current:
-        macro.MacroManager().add_macro(
-            kwargs["macro_fn"],
-            kwargs["virtual_button"],
-            event
-        )
-
-
-def _response_curve(event, value, **kwargs):
-    value.current = kwargs["curve_fn"](kwargs["deadzone_fn"](value.current))
-
-
-def _split_axis(event, value, **kwargs):
-    kwargs["split_fn"](value.current)
-
+    :param conditions the conditions to check
+    :return True if at least one condition is True, False otherwise
+    """
+    for condition in conditions:
+        if condition():
+            return True
+    return False
 
 
 class Value:
@@ -199,104 +92,181 @@ class Value:
         self._current = current
 
 
-class Factory:
+class ActivationCondition:
 
-    """Contains methods to create a variety of actions."""
+    """Represents a set of conditions dictating the activation of actions.
 
-    @staticmethod
-    def remap_input(from_type, to_type, vjoy_device_id, vjoy_input_id):
-        remap_lookup = {
-            (common.InputType.JoystickAxis,
-             common.InputType.JoystickAxis): _axis_to_axis,
-            (common.InputType.JoystickAxis,
-             common.InputType.JoystickButton): _axis_to_button,
-            (common.InputType.JoystickButton,
-             common.InputType.JoystickButton): _button_to_button,
-            (common.InputType.JoystickHat,
-             common.InputType.JoystickHat): _hat_to_hat,
-            (common.InputType.JoystickHat,
-             common.InputType.JoystickButton): _hat_to_button,
-            (common.InputType.Keyboard,
-             common.InputType.JoystickButton): _key_to_button,
-        }
+    This class contains a set of functions which evaluate to either True or
+    False which is used to indicate whether or not the entire condition is
+    True or False.
+    """
 
-        remap_fn = remap_lookup.get((from_type, to_type), None)
-        if remap_fn is not None:
-            return partial(
-                remap_fn,
-                vjoy_device_id=vjoy_device_id,
-                vjoy_input_id=vjoy_input_id
+    rule_function = {
+        base_classes.ActivationRule.All: smart_all,
+        base_classes.ActivationRule.Any: smart_any
+    }
+
+    def __init__(self, conditions, rule):
+        self._conditions = conditions
+        self._rule = rule
+
+    def process_event(self, event, value):
+        """Returns whether or not a condition is satisfied, i.e. true.
+
+        :param event the event this condition was triggered through
+        :param value process event value
+        :return True if all conditions are satisfied, False otherwise
+        """
+        return ActivationCondition.rule_function[self._rule](
+            [partial(c, event, value) for c in self._conditions]
+        )
+
+
+class AbstractCondition(metaclass=ABCMeta):
+
+    """Represents an abstract condition.
+
+    Conditions evaluate to either True or False and are given an event as well
+    as possibly processed Value when being evaluated.
+    """
+
+    def __init__(self, comparison):
+        """Creates a new condition with a specific comparision operation.
+
+        :param comparison the comparison operation to perform when evaluated
+        """
+        self.comparison = comparison
+
+    @abstractmethod
+    def __call__(self, event, value):
+        """Evaluates the condition using the condition and provided data.
+
+        :param event raw event that caused the condition to be evaluated
+        :param value the possibly modified value
+        :return True if the condition is satisfied, False otherwise
+        """
+        pass
+
+
+class KeyboardCondition(AbstractCondition):
+
+    """Condition veryfing the state of keyboard keys.
+
+    The conditions that can be checked on a keyboard is whether or not a
+    particular key is pressed or released.
+    """
+
+    def __init__(self, scan_code, is_extended, comparison):
+        """Creates a new instance.
+
+        :param scan_code the scan code of the key to evaluate
+        :param is_extended whether or not the key code is extended
+        :param comparison the comparison operation to perform when evaluated
+        """
+        super().__init__(comparison)
+        self.key = macro.key_from_code(scan_code, is_extended)
+
+    def __call__(self, event, value):
+        """Evaluates the condition using the condition and provided data.
+
+        :param event raw event that caused the condition to be evaluated
+        :param value the possibly modified value
+        :return True if the condition is satisfied, False otherwise
+        """
+        key_pressed = input_devices.Keyboard().is_pressed(self.key)
+        if self.comparison == "pressed":
+            return key_pressed
+        else:
+            return not key_pressed
+
+
+class JoystickCondition(AbstractCondition):
+
+    """Condition verifying the state of a joystick input.
+
+    Joysticks have three possible input types: axis, button, or hat and each
+    have their corresponding possibly sates. An axis can be inside or outside
+    a specific range. Buttons can be pressed or released and hats can be in
+    one of eight possible directions.
+    """
+
+    def __init__(self, windows_id, input_type, input_id, comparison):
+        """Creates a new instance.
+
+        :param windows_id the id assigned to the joystick by windows
+        :param input_type the input type to check
+        :param input_id the index of the input to check
+        :param comparison the comparison operation to perform when evaluated
+        """
+        super().__init__(comparison)
+        self.windows_id = windows_id
+        self.input_type = input_type
+        self.input_id = input_id
+
+    def __call__(self, event, value):
+        """Evaluates the condition using the condition and provided data.
+
+        :param event raw event that caused the condition to be evaluated
+        :param value the possibly modified value
+        :return True if the condition is satisfied, False otherwise
+        """
+        joy = input_devices.JoystickProxy()[self.windows_id]
+
+        if self.input_type == common.InputType.JoystickAxis:
+            return False
+        elif self.input_type == common.InputType.JoystickButton:
+            if self.comparison == "pressed":
+                return joy.button(self.input_id).is_pressed
+            else:
+                return not joy.button(self.input_id)
+        elif self.input_type == common.InputType.JoystickHat:
+            return False
+        else:
+            logging.getLogger("system").warn(
+                "Invalid input_type {} received".format(self.input_type)
             )
-
-    @staticmethod
-    def remap_to_keyboard(macro_press, macro_release):
-        return partial(
-            _remap_to_keyboard,
-            macro_press=macro_press,
-            macro_release=macro_release
-        )
-
-    @staticmethod
-    def split_axis(split_fn):
-        return partial(_split_axis, split_fn=split_fn)
-
-    @staticmethod
-    def response_curve(curve_fn, deadzone_fn):
-        return partial(
-            _response_curve,
-            curve_fn=curve_fn,
-            deadzone_fn=deadzone_fn
-        )
-
-    @staticmethod
-    def run_macro(macro_fn):
-        return partial(_run_macro, macro_fn=macro_fn)
-
-    @staticmethod
-    def temporary_mode_switch(mode):
-        return partial(_temporary_mode_switch, mode=mode)
-
-    @staticmethod
-    def switch_mode(mode):
-        return partial(_switch_mode, mode=mode)
-
-    @staticmethod
-    def previous_mode():
-        return partial(_switch_to_previous_mode)
-
-    @staticmethod
-    def cycle_modes(mode_list):
-        return partial(_cycle_modes, mode_list=mode_list)
-
-    @staticmethod
-    def pause():
-        return partial(_pause)
-
-    @staticmethod
-    def resume():
-        return partial(_resume)
-
-    @staticmethod
-    def toggle_pause_resume():
-        return partial(_toggle_pause_resume)
-
-    @staticmethod
-    def text_to_speech(text):
-        return partial(_text_to_speech, text=text)
-
-    @staticmethod
-    def play_sound(fname, volume):
-        return partial(_play_sound, fname=fname, volume=volume)
+            return False
 
 
-class VirtualButton:
+class InputActionCondition(AbstractCondition):
+
+    """Condition verifying the state of the triggering input itself.
+
+    This checks the state of the input that triggered the event in the first
+    place.
+    """
+
+    def __init__(self, comparison):
+        """Creates a new instance.
+
+        :param comparison the comparison operation to perform when evaluated
+        """
+        super().__init__(comparison)
+
+    def __call__(self, event, value):
+        """Evaluates the condition using the condition and provided data.
+
+        :param event raw event that caused the condition to be evaluated
+        :param value the possibly modified value
+        :return True if the condition is satisfied, False otherwise
+        """
+        if self.comparison == "pressed":
+            return value.current
+        elif self.comparison == "released":
+            return not value.current
+        elif self.comparison == "always":
+            return True
+        else:
+            return False
+
+
+class VirtualButton(metaclass=ABCMeta):
 
     """Implements a button like interface."""
 
     def __init__(self):
         """Creates a new instance."""
         self._fsm = self._initialize_fsm()
-        self._callback = None
         self._is_pressed = False
 
     def _initialize_fsm(self):
@@ -311,19 +281,44 @@ class VirtualButton:
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
+    def process_event(self, event, value):
+        """Process the input event and updates the value as needed.
+
+        :param event the input event that triggered this virtual button
+        :param value the value representation of the event's value
+        :return True if a state transition occured, False otherwise
+        """
+        state_transition = self._do_process(event, value)
+        value.current = self.is_pressed
+        return state_transition
+
+    @abstractmethod
+    def _do_process(self, event, value):
+        """Implementation of the virtual button logic.
+
+        This method has to be implemented in subclasses to provide the logic
+        deciding when a state transition, i.e. button press or release
+        occurs.
+
+        :param event the input event that is used to decide onthe state
+        :param value the value representation of the event's value
+        :return True if a state transition occured, False otherwise
+        """
+        pass
+
     def _press(self):
         """Executes the "press" action."""
         self._is_pressed = True
-        self._callback(Value(self.is_pressed))
+        return True
 
     def _release(self):
         """Executes the "release" action."""
         self._is_pressed = False
-        self._callback(Value(self.is_pressed))
+        return True
 
     def _noop(self):
         """Performs no action."""
-        pass
+        return False
 
     @property
     def is_pressed(self):
@@ -348,17 +343,17 @@ class AxisButton(VirtualButton):
         self._lower_limit = min(lower_limit, upper_limit)
         self._upper_limit = max(lower_limit, upper_limit)
 
-    def process(self, value, callback):
-        """Processes events for the virtual axis button.
+    def _do_process(self, event, value):
+        """Implementation of the virtual button logic.
 
-        :param value axis position
-        :param callback the function to call when the state changes
+        :param event the input event that is used to decide onthe state
+        :param value the value representation of the event's value
+        :return True if a state transition occured, False otherwise
         """
-        self._callback = callback
-        if self._lower_limit <= value <= self._upper_limit:
-            self._fsm.perform("press")
+        if self._lower_limit <= event.value <= self._upper_limit:
+            return self._fsm.perform("press")
         else:
-            self._fsm.perform("release")
+            return self._fsm.perform("release")
 
 
 class HatButton(VirtualButton):
@@ -373,17 +368,17 @@ class HatButton(VirtualButton):
         super().__init__()
         self._directions = directions
 
-    def process(self, value, callback):
-        """Process events for the virtual hat button.
+    def _do_process(self, event, value):
+        """Implementation of the virtual button logic.
 
-        :param value hat direction
-        :param callback the function to call when the state changes
+        :param event the input event that is used to decide onthe state
+        :param value the value representation of the event's value
+        :return True if a state transition occured, False otherwise
         """
-        self._callback = callback
-        if value in self._directions:
-            self._fsm.perform("press")
+        if event.value in self._directions:
+            return self._fsm.perform("press")
         else:
-            self._fsm.perform("release")
+            return self._fsm.perform("release")
 
 
 class AbstractActionContainer:
