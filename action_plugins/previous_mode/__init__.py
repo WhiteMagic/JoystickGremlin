@@ -87,14 +87,9 @@ class PreviousMode(AbstractAction):
     def _generate_xml(self):
         return ElementTree.Element("previous-mode")
 
-    def _generate_code(self):
-        return self._code_generation(
-            "previous_mode",
-            {"entry": self}
-        )
-
     def _is_valid(self):
         return True
+
 
 version = 1
 name = "previous-mode"

@@ -176,9 +176,6 @@ class SplitAxis(AbstractAction):
         node.set("axis2", str(self.axis2[1]))
         return node
 
-    def _generate_code(self):
-        return self._code_generation("split_axis", {"entry": self})
-
     def _is_valid(self):
         return True
 

@@ -294,24 +294,13 @@ class Remap(gremlin.base_classes.AbstractAction):
             )
         return node
 
-    def _generate_code(self):
-        """Returns Python code for this action.
-
-        :return Python code related to this action
-        """
-        return self._code_generation(
-            "remap",
-            {
-                "entry": self
-            }
-        )
-
     def _is_valid(self):
         """Returns whether or not the action is configured properly.
 
         :return True if the action is configured correctly, False otherwise
         """
         return True
+
 
 version = 1
 name = "remap"

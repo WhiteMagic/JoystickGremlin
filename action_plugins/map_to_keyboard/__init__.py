@@ -190,13 +190,6 @@ class MapToKeyboard(AbstractAction):
             node.append(key_node)
         return node
 
-    def _generate_code(self):
-        """Generates python code related.
-
-        :return python code related to this action
-        """
-        return self._code_generation("map_to_keyboard", {"entry": self})
-
     def _is_valid(self):
         """Returns whether or not this action is valid.
 

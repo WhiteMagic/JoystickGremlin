@@ -1252,26 +1252,13 @@ class ResponseCurve(AbstractAction):
 
         return node
 
-    def _generate_code(self):
-        """Generates python code corresponding to this object."""
-        return self._code_generation(
-            "response_curve",
-            {
-                "entry": self,
-                "gremlin": gremlin,
-                "curve_name": "curve_{:d}".format(ResponseCurve.next_code_id),
-                "deadzone_name": "deadzone_{:d}".format(
-                    ResponseCurve.next_code_id
-                )
-            }
-        )
-
     def _is_valid(self):
         """Returns whether or not the action is configured correctly.
 
         :return True if the action is configured correctly, False otherwise
         """
         return True
+
 
 version = 1
 name = "response-curve"

@@ -1279,9 +1279,6 @@ class ProfileData(metaclass=ABCMeta):
     configuration and to easily load, store, and generate code from them.
     """
 
-    # Monotonically increasing counter for unique ids
-    next_code_id = 0
-
     def __init__(self, parent):
         """Creates a new instance.
 
@@ -1303,16 +1300,6 @@ class ProfileData(metaclass=ABCMeta):
         :return XML representation of this instance
         """
         return self._generate_xml()
-
-    def to_code(self):
-        """Generates the code to execute the behaviour of this instance.
-
-        :return code representing this instance's behaviour
-        """
-        if self.code is None:
-            self.code = self._generate_code()
-            assert isinstance(self.code, CodeBlock)
-        return self.code
 
     def is_valid(self):
         """Returns whether or not an instance is fully specified.
@@ -1364,14 +1351,6 @@ class ProfileData(metaclass=ABCMeta):
         """Implementation of the XML generation.
 
         :return XML representation of this instance
-        """
-        pass
-
-    @abstractmethod
-    def _generate_code(self):
-        """Implementation of the code generation.
-
-        :return code representing this instance's behaviour
         """
         pass
 

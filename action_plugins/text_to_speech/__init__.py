@@ -97,9 +97,6 @@ class TextToSpeech(AbstractAction):
         node.set("text", self.text)
         return node
 
-    def _generate_code(self):
-        return self._code_generation("text_to_speech", {"entry": self})
-
     def _is_valid(self):
         return len(self.text) > 0
 

@@ -442,38 +442,6 @@ class AbstractAction(profile.ProfileData):
             "AbstractAction.requires_virtual_button not implemented"
         )
 
-    def _code_generation(self, template_name, params):
-        """Generates the code using the provided data.
-
-        :param template_name base name of the templates
-        :param params the parameters to pass to the template
-        :return CodeBlock object containing the generated code
-        """
-        # Insert additional common parameters
-        params["InputType"] = common.InputType
-        params["input_type"] = params["entry"].get_input_type()
-        params["id"] = profile.ProfileData.next_code_id
-        params["gremlin"] = gremlin
-        tpl_lookup = TemplateLookup(directories=["."])
-
-        code_block = profile.CodeBlock()
-        code_block.store("container_action", Template(
-            filename="action_plugins/{}/container_action.tpl".format(
-                template_name
-            ),
-            lookup=tpl_lookup
-        ).render(
-            **params
-        ))
-        code_block.store("setup", Template(
-            filename="action_plugins/{}/setup.tpl".format(template_name),
-            lookup=tpl_lookup
-        ).render(
-            **params
-        ))
-
-        return code_block
-
 
 class AbstractContainer(profile.ProfileData):
 
@@ -619,15 +587,6 @@ class AbstractContainer(profile.ProfileData):
             cond_node = node.find("activation-condition")
             if cond_node is not None:
                 self.activation_condition.from_xml(cond_node)
-
-    def _generate_code(self):
-        """Generates Python code for this container."""
-        # Generate code for each of the actions inside the action sets such
-        # that they are cached and have a unique code_id
-        for actions in self.action_sets:
-            for action in actions:
-                action.to_code()
-                gremlin.profile.ProfileData.next_code_id += 1
 
     def _is_valid(self):
         """Returns whether or not this container is configured properly.

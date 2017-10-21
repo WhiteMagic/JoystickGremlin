@@ -179,13 +179,6 @@ class CycleModes(AbstractAction):
             node.append(child)
         return node
 
-    def _generate_code(self):
-        return self._code_generation(
-            "cycle_modes",
-            {
-                "entry": self,
-            }
-        )
 
 version = 1
 name = "cycle-modes"

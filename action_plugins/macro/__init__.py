@@ -1018,20 +1018,9 @@ class Macro(AbstractAction):
         node.append(action_list)
         return node
 
-    def _generate_code(self):
-        """Generates the python code corresponding to this instance.
-
-        :return python code executing this object's contents.
-        """
-        return self._code_generation(
-            "macro",
-            {
-                "entry": self
-            }
-        )
-
     def _is_valid(self):
         return len(self.sequence) > 0
+
 
 version = 1
 name = "macro"
