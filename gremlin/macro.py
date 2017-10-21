@@ -654,7 +654,7 @@ class AbstractRepeat:
         :return XML node containing the instance's information
         """
         raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat::to_xml not implemented in subclass."
+            "AbstractRepeat.to_xml not implemented in subclass."
         )
 
     def from_xml(self, node):
@@ -663,7 +663,7 @@ class AbstractRepeat:
         :param node XML node containing data with which to populate the instance
         """
         raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat::from_xml not implemented in subclass"
+            "AbstractRepeat.from_xml not implemented in subclass"
         )
 
     def to_code(self):
@@ -672,7 +672,7 @@ class AbstractRepeat:
         :return Python code for this repeat mode
         """
         raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat::to_code not implemented in subclass"
+            "AbstractRepeat.to_code not implemented in subclass"
         )
 
 
