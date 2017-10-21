@@ -104,12 +104,25 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             return "Basic"
 
 
+class BasicContainerFunctor(gremlin.base_classes.AbstractFunctor):
+
+    def __init__(self, container):
+        super().__init__(container)
+        self.action_set = gremlin.code_runner.ActionSetExecutionGraph(
+            container.action_sets[0]
+        )
+
+    def process_event(self, event, value):
+        return self.action_set.process_event(event, value)
+
+
 class BasicContainer(gremlin.base_classes.AbstractContainer):
 
     """Represents a container which holds exactly one action."""
 
     name = "Basic"
     tag = "basic"
+    functor = BasicContainerFunctor
     widget = BasicContainerWidget
     input_types = [
         gremlin.common.InputType.JoystickButton,
