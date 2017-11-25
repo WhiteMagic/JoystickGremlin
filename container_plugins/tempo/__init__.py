@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
+import logging
+import threading
+import time
 from xml.etree import ElementTree
 
 from mako.template import Template
@@ -179,6 +183,62 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             return "Tempo"
 
 
+class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
+
+    def __init__(self, container):
+        super().__init__(container)
+        self.short_set = gremlin.code_runner.ActionSetExecutionGraph(
+            container.action_sets[0]
+        )
+        self.long_set = gremlin.code_runner.ActionSetExecutionGraph(
+            container.action_sets[1]
+        )
+        self.delay = container.delay
+
+        self.start_time = 0
+        self.timer = None
+        self.value_press = None
+        self.event_press = None
+
+    def process_event(self, event, value):
+        if not isinstance(value.current, bool):
+            logging.getLogger("system").warn(
+                "Invalid data type received in Tempo container: {}".format(
+                    type(event.value)
+                )
+            )
+            return False
+
+        # Copy state when input is pressed
+        if isinstance(value.current, bool) and value.current:
+            self.value_press = copy.deepcopy(value)
+            self.event_press = event.clone()
+
+        # Execute tempo logic
+        if value.current:
+            self.start_time = time.time()
+            self.timer = threading.Timer(self.delay, self._long_press)
+            self.timer.start()
+        else:
+            # Short press
+            if (self.start_time + self.delay) > time.time():
+                self.timer.cancel()
+                self.short_set.process_event(self.event_press, self.value_press)
+                time.sleep(0.1)
+                self.short_set.process_event(event, value)
+            # Long press
+            else:
+                self.long_set.process_event(event, value)
+
+            self.timer = None
+
+        return True
+
+    def _long_press(self):
+        """Callback executed, when the delay expires."""
+        self.long_set.process_event(self.event_press, self.value_press)
+
+
 class TempoContainer(gremlin.base_classes.AbstractContainer):
 
     """A container with two actions which are triggered based on the duration
@@ -190,6 +250,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
 
     name = "Tempo"
     tag = "tempo"
+    functor = TempoContainerFunctor
     widget = TempoContainerWidget
     input_types = [
         gremlin.common.InputType.JoystickButton,
