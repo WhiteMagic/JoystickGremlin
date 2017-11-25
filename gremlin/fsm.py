@@ -60,12 +60,13 @@ class FiniteStateMachine:
         """Performs a state transition on the FSM.
 
         :param action the action to perform
+        :return returns the state transition function's return value
         """
         key = (self.current_state, action)
         assert(action in self.actions)
         assert(key in self.transitions)
         assert(self.transitions[key].new_state in self.states)
-        self.transitions[key].callback()
+        value = self.transitions[key].callback()
         if self.debug:
             logging.getLogger("system").debug("FSM: {} -> {} ({})".format(
                 self.current_state,
@@ -73,3 +74,4 @@ class FiniteStateMachine:
                 action
             ))
         self.current_state = self.transitions[key].new_state
+        return value
