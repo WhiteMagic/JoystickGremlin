@@ -24,7 +24,7 @@ import time
 
 from PyQt5 import QtCore, QtMultimedia
 
-from . import base_classes, common, error, fsm, input_devices, macro
+from . import base_classes, common, error, fsm, input_devices, macro, util
 
 
 def smart_all(conditions):
@@ -375,7 +375,7 @@ class HatButton(VirtualButton):
         :param value the value representation of the event's value
         :return True if a state transition occured, False otherwise
         """
-        if event.value in self._directions:
+        if util.hat_tuple_to_direction(event.value) in self._directions:
             return self._fsm.perform("press")
         else:
             return self._fsm.perform("release")
