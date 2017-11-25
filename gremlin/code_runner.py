@@ -312,18 +312,23 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
 
         :param sequence the sequence of nodes
         """
+        seq_count = len(sequence)
         self.transitions = {}
         for i, seq in enumerate(sequence):
             if seq == "Condition":
+                # On success, transition to the next node of any type in line
                 self.transitions[(i, True)] = i+1
-                offset = i + 2
-                while offset < len(sequence):
+                offset = i + 1
+                # On failure, transition to the condition node after the
+                # next action node
+                while offset < seq_count:
                     if sequence[offset] == "Action":
-                        if offset+1 < len(sequence):
+                        if offset+1 < seq_count:
                             self.transitions[(i, False)] = offset+1
                             break
                     offset += 1
-            elif seq == "Action" and i+1 < len(sequence):
+            elif seq == "Action" and i+1 < seq_count:
+                # Transition to the next node irrepsective of failure or success
                 self.transitions[(i, True)] = i+1
                 self.transitions[(i, False)] = i + 1
 
