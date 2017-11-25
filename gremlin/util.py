@@ -221,26 +221,6 @@ def clamp(value, min_val, max_val):
     return min(max_val, max(min_val, value))
 
 
-def hat_tuple_to_index(direction):
-    """Returns the numerical representation of the hat direction tuple.
-
-    :param direction the direction represented via a tuple
-    :return integer representing the direction
-    """
-    lookup = {
-        ( 0,  0): 0,
-        ( 0,  1): 1,
-        ( 1,  1): 2,
-        ( 1,  0): 3,
-        ( 1, -1): 4,
-        ( 0, -1): 5,
-        (-1, -1): 6,
-        (-1,  0): 7,
-        (-1,  1): 8,
-    }
-    return lookup[direction]
-
-
 def hat_tuple_to_direction(value):
     """Converts a hat event direction value to it's textual equivalent.
 
