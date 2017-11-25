@@ -427,12 +427,14 @@ class ActionSetExecutionGraph(AbstractExecutionGraph):
         for action in action_set:
             # Create conditions for each action if needed
             if action.activation_condition is not None:
-                self.functors.append(
-                    self._create_activation_condition(
-                        action.activation_condition
+                # Only add a condition if we truly have conditions
+                if len(action.activation_condition.conditions) > 0:
+                    self.functors.append(
+                        self._create_activation_condition(
+                            action.activation_condition
+                        )
                     )
-                )
-                sequence.append("Condition")
+                    sequence.append("Condition")
 
             # Create default activation condition if needed
             has_input_action = self._contains_input_action_condition(
