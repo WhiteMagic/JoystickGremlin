@@ -18,6 +18,7 @@
 from PyQt5 import QtWidgets
 
 import logging
+import time
 from xml.etree import ElementTree
 
 from mako.template import Template
@@ -146,6 +147,44 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         )
 
 
+class ChainContainerFunctor(gremlin.base_classes.AbstractFunctor):
+
+    def __init__(self, container):
+        super().__init__(container)
+        self.action_sets = []
+        for action_set in container.action_sets:
+            self.action_sets.append(
+                gremlin.code_runner.ActionSetExecutionGraph(action_set)
+            )
+        self.timeout = container.timeout
+
+        self.index = 0
+        self.last_execution = 0.0
+        self.last_value = None
+
+        # Determine if we need to switch the action index after a press or
+        # release event. Only for container conditions this is neccessary to
+        # ensure proper cycling.
+        self.switch_on_press = False
+        if container.activation_condition_type == "container":
+            for cond in container.activation_condition.conditions:
+                if isinstance(cond, gremlin.base_classes.InputActionCondition):
+                    if cond.comparison == "press":
+                        self.switch_on_press = True
+
+    def process_event(self, event, value):
+        if self.timeout > 0.0:
+            if self.last_execution + self.timeout < time.time():
+                self.index = 0
+                self.last_execution = time.time()
+
+        result = self.action_sets[self.index].process_event(event, value)
+
+        if (self.switch_on_press and value.current) or not value.current:
+            self.index = (self.index + 1) % len(self.action_sets)
+        return result
+
+
 class ChainContainer(gremlin.base_classes.AbstractContainer):
 
     """Represents a container which holds multiplier actions.
@@ -156,7 +195,7 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
 
     name = "Chain"
     tag = "chain"
-    widget = ChainContainerWidget
+
     input_types = [
         gremlin.common.InputType.JoystickButton,
         gremlin.common.InputType.Keyboard
@@ -166,6 +205,9 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
         gremlin.ui.input_item.ActionSetView.Interactions.Down,
         gremlin.ui.input_item.ActionSetView.Interactions.Delete,
     ]
+
+    functor = ChainContainerFunctor
+    widget = ChainContainerWidget
 
     def __init__(self, parent=None):
         """Creates a new instance.
