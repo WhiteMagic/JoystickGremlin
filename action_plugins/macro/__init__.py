@@ -45,11 +45,11 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.index = index
 
         self.action_types = {
+            "Joystick": self._joystick_ui,
             "Keyboard": self._keyboard_ui,
             "Pause": self._pause_ui,
             # The following two devices are yet to be implemented
             # "Mouse": self._mouse_ui,
-            # "Joystick": self._joystick_ui
         }
 
         self.setMinimumWidth(200)
@@ -83,6 +83,9 @@ class MacroActionEditor(QtWidgets.QWidget):
         if isinstance(entry, gremlin.macro.KeyAction):
             self.action_selector.setCurrentText("Keyboard")
             self._keyboard_ui()
+        elif isinstance(entry, gremlin.macro.JoystickAction):
+            self.action_selector.setCurrentText("Joystick")
+            self._joystick_ui()
         elif isinstance(entry, gremlin.macro.PauseAction):
             self.action_selector.setCurrentText("Pause")
             self._pause_ui()
@@ -108,6 +111,16 @@ class MacroActionEditor(QtWidgets.QWidget):
                 ),
                 self.index.row()
             )
+        elif value == "Joystick":
+            self.model.set_entry(
+                gremlin.macro.JoystickAction(
+                    0,
+                    gremlin.common.InputType.JoystickButton,
+                    1,
+                    True
+                ),
+                self.index.row()
+            )
         elif value == "Pause":
             self.model.set_entry(
                 gremlin.macro.PauseAction(0.2),
@@ -121,7 +134,8 @@ class MacroActionEditor(QtWidgets.QWidget):
     def _pause_ui(self):
         """Creates and populates the PauseAction editor UI."""
         self.ui_elements["duration_label"] = QtWidgets.QLabel("Duration")
-        self.ui_elements["duration_spinbox"] = gremlin.ui.common.DynamicDoubleSpinBox()
+        self.ui_elements["duration_spinbox"] = \
+            gremlin.ui.common.DynamicDoubleSpinBox()
         self.ui_elements["duration_spinbox"].setSingleStep(0.1)
         self.ui_elements["duration_spinbox"].setMaximum(3600)
         duration = 0.5
@@ -138,10 +152,14 @@ class MacroActionEditor(QtWidgets.QWidget):
     def _keyboard_ui(self):
         """Creates and populates the KeyAction editor UI."""
         action = self.model.get_entry(self.index.row())
+        if action is None:
+            return
         self.ui_elements["key_label"] = QtWidgets.QLabel("Key")
         self.ui_elements["key_input"] = \
             gremlin.ui.common.NoKeyboardPushButton(action.key.name)
-        self.ui_elements["key_input"].clicked.connect(self._request_user_input)
+        self.ui_elements["key_input"].clicked.connect(
+            lambda: self._request_user_input([gremlin.common.InputType.Keyboard])
+        )
         self.ui_elements["key_press"] = QtWidgets.QRadioButton("Press")
         self.ui_elements["key_release"] = QtWidgets.QRadioButton("Release")
         if action.is_pressed:
@@ -163,7 +181,67 @@ class MacroActionEditor(QtWidgets.QWidget):
 
     def _joystick_ui(self):
         """Creates and populates the JoystickAction editor UI."""
-        pass
+        action = self.model.get_entry(self.index.row())
+        if action is None:
+            return
+
+        self.ui_elements["input_label"] = QtWidgets.QLabel("Input")
+        self.ui_elements["input_button"] = \
+            gremlin.ui.common.NoKeyboardPushButton("Press Me")
+        self.ui_elements["input_button"].clicked.connect(
+            lambda: self._request_user_input([
+                gremlin.common.InputType.JoystickAxis,
+                gremlin.common.InputType.JoystickButton,
+                gremlin.common.InputType.JoystickHat
+            ])
+        )
+
+        # Handle display of value based on the actual input type
+        if action.input_type == gremlin.common.InputType.JoystickAxis:
+            self.ui_elements["axis_value"] = \
+                gremlin.ui.common.DynamicDoubleSpinBox()
+            self.ui_elements["axis_value"].setRange(-1.0, 1.0)
+            self.ui_elements["axis_value"].setSingleStep(0.1)
+            self.ui_elements["axis_value"].setValue(action.value)
+            self.ui_elements["axis_value"].valueChanged.connect(
+                self._modify_axis_state
+            )
+            self.action_layout.addWidget(self.ui_elements["axis_value"])
+
+        elif action.input_type == gremlin.common.InputType.JoystickButton:
+            self.ui_elements["button_press"] = QtWidgets.QRadioButton("Press")
+            self.ui_elements["button_release"] = QtWidgets.QRadioButton("Release")
+            if action.value:
+                self.ui_elements["button_press"].setChecked(True)
+            else:
+                self.ui_elements["button_release"].setChecked(True)
+
+            self.ui_elements["button_press"].toggled.connect(
+                self._modify_button_state
+            )
+            self.ui_elements["button_release"].toggled.connect(
+                self._modify_button_state
+            )
+            self.action_layout.addWidget(self.ui_elements["button_press"])
+            self.action_layout.addWidget(self.ui_elements["button_release"])
+        elif action.input_type == gremlin.common.InputType.JoystickHat:
+            self.ui_elements["hat_direction"] = QtWidgets.QComboBox()
+            directions = [
+                "Center", "North", "North East", "East", "South East",
+                "South", "South West", "West", "North West"
+            ]
+            for val in directions:
+                self.ui_elements["hat_direction"].addItem(val)
+            self.ui_elements["hat_direction"].currentTextChanged.connect(
+                self._modify_hat_state
+            )
+            self.ui_elements["hat_direction"].setCurrentText(
+                gremlin.common.direction_tuple_lookup[action.value]
+            )
+            self.action_layout.addWidget(self.ui_elements["hat_direction"])
+
+        self.action_layout.addWidget(self.ui_elements["input_label"])
+        self.action_layout.addWidget(self.ui_elements["input_button"])
 
     def _modify_key_state(self, state):
         """Updates the key activation state, i.e. press or release of a key.
@@ -172,6 +250,21 @@ class MacroActionEditor(QtWidgets.QWidget):
         """
         action = self.model.get_entry(self.index.row())
         action.is_pressed = self.ui_elements["key_press"].isChecked()
+        self._update_model()
+
+    def _modify_button_state(self, state):
+        action = self.model.get_entry(self.index.row())
+        action.value = self.ui_elements["button_press"].isChecked()
+        self._update_model()
+
+    def _modify_axis_state(self, state):
+        action = self.model.get_entry(self.index.row())
+        action.value = self.ui_elements["axis_value"].value()
+        self._update_model()
+
+    def _modify_hat_state(self, state):
+        action = self.model.get_entry(self.index.row())
+        action.value = gremlin.common.direction_tuple_lookup[state]
         self._update_model()
 
     def _update_pause(self, value):
@@ -186,11 +279,16 @@ class MacroActionEditor(QtWidgets.QWidget):
         """Forces an update of the model at the current intex."""
         self.model.update(self.index)
 
-    def _request_user_input(self):
+    def _request_user_input(self, input_types):
         """Prompts the user for the input to bind to this item."""
+        if gremlin.common.InputType.Keyboard in input_types:
+            callback = self._modify_key
+        else:
+            callback = self._modify_joystick
+
         self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
-            self._modify_key,
-            [gremlin.common.InputType.Keyboard],
+            callback,
+            input_types,
             return_kb_event=True
         )
 
@@ -220,6 +318,21 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.ui_elements = {}
         self._keyboard_ui()
 
+    def _modify_joystick(self, event):
+        self.model.set_entry(
+            gremlin.macro.JoystickAction(
+                event.windows_id,
+                event.event_type,
+                event.identifier,
+                event.value
+            ),
+            self.index.row()
+        )
+        self._update_model()
+        gremlin.ui.common.clear_layout(self.action_layout)
+        self.ui_elements = {}
+        self._joystick_ui()
+
 
 class MacroListModel(QtCore.QAbstractListModel):
 
@@ -236,6 +349,15 @@ class MacroListModel(QtCore.QAbstractListModel):
         "press": QtGui.QIcon("{}/press".format(gfx_path)),
         "release": QtGui.QIcon("{}/release".format(gfx_path)),
         "pause": QtGui.QIcon("{}/pause".format(gfx_path))
+    }
+
+    value_format = {
+        gremlin.common.InputType.JoystickAxis:
+            lambda entry: "{:.2f}".format(entry.value),
+        gremlin.common.InputType.JoystickButton:
+            lambda entry: "pressed" if entry.value else "released",
+        gremlin.common.InputType.JoystickHat:
+            lambda entry: gremlin.common.direction_tuple_lookup[entry.value]
     }
 
     def __init__(self, data_storage, parent=None):
@@ -270,6 +392,18 @@ class MacroListModel(QtCore.QAbstractListModel):
         if role == QtCore.Qt.DisplayRole:
             if isinstance(entry, gremlin.macro.PauseAction):
                 return "Pause for {:.4f} s".format(entry.duration)
+            elif isinstance(entry, gremlin.macro.JoystickAction):
+                cur_joystick = None
+                for joy in gremlin.joystick_handling.joystick_devices():
+                    if joy.windows_id == entry.device_id:
+                        cur_joystick = joy
+
+                return "{} {} {} - {}".format(
+                    cur_joystick.name,
+                    gremlin.common.input_type_to_name[entry.input_type],
+                    entry.input_id,
+                    MacroListModel.value_format[entry.input_type](entry)
+                )
             elif isinstance(entry, gremlin.macro.KeyAction):
                 return "{} key {}".format(
                     "Press" if entry.is_pressed else "Release",

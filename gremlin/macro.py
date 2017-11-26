@@ -440,12 +440,44 @@ class AbstractAction:
         )
 
 
+class JoystickAction(AbstractAction):
+
+    """Joystick input action for a macro."""
+
+    def __init__(self, device_id, input_type, input_id, value):
+        """Creates a new JoystickAction instance for use in a macro.
+
+        :param device_id id of the device from which the input is generated
+        :param input_type type of input being generated
+        :param input_id id of the input being generated
+        :param value the value of the generated input
+        """
+        self.device_id = device_id
+        self.input_type = input_type
+        self.input_id = input_id
+        self.value = value
+        self._is_virtual = False
+
+    def __call__(self):
+        if self._is_virtual:
+            self.emit_event()
+        else:
+            self.set_vjoy()
+
+    def emit_event(self):
+        """Emits an Event instance through the EventListener system."""
+        pass
+
+    def set_vjoy(self):
+        pass
+
+
 class KeyAction(AbstractAction):
 
     """Key to press or release by a macro."""
 
     def __init__(self, key, is_pressed):
-        """Creates a new Key object for use in a macro.
+        """Creates a new KeyAction object for use in a macro.
 
         :param key the key to use in the action
         :param is_pressed True if the key should be pressed, False
