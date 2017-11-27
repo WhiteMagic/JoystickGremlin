@@ -84,7 +84,9 @@ class Repeater(QtCore.QObject):
     def stop(self):
         """Stops the event dispatch thread."""
         self.is_running = False
-        self._thread.join()
+        self._start_timer.cancel()
+        if self._thread.is_alive():
+            self._thread.join()
 
     def run(self):
         """Starts the event dispatch thread."""
