@@ -21,7 +21,7 @@ import time
 
 from PyQt5 import QtCore
 
-from . import common, event_handler
+from . import common, event_handler, joystick_handling
 
 
 class Repeater(QtCore.QObject):
@@ -49,6 +49,11 @@ class Repeater(QtCore.QObject):
         self._stop_timer = threading.Timer(5.0, self.stop)
         self._update_func = update_func
         self._timeout = time.time()
+        self._vjoy_device_id = [
+            dev.hardware_id for dev in joystick_handling.joystick_devices()
+                if dev.is_virtual
+        ][0]
+        self._event_registry = {}
 
     @property
     def events(self):
@@ -80,6 +85,54 @@ class Repeater(QtCore.QObject):
         self._start_timer.start()
         self._update_func("Received input")
         self._timeout = time.time()
+
+    def process_event(self, event):
+        """Processes an input event to decide whether or not to repeat it.
+
+        :param event the event to process
+        """
+        # Ignore VJoy events as well as events occuring when events are repeated
+        if self.is_running or event.hardware_id == self._vjoy_device_id:
+            return
+
+        # Ignore small joystick movements
+        if event.event_type == common.InputType.JoystickAxis:
+            if event in self._event_registry:
+                if abs(self._event_registry[event].value - event.value) < 0.25:
+                    return
+            else:
+                self._event_registry[event] = event
+                return
+
+        # Ignore neutral hat positions
+        if event.event_type == common.InputType.JoystickHat and \
+                event.value == (0, 0):
+            return
+
+        event_list = []
+        if event.event_type in [
+            common.InputType.Keyboard,
+            common.InputType.JoystickButton
+        ]:
+            event_list = [event.clone(), event.clone()]
+            event_list[0].is_pressed = False
+            event_list[1].is_pressed = True
+        elif event.event_type == common.InputType.JoystickAxis:
+            event_list = [
+                event.clone(),
+                event.clone(),
+                event.clone(),
+                event.clone()
+            ]
+            event_list[0].value = -0.75
+            event_list[1].value = 0.0
+            event_list[2].value = 0.75
+            event_list[3].value = 0.0
+        elif event.event_type == common.InputType.JoystickHat:
+            event_list = [event.clone(), event.clone()]
+            event_list[0].value = (0, 0)
+
+        self.events = event_list
 
     def stop(self):
         """Stops the event dispatch thread."""
@@ -128,8 +181,9 @@ class Repeater(QtCore.QObject):
         if event.event_type == common.InputType.JoystickButton:
             event.is_pressed = False
         elif event.event_type == common.InputType.JoystickAxis:
-            event.value = 0.0
+            event.value = self._event_registry[event].value
         elif event.event_type == common.InputType.JoystickHat:
             event.value = (0, 0)
         el.joystick_event.emit(event)
+        self._event_registry = {}
         self._update_func("Waiting for input")

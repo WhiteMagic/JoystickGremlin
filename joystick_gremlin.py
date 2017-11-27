@@ -376,12 +376,12 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Enables or disables the forwarding of events to the repeater."""
         el = gremlin.event_handler.EventListener()
         if self.ui.actionInputRepeater.isChecked():
-            el.keyboard_event.connect(self._handle_input_repeat)
-            el.joystick_event.connect(self._handle_input_repeat)
+            el.keyboard_event.connect(self.repeater.process_event)
+            el.joystick_event.connect(self.repeater.process_event)
             self._update_statusbar_repeater("Waiting for input")
         else:
-            el.keyboard_event.disconnect(self._handle_input_repeat)
-            el.joystick_event.disconnect(self._handle_input_repeat)
+            el.keyboard_event.disconnect(self.repeater.process_event)
+            el.joystick_event.disconnect(self.repeater.process_event)
             self.repeater.stop()
             self.status_bar_repeater.setText("")
 
@@ -906,50 +906,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             device_profile = {}
 
         return device_profile
-
-    def _handle_input_repeat(self, event):
-        """Performs setup for event repetition.
-
-        :param event the event to repeat
-        """
-        vjoy_device_id = \
-            [dev.hardware_id for dev in self.devices if dev.is_virtual][0]
-        # Ignore VJoy events
-        if self.repeater.is_running or event.hardware_id == vjoy_device_id:
-            return
-        # Ignore small joystick movements
-        elif event.event_type == gremlin.common.InputType.JoystickAxis and \
-                abs(event.value) < 0.25:
-            return
-        # Ignore neutral hat positions
-        if event.event_type == gremlin.common.InputType.JoystickHat and \
-                event.value == (0, 0):
-            return
-
-        event_list = []
-        if event.event_type in [
-            gremlin.common.InputType.Keyboard,
-            gremlin.common.InputType.JoystickButton
-        ]:
-            event_list = [event.clone(), event.clone()]
-            event_list[0].is_pressed = False
-            event_list[1].is_pressed = True
-        elif event.event_type == gremlin.common.InputType.JoystickAxis:
-            event_list = [
-                event.clone(),
-                event.clone(),
-                event.clone(),
-                event.clone()
-            ]
-            event_list[0].value = -0.75
-            event_list[1].value = 0.0
-            event_list[2].value = 0.75
-            event_list[3].value = 0.0
-        elif event.event_type == gremlin.common.InputType.JoystickHat:
-            event_list = [event.clone(), event.clone()]
-            event_list[0].value = (0, 0)
-
-        self.repeater.events = event_list
 
     def _save_changes_request(self):
         """Asks the user what to do in case of a profile change.
