@@ -821,11 +821,12 @@ class GremlinUi(QtWidgets.QMainWindow):
             gremlin.util.userprofile_path(),
             "{} files (*.{})".format(file_format.upper(), file_format)
         )
-        gremlin.documenter.generate_cheatsheet(
-            file_format,
-            fname,
-            self._profile
-        )
+        if len(fname) > 0:
+            gremlin.documenter.generate_cheatsheet(
+                file_format,
+                fname,
+                self._profile
+            )
 
     def _create_load_profile_fuction(self, fname):
         """Creates a callback to load a specific profile.
