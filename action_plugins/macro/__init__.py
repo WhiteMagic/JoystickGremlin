@@ -19,6 +19,7 @@
 import logging
 import os
 import pickle
+import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
@@ -353,7 +354,7 @@ class MacroListModel(QtCore.QAbstractListModel):
 
     value_format = {
         gremlin.common.InputType.JoystickAxis:
-            lambda entry: "{:.2f}".format(entry.value),
+            lambda entry: "{:.3f}".format(entry.value),
         gremlin.common.InputType.JoystickButton:
             lambda entry: "pressed" if entry.value else "released",
         gremlin.common.InputType.JoystickHat:
@@ -858,6 +859,8 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         super().__init__(action_data, parent)
         assert(isinstance(action_data, Macro))
 
+        self._recording_times = {}
+
     def _create_ui(self):
         """Creates the UI of this widget."""
         self.model = MacroListModel(self.action_data.sequence)
@@ -895,6 +898,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         )
         self.button_delete.clicked.connect(self._delete_cb)
         self.button_delete.setToolTip("Delete currently selected entry")
+
         record_icon = QtGui.QIcon()
         record_icon.addPixmap(
             QtGui.QPixmap("{}/macro_record".format(MacroWidget.gfx_path)),
@@ -918,10 +922,25 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             "Add pause after the currently selected entry"
         )
 
+        time_icon = QtGui.QIcon()
+        time_icon.addPixmap(
+            QtGui.QPixmap("{}/time".format(MacroWidget.gfx_path)),
+            QtGui.QIcon.Normal
+        )
+        time_icon.addPixmap(
+            QtGui.QPixmap("{}/time_on".format(MacroWidget.gfx_path)),
+            QtGui.QIcon.Active,
+            QtGui.QIcon.On
+        )
+        self.button_time = NoKeyboardPushButton(time_icon, "")
+        self.button_time.setCheckable(True)
+        self.button_time.setToolTip("Add pause between actions")
+
         self.buttons_layout.addWidget(self.button_new_entry)
         self.buttons_layout.addWidget(self.button_delete)
-        self.buttons_layout.addWidget(self.button_record)
         self.buttons_layout.addWidget(self.button_pause)
+        self.buttons_layout.addWidget(self.button_record)
+        self.buttons_layout.addWidget(self.button_time)
         self.buttons_layout.addStretch()
 
         # Assemble the entire widget
@@ -958,6 +977,10 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         :param event the event for which to create a KeyAction object
         """
+        if self.button_time.isChecked():
+            self._append_entry(gremlin.macro.PauseAction(
+                time.time() - max(self._recording_times.values())
+            ))
         action = gremlin.macro.KeyAction(
             gremlin.macro.key_from_code(
                 event.identifier[0],
@@ -965,7 +988,35 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             ),
             event.is_pressed
         )
+        self._recording_times["keyboard"] = time.time()
         self._append_entry(action)
+
+    def _create_joystick_action(self, event):
+        # If this is an axis motion do some checks such that we don't spam
+        # the ui with entries
+        add_new_entry = True
+        if event.event_type == gremlin.common.InputType.JoystickAxis:
+            cur_index = self.list_view.currentIndex().row()
+            entry = self.model.get_entry(cur_index)
+
+            if event not in self._recording_times:
+                self._recording_times[event] = time.time()
+            elif time.time() - self._recording_times[event] < 0.1:
+                add_new_entry = False
+
+        if add_new_entry:
+            if self.button_time.isChecked():
+                self._append_entry(gremlin.macro.PauseAction(
+                    time.time() - max(self._recording_times.values())
+                ))
+            action = gremlin.macro.JoystickAction(
+                event.windows_id,
+                event.event_type,
+                event.identifier,
+                event.value
+            )
+            self._recording_times[event] = time.time()
+            self._append_entry(action)
 
     def _record_cb(self):
         """Starts the recording of key presses."""
@@ -974,6 +1025,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             self._recording = True
             el = gremlin.event_handler.EventListener()
             el.keyboard_event.connect(self._create_key_action)
+            el.joystick_event.connect(self._create_joystick_action)
         else:
             # Stop recording keystrokes
             self._recording = False
