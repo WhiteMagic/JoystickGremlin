@@ -98,10 +98,11 @@ class Repeater(QtCore.QObject):
         # Ignore small joystick movements
         if event.event_type == common.InputType.JoystickAxis:
             if event in self._event_registry:
-                if abs(self._event_registry[event].value - event.value) < 0.25:
+                self._event_registry[event][1] = event
+                if abs(self._event_registry[event][0].value - event.value) < 0.25:
                     return
             else:
-                self._event_registry[event] = event
+                self._event_registry[event] = [event, event]
                 return
 
         # Ignore neutral hat positions
@@ -181,7 +182,7 @@ class Repeater(QtCore.QObject):
         if event.event_type == common.InputType.JoystickButton:
             event.is_pressed = False
         elif event.event_type == common.InputType.JoystickAxis:
-            event.value = self._event_registry[event].value
+            event.value = self._event_registry[event][1].value
         elif event.event_type == common.InputType.JoystickHat:
             event.value = (0, 0)
         el.joystick_event.emit(event)
