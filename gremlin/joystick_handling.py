@@ -147,15 +147,16 @@ def joystick_devices():
     :return list containing information about all joystick like devices
     """
     global _joystick_devices
+    syslog = logging.getLogger("system")
+
+    syslog.debug("{:d} joysticks found".format(sdl2.SDL_NumJoysticks()))
 
     # Get all connected devices
     devices = []
     for i in range(sdl2.SDL_NumJoysticks()):
         joy = sdl2.SDL_JoystickOpen(i)
         if joy is None:
-            logging.getLogger("system").error(
-                "Invalid joystick device at id {}".format(i)
-            )
+            syslog.error("Invalid joystick device at id {}".format(i))
         else:
             devices.append(JoystickDeviceData(joy))
 
@@ -166,9 +167,17 @@ def joystick_devices():
     for new_dev in devices:
         if new_dev not in _joystick_devices:
             device_added = True
+            syslog.debug("Added: name={} windows_id={:d}".format(
+                new_dev.name,
+                new_dev.windows_id
+            ))
     for old_dev in _joystick_devices:
         if old_dev not in devices:
             device_removed = True
+            syslog.debug("Removed: name={} windows_id={:d}".format(
+                new_dev.name,
+                new_dev.windows_id
+            ))
 
     if not device_added and not device_removed:
         return _joystick_devices
@@ -182,6 +191,7 @@ def joystick_devices():
         if not dev.is_virtual:
             continue
         hash_value = (dev.axis_count, dev.buttons, dev.hats)
+        syslog.debug("vjoy windows id {:d}: {}".format(i, hash_value))
         if hash_value in vjoy_lookup:
             raise error.GremlinError(
                 "Indistinguishable vJoy devices present.\n\n"
@@ -197,6 +207,7 @@ def joystick_devices():
 
     # Try each possible vJoy device and if it exists find the matching device
     # as detected by SDL
+    should_terminate = False
     for i in range(1, 17):
         try:
             vjoy_dev = vjoy_proxy[i]
@@ -212,14 +223,19 @@ def joystick_devices():
                 for j in range(vjoy_dev.axis_count):
                     axis_mapping.append((j+1, vjoy_dev.axis_id(j+1)))
                 devices[vjoy_lookup[hash_value]].set_axis_mapping(axis_mapping)
+                syslog.debug("vjoy id {:d}: {} - MATCH".format(i, hash_value))
 
             if hash_value not in vjoy_lookup:
-                raise error.GremlinError(
-                    "Unable to match vJoy devices to windows devices."
-                )
+                syslog.debug("vjoy id {:d}: {} - ERROR".format(i, hash_value))
+                should_terminate = True
         except error.VJoyError as e:
             if e.value != "Requested vJoy device is not available":
                 raise error.GremlinError(e.value)
+
+    if should_terminate:
+        raise error.GremlinError(
+            "Unable to match vJoy devices to windows devices."
+        )
 
     # Reset all devices so we don't hog the ones we aren't actually using
     vjoy_proxy.reset()
