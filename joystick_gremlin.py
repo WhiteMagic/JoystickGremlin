@@ -403,6 +403,10 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def new_profile(self):
         """Creates a new empty profile."""
+        # Disable Gremlin if active before opening a new profile
+        self.ui.actionActivate.setChecked(False)
+        self.activate(False)
+
         if not self._save_changes_request():
             return
 
