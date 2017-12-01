@@ -384,6 +384,13 @@ class Macro:
         """
         return self._sequence
 
+    def add_action(self, action):
+        """Adds an action to the list of actions to perform.
+
+        :param action the action to add
+        """
+        self._sequence.append(action)
+
     def pause(self, duration):
         """Adds a pause of the given duration to the macro.
 
@@ -456,20 +463,54 @@ class JoystickAction(AbstractAction):
         self.input_type = input_type
         self.input_id = input_id
         self.value = value
-        self._is_virtual = False
 
     def __call__(self):
-        if self._is_virtual:
-            self.emit_event()
-        else:
-            self.set_vjoy()
-
-    def emit_event(self):
         """Emits an Event instance through the EventListener system."""
-        pass
+        el = gremlin.event_handler.EventListener()
+        if self.input_type == gremlin.common.InputType.JoystickButton:
+            event = gremlin.event_handler.Event(
+                event_type=self.input_type,
+                hardware_id=el._joystick_guid_map[self.device_id],
+                windows_id=self.device_id,
+                identifier=self.input_id,
+                is_pressed=self.value
+            )
+        else:
+            event = gremlin.event_handler.Event(
+                event_type=self.input_type,
+                hardware_id=el._joystick_guid_map[self.device_id],
+                windows_id=self.device_id,
+                identifier=self.input_id,
+                value=self.value
+            )
+        el.joystick_event.emit(event)
 
-    def set_vjoy(self):
-        pass
+
+class VJoyAction(AbstractAction):
+
+    """VJoy input action for a macro."""
+
+    def __init__(self, vjoy_id, input_type, input_id, value):
+        """Creates a new JoystickAction instance for use in a macro.
+
+        :param vjoy_id id of the vjoy device which is to be modified
+        :param input_type type of input being generated
+        :param input_id id of the input being generated
+        :param value the value of the generated input
+        """
+        self.vjoy_id = vjoy_id
+        self.input_type = input_type
+        self.input_id = input_id
+        self.value = value
+
+    def __call__(self):
+        vjoy = gremlin.joystick_handling.VJoyProxy()[self.vjoy_id]
+        if self.input_type == gremlin.common.InputType.JoystickAxis:
+            vjoy.axis(self.input_id).value = self.value
+        elif self.input_type == gremlin.common.InputType.JoystickButton:
+            vjoy.button(self.input_id).is_pressed = self.value
+        elif self.input_type == gremlin.common.InputType.JoystickHat:
+            vjoy.hat(self.input_id).direction = self.value
 
 
 class KeyAction(AbstractAction):
