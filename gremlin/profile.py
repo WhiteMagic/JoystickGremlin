@@ -880,6 +880,39 @@ class Profile:
                 self.devices[device_id] = device
             return self.devices[device_id]
 
+    def empty(self):
+        """Returns whether or not a profile is empty.
+
+        :return True if the profile is empty, False otherwise
+        """
+        is_empty = True
+        is_empty &= len(self.imports) == 0
+        is_empty &= len(self.merge_axes) == 0
+
+        # Enumerate all input devices
+        all_input_types = [
+            InputType.JoystickAxis,
+            InputType.JoystickButton,
+            InputType.JoystickHat,
+            InputType.Keyboard
+        ]
+
+        # Process all devices
+        for dev in self.devices.values():
+            for mode in dev.modes.values():
+                for input_type in all_input_types:
+                    for item in mode.config[input_type].values():
+                        is_empty &= len(item.containers) == 0
+
+        # Process all vJoy devices
+        for dev in self.vjoy_devices.values():
+            for mode in dev.modes.values():
+                for input_type in all_input_types:
+                    for item in mode.config[input_type].values():
+                        is_empty &= len(item.containers) == 0
+
+        return is_empty
+
     def _parse_merge_axis(self, node):
         """Parses merge axis entries.
 

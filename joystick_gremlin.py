@@ -920,6 +920,10 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :return True continue with the intended action, False abort
         """
+        # If the profile is empty we don't need to ask anything
+        if self._profile.empty():
+            return True
+
         continue_process = True
         if self._has_profile_changed():
             message_box = QtWidgets.QMessageBox()
