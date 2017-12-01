@@ -284,12 +284,12 @@ class Remap(gremlin.base_classes.AbstractAction):
         node.set("vjoy", str(self.vjoy_device_id))
         if self.input_type == InputType.Keyboard:
             node.set(
-                common.input_type_to_tag(InputType.JoystickButton),
+                gremlin.common.input_type_to_tag(InputType.JoystickButton),
                 str(self.vjoy_input_id)
             )
         else:
             node.set(
-                common.input_type_to_tag(self.input_type),
+                gremlin.common.input_type_to_tag(self.input_type),
                 str(self.vjoy_input_id)
             )
         return node

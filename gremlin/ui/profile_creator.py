@@ -267,7 +267,7 @@ class ModeBindings(QtWidgets.QWidget):
         else:
             return "{} - {} {}".format(
                 self.device_names[bound_input.parent.parent.hardware_id],
-                profile.input_type_to_tag(bound_input.input_type).capitalize(),
+                gremlin.common.input_type_to_name[bound_input.input_type],
                 bound_input.input_id
             )
 

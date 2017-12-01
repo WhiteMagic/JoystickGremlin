@@ -23,48 +23,9 @@ from xml.dom import minidom
 from xml.etree import ElementTree
 
 import action_plugins
-from gremlin.common import DeviceType, InputType
+from gremlin.common import DeviceType, InputType, \
+    input_type_to_tag, tag_to_input_type
 from . import error, joystick_handling, plugin_manager, util
-
-
-def tag_to_input_type(tag):
-    """Returns the input type enum corresponding to the given XML tag.
-
-    :param tag xml tag for which to return the InputType enum
-    :return InputType enum corresponding to the given XML tag
-    """
-    lookup = {
-        "axis": InputType.JoystickAxis,
-        "button": InputType.JoystickButton,
-        "hat": InputType.JoystickHat,
-        "key": InputType.Keyboard,
-    }
-    if tag.lower() in lookup:
-        return lookup[tag.lower()]
-    else:
-        raise error.ProfileError(
-            "Invalid input type specified {}".format(tag)
-        )
-
-
-def input_type_to_tag(input_type):
-    """Returns the tag corresponding to the given input type.
-
-    :param input_type the input type to convert
-    :return text representation of the input type
-    """
-    lookup = {
-        InputType.JoystickAxis: "axis",
-        InputType.JoystickButton: "button",
-        InputType.JoystickHat: "hat",
-        InputType.Keyboard: "key"
-    }
-    if input_type in lookup:
-        return lookup[input_type]
-    else:
-        raise error.ProfileError(
-            "Invalid input type specified {}".format(input_type)
-        )
 
 
 def type_name_to_device_type(type_name):
@@ -1200,9 +1161,7 @@ class InputItem:
 
         :return XML node representing this object
         """
-        node = ElementTree.Element(
-            action_plugins.common.input_type_to_tag(self.input_type)
-        )
+        node = ElementTree.Element(input_type_to_tag(self.input_type))
         if self.input_type == InputType.Keyboard:
             node.set("id", str(self.input_id[0]))
             node.set("extended", str(self.input_id[1]))

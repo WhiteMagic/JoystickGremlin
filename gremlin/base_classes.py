@@ -143,7 +143,7 @@ class JoystickCondition(AbstractCondition):
         """
         node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
-        node.set("input", profile.input_type_to_tag(self.input_type))
+        node.set("input", common.input_type_to_tag(self.input_type))
         node.set("id", str(self.input_id))
         node.set("device_id", str(self.device_id))
         node.set("windows_id", str(self.windows_id))

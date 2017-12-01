@@ -48,6 +48,45 @@ def index_to_direction(direction):
     return lookup[int(direction)]
 
 
+def input_type_to_tag(input_type):
+    """Returns the XML tag corresponding to the given InputType enum.
+
+    :param input_type InputType enum to translate into a XML tag
+    :return XML tag corresponding to the provided InputType enum
+    """
+    lookup = {
+        InputType.JoystickAxis: "axis",
+        InputType.JoystickButton: "button",
+        InputType.JoystickHat: "hat",
+        InputType.Keyboard: "key",
+    }
+    if input_type in lookup:
+        return lookup[input_type]
+    else:
+        raise gremlin.error.ProfileError(
+            "Invalid input type specified {}".format(input_type)
+        )
+
+def tag_to_input_type(tag):
+    """Returns the InputType corresponding to the provided tag.
+
+    :param tag textual representation of the input type
+    :return InputType corresponding to the given tag
+    """
+    lookup = {
+        "axis": InputType.JoystickAxis,
+        "button": InputType.JoystickButton,
+        "hat": InputType.JoystickHat,
+        "key": InputType.Keyboard
+    }
+    if tag in lookup:
+        return lookup[tag]
+    else:
+        raise gremlin.error.ProfileError(
+            "Invalid input type specified {}".format(tag)
+        )
+
+
 # Mapping from InputType values to their textual representation
 input_type_to_name = {
     InputType.Keyboard: "Keyboard",
