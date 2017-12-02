@@ -20,6 +20,7 @@ from abc import abstractmethod, ABCMeta
 import gremlin
 from gremlin import actions, config, event_handler, input_devices, \
     joystick_handling, macro, util
+import action_plugins.remap
 
 
 class CodeRunner:
@@ -182,7 +183,29 @@ class InputItemCallback:
         """
         self.execution_graphs = []
 
-        for container in input_item.containers:
+        # Reorder containers such that if those containing remap actions are
+        # executed last
+        pre_containers = []
+        post_containers = []
+        for i, container in enumerate(input_item.containers):
+            contains_remap = False
+            for action_set in container.action_sets:
+                for action in action_set:
+                    if isinstance(action, action_plugins.remap.Remap):
+                        contains_remap |= True
+            if contains_remap:
+                print("X")
+                post_containers.append(i)
+            else:
+                pre_containers.append(i)
+
+        ordered_containers = []
+        for i in pre_containers:
+            ordered_containers.append(input_item.containers[i])
+        for i in post_containers:
+            ordered_containers.append(input_item.containers[i])
+
+        for container in ordered_containers:
             self.execution_graphs.append(ContainerExecutionGraph(container))
 
     def __call__(self, event):
@@ -244,7 +267,6 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
                 (self.current_index, result),
                 None
             )
-
         self.current_index = 0
 
     @abstractmethod
@@ -423,8 +445,18 @@ class ActionSetExecutionGraph(AbstractExecutionGraph):
                 action_set[0].parent.activation_condition
             )
 
-        # Create functors
+        # Reorder action set entries such that if any remap action is
+        # present it is executed last
+        ordered_action_set = []
         for action in action_set:
+            if not isinstance(action, action_plugins.remap.Remap):
+                ordered_action_set.append(action)
+        for action in action_set:
+            if isinstance(action, action_plugins.remap.Remap):
+                ordered_action_set.append(action)
+
+        # Create functors
+        for action in ordered_action_set:
             # Create conditions for each action if needed
             if action.activation_condition is not None:
                 # Only add a condition if we truly have conditions
