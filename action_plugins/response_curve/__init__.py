@@ -1169,11 +1169,14 @@ class ResponseCurve(AbstractAction):
 
     name = "Response Curve"
     tag = "response-curve"
-    widget = AxisResponseCurveWidget
+
+    default_button_activation = (True, True)
     input_types = [
-        InputType.JoystickAxis,
+        InputType.JoystickAxis
     ]
-    callback_params = []
+
+    functor = ResponseCurveFunctor
+    widget = AxisResponseCurveWidget
 
     curve_name_map = {
         "Cubic Spline": "cubic-spline",
