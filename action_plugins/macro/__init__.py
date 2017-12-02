@@ -1098,12 +1098,14 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         """Starts the recording of key presses."""
         if self.button_record.isChecked():
             # Record keystrokes
+            gremlin.shared_state.set_suspend_input_highlighting(True)
             self._recording = True
             el = gremlin.event_handler.EventListener()
             el.keyboard_event.connect(self._create_key_action)
             el.joystick_event.connect(self._create_joystick_action)
         else:
             # Stop recording keystrokes
+            gremlin.shared_state.set_suspend_input_highlighting(False)
             self._recording = False
             el = gremlin.event_handler.EventListener()
             el.keyboard_event.disconnect(self._create_key_action)

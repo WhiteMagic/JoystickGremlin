@@ -1122,6 +1122,10 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         :param event the keypress event to be processed
         """
+        # Ensure input highlighting is turned off, even if input request
+        # dialogs are spawned in quick succession
+        gremlin.shared_state.set_suspend_input_highlighting(True)
+
         # Only react to events we're interested in
         if event.event_type not in self._event_types:
             return
