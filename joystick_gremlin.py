@@ -297,7 +297,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.runner.start(
                 self._profile.build_inheritance_tree(),
                 self._profile.settings,
-                self._last_active_mode()
+                self._last_active_mode(),
+                self._profile
             )
         else:
             # Stop running the code
