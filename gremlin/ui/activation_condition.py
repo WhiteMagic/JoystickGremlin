@@ -370,6 +370,8 @@ class InputActionConditionWidget(AbstractConditionWidget):
             self.state_dropdown.setCurrentText(
                 self.condition_data.comparison.capitalize()
             )
+        else:
+            self.condition_data.comparison = "pressed"
         self.state_dropdown.currentTextChanged.connect(
             self._state_selection_changed
         )
