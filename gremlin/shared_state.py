@@ -16,6 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import threading
+
+
 """Stores global state that needs to be shared between various
 parts of the program.
 
@@ -25,6 +28,9 @@ This is ugly but the only sane way to do this at the moment.
 # Flag indicating whether or not input highlighting should be
 # prevented even if it is enabled by the user
 _suspend_input_highlighting = False
+
+# Timer used to disable input highlighting with a delay
+_suspend_timer = None
 
 
 def suspend_input_highlighting():
@@ -41,5 +47,20 @@ def set_suspend_input_highlighting(value):
     :param value if True disables automatic selection of used inputs, if False
         inputs will automatically be selected upon use
     """
-    global _suspend_input_highlighting
+    global _suspend_input_highlighting, _suspend_timer
+    if _suspend_timer is not None:
+        _suspend_timer.cancel()
     _suspend_input_highlighting = value
+
+
+def delayed_input_highlighting_suspension():
+    """Disables input highlighting with a delay."""
+    global _suspend_timer
+    if _suspend_timer is not None:
+        _suspend_timer.cancel()
+
+    _suspend_timer = threading.Timer(
+            2,
+            lambda: set_suspend_input_highlighting(False)
+    )
+    _suspend_timer.start()

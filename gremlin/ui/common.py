@@ -1154,11 +1154,7 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         # Delay unsuspending input highlighting to allow an axis that's being
         # moved to return to its center without triggering an input highligh
-        threading.Timer(
-            2,
-            lambda: gremlin.shared_state.set_suspend_input_highlighting(False)
-        ).start()
-
+        gremlin.shared_state.delayed_input_highlighting_suspension()
         super().closeEvent(evt)
 
     def _valid_event_types_string(self):
