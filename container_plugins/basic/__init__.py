@@ -41,6 +41,7 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         if len(self.profile_data.action_sets) > 0:
             assert len(self.profile_data.action_sets) == 1
 
+            self.profile_data.create_or_delete_virtual_button()
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[0],
                 "Basic",

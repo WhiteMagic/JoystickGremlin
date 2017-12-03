@@ -44,6 +44,8 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
     def _create_basic_ui(self):
         """Creates the UI components."""
+        self.profile_data.create_or_delete_virtual_button()
+
         self.delay_layout = QtWidgets.QHBoxLayout()
         self.delay_layout.addWidget(
             QtWidgets.QLabel("<b>Long press delay: </b>")
@@ -201,6 +203,7 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
         self.event_press = None
 
     def process_event(self, event, value):
+        # TODO: Currently this does not handle hat or axis inputs
         if not isinstance(value.current, bool):
             logging.getLogger("system").warn(
                 "Invalid data type received in Tempo container: {}".format(

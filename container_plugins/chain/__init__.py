@@ -44,6 +44,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """Creates the UI components."""
         self.widget_layout = QtWidgets.QHBoxLayout()
 
+        self.profile_data.create_or_delete_virtual_button()
         self.action_selector = gremlin.ui.common.ActionSelector(
             self.profile_data.get_input_type()
         )

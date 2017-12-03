@@ -124,9 +124,6 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_data.vjoy_input_id = vjoy_data["input_id"]
         self.action_data.input_type = vjoy_data["input_type"]
 
-        # Check if this requires an activation condition
-        self.action_data.parent.create_or_delete_virtual_button()
-
         # Signal changes
         self.action_modified.emit()
 
