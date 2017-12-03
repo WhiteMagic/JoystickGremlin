@@ -96,6 +96,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Input selection storage
         self._last_input_timestamp = time.time()
         self._last_input_event = None
+        self._event_process_registry = {}
 
         # Create all required UI elements
         self._create_system_tray()
@@ -1063,7 +1064,15 @@ class GremlinUi(QtWidgets.QMainWindow):
         if event.event_type == gremlin.common.InputType.JoystickButton:
             process_input = event.is_pressed
         elif event.event_type == gremlin.common.InputType.JoystickAxis:
-            process_input = abs(event.value) > 0.5
+            if event in self._event_process_registry:
+                self._event_process_registry[event][1] = event
+                if self._last_input_timestamp + 0.25 > time.time():
+                    self._event_process_registry[event][0] = event
+                if abs(self._event_process_registry[event][0].value -
+                        event.value) > 0.5:
+                    process_input = True
+            else:
+                self._event_process_registry[event] = [event, event]
         elif event.event_type == gremlin.common.InputType.JoystickHat:
             process_input = event.value != (0, 0)
         else:
