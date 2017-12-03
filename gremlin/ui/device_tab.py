@@ -313,7 +313,7 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             current_mode
         )
         self.input_item_list_view = input_item.InputItemListView()
-        self.input_item_list_view.setMinimumWidth(350)
+        self.input_item_list_view.setMinimumWidth(375)
 
         # Input type specific setups
         # Only show axis values for vJoy devices
