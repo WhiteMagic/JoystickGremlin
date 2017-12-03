@@ -190,7 +190,7 @@ class JoystickCondition(AbstractCondition):
     one of eight possible directions.
     """
 
-    def __init__(self, windows_id, input_type, input_id, comparison):
+    def __init__(self, condition):
         """Creates a new instance.
 
         :param windows_id the id assigned to the joystick by windows
@@ -226,7 +226,7 @@ class JoystickCondition(AbstractCondition):
             if self.comparison == "pressed":
                 return joy.button(self.input_id).is_pressed
             else:
-                return not joy.button(self.input_id)
+                return not joy.button(self.input_id).is_pressed
         elif self.input_type == common.InputType.JoystickHat:
             return joy.hat(self.input_id).direction == \
                    util.hat_direction_to_tuple(self.comparison)
