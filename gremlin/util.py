@@ -240,6 +240,7 @@ def hat_tuple_to_direction(value):
     }
     return lookup[value]
 
+
 def hat_direction_to_tuple(value):
     """Converts a direction string to a tuple value.
 
@@ -247,17 +248,18 @@ def hat_direction_to_tuple(value):
     :return tuple corresponding to the textual direction
     """
     lookup = {
-        "center": "(0, 0)",
-        "north": "(0, 1)",
-        "north-east": "(1, 1)",
-        "east": "(1, 0)",
-        "south-east": "(1, -1)",
-        "south": "(0, -1)",
-        "south-west": "(-1, -1)",
-        "west": "(-1, 0)",
-        "north-west": "(-1, 1)"
+        "center": (0, 0),
+        "north": (0, 1),
+        "north-east": (1, 1),
+        "east": (1, 0),
+        "south-east": (1, -1),
+        "south": (0, -1),
+        "south-west": (-1, -1),
+        "west": (-1, 0),
+        "north-west": (-1, 1)
     }
     return lookup[value]
+
 
 def userprofile_path():
     """Returns the path to the user's profile folder, %userprofile%."""

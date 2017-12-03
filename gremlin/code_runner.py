@@ -194,7 +194,6 @@ class InputItemCallback:
                     if isinstance(action, action_plugins.remap.Remap):
                         contains_remap |= True
             if contains_remap:
-                print("X")
                 post_containers.append(i)
             else:
                 pre_containers.append(i)
@@ -295,12 +294,7 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
                 )
             elif isinstance(condition, gremlin.base_classes.JoystickCondition):
                 conditions.append(
-                    gremlin.actions.JoystickCondition(
-                        condition.windows_id,
-                        condition.input_type,
-                        condition.input_id,
-                        condition.comparison
-                    )
+                    gremlin.actions.JoystickCondition(condition)
                 )
             elif isinstance(condition, gremlin.base_classes.InputActionCondition):
                 conditions.append(

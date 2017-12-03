@@ -19,7 +19,7 @@ from PyQt5 import QtCore, QtWidgets
 
 import logging
 
-from gremlin import base_classes, input_devices, macro
+from gremlin import base_classes, input_devices, macro, util
 from gremlin.common import InputType
 from . import common
 
@@ -272,7 +272,27 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.comparison_dropdown)
 
     def _hat_ui(self):
-        pass
+        directions = [
+            "Center", "North", "North East", "East", "South East",
+            "South", "South West", "West", "North West"
+        ]
+        self.comparison_dropdown = QtWidgets.QComboBox()
+        for entry in directions:
+            self.comparison_dropdown.addItem(entry)
+        self.comparison_dropdown.setCurrentText(
+            self.condition_data.comparison.replace("-", " ").title()
+        )
+        self.comparison_dropdown.currentTextChanged.connect(
+            self._comparison_changed_cb
+        )
+
+        self.main_layout.addWidget(QtWidgets.QLabel(
+            "Activate if {} Hat {:d} is".format(
+                self.condition_data.device_name,
+                self.condition_data.input_id
+            )
+        ))
+        self.main_layout.addWidget(self.comparison_dropdown)
 
     def _input_pressed_cb(self, event):
         self.condition_data.device_id = event.hardware_id
@@ -281,7 +301,13 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.condition_data.input_id = event.identifier
         self.condition_data.device_name = \
             input_devices.JoystickProxy()[event.windows_id].name
-        self.condition_data.comparison = "pressed"
+        if event.event_type == InputType.JoystickAxis:
+            self.condition_data.comparison = "inside"
+        elif event.event_type == InputType.JoystickButton:
+            self.condition_data.comparison = "pressed"
+        elif event.event_type == InputType.JoystickHat:
+            self.condition_data.comparison = \
+                util.hat_tuple_to_direction(event.value)
         self._create_ui()
 
     def _request_user_input(self):
@@ -318,7 +344,17 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.condition_data.range[1] = value
 
     def _comparison_changed_cb(self, text):
-        self.condition_data.comparison = text.lower()
+        if self.condition_data.input_type == InputType.JoystickButton:
+            self.condition_data.comparison = text.lower()
+        elif self.condition_data.input_type == InputType.JoystickHat:
+            self.condition_data.comparison = text.replace(" ", "-").lower()
+        else:
+            logging.getLogger("system").warning(
+                "Invalid input type encountered: {}".format(
+                    self.condition_data.input_type
+                )
+            )
+
 
 
 class InputActionConditionWidget(AbstractConditionWidget):

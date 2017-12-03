@@ -198,10 +198,11 @@ class JoystickCondition(AbstractCondition):
         :param input_id the index of the input to check
         :param comparison the comparison operation to perform when evaluated
         """
-        super().__init__(comparison)
-        self.windows_id = windows_id
-        self.input_type = input_type
-        self.input_id = input_id
+        super().__init__(condition.comparison)
+        self.windows_id = condition.windows_id
+        self.input_type = condition.input_type
+        self.input_id = condition.input_id
+        self.condition = condition
 
     def __call__(self, event, value):
         """Evaluates the condition using the condition and provided data.
@@ -213,14 +214,22 @@ class JoystickCondition(AbstractCondition):
         joy = input_devices.JoystickProxy()[self.windows_id]
 
         if self.input_type == common.InputType.JoystickAxis:
-            return False
+            in_range = self.condition.range[0] <= \
+                       joy.axis(self.input_id).value <= \
+                       self.condition.range[1]
+
+            if self.comparison in ["inside", "outside"]:
+                return in_range if self.comparison == "inside" else not in_range
+            else:
+                return False
         elif self.input_type == common.InputType.JoystickButton:
             if self.comparison == "pressed":
                 return joy.button(self.input_id).is_pressed
             else:
                 return not joy.button(self.input_id)
         elif self.input_type == common.InputType.JoystickHat:
-            return False
+            return joy.hat(self.input_id).direction == \
+                   util.hat_direction_to_tuple(self.comparison)
         else:
             logging.getLogger("system").warn(
                 "Invalid input_type {} received".format(self.input_type)
