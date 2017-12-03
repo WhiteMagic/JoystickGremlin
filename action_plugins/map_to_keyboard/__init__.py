@@ -21,7 +21,6 @@ from xml.etree import ElementTree
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from .. import common
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.ui.common
@@ -76,7 +75,7 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         combination."""
         self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
             self._update_keys,
-            [common.InputType.Keyboard],
+            [InputType.Keyboard],
             return_kb_event=False,
             multi_keys=True
         )
@@ -110,9 +109,9 @@ class MapToKeyboardFunctor(AbstractFunctor):
 
     def process_event(self, event, value):
         if value.current:
-            gremlin.macro.MacroManager().add_macro(self.press, None, event)
+            gremlin.macro.MacroManager().queue_macro(self.press)
         else:
-            gremlin.macro.MacroManager().add_macro(self.release, None, event)
+            gremlin.macro.MacroManager().queue_macro(self.release)
         return True
 
 
