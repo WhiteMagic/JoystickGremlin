@@ -934,7 +934,9 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         super().__init__(action_data, parent)
         assert(isinstance(action_data, Macro))
 
-        self._recording_times = {}
+        self._recording_times = {
+            None: time.time()
+        }
 
     def _create_ui(self):
         """Creates the UI of this widget."""
@@ -1109,6 +1111,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             self._recording = False
             el = gremlin.event_handler.EventListener()
             el.keyboard_event.disconnect(self._create_key_action)
+            el.joystick_event.disconnect(self._create_joystick_action)
 
     def _pause_cb(self):
         """Adds a pause macro action to the list."""
