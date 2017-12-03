@@ -176,7 +176,7 @@ class ChainContainerFunctor(gremlin.base_classes.AbstractFunctor):
         if self.timeout > 0.0:
             if self.last_execution + self.timeout < time.time():
                 self.index = 0
-                self.last_execution = time.time()
+            self.last_execution = time.time()
 
         result = self.action_sets[self.index].process_event(event, value)
 
