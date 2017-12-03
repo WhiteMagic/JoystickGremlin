@@ -218,7 +218,7 @@ class JoystickWrapper:
 
         @property
         def is_pressed(self):
-            return sdl2.SDL_JoystickGetButton(self._joystick, self._index)
+            return sdl2.SDL_JoystickGetButton(self._joystick, self._index) == 1
 
     class Hat(Input):
 
