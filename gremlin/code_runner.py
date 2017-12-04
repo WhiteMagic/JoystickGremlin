@@ -35,6 +35,7 @@ class CodeRunner:
         self.event_handler.add_plugin(input_devices.KeyboardPlugin())
 
         self._inheritance_tree = None
+        self._vjoy_curves = VJoyCurves()
         self._running = False
 
     def is_running(self):
@@ -75,7 +76,7 @@ class CodeRunner:
                             )
                             callback_count += 1
 
-            # Generate code based on the profile's content
+            # Create input callbacks based on the profile's content
             for device in profile.devices.values():
                 hid = device.hardware_id
                 wid = device.windows_id
@@ -102,6 +103,12 @@ class CodeRunner:
                                 InputItemCallback(input_item),
                                 input_item.always_execute
                             )
+
+            # Create vJoy response curve setups
+            self._vjoy_curves.profile_data = profile.vjoy_devices
+            self.event_handler.mode_changed.connect(
+                self._vjoy_curves.mode_changed
+            )
 
             # Use inheritance to build input action lookup table
             self.event_handler.build_event_lookup(inheritance_tree)
@@ -144,6 +151,9 @@ class CodeRunner:
             evt_lst.keyboard_event.disconnect(self.event_handler.process_event)
             evt_lst.joystick_event.disconnect(self.event_handler.process_event)
             evt_lst.keyboard_event.disconnect(kb.keyboard_event)
+            self.event_handler.mode_changed.disconnect(
+                self._vjoy_curves.mode_changed
+            )
         self._running = False
 
         # Empty callback registry
@@ -165,6 +175,38 @@ class CodeRunner:
             list(self._inheritance_tree.keys())[0]
         self.event_handler._previous_mode =\
             list(self._inheritance_tree.keys())[0]
+
+
+class VJoyCurves:
+
+    """Handles setting response curves on vJoy devices."""
+
+    def __init__(self):
+        """Creates a new instance"""
+        self.profile_data = None
+
+    def mode_changed(self, mode_name):
+        """Called when the mode changes and updates vJoy response curves.
+
+        :param mode_name the name of the new mode
+        """
+        if not self.profile_data:
+            return
+
+        vjoy = gremlin.joystick_handling.VJoyProxy()
+        for vid, device in self.profile_data.items():
+            if mode_name in device.modes:
+                for aid, data in device.modes[mode_name].config[
+                        gremlin.common.InputType.JoystickAxis
+                ].items():
+                    if len(data.containers) > 0 and vjoy[vid].is_axis_valid(aid):
+                        action = data.containers[0].action_sets[0][0]
+                        vjoy[vid].axis(aid).set_deadzone(*action.deadzone)
+                        vjoy[vid].axis(aid).set_response_curve(
+                            action.mapping_type,
+                            action.control_points
+                        )
+
 
 
 class InputItemCallback:
