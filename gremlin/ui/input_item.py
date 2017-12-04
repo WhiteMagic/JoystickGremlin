@@ -625,7 +625,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.setWidget(self.dock_tabs)
 
         # Create the individual tabs
-        self._create_basic_tab()
+        self._create_action_tab()
         self._create_activation_condition_tab()
         self._create_virtual_button_tab()
 
@@ -634,19 +634,17 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         # Select appropriate tab
         self._select_tab(self.profile_data.current_view_type)
 
-    def _create_basic_tab(self):
+    def _create_action_tab(self):
         # Create root widget of the dock element
-        self.basic_tab_widget = QtWidgets.QWidget()
-        # self.basic_tab_widget.setAutoFillBackground(True)
-        # self.basic_tab_widget.setPalette(self.palette)
+        self.action_tab_widget = QtWidgets.QWidget()
 
         # Create layout and place it inside the dock widget
-        self.basic_layout = QtWidgets.QVBoxLayout(self.basic_tab_widget)
+        self.action_layout = QtWidgets.QVBoxLayout(self.action_tab_widget)
 
         # Create the actual UI
-        self.dock_tabs.addTab(self.basic_tab_widget, "Basic")
-        self._create_basic_ui()
-        self.basic_layout.addStretch(10)
+        self.dock_tabs.addTab(self.action_tab_widget, "Action")
+        self._create_action_ui()
+        self.action_layout.addStretch(10)
 
     def _create_activation_condition_tab(self):
         # Create widget to place inside the tab
@@ -725,7 +723,6 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
             logging.getLogger("system").error(
                 "Invalid tab name encountered, {}".format(tab_text)
             )
-            print("BAD TAB NAME")
             return
 
         self.profile_data.current_view_type = view_type_map[tab_text]
@@ -784,7 +781,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
             "implemented in subclass"
         )
 
-    def _create_basic_ui(self):
+    def _create_action_ui(self):
         """Creates the UI elements for the widget."""
         raise gremlin.error.MissingImplementationError(
             "AbstractContainerWidget._create_basic_ui not "

@@ -40,7 +40,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         super().__init__(profile_data, parent)
 
-    def _create_basic_ui(self):
+    def _create_action_ui(self):
         """Creates the UI components."""
         self.widget_layout = QtWidgets.QHBoxLayout()
 
@@ -62,7 +62,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.timeout_input.valueChanged.connect(self._timeout_changed_cb)
         self.widget_layout.addWidget(self.timeout_input)
 
-        self.basic_layout.addLayout(self.widget_layout)
+        self.action_layout.addLayout(self.widget_layout)
 
         # Insert action widgets
         for i, action in enumerate(self.profile_data.action_sets):
@@ -71,7 +71,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                 "Action {:d}".format(i),
                 gremlin.ui.common.ContainerViewTypes.Basic
             )
-            self.basic_layout.addWidget(widget)
+            self.action_layout.addWidget(widget)
             widget.redraw()
             widget.model.data_changed.connect(self.container_modified.emit)
 

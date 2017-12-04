@@ -42,7 +42,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         """
         super().__init__(profile_data, parent)
 
-    def _create_basic_ui(self):
+    def _create_action_ui(self):
         """Creates the UI components."""
         self.profile_data.create_or_delete_virtual_button()
 
@@ -58,7 +58,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.delay_input.valueChanged.connect(self._delay_changed_cb)
         self.delay_layout.addWidget(self.delay_input)
         self.delay_layout.addStretch()
-        self.basic_layout.addLayout(self.delay_layout)
+        self.action_layout.addLayout(self.delay_layout)
 
         if self.profile_data.action_sets[0] is None:
             self._add_action_selector(
@@ -69,7 +69,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             self._create_action_widget(
                 0,
                 "Short Press",
-                self.basic_layout,
+                self.action_layout,
                 gremlin.ui.common.ContainerViewTypes.Basic
             )
 
@@ -82,7 +82,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             self._create_action_widget(
                 1,
                 "Long Press",
-                self.basic_layout,
+                self.action_layout,
                 gremlin.ui.common.ContainerViewTypes.Basic
             )
 
@@ -121,7 +121,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         group_box = QtWidgets.QGroupBox(label)
         group_box.setLayout(group_layout)
 
-        self.basic_layout.addWidget(group_box)
+        self.action_layout.addWidget(group_box)
 
     def _create_action_widget(self, index, label, layout, view_type):
         """Creates a new action widget.
