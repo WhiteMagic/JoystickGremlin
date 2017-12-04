@@ -20,7 +20,7 @@ from PyQt5 import QtWidgets, QtCore
 
 import container_plugins.basic
 import gremlin
-from gremlin.common import InputType
+from gremlin.common import DeviceType, InputType
 from . import common, input_item
 
 
@@ -67,6 +67,13 @@ class InputItemConfiguration(QtWidgets.QFrame):
 
         :param action_name name of the action to be added
         """
+        # If this is a vJoy item then do not permit adding an action if
+        # there is already one present, as only response curves can be added
+        # and only one of them makes sense to exist
+        if self.item_data.get_device_type() == DeviceType.VJoy:
+            if len(self.item_data.containers) > 0:
+                return
+
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
         container = container_plugins.basic.BasicContainer(self.item_data)
         container.add_action(

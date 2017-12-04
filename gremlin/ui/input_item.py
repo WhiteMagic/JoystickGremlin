@@ -353,8 +353,10 @@ class ActionSetView(common.AbstractView):
             self.group_layout.addLayout(self.action_layout, 0, 0)
         self.group_layout.setColumnStretch(0, 2)
 
-        # Only permit adding actions from the basic tab
-        if self.view_type == common.ContainerViewTypes.Basic:
+        # Only permit adding actions from the basic tab and if the tab is
+        # not associated with a vJoy device
+        if self.view_type == common.ContainerViewTypes.Basic and \
+                self.profile_data.get_device_type() != DeviceType.VJoy:
             self.action_selector = gremlin.ui.common.ActionSelector(
                 profile_data.parent.input_type
             )
@@ -626,8 +628,9 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
         # Create the individual tabs
         self._create_action_tab()
-        self._create_activation_condition_tab()
-        self._create_virtual_button_tab()
+        if self.profile_data.get_device_type() != DeviceType.VJoy:
+            self._create_activation_condition_tab()
+            self._create_virtual_button_tab()
 
         self.dock_tabs.currentChanged.connect(self._tab_changed)
 
