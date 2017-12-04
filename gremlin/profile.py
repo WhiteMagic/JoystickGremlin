@@ -1182,6 +1182,16 @@ class InputItem:
 
         return node
 
+    def get_device_type(self):
+        """Returns the DeviceType of this input item.
+
+        :return DeviceType of this entry
+        """
+        item = self.parent
+        while not isinstance(item, Device):
+            item = item.parent
+        return item.type
+
     def __eq__(self, other):
         """Checks whether or not two InputItem instances are identical.
 
