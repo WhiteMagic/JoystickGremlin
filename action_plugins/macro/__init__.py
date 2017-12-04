@@ -934,6 +934,8 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         super().__init__(action_data, parent)
         assert(isinstance(action_data, Macro))
 
+        self._polling_rate = \
+            gremlin.config.Configuration().macro_axis_polling_rate
         self._recording_times = {
             None: time.time()
         }
@@ -1078,7 +1080,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
 
             if event not in self._recording_times:
                 self._recording_times[event] = time.time()
-            elif time.time() - self._recording_times[event] < 0.1:
+            elif time.time() - self._recording_times[event] < self._polling_rate:
                 add_new_entry = False
 
         if add_new_entry:
@@ -1155,6 +1157,10 @@ class MacroFunctor(AbstractFunctor):
     def process_event(self, event, value):
         MacroFunctor.manager.queue_macro(self.macro)
         if isinstance(self.macro.repeat, gremlin.macro.HoldRepeat):
+            # TODO: This only works with physical buttons as this has no
+            #   notion of a virtual button which can also be used to trigger
+            #   such a hold macro. Will require significant / smart change
+            #   of information passing to make it work.
             gremlin.input_devices.ButtonReleaseActions().register_callback(
                 lambda: MacroFunctor.manager.terminate_macro(self.macro),
                 event

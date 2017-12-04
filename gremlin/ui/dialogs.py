@@ -93,11 +93,30 @@ class OptionsUi(common.BaseDialogUi):
         self._init_action_dropdown()
         self.default_action_layout.addStretch()
 
+        # Macro axis polling rate
+        self.macro_axis_polling_layout = QtWidgets.QHBoxLayout()
+        self.macro_axis_polling_label = \
+            QtWidgets.QLabel("Macro axis polling rate")
+        self.macro_axis_polling_value = common.DynamicDoubleSpinBox()
+        self.macro_axis_polling_value.setRange(0.001, 1.0)
+        self.macro_axis_polling_value.setSingleStep(0.05)
+        self.macro_axis_polling_value.setDecimals(3)
+        self.macro_axis_polling_value.setValue(
+            self.config.macro_axis_polling_rate
+        )
+        self.macro_axis_polling_value.valueChanged.connect(
+            self._macro_axis_polling_rate
+        )
+        self.macro_axis_polling_layout.addWidget(self.macro_axis_polling_label)
+        self.macro_axis_polling_layout.addWidget(self.macro_axis_polling_value)
+        self.macro_axis_polling_layout.addStretch()
+
         self.general_layout.addWidget(self.highlight_input)
         self.general_layout.addWidget(self.close_to_systray)
         self.general_layout.addWidget(self.start_minimized)
         self.general_layout.addWidget(self.show_mode_change_message)
         self.general_layout.addLayout(self.default_action_layout)
+        self.general_layout.addLayout(self.macro_axis_polling_layout)
         self.general_layout.addStretch()
         self.tab_container.addTab(self.general_page, "General")
 
@@ -311,6 +330,14 @@ class OptionsUi(common.BaseDialogUi):
         :param value the name of the newly selected action
         """
         self.config.default_action = value
+        self.config.save()
+
+    def _macro_axis_polling_rate(self, value):
+        """Updates the config with the newly set polling rate.
+
+        :param value the new polling rate
+        """
+        self.config.macro_axis_polling_rate = value
         self.config.save()
 
 

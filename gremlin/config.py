@@ -336,6 +336,19 @@ class Configuration:
         self.save()
 
     @property
+    def macro_axis_polling_rate(self):
+        """Returns the polling rate to use when recording axis macro actions.
+
+        :return polling rate to use when recording a macro with axis inputs
+        """
+        return self._data.get("macro_axis_polling_rate", 0.1)
+
+    @macro_axis_polling_rate.setter
+    def macro_axis_polling_rate(self, value):
+        self._data["macro_axis_polling_rate"] = value
+        self.save()
+
+    @property
     def window_size(self):
         """Returns the size of the main Gremlin window.
 
