@@ -260,6 +260,8 @@ class MacroManager:
         if isinstance(macro.repeat, ToggleRepeat) and macro.id in self._active:
             self.terminate_macro(macro)
         else:
+            # Preprocess macro to contain pauses as neccessary
+            self._preprocess_macro(macro)
             self._queue.append(MacroEntry(macro, True))
             self._schedule_event.set()
 
@@ -327,7 +329,6 @@ class MacroManager:
                 while count < macro.repeat.count and self._flags[macro.id]:
                     for action in macro.sequence:
                         action()
-                        time.sleep(default_delay)
                     count += 1
                     time.sleep(delay)
 
@@ -336,14 +337,12 @@ class MacroManager:
                 while self._flags[macro.id]:
                     for action in macro.sequence:
                         action()
-                        time.sleep(default_delay)
                     time.sleep(delay)
 
         # Handle simple one shot macros
         else:
             for action in macro.sequence:
                 action()
-                time.sleep(default_delay)
 
         # Remove macro from active set, notify manager, and remove any
         # potential callbacks
@@ -351,6 +350,18 @@ class MacroManager:
         if macro.id in self._flags:
             del self._flags[macro.id]
         self._schedule_event.set()
+
+    def _preprocess_macro(self, macro):
+        """Inserts pauses as neccessary into the macro."""
+        new_sequence = []
+        new_sequence.append(macro.sequence[0])
+        for a1, a2 in zip(macro.sequence[:-1], macro.sequence[1:]):
+            if isinstance(a1, PauseAction) or isinstance(a2, PauseAction):
+                new_sequence.append(a2)
+            else:
+                new_sequence.append(PauseAction(default_delay))
+                new_sequence.append(a2)
+        macro._sequence = new_sequence
 
 
 class Macro:
