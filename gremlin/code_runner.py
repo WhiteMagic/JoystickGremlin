@@ -36,6 +36,7 @@ class CodeRunner:
 
         self._inheritance_tree = None
         self._vjoy_curves = VJoyCurves()
+        self._merge_axes = []
         self._running = False
 
     def is_running(self):
@@ -103,6 +104,50 @@ class CodeRunner:
                                 InputItemCallback(input_item),
                                 input_item.always_execute
                             )
+
+            # Create merge axis callbacks
+            for entry in profile.merge_axes:
+                merge_axis = MergeAxis(
+                    entry["vjoy"]["device_id"],
+                    entry["vjoy"]["axis_id"]
+                )
+                self._merge_axes.append(merge_axis)
+
+                # Lower axis callback
+                event = event_handler.Event(
+                    event_type=gremlin.common.InputType.JoystickAxis,
+                    hardware_id=entry["lower"]["hardware_id"],
+                    windows_id=entry["lower"]["windows_id"],
+                    identifier=entry["lower"]["axis_id"]
+                )
+                self.event_handler.add_callback(
+                    util.get_device_id(
+                        entry["lower"]["hardware_id"],
+                        entry["lower"]["windows_id"]
+                    ),
+                    entry["mode"],
+                    event,
+                    merge_axis.update_axis1,
+                    False
+                )
+
+                # Upper axis callback
+                event = event_handler.Event(
+                    event_type=gremlin.common.InputType.JoystickAxis,
+                    hardware_id=entry["upper"]["hardware_id"],
+                    windows_id=entry["upper"]["windows_id"],
+                    identifier=entry["upper"]["axis_id"]
+                )
+                self.event_handler.add_callback(
+                    util.get_device_id(
+                        entry["upper"]["hardware_id"],
+                        entry["upper"]["windows_id"]
+                    ),
+                    entry["mode"],
+                    event,
+                    merge_axis.update_axis2,
+                    False
+                )
 
             # Create vJoy response curve setups
             self._vjoy_curves.profile_data = profile.vjoy_devices
@@ -207,6 +252,37 @@ class VJoyCurves:
                             action.control_points
                         )
 
+
+class MergeAxis:
+
+    """Merges inputs from two distinct axes into a single one."""
+
+    def __init__(self, vjoy_id, input_id):
+        self.axis_values = [0.0, 0.0]
+        self.vjoy_id = vjoy_id
+        self.input_id = input_id
+
+    def _update(self):
+        """Updates the merged axis value."""
+        value = (self.axis_values[0] - self.axis_values[1]) / 2.0
+        gremlin.joystick_handling.VJoyProxy()[self.vjoy_id]\
+            .axis(self.input_id).value = value
+
+    def update_axis1(self, event):
+        """Updates information for the first axis.
+
+        :param event data event for the first axis
+        """
+        self.axis_values[0] = event.value
+        self._update()
+
+    def update_axis2(self, event):
+        """Updates information for the second axis.
+
+        :param event data event for the second axis
+        """
+        self.axis_values[1] = event.value
+        self._update()
 
 
 class InputItemCallback:

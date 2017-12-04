@@ -48,14 +48,15 @@ class MergeAxisUi(common.BaseDialogUi):
 
         self.from_profile()
 
-    def _add_entry(self):
+    def _add_entry(self, without_saving=False):
         """Adds a new axis to merge configuration entry."""
         entry = MergeAxisEntry(self.to_profile, self.profile_data)
         entry.closed.connect(self._remove_entry)
 
         self.entries.append(entry)
         self.merge_layout.addWidget(entry)
-        self.to_profile()
+        if not without_saving:
+            self.to_profile()
 
     def _remove_entry(self, widget):
         """Removes a widget from the dialog.
@@ -103,7 +104,7 @@ class MergeAxisUi(common.BaseDialogUi):
     def from_profile(self):
         """Populates the merge axis entries of the ui from the profile data."""
         for entry in self.profile_data.merge_axes:
-            self._add_entry()
+            self._add_entry(True)
             new_entry = self.entries[-1]
             new_entry.select(entry)
 
