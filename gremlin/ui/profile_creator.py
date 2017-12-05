@@ -346,9 +346,10 @@ class BindableAction(QtWidgets.QWidget):
         self.icon_layout.addStretch()
 
         for container in input_item.containers:
-            for action in container.actions:
-                self.icon_layout.addWidget(
-                    gremlin.ui.input_item.ActionLabel(action))
+            for action_set in container.action_sets:
+                for action in action_set:
+                    self.icon_layout.addWidget(
+                        gremlin.ui.input_item.ActionLabel(action))
         self.main_layout.addLayout(self.icon_layout)
         self.main_layout.addWidget(self.bound_action)
 
