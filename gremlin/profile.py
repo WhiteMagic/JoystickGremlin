@@ -192,7 +192,7 @@ class ProfileConverter:
     """Handle converting and checking profiles."""
 
     # Current profile version number
-    current_version = 4
+    current_version = 5
 
     def __init__(self):
         pass
@@ -230,11 +230,16 @@ class ProfileConverter:
             new_root = self._convert_from_v1(root)
             new_root = self._convert_from_v2(new_root)
             new_root = self._convert_from_v3(new_root)
+            new_root = self._convert_from_v4(new_root)
         if old_version == 2:
             new_root = self._convert_from_v2(root)
             new_root = self._convert_from_v3(new_root)
+            new_root = self._convert_from_v4(new_root)
         if old_version == 3:
             new_root = self._convert_from_v3(root)
+            new_root = self._convert_from_v4(new_root)
+        if old_version == 4:
+            new_root = self._convert_from_v4(root)
 
         if new_root is not None:
             # Save converted version
@@ -265,6 +270,8 @@ class ProfileConverter:
             return 3
         elif root.tag == "profile" and int(root.get("version")) == 4:
             return 4
+        elif root.tag == "profile" and int(root.get("version")) == 5:
+            return 5
         else:
             raise error.ProfileError(
                 "Invalid profile version encountered"
@@ -449,6 +456,33 @@ class ProfileConverter:
 
                     for container in containers:
                         input_item.append(container)
+
+        return new_root
+
+    def _convert_from_v4(self, root):
+        """Converts v4 profiles to v5 profiles.
+
+        The following operations are performed in this conversion:
+        - Place individual actions inside action_sets
+
+        :param root the v4 profile
+        :return v5 representation of the profile
+        """
+        new_root = copy.deepcopy(root)
+        new_root.set("version", "5")
+        for container in new_root.iter("container"):
+            actions_to_remove = []
+            action_sets = []
+            for action in container:
+                action_set = ElementTree.Element("action-set")
+                action_set.append(action)
+                action_sets.append(action_set)
+                actions_to_remove.append(action)
+
+            for action in actions_to_remove:
+                container.remove(action)
+            for action_set in action_sets:
+                container.append(action_set)
 
         return new_root
 
@@ -754,7 +788,7 @@ class Profile:
         """
         # Generate XML document
         root = ElementTree.Element("profile")
-        root.set("version", "4")
+        root.set("version", "5")
 
         # Device settings
         devices = ElementTree.Element("devices")
