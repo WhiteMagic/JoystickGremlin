@@ -231,6 +231,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
 
     def merge_axis(self):
+        """Opens the modal window to define axis merging."""
         self.modal_windows["merge_axis"] = \
             gremlin.ui.merge_axis.MergeAxisUi(self._profile)
         self.modal_windows["merge_axis"].show()
@@ -250,6 +251,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
 
     def profile_creator(self):
+        """Opens the UI used to create a profile from an existing one."""
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
             "Profile to load as template",

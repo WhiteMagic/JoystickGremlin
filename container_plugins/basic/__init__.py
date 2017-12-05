@@ -107,6 +107,8 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
 class BasicContainerFunctor(gremlin.base_classes.AbstractFunctor):
 
+    """Executes the contents of the associated basic container."""
+
     def __init__(self, container):
         super().__init__(container)
         self.action_set = gremlin.code_runner.ActionSetExecutionGraph(
@@ -114,6 +116,12 @@ class BasicContainerFunctor(gremlin.base_classes.AbstractFunctor):
         )
 
     def process_event(self, event, value):
+        """Executes the content with the provided data.
+
+        :param event the event to process
+        :param value the value received with the event
+        :return True if execution was successful, False otherwise
+        """
         return self.action_set.process_event(event, value)
 
 

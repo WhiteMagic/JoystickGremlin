@@ -26,6 +26,8 @@ from . import common
 
 class ActivationConditionWidget(QtWidgets.QWidget):
 
+    """Widget displaying the UI used to configure activation conditions."""
+
     # Signal which is emitted whenever the widget's contents change
     activation_condition_modified = QtCore.pyqtSignal()
 
@@ -37,12 +39,18 @@ class ActivationConditionWidget(QtWidgets.QWidget):
     }
 
     def __init__(self, profile_data, parent=None):
+        """Creates a new instance.
+
+        :param profile_data the profile data associated with the conditions
+        :param parent the parent widget of this
+        """
         super().__init__(parent)
         self.profile_data = profile_data
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self._create_ui()
 
     def _create_ui(self):
+        """Creates the configuration UI."""
         self.granularity_selector = QtWidgets.QComboBox()
         self.granularity_selector.addItem("None")
         self.granularity_selector.addItem("Action")
@@ -77,6 +85,10 @@ class ActivationConditionWidget(QtWidgets.QWidget):
         self.main_layout.addStretch()
 
     def _granularity_changed_cb(self, index):
+        """Updates whether conditions are on actions or containers.
+
+        :param index the entry of the selection box
+        """
         index_to_type = {
             0: None,
             1: "action",
@@ -98,9 +110,16 @@ class ActivationConditionWidget(QtWidgets.QWidget):
 
 class AbstractConditionWidget(QtWidgets.QWidget):
 
+    """Abstract class for condition ui widgets."""
+
     deleted = QtCore.pyqtSignal(base_classes.AbstractCondition)
 
     def __init__(self, condition_data, parent=None):
+        """Creates a new widget.
+
+        :param condition_data the data to be represented by the widget
+        :param parent the parent of this widget
+        """
         super().__init__(parent)
         self.condition_data = condition_data
 
@@ -108,15 +127,24 @@ class AbstractConditionWidget(QtWidgets.QWidget):
         self._create_ui()
 
     def _create_ui(self):
+        """Creates the configuration UI for this widget."""
         pass
 
 
 class KeyboardConditionWidget(AbstractConditionWidget):
 
+    """Widget allowing the configuration of a keyboard based condition."""
+
     def __init__(self, condition_data, parent=None):
+        """Creates a new widget.
+
+        :param condition_data the data to be represented by the widget
+        :param parent the parent of this widget
+        """
         super().__init__(condition_data, parent)
 
     def _create_ui(self):
+        """Creates the configuration UI for this widget."""
         self.key_label = QtWidgets.QLabel("Not set")
         if self.condition_data.scan_code is not None:
             self.key_label.setText("<b>{}</b>".format(
@@ -152,6 +180,10 @@ class KeyboardConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.delete_button)
 
     def _key_pressed_cb(self, key):
+        """Updates the UI and model with the newly pressed key information.
+
+        :param key the key that has been pressed
+        """
         self.condition_data.scan_code = key.identifier[0]
         self.condition_data.is_extended = key.identifier[1]
         self.condition_data.comparison = self.comparison_dropdown.currentText().lower()
@@ -163,6 +195,10 @@ class KeyboardConditionWidget(AbstractConditionWidget):
         ))
 
     def _comparison_changed_cb(self, text):
+        """Updates the comparison operation to use.
+
+        :param text the new comparison operation name
+        """
         self.condition_data.comparison = text.lower()
 
     def _request_user_input(self):
@@ -191,11 +227,19 @@ class KeyboardConditionWidget(AbstractConditionWidget):
 
 class JoystickConditionWidget(AbstractConditionWidget):
 
+    """Widget allowing the configuration of a keyboard based condition."""
+
     def __init__(self, condition_data, parent=None):
+        """Creates a new widget.
+
+        :param condition_data the data to be represented by the widget
+        :param parent the parent of this widget
+        """
         self.input_event = None
         super().__init__(condition_data, parent)
 
     def _create_ui(self):
+        """Creates the configuration UI for this widget."""
         common.clear_layout(self.main_layout)
 
         self.record_button = QtWidgets.QPushButton("Change")
@@ -216,6 +260,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.delete_button)
 
     def _axis_ui(self):
+        """Creates the UI needed to configure an axis based condition."""
         self.lower = common.DynamicDoubleSpinBox()
         self.lower.setMinimum(-1.0)
         self.lower.setMaximum(1.0)
@@ -253,6 +298,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.upper)
 
     def _button_ui(self):
+        """Creates the UI needed to configure a button based condition."""
         self.comparison_dropdown = QtWidgets.QComboBox()
         self.comparison_dropdown.addItem("Pressed")
         self.comparison_dropdown.addItem("Released")
@@ -272,6 +318,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.comparison_dropdown)
 
     def _hat_ui(self):
+        """Creates the UI needed to configure a hat based condition."""
         directions = [
             "Center", "North", "North East", "East", "South East",
             "South", "South West", "West", "North West"
@@ -295,6 +342,10 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.comparison_dropdown)
 
     def _input_pressed_cb(self, event):
+        """Processes input events to update the UI and model.
+
+        :param event the input event to process
+        """
         self.condition_data.device_id = event.hardware_id
         self.condition_data.windows_id = event.windows_id
         self.condition_data.input_type = event.event_type
@@ -338,12 +389,24 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.input_dialog.show()
 
     def _range_lower_changed_cb(self, value):
+        """Updates the lower part of an axis range.
+
+        :param value the new value
+        """
         self.condition_data.range[0] = value
 
     def _range_upper_changed_cb(self, value):
+        """Updates the upper part of an axis range.
+
+        :param value the new value
+        """
         self.condition_data.range[1] = value
 
     def _comparison_changed_cb(self, text):
+        """Updates the comparison operation to use.
+
+        :param text the new comparison operation name
+        """
         if self.condition_data.input_type == InputType.JoystickButton:
             self.condition_data.comparison = text.lower()
         elif self.condition_data.input_type == InputType.JoystickHat:
@@ -356,13 +419,20 @@ class JoystickConditionWidget(AbstractConditionWidget):
             )
 
 
-
 class InputActionConditionWidget(AbstractConditionWidget):
 
+    """Creates the UI needed to configure an input action based condition."""
+
     def __init__(self, condition_data, parent=None):
+        """Creates a new widget.
+
+        :param condition_data the data to be represented by the widget
+        :param parent the parent of this widget
+        """
         super().__init__(condition_data, parent)
 
     def _create_ui(self):
+        """Creates the configuration UI for this widget."""
         self.state_dropdown = QtWidgets.QComboBox()
         self.state_dropdown.addItem("Pressed")
         self.state_dropdown.addItem("Released")
@@ -388,26 +458,57 @@ class InputActionConditionWidget(AbstractConditionWidget):
         self.main_layout.addWidget(self.delete_button)
 
     def _state_selection_changed(self, label):
+        """Updates the activation state of the condition.
+
+        :param label the new activation state
+        """
         self.condition_data.comparison = label.lower()
 
 
 class ConditionModel(common.AbstractModel):
 
+    """Stores and represents condition data."""
+
     def __init__(self, condition_data, parent=None):
+        """Creates a new model to store condition data.
+
+        :param condition_data the condition data to represent
+        :param parent the parent of this object
+        """
         super().__init__(parent)
         self.condition_data = condition_data
 
     def rows(self):
+        """Returns the number of rows in the model.
+
+        :return number of rows
+        """
         return len(self.condition_data.conditions)
 
     def data(self, index):
+        """Returns the data stored at the given index.
+
+        :param index the index for which to return the data
+        :return the data stored at the provided index
+        """
         return self.condition_data.conditions[index]
 
     def add_condition(self, condition_data):
+        """Adds a condition to to the model.
+
+        :param condition_data the condition data to add
+        """
         self.condition_data.conditions.append(condition_data)
         self.data_changed.emit()
 
     def delete_condition(self, condition_data):
+        """Deletes a condition from the model.
+
+        Attempts to locate the provided condition and deletes it, if it is
+        present.
+
+        :param condition_data the condition to remove.
+        """
         idx = self.condition_data.conditions.index(condition_data)
         if idx != -1:
             del self.condition_data.conditions[idx]
@@ -423,6 +524,8 @@ class ConditionModel(common.AbstractModel):
 
 
 class ConditionView(common.AbstractView):
+
+    """Widget visualizing a condition model instance."""
 
     condition_map = {
         "Keyboard": [base_classes.KeyboardCondition,
@@ -441,6 +544,10 @@ class ConditionView(common.AbstractView):
     }
 
     def __init__(self, parent=None):
+        """Creates a new instance.
+
+        :param parent the parent of this widget
+        """
         super().__init__(parent)
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -469,6 +576,7 @@ class ConditionView(common.AbstractView):
         self.controls_layout.addWidget(self.condition_add_button)
 
     def redraw(self):
+        """Redraws the entire view."""
         common.clear_layout(self.conditions_layout)
 
         lookup = {}
@@ -484,15 +592,21 @@ class ConditionView(common.AbstractView):
             self.conditions_layout.addWidget(condition_widget)
 
     def _add_condition(self):
+        """Adds a condition to the view's model."""
         data_type = ConditionView.condition_map[
             self.condition_selector.currentText()
         ][0]
         self.model.add_condition(data_type())
 
     def _rule_changed_cb(self, text):
+        """Updates the rule of the model.
+
+        :param text the new rule value
+        """
         self.model.rule = ConditionView.rules_map[text]
 
     def _model_changed(self):
+        """Updates the view when the model changes."""
         self.rule_selector.setCurrentText(
             ConditionView.rules_map[self.model.rule]
         )
