@@ -18,8 +18,7 @@
 from abc import abstractmethod, ABCMeta
 
 import gremlin
-from gremlin import actions, config, event_handler, input_devices, \
-    joystick_handling, macro, util
+from gremlin import event_handler, input_devices, joystick_handling, macro, util
 import action_plugins.remap
 
 
@@ -52,6 +51,8 @@ class CodeRunner:
         :param inheritance_tree tree encoding inheritance between the
             different modes
         :param settings profile settings to apply at launch
+        :param start_mode the mode in which to start Gremlin
+        :param profile the profile to use when generating all the callbacks
         """
         # Reset states to their default values
         self._inheritance_tree = inheritance_tree
@@ -361,16 +362,16 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
     graph terminates.
     """
 
-    def __init__(self, object):
+    def __init__(self, instance):
         """Creates a new execution graph based on the provided data.
 
-        :param the object to use in order to generate the graph
+        :param instance the object to use in order to generate the graph
         """
         self.functors = []
         self.transitions = {}
         self.current_index = 0
 
-        self._build_graph(object)
+        self._build_graph(instance)
 
     def process_event(self, event, value):
         """Executes the graph with the provided data.
@@ -387,10 +388,10 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
         self.current_index = 0
 
     @abstractmethod
-    def _build_graph(self, object):
+    def _build_graph(self, instance):
         """Builds the graph structure based on the given object's content.
 
-        :param object the object to use in order to generate the graph
+        :param instance the object to use in order to generate the graph
         """
         pass
 

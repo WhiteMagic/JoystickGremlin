@@ -19,8 +19,6 @@
 from abc import abstractmethod, ABCMeta
 import enum
 import logging
-from mako.template import Template
-from mako.lookup import TemplateLookup
 from xml.etree import ElementTree
 
 import gremlin
@@ -362,10 +360,10 @@ class AbstractFunctor(metaclass=ABCMeta):
     These classes are used in the internal code execution system.
     """
 
-    def __init__(self, object):
+    def __init__(self, instance):
         """Creates a new instance, extracting needed information.
 
-        :param object the object which contains the information needed to
+        :param instance the object which contains the information needed to
             execute it later on
         """
         pass

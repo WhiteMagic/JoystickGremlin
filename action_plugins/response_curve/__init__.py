@@ -17,6 +17,7 @@
 
 
 import enum
+import logging
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree

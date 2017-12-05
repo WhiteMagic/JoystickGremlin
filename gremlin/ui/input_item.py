@@ -879,7 +879,7 @@ class AbstractActionWrapper(QtWidgets.QDockWidget):
         # Create widget sitting in the root of the dock element
         self.dock_widget = QtWidgets.QFrame()
         self.dock_widget.setFrameShape(QtWidgets.QFrame.Box)
-        self.dock_widget.setObjectName("frame");
+        self.dock_widget.setObjectName("frame")
         self.dock_widget.setStyleSheet(
             "#frame { border: 1px solid #949494; background-color: #afafaf; }"
         )

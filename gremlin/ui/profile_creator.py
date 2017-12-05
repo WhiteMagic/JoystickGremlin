@@ -20,7 +20,7 @@ import copy
 
 from PyQt5 import QtWidgets
 
-from gremlin import common, joystick_handling, macro, profile, util
+from gremlin import common, joystick_handling, macro, util
 import gremlin.ui.common
 import gremlin.ui.input_item
 

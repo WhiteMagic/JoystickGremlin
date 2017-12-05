@@ -17,6 +17,8 @@
 
 import enum
 
+from gremlin.error import ProfileError
+
 
 class InputType(enum.Enum):
 
@@ -63,7 +65,7 @@ def input_type_to_tag(input_type):
     if input_type in lookup:
         return lookup[input_type]
     else:
-        raise gremlin.error.ProfileError(
+        raise ProfileError(
             "Invalid input type specified {}".format(input_type)
         )
 
@@ -82,7 +84,7 @@ def tag_to_input_type(tag):
     if tag in lookup:
         return lookup[tag]
     else:
-        raise gremlin.error.ProfileError(
+        raise ProfileError(
             "Invalid input type specified {}".format(tag)
         )
 

@@ -19,7 +19,7 @@
 import os
 from xml.etree import ElementTree
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType

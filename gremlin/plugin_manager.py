@@ -210,7 +210,6 @@ class ActionPlugins:
                 except Exception as e:
                     # Log an error and ignore the action_plugins if
                     # anything is wrong with it
-                    raise(e) # TODO: REMOVE ME
                     logging.getLogger("system").warning(
                         "Loading action_plugins '{}' failed due to: {}".format(
                             root.split("\\")[-1],

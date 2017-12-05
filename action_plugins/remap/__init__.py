@@ -18,7 +18,6 @@
 
 from xml.etree import ElementTree
 
-from .. import common
 from gremlin.common import InputType
 from gremlin import input_devices, joystick_handling
 import gremlin.ui.common
@@ -131,6 +130,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
 class RemapFunctor(gremlin.base_classes.AbstractFunctor):
 
     def __init__(self, action):
+        super().__init__(action)
         self.vjoy_device_id = action.vjoy_device_id
         self.vjoy_input_id = action.vjoy_input_id
         self.input_type = action.input_type

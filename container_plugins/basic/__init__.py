@@ -17,8 +17,6 @@
 
 from xml.etree import ElementTree
 
-from mako.template import Template
-
 import gremlin
 import gremlin.ui.common
 import gremlin.ui.input_item

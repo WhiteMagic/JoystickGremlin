@@ -353,8 +353,7 @@ class MacroManager:
 
     def _preprocess_macro(self, macro):
         """Inserts pauses as neccessary into the macro."""
-        new_sequence = []
-        new_sequence.append(macro.sequence[0])
+        new_sequence = [macro.sequence[0]]
         for a1, a2 in zip(macro.sequence[:-1], macro.sequence[1:]):
             if isinstance(a1, PauseAction) or isinstance(a2, PauseAction):
                 new_sequence.append(a2)
@@ -670,7 +669,7 @@ class AbstractRepeat:
 
 class CountRepeat(AbstractRepeat):
 
-    "Repeat mode which repeats the macro a fixed number of times."
+    """Repeat mode which repeats the macro a fixed number of times."""
 
     def __init__(self, count=1, delay=0.1):
         """Creates a new instance.
@@ -927,7 +926,7 @@ g_name_to_key = {
 
 
 # Populate the scan code based lookup table
-for name, key in g_name_to_key.items():
-    assert isinstance(key, Key)
-    key.lookup_name = name
-    g_scan_code_to_key[(key.scan_code, key.is_extended)] = key
+for name_, key_ in g_name_to_key.items():
+    assert isinstance(key_, Key)
+    key_.lookup_name = name_
+    g_scan_code_to_key[(key_.scan_code, key_.is_extended)] = key_

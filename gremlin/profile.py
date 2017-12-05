@@ -154,6 +154,8 @@ def safe_read(node, key, type_cast=None):
 
     :param node the XML node from which to read an attribute
     :param key the attribute to read
+    :param type_cast the type to which to cast the read value, if specified
+    :return the value stored in the node with the given key
     """
     if key not in node.keys():
         msg = "Attempted to read attribute '{}' which does not exist.".format(key)
@@ -351,7 +353,7 @@ class ProfileConverter:
                 # Check if macros are used to create what is now a
                 # "map to keyboard" action
                 press_and_release = [False, False]
-                count = sum([1 for v in input_item])
+                count = sum([1 for _ in input_item])
                 for action in input_item:
                     if input_item.tag == "button":
                         if action.tag == "macro":

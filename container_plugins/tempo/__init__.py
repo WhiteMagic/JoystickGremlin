@@ -21,8 +21,6 @@ import threading
 import time
 from xml.etree import ElementTree
 
-from mako.template import Template
-
 from PyQt5 import QtWidgets
 
 import gremlin
@@ -233,7 +231,7 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
     def process_event(self, event, value):
         # TODO: Currently this does not handle hat or axis inputs
         if not isinstance(value.current, bool):
-            logging.getLogger("system").warn(
+            logging.getLogger("system").warning(
                 "Invalid data type received in Tempo container: {}".format(
                     type(event.value)
                 )

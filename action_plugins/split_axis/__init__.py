@@ -126,14 +126,14 @@ class SplitAxisFunctor(AbstractFunctor):
 
     def process_event(self, event, value):
         if value.current < self.center_point:
-            range = -1.0 - self.center_point
+            value_range = -1.0 - self.center_point
             self.vjoy[self.axis1[0]].axis(self.axis1[1]).value = \
-                ((value.current - self.center_point) / range) * 2.0 - 1.0
+                ((value.current - self.center_point) / value_range) * 2.0 - 1.0
             self.vjoy[self.axis2[0]].axis(self.axis2[1]).value = -1.0
         else:
-            range = 1.0 - self.center_point
+            value_range = 1.0 - self.center_point
             self.vjoy[self.axis2[0]].axis(self.axis2[1]).value = \
-                ((value.current - self.center_point) / range) * 2.0 - 1.0
+                ((value.current - self.center_point) / value_range) * 2.0 - 1.0
             self.vjoy[self.axis1[0]].axis(self.axis1[1]).value = -1.0
 
         return True

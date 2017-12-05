@@ -131,8 +131,8 @@ class CubicBezierSpline:
             # Get t -> coordinate mappings
             step_size = 1.0 / 100
             self._lookup.append([])
-            for i in range(0, 101):
-                t = i * step_size
+            for j in range(0, 101):
+                t = j * step_size
                 self._lookup[-1].append((t, self._value_at_t(points, t)))
 
     def _value_at_t(self, points, t):
@@ -169,6 +169,7 @@ class CubicBezierSpline:
         x = gremlin.util.clamp(x, -1.0, 1.0)
 
         # Determine spline group to use
+        index = 0
         if self.knots[0][0] > x:
             index = 0
         elif self.knots[-1][0] <= x:

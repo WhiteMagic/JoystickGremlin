@@ -567,7 +567,6 @@ class ButtonReleaseActions(QtCore.QObject):
         :param evt the joystick event to process
         """
         if evt in self._registry and not evt.is_pressed:
-            vjoy = joystick_handling.VJoyProxy()
             for callback in self._registry[evt]:
                 callback()
             self._registry[evt] = []

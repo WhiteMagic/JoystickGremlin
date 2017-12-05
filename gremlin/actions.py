@@ -16,15 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from abc import abstractmethod, ABCMeta
-import copy
 from functools import partial
 import logging
-import threading
-import time
 
-from PyQt5 import QtCore, QtMultimedia
-
-from . import base_classes, common, error, fsm, input_devices, macro, util
+from . import base_classes, common, fsm, input_devices, macro, util
 
 
 def smart_all(conditions):
@@ -193,10 +188,7 @@ class JoystickCondition(AbstractCondition):
     def __init__(self, condition):
         """Creates a new instance.
 
-        :param windows_id the id assigned to the joystick by windows
-        :param input_type the input type to check
-        :param input_id the index of the input to check
-        :param comparison the comparison operation to perform when evaluated
+        :param condition the condition to check against
         """
         super().__init__(condition.comparison)
         self.windows_id = condition.windows_id
@@ -231,7 +223,7 @@ class JoystickCondition(AbstractCondition):
             return joy.hat(self.input_id).direction == \
                    util.hat_direction_to_tuple(self.comparison)
         else:
-            logging.getLogger("system").warn(
+            logging.getLogger("system").warning(
                 "Invalid input_type {} received".format(self.input_type)
             )
             return False
@@ -388,271 +380,3 @@ class HatButton(VirtualButton):
             return self._fsm.perform("press")
         else:
             return self._fsm.perform("release")
-
-
-class AbstractActionContainer:
-
-    """Code implementation used by containers."""
-
-    def __init__(self, action_sets, virtual_button):
-        """Creates a new instance.
-
-        :param action_sets the actions that are part of the container
-        :param virtual_button virtual button instance used with this container
-        """
-        self.action_sets = action_sets
-        self.virtual_button = virtual_button
-
-    def _process_value(self, value):
-        """Processes a value through the container, handling activation etc.
-
-        :param value the original input value
-        :return value once processed by the activation condition, if present
-        """
-        use_value = value
-        if self.virtual_button is not None:
-            use_value = Value(self.virtual_button.is_pressed)
-        return use_value
-
-    def __call__(self, event, value):
-        """Executes the container.
-
-        This will run the appropriate action contained in the container if
-        activation condition and other checks are passed successfully.
-
-        :param event the event triggering the execution
-        :param value the even'ts value with potential modifications from other
-            prior executions
-        """
-        if self.virtual_button is not None:
-            self.virtual_button.process(
-                event.value,
-                lambda x: self._execute_call(event, x)
-            )
-        else:
-            self._execute_call(event, value)
-
-    def _execute_call(self, event, value):
-        """Performs the actual execution of the container.
-
-        This method is called by __call__ and has to be implemented by
-        derived classes to implement the actual execution functionality.
-
-        :param event the event triggering the execution
-        :param value the event's value with potential modifications from other
-            prior executions
-        """
-        raise error.GremlinError("Missing _execute_call implementation")
-
-
-class Basic(AbstractActionContainer):
-
-    """Implements the execution logic of basic containers."""
-
-    def __init__(self, action_sets, virtual_button=None):
-        """Creates a new instance.
-
-        :param action_sets the actions that are part of the container
-        :param virtual_button virtual button instance used with this container
-        """
-        super().__init__(action_sets, virtual_button)
-        assert len(self.action_sets) == 1
-
-    def _execute_call(self, event, value):
-        """Executes the action stored within the container.
-
-        :param event the event triggering the execution
-        :param value the even'ts value with potential modifications from other
-            prior executions
-        """
-        for action in self.action_sets[0]:
-            action(event, value, virtual_button=self.virtual_button)
-
-
-class Tempo(AbstractActionContainer):
-
-    """Implements the execution logic of tempo containers."""
-
-    # This entire container only makes sense for button like inputs
-
-    def __init__(self, action_sets, virtual_button, duration):
-        """Creates a new instance.
-
-        :param action_sets the actions that are part of the container
-        :param virtual_button virtual button instance used with this container
-        :param duration time after which the long press action is used
-        """
-        super().__init__(action_sets, virtual_button)
-        self.duration = duration
-        self.start_time = 0
-        self.timer = None
-        self.value_press = None
-        self.event_press = None
-
-    def _execute_call(self, event, value):
-        """Executes the action stored within the container.
-
-        :param event the event triggering the execution
-        :param value the even'ts value with potential modifications from other
-            prior executions
-        """
-        # Has to change and use timers internally probably
-        # 1. both press and release have to be sent for some actions, such
-        #   as macro or remap
-        # 2. want to be able to do things where long is being held down and
-        #   start doing it as soon as the delay has expired
-
-        if isinstance(value.current, bool) and value.current:
-            self.value_press = copy.deepcopy(value)
-            self.event_press = event.clone()
-
-        if value.current:
-            self.start_time = time.time()
-            self.timer = threading.Timer(self.duration, self._long_press)
-            self.timer.start()
-        else:
-            if (self.start_time + self.duration) > time.time():
-                self.timer.cancel()
-                for action in self.action_sets[0]:
-                    action(
-                        self.event_press,
-                        self.value_press,
-                        virtual_button=self.virtual_button
-                    )
-                time.sleep(0.1)
-                for action in self.action_sets[0]:
-                    action(event, value, virtual_button=self.virtual_button)
-            else:
-                for action in self.action_sets[1]:
-                    action(event, value, virtual_button=self.virtual_button)
-
-            self.timer = None
-
-    def _long_press(self):
-        """Callback executed, when the delay expires."""
-        for action in self.action_sets[1]:
-            action(
-                self.event_press,
-                self.value_press,
-                virtual_button=self.virtual_button
-            )
-
-
-class Chain(AbstractActionContainer):
-
-    """Implements the execution logic of the chain container."""
-
-    def __init__(self, action_sets, virtual_button, timeout=0.0):
-        """Creates a new instance.
-
-        :param action_sets the actions that are part of the container
-        :param virtual_button virtual button instance used with this container
-        :param timeout duration after which the chain resets to the first entry
-        """
-        super().__init__(action_sets, virtual_button)
-        self.index = 0
-        self.timeout = timeout
-        self.last_execution = 0.0
-        self.last_value = None
-
-    def _execute_call(self, event, value):
-        """Executes the action stored within the container.
-
-        :param event the event triggering the execution
-        :param value the even'ts value with potential modifications from other
-            prior executions
-        """
-        if self.timeout > 0.0:
-            if self.last_execution + self.timeout < time.time():
-                self.index = 0
-                self.last_execution = time.time()
-
-        # TODO: This behaves somewhat odd with hats and axes. Axes do nothing
-        #   as they make no sense while hats only switch to the next element
-        #   if the hat is let go.
-
-        # FIXME: Currently this allows the use of "hat as button" and
-        #   "hat as hat" in the same chain which is entirely useless and
-        #   shouldn't be done but can't truly be prevented.
-
-        # FIXME: Currently this behaves oddly with axis macros due to them only
-        #   entering this section when the "button" is pressed and not on
-        #   release.
-
-        # Execute action
-        for action in self.action_sets[self.index]:
-            action(event, value, virtual_button=self.virtual_button)
-
-        # Decide how to switch to next action
-        if event.event_type in [
-            common.InputType.JoystickAxis,
-            common.InputType.JoystickHat
-        ]:
-            if self.virtual_button is not None:
-                if not value.current:
-                    self.index = (self.index + 1) % len(self.action_sets)
-            else:
-                if event.event_type == common.InputType.JoystickHat:
-                    if event.value == (0, 0):
-                        self.index = (self.index + 1) % len(self.action_sets)
-                    self.last_value = event.value
-                else:
-                    logging.getLogger("system").warning(
-                        "Trying to use chain container with an axis, this is "
-                        "not a sensible thing."
-                    )
-                    return
-        else:
-            if not value.current:
-                self.index = (self.index + 1) % len(self.action_sets)
-
-
-# class SmartToggle(AbstractActionContainer):
-#
-#     def __init__(self, actions, duration=0.25):
-#         if not isinstance(actions, list):
-#             actions = [actions]
-#         super().__init__(actions)
-#         self.duration = duration
-#
-#         self._init_time = 0
-#         self._is_toggled = False
-#
-#     def _execute_call(self, value):
-#         # FIXME: breaks when held while toggle is active
-#         if value:
-#             self._init_time = time.time()
-#             if not self._is_toggled:
-#                 self.actions[0](value)
-#         else:
-#             if time.time() < self._init_time + self.duration:
-#                 # Toggle action
-#                 if self._is_toggled:
-#                     self.actions[0](value)
-#                 self._is_toggled = not self._is_toggled
-#             else:
-#                 # Tap action
-#                 self.actions[0](value)
-#
-#
-# class DoubleTap(AbstractActionContainer):
-#
-#     def __init__(self, actions, timeout=0.5):
-#         if not isinstance(actions, list):
-#             actions = [actions]
-#         super().__init__(actions)
-#         self.timeout = timeout
-#
-#         self._init_time = 0
-#         self._triggered = False
-#
-#     def _execute_call(self, value):
-#         if value:
-#             if time.time() > self._init_time + self.timeout:
-#                 self._init_time = time.time()
-#             else:
-#                 self.actions[0](value)
-#                 self._triggered = True
-#         elif not value and self._triggered:
-#             self.actions[0](value)
-#             self._triggered = False
