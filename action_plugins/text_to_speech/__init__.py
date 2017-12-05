@@ -51,10 +51,10 @@ class TextToSpeechFunctor(AbstractFunctor):
 
     def __init__(self, action):
         super().__init__(action)
-        self.text = gremlin.tts.text_substitution(action.text)
+        self.text = action.text
 
     def process_event(self, event, value):
-        TextToSpeechFunctor.tts.speak(self.text)
+        TextToSpeechFunctor.tts.speak(gremlin.tts.text_substitution(self.text))
         return True
 
 
