@@ -1,4 +1,3 @@
-<%namespace name="util" module="templates.functions"/>\
 import importlib
 import gremlin
 
