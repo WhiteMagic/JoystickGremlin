@@ -240,30 +240,6 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
             node.append(as_node)
         return node
 
-    def _generate_code(self):
-        """Returns Python code for this container.
-
-        :return Python code for this container
-        """
-        super()._generate_code()
-        code_id = gremlin.profile.ProfileData.next_code_id
-        gremlin.profile.ProfileData.next_code_id += 1
-
-        tpl = Template(filename="container_plugins/chain/global.tpl")
-        code = gremlin.profile.CodeBlock()
-        code.store("container", tpl.render(
-            entry=self,
-            id=code_id,
-            code=code
-        ))
-        tpl = Template(filename="container_plugins/chain/body.tpl")
-        code.store("body", tpl.render(
-            entry=self,
-            id=code_id,
-            code=code
-        ))
-        return code
-
     def _is_container_valid(self):
         """Returns whether or not this container is configured properly.
 
