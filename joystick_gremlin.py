@@ -1129,7 +1129,7 @@ def configure_logger(config):
 
     logger.debug("-" * 80)
     logger.debug(time.strftime("%Y-%m-%d %H:%M"))
-    logger.debug("Starting Joystick Gremlin R8.1")
+    logger.debug("Starting Joystick Gremlin R9")
     logger.debug("-" * 80)
 
 
@@ -1184,6 +1184,7 @@ if __name__ == "__main__":
 
     # Unhandled exception traceback
     # TODO: Re-enable for release
+    # TODO: Re-enable exception capturing for profile loading
     sys.excepthook = exception_hook
 
     # Initialize SDL
