@@ -476,10 +476,17 @@ class ProfileConverter:
             actions_to_remove = []
             action_sets = []
             for action in container:
-                action_set = ElementTree.Element("action-set")
-                action_set.append(action)
-                action_sets.append(action_set)
-                actions_to_remove.append(action)
+                # Handle virtual button setups
+                if action.tag == "activation-condition":
+                    action.tag = "virtual-button"
+                    action_sets.append(action)
+                    actions_to_remove.append(action)
+                # Handle actions
+                else:
+                    action_set = ElementTree.Element("action-set")
+                    action_set.append(action)
+                    action_sets.append(action_set)
+                    actions_to_remove.append(action)
 
             for action in actions_to_remove:
                 container.remove(action)
