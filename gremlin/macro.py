@@ -220,7 +220,7 @@ class MacroManager:
 
     def __init__(self):
         """Initializes the instance."""
-        self._queue = collections.deque()
+        self._queue = []
         self._active = {}
         self._flags = {}
 
@@ -231,6 +231,8 @@ class MacroManager:
 
     def start(self):
         """Starts the scheduler."""
+        self._active = {}
+        self._flags = {}
         self._is_running = True
         if self._run_scheduler_thread is None:
             self._run_scheduler_thread = Thread(target=self._run_scheduler)
@@ -282,18 +284,21 @@ class MacroManager:
 
             # Run scheduled macros and ensure exclusive ones run separately
             # from all other macros
-            while len(self._queue) > 0:
-                if self._queue[0].state == False:
-                    entry = self._queue.popleft()
+            for i, entry in enumerate(self._queue):
+                if entry.state == False:
                     self._flags[entry.macro.id] = False
-                elif self._queue[0].macro.id in self._active:
+                    del self._queue[i]
+                elif entry.macro.id in self._active:
+                    # print(time.time(), len(self._queue))
                     continue
-                elif self._queue[0].macro.exclusive:
+                elif entry.macro.exclusive:
                     if len(self._active) == 0:
-                        self._dispatch_macro(self._queue.popleft().macro)
+                        self._dispatch_macro(entry.macro)
+                        del self._queue[i]
                     break
                 else:
-                    self._dispatch_macro(self._queue.popleft().macro)
+                    self._dispatch_macro(entry.macro)
+                    del self._queue[i]
 
     def _dispatch_macro(self, macro):
         """Dispatches a single macro to be run.
