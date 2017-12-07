@@ -617,9 +617,11 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.profile_data = profile_data
         self.action_widgets = []
 
-        # Basic widget configuration
-        self.setWindowTitle(self._get_window_title())
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
+        self.setTitleBarWidget(TitleBar(
+            self._get_window_title(),
+            gremlin.hints.hint.get(self.profile_data.tag, ""),
+            self.remove
+        ))
 
         # Create tab widget to display various UI controls in
         self.dock_tabs = QtWidgets.QTabWidget()
@@ -662,8 +664,6 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.activation_condition_widget.activation_condition_modified.connect(
             self.container_modified.emit
         )
-        # self.activation_condition_widget.setAutoFillBackground(True)
-        # self.activation_condition_widget.setPalette(self.palette)
 
         # Put everything together
         self.activation_condition_layout.addWidget(
@@ -765,12 +765,8 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
         return action_set_view
 
-    def closeEvent(self, event):
-        """Emits the closed event when this widget is being closed.
-
-        :param event the close event details
-        """
-        QtWidgets.QDockWidget.closeEvent(self, event)
+    def remove(self, _):
+        """Emits the closed event when this widget is being closed."""
         self.closed.emit(self)
 
     def _handle_interaction(self, widget, action):
@@ -881,12 +877,152 @@ class AbstractActionWrapper(QtWidgets.QDockWidget):
         self.dock_widget.setFrameShape(QtWidgets.QFrame.Box)
         self.dock_widget.setObjectName("frame")
         self.dock_widget.setStyleSheet(
-            "#frame { border: 1px solid #949494; background-color: #afafaf; }"
+            "#frame { border: 1px solid #949494; border-top: none; background-color: #afafaf; }"
         )
         self.setWidget(self.dock_widget)
 
         # Create default layout
         self.main_layout = QtWidgets.QVBoxLayout(self.dock_widget)
+
+
+class TitleBarButton(QtWidgets.QAbstractButton):
+
+    """Button usable in the titlebar of dock widgets."""
+
+    def __init__(self, parent=None):
+        """Creates a new instance.
+
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+
+    def sizeHint(self):
+        """Returns the ideal size of this widget.
+
+        :return ideal size of the widget
+        """
+        self.ensurePolished()
+
+        size = 2 * self.style().pixelMetric(
+            QtWidgets.QStyle.PM_DockWidgetTitleBarButtonMargin
+        )
+
+        if not self.icon().isNull():
+            icon_size = self.style().pixelMetric(
+                QtWidgets.QStyle.PM_SmallIconSize
+            )
+            sz = self.icon().actualSize(QtCore.QSize(icon_size, icon_size))
+            size += max(sz.width(), sz.height())
+
+        return QtCore.QSize(size, size)
+
+    def enterEvent(self, event):
+        """Handles the event of the widget being entered.
+
+        :param event the event to handle
+        """
+        if self.isEnabled():
+            self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        """Handles the event of leaving the widget.
+
+        :param event the event to handle
+        """
+        if self.isEnabled():
+            self.update()
+        super().leaveEvent(event)
+
+    def paintEvent(self, event):
+        """Render the widget based on its current state.
+
+        :param event the rendering event
+        """
+        p = QtGui.QPainter(self)
+
+        options = QtWidgets.QStyleOptionToolButton()
+        options.initFrom(self)
+        options.state |= QtWidgets.QStyle.State_AutoRaise
+
+        if self.style().styleHint(QtWidgets.QStyle.SH_DockWidget_ButtonsHaveFrame):
+            if self.isEnabled() and self.underMouse() and not self.isChecked() and not self.isDown():
+                options.state |= QtWidgets.QStyle.State_Raised
+            if self.isChecked():
+                options.state |= QtWidgets.QStyle.State_On
+            if self.isDown():
+                options.state |= QtWidgets.QStyle.State_Sunken
+            self.style().drawPrimitive(
+                QtWidgets.QStyle.PE_PanelButtonTool,
+                options,
+                p,
+                self
+            )
+
+        options.icon = self.icon()
+        options.subControls = QtWidgets.QStyle.SC_None
+        options.activeSubControls = QtWidgets.QStyle.SC_None
+        options.features = QtWidgets.QStyleOptionToolButton.None_
+        options.arrowType = QtCore.Qt.NoArrow
+        size = self.style().pixelMetric(
+            QtWidgets.QStyle.PM_SmallIconSize
+        )
+        options.iconSize = QtCore.QSize(size, size)
+        self.style().drawComplexControl(
+            QtWidgets.QStyle.CC_ToolButton, options, p, self
+        )
+
+
+class TitleBar(QtWidgets.QFrame):
+
+    """Represents a titlebar for use with dock widgets.
+
+    This titlebar behaves like the default DockWidget title bar with the
+    exception that it has a "help" button which will display some informaiton
+    about the content of the widget.
+    """
+
+    def __init__(self, label, hint, close_cb, parent=None):
+        """Creates a new instance.
+
+        :param label the label of the title bar
+        :param hint the hint to show if needed
+        :param close_cb the function to call when closing the widget
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+
+        self.hint = hint
+        self.label = QtWidgets.QLabel(label)
+        self.help_button = TitleBarButton()
+        self.help_button.setIcon(QtGui.QIcon("gfx/help"))
+        self.help_button.clicked.connect(self._show_hint)
+        self.close_button = TitleBarButton()
+        self.close_button.setIcon(QtGui.QIcon("gfx/close"))
+        self.close_button.clicked.connect(close_cb)
+        self.layout = QtWidgets.QHBoxLayout()
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(5, 0, 5, 0)
+
+        self.layout.addWidget(self.label)
+        self.layout.addStretch()
+        self.layout.addWidget(self.help_button)
+        self.layout.addWidget(self.close_button)
+
+        self.setFrameShape(QtWidgets.QFrame.Box)
+        self.setObjectName("frame")
+        self.setStyleSheet(
+            "#frame { border: 1px solid #949494; background-color: #dadada; }"
+        )
+
+        self.setLayout(self.layout)
+
+    def _show_hint(self):
+        """Displays a hint, explaining the purpose of the action."""
+        QtWidgets.QWhatsThis.showText(
+            self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
+            self.hint
+        )
 
 
 class BasicActionWrapper(AbstractActionWrapper):
@@ -904,29 +1040,16 @@ class BasicActionWrapper(AbstractActionWrapper):
         """
         super().__init__(action_widget, parent)
 
-        # Enable closing of the widget and give it a title
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)
-        self.setWindowTitle(action_widget.action_data.name)
-
-        # self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
-        # self.help_button.clicked.connect(self._show_hint)
-        # self.controls_layout.addWidget(self.help_button)
+        self.setTitleBarWidget(TitleBar(
+            action_widget.action_data.name,
+            gremlin.hints.hint.get(self.action_widget.action_data.tag, ""),
+            self.remove
+        ))
 
         self.main_layout.addWidget(self.action_widget)
 
-    def _show_hint(self):
-        """Displays a hint, explaining the purpose of the action."""
-        QtWidgets.QWhatsThis.showText(
-            self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
-            gremlin.hints.hint.get(self.action_widget.action_data.tag, "")
-        )
-
-    def closeEvent(self, event):
-        """Emits the closed event when this widget is being closed.
-
-        :param event the close event details
-        """
-        QtWidgets.QDockWidget.closeEvent(self, event)
+    def remove(self, _):
+        """Emits the closed event when this widget is being closed."""
         self.closed.emit(self)
 
 
