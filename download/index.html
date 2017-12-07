@@ -6,35 +6,47 @@ area: download
 
 <div class="row">
     <div class="col-md-6">
-        <h2>Release 8.1</h2>
+        <h2>Release 9</h2>
     </div>
     <div class="col-md-6 text-right">
-        <h2><small>2017-08-20</small></h2>
+        <h2><small>2017-12-08</small></h2>
     </div>
 </div>
 
 <a class="btn btn-primary"
-    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.msi">Download
-    Release 8.1 MSI</a>
+    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9/Joystick.Gremlin.R9.msi">Download
+    Release 9 MSI</a>
 <a class="btn btn-primary"
-    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.zip">Download
-    Release 8.1 ZIP</a>
+    href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9/Joystick.Gremlin.R9.zip">Download
+    Release 9 ZIP</a>
 
 
 <h3>Change log</h3>
 
 <h4>New Features</h4>
 <ul>
-    <li>Ask to save changes when appropriate</li>
-    <li>Temporary mode switch action</li>
-    <li>Sound playback action</li>
-    <li>Symmetry mode for Bezier curve handles</li>
+    <li>Support for action sets, i.e. collection of actions in a single container</li>
+    <li>Activation conditions for either individual actions or entire containers, triggering based on the action state itself or the state of other inputs</li>
+    <li>UI rework to display the various pieces of information without overloading the entire UI</li>
+    <li>Code generation from profiles redone completely</li>
+    <li>Macros can now record joystick actions and vJoy actions with timing information</li>
+    <li>No operation action added to use when no action is desired but one is needed (Tempo container)</li>
+    <li>Customizable activation condition for short presses in the Tempo container</li>
 </ul>
 
 <h4>Fixes</h4>
 <ul>
-    <li>AltGr and Pause should now work properly</li>
-    <li>Reworked cubic Bezier curves</li>
-    <li>Properly store curve type changes</li>
-    <li>Consistent initial activation mode selection</li>
+    <li>Should no longer crash on media key usage (can't use them yet)</li>
+    <li>Properly release vJoy devices when they are not in use</li>
+    <li>Value entry boxes should now be less annoying to use</li>
+    <li>Reading XML profiles should be a bit more robust now</li>
+    <li>Update SDL to the current version 2.0.6</li>
+    <li>Response curve input field changes should now be stored again</li>
+    <li>Crash due to activation race condition fixed</li>
+    <li>Input repeater and input highlighting code improved to work better with axes that don't physically reset to center</li>
+    <li>Cheatsheet generation should no longer crash when no save file is provided</li>
+    <li>Logging added for vJoy and SDL device matching, to help debug mapping issues in the future</li>
+    <li>Somewhat improve the "Do you want to save these changes" dialog logic</li>
+    <li>vJoy response curves should once again apply properly</li>
+    <li>Fixed macro manager to prevent excessive polling when identical macros are queued up</li>
 </ul>
