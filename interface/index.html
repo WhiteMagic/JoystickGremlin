@@ -8,7 +8,7 @@
 
     <title>Joystick Gremlin</title>
 
-    <link rel="canonical" href="http://whitemagic.github.io/JoystickGremlin/interface/">
+    <link rel="canonical" href="http://localhost:4000/JoystickGremlin/interface/">
 
     <!-- Code highlighting CSS -->
     <link rel="stylesheet" href="/JoystickGremlin/css/github.css">
@@ -94,10 +94,12 @@
 <h4>Table of Contents</h4>
 <ul>
     <li><a href="#2_1">Overview</a></li>
-    <li><a href="#2_2">Conditions</a></li>
-    <li><a href="#2_3">Actions</a></li>
-    <li><a href="#2_4">Tools</a></li>
-    <li><a href="#2_5">Command Line Options</a></li>
+    <li><a href="#2_2">Virtual Buttons</a></li>
+    <li><a href="#2_3">Activation Conditions</a></li>
+    <li><a href="#2_4">Containers</a></li>
+    <li><a href="#2_5">Actions</a></li>
+    <li><a href="#2_6">Tools</a></li>
+    <li><a href="#2_7">Command Line Options</a></li>
 </ul>
 
 
@@ -114,9 +116,9 @@
     </br>
 
     <ol class="text-justify">
-        <li>Overview of all the inputs available for a given device. The small
-            icons on the far right of each input indicate the type of actions
-            associated with the input. The icons and their meaning are
+        <li>Overview of all the inputs available for a given physical device.
+            The small icons on the far right of each input indicate the type of
+            actions associated with the input. The icons and their meaning are
             summarised in the table below.</li>
         <li>The right hand portion of the UI shows the list of containers and
             actions associated with the currently selected input. This panel
@@ -128,6 +130,13 @@
         <li>This drop down contains the available containers for the currently
             selected input. Pressing the "Add" button inserts an empty
             container of the desired type.</li>
+        <li>Each container can contain up to three tabs that handle
+            various configurations. The <em>Action</em> tab allows the
+            basic configuration of an action. The <em>Condition</em> tab
+            allows fine tuning under which conditions the action or
+            container should be executed. Finally the <em>Virtual
+            Button</em> allows configuring an axis or hat to be used
+            like a button.</li>
         <li>The mode section allows changing the mode currently being
             configured.</li>
         <li>Each tab represents an individual device that is currently
@@ -164,44 +173,50 @@
         <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_map_to_keyboard.png"></td>
             <td>Map to keyboard</td>
+            <td><img class="img-responsive" src="/JoystickGremlin/images/icon_noop.png"></td>
+            <td>No-Op</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_pause.png"></td>
             <td>Pause</td>
-        </tr>
-        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_play_sound.png"></td>
             <td>Play sound</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_remap_axis_001.png"></td>
             <td>Remap axis</td>
-        </tr>
-        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_remap_button_001.png"></td>
             <td>Remap button</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_remap_hat_001.png"></td>
             <td>Remap hat</td>
-        </tr>
-        <tr>
             <td width="50px"><img class="img-responsive" src="/JoystickGremlin/images/icon_response_curve.png"></td>
             <td>Response curve</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_resume.png"></td>
             <td>Resume</td>
-        </tr>
-        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_split_axis.png"></td>
             <td>Split axis</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_switch_mode.png"></td>
             <td>Switch mode</td>
-        </tr>
-        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_previous_mode.png"></td>
             <td>Switch to previous mode</td>
-            <td><img class="img-responsive" src="/JoystickGremlin/images/icon_temporary_mode_switch.png"></td>
-            <td>Temporary mode switch</td>
         </tr>
         <tr>
+            <td><img class="img-responsive" src="/JoystickGremlin/images/icon_temporary_mode_switch.png"></td>
+            <td>Temporary mode switch</td>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_text_to_speech.png"></td>
             <td>Text-to-speech</td>
+        </tr>
+        <tr>
             <td><img class="img-responsive" src="/JoystickGremlin/images/icon_pause_resume.png"></td>
             <td>Toggle pause &amp; resume</td>
+            <td></td>
+            <td></td>
         </tr>
         <tr><td></td><td></td><td></td><td></td></tr>
     </table>
@@ -209,42 +224,199 @@
 
 
 
-<h3><a name="2_2">2.2 Conditions</a></h3>
+<h3><a name="2_2">2.2 Virtual Buttons</a></h3>
 
 <p class="text-justify">
-    Each input has a natural behaviour or type of states it can be in. Certain
-    actions, however, require a binary state reflecting that of buttons, i.e.
-    <em>pressed</em> and <em>released</em>. In order for axis and hat inputs to
-    support this they require an activation condition to be specified when an
-    action requires such binary input. The details of these activation
-    conditions is covered next.
+    Each input has a natural behaviour or type of states it can be in.
+    Certain actions, however, require a binary state reflecting that of
+    buttons, i.e.  <em>pressed</em> and <em>released</em>. In order for
+    axis and hat inputs to support this they require to specify the
+    condition under which they should be considered <em>pressed</em> and
+    <em>released</em>, effectively turning them into a virtual button.
+    The details of these activation conditions is covered next.
 </p>
 
 <h4 class="subsection">Button and Keyboard Key</h4>
-    As these inputs are already binary there is no activation condition
-    associated with them.
+    As these inputs are already binary there is no virtual button
+    configuration needed.
 <p class="text-justify">
 </p>
 
 <h4 class="subsection">Axis</h4>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/condition_virtual_button_axis.png">
+    </div>
+    <div class="col-md-5">
+        <em>Turning an axis into a virtual button by specifiying the
+            range in which the virtual button is considered pressed.</em>
+    </div>
+</div>
 <p class="text-justify">
-    Actions associated with axis inputs have a range based activation condition
-    which allows to treat the axis as a button when it enters and leaves the
-    specified range. This works by considering a virtual button being pressed
-    when the axis enters the range and releasing the virtual button when
-    leaving the range.
+    Actions associated with axis inputs have a range based setup
+    which simulates a button press when the axis enters the specified
+    range and releases the virtual button when it leaves the range.
 </p>
 
 <h4 class="subsection">Hat</h4>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/condition_virtual_button_hat.png">
+    </div>
+    <div class="col-md-5">
+        <em>Turning a hat into a button by selecting the directions
+            which when pressed are considered to be pressing a virtual
+            button.</em>
+    </div>
+</div>
 <p class="text-justify">
-    The eight directions of POV hats can be treated a simple activation
-    condition. It is possible to select multiple directions at once and any of
-    the selected directions will be considered as part of a single virtual
-    button.
+    The eight directions of POV hats can be treated as states in which
+    the virtual button is considered pressed. It is possible to select
+    multiple directions at once and any of the selected directions will
+    be considered as part of a single virtual button.
 </p>
 
 
-<h3><a name="2_3">2.3 Actions</a></h3>
+<h3><a name="2_3">2.3 Activation Conditions</a></h3>
+
+<p class="text-justify">
+    Sometimes executing actions associated with a physical input when
+    said physical input is pressed does not provide enough control or
+    customizability. As such Joystick Gremlin offers the ability to
+    further configure when an single action or the actions inside a
+    container should be executed.
+</p>
+
+<p class="text-justify">
+    Typical usage scenarios for this would be the use of a modifier or
+    shift key to change what a particular physical input does in certain
+    situations. Another common case is to trigger different actions when
+    a button is pressed or released, for example on throttles with
+    switches rather then buttons.
+</p>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/condition_action_action.png">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/condition_container_action.png">
+    </div>
+    <div class="col-md-5">
+        <em>Conditions can be placed on either each action individually
+        or on the container as a whole.</em>
+    </div>
+</div>
+<p class="text-justify">
+    As mentioned in <a href="/JoystickGremlin/interface/2_1">2.1.
+        Overview</a> the conditions are configured in the condition tab
+    present in every container widget. The tab allows placing conditions
+    on either every action individually or on the container as a whole.
+    These conditions will dictate whether or not a particular action or
+    container is executed when the corresponding physical input is
+    activated.
+</p>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/condition_container_action.png">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/condition_container_joystick.png">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/condition_container_keyboard.png">
+    </div>
+    <div class="col-md-5">
+        <em>Activation conditions can check for the state of the
+            action's physical input, a physical joystick input, or a
+            keyboard input.</em>
+    </div>
+</div>
+<p class="text-justify">
+    There are three types of conditions available that can be checked
+    for:
+    <dl>
+        <dt>Action</dt>
+        <dd>The <em>Action</em> condition checks whether or not the
+        physical or virtual button triggering the action or container is
+        pressed or released. This enables for example to run a macro
+        when the physical button is released rather then when the button
+        is pressed.</dd>
+
+        <dt>Joystick</dt>
+        <dd>The <em>Joystick</em> condition allows to use any physical
+        joystick input as a condition. For buttons this is whether or
+        not the button is pressed, for hats this is whether a particular
+        direction is pressed, and for axis whether or not it currently
+        is inside or outside a specified range.</dd>
+
+        <dt>Keyboard</dt>
+        <dd>The <em>Keyboard</em> conditions allows checking whether or
+        not a particular keyboard key is pressed or not. This would
+        typically be used to implement a modifier or shift key. To
+        trigger different actions depending on the state of a key.</dd>
+    </dl>
+    Multiple of these conditions can also be used jointly by specifying
+    whether or not an action / container should be executed if
+    <em>any</em> or <em>all</em> of the conditions are satisfied.
+</p>
+
+
+<h3><a name="2_4">2.4 Containers</a></h3>
+
+As the name implies containers are designed to hold one or more actions.
+In addition to grouping actions together a container can also apply
+further logic to groups of actions. Currently the following three types
+of containers exist.
+
+<h4>Basic</h4>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/container_basic.png">
+    </div>
+    <div class="col-md-5">
+        <em>Basic container widget.</em>
+    </div>
+</div>
+<p class="text-justify">
+    This container simply holds a group of actions without any further
+    specific functionality. This is the default container and suitable
+    for most situations.
+</p>
+
+<h4>Chain</h4>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/container_chain.png">
+    </div>
+    <div class="col-md-5">
+        <em>Chain container with two groups.</em>
+    </div>
+</div>
+<p class="text-justify">
+    This container holds several independent groups of actions. Each
+    time the physical action with which this container is associated the
+    next action group is executed. When the last group in the chain is
+    reached the first group is executed again. Additionally, a timeout
+    can be set after which the chain is reset to the first entry.
+</p>
+
+<h4>Tempo</h4>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/container_tempo.png">
+    </div>
+    <div class="col-md-5">
+        <em>Tempo container with a remap action in both the short and
+            long press action groups.</em>
+    </div>
+</div>
+<p class="text-justify">
+    This container holds two groups of actions that get executed under
+    different conditions. The first one is run when the input is pressed
+    for a duration shorter then the specified delay. The second group is
+    run when the input is pressed for longer then the specified delay.
+    Whether the first group is executed with the input being pressed or
+    only when it is released can be controlled by the activation
+    setting.
+</p>
+
+
+<h3><a name="2_5">2.5 Actions</a></h3>
 
 <p class="text-justify">
     As described in <a href="/JoystickGremlin/overview/#1_2">Section 1.2</a>,
@@ -289,14 +461,6 @@
     </div>
     <div class="col-md-5">
         <em>Hat remapping dialogue</em>
-    </div>
-</div>
-<div class="row bottom-gap">
-    <div class="col-md-7">
-        <img class="img-responsive center-block" src="/JoystickGremlin/images/action_remap_hat_to_button.png">
-    </div>
-    <div class="col-md-5">
-        <em>Hat remapping to button dialogue</em>
     </div>
 </div>
 </br>
@@ -647,7 +811,27 @@
 </p>
 
 
-<h3><a name="2_4">2.4 Tools</a></h3>
+<h4 class="subsection">No Operation</h4>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="/JoystickGremlin/images/action_noop.png">
+    </div>
+    <div class="col-md-5">
+        <em>An action that performs no function other then to serve as a place holder.</em>
+    </div>
+</div>
+</br>
+
+<p class="text-justify">
+    Sometimes one wants an empty or no operation action that can be used as a
+    place holder. For example to use a tempo container with no short press
+    action. This action allows having an action inside a container without it
+    doing anything.
+</p>
+
+
+<h3><a name="2_6">2.6 Tools</a></h3>
 
 <p class="text-justify">
     In the following section the various tools provided by Joystick
@@ -924,7 +1108,7 @@
 </p>
 
 
-<h3><a name="2_5">2.5 Command Line Options</a></h3>
+<h3><a name="2_7">2.7 Command Line Options</a></h3>
 
 Joystick Gremlin allows controlling the following options via command line
 parameters:
@@ -952,7 +1136,7 @@ program has been fully loaded.
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: August 20, 2017</p>
+            <p class="text-muted">Last update: December 9, 2017</p>
         </div>
     </div>
 </footer>
