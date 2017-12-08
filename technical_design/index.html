@@ -19,6 +19,15 @@ layout: default
 </p>
 
 
+<h3>Component Overview</h3>
+
+<p class="text-justify">
+    The following provides an overview of the various components that
+    are part of Joystick Gremlin. The components can roughly be split
+    into two categories: functional and user interface.
+</p>
+
+
 <h3><a name="4_1">4.1 Qt Signal &amp; Slots for Input Event Communication</a></h3>
 
 <p class="text-justify">
@@ -32,15 +41,24 @@ layout: default
 </p>
 
 
-<h3><a name="4_2">4.2 Threaded Macro System</a></h3>
+<h3><a name="4_2">4.2 Macro System</a></h3>
 
 <p class="text-justify">
-    Each macro consists of a sequence of actions which are executed one after
-    the other. Each macro is run in a separate thread in order to prevent
-    Joystick Gremlin to become unresponsive. This allows multiple macros to run
-    at the same time and over long periods of time. However, a side effect of
-    this is that if multiple long running macros are active at the same time
-    they can interfere with each other.
+    Each macro consists of a sequence of actions which are executed one
+    after the other. Each macro is run in a separate thread in order to
+    prevent Joystick Gremlin to become unresponsive.
+</p>
+<p class="text-justify">
+    In order to be provide some control over the execution of macros
+    there exists a macro manager which handles the queueing and
+    dispatching of macros. This permits some macros to be run in an
+    exclusive mode, i.e. only the particular macro can be active and no
+    other macro can run during the life time of the exclusive macro.
+</p>
+<p class="text-justify">
+    The various modes in which a macro can be executed, i.e. repeat,
+    hold, and toggle, are implemented inside the manager which takes
+    care of repeating the macro and terminating it when required.
 </p>
 
 
@@ -70,6 +88,9 @@ layout: default
         <dd>the widget class used by the UI to represent this action</dd>
         <dt><code>input_types</code></dt>
         <dd>the list of <code>UIInputType</code> types this action is
+    Each macro consists of a sequence of actions which are executed one after
+    the other. Each macro is run in a separate thread in order to prevent
+    Joystick Gremlin to become unresponsive.
             applicable to</dd>
     </dl>
     In addition to these variables each implementation has to define the
@@ -107,7 +128,10 @@ layout: default
 </p>
 
 
-<h3><a name="4_4">4.4 XML Storage</a></h3>
+<h3><a name="4_4">4.4 Container Plugin System for UI Widgets</a></h3>
+
+
+<h3><a name="4_5">4.5 XML Storage</a></h3>
 
 <p class="text-justify">
     Each profile is stored in a single XML file. The contents of the XML file
