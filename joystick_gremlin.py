@@ -1062,27 +1062,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param event the event to make the decision about
         :return True if the event is to be processed, False otherwise
         """
-        # Check if the input in general is something we want to process
-        process_input = False
-        if event.event_type == gremlin.common.InputType.JoystickButton:
-            process_input = event.is_pressed
-        elif event.event_type == gremlin.common.InputType.JoystickAxis:
-            if event in self._event_process_registry:
-                self._event_process_registry[event][1] = event
-                if self._last_input_timestamp + 0.25 > time.time():
-                    self._event_process_registry[event][0] = event
-                if abs(self._event_process_registry[event][0].value -
-                        event.value) > 0.5:
-                    process_input = True
-            else:
-                self._event_process_registry[event] = [event, event]
-        elif event.event_type == gremlin.common.InputType.JoystickHat:
-            process_input = event.value != (0, 0)
-        else:
-            logging.getLogger("system").warning(
-                "Event with bad content received"
-            )
-            process_input = False
+        # Check whether or not the event's input is significant enough to
+        # be processed further
+        process_input = gremlin.input_devices.JoystickInputSignificant() \
+            .should_process(event)
 
         # Check if we should actually react to the event
         if event == self._last_input_event:
