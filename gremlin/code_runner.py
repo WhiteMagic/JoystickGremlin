@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from abc import abstractmethod, ABCMeta
+import copy
 
 import gremlin
 from gremlin import event_handler, input_devices, joystick_handling, macro, util
@@ -346,7 +347,7 @@ class InputItemCallback:
             raise gremlin.error.GremlinError("Invalid event type")
 
         for graph in self.execution_graphs:
-            graph.process_event(event, value)
+            graph.process_event(event, copy.deepcopy(value))
 
 
 class AbstractExecutionGraph(metaclass=ABCMeta):
