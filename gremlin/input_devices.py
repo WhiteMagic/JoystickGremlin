@@ -572,6 +572,88 @@ class ButtonReleaseActions(QtCore.QObject):
             self._registry[evt] = []
 
 
+@common.SingletonDecorator
+class JoystickInputSignificant:
+
+    """Checks whether or not joystick inputs are significant."""
+
+    def __init__(self):
+        """Initializes the instance."""
+        self._event_registry = {}
+        self._mre_registry = {}
+        self._time_registry = {}
+
+    def should_process(self, event):
+        """Returns whether or not a particular event is significant enough to
+        process.
+
+        :param event the event to check for significance
+        :return True if it should be processed, False otherwise
+        """
+        self._mre_registry[event] = event
+
+        if event.event_type == common.InputType.JoystickAxis:
+            return self._process_axis(event)
+        elif event.event_type == common.InputType.JoystickButton:
+            return self._process_button(event)
+        elif event.event_type == common.InputType.JoystickHat:
+            return self._process_hat(event)
+        else:
+            logging.getLogger("system").warning(
+                "Event with unknown type received"
+            )
+            return False
+
+    def last_event(self, event):
+        """Returns the most recent event of this type.
+
+        :param event the type of event for which to return the most recent one
+        """
+        return self._mre_registry[event]
+
+    def _process_axis(self, event):
+        """Process an axis event.
+
+        :param event the axis event to process
+        :return True if it should be processed, False otherwise
+        """
+        if event in self._event_registry:
+            # Reset everything if we have no recent data
+            if self._time_registry[event] + 5.0 < time.time():
+                self._event_registry[event] = event
+                self._time_registry[event] = time.time()
+                return False
+            # Update state
+            else:
+                self._time_registry[event] = time.time()
+                if abs(self._event_registry[event].value - event.value) > 0.25:
+                    self._event_registry[event] = event
+                    self._time_registry[event] = time.time()
+                    return True
+                else:
+                    return False
+        else:
+            self._event_registry[event] = event
+            self._time_registry[event] = time.time()
+            return False
+
+    def _process_button(self, event):
+        """Process a button event.
+
+        :param event the button event to process
+        :return True if it should be processed, False otherwise
+        """
+        return True
+
+    def _process_hat(self, event):
+        """Process a hat event.
+
+        :param event the hat event to process
+        :return True if it should be processed, False otherwise
+        """
+        return event.direction != (0, 0)
+
+
 def _button(button_id, device_id, mode, always_execute=False):
     """Decorator for button callbacks.
 
