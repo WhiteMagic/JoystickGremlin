@@ -1130,16 +1130,13 @@ class InputListenerWidget(QtWidgets.QFrame):
         if event.event_type not in self._event_types:
             return
 
-        if event.event_type == gremlin.common.InputType.JoystickButton and \
-                not event.is_pressed:
-            self.callback(event)
-            self.close()
-        elif event.event_type == gremlin.common.InputType.JoystickAxis and \
-                abs(event.value) > 0.5:
-            self.callback(event)
-            self.close()
-        elif event.event_type == gremlin.common.InputType.JoystickHat and \
-                event.value != (0, 0):
+        # Ensure the event corresponds to a significant enough change in input
+        process_event = gremlin.input_devices.JoystickInputSignificant() \
+            .should_process(event)
+        if event.event_type == gremlin.common.InputType.JoystickButton:
+            process_event &= not event.is_pressed
+
+        if process_event:
             self.callback(event)
             self.close()
 
