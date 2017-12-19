@@ -999,6 +999,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile,
             self._current_mode
         )
+        self.ui.devices.widget(self.ui.devices.count()-1).refresh_ui()
 
     def _sanitize_profile(self, profile_data):
         """Validates a profile file before actually loading it.

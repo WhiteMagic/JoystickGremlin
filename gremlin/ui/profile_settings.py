@@ -40,6 +40,11 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
 
         self._create_ui()
 
+    def refresh_ui(self):
+        """Refreshes the entire UI."""
+        gremlin.ui.common.clear_layout(self.main_layout)
+        self._create_ui()
+
     def _create_ui(self):
         """Creates the UI elements of this widget."""
         self.main_layout.addWidget(DefaultModeSelector(self.profile_settings))
