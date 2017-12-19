@@ -525,8 +525,12 @@ class Settings:
 
     """Stores general profile specific settings."""
 
-    def __init__(self):
-        """Creates a new instance."""
+    def __init__(self, parent):
+        """Creates a new instance.
+
+        :param parent the parent profile
+        """
+        self.parent = parent
         self.vjoy_initial_values = {}
 
     def to_xml(self):
@@ -603,7 +607,7 @@ class Profile:
         self.vjoy_devices = {}
         self.imports = []
         self.merge_axes = []
-        self.settings = Settings()
+        self.settings = Settings(self)
         self.parent = None
 
     def initialize_joystick_device(self, device, modes):
