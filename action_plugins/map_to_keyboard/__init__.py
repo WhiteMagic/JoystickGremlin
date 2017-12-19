@@ -130,7 +130,8 @@ class MapToKeyboard(AbstractAction):
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
-        InputType.JoystickHat
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
 
     functor = MapToKeyboardFunctor
