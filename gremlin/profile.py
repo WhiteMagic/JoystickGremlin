@@ -532,6 +532,7 @@ class Settings:
         """
         self.parent = parent
         self.vjoy_initial_values = {}
+        self.startup_mode = None
 
     def to_xml(self):
         """Returns an XML node containing the settings.
@@ -539,6 +540,12 @@ class Settings:
         :return XML node containing the settings
         """
         node = ElementTree.Element("settings")
+
+        # Startup mode
+        if self.startup_mode is not None:
+            mode_node = ElementTree.Element("startup-mode")
+            mode_node.text = self.startup_mode
+            node.append(mode_node)
 
         # Process vJoy axis initial values
         for vid, data in self.vjoy_initial_values.items():
@@ -561,6 +568,12 @@ class Settings:
         if not node:
             return
 
+        # Startup mode
+        self.startup_mode = None
+        if node.find("startup-mode") is not None:
+            self.startup_mode = node.find("startup-mode").text
+
+        # Vjoy initialization values
         self.vjoy_initial_values = {}
         for vjoy_node in node.findall("vjoy"):
             vid = int(vjoy_node.get("id"))
