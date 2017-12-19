@@ -59,6 +59,12 @@ class CodeRunner:
         self._inheritance_tree = inheritance_tree
         self._reset_state()
 
+        # Check if we want to override the star mode as determined by the
+        # heuristic
+        if settings.startup_mode is not None:
+            if settings.startup_mode in gremlin.profile.mode_list(profile):
+                start_mode = settings.startup_mode
+
         # Load the generated code
         try:
             # Load generated python code
