@@ -81,12 +81,23 @@ class VirtualAxisButtonWidget(AbstractVirtualButtonWidget):
         self.upper_limit = gremlin.ui.common.DynamicDoubleSpinBox()
         self.upper_limit.setRange(-1.0, 1.0)
         self.upper_limit.setSingleStep(0.05)
+        self.direction = QtWidgets.QComboBox()
+        self.direction.addItem("Anywhere")
+        self.direction.addItem("Above")
+        self.direction.addItem("Below")
 
         self.setTitle("Virtual Button")
-        self.range_layout.addWidget(QtWidgets.QLabel("Activate when axis is between: "))
+        self.range_layout.addWidget(
+            QtWidgets.QLabel("Activate when axis is between: ")
+        )
         self.range_layout.addWidget(self.lower_limit)
         self.range_layout.addWidget(QtWidgets.QLabel("and"))
         self.range_layout.addWidget(self.upper_limit)
+        self.range_layout.addWidget(
+            QtWidgets.QLabel("when entering the range from")
+        )
+        self.range_layout.addWidget(self.direction)
+
         self.range_layout.addStretch(1)
 
         self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
@@ -97,11 +108,17 @@ class VirtualAxisButtonWidget(AbstractVirtualButtonWidget):
 
         self.lower_limit.valueChanged.connect(self._lower_limit_cb)
         self.upper_limit.valueChanged.connect(self._upper_limit_cb)
+        self.direction.currentTextChanged.connect(self._direction_changed_cb)
 
     def _populate_ui(self):
         """Populates the UI elements with data."""
         self.lower_limit.setValue(self.condition_data.lower_limit)
         self.upper_limit.setValue(self.condition_data.upper_limit)
+        self.direction.setCurrentText(
+            gremlin.common.AxisButtonDirection.to_string(
+                self.condition_data.direction
+            ).capitalize()
+        )
 
     def _lower_limit_cb(self, value):
         """Updates the lower limit value.
@@ -117,6 +134,11 @@ class VirtualAxisButtonWidget(AbstractVirtualButtonWidget):
         :param value the new value of the virtual button's upper limit
         """
         self.condition_data.upper_limit = value
+        self.virtual_button_modified.emit()
+
+    def _direction_changed_cb(self, value):
+        self.condition_data.direction = \
+            gremlin.common.AxisButtonDirection.to_enum(value.lower())
         self.virtual_button_modified.emit()
 
     def _show_hint(self):

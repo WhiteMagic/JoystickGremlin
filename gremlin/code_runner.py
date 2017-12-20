@@ -537,7 +537,8 @@ class ContainerExecutionGraph(AbstractExecutionGraph):
         if input_type == gremlin.common.InputType.JoystickAxis:
             return gremlin.actions.AxisButton(
                 container.virtual_button.lower_limit,
-                container.virtual_button.upper_limit
+                container.virtual_button.upper_limit,
+                container.virtual_button.direction
             )
         elif input_type == gremlin.common.InputType.JoystickHat:
             return gremlin.actions.HatButton(

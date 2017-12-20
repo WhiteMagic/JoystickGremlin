@@ -18,7 +18,6 @@
 from abc import abstractmethod, ABCMeta
 from functools import partial
 import logging
-import time
 
 from . import base_classes, common, fsm, input_devices, macro, util
 
@@ -335,7 +334,7 @@ class AxisButton(VirtualButton):
 
     """Virtual button based around an axis."""
 
-    def __init__(self, lower_limit, upper_limit):
+    def __init__(self, lower_limit, upper_limit, direction):
         """Creates a new instance.
 
         :param lower_limit lower axis value where the button range starts
@@ -344,6 +343,7 @@ class AxisButton(VirtualButton):
         super().__init__()
         self._lower_limit = min(lower_limit, upper_limit)
         self._upper_limit = max(lower_limit, upper_limit)
+        self._direction = direction
         self._last_value = None
         self.forced_activation = False
 
@@ -355,6 +355,7 @@ class AxisButton(VirtualButton):
         :return True if a state transition occured, False otherwise
         """
         self.forced_activation = False
+        direction = common.AxisButtonDirection.Anywhere
         if self._last_value is None:
             self._last_value = event.value
         else:
@@ -367,10 +368,35 @@ class AxisButton(VirtualButton):
                     event.value < self._lower_limit:
                 self.forced_activation = True
 
+            # Determine direction in which the axis is moving
+            if self._last_value < event.value:
+                direction = common.AxisButtonDirection.Below
+            elif self._last_value > event.value:
+                direction = common.AxisButtonDirection.Above
+
+        inside_range = self._lower_limit <= event.value <= self._upper_limit
         self._last_value = event.value
 
+        # If the determined direction is Anywhere this corresponds to an
+        # event that's processed again due to too fast axis motion which
+        # cause the execution of the axis button being skipped. This should
+        # be processed, however, needs to bypass the direction determination
+        # part of the code.
+
+        # Terminate early if the travel direction is incompatible with the
+        # one required by this instance
+        if direction != common.AxisButtonDirection.Anywhere and \
+                self._direction != common.AxisButtonDirection.Anywhere:
+            # Ensure we can only press a button by moving in the desired
+            # direction, however, allow releasing in any direction
+            if inside_range and direction != self._direction:
+                return False
+            if self.forced_activation and direction != self._direction:
+                return False
+
+        # Execute FSM transitions as required
         if not self.forced_activation:
-            if self._lower_limit <= event.value <= self._upper_limit:
+            if inside_range:
                 return self._fsm.perform("press")
             else:
                 return self._fsm.perform("release")

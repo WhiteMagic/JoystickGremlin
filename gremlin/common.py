@@ -17,7 +17,7 @@
 
 import enum
 
-from gremlin.error import ProfileError
+import gremlin.error
 
 
 class InputType(enum.Enum):
@@ -29,6 +29,43 @@ class InputType(enum.Enum):
     JoystickButton = 3
     JoystickHat = 4
     Count = 5
+
+
+class AxisButtonDirection(enum.Enum):
+
+    """Possible activation directions for axis button instances."""
+
+    Anywhere = 1
+    Below = 2
+    Above = 3
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _AxisButtonDirection_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _AxisButtonDirection_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+
+_AxisButtonDirection_to_string_lookup = {
+    AxisButtonDirection.Anywhere: "anywhere",
+    AxisButtonDirection.Above: "above",
+    AxisButtonDirection.Below: "below"
+}
+
+
+_AxisButtonDirection_to_enum_lookup = {
+    "anywhere": AxisButtonDirection.Anywhere,
+    "above": AxisButtonDirection.Above,
+    "below": AxisButtonDirection.Below
+}
 
 
 def index_to_direction(direction):
@@ -65,7 +102,7 @@ def input_type_to_tag(input_type):
     if input_type in lookup:
         return lookup[input_type]
     else:
-        raise ProfileError(
+        raise gremlin.error.ProfileError(
             "Invalid input type specified {}".format(input_type)
         )
 
@@ -84,7 +121,7 @@ def tag_to_input_type(tag):
     if tag in lookup:
         return lookup[tag]
     else:
-        raise ProfileError(
+        raise gremlin.error.ProfileError(
             "Invalid input type specified {}".format(tag)
         )
 
