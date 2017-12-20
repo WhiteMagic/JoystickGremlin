@@ -28,8 +28,9 @@ import sys
 import time
 import traceback
 
+# Import QtMultimedia so pyinstaller doesn't miss it
 import PyQt5
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
 import sdl2.hints
