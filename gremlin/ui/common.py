@@ -40,7 +40,7 @@ class ContainerViewTypes(enum.Enum):
 
     """Enumeration of view types used by containers."""
 
-    Basic = 1
+    Action = 1
     Condition = 2
     VirtualButton = 3
 

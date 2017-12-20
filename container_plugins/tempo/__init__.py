@@ -85,7 +85,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                 0,
                 "Short Press",
                 self.action_layout,
-                gremlin.ui.common.ContainerViewTypes.Basic
+                gremlin.ui.common.ContainerViewTypes.Action
             )
 
         if self.profile_data.action_sets[1] is None:
@@ -98,7 +98,7 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
                 1,
                 "Long Press",
                 self.action_layout,
-                gremlin.ui.common.ContainerViewTypes.Basic
+                gremlin.ui.common.ContainerViewTypes.Action
             )
 
     def _create_condition_ui(self):
