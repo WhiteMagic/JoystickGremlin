@@ -146,7 +146,7 @@ def parse_float(value):
         )
 
 
-def safe_read(node, key, type_cast=None):
+def safe_read(node, key, type_cast=None, default_value=None):
     """Safely reads an attribute from an XML node.
 
     If the attempt at reading the attribute fails, due to the attribute not
@@ -155,14 +155,20 @@ def safe_read(node, key, type_cast=None):
     :param node the XML node from which to read an attribute
     :param key the attribute to read
     :param type_cast the type to which to cast the read value, if specified
+    :param default_value value to return in case the key is not present
     :return the value stored in the node with the given key
     """
+    # Attempt to read the value and if present use the provided default value
+    # in case reading fails
+    value = default_value
     if key not in node.keys():
-        msg = "Attempted to read attribute '{}' which does not exist.".format(key)
-        logging.getLogger("system").error(msg)
-        raise error.ProfileError(msg)
+        if default_value is None:
+            msg = "Attempted to read attribute '{}' which does not exist.".format(key)
+            logging.getLogger("system").error(msg)
+            raise error.ProfileError(msg)
+    else:
+        value = node.get(key)
 
-    value = node.get(key)
     if type_cast is not None:
         try:
             value = type_cast(value)
