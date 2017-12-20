@@ -18,6 +18,7 @@
 from abc import abstractmethod, ABCMeta
 from functools import partial
 import logging
+import time
 
 from . import base_classes, common, fsm, input_devices, macro, util
 
@@ -343,6 +344,8 @@ class AxisButton(VirtualButton):
         super().__init__()
         self._lower_limit = min(lower_limit, upper_limit)
         self._upper_limit = max(lower_limit, upper_limit)
+        self._last_value = None
+        self.forced_activation = False
 
     def _do_process(self, event, value):
         """Implementation of the virtual button logic.
@@ -351,10 +354,28 @@ class AxisButton(VirtualButton):
         :param value the value representation of the event's value
         :return True if a state transition occured, False otherwise
         """
-        if self._lower_limit <= event.value <= self._upper_limit:
-            return self._fsm.perform("press")
+        self.forced_activation = False
+        if self._last_value is None:
+            self._last_value = event.value
         else:
-            return self._fsm.perform("release")
+            # Check if we moved over the activation region between two
+            # consecutive measurements
+            if self._last_value < self._lower_limit and \
+                    event.value > self._upper_limit:
+                self.forced_activation = True
+            elif self._last_value > self._upper_limit and \
+                    event.value < self._lower_limit:
+                self.forced_activation = True
+
+        self._last_value = event.value
+
+        if not self.forced_activation:
+            if self._lower_limit <= event.value <= self._upper_limit:
+                return self._fsm.perform("press")
+            else:
+                return self._fsm.perform("release")
+        else:
+            return self._fsm.perform("press")
 
 
 class HatButton(VirtualButton):
