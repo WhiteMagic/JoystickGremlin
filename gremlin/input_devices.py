@@ -658,7 +658,7 @@ class JoystickInputSignificant:
         :param event the hat event to process
         :return True if it should be processed, False otherwise
         """
-        return event.direction != (0, 0)
+        return event.value != (0, 0)
 
 
 def _button(button_id, device_id, mode, always_execute=False):
