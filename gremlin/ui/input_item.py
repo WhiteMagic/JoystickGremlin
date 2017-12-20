@@ -324,7 +324,7 @@ class ActionSetView(common.AbstractView):
             self,
             profile_data,
             label,
-            view_type=common.ContainerViewTypes.Basic,
+            view_type=common.ContainerViewTypes.Action,
             parent=None
     ):
         super().__init__(parent)
@@ -345,7 +345,7 @@ class ActionSetView(common.AbstractView):
         self.action_layout = QtWidgets.QVBoxLayout()
 
         # Only show edit controls in the basic tab
-        if self.view_type == common.ContainerViewTypes.Basic:
+        if self.view_type == common.ContainerViewTypes.Action:
             self._create_edit_controls()
             self.group_layout.addLayout(self.action_layout, 0, 0)
             self.group_layout.addLayout(self.controls_layout, 0, 1)
@@ -355,7 +355,7 @@ class ActionSetView(common.AbstractView):
 
         # Only permit adding actions from the basic tab and if the tab is
         # not associated with a vJoy device
-        if self.view_type == common.ContainerViewTypes.Basic and \
+        if self.view_type == common.ContainerViewTypes.Action and \
                 self.profile_data.get_device_type() != DeviceType.VJoy:
             self.action_selector = gremlin.ui.common.ActionSelector(
                 profile_data.parent.input_type
@@ -369,7 +369,7 @@ class ActionSetView(common.AbstractView):
         if self.model is None:
             return
 
-        if self.view_type == common.ContainerViewTypes.Basic:
+        if self.view_type == common.ContainerViewTypes.Action:
             for index in range(self.model.rows()):
                 data = self.model.data(index)
                 widget = data.widget(data)
@@ -700,35 +700,21 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.virtual_button_layout.addStretch(10)
 
     def _select_tab(self, view_type):
-        tab_title_map = {
-            common.ContainerViewTypes.Basic: "Basic",
-            common.ContainerViewTypes.Condition: "Condition",
-            common.ContainerViewTypes.VirtualButton: "Virtual Button"
-        }
-
-        if view_type not in tab_title_map:
+        try:
+            tab_title = common.ContainerViewTypes.to_string(view_type).title()
+            for i in range(self.dock_tabs.count()):
+                if self.dock_tabs.tabText(i) == tab_title:
+                    self.dock_tabs.setCurrentIndex(i)
+        except gremlin.error.GremlinError:
             return
-
-        tab_title = tab_title_map[view_type]
-        for i in range(self.dock_tabs.count()):
-            if self.dock_tabs.tabText(i) == tab_title:
-                self.dock_tabs.setCurrentIndex(i)
 
     def _tab_changed(self, index):
-        view_type_map = {
-            "Basic": common.ContainerViewTypes.Basic,
-            "Condition": common.ContainerViewTypes.Condition,
-            "Virtual Button": common.ContainerViewTypes.VirtualButton
-        }
-
-        tab_text = self.dock_tabs.tabText(index)
-        if tab_text not in view_type_map:
-            logging.getLogger("system").error(
-                "Invalid tab name encountered, {}".format(tab_text)
-            )
+        try:
+            tab_text = self.dock_tabs.tabText(index)
+            self.profile_data.current_view_type = \
+                common.ContainerViewTypes.to_enum(tab_text.lower())
+        except gremlin.error.GremlinError:
             return
-
-        self.profile_data.current_view_type = view_type_map[tab_text]
 
     def _get_widget_index(self, widget):
         """Returns the index of the provided widget.

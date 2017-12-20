@@ -44,6 +44,34 @@ class ContainerViewTypes(enum.Enum):
     Condition = 2
     VirtualButton = 3
 
+    @staticmethod
+    def to_string(value):
+        try:
+            return _ContainerView_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _ContainerView_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+
+_ContainerView_to_enum_lookup = {
+    "action": ContainerViewTypes.Action,
+    "condition": ContainerViewTypes.Condition,
+    "virtual button": ContainerViewTypes.VirtualButton
+}
+
+
+_ContainerView_to_string_lookup = {
+    ContainerViewTypes.Action: "Action",
+    ContainerViewTypes.Condition: "Condition",
+    ContainerViewTypes.VirtualButton: "Virtual Button"
+}
+
 
 class AbstractModel(QtCore.QObject):
 
