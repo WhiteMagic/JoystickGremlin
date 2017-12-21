@@ -1,0 +1,73 @@
+---
+layout: default
+chapter: quickstart
+area: manual
+---
+
+<h2><a name="2">2. Quick Start</a></h2>
+
+The following is intended as a simple guide that introduces the concepts
+used in Joystick Gremlin by the way of examples of how common tasks are
+achieved.
+
+One can think of Gremlin as a reacting to the user's input, i.e. when
+the user does something Gremlin will react in a way specified by the
+user. In a sense the following summarizes the way Gremlin operates:
+<blockquote class="alert-success">
+<!--<div class="well">-->
+When I press this button on my joystick, I want the following to happen.
+<!--</div>-->
+</blockquote>
+
+This is also reflected by the design of the UI which is divided
+vertically into two parts. The left hand side lists all the physical
+inputs of a joystick, such as axes, buttons, and hats. The right
+hand side lists the action associated with a particular physical input.
+Going back to the above idea the left hand side contains the <em>When I
+press this button on my joystick</em> part while the right hand side
+reflects the <em>I want the following to happen</em>.
+
+<h3>Simple 1:1 Mappings</h3>
+
+The simplest type of mappings are remapping a physical input to a
+virtual one, this is done using the <em>Remap</em> action. The other
+basic action is to map a physical input to a keyboard key through the
+<em>Map to Keyboard</em> action. These two actions together allow
+merging of multiple physical devices into one virtual or using existing
+keyboard mappings of a game directly without having to create custom key
+bindings.
+
+
+<h3>Macros</h3>
+
+
+<h3>Dealing with Axes</h3>
+
+
+<h3>Containers</h3>
+
+Sometimes it is desirable to use a single physical input for multiple
+different actions. This is achieved through what are called
+<em>containers</em>. These containers hold different actions and use
+them in a particular way that is defined by the container itself. The
+<em>Tempo</em> container has two sets of actions. The first set is used
+when the physical input is only pressed quickly. The second set is used
+when the physical input is pressed for longer. Effectively this allows
+two different types of actions to run from a single physical input.
+Another container <em>Chain</em> is used when with each press of the
+physical input a different action in a sequence should run. As an
+example A -> B -> C -> A.
+
+<h3>Modes</h3>
+
+While in many cases a simple setup, mapping physical inputs to actions
+is enough, there are always instances when a more complex setup where
+physical inputs change their meaning are desired. To support this type
+of configuration the concept of modes is introduced. A mode is a
+completely self container set of mappings from physical inputs to
+actions. Switching between those is supported via actions. As sometimes
+it is desired to keep certain mappings intact across several modes, for
+example flight controls in a flight simulator, modes support inheriting
+action mappings which allows the user to override only those actions the
+want to change while keeping others like they were in the mode they
+inherited from.
