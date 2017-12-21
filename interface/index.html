@@ -59,6 +59,7 @@
                             
                             <ul class="dropdown-menu">
                                 <li ><a href="/JoystickGremlin/overview/">Overview</a></li>
+                                <!--<li ><a href="/JoystickGremlin/quickstart/">Quickstart</a></li>-->
                                 <li class="active"><a href="/JoystickGremlin/interface/">Interface</a></li>
                                 <li ><a href="/JoystickGremlin/custom_modules/">Custom Modules</a></li>
                                 <li ><a href="/JoystickGremlin/technical_design/">Technical Design</a></li>
@@ -253,9 +254,13 @@
     </div>
 </div>
 <p class="text-justify">
-    Actions associated with axis inputs have a range based setup
-    which simulates a button press when the axis enters the specified
-    range and releases the virtual button when it leaves the range.
+    Actions associated with axis inputs have a range based setup which
+    simulates a button press when the axis enters the specified range and
+    releases the virtual button when it leaves the range. In addition to being
+    able to specify the range for the button you can also specify a direction
+    in which said range has to be entered if desired. This allows triggering
+    two different actions for the same range depending on the direction it is
+    traversed.
 </p>
 
 <h4 class="subsection">Hat</h4>
@@ -1136,7 +1141,7 @@ program has been fully loaded.
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: December 9, 2017</p>
+            <p class="text-muted">Last update: December 21, 2017</p>
         </div>
     </div>
 </footer>
