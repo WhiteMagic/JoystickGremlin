@@ -46,6 +46,7 @@ class OptionsUi(common.BaseDialogUi):
 
         self._create_general_page()
         self._create_profile_page()
+        self._create_hidguardian_page()
 
     def _create_general_page(self):
         """Creates the general options page."""
@@ -176,6 +177,77 @@ class OptionsUi(common.BaseDialogUi):
         self.tab_container.addTab(self.profile_page, "Profiles")
 
         self.populate_executables()
+
+    def _create_hidguardian_page(self):
+        self.hg_page = QtWidgets.QWidget()
+        self.hg_page_layout = QtWidgets.QVBoxLayout(self.hg_page)
+
+        # Display instructions for non admin users
+        if not gremlin.util.is_user_admin():
+            label = QtWidgets.QLabel(
+                "In order to use HidGuardian to both specify the devices to "
+                "hide via HidGuardian as well as have Gremlin see them, "
+                "Gremlin has to be run as Administrator."
+            )
+            label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+            label.setWordWrap(True)
+            label.setFrameShape(QtWidgets.QFrame.Box)
+            label.setMargin(10)
+            self.hg_page_layout.addWidget(label)
+
+        else:
+            # Get list of devices affected by HidGuardian
+            hg = gremlin.hid_guardian.HidGuardian()
+            hg_device_list = hg.get_device_list()
+
+            self.hg_device_layout = QtWidgets.QGridLayout()
+            self.hg_device_layout.addWidget(
+                QtWidgets.QLabel("<b>Device Name</b>"), 0, 0
+            )
+            self.hg_device_layout.addWidget(
+                QtWidgets.QLabel("<b>Hidden</b>"), 0, 1
+            )
+
+            devices = gremlin.joystick_handling.joystick_devices()
+            devices_added = []
+            for i, dev in enumerate(devices):
+                # Don't add vJoy to this list
+                if dev.name == "vJoy Device":
+                    continue
+
+                # For identical VID / PID devices only add one instance
+                vid_pid_key = (dev.vendor_id, dev.product_id)
+                if vid_pid_key in devices_added:
+                    continue
+
+                # Set checkbox state based on whether or not HidGuardian tracks
+                # the device. Add a callback with pid/vid to add / remove said
+                # device from the list of devices handled by HidGuardian
+                self.hg_device_layout.addWidget(
+                    QtWidgets.QLabel(dev.name), i+1, 0
+                )
+                checkbox = QtWidgets.QCheckBox("")
+                checkbox.setChecked(vid_pid_key in hg_device_list)
+                checkbox.stateChanged.connect(self._create_hg_cb(dev))
+                self.hg_device_layout.addWidget(checkbox, i+1, 1)
+                devices_added.append(vid_pid_key)
+
+            self.hg_page_layout.addLayout(self.hg_device_layout)
+
+            self.hg_page_layout.addStretch()
+            label = QtWidgets.QLabel(
+                "After making changes to the devices hidden by HidGuardian "
+                "the devices that should now be hidden or shown to other"
+                "applications need to be unplugged and plugged back in for "
+                "the changes to take effect."
+            )
+            label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+            label.setWordWrap(True)
+            label.setFrameShape(QtWidgets.QFrame.Box)
+            label.setMargin(10)
+            self.hg_page_layout.addWidget(label)
+
+        self.tab_container.addTab(self.hg_page, "HidGuardian")
 
     def closeEvent(self, event):
         """Closes the calibration window.
@@ -339,6 +411,58 @@ class OptionsUi(common.BaseDialogUi):
         """
         self.config.macro_axis_polling_rate = value
         self.config.save()
+
+    def _create_hg_cb(self, *params):
+        return lambda x: self._update_hg_device(x, *params)
+
+    def _update_hg_device(self, state, device):
+        hg = gremlin.hid_guardian.HidGuardian()
+        if state == QtCore.Qt.Checked:
+            hg.add_device(device.vendor_id, device.product_id)
+        else:
+            hg.remove_device(device.vendor_id, device.product_id)
+
+
+class HidGuardianWindow(common.BaseDialogUi):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowFilePath("HidGuardian Configuration")
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        # Get list of devices affected by HidGuardian
+        hg = gremlin.hid_guardian.HidGuardian()
+        hg_device_list = hg.get_device_list()
+
+        self.device_layout = QtWidgets.QGridLayout()
+        devices = gremlin.joystick_handling.joystick_devices()
+        for i, dev in enumerate(devices):
+            # Set checkbox state based on whether or not HidGuardian tracks
+            # the device. Add a callback with pid/vid to add / remove said
+            # device from the list of devices handled by HidGuardian
+            self.device_layout.addWidget(QtWidgets.QLabel(dev.name), i, 0)
+            checkbox = QtWidgets.QCheckBox("")
+            if (dev.vendor_id, dev.product_id) in hg_device_list:
+                checkbox.setChecked(True)
+            checkbox.stateChanged.connect(
+                self._create_cb(self._update_device, dev)
+            )
+            self.device_layout.addWidget(checkbox, i, 1)
+
+        self.main_layout.addLayout(self.device_layout)
+        self.main_layout.addStretch()
+
+    def _create_cb(self, function, *params):
+        return lambda x: function(x, *params)
+
+    def _update_device(self, state, device):
+        hg = gremlin.hid_guardian.HidGuardian()
+        if state == QtCore.Qt.Checked:
+            hg.add_device(device.vendor_id, device.product_id)
+        else:
+            hg.remove_device(device.vendor_id, device.product_id)
 
 
 class ProcessWindow(common.BaseDialogUi):
