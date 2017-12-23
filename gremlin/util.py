@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import ctypes
 import importlib
 import logging
 import os
@@ -80,6 +81,14 @@ class FileWatcher(QtCore.QObject):
                     self._last_size[fname] = stats.st_size
                     self.file_changed.emit(fname)
             time.sleep(1)
+
+
+def is_user_admin():
+    """Returns whether or not the user has admin privileges.
+
+    :return True if user has admin rights, False otherwise
+    """
+    return ctypes.windll.shell32.IsUserAnAdmin() == 1
 
 
 def setup_duplicate_devices(device_id_fn, duplicate_devices):
