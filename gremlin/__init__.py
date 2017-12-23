@@ -26,6 +26,7 @@ import gremlin.documenter
 import gremlin.error
 import gremlin.event_handler
 import gremlin.fsm
+import gremlin.hid_guardian
 import gremlin.hints
 import gremlin.input_devices
 import gremlin.joystick_handling
