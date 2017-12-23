@@ -69,6 +69,8 @@ class JoystickDeviceData:
         """
         self._hardware_id = get_device_guid(device)
         self._windows_id = sdl2.SDL_JoystickInstanceID(device)
+        self._vendor_id = sdl2.SDL_JoystickGetVendor(device)
+        self._product_id = sdl2.SDL_JoystickGetProduct(device)
         name_object = sdl2.SDL_JoystickName(device)
         if name_object is None:
             self._name = "Unknown device"
@@ -92,6 +94,14 @@ class JoystickDeviceData:
     @property
     def windows_id(self):
         return self._windows_id
+
+    @property
+    def product_id(self):
+        return self._product_id
+
+    @property
+    def vendor_id(self):
+        return self._vendor_id
 
     @property
     def name(self):
