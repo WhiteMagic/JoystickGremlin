@@ -38,7 +38,7 @@ class ProfileError(GremlinError):
     """
 
     def __init__(self, value):
-        GremlinError.__init__(self, value)
+        super().__init__(value)
 
 
 class KeyboardError(GremlinError):
@@ -48,7 +48,7 @@ class KeyboardError(GremlinError):
     """
 
     def __init__(self, value):
-        GremlinError.__init__(self, value)
+        super().__init__(value)
 
 
 class MissingImplementationError(GremlinError):
@@ -56,7 +56,7 @@ class MissingImplementationError(GremlinError):
     """Exception raised when a method is not implemented."""
 
     def __init__(self, value):
-        GremlinError.__init__(self, value)
+        super().__init__(value)
 
 
 class VJoyError(GremlinError):
@@ -64,4 +64,12 @@ class VJoyError(GremlinError):
     """Exception raised when an error occurs within the vJoy module."""
 
     def __init__(self, value):
-        GremlinError.__init__(self, value)
+        super().__init__(value)
+
+
+class HidGuardianError(GremlinError):
+
+    """Exception raised when an error related to HidGuardian."""
+
+    def __init__(self, value):
+        super().__init__(value)
