@@ -1174,6 +1174,10 @@ if __name__ == "__main__":
     # TODO: Re-enable exception capturing for profile loading
     sys.excepthook = exception_hook
 
+    # Initialize HidGuardian before we let SDL grab joystick data
+    hg = gremlin.hid_guardian.HidGuardian()
+    hg.add_process(os.getpid())
+
     # Initialize SDL
     sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
     sdl2.SDL_SetHint(
@@ -1252,5 +1256,7 @@ if __name__ == "__main__":
 
     # Relinquish control over all VJoy devices used
     gremlin.joystick_handling.VJoyProxy.reset()
+
+    hg.remove_process(os.getpid())
 
     sys.exit(0)
