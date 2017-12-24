@@ -47,8 +47,10 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
 
     def _create_ui(self):
         """Creates the UI elements of this widget."""
+        # Default start mode selection
         self.main_layout.addWidget(DefaultModeSelector(self.profile_settings))
 
+        # vJoy axis initialization value setup
         # Get list of vjoy devices
         vjoy_devices = []
         for device in gremlin.joystick_handling.joystick_devices():
@@ -71,6 +73,7 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
 
         self.main_layout.addStretch(1)
 
+        # Information label
         label = QtWidgets.QLabel(
             "This tab allows setting default initialization of vJoy axis "
             "values. These values  will be used when activating Gremlin."

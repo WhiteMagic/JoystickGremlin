@@ -102,7 +102,7 @@ class InputItemConfiguration(QtWidgets.QFrame):
         """Creates the description input for the input item."""
         self.description_layout = QtWidgets.QHBoxLayout()
         self.description_layout.addWidget(
-            QtWidgets.QLabel("<b>Description</b>")
+            QtWidgets.QLabel("<b>Action Description</b>")
         )
         self.description_field = QtWidgets.QLineEdit()
         self.description_field.setText(self.item_data.description)
@@ -391,14 +391,6 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
 
         self.main_layout.addWidget(widget)
 
-    def _create_change_cb(self, index):
-        """Creates a callback handling content changes.
-
-        :param index the index of the content being changed
-        :return callback function redrawing changed content
-        """
-        return lambda: self.input_item_list_view.redraw_index(index)
-
     def mode_changed_cb(self, mode):
         """Handles mode change.
 
@@ -422,6 +414,14 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         """Refreshes the current selection, ensuring proper synchronization."""
         if self.input_item_list_view.current_index is not None:
             self.input_item_selected_cb(self.input_item_list_view.current_index)
+
+    def _create_change_cb(self, index):
+        """Creates a callback handling content changes.
+
+        :param index the index of the content being changed
+        :return callback function redrawing changed content
+        """
+        return lambda: self.input_item_list_view.redraw_index(index)
 
     def update_device_label(self, text):
         """Updates the label assigned to this device.

@@ -1184,7 +1184,7 @@ class InputListenerWidget(QtWidgets.QFrame):
             event_listener.joystick_event.disconnect(self._joy_event_cb)
 
         # Delay unsuspending input highlighting to allow an axis that's being
-        # moved to return to its center without triggering an input highligh
+        # moved to return to its center without triggering an input highlight
         gremlin.shared_state.delayed_input_highlighting_suspension()
         super().closeEvent(evt)
 

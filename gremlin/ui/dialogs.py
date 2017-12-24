@@ -423,48 +423,6 @@ class OptionsUi(common.BaseDialogUi):
             hg.remove_device(device.vendor_id, device.product_id)
 
 
-class HidGuardianWindow(common.BaseDialogUi):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.setWindowFilePath("HidGuardian Configuration")
-
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-
-        # Get list of devices affected by HidGuardian
-        hg = gremlin.hid_guardian.HidGuardian()
-        hg_device_list = hg.get_device_list()
-
-        self.device_layout = QtWidgets.QGridLayout()
-        devices = gremlin.joystick_handling.joystick_devices()
-        for i, dev in enumerate(devices):
-            # Set checkbox state based on whether or not HidGuardian tracks
-            # the device. Add a callback with pid/vid to add / remove said
-            # device from the list of devices handled by HidGuardian
-            self.device_layout.addWidget(QtWidgets.QLabel(dev.name), i, 0)
-            checkbox = QtWidgets.QCheckBox("")
-            if (dev.vendor_id, dev.product_id) in hg_device_list:
-                checkbox.setChecked(True)
-            checkbox.stateChanged.connect(
-                self._create_cb(self._update_device, dev)
-            )
-            self.device_layout.addWidget(checkbox, i, 1)
-
-        self.main_layout.addLayout(self.device_layout)
-        self.main_layout.addStretch()
-
-    def _create_cb(self, function, *params):
-        return lambda x: function(x, *params)
-
-    def _update_device(self, state, device):
-        hg = gremlin.hid_guardian.HidGuardian()
-        if state == QtCore.Qt.Checked:
-            hg.add_device(device.vendor_id, device.product_id)
-        else:
-            hg.remove_device(device.vendor_id, device.product_id)
-
-
 class ProcessWindow(common.BaseDialogUi):
 
     """Displays active processes in a window for the user to select."""
