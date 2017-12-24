@@ -96,6 +96,8 @@ class Ui_Gremlin(object):
         self.actionRecent.setObjectName("actionRecent")
         self.actionEmpty = QtWidgets.QAction(Gremlin)
         self.actionEmpty.setObjectName("actionEmpty")
+        self.actionSwapDevices = QtWidgets.QAction(Gremlin)
+        self.actionSwapDevices.setObjectName("actionSwapDevices")
         self.menuRecent.addAction(self.actionEmpty)
         self.menuFile.addAction(self.actionNewProfile)
         self.menuFile.addAction(self.actionLoadProfile)
@@ -120,6 +122,7 @@ class Ui_Gremlin(object):
         self.menu_Help.addAction(self.actionAbout)
         self.menuActions.addAction(self.actionCreate1to1Mapping)
         self.menuActions.addAction(self.actionMergeAxis)
+        self.menuActions.addAction(self.actionSwapDevices)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuActions.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
@@ -165,4 +168,5 @@ class Ui_Gremlin(object):
         self.actionModifyProfile.setText(_translate("Gremlin", "Modify Profile"))
         self.actionRecent.setText(_translate("Gremlin", "&Recent"))
         self.actionEmpty.setText(_translate("Gremlin", "Empty"))
+        self.actionSwapDevices.setText(_translate("Gremlin", "Swap Devices"))
 

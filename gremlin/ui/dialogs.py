@@ -1028,3 +1028,167 @@ class DeviceInformationUi(common.BaseDialogUi):
         self.close_button = QtWidgets.QPushButton("Close")
         self.close_button.clicked.connect(lambda: self.close())
         self.main_layout.addWidget(self.close_button, len(devices)+1, 3)
+
+
+class SwapDevicesUi(common.BaseDialogUi):
+
+    """UI Widget that allows users to swap identical devices."""
+
+    def __init__(self, devices, profile, parent=None):
+        """Creates a new instance.
+
+        :param devices the list of devices to use
+        :param profile the current profile
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+
+        self.devices = devices
+        self.profile = profile
+
+        self.setWindowTitle("Swap Devices")
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        if not gremlin.util.g_duplicate_devices:
+            self._create_info_ui()
+        else:
+            self._create_swap_ui()
+
+    def _create_info_ui(self):
+        """Displays explanatory message when no duplicate devices are present."""
+        label = QtWidgets.QLabel(
+            "Swapping devices is only available when duplicate devices "
+            "are present."
+        )
+        label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+        label.setWordWrap(True)
+        label.setFrameShape(QtWidgets.QFrame.Box)
+        label.setMargin(10)
+        self.main_layout.addWidget(label)
+
+    def _create_swap_ui(self):
+        """Displays possible groups of swappable devices."""
+        common.clear_layout(self.main_layout)
+
+        # Generate list of duplicate device instances
+        device_groups = {}
+        for dev in [dev for dev in self.devices if not dev.is_virtual]:
+            if dev.hardware_id not in device_groups:
+                device_groups[dev.hardware_id] = []
+            device_groups[dev.hardware_id].append(dev)
+
+        duplicate_devices = []
+        for key, value in device_groups.items():
+            if len(value) > 1:
+                duplicate_devices.append(value)
+
+        # Create groups for each device
+        for group in duplicate_devices:
+            widget = QtWidgets.QGroupBox(group[0].name)
+
+            group_layout = QtWidgets.QGridLayout()
+            profile_data = self._profile_data(group[0].hardware_id)
+            for i, entry in enumerate(profile_data):
+                group_layout.addWidget(QtWidgets.QLabel(entry.label), i, 0)
+
+                record_button = QtWidgets.QPushButton(
+                    "Assigned Device: {:d}".format(entry.windows_id)
+                )
+                record_button.clicked.connect(
+                    self._create_request_user_input_cb(
+                        group[0].hardware_id,
+                        entry
+                    )
+                )
+                group_layout.addWidget(record_button, i, 1)
+            widget.setLayout(group_layout)
+            self.main_layout.addWidget(widget)
+            self.main_layout.addStretch()
+
+    def _create_request_user_input_cb(self, hardware_id, device_profile):
+        """Creates the callback allowing user to press a button to select a device.
+
+        :param hardware_id the hardware_id of the device we're interested in
+        :param device_profile the profile data of the device of interest
+        :return callback function for user input selection handling
+        """
+        def filter_function(event):
+            return event.hardware_id == hardware_id
+
+        return lambda: self._request_user_input(
+            filter_function,
+            lambda event: self._user_input_cb(event, device_profile)
+        )
+
+    def _user_input_cb(self, event, device_profile):
+        """Processes input events to update the UI and model.
+
+        :param event the input event to process
+        :param device_profile the profile data of the current device
+        """
+        # No change, nothing else to do
+        if device_profile.windows_id == event.windows_id:
+            return
+
+        # Find the device with which we can swap
+        device_1 = device_profile
+        device_2 = None
+        for key, device in self.profile.devices.items():
+            if key == (event.hardware_id, event.windows_id) \
+                    and device != device_1:
+                device_2 = device
+        key_1 = gremlin.util.device_id(device_1)
+        key_2 = gremlin.util.device_id(device_2)
+
+        # Swap profile data and entries
+        device_1.windows_id, device_2.windows_id = \
+            device_2.windows_id, device_1.windows_id
+        self.profile.devices[key_1], self.profile.devices[key_2] = \
+            self.profile.devices[key_2], self.profile.devices[key_1]
+
+        # Update the UI
+        self._create_swap_ui()
+
+    def _request_user_input(self, filter_func, callback):
+        """Prompts the user for the input to bind to this item.
+
+        :param filter_func function filtering out undesired inputs
+        :param callback function to call with the accepted input
+        """
+        self.input_dialog = common.InputListenerWidget(
+            callback,
+            [
+                gremlin.common.InputType.JoystickAxis,
+                gremlin.common.InputType.JoystickButton,
+                gremlin.common.InputType.JoystickHat
+            ],
+            return_kb_event=False,
+            multi_keys=False,
+            filter_func=filter_func
+        )
+
+        # Display the dialog centered in the middle of the UI
+        root = self
+        while root.parent():
+            root = root.parent()
+        geom = root.geometry()
+
+        self.input_dialog.setGeometry(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+            300,
+            150
+        )
+        self.input_dialog.show()
+
+    def _profile_data(self, hardware_id):
+        """Returns the profile data for the given hardware id.
+
+        :param hardware_id hardware id for which to retrieve profile data
+        :return profile data corresponding to the given hardware id
+        """
+        data = []
+        for dev in self.profile.devices.values():
+            if dev.hardware_id == hardware_id:
+                data.append(dev)
+        return data

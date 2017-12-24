@@ -92,6 +92,7 @@
     </property>
     <addaction name="actionCreate1to1Mapping"/>
     <addaction name="actionMergeAxis"/>
+    <addaction name="actionSwapDevices"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuActions"/>
@@ -231,6 +232,11 @@
   <action name="actionEmpty">
    <property name="text">
     <string>Empty</string>
+   </property>
+  </action>
+  <action name="actionSwapDevices">
+   <property name="text">
+    <string>Swap Devices</string>
    </property>
   </action>
  </widget>
