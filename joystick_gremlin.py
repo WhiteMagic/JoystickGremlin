@@ -276,6 +276,25 @@ class GremlinUi(QtWidgets.QMainWindow):
             lambda: self._remove_modal_window("profile_creator")
         )
 
+    def swap_devices(self):
+        """Opens the UI used to swap devices."""
+        self.modal_windows["swap_devices"] = \
+            gremlin.ui.dialogs.SwapDevicesUi(self.devices, self._profile)
+        geom = self.geometry()
+        self.modal_windows["swap_devices"].setGeometry(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+            300,
+            150
+        )
+        self.modal_windows["swap_devices"].show()
+        self.modal_windows["swap_devices"].closed.connect(
+            lambda: self._remove_modal_window("swap_devices")
+        )
+        self.modal_windows["swap_devices"].closed.connect(
+            self._create_tabs
+        )
+
     def _remove_modal_window(self, name):
         """Removes the modal window widget from the system.
 
@@ -491,6 +510,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.create_1to1_mapping
         )
         self.ui.actionMergeAxis.triggered.connect(self.merge_axis)
+        self.ui.actionSwapDevices.triggered.connect(self.swap_devices)
 
         # Tools
         self.ui.actionDeviceInformation.triggered.connect(
