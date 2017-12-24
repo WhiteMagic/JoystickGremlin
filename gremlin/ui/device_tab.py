@@ -336,6 +336,16 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             self.input_item_selected_cb
         )
 
+        # Add modifiable device label
+        label_layout = QtWidgets.QHBoxLayout()
+        label_layout.setContentsMargins(10, 9, 9, 0)
+        label_layout.addWidget(QtWidgets.QLabel("<b>Device Label</b>"))
+        line_edit = QtWidgets.QLineEdit()
+        line_edit.setText(device_profile.label)
+        line_edit.textChanged.connect(self.update_device_label)
+        label_layout.addWidget(line_edit)
+
+        self.left_panel_layout.addLayout(label_layout)
         self.left_panel_layout.addWidget(self.input_item_list_view)
 
         # Add a help text for the purpose of the vJoy tab
@@ -409,6 +419,13 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         """Refreshes the current selection, ensuring proper synchronization."""
         if self.input_item_list_view.current_index is not None:
             self.input_item_selected_cb(self.input_item_list_view.current_index)
+
+    def update_device_label(self, text):
+        """Updates the label assigned to this device.
+
+        :param text the new label text
+        """
+        self.device_profile.label = text
 
 
 class KeyboardDeviceTabWidget(QtWidgets.QWidget):
