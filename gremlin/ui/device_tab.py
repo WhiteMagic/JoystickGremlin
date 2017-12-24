@@ -415,6 +415,9 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             item.widget().deleteLater()
         self.main_layout.removeItem(item)
 
+        # Select the first input item
+        self.input_item_list_view.select_item(0)
+
     def refresh(self):
         """Refreshes the current selection, ensuring proper synchronization."""
         if self.input_item_list_view.current_index is not None:
