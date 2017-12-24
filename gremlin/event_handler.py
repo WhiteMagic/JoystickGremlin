@@ -121,6 +121,8 @@ class Event:
                 << Event.ShiftIdentifier
         else:
             hash_val += self.identifier << Event.ShiftIdentifier
+        # FIXME: Value is only valid for axis and hats, but not buttons is
+        #        this on purpose?
         hash_val += self.event_type.value << Event.ShiftEventId
         if util.g_duplicate_devices:
             hash_val += self.windows_id << Event.ShiftSystemId
