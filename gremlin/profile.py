@@ -991,6 +991,7 @@ class Device:
         """
         self.parent = parent
         self.name = None
+        self.label = ""
         self.hardware_id = None
         self.windows_id = None
         self.modes = {}
@@ -1023,6 +1024,7 @@ class Device:
         :param node the xml node to parse to populate this device
         """
         self.name = node.get("name")
+        self.label = safe_read(node, "label", default_value=self.name)
         self.hardware_id = int(node.get("id"))
         self.windows_id = int(node.get("windows_id"))
         self.type = type_name_to_device_type(node.get("type"))
@@ -1052,6 +1054,7 @@ class Device:
         node_tag = "device" if self.type != DeviceType.VJoy else "vjoy-device"
         node = ElementTree.Element(node_tag)
         node.set("name", self.name)
+        node.set("label", self.label)
         node.set("id", str(self.hardware_id))
         node.set("windows_id", str(self.windows_id))
         node.set("type", device_type_to_type_name(self.type))
@@ -1108,7 +1111,6 @@ class Mode:
                 self.config[item.input_type][item.input_id] = item
 
         joystick_handling.VJoyProxy().reset()
-
 
     def to_xml(self):
         """Generates XML code for this DeviceConfiguration.
