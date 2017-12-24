@@ -1055,6 +1055,7 @@ class InputListenerWidget(QtWidgets.QFrame):
             event_types,
             return_kb_event=False,
             multi_keys=False,
+            filter_func=None,
             parent=None
     ):
         """Creates a new instance.
@@ -1066,6 +1067,8 @@ class InputListenerWidget(QtWidgets.QFrame):
             the key itself (False)
         :param multi_keys whether or not to return multiple key presses (True)
             or return after the first initial press (False)
+        :param filter_func function applied to inputs which filters out more
+            complex unwanted inputs
         :param parent the parent widget of this widget
         """
         super().__init__(parent)
@@ -1074,6 +1077,7 @@ class InputListenerWidget(QtWidgets.QFrame):
         self._event_types = event_types
         self._return_kb_event = return_kb_event
         self._multi_keys = multi_keys
+        self.filter_func = filter_func
 
         self._multi_key_storage = []
 
@@ -1156,6 +1160,8 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         # Only react to events we're interested in
         if event.event_type not in self._event_types:
+            return
+        if self.filter_func is not None and not self.filter_func(event):
             return
 
         # Ensure the event corresponds to a significant enough change in input
