@@ -353,8 +353,15 @@ class InputItemCallback:
         else:
             raise gremlin.error.GremlinError("Invalid event type")
 
+        # Containers representing a virtual button get their individual
+        # value instance, all others share one to propagate changes across
+        shared_value = copy.deepcopy(value)
+
         for graph in self.execution_graphs:
-            graph.process_event(event, copy.deepcopy(value))
+            if graph.is_virtual_button:
+                graph.process_event(event, copy.deepcopy(value))
+            else:
+                graph.process_event(event, shared_value)
 
 
 class AbstractExecutionGraph(metaclass=ABCMeta):
@@ -486,7 +493,7 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
                             break
                     offset += 1
             elif seq == "Action" and i+1 < seq_count:
-                # Transition to the next node irrepsective of failure or success
+                # Transition to the next node irrespective of failure or success
                 self.transitions[(i, True)] = i+1
                 self.transitions[(i, False)] = i + 1
 
@@ -503,6 +510,7 @@ class ContainerExecutionGraph(AbstractExecutionGraph):
         """
         assert isinstance(container, gremlin.base_classes.AbstractContainer)
         super().__init__(container)
+        self.is_virtual_button = container.virtual_button is not None
 
     def _build_graph(self, container):
         """Builds the graph structure based on the container's content.
