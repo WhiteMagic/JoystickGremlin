@@ -1,0 +1,37 @@
+---
+area: manual
+chapter: changelog
+layout: default
+title:  "Release 9"
+date:   2017-12-09 12:00:00"
+---
+
+<h3>Release 9</h3>
+
+<h4>New Features</h4>
+<ul>
+    <li>Support for action sets, i.e. collection of actions in a single container</li>
+    <li>Activation conditions for either individual actions or entire containers, triggering based on the action state itself or the state of other inputs</li>
+    <li>UI rework to display the various pieces of information without overloading the entire UI</li>
+    <li>Code generation from profiles redone completely</li>
+    <li>Macros can now record joystick actions and vJoy actions with timing information</li>
+    <li>No operation action added to use when no action is desired but one is needed (Tempo container)</li>
+    <li>Customizable activation condition for short presses in the Tempo container</li>
+</ul>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Should no longer crash on media key usage (can't use them yet)</li>
+    <li>Properly release vJoy devices when they are not in use</li>
+    <li>Value entry boxes should now be less annoying to use</li>
+    <li>Reading XML profiles should be a bit more robust now</li>
+    <li>Update SDL to the current version 2.0.6</li>
+    <li>Response curve input field changes should now be stored again</li>
+    <li>Crash due to activation race condition fixed</li>
+    <li>Input repeater and input highlighting code improved to work better with axes that don't physically reset to center</li>
+    <li>Cheatsheet generation should no longer crash when no save file is provided</li>
+    <li>Logging added for vJoy and SDL device matching, to help debug mapping issues in the future</li>
+    <li>Somewhat improve the "Do you want to save these changes" dialog logic</li>
+    <li>vJoy response curves should once again apply properly</li>
+    <li>Fixed macro manager to prevent excessive polling when identical macros are queued up</li>
+</ul>
