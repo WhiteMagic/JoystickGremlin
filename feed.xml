@@ -3,8 +3,8 @@
 	<channel>
 		<title>Joystick Gremlin - Updates</title>
 		<description>New release information for Joystick Gremlin</description>
-		<link>http://localhost:4000</link>
-		<atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
+		<link></link>
+		<atom:link href="http://whitemagic.github.io/JoystickGremlin//feed.xml" rel="self" type="application/rss+xml" />
 		<lastBuildDate>Thu, 21 Dec 2017 12:00:00 +0100</lastBuildDate>
 		
 			<item>
@@ -28,8 +28,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Thu, 21 Dec 2017 12:00:00 +0100</pubDate>
-				<link>http://localhost:4000/changelog/2017/12/21/Release-9.1.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2017/12/21/Release-9.1.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/21/Release-9.1.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/21/Release-9.1.html</guid>
 			</item>
 		
 			<item>
@@ -65,8 +65,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sat, 09 Dec 2017 12:00:00 +0100</pubDate>
-				<link>http://localhost:4000/changelog/2017/12/09/Release-9.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2017/12/09/Release-9.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/09/Release-9.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/09/Release-9.html</guid>
 			</item>
 		
 			<item>
@@ -90,8 +90,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sat, 19 Aug 2017 12:00:00 +0200</pubDate>
-				<link>http://localhost:4000/changelog/2017/08/19/Release-8.1.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2017/08/19/Release-8.1.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/08/19/Release-8.1.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/08/19/Release-8.1.html</guid>
 			</item>
 		
 			<item>
@@ -125,8 +125,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sat, 08 Jul 2017 12:00:00 +0200</pubDate>
-				<link>http://localhost:4000/changelog/2017/07/08/Release-8.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2017/07/08/Release-8.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/07/08/Release-8.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/07/08/Release-8.html</guid>
 			</item>
 		
 			<item>
@@ -147,8 +147,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sun, 26 Feb 2017 12:00:00 +0100</pubDate>
-				<link>http://localhost:4000/changelog/2017/02/26/Release-7.1.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2017/02/26/Release-7.1.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/02/26/Release-7.1.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/02/26/Release-7.1.html</guid>
 			</item>
 		
 			<item>
@@ -174,8 +174,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Thu, 22 Dec 2016 12:00:00 +0100</pubDate>
-				<link>http://localhost:4000/changelog/2016/12/22/Release-7.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2016/12/22/Release-7.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/12/22/Release-7.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/12/22/Release-7.html</guid>
 			</item>
 		
 			<item>
@@ -199,8 +199,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Thu, 10 Nov 2016 12:00:00 +0100</pubDate>
-				<link>http://localhost:4000/changelog/2016/11/10/Release-6.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2016/11/10/Release-6.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/11/10/Release-6.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/11/10/Release-6.html</guid>
 			</item>
 		
 			<item>
@@ -224,8 +224,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Wed, 29 Jun 2016 12:00:00 +0200</pubDate>
-				<link>http://localhost:4000/changelog/2016/06/29/Release-5.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2016/06/29/Release-5.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/06/29/Release-5.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/06/29/Release-5.html</guid>
 			</item>
 		
 			<item>
@@ -253,8 +253,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Fri, 29 Jan 2016 12:00:00 +0100</pubDate>
-				<link>http://localhost:4000/changelog/2016/01/29/Release-4.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2016/01/29/Release-4.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/01/29/Release-4.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/01/29/Release-4.html</guid>
 			</item>
 		
 			<item>
@@ -283,10 +283,9 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sun, 18 Oct 2015 12:00:00 +0200</pubDate>
-				<link>http://localhost:4000/changelog/2015/10/18/Release-3.html</link>
-				<guid isPermaLink="true">http://localhost:4000/changelog/2015/10/18/Release-3.html</guid>
+				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2015/10/18/Release-3.html</link>
+				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2015/10/18/Release-3.html</guid>
 			</item>
 		
 	</channel>
 </rss>
-  tags
