@@ -33,6 +33,9 @@
 
     <!-- Custom CSS overrides -->
     <link rel="stylesheet" href="/JoystickGremlin/css/override.css">
+
+    <!-- Atom feed -->
+    <link href="/JoystickGremlin/feed.xml" type="application/rss+xml" rel="alternate" title="Joystick Gremlin - Changelog" />
 </head>
 
 
@@ -83,244 +86,88 @@
                 <div class="col-md-8">
                     <h2><a name="7">7. Changelog</a></h2>
 
-<h3>Release 9.1</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Ability to select the starting mode on a per profile basis or keep the old heuristic system</li>
-    <li>Axis based virtual buttons can now specify an optional activation direction</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Consistent handling of "sufficient" input detection</li>
-    <li>Allow mapping of keyboard keys to other keyboard keys</li>
-    <li>Automatically release keys pressed using the Map to Keyboard action</li>
-    <li>Automatically release keys and buttons pressed via keyboard keys</li>
-    <li>Handle skipping over virtual axis button activation regions</li>
-    <li>Properly remember and use information about currently active container tabs</li>
-</ul>
-
-
-<h3>Release 9</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Support for action sets, i.e. collection of actions in a single container</li>
-    <li>Activation conditions for either individual actions or entire containers, triggering based on the action state itself or the state of other inputs</li>
-    <li>UI rework to display the various pieces of information without overloading the entire UI</li>
-    <li>Code generation from profiles redone completely</li>
-    <li>Macros can now record joystick actions and vJoy actions with timing information</li>
-    <li>No operation action added to use when no action is desired but one is needed (Tempo container)</li>
-    <li>Customizable activation condition for short presses in the Tempo container</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Should no longer crash on media key usage (can't use them yet)</li>
-    <li>Properly release vJoy devices when they are not in use</li>
-    <li>Value entry boxes should now be less annoying to use</li>
-    <li>Reading XML profiles should be a bit more robust now</li>
-    <li>Update SDL to the current version 2.0.6</li>
-    <li>Response curve input field changes should now be stored again</li>
-    <li>Crash due to activation race condition fixed</li>
-    <li>Input repeater and input highlighting code improved to work better with axes that don't physically reset to center</li>
-    <li>Cheatsheet generation should no longer crash when no save file is provided</li>
-    <li>Logging added for vJoy and SDL device matching, to help debug mapping issues in the future</li>
-    <li>Somewhat improve the "Do you want to save these changes" dialog logic</li>
-    <li>vJoy response curves should once again apply properly</li>
-    <li>Fixed macro manager to prevent excessive polling when identical macros are queued up</li>
-</ul>
-
-
-<h3>Release 8.1</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Ask to save changes when appropriate</li>
-    <li>Temporary mode switch action</li>
-    <li>Sound playback action</li>
-    <li>Symmetry mode for Bezier curve handles</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>AltGr and Pause should now work properly</li>
-    <li>Reworked cubic Bezier curves</li>
-    <li>Properly store curve type changes</li>
-    <li>Consistent initial activation mode selection</li>
-</ul>
-
-
-<h3>Release 8</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>New container and action system</li>
-    <ul>
-        <li>Actions are now placed inside containers</li>
-        <li>Containers come in different varieties, such as basic, chain, and tempo</li>
-    </ul>
-    <li>New map to keyboard action</li>
-    <li>vJoy axis initialization value customization</li>
-    <li>Ability to map hat directions to vJoy buttons</li>
-    <li>Ability to select processes for automatic profile activation from a list</li>
-    <li>Listing of recently used profiles</li>
-    <li>Improved macro action functionalities</li>
-    <li>Restore last known position and size of the main window</li>
-    <li>Basic help / hint system started</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Rewritten UI</li>
-    <li>Code generation changes</li>
-    <li>Properly handle non-consecutive vJoy axis setups</li>
-    <li>Better handling of international keyboards and layouts</li>
-    <li>Improve vJoy error handling</li>
-</ul>
-
-
-<h3>Release 7.1</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Display description of inputs in the overview list</li>
-    <li>Default action can be configured via options</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Properly keep vJoy devices alive by using the last known input data</li>
-    <li>Minimize to system tray works again</li>
-    <li>Updated SDL2 library which which hopefully shows all devices</li>
-</ul>
-
-
-<h3>Release 7</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Template system, allows creation of a new profile based on an existing one</li>
-    <li>Profile loading and enabling of Joystick Gremlin via command line arguments</li>
-    <li>Proper unique device ids due to an Update of third party libraries</li>
-    <li>Joystick devices can now be addressed by their name instead of only ID in code</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>TTS system induced crash</li>
-    <li>Handle multiple vJoy devices correctly</li>
-    <li>Fix issues with the merge axis feature</li>
-    <li>Handle switching modes while a hat is pressed properly</li>
-    <li>Fixed a possible crash in the input repeater tool</li>
-    <li>Various UI glitches and bugs</li>
-</ul>
-
-
-<h3>Release 6</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Split and merge axis functionality</li>
-    <li>Actions implemented as a plugin system</li>
-    <li>Ability to specify response curves for virtual axes</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>More robust error handling</li>
-    <li>Validate installed version of vJoy</li>
-    <li>Fix generation of invalid Python identifiers</li>
-    <li>Prevent continous scrolling of the log display</li>
-    <li>Fix cubic spline implementation</li>
-</ul>
-
-
-<h3>Release 5</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>System tray icon</li>
-    <li>Periodic function execution</li>
-    <li>Log viewer</li>
-    <li>Reworked joystick interface API</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Fix various crashes</li>
-    <li>Fix UI lag</li>
-    <li>vJoy issue checking and handling</li>
-    <li>Improved macro recording</li>
-</ul>
-
-
-<h3>Release 4</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Load and activate profile based on currently active process</li>
-    <li>Update device list at runtime</li>
-    <li>Axis range based activation of actions</li>
-    <li>Shift button condition added for buttons</li>
-    <li>Ability to quickly create a 1:1 mapping</li>
-    <li>Ability to rename modes added</li>
-    <li>New action indicator icons added for quicker overview of used actions</li>
-    <li>Input repeater usability improved</li>
-    <li>Bunch of additional usability improvements</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Profile loading and saving related improvements</li>
-    <li>Store data in %userprofile% rather then %APPDATA%</li>
-    <li>Prevent buttons from being stuck down when switching modes</li>
-</ul>
-
-
-<h3>Release 3</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Added text-to-speech support</li>
-    <li>Modes now can form arbitrary, user defined inheritance trees</li>
-    <li>Generation of HTML and PDF cheatsheets</li>
-    <li>Ability to assign actions to individual hat directions</li>
-    <li>Ability to add a description to each input</li>
-    <li>Improved cubic Bezier spline interface</li>
-    <li>Select input currently being used on the physical device</li>
-    <li>Modes can now have arbitrary names</li>
-    <li>Action to toggle pause mode on and off</li>
-    <li>Getting started tab with a quick guide added</li>
-    <li>Simple text-to-speech support</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Timeout issues making vJoy fail partially fixed</li>
-    <li>More error handling and fixing of edge cases</li>
-</ul>
-
-
-<h3>Release 2</h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Input repeating for binding actions in games</li>
-    <li>Storing of last used profile to auto load on next start</li>
-    <li>Calibration of joystick axes</li>
-    <li>Cubic Bezier splines added for response curve configuration</li>
-    <li>Properly support multiple identical devices</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>XML profile parsing error handling improved</li>
-    <li>Accidental overwriting of an existing profile after creating a new
-        one</li>
-    <li>Some error handling improvements</li>
-</ul>
+<center>
+<table width="80%">
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2017/12/21/Release-9.1.html">Release 9.1</a></h4>
+        </td>
+        <td align="right">21 December 2017</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2017/12/09/Release-9.html">Release 9</a></h4>
+        </td>
+        <td align="right">9 December 2017</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2017/08/19/Release-8.1.html">Release 8.1</a></h4>
+        </td>
+        <td align="right">19 August 2017</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2017/07/08/Release-8.html">Release 8</a></h4>
+        </td>
+        <td align="right">8 July 2017</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2017/02/26/Release-7.1.html">Release 7.1</a></h4>
+        </td>
+        <td align="right">26 February 2017</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2016/12/22/Release-7.html">Release 7</a></h4>
+        </td>
+        <td align="right">22 December 2016</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2016/11/10/Release-6.html">Release 6</a></h4>
+        </td>
+        <td align="right">10 November 2016</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2016/06/29/Release-5.html">Release 5</a></h4>
+        </td>
+        <td align="right">29 June 2016</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2016/01/29/Release-4.html">Release 4</a></h4>
+        </td>
+        <td align="right">29 January 2016</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2015/10/18/Release-3.html">Release 3</a></h4>
+        </td>
+        <td align="right">18 October 2015</td>
+    </tr>
+    
+    <tr>
+        <td>
+            <h4><a href="/JoystickGremlin/changelog/2015/03/28/Release-2.html">Release 2</a></h4>
+        </td>
+        <td align="right">28 March 2015</td>
+    </tr>
+    
+</table>
+</center>
 
                 </div>
                 <div class="col-md-2"></div>
@@ -331,7 +178,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: December 21, 2017</p>
+            <p class="text-muted">Last update: December 25, 2017</p>
         </div>
     </div>
 </footer>

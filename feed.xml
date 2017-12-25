@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>Joystick Gremlin - Updates</title>
+		<description>New release information for Joystick Gremlin</description>
+		<link>http://localhost:4000</link>
+		<atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
+		<lastBuildDate>Thu, 21 Dec 2017 12:00:00 +0100</lastBuildDate>
+		
+			<item>
+				<title>Release 9.1</title>
+				<description>&lt;h3&gt;Release 9.1&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Ability to select the starting mode on a per profile basis or keep the old heuristic system&lt;/li&gt;
+    &lt;li&gt;Axis based virtual buttons can now specify an optional activation direction&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Consistent handling of &quot;sufficient&quot; input detection&lt;/li&gt;
+    &lt;li&gt;Allow mapping of keyboard keys to other keyboard keys&lt;/li&gt;
+    &lt;li&gt;Automatically release keys pressed using the Map to Keyboard action&lt;/li&gt;
+    &lt;li&gt;Automatically release keys and buttons pressed via keyboard keys&lt;/li&gt;
+    &lt;li&gt;Handle skipping over virtual axis button activation regions&lt;/li&gt;
+    &lt;li&gt;Properly remember and use information about currently active container tabs&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Thu, 21 Dec 2017 12:00:00 +0100</pubDate>
+				<link>http://localhost:4000/changelog/2017/12/21/Release-9.1.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2017/12/21/Release-9.1.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 9</title>
+				<description>&lt;h3&gt;Release 9&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Support for action sets, i.e. collection of actions in a single container&lt;/li&gt;
+    &lt;li&gt;Activation conditions for either individual actions or entire containers, triggering based on the action state itself or the state of other inputs&lt;/li&gt;
+    &lt;li&gt;UI rework to display the various pieces of information without overloading the entire UI&lt;/li&gt;
+    &lt;li&gt;Code generation from profiles redone completely&lt;/li&gt;
+    &lt;li&gt;Macros can now record joystick actions and vJoy actions with timing information&lt;/li&gt;
+    &lt;li&gt;No operation action added to use when no action is desired but one is needed (Tempo container)&lt;/li&gt;
+    &lt;li&gt;Customizable activation condition for short presses in the Tempo container&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Should no longer crash on media key usage (can't use them yet)&lt;/li&gt;
+    &lt;li&gt;Properly release vJoy devices when they are not in use&lt;/li&gt;
+    &lt;li&gt;Value entry boxes should now be less annoying to use&lt;/li&gt;
+    &lt;li&gt;Reading XML profiles should be a bit more robust now&lt;/li&gt;
+    &lt;li&gt;Update SDL to the current version 2.0.6&lt;/li&gt;
+    &lt;li&gt;Response curve input field changes should now be stored again&lt;/li&gt;
+    &lt;li&gt;Crash due to activation race condition fixed&lt;/li&gt;
+    &lt;li&gt;Input repeater and input highlighting code improved to work better with axes that don't physically reset to center&lt;/li&gt;
+    &lt;li&gt;Cheatsheet generation should no longer crash when no save file is provided&lt;/li&gt;
+    &lt;li&gt;Logging added for vJoy and SDL device matching, to help debug mapping issues in the future&lt;/li&gt;
+    &lt;li&gt;Somewhat improve the &quot;Do you want to save these changes&quot; dialog logic&lt;/li&gt;
+    &lt;li&gt;vJoy response curves should once again apply properly&lt;/li&gt;
+    &lt;li&gt;Fixed macro manager to prevent excessive polling when identical macros are queued up&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sat, 09 Dec 2017 12:00:00 +0100</pubDate>
+				<link>http://localhost:4000/changelog/2017/12/09/Release-9.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2017/12/09/Release-9.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 8.1</title>
+				<description>&lt;h3&gt;Release 8.1&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Ask to save changes when appropriate&lt;/li&gt;
+    &lt;li&gt;Temporary mode switch action&lt;/li&gt;
+    &lt;li&gt;Sound playback action&lt;/li&gt;
+    &lt;li&gt;Symmetry mode for Bezier curve handles&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;AltGr and Pause should now work properly&lt;/li&gt;
+    &lt;li&gt;Reworked cubic Bezier curves&lt;/li&gt;
+    &lt;li&gt;Properly store curve type changes&lt;/li&gt;
+    &lt;li&gt;Consistent initial activation mode selection&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sat, 19 Aug 2017 12:00:00 +0200</pubDate>
+				<link>http://localhost:4000/changelog/2017/08/19/Release-8.1.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2017/08/19/Release-8.1.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 8</title>
+				<description>&lt;h3&gt;Release 8&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;New container and action system&lt;/li&gt;
+    &lt;ul&gt;
+        &lt;li&gt;Actions are now placed inside containers&lt;/li&gt;
+        &lt;li&gt;Containers come in different varieties, such as basic, chain, and tempo&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;li&gt;New map to keyboard action&lt;/li&gt;
+    &lt;li&gt;vJoy axis initialization value customization&lt;/li&gt;
+    &lt;li&gt;Ability to map hat directions to vJoy buttons&lt;/li&gt;
+    &lt;li&gt;Ability to select processes for automatic profile activation from a list&lt;/li&gt;
+    &lt;li&gt;Listing of recently used profiles&lt;/li&gt;
+    &lt;li&gt;Improved macro action functionalities&lt;/li&gt;
+    &lt;li&gt;Restore last known position and size of the main window&lt;/li&gt;
+    &lt;li&gt;Basic help / hint system started&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Rewritten UI&lt;/li&gt;
+    &lt;li&gt;Code generation changes&lt;/li&gt;
+    &lt;li&gt;Properly handle non-consecutive vJoy axis setups&lt;/li&gt;
+    &lt;li&gt;Better handling of international keyboards and layouts&lt;/li&gt;
+    &lt;li&gt;Improve vJoy error handling&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sat, 08 Jul 2017 12:00:00 +0200</pubDate>
+				<link>http://localhost:4000/changelog/2017/07/08/Release-8.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2017/07/08/Release-8.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 7.1</title>
+				<description>&lt;h3&gt;Release 7.1&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Display description of inputs in the overview list&lt;/li&gt;
+    &lt;li&gt;Default action can be configured via options&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Properly keep vJoy devices alive by using the last known input data&lt;/li&gt;
+    &lt;li&gt;Minimize to system tray works again&lt;/li&gt;
+    &lt;li&gt;Updated SDL2 library which which hopefully shows all devices&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sun, 26 Feb 2017 12:00:00 +0100</pubDate>
+				<link>http://localhost:4000/changelog/2017/02/26/Release-7.1.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2017/02/26/Release-7.1.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 7</title>
+				<description>&lt;h3&gt;Release 7&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Template system, allows creation of a new profile based on an existing one&lt;/li&gt;
+    &lt;li&gt;Profile loading and enabling of Joystick Gremlin via command line arguments&lt;/li&gt;
+    &lt;li&gt;Proper unique device ids due to an Update of third party libraries&lt;/li&gt;
+    &lt;li&gt;Joystick devices can now be addressed by their name instead of only ID in code&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;TTS system induced crash&lt;/li&gt;
+    &lt;li&gt;Handle multiple vJoy devices correctly&lt;/li&gt;
+    &lt;li&gt;Fix issues with the merge axis feature&lt;/li&gt;
+    &lt;li&gt;Handle switching modes while a hat is pressed properly&lt;/li&gt;
+    &lt;li&gt;Fixed a possible crash in the input repeater tool&lt;/li&gt;
+    &lt;li&gt;Various UI glitches and bugs&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Thu, 22 Dec 2016 12:00:00 +0100</pubDate>
+				<link>http://localhost:4000/changelog/2016/12/22/Release-7.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2016/12/22/Release-7.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 6</title>
+				<description>&lt;h3&gt;Release 6&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Split and merge axis functionality&lt;/li&gt;
+    &lt;li&gt;Actions implemented as a plugin system&lt;/li&gt;
+    &lt;li&gt;Ability to specify response curves for virtual axes&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;More robust error handling&lt;/li&gt;
+    &lt;li&gt;Validate installed version of vJoy&lt;/li&gt;
+    &lt;li&gt;Fix generation of invalid Python identifiers&lt;/li&gt;
+    &lt;li&gt;Prevent continous scrolling of the log display&lt;/li&gt;
+    &lt;li&gt;Fix cubic spline implementation&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Thu, 10 Nov 2016 12:00:00 +0100</pubDate>
+				<link>http://localhost:4000/changelog/2016/11/10/Release-6.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2016/11/10/Release-6.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 5</title>
+				<description>&lt;h3&gt;Release 5&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;System tray icon&lt;/li&gt;
+    &lt;li&gt;Periodic function execution&lt;/li&gt;
+    &lt;li&gt;Log viewer&lt;/li&gt;
+    &lt;li&gt;Reworked joystick interface API&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Fix various crashes&lt;/li&gt;
+    &lt;li&gt;Fix UI lag&lt;/li&gt;
+    &lt;li&gt;vJoy issue checking and handling&lt;/li&gt;
+    &lt;li&gt;Improved macro recording&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Wed, 29 Jun 2016 12:00:00 +0200</pubDate>
+				<link>http://localhost:4000/changelog/2016/06/29/Release-5.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2016/06/29/Release-5.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 4</title>
+				<description>&lt;h3&gt;Release 4&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Load and activate profile based on currently active process&lt;/li&gt;
+    &lt;li&gt;Update device list at runtime&lt;/li&gt;
+    &lt;li&gt;Axis range based activation of actions&lt;/li&gt;
+    &lt;li&gt;Shift button condition added for buttons&lt;/li&gt;
+    &lt;li&gt;Ability to quickly create a 1:1 mapping&lt;/li&gt;
+    &lt;li&gt;Ability to rename modes added&lt;/li&gt;
+    &lt;li&gt;New action indicator icons added for quicker overview of used actions&lt;/li&gt;
+    &lt;li&gt;Input repeater usability improved&lt;/li&gt;
+    &lt;li&gt;Bunch of additional usability improvements&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Profile loading and saving related improvements&lt;/li&gt;
+    &lt;li&gt;Store data in %userprofile% rather then %APPDATA%&lt;/li&gt;
+    &lt;li&gt;Prevent buttons from being stuck down when switching modes&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Fri, 29 Jan 2016 12:00:00 +0100</pubDate>
+				<link>http://localhost:4000/changelog/2016/01/29/Release-4.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2016/01/29/Release-4.html</guid>
+			</item>
+		
+			<item>
+				<title>Release 3</title>
+				<description>&lt;h3&gt;Release 3&lt;/h3&gt;
+
+&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Added text-to-speech support&lt;/li&gt;
+    &lt;li&gt;Modes now can form arbitrary, user defined inheritance trees&lt;/li&gt;
+    &lt;li&gt;Generation of HTML and PDF cheatsheets&lt;/li&gt;
+    &lt;li&gt;Ability to assign actions to individual hat directions&lt;/li&gt;
+    &lt;li&gt;Ability to add a description to each input&lt;/li&gt;
+    &lt;li&gt;Improved cubic Bezier spline interface&lt;/li&gt;
+    &lt;li&gt;Select input currently being used on the physical device&lt;/li&gt;
+    &lt;li&gt;Modes can now have arbitrary names&lt;/li&gt;
+    &lt;li&gt;Action to toggle pause mode on and off&lt;/li&gt;
+    &lt;li&gt;Getting started tab with a quick guide added&lt;/li&gt;
+    &lt;li&gt;Simple text-to-speech support&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Timeout issues making vJoy fail partially fixed&lt;/li&gt;
+    &lt;li&gt;More error handling and fixing of edge cases&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sun, 18 Oct 2015 12:00:00 +0200</pubDate>
+				<link>http://localhost:4000/changelog/2015/10/18/Release-3.html</link>
+				<guid isPermaLink="true">http://localhost:4000/changelog/2015/10/18/Release-3.html</guid>
+			</item>
+		
+	</channel>
+</rss>
+  tags

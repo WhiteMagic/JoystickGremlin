@@ -6,9 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Joystick Gremlin</title>
+    <title>Release 7.1</title>
 
-    <link rel="canonical" href="http://localhost:4000/JoystickGremlin/">
+    <link rel="canonical" href="http://localhost:4000/JoystickGremlin/changelog/2017/02/26/Release-7.1.html">
 
     <!-- Code highlighting CSS -->
     <link rel="stylesheet" href="/JoystickGremlin/css/github.css">
@@ -51,13 +51,13 @@
                 <div class="collapse navbar-collapse" id="navbar-collapse">
                     <ul class="nav navbar-nav">
                         <!-- Home -->
-                        <li class="active"><a href="/JoystickGremlin/">Home</a></li>
+                        <li ><a href="/JoystickGremlin/">Home</a></li>
 
                         <!-- Download -->
                         <li ><a href="/JoystickGremlin/download/">Download</a></li>
 
                         <!-- Manual entries -->
-                        <li class="dropdown ">
+                        <li class="dropdown active">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
                             
                             <ul class="dropdown-menu">
@@ -68,7 +68,7 @@
                                 <li ><a href="/JoystickGremlin/technical_design/">Technical Design</a></li>
                                 <li ><a href="/JoystickGremlin/examples/">Examples</a></li>
                                 <li ><a href="/JoystickGremlin/faq/">FAQ</a></li>
-                                <li ><a href="/JoystickGremlin/changelog/">Changelog</a></li>
+                                <li class="active"><a href="/JoystickGremlin/changelog/">Changelog</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -84,52 +84,20 @@
             <div class="row">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <div class="page-header">
-    <h1>Joystick Gremlin</h1>
-</div>
+                    <h3>Release 7.1</h3>
 
-<p class="text-justify">
-    Joystick Gremlin is a program that allows the configuration of joystick
-    like devices, similar to what CH Control Manager and Thrustmaster's
-    T.A.R.G.E.T. do for their respectively supported joysticks. However,
-    Joystick Gremlin works with any device be it from different manufacturers
-    or custom devices that appear as a joystick to Windows. Joystick Gremlin
-    uses the virtual joysticks provided by vJoy to map physical to virtual
-    inputs and apply various other transformations such as response curves to
-    analogue axes. In addition to managing joysticks, Joystick Gremlin also
-    provides keyboard macros, a flexible mode system, scripting using Python,
-    and many other features.
-</p>
+<h4>New Features</h4>
+<ul>
+    <li>Display description of inputs in the overview list</li>
+    <li>Default action can be configured via options</li>
+</ul>
 
-<p class="text-justify">
-    The main features are:
-    <ul class="text-justify">
-        <li>Works with arbitrary joystick like devices</li>
-        <li>User interface for common configuration tasks</li>
-        <li>Merging of multiple physical devices into a single virtual device</li>
-        <li>Axis response curve and dead zone configuration</li>
-        <li>Arbitrary number of modes with inheritance and customizable mode switching</li>
-        <li>Keyboard macros</li>
-        <li>Python scripting support</li>
-    </ul>
-</p>
-
-<p class="text-justify">
-    There are a few other tools which provide some of the above features,
-    including:
-    <ul>
-        <li><a href="http://evilc.com/joomla/articles/9-code/autohotkey/1-ujr-universal-joystick-remapper" target="_blank">Universal Joystick Remapper</a></li>
-        <li><a href="https://autohotkey.com/boards/viewtopic.php?t=12249">Universal Control Remapper</a> (successor to UJR)</li>
-        <li><a href="http://xedocproject.com/joystickcurves.html" target="_blank">Joystick Curves</a></li>
-        <li><a href="https://andersmalmgren.github.io/FreePIE/" target="_blank">FreePie</a></li>
-        <li><a href="http://ahkscript.org/" target="_blank">AutoHotkey</a></li>
-    </ul>
-    Compared to Joystick Gremlin the above tools, with the exception of UCR,
-    either have limited functionality due to being intended for a more specific
-    task or require more manual coding as they are a more general purpose tool.
-    As such Joystick Gremlin sits somewhere in between aimed at providing a
-    complete package for joystick configuration and management.
-</p>
+<h4>Fixes</h4>
+<ul>
+    <li>Properly keep vJoy devices alive by using the last known input data</li>
+    <li>Minimize to system tray works again</li>
+    <li>Updated SDL2 library which which hopefully shows all devices</li>
+</ul>
 
                 </div>
                 <div class="col-md-2"></div>
