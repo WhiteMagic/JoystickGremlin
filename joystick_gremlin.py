@@ -28,8 +28,9 @@ import sys
 import time
 import traceback
 
+# Import QtMultimedia so pyinstaller doesn't miss it
 import PyQt5
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
 import sdl2.hints
@@ -999,6 +1000,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile,
             self._current_mode
         )
+        self.ui.devices.widget(self.ui.devices.count()-1).refresh_ui()
 
     def _sanitize_profile(self, profile_data):
         """Validates a profile file before actually loading it.
@@ -1062,27 +1064,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param event the event to make the decision about
         :return True if the event is to be processed, False otherwise
         """
-        # Check if the input in general is something we want to process
-        process_input = False
-        if event.event_type == gremlin.common.InputType.JoystickButton:
-            process_input = event.is_pressed
-        elif event.event_type == gremlin.common.InputType.JoystickAxis:
-            if event in self._event_process_registry:
-                self._event_process_registry[event][1] = event
-                if self._last_input_timestamp + 0.25 > time.time():
-                    self._event_process_registry[event][0] = event
-                if abs(self._event_process_registry[event][0].value -
-                        event.value) > 0.5:
-                    process_input = True
-            else:
-                self._event_process_registry[event] = [event, event]
-        elif event.event_type == gremlin.common.InputType.JoystickHat:
-            process_input = event.value != (0, 0)
-        else:
-            logging.getLogger("system").warning(
-                "Event with bad content received"
-            )
-            process_input = False
+        # Check whether or not the event's input is significant enough to
+        # be processed further
+        process_input = gremlin.input_devices.JoystickInputSignificant() \
+            .should_process(event)
 
         # Check if we should actually react to the event
         if event == self._last_input_event:
@@ -1131,7 +1116,7 @@ def configure_logger(config):
 
     logger.debug("-" * 80)
     logger.debug(time.strftime("%Y-%m-%d %H:%M"))
-    logger.debug("Starting Joystick Gremlin R9")
+    logger.debug("Starting Joystick Gremlin R9.1")
     logger.debug("-" * 80)
 
 

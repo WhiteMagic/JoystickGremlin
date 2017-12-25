@@ -43,7 +43,7 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[0],
                 "Basic",
-                gremlin.ui.common.ContainerViewTypes.Basic
+                gremlin.ui.common.ContainerViewTypes.Action
             )
             self.action_layout.addWidget(widget)
             widget.redraw()

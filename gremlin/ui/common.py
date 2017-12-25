@@ -40,9 +40,37 @@ class ContainerViewTypes(enum.Enum):
 
     """Enumeration of view types used by containers."""
 
-    Basic = 1
+    Action = 1
     Condition = 2
     VirtualButton = 3
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _ContainerView_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _ContainerView_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+
+_ContainerView_to_enum_lookup = {
+    "action": ContainerViewTypes.Action,
+    "condition": ContainerViewTypes.Condition,
+    "virtual button": ContainerViewTypes.VirtualButton
+}
+
+
+_ContainerView_to_string_lookup = {
+    ContainerViewTypes.Action: "Action",
+    ContainerViewTypes.Condition: "Condition",
+    ContainerViewTypes.VirtualButton: "Virtual Button"
+}
 
 
 class AbstractModel(QtCore.QObject):
@@ -1130,16 +1158,13 @@ class InputListenerWidget(QtWidgets.QFrame):
         if event.event_type not in self._event_types:
             return
 
-        if event.event_type == gremlin.common.InputType.JoystickButton and \
-                not event.is_pressed:
-            self.callback(event)
-            self.close()
-        elif event.event_type == gremlin.common.InputType.JoystickAxis and \
-                abs(event.value) > 0.5:
-            self.callback(event)
-            self.close()
-        elif event.event_type == gremlin.common.InputType.JoystickHat and \
-                event.value != (0, 0):
+        # Ensure the event corresponds to a significant enough change in input
+        process_event = gremlin.input_devices.JoystickInputSignificant() \
+            .should_process(event)
+        if event.event_type == gremlin.common.InputType.JoystickButton:
+            process_event &= not event.is_pressed
+
+        if process_event:
             self.callback(event)
             self.close()
 

@@ -272,6 +272,7 @@ class VirtualAxisButton(AbstractVirtualButton):
         super().__init__()
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
+        self.direction = common.AxisButtonDirection.Anywhere
 
     def from_xml(self, node):
         """Populates the virtual button based on the node's data.
@@ -280,6 +281,9 @@ class VirtualAxisButton(AbstractVirtualButton):
         """
         self.lower_limit = safe_read(node, "lower-limit", float)
         self.upper_limit = safe_read(node, "upper-limit", float)
+        self.direction = common.AxisButtonDirection.to_enum(
+            safe_read(node, "direction", default_value="anywhere")
+        )
 
     def to_xml(self):
         """Returns an XML node representing the data of this instance.
@@ -289,6 +293,10 @@ class VirtualAxisButton(AbstractVirtualButton):
         node = ElementTree.Element("virtual-button")
         node.set("lower-limit", str(self.lower_limit))
         node.set("upper-limit", str(self.upper_limit))
+        node.set(
+            "direction",
+            common.AxisButtonDirection.to_string(self.direction)
+        )
         return node
 
 

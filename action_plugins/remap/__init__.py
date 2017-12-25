@@ -142,7 +142,7 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
                 .axis(self.vjoy_input_id).value = value.current
 
         elif self.input_type == InputType.JoystickButton:
-            if event.event_type == InputType.JoystickButton \
+            if event.event_type in [InputType.JoystickButton, InputType.Keyboard] \
                     and event.is_pressed \
                     and self.needs_auto_release:
                 input_devices.ButtonReleaseActions().register_button_release(

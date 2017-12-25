@@ -511,7 +511,11 @@ class ButtonReleaseActions(QtCore.QObject):
 
         self._registry = {}
         el = event_handler.EventListener()
-        el.joystick_event.connect(self._joystick_cb)
+        el.joystick_event.connect(self._input_event_cb)
+        el.keyboard_event.connect(self._input_event_cb)
+        eh = event_handler.EventHandler()
+        self._current_mode = eh.active_mode
+        eh.mode_changed.connect(self._mode_changed_cb)
 
     def register_callback(self, callback, physical_event):
         """Registers a callback with the system.
@@ -525,9 +529,7 @@ class ButtonReleaseActions(QtCore.QObject):
 
         if release_evt not in self._registry:
             self._registry[release_evt] = []
-        self._registry[release_evt].append(
-            callback
-        )
+        self._registry[release_evt].append((callback, self._current_mode))
 
     def register_button_release(self, vjoy_input, physical_event):
         """Registers a physical and vjoy button pair for tracking.
@@ -558,18 +560,105 @@ class ButtonReleaseActions(QtCore.QObject):
         if vjoy[vjoy_input[0]].is_button_valid(vjoy_input[1]):
             vjoy[vjoy_input[0]].button(vjoy_input[1]).is_pressed = False
 
-    def _joystick_cb(self, evt):
-        """Releases vjoy buttons if appropriate.
+    def _input_event_cb(self, evt):
+        """Runs callbacks associated with the given event.
 
-        If any vjoy buttons are associated with the event they are
-        released
-
-        :param evt the joystick event to process
+        :param evt the event to process
         """
         if evt in self._registry and not evt.is_pressed:
-            for callback in self._registry[evt]:
-                callback()
+            for entry in self._registry[evt]:
+                if entry[1] != self._current_mode:
+                    entry[0]()
             self._registry[evt] = []
+
+    def _mode_changed_cb(self, mode):
+        """Updates the current mode variable.
+
+        :param mode the new mode
+        """
+        self._current_mode = mode
+
+
+@common.SingletonDecorator
+class JoystickInputSignificant:
+
+    """Checks whether or not joystick inputs are significant."""
+
+    def __init__(self):
+        """Initializes the instance."""
+        self._event_registry = {}
+        self._mre_registry = {}
+        self._time_registry = {}
+
+    def should_process(self, event):
+        """Returns whether or not a particular event is significant enough to
+        process.
+
+        :param event the event to check for significance
+        :return True if it should be processed, False otherwise
+        """
+        self._mre_registry[event] = event
+
+        if event.event_type == common.InputType.JoystickAxis:
+            return self._process_axis(event)
+        elif event.event_type == common.InputType.JoystickButton:
+            return self._process_button(event)
+        elif event.event_type == common.InputType.JoystickHat:
+            return self._process_hat(event)
+        else:
+            logging.getLogger("system").warning(
+                "Event with unknown type received"
+            )
+            return False
+
+    def last_event(self, event):
+        """Returns the most recent event of this type.
+
+        :param event the type of event for which to return the most recent one
+        """
+        return self._mre_registry[event]
+
+    def _process_axis(self, event):
+        """Process an axis event.
+
+        :param event the axis event to process
+        :return True if it should be processed, False otherwise
+        """
+        if event in self._event_registry:
+            # Reset everything if we have no recent data
+            if self._time_registry[event] + 5.0 < time.time():
+                self._event_registry[event] = event
+                self._time_registry[event] = time.time()
+                return False
+            # Update state
+            else:
+                self._time_registry[event] = time.time()
+                if abs(self._event_registry[event].value - event.value) > 0.25:
+                    self._event_registry[event] = event
+                    self._time_registry[event] = time.time()
+                    return True
+                else:
+                    return False
+        else:
+            self._event_registry[event] = event
+            self._time_registry[event] = time.time()
+            return False
+
+    def _process_button(self, event):
+        """Process a button event.
+
+        :param event the button event to process
+        :return True if it should be processed, False otherwise
+        """
+        return True
+
+    def _process_hat(self, event):
+        """Process a hat event.
+
+        :param event the hat event to process
+        :return True if it should be processed, False otherwise
+        """
+        return event.value != (0, 0)
 
 
 def _button(button_id, device_id, mode, always_execute=False):

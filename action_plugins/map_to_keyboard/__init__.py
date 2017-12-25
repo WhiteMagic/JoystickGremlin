@@ -23,6 +23,7 @@ from PyQt5 import QtWidgets
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
+from gremlin.input_devices import ButtonReleaseActions
 import gremlin.ui.common
 import gremlin.ui.input_item
 
@@ -71,8 +72,7 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_modified.emit()
 
     def _record_keys_cb(self):
-        """Shows a dialog prompint the user to press the desired key
-        combination."""
+        """Prompts the user to press the desired key combination."""
         self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
             self._update_keys,
             [InputType.Keyboard],
@@ -110,6 +110,10 @@ class MapToKeyboardFunctor(AbstractFunctor):
     def process_event(self, event, value):
         if value.current:
             gremlin.macro.MacroManager().queue_macro(self.press)
+            ButtonReleaseActions().register_callback(
+                lambda: gremlin.macro.MacroManager().queue_macro(self.release),
+                event
+            )
         else:
             gremlin.macro.MacroManager().queue_macro(self.release)
         return True
@@ -130,7 +134,8 @@ class MapToKeyboard(AbstractAction):
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
-        InputType.JoystickHat
+        InputType.JoystickHat,
+        InputType.Keyboard
     ]
 
     functor = MapToKeyboardFunctor

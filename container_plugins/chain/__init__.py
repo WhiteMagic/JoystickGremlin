@@ -67,7 +67,7 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[i],
                 "Action {:d}".format(i),
-                gremlin.ui.common.ContainerViewTypes.Basic
+                gremlin.ui.common.ContainerViewTypes.Action
             )
             self.action_layout.addWidget(widget)
             widget.redraw()

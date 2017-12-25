@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from abc import abstractmethod, ABCMeta
+import copy
+import time
 
 import gremlin
 from gremlin import event_handler, input_devices, joystick_handling, macro, util
@@ -57,6 +59,12 @@ class CodeRunner:
         # Reset states to their default values
         self._inheritance_tree = inheritance_tree
         self._reset_state()
+
+        # Check if we want to override the star mode as determined by the
+        # heuristic
+        if settings.startup_mode is not None:
+            if settings.startup_mode in gremlin.profile.mode_list(profile):
+                start_mode = settings.startup_mode
 
         # Load the generated code
         try:
@@ -346,7 +354,7 @@ class InputItemCallback:
             raise gremlin.error.GremlinError("Invalid event type")
 
         for graph in self.execution_graphs:
-            graph.process_event(event, value)
+            graph.process_event(event, copy.deepcopy(value))
 
 
 class AbstractExecutionGraph(metaclass=ABCMeta):
@@ -379,13 +387,28 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
         :param event the raw event that caused the execution of this graph
         :param value the possibly modified value extracted from the event
         """
+        # Processing an event twice is needed when a virtual axis button has
+        # "jumped" over it's activation region without triggering it. Once
+        # this is detected the "press" event is sent and the second run ensures
+        # a "release" event is sent.
+        process_again = False
+
         while self.current_index is not None:
-            result = self.functors[self.current_index].process_event(event, value)
+            functor = self.functors[self.current_index]
+            result = functor.process_event(event, value)
+
+            if isinstance(functor, gremlin.actions.AxisButton):
+                process_again = functor.forced_activation
+
             self.current_index = self.transitions.get(
                 (self.current_index, result),
                 None
             )
         self.current_index = 0
+
+        if process_again:
+            time.sleep(0.05)
+            self.process_event(event, value)
 
     @abstractmethod
     def _build_graph(self, instance):
@@ -514,7 +537,8 @@ class ContainerExecutionGraph(AbstractExecutionGraph):
         if input_type == gremlin.common.InputType.JoystickAxis:
             return gremlin.actions.AxisButton(
                 container.virtual_button.lower_limit,
-                container.virtual_button.upper_limit
+                container.virtual_button.upper_limit,
+                container.virtual_button.direction
             )
         elif input_type == gremlin.common.InputType.JoystickHat:
             return gremlin.actions.HatButton(
