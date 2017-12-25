@@ -5,7 +5,31 @@
 		<description>New release information for Joystick Gremlin</description>
 		<link>https://whitemagic.github.io/JoystickGremlin</link>
 		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
-		<lastBuildDate>Thu, 21 Dec 2017 12:00:00 +0100</lastBuildDate>
+		<lastBuildDate>Mon, 25 Dec 2017 00:00:00 +0100</lastBuildDate>
+		
+			<item>
+				<title>Release 9.2</title>
+				<description>&lt;h3&gt;Release 9.2&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9.2/Joystick.Gremlin.R9.2.msi&quot;&gt;Download
+    Release 9.2 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9.2/Joystick.Gremlin.R9.2.zip&quot;&gt;Download
+    Release 9.2 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
+
+&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;ul&gt;
+    &lt;li&gt;Properly fix virtual axis buttons without breaking response curves&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Mon, 25 Dec 2017 00:00:00 +0100</pubDate>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/25/Release-9.2.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/25/Release-9.2.html</guid>
+			</item>
 		
 			<item>
 				<title>Release 9.1</title>
@@ -343,48 +367,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Fri, 29 Jan 2016 12:00:00 +0100</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-4.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-4.html</guid>
-			</item>
-		
-			<item>
-				<title>Release 3</title>
-				<description>&lt;h3&gt;Release 3&lt;/h3&gt;
-
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_3/Joystick.Gremlin.R3.msi&quot;&gt;Download
-    Release 3 MSI&lt;/a&gt;
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_3/Joystick.Gremlin.R3.zip&quot;&gt;Download
-    Release 3 ZIP&lt;/a&gt;
-
-&lt;br/&gt;&lt;br/&gt;
-
-
-&lt;h4&gt;New Features&lt;/h4&gt;
-&lt;ul&gt;
-    &lt;li&gt;Added text-to-speech support&lt;/li&gt;
-    &lt;li&gt;Modes now can form arbitrary, user defined inheritance trees&lt;/li&gt;
-    &lt;li&gt;Generation of HTML and PDF cheatsheets&lt;/li&gt;
-    &lt;li&gt;Ability to assign actions to individual hat directions&lt;/li&gt;
-    &lt;li&gt;Ability to add a description to each input&lt;/li&gt;
-    &lt;li&gt;Improved cubic Bezier spline interface&lt;/li&gt;
-    &lt;li&gt;Select input currently being used on the physical device&lt;/li&gt;
-    &lt;li&gt;Modes can now have arbitrary names&lt;/li&gt;
-    &lt;li&gt;Action to toggle pause mode on and off&lt;/li&gt;
-    &lt;li&gt;Getting started tab with a quick guide added&lt;/li&gt;
-    &lt;li&gt;Simple text-to-speech support&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4&gt;Fixes&lt;/h4&gt;
-&lt;ul&gt;
-    &lt;li&gt;Timeout issues making vJoy fail partially fixed&lt;/li&gt;
-    &lt;li&gt;More error handling and fixing of edge cases&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Sun, 18 Oct 2015 12:00:00 +0200</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2015/10/18/Release-3.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2015/10/18/Release-3.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-9.3.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-9.3.html</guid>
 			</item>
 		
 	</channel>
