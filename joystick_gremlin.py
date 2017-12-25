@@ -614,7 +614,10 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self._current_mode
             )
             self.tabs[gremlin.util.device_id(device)] = widget
-            self.ui.devices.addTab(widget, device.name)
+            tab_label = device.name
+            if gremlin.util.g_duplicate_devices:
+                tab_label += " ({:d})".format(device.windows_id)
+            self.ui.devices.addTab(widget, tab_label)
 
         # Create keyboard tab
         device_profile = self._profile.get_device_modes(
