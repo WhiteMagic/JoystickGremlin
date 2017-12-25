@@ -10,6 +10,10 @@ title: Joystick Gremlin
 baseurl: "/JoystickGremlin"
 url: "http://whitemagic.github.io"
 
+# Generic settings
+name: Joystick Gremlin
+description:  A tool for configuring and managing joystick devices
+url: http://whitemagic.github.io/JoystickGremlin/
 
 # Build settings
 markdown: kramdown
