@@ -3,13 +3,23 @@
 	<channel>
 		<title>Joystick Gremlin - Updates</title>
 		<description>New release information for Joystick Gremlin</description>
-		<link>http://whitemagic.github.io/JoystickGremlin/</link>
-		<atom:link href="http://whitemagic.github.io/JoystickGremlin//feed.xml" rel="self" type="application/rss+xml" />
+		<link>https://whitemagic.github.io/JoystickGremlin</link>
+		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
 		<lastBuildDate>Thu, 21 Dec 2017 12:00:00 +0100</lastBuildDate>
 		
 			<item>
 				<title>Release 9.1</title>
 				<description>&lt;h3&gt;Release 9.1&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9.1/Joystick.Gremlin.R9.1.msi&quot;&gt;Download
+    Release 9.1 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9.1/Joystick.Gremlin.R9.1.zip&quot;&gt;Download
+    Release 9.1 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -28,13 +38,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Thu, 21 Dec 2017 12:00:00 +0100</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/21/Release-9.1.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/21/Release-9.1.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/21/Release-9.1.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/21/Release-9.1.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 9</title>
 				<description>&lt;h3&gt;Release 9&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9/Joystick.Gremlin.R9.msi&quot;&gt;Download
+    Release 9 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9/Joystick.Gremlin.R9.zip&quot;&gt;Download
+    Release 9 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -65,13 +85,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sat, 09 Dec 2017 12:00:00 +0100</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/09/Release-9.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/12/09/Release-9.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/09/Release-9.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/09/Release-9.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 8.1</title>
 				<description>&lt;h3&gt;Release 8.1&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.msi&quot;&gt;Download
+    Release 8.1 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.zip&quot;&gt;Download
+    Release 8.1 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -90,13 +120,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sat, 19 Aug 2017 12:00:00 +0200</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/08/19/Release-8.1.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/08/19/Release-8.1.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 8</title>
 				<description>&lt;h3&gt;Release 8&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.msi&quot;&gt;Download
+    Release 8 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.zip&quot;&gt;Download
+    Release 8 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -125,13 +165,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sat, 08 Jul 2017 12:00:00 +0200</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/07/08/Release-8.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/07/08/Release-8.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 7.1</title>
 				<description>&lt;h3&gt;Release 7.1&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7.1/Joystick.Gremlin.R7.1.msi&quot;&gt;Download
+    Release 7.1 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7.1/Joystick.Gremlin.R7.1.zip&quot;&gt;Download
+    Release 7.1 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -147,13 +197,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sun, 26 Feb 2017 12:00:00 +0100</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2017/02/26/Release-7.1.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2017/02/26/Release-7.1.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 7</title>
 				<description>&lt;h3&gt;Release 7&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7/Joystick.Gremlin.R7.msi&quot;&gt;Download
+    Release 7 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7/Joystick.Gremlin.R7.zip&quot;&gt;Download
+    Release 7 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -174,13 +234,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Thu, 22 Dec 2016 12:00:00 +0100</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/12/22/Release-7.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/12/22/Release-7.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/12/22/Release-7.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/12/22/Release-7.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 6</title>
 				<description>&lt;h3&gt;Release 6&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_6/Joystick.Gremlin.R6.msi&quot;&gt;Download
+    Release 6 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_6/Joystick.Gremlin.R6.zip&quot;&gt;Download
+    Release 6 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -199,13 +269,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Thu, 10 Nov 2016 12:00:00 +0100</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/11/10/Release-6.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/11/10/Release-6.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/11/10/Release-6.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/11/10/Release-6.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 5</title>
 				<description>&lt;h3&gt;Release 5&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_5/Joystick.Gremlin.R5.msi&quot;&gt;Download
+    Release 5 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_5/Joystick.Gremlin.R5.zip&quot;&gt;Download
+    Release 5 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -224,13 +304,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Wed, 29 Jun 2016 12:00:00 +0200</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/06/29/Release-5.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/06/29/Release-5.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/06/29/Release-5.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/06/29/Release-5.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 4</title>
 				<description>&lt;h3&gt;Release 4&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_4/Joystick.Gremlin.R4.msi&quot;&gt;Download
+    Release 4 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_4/Joystick.Gremlin.R4.zip&quot;&gt;Download
+    Release 4 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -253,13 +343,23 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Fri, 29 Jan 2016 12:00:00 +0100</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2016/01/29/Release-4.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2016/01/29/Release-4.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-4.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-4.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 3</title>
 				<description>&lt;h3&gt;Release 3&lt;/h3&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_3/Joystick.Gremlin.R3.msi&quot;&gt;Download
+    Release 3 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_3/Joystick.Gremlin.R3.zip&quot;&gt;Download
+    Release 3 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
 
 &lt;h4&gt;New Features&lt;/h4&gt;
 &lt;ul&gt;
@@ -283,8 +383,8 @@
 &lt;/ul&gt;
 </description>
 				<pubDate>Sun, 18 Oct 2015 12:00:00 +0200</pubDate>
-				<link>http://whitemagic.github.io/JoystickGremlin//changelog/2015/10/18/Release-3.html</link>
-				<guid isPermaLink="true">http://whitemagic.github.io/JoystickGremlin//changelog/2015/10/18/Release-3.html</guid>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2015/10/18/Release-3.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2015/10/18/Release-3.html</guid>
 			</item>
 		
 	</channel>
