@@ -3,12 +3,14 @@ area: manual
 chapter: changelog
 layout: default
 title:  "Release 9"
-date:   2017-12-09 12:00:00"
+date:   "2017-12-09 12:00:00"
 ---
 
-<h3>Release 9</h3>
+<h1>Release 9</h1>
 
-<h4>New Features</h4>
+{% include download.html release=9 %}
+
+<h2>New Features</h2>
 <ul>
     <li>Support for action sets, i.e. collection of actions in a single container</li>
     <li>Activation conditions for either individual actions or entire containers, triggering based on the action state itself or the state of other inputs</li>
@@ -19,7 +21,7 @@ date:   2017-12-09 12:00:00"
     <li>Customizable activation condition for short presses in the Tempo container</li>
 </ul>
 
-<h4>Fixes</h4>
+<h2>Fixes</h2>
 <ul>
     <li>Should no longer crash on media key usage (can't use them yet)</li>
     <li>Properly release vJoy devices when they are not in use</li>

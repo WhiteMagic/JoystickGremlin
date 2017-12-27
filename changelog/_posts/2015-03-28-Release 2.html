@@ -3,12 +3,14 @@ area: manual
 chapter: changelog
 layout: default
 title:  "Release 2"
-date:   2015-03-28 12:00:00"
+date:   "2015-03-28 12:00:00"
 ---
 
-<h3>Release 2</h3>
+<h1>Release 2</h1>
 
-<h4>New Features</h4>
+{% include download.html release=2 %}
+
+<h2>New Features</h2>
 <ul>
     <li>Input repeating for binding actions in games</li>
     <li>Storing of last used profile to auto load on next start</li>
@@ -17,7 +19,7 @@ date:   2015-03-28 12:00:00"
     <li>Properly support multiple identical devices</li>
 </ul>
 
-<h4>Fixes</h4>
+<h2>Fixes</h2>
 <ul>
     <li>XML profile parsing error handling improved</li>
     <li>Accidental overwriting of an existing profile after creating a new

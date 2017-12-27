@@ -4,7 +4,7 @@ chapter: custom_modules
 layout: default
 ---
 
-<h2><a name="3">3. Custom Modules</a></h2>
+<h1><a name="4">4. Custom Modules</a></h1>
 
 <p class="text-justify">
     While common configuration tasks can be performed directly via the
@@ -25,7 +25,7 @@ layout: default
 </p>
 
 
-<h3><a name="3_1">3.1 Principle &amp; Layout of Custom Modules</a></h3>
+<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules</a></h2>
 
 <p class="text-justify">
     Joystick Gremlin uses callbacks, i.e. functions that are executed in
@@ -85,7 +85,7 @@ def callback_function(event, <optional parameter list>):
 </p>
 
 
-<h3><a name="3_2">3.2 Plugin API</a></h3>
+<h2><a name="4_2">4.2 Plugin API</a></h2>
 
 <p class="text-justify">
     The following describes the API of the optional variables exposed
@@ -100,8 +100,7 @@ def callback_function(event, <optional parameter list>):
 
 
 
-
-<h4 class="subsection">vJoy</h4>
+<h3>vJoy</h3>
 
 <p class="text-justify">
     Any decorated function that has a parameter named <code>vjoy</code>
@@ -126,7 +125,7 @@ vjoy[2].axis(2).value = -0.25
 vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
 
 
-<h4 class="subsection">Joystick State</h4>
+<h3>Joystick State</h3>
 
 <p class="text-justify">
     Any decorated function that has a parameter named <code>joy</code>
@@ -176,7 +175,7 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
 </p>
 
 
-<h4 class="subsection">Keyboard State</h4>
+<h3>Keyboard State</h3>
 
 <p class="text-justify">
     Any decorated function that has a parameter named
@@ -194,7 +193,7 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
 </p>
 
 
-<h3><a name="3_3">3.3 Decorator Based User Input Callback Generation</a></h3>
+<h2><a name="4_3">4.3 Decorator Based User Input Callback Generation</a></h2>
 
 <p class="text-justify">
     Callbacks reacting to user inputs are created by decorating
@@ -252,7 +251,7 @@ def keyboard_callback(event):
 </p>
 
 
-<h3><a name="3_4">3.4 Decorator Based Periodic Function Callbacks</a></h3>
+<h2><a name="4_4">4.4 Decorator Based Periodic Function Callbacks</a></h2>
 
 <p class="text-justify">
     In some situations a function needs to be executed at regular
@@ -275,7 +274,7 @@ def periodic_function():
 </p>
 
 
-<h3><a name="3_5">3.5 Debugging</a></h3>
+<h2><a name="4_5">4.5 Debugging</a></h2>
 
 <p class="text-justify">
     To facilitate the debugging of custom modules without setting up the
@@ -293,7 +292,7 @@ def periodic_function():
 </p>
 
 
-<h3><a name="3_6">3.6 Examples</a></h3>
+<h2><a name="4_6">4.6 Examples</a></h2>
 
 <p class="text-justify">
     In the following a few examples of custom modules are shown. They
@@ -303,7 +302,7 @@ def periodic_function():
 </p>
 
 
-<h4 class="subsection">Keyboard Controlled Throttle</h4>
+<h3>Keyboard Controlled Throttle</h3>
 
 <p class="text-justify">
     This script allows the user to control an analogue throttle in 1/3rd
@@ -316,7 +315,7 @@ def periodic_function():
 {% endhighlight %}
 
 
-<h4 class="subsection">Joystick Response Curve</h4>
+<h3>Joystick Response Curve</h3>
 
 <p class="text-justify">
     This script configures a response curve which provides more control
@@ -329,7 +328,7 @@ def periodic_function():
 {% endhighlight %}
 
 
-<h4 class="subsection">Mode Switching</h4>
+<h3>Mode Switching</h3>
 
 <p class="text-justify">
     This script presents a few different ways of using mode switching
@@ -346,7 +345,7 @@ def periodic_function():
 {% endhighlight %}
 
 
-<h4 class="subsection">Precision Mode</h4>
+<h3>Precision Mode</h3>
 
 <p class="text-justify">
     This script switches to a lower sensitivity curve when any of the weapon

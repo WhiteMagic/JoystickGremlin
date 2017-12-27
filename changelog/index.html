@@ -4,15 +4,13 @@ chapter: changelog
 layout: default
 ---
 
-<h2><a name="7">7. Changelog</a></h2>
+<h1><a name="8">8. Changelog</a></h1>
 
 <center>
 <table width="80%">
     {% for post in site.posts %}
     <tr>
-        <td>
-            <h4><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h4>
-        </td>
+        <td><a href="{{ site.url }}{{ post.url }}">{{ post.title }}</a></td>
         <td align="right">{{ post.date | date: "%-d %B %Y" }}</td>
     </tr>
     {% endfor %}

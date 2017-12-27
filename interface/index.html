@@ -4,7 +4,7 @@ chapter: interface
 layout: default
 ---
 
-<h2><a name="2">2. User Interface</a></h2>
+<h1><a name="2">3. User Interface</a></h1>
 
 
 <p class="text-justify">
@@ -12,30 +12,29 @@ layout: default
     introduced and their usage described. The UI should be sufficient for most
     common use cases, however, if functionality is missing user created modules
     can provide these. Examples of how to achieve certain tasks using the tools
-    provided by Joystick Gremlin are shown in <a href="{{ site.baseurl
-    }}/examples/">5. Examples</a>.
+    provided by Joystick Gremlin are shown in <a href="{{ site.url }}/examples/">5. Examples</a>.
 </p>
 
 <h4>Table of Contents</h4>
 <ul>
-    <li><a href="#2_1">Overview</a></li>
-    <li><a href="#2_2">Virtual Buttons</a></li>
-    <li><a href="#2_3">Activation Conditions</a></li>
-    <li><a href="#2_4">Containers</a></li>
-    <li><a href="#2_5">Actions</a></li>
-    <li><a href="#2_6">Tools</a></li>
-    <li><a href="#2_7">Command Line Options</a></li>
+    <li><a href="#3_1">Overview</a></li>
+    <li><a href="#3_2">Virtual Buttons</a></li>
+    <li><a href="#3_3">Activation Conditions</a></li>
+    <li><a href="#3_4">Containers</a></li>
+    <li><a href="#3_5">Actions</a></li>
+    <li><a href="#3_6">Tools</a></li>
+    <li><a href="#3_7">Command Line Options</a></li>
 </ul>
 
 
-<h3><a name="2_1">2.1 Overview</a></h3>
+<h2><a name="3_1">3.1 Overview</a></h2>
 
 <p class="text-justify">
     The following is a short overview of the different components that make
     up the main user interface, shown in the following image.
 
     <div class="text-center">
-        <img class="img-responsive" src="{{ site.baseurl }}/images/main_window_annotated.png">
+        <img class="img-fluid" src="{{ site.url }}/images/main_window_annotated.png">
         <em>Joystick Gremlin UI</em>
     </div>
     </br>
@@ -90,55 +89,55 @@ layout: default
     The following table shows the different icons and the actions they represent.
     <table class="table">
         <tr>
-            <td width="50px"><img class="img-responsive" src="{{ site.baseurl }}/images/icon_cycle_modes.png"></td>
+            <td width="50px"><img class="img-fluid" src="{{ site.url }}/images/icon_cycle_modes.png"></td>
             <td width="40%">Cycle modes</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_macro.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_macro.png"></td>
             <td>Macro</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_map_to_keyboard.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_map_to_keyboard.png"></td>
             <td>Map to keyboard</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_noop.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_noop.png"></td>
             <td>No-Op</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_pause.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_pause.png"></td>
             <td>Pause</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_play_sound.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_play_sound.png"></td>
             <td>Play sound</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_axis_001.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_axis_001.png"></td>
             <td>Remap axis</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_button_001.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_button_001.png"></td>
             <td>Remap button</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_remap_hat_001.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_hat_001.png"></td>
             <td>Remap hat</td>
-            <td width="50px"><img class="img-responsive" src="{{ site.baseurl }}/images/icon_response_curve.png"></td>
+            <td width="50px"><img class="img-fluid" src="{{ site.url }}/images/icon_response_curve.png"></td>
             <td>Response curve</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_resume.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_resume.png"></td>
             <td>Resume</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_split_axis.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_split_axis.png"></td>
             <td>Split axis</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_switch_mode.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_switch_mode.png"></td>
             <td>Switch mode</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_previous_mode.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_previous_mode.png"></td>
             <td>Switch to previous mode</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_temporary_mode_switch.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_temporary_mode_switch.png"></td>
             <td>Temporary mode switch</td>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_text_to_speech.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_text_to_speech.png"></td>
             <td>Text-to-speech</td>
         </tr>
         <tr>
-            <td><img class="img-responsive" src="{{ site.baseurl }}/images/icon_pause_resume.png"></td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_pause_resume.png"></td>
             <td>Toggle pause &amp; resume</td>
             <td></td>
             <td></td>
@@ -149,7 +148,7 @@ layout: default
 
 
 
-<h3><a name="2_2">2.2 Virtual Buttons</a></h3>
+<h2><a name="3_2">3.2 Virtual Buttons</a></h2>
 
 <p class="text-justify">
     Each input has a natural behaviour or type of states it can be in.
@@ -161,16 +160,16 @@ layout: default
     The details of these activation conditions is covered next.
 </p>
 
-<h4 class="subsection">Button and Keyboard Key</h4>
+<h3>Button and Keyboard Key</h3>
     As these inputs are already binary there is no virtual button
     configuration needed.
 <p class="text-justify">
 </p>
 
-<h4 class="subsection">Axis</h4>
+<h3>Axis</h3>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/condition_virtual_button_axis.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/condition_virtual_button_axis.png">
     </div>
     <div class="col-md-5">
         <em>Turning an axis into a virtual button by specifiying the
@@ -187,10 +186,10 @@ layout: default
     traversed.
 </p>
 
-<h4 class="subsection">Hat</h4>
+<h3>Hat</h3>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/condition_virtual_button_hat.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/condition_virtual_button_hat.png">
     </div>
     <div class="col-md-5">
         <em>Turning a hat into a button by selecting the directions
@@ -206,7 +205,7 @@ layout: default
 </p>
 
 
-<h3><a name="2_3">2.3 Activation Conditions</a></h3>
+<h2><a name="3_3">3.3 Activation Conditions</a></h2>
 
 <p class="text-justify">
     Sometimes executing actions associated with a physical input when
@@ -226,8 +225,8 @@ layout: default
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/condition_action_action.png">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/condition_container_action.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/condition_action_action.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/condition_container_action.png">
     </div>
     <div class="col-md-5">
         <em>Conditions can be placed on either each action individually
@@ -235,7 +234,7 @@ layout: default
     </div>
 </div>
 <p class="text-justify">
-    As mentioned in <a href="{{ site.baseurl }}/interface/2_1">2.1.
+    As mentioned in <a href="{{ site.url }}/interface/2_1">2.1.
         Overview</a> the conditions are configured in the condition tab
     present in every container widget. The tab allows placing conditions
     on either every action individually or on the container as a whole.
@@ -245,9 +244,9 @@ layout: default
 </p>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/condition_container_action.png">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/condition_container_joystick.png">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/condition_container_keyboard.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/condition_container_action.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/condition_container_joystick.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/condition_container_keyboard.png">
     </div>
     <div class="col-md-5">
         <em>Activation conditions can check for the state of the
@@ -285,17 +284,17 @@ layout: default
 </p>
 
 
-<h3><a name="2_4">2.4 Containers</a></h3>
+<h2><a name="3_4">3.4 Containers</a></h2>
 
 As the name implies containers are designed to hold one or more actions.
 In addition to grouping actions together a container can also apply
 further logic to groups of actions. Currently the following three types
 of containers exist.
 
-<h4>Basic</h4>
+<h3>Basic</h3>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/container_basic.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/container_basic.png">
     </div>
     <div class="col-md-5">
         <em>Basic container widget.</em>
@@ -307,10 +306,10 @@ of containers exist.
     for most situations.
 </p>
 
-<h4>Chain</h4>
+<h3>Chain</h3>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/container_chain.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/container_chain.png">
     </div>
     <div class="col-md-5">
         <em>Chain container with two groups.</em>
@@ -324,10 +323,10 @@ of containers exist.
     can be set after which the chain is reset to the first entry.
 </p>
 
-<h4>Tempo</h4>
+<h3>Tempo</h3>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/container_tempo.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/container_tempo.png">
     </div>
     <div class="col-md-5">
         <em>Tempo container with a remap action in both the short and
@@ -345,10 +344,10 @@ of containers exist.
 </p>
 
 
-<h3><a name="2_5">2.5 Actions</a></h3>
+<h2><a name="3_5">3.5 Actions</a></h2>
 
 <p class="text-justify">
-    As described in <a href="{{ site.baseurl }}/overview/#1_2">Section 1.2</a>,
+    As described in <a href="{{ site.url }}/overview/#1_2">Section 1.2</a>,
     each input, such as axis, button, hat, or keyboard key, can have multiple
     actions associated with it. However, not all inputs have access to the same
     types of actions as they are not applicable to them. In the following all
@@ -366,11 +365,11 @@ of containers exist.
     execution has been paused.
 </p>
 
-<h4 class="subsection">Remapping</h4>
+<h3>Remapping</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_axis.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_remap_axis.png">
     </div>
     <div class="col-md-5">
         <em>Axis remapping dialogue</em>
@@ -378,7 +377,7 @@ of containers exist.
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_button.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_remap_button.png">
     </div>
     <div class="col-md-5">
         <em>Button remapping dialogue</em>
@@ -386,7 +385,7 @@ of containers exist.
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_remap_hat.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_remap_hat.png">
     </div>
     <div class="col-md-5">
         <em>Hat remapping dialogue</em>
@@ -408,18 +407,18 @@ of containers exist.
     afterburners when a throttle is set to greater then 95%.
 </p>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout bd-callout-warning text-justify">
     In most cases button remap actions should always trigger, i.e. on
     button press and release, as otherwise the forwarding to vJoy is
     incomplete.
 </p>
 
 
-<h4 class="subsection">Response Curve</h4>
+<h3>Response Curve</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_response_curve.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_response_curve.png">
     </div>
     <div class="col-md-5">
         <em>Response curve action dialogue which allows the customisation
@@ -468,13 +467,13 @@ of containers exist.
     </dl>
 </p>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout-warning bd-callout text-justify">
     A response curve mapping action always needs to be paired with a
     remap action, as otherwise the transformation will not have any
     effect.
 </p>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout-warning bd-callout text-justify">
     In order for response curves to work properly the game has to be configured
     to use a linear 1:1 curve, as otherwise the two curve settings will
     interfere with each other producing undesirable results. This also applies
@@ -483,11 +482,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Macro</h4>
+<h3>Macro</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_macro.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_macro.png">
     </div>
     <div class="col-md-5">
         <em>Macro action dialogue allowing the recording of key press
@@ -512,17 +511,17 @@ of containers exist.
     using the <em>Up</em> and <em>Down</em> buttons.
 </p>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout bd-callout-warning text-justify">
     Each macro is executed independently, which means that multiple long
     running macros can have their key presses interfere with each other.
 </p>
 
 
-<h4 class="subsection">Map to Keyboard</h4>
+<h3>Map to Keyboard</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_map_to_keyboard.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_map_to_keyboard.png">
     </div>
     <div class="col-md-5">
         <em>Map to Keyboard dialogue which allows mapping of a physical key to
@@ -539,11 +538,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Pause, Resume &amp; Toggle</h4>
+<h3>Pause, Resume &amp; Toggle</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_pause.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_pause.png">
     </div>
     <div class="col-md-5">
         <em>Pause dialogue which allows to temporarily stop the execution of
@@ -552,7 +551,7 @@ of containers exist.
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_resume.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_resume.png">
     </div>
     <div class="col-md-5">
         <em>Resume dialogue which allows Joystick Gremlin to execute
@@ -561,7 +560,7 @@ of containers exist.
 </div>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_toggle_pause_resume.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_toggle_pause_resume.png">
     </div>
     <div class="col-md-5">
         <em>Toggle between pause and resume dialogue, which toggles
@@ -576,18 +575,18 @@ of containers exist.
     execute</em> will be executed.
 </p>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout bd-callout-warning text-justify">
     In order for the <em>resume</em> and <em>toggle</em> actions to be
     useful they have to be defined as <em>always execute</em>, as
     otherwise it will be impossible to resume from the paused state.
 </p>
 
 
-<h4 class="subsection">Change Mode</h4>
+<h3>Change Mode</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_switch_mode.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_switch_mode.png">
     </div>
     <div class="col-md-5">
         <em>Change mode action dialogue which allows to select the mode
@@ -601,11 +600,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Temporary Mode Switch</h4>
+<h3>Temporary Mode Switch</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_temporary_mode_switch.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_temporary_mode_switch.png">
     </div>
     <div class="col-md-5">
         <em>Temporary mode switch dialogue which allows specifying a mode to
@@ -620,11 +619,11 @@ of containers exist.
     will automatically be changed back to the previous one.
 </p>
 
-<h4 class="subsection">Switch to Previous Mode</h4>
+<h3>Switch to Previous Mode</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_switch_to_previous_mode.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_switch_to_previous_mode.png">
     </div>
     <div class="col-md-5">
         <em>Dialogue of the action that switches to the previously active
@@ -637,11 +636,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Cycle Modes</h4>
+<h3>Cycle Modes</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_cycle_modes.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_cycle_modes.png">
     </div>
     <div class="col-md-5">
         <em>The dialogue of the cycle modes action allows adding various
@@ -666,11 +665,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Split Axis</h4>
+<h3>Split Axis</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_split_axis.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_split_axis.png">
     </div>
     <div class="col-md-5">
         <em>Split axis dialog which allows splitting a single axis into two
@@ -684,11 +683,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Play Sound</h4>
+<h3>Play Sound</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_play_sound.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_play_sound.png">
     </div>
     <div class="col-md-5">
         <em>Plays the sound file specified at the given volume when the action
@@ -703,11 +702,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Text to Speech</h4>
+<h3>Text to Speech</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_text_to_speech.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_text_to_speech.png">
     </div>
     <div class="col-md-5">
         <em>Text to speech action dialogue which allows entering text to
@@ -733,18 +732,18 @@ of containers exist.
     </tr>
 </table>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout bd-callout-warning text-justify">
     The text segments are spoken in the order they are requested and as
     such queueing multiple long segments can lead to significant delays
     between them being triggered and played.
 </p>
 
 
-<h4 class="subsection">No Operation</h4>
+<h3>No Operation</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/action_noop.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_noop.png">
     </div>
     <div class="col-md-5">
         <em>An action that performs no function other then to serve as a place holder.</em>
@@ -760,7 +759,7 @@ of containers exist.
 </p>
 
 
-<h3><a name="2_6">2.6 Tools</a></h3>
+<h2><a name="3_6">3.6 Tools</a></h2>
 
 <p class="text-justify">
     In the following section the various tools provided by Joystick
@@ -769,11 +768,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Mode Manager</h4>
+<h3>Mode Manager</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_mode_manager.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_mode_manager.png">
     </div>
     <div class="col-md-5">
         <em>The mode manager allows the creation, deletion, and renaming
@@ -793,11 +792,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">User Module Manager</h4>
+<h3>User Module Manager</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_user_module_manager.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_user_module_manager.png">
     </div>
     <div class="col-md-5">
         <em>The user module manager dialogue lists the custom modules Joystick
@@ -808,7 +807,7 @@ of containers exist.
 <p class="text-justify">
     While the UI allows to perform common tasks there will be functionality
     that is not present. However, by using custom modules, described in <a
-    href="{{ site.baseurl }}/custom_modules">Section 3</a>, the limitations of
+    href="{{ site.url }}/custom_modules">Section 3</a>, the limitations of
     the UI can easily be overcome.  The module configuration dialogue is
     accessed via <em>Tools > Manage Custom Modules</em>. The modules listed
     there will be loaded in conjunction with the UI based configuration,
@@ -818,17 +817,17 @@ of containers exist.
     <em>Delete</em> button.
 </p>
 
-<div class="alert alert-warning">
+<p class="bd-callout bd-callout-warning text-justify">
     In order for Joystick Gremlin to successfully load the additional
     modules they have to be placed in the same folder as the profile
     file itself.
-</div>
+</p>
 
-<h4 class="subsection">Merge Axis</h4>
+<h3>Merge Axis</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_merge_axis.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_merge_axis.png">
     </div>
     <div class="col-md-5">
         <em>This dialog allows the specification of two physical axis that
@@ -842,7 +841,7 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Input Repeater</h4>
+<h3>Input Repeater</h3>
 
 <p class="text-justify">
     When enabling the <em>Input Repeater</em> option, while Joystick
@@ -855,11 +854,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Device Information</h4>
+<h3>Device Information</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_device_information.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_device_information.png">
     </div>
     <div class="col-md-5">
         <em>The device information dialogue provides an overview of the
@@ -878,7 +877,7 @@ of containers exist.
     unique to each device.
 </p>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout bd-callout-warning text-justify">
     The currently used hardware id is not device, but product specific.
     As such it can not distinguish between two identical joysticks. To
     distinguish those the system id is used. When there are no duplicate
@@ -886,11 +885,11 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Calibration</h4>
+<h3>Calibration</h3>
 
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_calibration.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_calibration.png">
     </div>
     <div class="col-md-5">
         <em>The calibration tool allows the calibration of all connected
@@ -911,7 +910,7 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Cheatsheet Generation</h4>
+<h3>Cheatsheet Generation</h3>
 <p class="text-justify">
     To help remember complex setups Joystick Gremlin has the ability to
     create PDF and HTML cheatsheets of the current profile. The output lists
@@ -920,7 +919,7 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Create 1:1 Mapping</h4>
+<h3>Create 1:1 Mapping</h3>
 <p class="text-justify">
     In order to make the initial setup quicker Joystick Gremlin can
     create a 1:1 mapping for the user. To do this select the entry from
@@ -929,7 +928,7 @@ of containers exist.
     to buttons and axes to axes.
 </p>
 
-<h4 class="subsection">Profile Creator</h4>
+<h3>Profile Creator</h3>
 <p class="text-justify">
     In order to enable easier sharing of configurations, even if different
     devices are used, the Profile Creator allows creating a new profile from an
@@ -939,6 +938,10 @@ of containers exist.
 </p>
 
 <div class="text-justify row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_profile_creator.png">
+    </div>
+
     <div class="col-md-5">
         The interface shows:
         <ul>
@@ -951,22 +954,18 @@ of containers exist.
         reflect this binding. When all desired actions are bound the configuration
         can be saved as a new profile by clicking on the save button.
     </div>
-
-    <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_profile_creator.png">
-    </div>
 </div>
 
-<p class="alert alert-warning text-justify">
+<p class="bd-callout bd-callout-warning text-justify">
     This tool is only capable of binding actions defined via the UI and if
     custom modules are used in a profile those will not be automatically
     adapted to the new devices used.
 </p>
 
-<h4 class="subsection">Log viewer</h4>
+<h3>Log viewer</h3>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_log_viewer.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_log_viewer.png">
     </div>
     <div class="col-md-5">
         <em>The log viewer allows the user to easily check the content of the
@@ -981,12 +980,12 @@ of containers exist.
 </p>
 
 
-<h4 class="subsection">Options</h4>
+<h3>Options</h3>
 <div class="row bottom-gap">
     <div class="col-md-7">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_options_general.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_options_general.png">
         </br>
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/dialog_options_profiles.png">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_options_profiles.png">
     </div>
     <div class="col-md-5">
         <em>The options dialogue which is used to set some default
@@ -1037,7 +1036,7 @@ of containers exist.
 </p>
 
 
-<h3><a name="2_7">2.7 Command Line Options</a></h3>
+<h2><a name="3_7">3.7 Command Line Options</a></h2>
 
 Joystick Gremlin allows controlling the following options via command line
 parameters:
@@ -1046,12 +1045,12 @@ parameters:
     <li>Enabling the program on launch</li>
 </ul>
 
-<h4>Profile Loading</h4>
+<h3>Profile Loading</h3>
 
 By passing the <code>--profile</code> parameter followed by the path to the
 profile to load Joystick Gremlin will load the specified profile.
 
-<h4>Enabling on Launch</h4>
+<h3>Enabling on Launch</h3>
 
 Passing the <code>--enable</code> flag will enable Joystick Gremlin once the
 program has been fully loaded.

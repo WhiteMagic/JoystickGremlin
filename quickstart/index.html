@@ -4,70 +4,154 @@ chapter: quickstart
 area: manual
 ---
 
-<h2><a name="2">2. Quick Start</a></h2>
+<h1><a name="2">2. Quick Start</a></h1>
 
-The following is intended as a simple guide that introduces the concepts
-used in Joystick Gremlin by the way of examples of how common tasks are
-achieved.
+<h2>2.1 Installation & Setup</h2>
 
-One can think of Gremlin as a reacting to the user's input, i.e. when
-the user does something Gremlin will react in a way specified by the
-user. In a sense the following summarizes the way Gremlin operates:
-<blockquote class="alert-success">
-<!--<div class="well">-->
-When I press this button on my joystick, I want the following to happen.
-<!--</div>-->
-</blockquote>
+<p class="text-justify">
+    On most sytems installing Joystick Gremlin only requires the installation
+    of <a
+   href="https://sourceforge.net/projects/vjoystick/files/Beta%202.x/2.1.8.31-291116/vJoySetup.exe/download">vJoy</a>
+    and <a href="{{ site.url }}/download">Joystick Gremlin</a> itself. Once
+    vJoy is installed it is advisable to configure the vJoy device(s), using
+    vJoyConf, to contain the desired number of axes, buttons, and hats.
+</p>
 
-This is also reflected by the design of the UI which is divided
-vertically into two parts. The left hand side lists all the physical
-inputs of a joystick, such as axes, buttons, and hats. The right
-hand side lists the action associated with a particular physical input.
-Going back to the above idea the left hand side contains the <em>When I
-press this button on my joystick</em> part while the right hand side
-reflects the <em>I want the following to happen</em>.
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="{{ site.url }}/images/vjoy_configuration.png">
+    </div>
+    <div class="col-md-5">
+        <em>VJoy configuration dialog with settings required for proper
+            Joystick Gremlin operation.</em>
+    </div>
+</div>
 
-<h3>Simple 1:1 Mappings</h3>
+<div class="bd-callout-warning bd-callout">
+    When configuring the hat instances make sure to select
+    <strong>continuous</strong> for their type.
+</div>
 
-The simplest type of mappings are remapping a physical input to a
-virtual one, this is done using the <em>Remap</em> action. The other
-basic action is to map a physical input to a keyboard key through the
-<em>Map to Keyboard</em> action. These two actions together allow
-merging of multiple physical devices into one virtual or using existing
-keyboard mappings of a game directly without having to create custom key
-bindings.
+
+<h2>2.2 Simple Profiles</h2>
+
+<p class="text-justify">
+    The following is intended as a simple guide that introduces the
+    concepts used in Joystick Gremlin by way of examples of how common
+    tasks are achieved. One can think of Gremlin as a system that reacts
+    to the user's input. This means that when the user does something
+    Gremlin will react in a way specified by the user. In a sense the
+    following summarizes the way Gremlin operates:
+</p>
+
+<div class="bd-callout">
+    When I press this button on my joystick, I want the following to
+    happen.
+</div>
+
+<p class="text-justify">
+    This is also reflected by the design of the UI which is divided into
+    two halves. The left side lists all the physical inputs of a
+    particular joystick, such as axes, buttons, and hats. The right side
+    lists the actions associated with a particular physical input.
+    Going back to the above idea the left hand side contains the
+    &#8220;<em>When I do</em>&#8221; part while the
+    right hand side reflects the &#8220;<em>Gremlin does"</em>&#8221; part.
+</p>
+
+<h3>Basic Mappings</h3>
+
+<p class="text-justify">
+    The simplest type of mappings are remapping a physical input to a
+    virtual one with the <mark>Remap</mark> action. The other basic
+    action is to map a physical input to a keyboard key or combination
+    of keys using the <mark>Map to Keyboard</mark> action. Both of
+    these actions will press and hold their virtual or simulated input
+    for as long as the physical input is pressed.
+</p>
+
+<p class="text-justify">
+    These actions allow merging of multiple physical devices into a
+    single one which can be useful for games that only recognize a
+    single joystick. Mapping joystick buttons to keyboard keys allows
+    using the default bindings of a game without having to rebind
+    everything or if a game doesn't support joystick input.
+</p>
 
 
 <h3>Macros</h3>
 
+<p class="text-justify">
+    Sometimes it's not enough to simply press and hold a button, for
+    example when a sequence of keys needs to be pressed or an axis
+    ramped up in a particular manner. This is where the
+    <mark>Macro</mark> action comes into play. This action allows the
+    recording and customizing of events that should be played back when
+    the associated physical input is pressed.
+</p>
+
+<p class="text-justify">
+    Besides simply executing the macro once upon activation it is also
+    possible to have a macro repeat in a variety of ways:
+    <ul>
+        <li>Repeat a fixed number of times</li>
+        <li>Repeat until the physical input is pressed again</li>
+        <li>Repeat as long as the physical input is pressed</li>
+    </ul>
+</p>
+
 
 <h3>Dealing with Axes</h3>
 
+<p class="text-justify">
+    Axes often require additional configuration to add deadzones to prevent
+    accidental inputs or response curves that modify the response to a physical
+    input. This allows increasing or reducing the sensitivity of particular
+    areas of physical input to tailor the axis to a user's preference.  The
+    horizontal axis of the curve editor reflects the physical deflection of the
+    axis from minimum (left) to maximum (right) while the vertical axis
+    reflects to output generated for the corresponding physical input.
+</p>
 
-<h3>Containers</h3>
 
-Sometimes it is desirable to use a single physical input for multiple
-different actions. This is achieved through what are called
-<em>containers</em>. These containers hold different actions and use
-them in a particular way that is defined by the container itself. The
-<em>Tempo</em> container has two sets of actions. The first set is used
-when the physical input is only pressed quickly. The second set is used
-when the physical input is pressed for longer. Effectively this allows
-two different types of actions to run from a single physical input.
-Another container <em>Chain</em> is used when with each press of the
-physical input a different action in a sequence should run. As an
-example A -> B -> C -> A.
+<h2>2.3 Complex Profiles</h2>
 
-<h3>Modes</h3>
+<p class="text-justify">
+    While simple profiles as described above already are capable of supporting
+    a large variety of setups, sometimes a bit more complexity is required to
+    create a particular setup. This is where <mark>containers</mark>,
+    <mark>conditions</mark>, and <mark>modes</mark> come into play.
+</p>
 
-While in many cases a simple setup, mapping physical inputs to actions
-is enough, there are always instances when a more complex setup where
-physical inputs change their meaning are desired. To support this type
-of configuration the concept of modes is introduced. A mode is a
-completely self container set of mappings from physical inputs to
-actions. Switching between those is supported via actions. As sometimes
-it is desired to keep certain mappings intact across several modes, for
-example flight controls in a flight simulator, modes support inheriting
-action mappings which allows the user to override only those actions the
-want to change while keeping others like they were in the mode they
-inherited from.
+<p class="text-justify">
+    A container holds one or more actions and is capable of executing
+    additional logic specific to the container. The simplest container type
+    <mark>Basic</mark> simply executes all contained actions. This is the type
+    which we've used implicitly when creating a simple profile. There are
+    currently two more advanced containers, <mark>Tempo</mark> and
+    <mark>Chain</mark>. The tempo container executes different sets of actions
+    depending on how long the corresponding physical input is pressed. This
+    allows using a single button for two different actions where, for example,
+    one is used more often then the other. The chain container contains an
+    arbitrary number of action sets and with each press of the associated
+    physical input one of the action sets is executed. When the last action
+    set was processed the first one will be run next. This can be used when a
+    single physical button should be used to switch through different actions.
+</p>
+
+<p class="text-justify">
+    Sometimes it can be helpful to control the condition under which an action
+    or container is executed. The execution can thus be conditioned on the state
+    of other input devices such as joysticks or keyboard, as well as the state
+    of the input associated with the action or container. This can be used to
+    implement a shift state which normally executes one action but if a certain
+    button is pressed a different action is executed.
+</p>
+
+<p class="text-justify">
+    In certain situations it can be beneficial to split a profile into several
+    parts, called modes. Each mode can have their own individual set of
+    physical input to action mappings. For example in flight simulators this
+    can be used to have one mode for air combat, one for ground attack, and one
+    for communications.
+</p>

@@ -3,12 +3,14 @@ area: manual
 chapter: changelog
 layout: default
 title:  "Release 7"
-date:   2016-12-22 12:00:00"
+date:   "2016-12-22 12:00:00"
 ---
 
-<h3>Release 7</h3>
+<h1>Release 7</h1>
 
-<h4>New Features</h4>
+{% include download.html release=7 %}
+
+<h2>New Features</h2>
 <ul>
     <li>Template system, allows creation of a new profile based on an existing one</li>
     <li>Profile loading and enabling of Joystick Gremlin via command line arguments</li>
@@ -16,7 +18,7 @@ date:   2016-12-22 12:00:00"
     <li>Joystick devices can now be addressed by their name instead of only ID in code</li>
 </ul>
 
-<h4>Fixes</h4>
+<h2>Fixes</h2>
 <ul>
     <li>TTS system induced crash</li>
     <li>Handle multiple vJoy devices correctly</li>

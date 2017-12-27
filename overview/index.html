@@ -4,7 +4,7 @@ chapter: overview
 layout: default
 ---
 
-<h2><a name="1">1. Overview</a></h2>
+<h1><a name="1">1. Overview</a></h1>
 
 <p class="text-justify">
     Joystick Gremlin is a program that allows the configuration of joystick
@@ -35,15 +35,15 @@ layout: default
 
 <p class="text-justify">
     Joystick Gremlin provides a graphical user interface, described in <a
-    href="{{ site.baseurl }}/interface">Section 2</a>, which allows commonly
+    href="{{ site.url }}/interface">Section 2</a>, which allows commonly
     performed tasks, such as input remapping, axis response curve setups, and
     macro recording to be performed easily. Functionality that is not accessible
     via the UI can be implemented through custom modules, explained in detail in <a
-    href="{{ site.baseurl }}/custom_modules">Section 3</a>.
+    href="{{ site.url }}/custom_modules">Section 3</a>.
 </p>
 
 
-<h3><a name="1_1">1.1 Installation</a></h3>
+<h2><a name="1_1">1.1 Installation</a></h2>
 
 <p class="text-justify">
     Joystick Gremlin has one major dependency, vJoy which provides virtual
@@ -51,7 +51,7 @@ layout: default
     programs needed are listed below:
 
     <ul>
-        <li><a href="https://github.com/WhiteMagic/JoystickGremlin">Joystick Gremlin</a></li>
+        <li><a href="{{ site.url }}/download">Joystick Gremlin</a></li>
         <li><a href="http://vjoystick.sourceforge.net/site/">vJoy</a> version 2.1.8 (direct
             download link <a href="https://sourceforge.net/projects/vjoystick/files/Beta%202.x/2.1.8.31-291116/vJoySetup.exe/download">2.1.8 2016-11-29</a>)</li>
         <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=5555">VC Redistributable  2010 (x86)</a></li>
@@ -75,7 +75,7 @@ layout: default
 
 
 
-<h4 class="subsection">vJoy Configuration</h4>
+<h3>vJoy Configuration</h3>
 
 <p class="text-justify">
     In order to properly use Joystick Gremlin vJoy has to be configured first.
@@ -89,7 +89,7 @@ layout: default
 
     <div class="row bottom-gap">
         <div class="col-md-7">
-            <img class="img-responsive center-block" src="{{ site.baseurl }}/images/vjoy_configuration.png">
+            <img class="img-responsive center-block" src="{{ site.url }}/images/vjoy_configuration.png">
         </div>
         <div class="col-md-5">
             <em>VJoy configuration dialog with settings required for proper
@@ -99,7 +99,7 @@ layout: default
 </p>
 
 
-<h3><a name="1_2">1.2 Concepts</a></h3>
+<h2><a name="1_2">1.2 Concepts</a></h2>
 
 <p class="text-justify">
     The following section introduces the terminology used by Joystick Gremlin.
@@ -108,7 +108,7 @@ layout: default
 </p>
 
 
-<h4 class="subsection">Action</h4>
+<h3>Action</h3>
 <p class="text-justify">
     An action is something Joystick Gremlin executes in response to the user
     activating a physical input.  Examples include running a macro, sending
@@ -119,7 +119,7 @@ layout: default
     pressed in order for the action to be run.
 </p>
 
-<h4 class="subsection">Container</h4>
+<h3>Container</h3>
 <p class="text-justify">
     A container holds one or more actions and uses them in an interesting way.
     In the most simple case it simply executes the action. More complex cases
@@ -127,21 +127,21 @@ layout: default
     duration a button is held down.
 </p>
 
-<h4 class="subsection">Input</h4>
+<h3>Input</h3>
 <p class="text-justify">
     An input is an axis, button, hat, or keyboard key on a physical device.
     Each input can have multiple actions assigned to it and these actions
     can change between the different modes.
 </p>
 
-<h4 class="subsection">Device</h4>
+<h3>Device</h3>
 <p class="text-justify">
     A device is a physical controller connected to the computer such as a
     joystick, pedal, or throttle. Each device has multiple inputs with their
     own associated actions.
 </p>
 
-<h4 class="subsection">Mode</h4>
+<h3>Mode</h3>
 <p class="text-justify">
     A mode is a collection of actions associated with the inputs for each
     connected device. Each mode can inherit from one other mode, his parent.
@@ -152,14 +152,14 @@ layout: default
     specialised modes add to or change.
 </p>
 
-<h4 class="subsection">Profile</h4>
+<h3>Profile</h3>
 <p class="text-justify">
     A profile is a folder which contains a XML configuration file together
     with any custom modules used. The profile contains the settings made via
     the user interface for each of the connected peripherals.
 </p>
 
-<h4 class="subsection">Example</h4>
+<h3>Example</h3>
 <p class="text-justify">
     The following is a simple example showing how the above introduced concepts
     work together. The profile contains two modes, <em>Default</em> and
@@ -293,7 +293,7 @@ layout: default
     </div>
 
     <div class="col-md-4">
-        <img class="img-responsive center-block" src="{{ site.baseurl }}/images/concepts.png">
+        <img class="img-responsive center-block" src="{{ site.url }}/images/concepts.png" width="100%">
         <em>The image shows how the various concepts explained below relate to
             each other.</em>
     </div>
