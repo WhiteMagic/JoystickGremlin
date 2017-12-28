@@ -529,7 +529,9 @@ class ButtonReleaseActions(QtCore.QObject):
 
         if release_evt not in self._registry:
             self._registry[release_evt] = []
-        self._registry[release_evt].append((callback, self._current_mode))
+        # Do not record the mode since we may want to run the release action
+        # independent of a mode
+        self._registry[release_evt].append((callback, None))
 
     def register_button_release(self, vjoy_input, physical_event):
         """Registers a physical and vjoy button pair for tracking.
@@ -543,10 +545,16 @@ class ButtonReleaseActions(QtCore.QObject):
         :param physical_event the button event when release should
             trigger the release of the vjoy button
         """
-        self.register_callback(
+        release_evt = physical_event.clone()
+        release_evt.is_pressed = False
+
+        if release_evt not in self._registry:
+            self._registry[release_evt] = []
+        # Record current mode so we only release if we've changed mode
+        self._registry[release_evt].append((
             lambda: self._create_release_callback(vjoy_input),
-            physical_event
-        )
+            self._current_mode
+        ))
 
     def _create_release_callback(self, vjoy_input):
         """Creates a button release callback.
@@ -559,6 +567,11 @@ class ButtonReleaseActions(QtCore.QObject):
         # to crash
         if vjoy[vjoy_input[0]].is_button_valid(vjoy_input[1]):
             vjoy[vjoy_input[0]].button(vjoy_input[1]).is_pressed = False
+        else:
+            logging.getLogger("system").warning(
+                "Attempted to use non existent button: vJoy {:d} button {:d}".format(
+                    vjoy_input[0], vjoy_input[1])
+            )
 
     def _input_event_cb(self, evt):
         """Runs callbacks associated with the given event.
@@ -567,7 +580,7 @@ class ButtonReleaseActions(QtCore.QObject):
         """
         if evt in self._registry and not evt.is_pressed:
             for entry in self._registry[evt]:
-                if entry[1] != self._current_mode:
+                if entry[1] is None or entry[1] != self._current_mode:
                     entry[0]()
             self._registry[evt] = []
 
