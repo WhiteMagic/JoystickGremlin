@@ -120,9 +120,12 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Enable reloading for when a user connects / disconnects a
         # device. Sleep for a bit to avert race with devices being added
-        # when they already exist.
+        # when they already exist. Additionally, force a refresh of the
+        # joystick initialization to ensure the proper device_id function
+        # is used.
         el = gremlin.event_handler.EventListener()
         time.sleep(0.1)
+        el._init_joysticks()
         el.device_change_event.connect(self._device_change_cb)
 
         self.apply_user_settings()
