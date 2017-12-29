@@ -360,7 +360,6 @@ class VirtualHatButton(AbstractVirtualButton):
         return node
 
 
-
 class AbstractFunctor(metaclass=ABCMeta):
 
     """Abstract base class defining the interface for functor like classes.

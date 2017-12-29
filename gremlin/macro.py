@@ -262,7 +262,7 @@ class MacroManager:
         if isinstance(macro.repeat, ToggleRepeat) and macro.id in self._active:
             self.terminate_macro(macro)
         else:
-            # Preprocess macro to contain pauses as neccessary
+            # Preprocess macro to contain pauses as necessary
             self._preprocess_macro(macro)
             self._queue.append(MacroEntry(macro, True))
             self._schedule_event.set()
@@ -662,15 +662,6 @@ class AbstractRepeat:
             "AbstractRepeat.from_xml not implemented in subclass"
         )
 
-    def to_code(self):
-        """Generates Python code for this repeat mode.
-
-        :return Python code for this repeat mode
-        """
-        raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat.to_code not implemented in subclass"
-        )
-
 
 class CountRepeat(AbstractRepeat):
 
@@ -704,16 +695,6 @@ class CountRepeat(AbstractRepeat):
         self.delay = float(node.get("delay"))
         self.count = int(node.get("count"))
 
-    def to_code(self):
-        """Generates Python code for this repeat mode.
-
-        :return Python code for this repeat mode
-        """
-        return "gremlin.macro.CountRepeat({:d}, {:.2f})".format(
-            self.count,
-            self.delay
-        )
-
 
 class ToggleRepeat(AbstractRepeat):
 
@@ -744,13 +725,6 @@ class ToggleRepeat(AbstractRepeat):
         """
         self.delay = float(node.get("delay"))
 
-    def to_code(self):
-        """Generates Python code for this repeat mode.
-
-        :return Python code for this repeat mode
-        """
-        return "gremlin.macro.ToggleRepeat({:.2f})".format(self.delay)
-
 
 class HoldRepeat(AbstractRepeat):
 
@@ -780,13 +754,6 @@ class HoldRepeat(AbstractRepeat):
         :param node XML node containing data with which to populate the instance
         """
         self.delay = float(node.get("delay"))
-
-    def to_code(self):
-        """Generates Python code for this repeat mode.
-
-        :return Python code for this repeat mode
-        """
-        return "gremlin.macro.HoldRepeat({:.2f})".format(self.delay)
 
 
 def key_from_name(name):

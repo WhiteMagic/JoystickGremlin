@@ -1157,10 +1157,6 @@ class MacroFunctor(AbstractFunctor):
     def process_event(self, event, value):
         MacroFunctor.manager.queue_macro(self.macro)
         if isinstance(self.macro.repeat, gremlin.macro.HoldRepeat):
-            # TODO: This only works with physical buttons as this has no
-            #   notion of a virtual button which can also be used to trigger
-            #   such a hold macro. Will require significant / smart change
-            #   of information passing to make it work.
             gremlin.input_devices.ButtonReleaseActions().register_callback(
                 lambda: MacroFunctor.manager.terminate_macro(self.macro),
                 event
