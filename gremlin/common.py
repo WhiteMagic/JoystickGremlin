@@ -22,13 +22,14 @@ import gremlin.error
 
 class InputType(enum.Enum):
 
-    """Enumeration of possible UI input types."""
+    """Enumeration of possible input types."""
 
     Keyboard = 1
     JoystickAxis = 2
     JoystickButton = 3
     JoystickHat = 4
-    Count = 5
+    VirtualButton = 5
+    Count = 6
 
 
 class AxisButtonDirection(enum.Enum):
