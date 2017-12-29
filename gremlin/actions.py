@@ -19,7 +19,8 @@ from abc import abstractmethod, ABCMeta
 from functools import partial
 import logging
 
-from . import base_classes, common, fsm, input_devices, macro, util
+from . import base_classes, common, event_handler, fsm, input_devices, \
+    macro, util
 
 
 def smart_all(conditions):
@@ -265,10 +266,22 @@ class VirtualButton(metaclass=ABCMeta):
 
     """Implements a button like interface."""
 
+    # Single shared event  listener instance
+    event_listener = event_handler.EventListener()
+
+    # Next identifier ID to use
+    next_id = 1
+
     def __init__(self):
         """Creates a new instance."""
         self._fsm = self._initialize_fsm()
         self._is_pressed = False
+        self._identifier = VirtualButton.next_id
+        VirtualButton.next_id += 1
+
+    @property
+    def identifier(self):
+        return self._identifier
 
     def _initialize_fsm(self):
         """Initializes the state of the button FSM."""
@@ -282,39 +295,54 @@ class VirtualButton(metaclass=ABCMeta):
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
-    def process_event(self, event, value):
+    def process_event(self, event):
         """Process the input event and updates the value as needed.
 
         :param event the input event that triggered this virtual button
-        :param value the value representation of the event's value
-        :return True if a state transition occured, False otherwise
+        :return True if a state transition occurred, False otherwise
         """
-        state_transition = self._do_process(event, value)
-        value.current = self.is_pressed
+        state_transition = self._do_process(event)
         return state_transition
 
     @abstractmethod
-    def _do_process(self, event, value):
+    def _do_process(self, event):
         """Implementation of the virtual button logic.
 
         This method has to be implemented in subclasses to provide the logic
         deciding when a state transition, i.e. button press or release
         occurs.
 
-        :param event the input event that is used to decide onthe state
-        :param value the value representation of the event's value
-        :return True if a state transition occured, False otherwise
+        :param event the input event that is used to decide on the state
+        :return True if a state transition occurred, False otherwise
         """
         pass
 
     def _press(self):
         """Executes the "press" action."""
         self._is_pressed = True
+        event = event_handler.Event(
+            common.InputType.VirtualButton,
+            self._identifier,
+            9999,
+            9999,
+            is_pressed=self._is_pressed,
+            raw_value=self._is_pressed
+        )
+        VirtualButton.event_listener.virtual_event.emit(event)
         return True
 
     def _release(self):
         """Executes the "release" action."""
         self._is_pressed = False
+        event = event_handler.Event(
+            common.InputType.VirtualButton,
+            self._identifier,
+            9999,
+            9999,
+            is_pressed=self._is_pressed,
+            raw_value=self._is_pressed
+        )
+        VirtualButton.event_listener.virtual_event.emit(event)
         return True
 
     def _noop(self):
@@ -347,12 +375,11 @@ class AxisButton(VirtualButton):
         self._last_value = None
         self.forced_activation = False
 
-    def _do_process(self, event, value):
+    def _do_process(self, event):
         """Implementation of the virtual button logic.
 
-        :param event the input event that is used to decide onthe state
-        :param value the value representation of the event's value
-        :return True if a state transition occured, False otherwise
+        :param event the input event that is used to decide on the state
+        :return True if a state transition occurred, False otherwise
         """
         self.forced_activation = False
         direction = common.AxisButtonDirection.Anywhere
@@ -416,12 +443,11 @@ class HatButton(VirtualButton):
         super().__init__()
         self._directions = directions
 
-    def _do_process(self, event, value):
+    def _do_process(self, event):
         """Implementation of the virtual button logic.
 
-        :param event the input event that is used to decide onthe state
-        :param value the value representation of the event's value
-        :return True if a state transition occured, False otherwise
+        :param event the input event that is used to decide on the state
+        :return True if a state transition occurred, False otherwise
         """
         if util.hat_tuple_to_direction(event.value) in self._directions:
             return self._fsm.perform("press")
