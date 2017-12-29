@@ -110,20 +110,20 @@ class Event:
         """Computes the hash value of this event.
 
         The hash is comprised of the events type, identifier of the
-        event source and the id of the event device.
+        event source and the id of the event device. Events from the same
+        input, e.g. axis, button, hat, key, with different values / states
+        shall have the same hash.
 
         :return integer hash value of this event
         """
         hash_val = 0
+        hash_val += self.event_type.value << Event.ShiftEventId
         if self.event_type == common.InputType.Keyboard:
             extended_val = 1 << 8 if self.identifier[1] else 0
             hash_val += (extended_val + int(self.identifier[0])) \
                 << Event.ShiftIdentifier
         else:
             hash_val += self.identifier << Event.ShiftIdentifier
-        # FIXME: Value is only valid for axis and hats, but not buttons is
-        #        this on purpose?
-        hash_val += self.event_type.value << Event.ShiftEventId
         if util.g_duplicate_devices:
             hash_val += self.windows_id << Event.ShiftSystemId
         hash_val += self.hardware_id << Event.ShiftDeviceId
@@ -157,6 +157,8 @@ class EventListener(QtCore.QObject):
     keyboard_event = QtCore.pyqtSignal(Event)
     # Signal emitted when joystick events are received
     joystick_event = QtCore.pyqtSignal(Event)
+    # Signal emitted when virtual button events are received
+    virtual_event = QtCore.pyqtSignal(Event)
     # Signal emitted when a joystick is attached or removed
     device_change_event = QtCore.pyqtSignal()
 
@@ -294,8 +296,13 @@ class EventListener(QtCore.QObject):
         """
         cfg = config.Configuration()
         for i in range(sdl2.SDL_JoystickNumAxes(self._joysticks[guid])):
-            device = joystick_handling.JoystickDeviceData(self._joysticks[guid])
-            limits = cfg.get_calibration(util.device_id(device), i + 1)
+            if util.device_id is None:
+                limits = cfg.get_calibration(guid, i + 1)
+            else:
+                device = joystick_handling.JoystickDeviceData(
+                    self._joysticks[guid]
+                )
+                limits = cfg.get_calibration(util.device_id(device), i + 1)
             self._calibrations[(guid, i+1)] = \
                 util.create_calibration_function(
                     limits[0],
@@ -472,13 +479,14 @@ class EventHandler(QtCore.QObject):
         :return a list of all callbacks registered and valid for the
             given event
         """
-        callback_list = []
         # Obtain callbacks matching the event
+        callback_list = []
         device_id = util.device_id(event)
         if device_id in self.callbacks:
             callback_list = self.callbacks[device_id].get(
                 self._active_mode, {}
             ).get(event, [])
+
         # Filter events when the system is paused
         if not self.process_callbacks:
             return [c[0] for c in callback_list if c[1]]
