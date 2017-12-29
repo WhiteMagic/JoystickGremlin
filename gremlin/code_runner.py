@@ -106,13 +106,29 @@ class CodeRunner:
                                 identifier=input_item.input_id
                             )
 
-                            self.event_handler.add_callback(
-                                dev_id,
-                                mode.name,
-                                event,
-                                InputItemCallback(input_item),
-                                input_item.always_execute
+                            # Create possibly several callbacks depending
+                            # on the input item's content
+                            callbacks = self._create_input_item_callbacks(
+                                input_item
                             )
+
+                            for data in callbacks:
+                                if data[1] is None:
+                                    self.event_handler.add_callback(
+                                        dev_id,
+                                        mode.name,
+                                        event,
+                                        data[0],
+                                        input_item.always_execute
+                                    )
+                                else:
+                                    self.event_handler.add_callback(
+                                        9999,
+                                        mode.name,
+                                        data[1],
+                                        data[0],
+                                        input_item.always_execute
+                                    )
 
             # Create merge axis callbacks
             for entry in profile.merge_axes:
@@ -182,6 +198,9 @@ class CodeRunner:
             evt_listener.joystick_event.connect(
                 self.event_handler.process_event
             )
+            evt_listener.virtual_event.connect(
+                self.event_handler.process_event
+            )
             evt_listener.keyboard_event.connect(kb.keyboard_event)
 
             input_devices.periodic_registry.start()
@@ -204,6 +223,7 @@ class CodeRunner:
             kb = input_devices.Keyboard()
             evt_lst.keyboard_event.disconnect(self.event_handler.process_event)
             evt_lst.joystick_event.disconnect(self.event_handler.process_event)
+            evt_lst.virtual_event.disconnect(self.event_handler.process_event)
             evt_lst.keyboard_event.disconnect(kb.keyboard_event)
             self.event_handler.mode_changed.disconnect(
                 self._vjoy_curves.mode_changed
@@ -229,6 +249,34 @@ class CodeRunner:
             list(self._inheritance_tree.keys())[0]
         self.event_handler._previous_mode =\
             list(self._inheritance_tree.keys())[0]
+
+    def _create_input_item_callbacks(self, input_item):
+        """Returns a list of callbacks for the given input item.
+
+        :param input_item the InputItem instance to process
+        :return list of callback instances which react to input events
+        """
+        callbacks = []
+        for container in input_item.containers:
+            # For a virtual button create a calback that sends VirtualButton
+            # events and another callback that triggers of these events
+            # like a button would.
+            if container.virtual_button is not None:
+                callbacks.append((VirtualButtonProcess(container), None))
+                callbacks.append((
+                    VirtualButtonCallback(container),
+                    gremlin.event_handler.Event(
+                        gremlin.common.InputType.VirtualButton,
+                        callbacks[-1][0].virtual_button.identifier,
+                        9999,
+                        9999,
+                        is_pressed=True,
+                        raw_value=True
+                    )
+                ))
+        callbacks.append((InputItemCallback(input_item), None))
+
+        return callbacks
 
 
 class VJoyCurves:
@@ -315,6 +363,10 @@ class InputItemCallback:
         pre_containers = []
         post_containers = []
         for i, container in enumerate(input_item.containers):
+            # Don't include virtual button based containers they are handled
+            # separately
+            if container.virtual_button:
+                continue
             contains_remap = False
             for action_set in container.action_sets:
                 for action in action_set:
@@ -347,7 +399,8 @@ class InputItemCallback:
             value = gremlin.actions.Value(event.value)
         elif event.event_type in [
             gremlin.common.InputType.JoystickButton,
-            gremlin.common.InputType.Keyboard
+            gremlin.common.InputType.Keyboard,
+            gremlin.common.InputType.VirtualButton
         ]:
             value = gremlin.actions.Value(event.is_pressed)
         else:
@@ -358,10 +411,66 @@ class InputItemCallback:
         shared_value = copy.deepcopy(value)
 
         for graph in self.execution_graphs:
-            if graph.is_virtual_button:
+            if event == gremlin.common.InputType.VirtualButton:
                 graph.process_event(event, copy.deepcopy(value))
             else:
                 graph.process_event(event, shared_value)
+
+
+class VirtualButtonCallback:
+
+    """VirtualButton event based callback class."""
+
+    def __init__(self, container):
+        """Creates a new instance.
+
+        :param container the container to execute when called
+        """
+        self._execution_graph = ContainerExecutionGraph(container)
+
+    def __call__(self, event):
+        """Executes the container's content when called.
+
+        :param event the event triggering the callback
+        """
+        self._execution_graph.process_event(
+            event,
+            gremlin.actions.Value(event.is_pressed)
+        )
+
+
+class VirtualButtonProcess:
+
+    """Callback that is responsible for emitting press and release events
+    for a virtual button."""
+
+    def __init__(self, container):
+        """Creates a new instance for the given container.
+
+        :param container the container using a virtual button configuration
+        """
+        self.virtual_button = None
+
+        input_type = container.get_input_type()
+        if input_type == gremlin.common.InputType.JoystickAxis:
+            self.virtual_button = gremlin.actions.AxisButton(
+                container.virtual_button.lower_limit,
+                container.virtual_button.upper_limit,
+                container.virtual_button.direction
+            )
+        elif input_type == gremlin.common.InputType.JoystickHat:
+            self.virtual_button = gremlin.actions.HatButton(
+                container.virtual_button.directions
+            )
+        else:
+            raise gremlin.error.GremlinError("Invalid virtual button provided")
+
+    def __call__(self, event):
+        """Processes the provided event through the virtual button instance.
+
+        :param event the input event being processed
+        """
+        self.virtual_button.process_event(event)
 
 
 class AbstractExecutionGraph(metaclass=ABCMeta):
@@ -510,7 +619,6 @@ class ContainerExecutionGraph(AbstractExecutionGraph):
         """
         assert isinstance(container, gremlin.base_classes.AbstractContainer)
         super().__init__(container)
-        self.is_virtual_button = container.virtual_button is not None
 
     def _build_graph(self, container):
         """Builds the graph structure based on the container's content.
@@ -520,11 +628,11 @@ class ContainerExecutionGraph(AbstractExecutionGraph):
         sequence = []
 
         # Add virtual button transform as the first functor if present
-        if container.virtual_button:
-            self.functors.append(self._create_virtual_button(container))
-            sequence.append("Condition")
+        # if container.virtual_button:
+        #     self.functors.append(self._create_virtual_button(container))
+        #     sequence.append("Condition")
 
-        # If container based conditions exist add them beofre any actions
+        # If container based conditions exist add them before any actions
         if container.activation_condition_type == "container":
             self.functors.append(
                 self._create_activation_condition(container.activation_condition)
@@ -536,24 +644,24 @@ class ContainerExecutionGraph(AbstractExecutionGraph):
 
         self._create_transitions(sequence)
 
-    def _create_virtual_button(self, container):
-        """Creates a VirtualButton object for the provided container.
-
-        :param container data to use in order to generate the VirtualButton
-        """
-        input_type = container.get_input_type()
-        if input_type == gremlin.common.InputType.JoystickAxis:
-            return gremlin.actions.AxisButton(
-                container.virtual_button.lower_limit,
-                container.virtual_button.upper_limit,
-                container.virtual_button.direction
-            )
-        elif input_type == gremlin.common.InputType.JoystickHat:
-            return gremlin.actions.HatButton(
-                container.virtual_button.directions
-            )
-        else:
-            raise gremlin.error.GremlinError("Invalid virtual button provided")
+    # def _create_virtual_button(self, container):
+    #     """Creates a VirtualButton object for the provided container.
+    #
+    #     :param container data to use in order to generate the VirtualButton
+    #     """
+    #     input_type = container.get_input_type()
+    #     if input_type == gremlin.common.InputType.JoystickAxis:
+    #         return gremlin.actions.AxisButton(
+    #             container.virtual_button.lower_limit,
+    #             container.virtual_button.upper_limit,
+    #             container.virtual_button.direction
+    #         )
+    #     elif input_type == gremlin.common.InputType.JoystickHat:
+    #         return gremlin.actions.HatButton(
+    #             container.virtual_button.directions
+    #         )
+    #     else:
+    #         raise gremlin.error.GremlinError("Invalid virtual button provided")
 
 
 class ActionSetExecutionGraph(AbstractExecutionGraph):

@@ -513,6 +513,7 @@ class ButtonReleaseActions(QtCore.QObject):
         el = event_handler.EventListener()
         el.joystick_event.connect(self._input_event_cb)
         el.keyboard_event.connect(self._input_event_cb)
+        el.virtual_event.connect(self._input_event_cb)
         eh = event_handler.EventHandler()
         self._current_mode = eh.active_mode
         eh.mode_changed.connect(self._mode_changed_cb)
