@@ -687,6 +687,11 @@ class ActionSetExecutionGraph(AbstractExecutionGraph):
 
         :param action_set data to use in order to generate the graph
         """
+        # The action set shouldn't be empty, but in case this happens
+        # nonetheless we abort
+        if len(action_set) == 0:
+            return
+
         sequence = []
 
         condition_type = action_set[0].parent.activation_condition_type
