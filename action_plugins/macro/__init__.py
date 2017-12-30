@@ -1065,6 +1065,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.toolbar.addWidget(self.record_button)
         self.toolbar.addWidget(self.record_hat)
         self.toolbar.addWidget(self.record_key)
+        self.toolbar.setMinimumHeight(210)
 
         # Assemble the entire widget
         self.main_layout.addWidget(self.list_view)
