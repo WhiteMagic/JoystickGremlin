@@ -147,7 +147,6 @@ class MacroActionEditor(QtWidgets.QWidget):
         self._update_model()
         self.action_types[value]()
 
-
     def _joystick_ui(self):
         """Creates and populates the JoystickAction editor UI."""
         action = self.model.get_entry(self.index.row())
@@ -972,67 +971,131 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.editor_settings_layout.addStretch()
 
         # Create buttons used to modify and interact with the macro actions
-        self.button_new_entry = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/list_add"), ""
+        self.button_new_entry = self._create_toolbutton(
+            "gfx/list_add",
+            "Add a new action",
+            False
         )
-        self.button_new_entry.setToolTip("Add a new action")
         self.button_new_entry.clicked.connect(self._pause_cb)
-        self.button_delete = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/list_delete"), ""
+
+        self.button_delete = self._create_toolbutton(
+            "gfx/list_delete",
+            "Delete currently selected entry",
+            False
         )
         self.button_delete.clicked.connect(self._delete_cb)
-        self.button_delete.setToolTip("Delete currently selected entry")
 
-        record_icon = QtGui.QIcon()
-        record_icon.addPixmap(
-            QtGui.QPixmap("{}/macro_record".format(MacroWidget.gfx_path)),
-            QtGui.QIcon.Normal
-        )
-        record_icon.addPixmap(
-            QtGui.QPixmap("{}/macro_record_on".format(MacroWidget.gfx_path)),
-            QtGui.QIcon.Active,
-            QtGui.QIcon.On
-        )
-
-        self.button_record = NoKeyboardPushButton(record_icon, "")
-        self.button_record.setCheckable(True)
-        self.button_record.clicked.connect(self._record_cb)
-        self.button_record.setToolTip("Start / stop recording keyboard input")
-        self.button_pause = QtWidgets.QPushButton(
-            QtGui.QIcon("{}/macro_add_pause".format(MacroWidget.gfx_path)), ""
+        self.button_pause = self._create_toolbutton(
+            "{}/pause".format(MacroWidget.gfx_path),
+            "Add pause after the currently selected entry",
+            False
         )
         self.button_pause.clicked.connect(self._pause_cb)
-        self.button_pause.setToolTip(
-            "Add pause after the currently selected entry"
+
+        self.button_record = self._create_toolbutton(
+            [
+                "{}/macro_record".format(MacroWidget.gfx_path),
+                "{}/macro_record_on".format(MacroWidget.gfx_path)
+            ],
+            "Record keyboard and joystick inputs",
+            True,
+            False
+        )
+        self.button_record.clicked.connect(self._record_cb)
+
+        self.record_time = self._create_toolbutton(
+            [
+                "{}/time".format(MacroWidget.gfx_path),
+                "{}/time_on".format(MacroWidget.gfx_path)
+            ],
+            "Record pauses between actions",
+            True,
+            False
         )
 
-        time_icon = QtGui.QIcon()
-        time_icon.addPixmap(
-            QtGui.QPixmap("{}/time".format(MacroWidget.gfx_path)),
-            QtGui.QIcon.Normal
+        # Input type recording buttons
+        self.record_axis = self._create_toolbutton(
+            [
+                "{}/record_axis".format(MacroWidget.gfx_path),
+                "{}/record_axis_on".format(MacroWidget.gfx_path)
+            ],
+            "Record joystick axis events",
+            True
         )
-        time_icon.addPixmap(
-            QtGui.QPixmap("{}/time_on".format(MacroWidget.gfx_path)),
-            QtGui.QIcon.Active,
-            QtGui.QIcon.On
+        self.record_button = self._create_toolbutton(
+            [
+                "{}/record_button".format(MacroWidget.gfx_path),
+                "{}/record_button_on".format(MacroWidget.gfx_path)
+            ],
+            "Record joystick button events",
+            True
         )
-        self.button_time = NoKeyboardPushButton(time_icon, "")
-        self.button_time.setCheckable(True)
-        self.button_time.setToolTip("Add pause between actions")
+        self.record_hat = self._create_toolbutton(
+            [
+                "{}/record_hat".format(MacroWidget.gfx_path),
+                "{}/record_hat_on".format(MacroWidget.gfx_path)
+            ],
+            "Record joystick hat events",
+            True
+        )
+        self.record_key = self._create_toolbutton(
+            [
+                "{}/record_key".format(MacroWidget.gfx_path),
+                "{}/record_key_on".format(MacroWidget.gfx_path)
+            ],
+            "Record keyboard events",
+            True
+        )
 
-        self.buttons_layout.addWidget(self.button_new_entry)
-        self.buttons_layout.addWidget(self.button_delete)
-        self.buttons_layout.addWidget(self.button_pause)
-        self.buttons_layout.addWidget(self.button_record)
-        self.buttons_layout.addWidget(self.button_time)
-        self.buttons_layout.addStretch()
+        # Toolbar
+        self.toolbar = QtWidgets.QToolBar()
+        self.toolbar.setStyleSheet(
+            "QToolBar { border: 1px solid #949494; background-color: #dadada; }"
+        )
+        self.toolbar.setIconSize(QtCore.QSize(16, 16))
+        self.toolbar.setOrientation(QtCore.Qt.Vertical)
+        self.toolbar.addWidget(self.button_new_entry)
+        self.toolbar.addWidget(self.button_delete)
+        self.toolbar.addWidget(self.button_pause)
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(self.button_record)
+        self.toolbar.addWidget(self.record_time)
+        self.toolbar.addWidget(self.record_axis)
+        self.toolbar.addWidget(self.record_button)
+        self.toolbar.addWidget(self.record_hat)
+        self.toolbar.addWidget(self.record_key)
 
         # Assemble the entire widget
         self.main_layout.addWidget(self.list_view)
-        self.main_layout.addLayout(self.buttons_layout)
+        self.main_layout.addWidget(self.toolbar)
         self.main_layout.addLayout(self.editor_settings_layout)
 
         self.main_layout.setContentsMargins(0, 0, 0, 0)
+
+    def _create_toolbutton(self, icon_path, tooltip, is_checkable, default_on=True):
+        """Creates a new toolbutton with the provided options.
+
+        :param icon_path the path or list of paths of icons
+        :param tooltip the tooltip of the button
+        :param is_checkable whether or not the button can be toggled
+        :param default_on whether or not to toggle the button by default
+        """
+        button = QtWidgets.QToolButton()
+        if isinstance(icon_path, list):
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(icon_path[0]), QtGui.QIcon.Normal)
+            icon.addPixmap(
+                QtGui.QPixmap(icon_path[1]),
+                QtGui.QIcon.Active,
+                QtGui.QIcon.On
+            )
+            button.setIcon(icon)
+        else:
+            button.setIcon(QtGui.QIcon(icon_path))
+        button.setToolTip(tooltip)
+        button.setCheckable(is_checkable)
+        button.setChecked(is_checkable and default_on)
+        return button
 
     def _populate_ui(self):
         """Populate the UI with content from the data."""
@@ -1061,7 +1124,11 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         :param event the event for which to create a KeyAction object
         """
-        if self.button_time.isChecked():
+        # Abort if we should not record keyboard keys
+        if not self.record_key.isChecked():
+            return
+
+        if self.record_time.isChecked():
             self._append_entry(gremlin.macro.PauseAction(
                 time.time() - max(self._recording_times.values())
             ))
@@ -1076,6 +1143,17 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         self._append_entry(action)
 
     def _create_joystick_action(self, event):
+        # Check whether or not to record a specific type of input
+        if event.event_type == gremlin.common.InputType.JoystickAxis and \
+                not self.record_axis.isChecked():
+            return
+        if event.event_type == gremlin.common.InputType.JoystickButton and \
+                not self.record_button.isChecked():
+            return
+        if event.event_type == gremlin.common.InputType.JoystickHat and \
+                not self.record_hat.isChecked():
+            return
+
         # If this is an axis motion do some checks such that we don't spam
         # the ui with entries
         add_new_entry = True
@@ -1092,7 +1170,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
                 add_new_entry = False
 
         if add_new_entry:
-            if self.button_time.isChecked():
+            if self.record_time.isChecked():
                 self._append_entry(gremlin.macro.PauseAction(
                     time.time() - max(self._recording_times.values())
                 ))
