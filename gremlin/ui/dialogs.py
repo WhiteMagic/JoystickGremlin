@@ -112,12 +112,35 @@ class OptionsUi(common.BaseDialogUi):
         self.macro_axis_polling_layout.addWidget(self.macro_axis_polling_value)
         self.macro_axis_polling_layout.addStretch()
 
+        # Macro axis minimum change value
+        self.macro_axis_minimum_change_layout = QtWidgets.QHBoxLayout()
+        self.macro_axis_minimum_change_label = \
+            QtWidgets.QLabel("Macro axis minimum change value")
+        self.macro_axis_minimum_change_value = common.DynamicDoubleSpinBox()
+        self.macro_axis_minimum_change_value.setRange(0.00001, 1.0)
+        self.macro_axis_minimum_change_value.setSingleStep(0.01)
+        self.macro_axis_minimum_change_value.setDecimals(5)
+        self.macro_axis_minimum_change_value.setValue(
+            self.config.macro_axis_minimum_change_rate
+        )
+        self.macro_axis_minimum_change_value.valueChanged.connect(
+            self._macro_axis_minimum_change_value
+        )
+        self.macro_axis_minimum_change_layout.addWidget(
+            self.macro_axis_minimum_change_label
+        )
+        self.macro_axis_minimum_change_layout.addWidget(
+            self.macro_axis_minimum_change_value
+        )
+        self.macro_axis_minimum_change_layout.addStretch()
+
         self.general_layout.addWidget(self.highlight_input)
         self.general_layout.addWidget(self.close_to_systray)
         self.general_layout.addWidget(self.start_minimized)
         self.general_layout.addWidget(self.show_mode_change_message)
         self.general_layout.addLayout(self.default_action_layout)
         self.general_layout.addLayout(self.macro_axis_polling_layout)
+        self.general_layout.addLayout(self.macro_axis_minimum_change_layout)
         self.general_layout.addStretch()
         self.tab_container.addTab(self.general_page, "General")
 
@@ -411,6 +434,13 @@ class OptionsUi(common.BaseDialogUi):
         """
         self.config.macro_axis_polling_rate = value
         self.config.save()
+
+    def _macro_axis_minimum_change_value(self, value):
+        """Updates the config with the newly set minimum change value.
+
+        :param value the new minimum change value
+        """
+        self.config.macro_axis_minimum_change_rate = value
 
     def _create_hg_cb(self, *params):
         return lambda x: self._update_hg_device(x, *params)

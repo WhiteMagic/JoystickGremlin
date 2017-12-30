@@ -349,6 +349,19 @@ class Configuration:
         self.save()
 
     @property
+    def macro_axis_minimum_change_rate(self):
+        """Returns the minimum change in value required to record an axis event.
+
+        :return minimum axis change required
+        """
+        return self._data.get("macro_axis_minimum_change_rate", 0.005)
+
+    @macro_axis_minimum_change_rate.setter
+    def macro_axis_minimum_change_rate(self, value):
+        self._data["macro_axis_minimum_change_rate"] = value
+        self.save()
+
+    @property
     def window_size(self):
         """Returns the size of the main Gremlin window.
 
