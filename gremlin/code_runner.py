@@ -123,7 +123,7 @@ class CodeRunner:
                                     )
                                 else:
                                     self.event_handler.add_callback(
-                                        9999,
+                                        util.get_device_id(9999, 9999),
                                         mode.name,
                                         data[1],
                                         data[0],
