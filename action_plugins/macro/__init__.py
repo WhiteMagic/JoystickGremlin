@@ -936,8 +936,13 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         self._polling_rate = \
             gremlin.config.Configuration().macro_axis_polling_rate
+        self._minimum_change_amount = \
+            gremlin.config.Configuration().macro_axis_minimum_change_rate
         self._recording_times = {
             None: time.time()
+        }
+        self._recording_values = {
+            None: 0.0
         }
 
     def _create_ui(self):
@@ -1082,6 +1087,9 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
                 self._recording_times[event] = time.time()
             elif time.time() - self._recording_times[event] < self._polling_rate:
                 add_new_entry = False
+            elif abs(event.value - self._recording_values[event]) < \
+                    self._minimum_change_amount:
+                add_new_entry = False
 
         if add_new_entry:
             if self.button_time.isChecked():
@@ -1096,6 +1104,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
                     else event.value
             )
             self._recording_times[event] = time.time()
+            self._recording_values[event] = event.value
             self._append_entry(action)
 
     def _record_cb(self):
