@@ -21,7 +21,7 @@ from ctypes import wintypes
 import functools
 import logging
 import time
-from threading import Event, Thread
+from threading import Event, Lock, Thread
 from xml.etree import ElementTree
 
 import win32con
@@ -220,10 +220,13 @@ class MacroManager:
 
     def __init__(self):
         """Initializes the instance."""
-        self._queue = []
         self._active = {}
+        self._queue = []
         self._flags = {}
+        self._flags_lock = Lock()
+        self._queue_lock = Lock()
 
+        self._is_executing_exclusive = False
         self._is_running = False
         self._schedule_event = Event()
 
@@ -251,8 +254,9 @@ class MacroManager:
             self._run_scheduler_thread = None
 
             # Terminate any macro that is still active
-            for key, value in self._flags.items():
-                self._flags[key] = False
+            with self._flags_lock:
+                for key, value in self._flags.items():
+                    self._flags[key] = False
 
     def queue_macro(self, macro):
         """Queues a macro in the schedule taking the repeat type into account.
@@ -264,7 +268,8 @@ class MacroManager:
         else:
             # Preprocess macro to contain pauses as necessary
             self._preprocess_macro(macro)
-            self._queue.append(MacroEntry(macro, True))
+            with self._queue_lock:
+                self._queue.append(MacroEntry(macro, True))
             self._schedule_event.set()
 
     def terminate_macro(self, macro):
@@ -284,21 +289,47 @@ class MacroManager:
 
             # Run scheduled macros and ensure exclusive ones run separately
             # from all other macros
-            for i, entry in enumerate(self._queue):
-                if entry.state == False:
-                    self._flags[entry.macro.id] = False
-                    del self._queue[i]
-                elif entry.macro.id in self._active:
-                    # print(time.time(), len(self._queue))
-                    continue
-                elif entry.macro.exclusive:
-                    if len(self._active) == 0:
+            with self._queue_lock:
+                entries_to_remove = []
+                has_exclusive = False
+                for i, entry in enumerate(self._queue):
+                    # Terminate macro if needed
+                    if entry.state is False:
+                        if entry.macro.id in self._flags and self._flags[entry.macro.id]:
+                            # Terminate currently running macro
+                            with self._flags_lock:
+                                self._flags[entry.macro.id] = False
+                            # del self._queue[i]
+
+                            # Remove all queued up macros with the same id as
+                            # they should have been impossible to queue up
+                            # in the first place
+                            removal_list = []
+                            for queue_entry in self._queue:
+                                if queue_entry.macro.id == entry.macro.id:
+                                    removal_list.append(queue_entry)
+                            for queue_entry in removal_list:
+                                self._queue.remove(queue_entry)
+                    # Don't run a queued macro if the same instance is already
+                    # running
+                    elif entry.macro.id in self._active:
+                        continue
+                    # Handle exclusive macros
+                    elif entry.macro.exclusive:
+                        has_exclusive = True
+                        if len(self._active) == 0:
+                            self._dispatch_macro(entry.macro)
+                            self._is_executing_exclusive = True
+                            entries_to_remove.append(entry)
+                    # Start a queued up macro
+                    elif not has_exclusive and not self._is_executing_exclusive:
                         self._dispatch_macro(entry.macro)
-                        del self._queue[i]
-                    break
-                else:
-                    self._dispatch_macro(entry.macro)
-                    del self._queue[i]
+                        entries_to_remove.append(entry)
+
+                # Remove all entries we've processed
+                for entry in entries_to_remove:
+                    if entry in self._queue:
+                        self._queue.remove(entry)
 
     def _dispatch_macro(self, macro):
         """Dispatches a single macro to be run.
@@ -326,7 +357,8 @@ class MacroManager:
         if macro.repeat is not None:
             delay = macro.repeat.delay
 
-            self._flags[macro.id] = True
+            with self._flags_lock:
+                self._flags[macro.id] = True
 
             # Handle count repeat mode
             if isinstance(macro.repeat, CountRepeat):
@@ -352,12 +384,15 @@ class MacroManager:
         # Remove macro from active set, notify manager, and remove any
         # potential callbacks
         del self._active[macro.id]
-        if macro.id in self._flags:
-            del self._flags[macro.id]
+        if macro.exclusive:
+            self._is_executing_exclusive = False
+        with self._flags_lock:
+            if macro.id in self._flags:
+                self._flags[macro.id] = False
         self._schedule_event.set()
 
     def _preprocess_macro(self, macro):
-        """Inserts pauses as neccessary into the macro."""
+        """Inserts pauses as necessary into the macro."""
         new_sequence = [macro.sequence[0]]
         for a1, a2 in zip(macro.sequence[:-1], macro.sequence[1:]):
             if isinstance(a1, PauseAction) or isinstance(a2, PauseAction):
