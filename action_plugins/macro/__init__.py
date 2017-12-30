@@ -1020,7 +1020,8 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
                 "{}/record_axis_on".format(MacroWidget.gfx_path)
             ],
             "Record joystick axis events",
-            True
+            True,
+            False
         )
         self.record_button = self._create_toolbutton(
             [
