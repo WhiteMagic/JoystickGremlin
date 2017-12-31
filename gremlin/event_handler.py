@@ -26,7 +26,7 @@ from PyQt5 import QtCore
 import sdl2
 import sdl2.ext
 
-from . import common, config, error, joystick_handling, keyboard_hook, \
+from . import common, config, error, joystick_handling, windows_event_hook, \
     macro, util
 
 
@@ -153,10 +153,12 @@ class EventListener(QtCore.QObject):
     via QT's signal/slot interface.
     """
 
-    # Signal emitted when keyboard events are received
-    keyboard_event = QtCore.pyqtSignal(Event)
     # Signal emitted when joystick events are received
     joystick_event = QtCore.pyqtSignal(Event)
+    # Signal emitted when keyboard events are received
+    keyboard_event = QtCore.pyqtSignal(Event)
+    # Signal emitted when mouse events are received
+    mouse_event = QtCore.pyqtSignal(Event)
     # Signal emitted when virtual button events are received
     virtual_event = QtCore.pyqtSignal(Event)
     # Signal emitted when a joystick is attached or removed
@@ -165,8 +167,10 @@ class EventListener(QtCore.QObject):
     def __init__(self):
         """Creates a new instance."""
         QtCore.QObject.__init__(self)
-        self.keyboard_hook = keyboard_hook.KeyboardHook()
+        self.keyboard_hook = windows_event_hook.KeyboardHook()
         self.keyboard_hook.register(self._keyboard_handler)
+        self.mouse_hook = windows_event_hook.MousedHook()
+        self.mouse_hook.register(self._mouse_handler)
         self._joysticks = {}
         self._joystick_guid_map = {}
         self._calibrations = {}
@@ -175,12 +179,14 @@ class EventListener(QtCore.QObject):
 
         self._init_joysticks()
         self.keyboard_hook.start()
+        self.mouse_hook.start()
         Thread(target=self._run).start()
 
     def terminate(self):
         """Stops the loop from running."""
         self._running = False
         self.keyboard_hook.stop()
+        self.mouse_hook.stop()
 
     def _run(self):
         """Starts the event loop."""
@@ -189,33 +195,6 @@ class EventListener(QtCore.QObject):
             for event in sdl2.ext.get_events():
                 self._joystick_handler(event)
             time.sleep(0.001)
-
-    def _keyboard_handler(self, event):
-        """Callback for keyboard events.
-
-        The handler converts the event data into a signal which is then
-        emitted.
-
-        :param event the keyboard event
-        """
-        # Ignore events we created via the macro system
-        if not event.is_injected:
-            key_id = (event.scan_code, event.is_extended)
-            is_pressed = event.is_pressed
-            is_repeat = self._keyboard_state.get(key_id, False) and is_pressed
-            # Only emit an event if they key is pressed for the first
-            # time or released but not when it's being held down
-            if not is_repeat:
-                self._keyboard_state[key_id] = is_pressed
-                self.keyboard_event.emit(Event(
-                    event_type=common.InputType.Keyboard,
-                    hardware_id=0,
-                    windows_id=0,
-                    identifier=key_id,
-                    is_pressed=is_pressed,
-                ))
-        # Allow the windows event to propagate further
-        return True
 
     def _joystick_handler(self, event):
         """Callback for joystick events.
@@ -263,6 +242,53 @@ class EventListener(QtCore.QObject):
         elif event.type in [sdl2.SDL_JOYDEVICEADDED, sdl2.SDL_JOYDEVICEREMOVED]:
             self._init_joysticks()
             self.device_change_event.emit()
+
+    def _keyboard_handler(self, event):
+        """Callback for keyboard events.
+
+        The handler converts the event data into a signal which is then
+        emitted.
+
+        :param event the keyboard event
+        """
+        # Ignore events we created via the macro system
+        if not event.is_injected:
+            key_id = (event.scan_code, event.is_extended)
+            is_pressed = event.is_pressed
+            is_repeat = self._keyboard_state.get(key_id, False) and is_pressed
+            # Only emit an event if they key is pressed for the first
+            # time or released but not when it's being held down
+            if not is_repeat:
+                self._keyboard_state[key_id] = is_pressed
+                self.keyboard_event.emit(Event(
+                    event_type=common.InputType.Keyboard,
+                    hardware_id=0,
+                    windows_id=0,
+                    identifier=key_id,
+                    is_pressed=is_pressed,
+                ))
+        # Allow the windows event to propagate further
+        return True
+
+    def _mouse_handler(self, event):
+        """Callback for mouse events.
+
+        The handler converts the event data into a signal which is then
+        emitted.
+
+        :param event the mouse event
+        """
+        # Ignore events we created via the macro system
+        if not event.is_injected:
+            self.mouse_event.emit(Event(
+                event_type=common.InputType.Mouse,
+                hardware_id=0,
+                windows_id=0,
+                identifier=event.button_id,
+                is_pressed=event.is_pressed,
+            ))
+        # Allow the windows event to propagate further
+        return True
 
     def _init_joysticks(self):
         """Initializes joystick devices."""

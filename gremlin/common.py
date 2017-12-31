@@ -28,8 +28,9 @@ class InputType(enum.Enum):
     JoystickAxis = 2
     JoystickButton = 3
     JoystickHat = 4
-    VirtualButton = 5
-    Count = 6
+    Mouse = 5
+    VirtualButton = 6
+    Count = 7
 
 
 class AxisButtonDirection(enum.Enum):
@@ -66,6 +67,53 @@ _AxisButtonDirection_to_enum_lookup = {
     "anywhere": AxisButtonDirection.Anywhere,
     "above": AxisButtonDirection.Above,
     "below": AxisButtonDirection.Below
+}
+
+
+class MouseButton(enum.Enum):
+
+    Left = 1
+    Right = 2
+    Middle = 3
+    Forward = 4
+    Back = 5
+    WheelUp = 10
+    WheelDown = 11
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _MouseButton_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _MouseButton_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+
+_MouseButton_to_string_lookup = {
+    MouseButton.Left: "Left",
+    MouseButton.Right: "Right",
+    MouseButton.Middle: "Middle",
+    MouseButton.Forward: "Forward",
+    MouseButton.Back: "Back",
+    MouseButton.WheelUp: "Wheel Up",
+    MouseButton.WheelDown: "Wheel Down",
+}
+
+
+_MouseButton_to_enum_lookup = {
+    "Left": MouseButton.Left,
+    "Right": MouseButton.Right,
+    "Middle": MouseButton.Middle,
+    "Forward": MouseButton.Forward,
+    "Back": MouseButton.Back,
+    "Wheel Up": MouseButton.WheelUp,
+    "Wheel Down": MouseButton.WheelDown,
 }
 
 

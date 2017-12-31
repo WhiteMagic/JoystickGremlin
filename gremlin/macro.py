@@ -536,6 +536,71 @@ class JoystickAction(AbstractAction):
         el.joystick_event.emit(event)
 
 
+class KeyAction(AbstractAction):
+
+    """Key to press or release by a macro."""
+
+    def __init__(self, key, is_pressed):
+        """Creates a new KeyAction object for use in a macro.
+
+        :param key the key to use in the action
+        :param is_pressed True if the key should be pressed, False otherwise
+        """
+        if not isinstance(key, Key):
+            raise gremlin.error.KeyboardError("Invalid Key instance provided")
+        self.key = key
+        self.is_pressed = is_pressed
+
+    def __call__(self):
+        if self.is_pressed:
+            _send_key_down(self.key)
+        else:
+            _send_key_up(self.key)
+
+
+class MouseAction(AbstractAction):
+
+    """Mouse button action."""
+
+    def __init__(self, button, is_pressed):
+        """Creates a new MouseAction object for use in a macro.
+
+        :param button the button to use in the action
+        :param is_pressed True if the button should be pressed, False otherwise
+        """
+        if not isinstance(button, gremlin.common.MouseButton):
+            raise gremlin.error.MouseError("Invalid mouse button provided")
+
+        self.button = button
+        self.is_pressed = is_pressed
+
+    def __call__(self):
+        if self.button == gremlin.common.MouseButton.WheelDown:
+            gremlin.sendinput.mouse_wheel(1)
+        elif self.button == gremlin.common.MouseButton.WheelUp:
+            gremlin.sendinput.mouse_wheel(-1)
+        else:
+            if self.is_pressed:
+                gremlin.sendinput.mouse_press(self.button)
+            else:
+                gremlin.sendinput.mouse_release(self.button)
+
+
+class PauseAction(AbstractAction):
+
+    """Represents the pause in a macro between pressed."""
+
+    def __init__(self, duration):
+        """Creates a new Pause object for use in a macro.
+
+        :param duration the duration in seconds of the pause
+        """
+        self.duration = duration
+
+    def __call__(self):
+        time.sleep(self.duration)
+
+
 class VJoyAction(AbstractAction):
 
     """VJoy input action for a macro."""
@@ -561,46 +626,6 @@ class VJoyAction(AbstractAction):
             vjoy.button(self.input_id).is_pressed = self.value
         elif self.input_type == gremlin.common.InputType.JoystickHat:
             vjoy.hat(self.input_id).direction = self.value
-
-
-class KeyAction(AbstractAction):
-
-    """Key to press or release by a macro."""
-
-    def __init__(self, key, is_pressed):
-        """Creates a new KeyAction object for use in a macro.
-
-        :param key the key to use in the action
-        :param is_pressed True if the key should be pressed, False
-            otherwise
-        """
-        if not isinstance(key, Key):
-            raise gremlin.error.KeyboardError(
-                "Invalid Key instance provided"
-            )
-        self.key = key
-        self.is_pressed = is_pressed
-
-    def __call__(self):
-        if self.is_pressed:
-            _send_key_down(self.key)
-        else:
-            _send_key_up(self.key)
-
-
-class PauseAction(AbstractAction):
-
-    """Represents the pause in a macro between pressed."""
-
-    def __init__(self, duration):
-        """Creates a new Pause object for use in a macro.
-
-        :param duration the duration in seconds of the pause
-        """
-        self.duration = duration
-
-    def __call__(self):
-        time.sleep(self.duration)
 
 
 class Key:
