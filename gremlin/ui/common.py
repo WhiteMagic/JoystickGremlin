@@ -1108,6 +1108,36 @@ class InputListenerWidget(QtWidgets.QFrame):
                 gremlin.common.InputType.JoystickButton in self._event_types or \
                 gremlin.common.InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.connect(self._joy_event_cb)
+        elif gremlin.common.InputType.Mouse in self._event_types:
+            event_listener.mouse_event.connect(self._mouse_event_cb)
+
+    def _joy_event_cb(self, event):
+        """Passes the pressed joystick event to the provided callback
+        and closes the overlay.
+
+        This only passes on joystick button presses.
+
+        :param event the keypress event to be processed
+        """
+        # Ensure input highlighting is turned off, even if input request
+        # dialogs are spawned in quick succession
+        gremlin.shared_state.set_suspend_input_highlighting(True)
+
+        # Only react to events we're interested in
+        if event.event_type not in self._event_types:
+            return
+        if self.filter_func is not None and not self.filter_func(event):
+            return
+
+        # Ensure the event corresponds to a significant enough change in input
+        process_event = gremlin.input_devices.JoystickInputSignificant() \
+            .should_process(event)
+        if event.event_type == gremlin.common.InputType.JoystickButton:
+            process_event &= not event.is_pressed
+
+        if process_event:
+            self.callback(event)
+            self.close()
 
     def _kb_event_cb(self, event):
         """Passes the pressed key to the provided callback and closes
@@ -1146,33 +1176,9 @@ class InputListenerWidget(QtWidgets.QFrame):
                 self.callback(self._multi_key_storage)
                 self.close()
 
-    def _joy_event_cb(self, event):
-        """Passes the pressed joystick event to the provided callback
-        and closes the overlay.
-
-        This only passes on joystick button presses.
-
-        :param event the keypress event to be processed
-        """
-        # Ensure input highlighting is turned off, even if input request
-        # dialogs are spawned in quick succession
-        gremlin.shared_state.set_suspend_input_highlighting(True)
-
-        # Only react to events we're interested in
-        if event.event_type not in self._event_types:
-            return
-        if self.filter_func is not None and not self.filter_func(event):
-            return
-
-        # Ensure the event corresponds to a significant enough change in input
-        process_event = gremlin.input_devices.JoystickInputSignificant() \
-            .should_process(event)
-        if event.event_type == gremlin.common.InputType.JoystickButton:
-            process_event &= not event.is_pressed
-
-        if process_event:
-            self.callback(event)
-            self.close()
+    def _mouse_event_cb(self, event):
+        self.callback(event)
+        self.close()
 
     def closeEvent(self, evt):
         """Closes the overlay window."""
@@ -1182,6 +1188,8 @@ class InputListenerWidget(QtWidgets.QFrame):
                 gremlin.common.InputType.JoystickButton in self._event_types or \
                 gremlin.common.InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.disconnect(self._joy_event_cb)
+        elif gremlin.common.InputType.Mouse in self._event_types:
+            event_listener.mouse_event.disconnect(self._mouse_event_cb)
 
         # Delay unsuspending input highlighting to allow an axis that's being
         # moved to return to its center without triggering an input highlight
