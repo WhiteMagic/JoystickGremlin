@@ -43,9 +43,15 @@ class ProfileError(GremlinError):
 
 class KeyboardError(GremlinError):
 
-    """Exception raised when an error occurs in the keyboard related
-    classes.
-    """
+    """Exception raised when an error occurs related to keyboard inputs."""
+
+    def __init__(self, value):
+        super().__init__(value)
+
+
+class MouseError(GremlinError):
+
+    """Exception raised when an error occurs related to mouse inputs."""
 
     def __init__(self, value):
         super().__init__(value)
