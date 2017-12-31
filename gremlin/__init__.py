@@ -30,13 +30,14 @@ import gremlin.hid_guardian
 import gremlin.hints
 import gremlin.input_devices
 import gremlin.joystick_handling
-import gremlin.keyboard_hook
 import gremlin.macro
 import gremlin.plugin_manager
 import gremlin.process_monitor
 import gremlin.profile
 import gremlin.repeater
 import gremlin.shared_state
+import gremlin.sendinput
 import gremlin.spline
 import gremlin.tts
 import gremlin.util
+import gremlin.windows_event_hook

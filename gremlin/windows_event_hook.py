@@ -71,6 +71,28 @@ class KeyEvent:
         return self._is_injected
 
 
+class MouseEvent:
+
+    """Structure containing information about a mouse event."""
+
+    def __init__(self, button_id, is_pressed, is_injected):
+        self._button_id = button_id
+        self._is_pressed = is_pressed
+        self._is_injected = is_injected
+
+    @property
+    def button_id(self):
+        return self._button_id
+
+    @property
+    def is_pressed(self):
+        return self._is_pressed
+
+    @property
+    def is_injected(self):
+        return self._is_injected
+
+
 @gremlin.common.SingletonDecorator
 class KeyboardHook:
 
@@ -181,6 +203,151 @@ class KeyboardHook:
         # Ensure proper cleanup on termination
         atexit.register(
                 ctypes.windll.user32.UnhookWindowsHookEx, self.hook_id
+        )
+
+        while self._running:
+            ctypes.windll.user32.PeekMessageW(None, 0, 0, 0, 1)
+            time.sleep(0.001)
+
+
+@gremlin.common.SingletonDecorator
+class MousedHook:
+
+    """Hooks into the event stream and grabs mouse related events
+    and passes them on to registered callback functions.
+
+    The following pages are references to the various functions used:
+    [1] SetWindowsHookEx
+        https://msdn.microsoft.com/en-us/library/windows/desktop/ms644990(v=vs.85).aspx
+    [2] LowLevelMouseProc
+        https://msdn.microsoft.com/de-de/library/windows/desktop/ms644986(v=vs.85).aspx
+    [3] KBDLLHOOKSTRUCT
+        https://msdn.microsoft.com/en-us/library/windows/desktop/ms644967(v=vs.85).aspx
+    """
+
+    WM_MOUSEMOVE = 0x0200
+    WM_LBUTTONDOWN = 0x0201
+    WM_LBUTTONUP = 0x0202
+    WM_RBUTTONDOWN = 0x0204
+    WM_RBUTTONUP = 0x0205
+    WM_MBUTTONDOWN = 0x0207
+    WM_MBUTTONUP = 0x0208
+    WM_MOUSEWHEEL = 0x020A
+    WM_XBUTTONDOWN = 0x020B
+    WM_XBUTTONUP = 0x020C
+    WM_MOUSEHWHEEL = 0x020E
+
+    def __init__(self):
+        self._hook_id = None
+        self._callbacks = []
+        self._running = False
+        self._listen_thread = threading.Thread(target=self._listen)
+
+    def register(self, callback):
+        """Registers a new message callback.
+
+        :param callback the new callback to register
+        """
+        self._callbacks.append(callback)
+
+    def start(self):
+        """Starts the hook if it is not yet running."""
+        if self._running:
+            return
+        self._running = True
+        self._listen_thread.start()
+
+    def stop(self):
+        """Stops the hook from running."""
+        if self._running:
+            self._running = False
+            self._listen_thread.join()
+            # Recreate thread so we can launch it again
+            self._listen_thread = threading.Thread(target=self._listen)
+
+    def _process_event(self, n_code, w_param, l_param):
+        """Process a single event.
+
+        :param n_code code detailing how to process the event
+        :param w_param message type identifier
+        :param l_param message content
+        """
+        # Only handle events we're supposed to, see
+        # https://msdn.microsoft.com/en-us/library/windows/desktop/ms644985(v=vs.85).aspx
+        if n_code == 0 and w_param != self.WM_MOUSEMOVE:
+            button_id = None
+            is_pressed = True
+            if w_param in [self.WM_LBUTTONDOWN, self.WM_LBUTTONUP]:
+                button_id = gremlin.common.MouseButton.Left
+                is_pressed = w_param == self.WM_LBUTTONDOWN
+            elif w_param in [self.WM_RBUTTONDOWN, self.WM_RBUTTONUP]:
+                button_id = gremlin.common.MouseButton.Right
+                is_pressed = w_param == self.WM_RBUTTONDOWN
+            elif w_param in [self.WM_MBUTTONDOWN, self.WM_MBUTTONUP]:
+                button_id = gremlin.common.MouseButton.Middle
+                is_pressed = w_param == self.WM_MBUTTONDOWN
+            elif w_param in [self.WM_XBUTTONDOWN, self.WM_XBUTTONUP]:
+                if l_param[2] & (0x0001 << 16):
+                    button_id = gremlin.common.MouseButton.Back
+                elif l_param[2] & (0x0002 << 16):
+                    button_id = gremlin.common.MouseButton.Forward
+                is_pressed = w_param == self.WM_XBUTTONDOWN
+            elif w_param == self.WM_MOUSEWHEEL:
+                if (l_param[2] >> 16) == 120:
+                    button_id = gremlin.common.MouseButton.WheelUp
+                elif (l_param[2] >> 16) == 65416:
+                    button_id = gremlin.common.MouseButton.WheelDown
+            else:
+                print(w_param)
+
+            # print(button_id)
+            evt = MouseEvent(button_id, is_pressed, False)
+            for cb in self._callbacks:
+                cb(evt)
+
+            # Extract data from the message
+            # print(n_code, w_param)
+            # if l_param[2] is not None:
+            #     # print(l_param[0], l_param[1], bin(l_param[2]))
+            #     print(w_param, l_param[2] & (0x0001 << 16))
+            #     #
+            #     #  1 0000 0000 0000 0000
+            #     # 10 0000 0000 0000 0000
+
+        # Pass the event on to the next callback in the chain
+        return ctypes.windll.user32.CallNextHookEx(
+                self.hook_id,
+                n_code,
+                w_param,
+                l_param
+        )
+
+    def _listen(self):
+        """Configures the hook and starts listening."""
+        # Hook callback function factory
+        hook_factory = ctypes.CFUNCTYPE(
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_void_p)
+        )
+        mouse_hook = hook_factory(self._process_event)
+
+        # Hook our callback into the system
+        ctypes.windll.kernel32.GetModuleHandleW.restype = \
+            ctypes.wintypes.HMODULE
+        ctypes.windll.kernel32.GetModuleHandleW.argtypes = \
+            [ctypes.wintypes.LPCWSTR]
+        self.hook_id = ctypes.windll.user32.SetWindowsHookExA(
+                0x00E,
+                mouse_hook,
+                ctypes.windll.kernel32.GetModuleHandleW(None),
+                0
+        )
+
+        # Ensure proper cleanup on termination
+        atexit.register(
+            ctypes.windll.user32.UnhookWindowsHookEx, self.hook_id
         )
 
         while self._running:
