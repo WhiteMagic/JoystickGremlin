@@ -1092,6 +1092,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         )
 
         # Input type recording buttons
+        cfg = gremlin.config.Configuration()
         self.record_axis = self._create_toolbutton(
             [
                 "{}/record_axis".format(MacroWidget.gfx_path),
@@ -1099,32 +1100,39 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             ],
             "Record joystick axis events",
             True,
-            False
+            cfg.macro_record_axis
         )
+        self.record_axis.clicked.connect(self._update_record_settings)
         self.record_button = self._create_toolbutton(
             [
                 "{}/record_button".format(MacroWidget.gfx_path),
                 "{}/record_button_on".format(MacroWidget.gfx_path)
             ],
             "Record joystick button events",
-            True
+            True,
+            cfg.macro_record_button
         )
+        self.record_button.clicked.connect(self._update_record_settings)
         self.record_hat = self._create_toolbutton(
             [
                 "{}/record_hat".format(MacroWidget.gfx_path),
                 "{}/record_hat_on".format(MacroWidget.gfx_path)
             ],
             "Record joystick hat events",
-            True
+            True,
+            cfg.macro_record_hat
         )
+        self.record_hat.clicked.connect(self._update_record_settings)
         self.record_key = self._create_toolbutton(
             [
                 "{}/record_key".format(MacroWidget.gfx_path),
                 "{}/record_key_on".format(MacroWidget.gfx_path)
             ],
             "Record keyboard events",
-            True
+            True,
+            cfg.macro_record_keyboard
         )
+        self.record_key.clicked.connect(self._update_record_settings)
         self.record_mouse = self._create_toolbutton(
             [
                 "{}/record_mouse".format(MacroWidget.gfx_path),
@@ -1132,8 +1140,9 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             ],
             "Record mouse events",
             True,
-            False
+            cfg.macro_record_mouse
         )
+        self.record_mouse.clicked.connect(self._update_record_settings)
 
         # Toolbar
         self.toolbar = QtWidgets.QToolBar()
@@ -1204,6 +1213,15 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         old_item.widget().hide()
         old_item.widget().deleteLater()
         self.editor_settings_layout.insertWidget(0, self.editor_widget)
+
+    def _update_record_settings(self):
+        """Store user preferences of inputs to record."""
+        cfg = gremlin.config.Configuration()
+        cfg.macro_record_axis = self.record_axis.isChecked()
+        cfg.macro_record_button = self.record_button.isChecked()
+        cfg.macro_record_hat = self.record_hat.isChecked()
+        cfg.macro_record_keyboard = self.record_key.isChecked()
+        cfg.macro_record_mouse = self.record_mouse.isChecked()
 
     def _refresh_editor_ui(self):
         """Forcibly refresh the editor widget content."""

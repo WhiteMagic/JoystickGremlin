@@ -362,6 +362,51 @@ class Configuration:
         self.save()
 
     @property
+    def macro_record_axis(self):
+        return self._data.get("macro_record_axis", False)
+
+    @macro_record_axis.setter
+    def macro_record_axis(self, value):
+        self._data["macro_record_axis"] = bool(value)
+        self.save()
+
+    @property
+    def macro_record_button(self):
+        return self._data.get("macro_record_button", True)
+
+    @macro_record_button.setter
+    def macro_record_button(self, value):
+        self._data["macro_record_button"] = bool(value)
+        self.save()
+
+    @property
+    def macro_record_hat(self):
+        return self._data.get("macro_record_hat", True)
+
+    @macro_record_hat.setter
+    def macro_record_hat(self, value):
+        self._data["macro_record_hat"] = bool(value)
+        self.save()
+
+    @property
+    def macro_record_keyboard(self):
+        return self._data.get("macro_record_keyboard", True)
+
+    @macro_record_keyboard.setter
+    def macro_record_keyboard(self, value):
+        self._data["macro_record_keyboard"] = bool(value)
+        self.save()
+
+    @property
+    def macro_record_mouse(self):
+        return self._data.get("macro_record_mouse", False)
+
+    @macro_record_mouse.setter
+    def macro_record_mouse(self, value):
+        self._data["macro_record_mouse"] = bool(value)
+        self.save()
+
+    @property
     def window_size(self):
         """Returns the size of the main Gremlin window.
 
