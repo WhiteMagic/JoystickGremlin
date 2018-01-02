@@ -664,8 +664,22 @@ class ModeManagerUi(common.BaseDialogUi):
         self.mode_layout = QtWidgets.QGridLayout()
 
         self.main_layout.addLayout(self.mode_layout)
+        self.main_layout.addStretch()
         self.add_button = QtWidgets.QPushButton("Add Mode")
         self.add_button.clicked.connect(self._add_mode_cb)
+
+        label = QtWidgets.QLabel(
+            "Modes are by default self contained configurations. Specifying "
+            "a parent for a mode causes the the mode \"inherits\" all actions "
+            "defined in the parent, unless the mode configures its own actions "
+            "for specific inputs."
+        )
+        label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+        label.setWordWrap(True)
+        label.setFrameShape(QtWidgets.QFrame.Box)
+        label.setMargin(10)
+        self.main_layout.addWidget(label)
+
         self.main_layout.addWidget(self.add_button)
 
         self._populate_mode_layout()
@@ -689,8 +703,12 @@ class ModeManagerUi(common.BaseDialogUi):
                         continue
                     mode_list[mode.name] = mode.inherit
 
+        # Add header information
+        self.mode_layout.addWidget(QtWidgets.QLabel("<b>Name</b>"), 0, 0)
+        self.mode_layout.addWidget(QtWidgets.QLabel("<b>Parent</b>"), 0, 1)
+
         # Create UI element for each mode
-        row = 0
+        row = 1
         for mode, inherit in sorted(mode_list.items()):
             self.mode_layout.addWidget(QtWidgets.QLabel(mode), row, 0)
             self.mode_dropdowns[mode] = QtWidgets.QComboBox()
