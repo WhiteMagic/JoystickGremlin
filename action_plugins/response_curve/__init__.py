@@ -188,6 +188,13 @@ class AbstractCurveModel(QtCore.QObject):
 
         self.symmetry_mode = SymmetryMode.NoSymmetry
 
+    def invert(self):
+        for cp in self._control_points:
+            cp.center.y = -cp.center.y
+            for handle in cp.handles:
+                handle.y = -handle.y
+        self.content_modified.emit()
+
     def model_updated(self):
         # If symmetry is enabled ensure that symmetry is preserved after
         # any changes
@@ -1056,16 +1063,22 @@ class ResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         )
 
         # Curve manipulation options
-        self.curve_symmetry = QtWidgets.QCheckBox("Diagonal Symmetry")
-        self.curve_symmetry.stateChanged.connect(self._curve_symmetry_cb)
-
         self.curve_settings_layout = QtWidgets.QHBoxLayout()
         self.curve_settings_layout.addWidget(QtWidgets.QLabel("Curve Type:"))
         self.curve_settings_layout.addWidget(self.curve_type_selection)
         self.curve_settings_layout.addStretch(1)
+
+        # Curve inversion
+        self.curve_inversion = QtWidgets.QPushButton("Invert")
+        self.curve_inversion.clicked.connect(self._invert_curve)
+        self.curve_settings_layout.addWidget(self.curve_inversion)
+
+        # Curve symmetry
+        self.curve_symmetry = QtWidgets.QCheckBox("Diagonal Symmetry")
+        self.curve_symmetry.stateChanged.connect(self._curve_symmetry_cb)
         self.curve_settings_layout.addWidget(self.curve_symmetry)
 
-        # Check if we need to add a symmetry mode for handles
+        # Handle symmetry
         self.handle_symmetry = None
         if self.action_data.mapping_type == "cubic-bezier-spline":
             self.handle_symmetry = QtWidgets.QCheckBox("Force smooth curves")
@@ -1097,7 +1110,6 @@ class ResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.deadzone = DeadzoneWidget(self.action_data)
 
         # Add all widgets to the layout
-        # self.main_layout.addWidget(self.curve_type_selection)
         self.main_layout.addLayout(self.curve_settings_layout)
         self.main_layout.addLayout(self.curve_view_layout)
         self.main_layout.addWidget(self.control_point_editor)
@@ -1202,6 +1214,9 @@ class ResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.curve_view_layout.addStretch()
         self.curve_view_layout.addWidget(self.curve_view)
         self.curve_view_layout.addStretch()
+
+    def _invert_curve(self):
+        self.curve_model.invert()
 
 
 class ResponseCurveFunctor(AbstractFunctor):
