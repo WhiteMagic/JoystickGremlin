@@ -19,6 +19,7 @@
 import enum
 import logging
 import os
+import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
@@ -31,7 +32,6 @@ import gremlin.ui.input_item
 g_scene_size = 250.0
 
 
-
 class SymmetryMode(enum.Enum):
 
     """Symmetry modes for response curves."""
@@ -40,19 +40,161 @@ class SymmetryMode(enum.Enum):
     Diagonal = 2
 
 
-class AbstractCurveModel:
+class Point2D:
+
+    """Represents a 2D point with support for addition and subtraction."""
+
+    def __init__(self, x=0.0, y=0.0):
+        """Creates a new instance.
+
+        :param x the x coordinate
+        :param y the y coordinate
+        """
+        self.x = x
+        self.y = y
+
+    def __add__(self, other):
+        return Point2D(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        return Point2D(self.x - other.x, self.y - other.y)
+
+    def __str__(self):
+        return "[{:.2f}, {:.2f}]".format(self.x, self.y)
+
+
+class ControlPoint:
+
+    """Represents a single control point in a response curve.
+
+    Each control point has at least a center point but can possibly have
+    multiple handles which are used to control the shape of a curve segment.
+    Each instance furthermore has a unique identifier used to distinguish
+    and track different instances.
+    """
+
+    # Identifier of the next ControlPoint instance being created
+    next_id = 0
+
+    def __init__(self, model, center, handles=()):
+        """Creates a new instance.
+
+        :param model the model the control point is associated with
+        :param center the center point of the control point
+        :param handles optional list of handles to control curvature
+        """
+        self._model = model
+        self._center = center
+        self._handles = [hdl for hdl in handles]
+        self._identifier = ControlPoint.next_id
+        self._last_modified = time.time()
+        ControlPoint.next_id += 1
+
+    @property
+    def last_modified(self):
+        return self._last_modified
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def center(self):
+        """Returns the center point of the control point.
+
+        :return center point of the control point
+        """
+        return self._center
+
+    def set_center(self, point, emit_model_update=True):
+        """Sets the center of the control point, if it is a valid point.
+
+        This method uses the provided model to check if the provided location
+        is valid.
+
+        :param point the new center position of the control point
+        """
+        if self._model.is_valid_point(point, self.identifier):
+            # Update handle locations if any are present
+            delta = self.center - point
+            for handle in self.handles:
+                handle.x -= delta.x
+                handle.y -= delta.y
+
+            # Update center position
+            self._center = point
+
+            self._last_modified = time.time()
+            if emit_model_update:
+                self._model.model_updated()
+
+    @property
+    def identifier(self):
+        return self._identifier
+
+    @property
+    def handles(self):
+        return self._handles
+
+    def set_handle(self, index, point):
+        """Sets the location of the specified handle.
+
+        :param index the id of the handle to modify
+        :param point the new location of the handle
+        """
+        if len(self.handles) > index:
+            self._last_modified = time.time()
+            self.handles[index] = point
+            if len(self.handles) == 2 and \
+                    isinstance(self._model, CubicBezierSplineModel) and \
+                    self._model.handle_symmetry_enabled:
+                alt_point = self._center + (self._center - point)
+                alt_index = 1 if index == 0 else 0
+                self.handles[alt_index] = alt_point
+            self._model.model_updated()
+
+            self._last_modified = time.time()
+            self._model.model_updated()
+
+    def __eq__(self, other):
+        """Compares two control points for identity.
+
+        The unique identifier is used for the comparison.
+
+        :param other the control point to compare with for identity
+        :return True of the control points are the same, False otherwise
+        """
+        return self.identifier == other.identifier
+
+
+class AbstractCurveModel(QtCore.QObject):
 
     """Abstract base class for all  curve models."""
 
-    def __init__(self, profile_data):
+    # Signal emitted when model data changes
+    content_modified = QtCore.pyqtSignal()
+    # Signal emitted when points are added or removed
+    content_added = QtCore.pyqtSignal()
+
+    def __init__(self, profile_data, parent=None):
         """Initializes an empty model.
         
         :param profile_data the data of this response curve
         """
+        super().__init__(parent)
         self._control_points = []
         self._profile_data = profile_data
         self._init_from_profile_data()
+
         self.symmetry_mode = SymmetryMode.NoSymmetry
+
+    def model_updated(self):
+        # If symmetry is enabled ensure that symmetry is preserved after
+        # any changes
+        if self.symmetry_mode == SymmetryMode.Diagonal:
+            self._enforce_symmetry()
+        self.save_to_profile()
+        self.content_modified.emit()
 
     def get_curve_function(self):
         """Returns the curve function corresponding to the model.
@@ -77,10 +219,15 @@ class AbstractCurveModel:
         :param handles list of potential handles
         :return the newly created control point
         """
-        cp = self._create_control_point(point, handles)
-        self._control_points.append(cp)
-        self.synchronize_data()
-        return cp
+        self._control_points.append(self._create_control_point(point, handles))
+
+        if self.symmetry_mode == SymmetryMode.Diagonal:
+            self._control_points.append(self._create_control_point(
+                Point2D(-point.x, -point.y),
+                handles
+            ))
+        self.save_to_profile()
+        self.content_added.emit()
 
     def _create_control_point(self, point, handles=()):
         """Subclass specific implementation to add new control points.
@@ -101,7 +248,8 @@ class AbstractCurveModel:
         idx = self._control_points.index(control_point)
         if idx:
             del self._control_points[idx]
-            self.synchronize_data()
+            self.save_to_profile()
+            self.content_added.emit()
 
     def is_valid_point(self, point, identifier=None):
         """Checks is a point is valid in the model.
@@ -120,21 +268,48 @@ class AbstractCurveModel:
             "AbstractCurveModel::_init_from_profile_data not implemented"
         )
 
-    def synchronize_data(self):
+    def save_to_profile(self):
         """Ensures that the control point data is properly recorded in
         the profile data."""
         raise gremlin.error.MissingImplementationError(
             "AbstractCurveModel::_update_profile_data not implemented"
         )
 
+    def _enforce_symmetry(self):
+        count = len(self._control_points)
+
+        ordered_cp = sorted(self._control_points, key=lambda x: x.center.x)
+        for i in range(int(count / 2.0)):
+            cp1 = ordered_cp[i]
+            cp2 = ordered_cp[-i - 1]
+            if cp1.last_modified < cp2.last_modified:
+                cp2, cp1 = cp1, cp2
+
+            # cp1 is now the reference which is used to specify the values
+            # of cp2
+            cp2.set_center(Point2D(-cp1.center.x, -cp1.center.y), False)
+
+            # Update handles
+            if len(cp1.handles) == 2:
+                cp2.handles[0] = cp2.center - (cp1.handles[1] - cp1.center)
+                cp2.handles[1] = cp2.center - (cp1.handles[0] - cp1.center)
+            elif len(cp1.handles) == 1:
+                cp2.handles[0] = cp2.center - (cp1.handles[0] - cp1.center)
+
+        if count % 2 != 0:
+            ordered_cp[int(count / 2)].set_center(Point2D(0, 0), False)
+
     def set_symmetry_mode(self, mode):
         """Sets the symmetry mode of the curve model.
 
         :param mode the symmetry mode to use
         """
-        raise gremlin.error.MissingImplementationError(
-            "AbstractCurveModel::set_symmetry_mode not implemented"
-        )
+        if len(self._control_points) == 2:
+            self.add_control_point(Point2D(0.0, 0.0))
+
+        self._enforce_symmetry()
+        self.symmetry_mode = mode
+        self.content_added.emit()
 
 
 class CubicSplineModel(AbstractCurveModel):
@@ -179,6 +354,7 @@ class CubicSplineModel(AbstractCurveModel):
             if other.identifier == identifier:
                 continue
             elif other.center.x == point.x:
+                print(other.identifier, point.identifier)
                 is_valid = False
         return is_valid
 
@@ -189,20 +365,13 @@ class CubicSplineModel(AbstractCurveModel):
                 ControlPoint(self, Point2D(coord[0], coord[1]))
             )
 
-    def synchronize_data(self):
+    def save_to_profile(self):
         """Ensures that the control point data is properly recorded in
         the profile data."""
         self._profile_data.mapping_type = "cubic-spline"
         self._profile_data.control_points = []
         for cp in self._control_points:
             self._profile_data.control_points.append((cp.center.x, cp.center.y))
-
-    def set_symmetry_mode(self, mode):
-        """Sets the symmetry mode of the curve model.
-
-        :param mode the symmetry mode to use
-        """
-        pass
 
 
 class CubicBezierSplineModel(AbstractCurveModel):
@@ -212,7 +381,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
     def __init__(self, profile_data):
         """Creates a new model."""
         super().__init__(profile_data)
-        self._is_handle_symmetry_enabled = False
+        self.handle_symmetry_enabled = False
 
     def get_curve_function(self):
         """Returns the curve function corresponding to the model.
@@ -244,11 +413,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
 
         :param is_enabled whether or not the handle symmetry should be enabled
         """
-        self._is_handle_symmetry_enabled = is_enabled
-
-    @property
-    def handle_symmetry_enabled(self):
-        return self._is_handle_symmetry_enabled
+        self.handle_symmetry_enabled = is_enabled
 
     def _create_control_point(self, point, handles=()):
         """Adds a new control point to the model.
@@ -319,7 +484,7 @@ class CubicBezierSplineModel(AbstractCurveModel):
             )
         )
 
-    def synchronize_data(self):
+    def save_to_profile(self):
         """Ensure that UI and profile data are in sync."""
         control_points = sorted(
             self._control_points,
@@ -351,94 +516,6 @@ class CubicBezierSplineModel(AbstractCurveModel):
                 self._profile_data.control_points.append(
                     [cp.handles[1].x, cp.handles[1].y]
                 )
-
-    def set_symmetry_mode(self, mode):
-        """Sets the symmetry mode of the curve model.
-
-        :param mode the symmetry mode to use
-        """
-        pass
-
-
-class ControlPoint:
-
-    """Represents a single control point in a response curve.
-
-    Each control point has at least a center point but can possibly have
-    multiple handles which are used to control the shape of a curve segment.
-    Each instance furthermore has a unique identifier used to distinguish
-    and track different instances.
-    """
-
-    # Identifier of the next ControlPoint instance being created
-    next_id = 0
-
-    def __init__(self, model, center, handles=()):
-        """Creates a new instance.
-
-        :param model the model the control point is associated with
-        :param center the center point of the control point
-        :param handles optional list of handles to control curvature
-        """
-        self._model = model
-        self._center = center
-        self.handles = [hdl for hdl in handles]
-        self.identifier = ControlPoint.next_id
-        ControlPoint.next_id += 1
-
-    @property
-    def model(self):
-        return self._model
-
-    @property
-    def center(self):
-        """Returns the center point of the control point.
-
-        :return center point of the control point
-        """
-        return self._center
-
-    def set_center(self, point):
-        """Sets the center of the control point, if it is a valid point.
-
-        This method uses the provided model to check if the provided location
-        is valid.
-
-        :param point the new center position of the control point
-        """
-        if self._model.is_valid_point(point, self.identifier):
-            # If there are handles update their relative positions
-            delta = self.center - point
-            for handle in self.handles:
-                handle.x -= delta.x
-                handle.y -= delta.y
-            # Update the actual center
-            self._center = point
-
-    def set_handle(self, index, point):
-        """Sets the location of the specified handle.
-
-        :param index the id of the handle to modify
-        :param point the new location of the handle
-        """
-        if len(self.handles) > index:
-            self.handles[index] = point
-            if len(self.handles) == 2 and \
-                    isinstance(self._model, CubicBezierSplineModel) and \
-                    self._model.handle_symmetry_enabled:
-                alt_point = self._center + (self._center - point)
-                alt_index = 1 if index == 0 else 0
-                self.handles[alt_index] = alt_point
-
-    def __eq__(self, other):
-        """Compares two control points for identity.
-
-        The unique identifier is used for the comparison.
-
-        :param other the control point to compare with for identity
-        :return True of the control points are the same, False otherwise
-        """
-        return self.identifier == other.identifier
 
 
 class ControlPointGraphicsItem(QtWidgets.QGraphicsEllipseItem):
@@ -489,7 +566,7 @@ class ControlPointGraphicsItem(QtWidgets.QGraphicsEllipseItem):
                 self.grabMouse()
         else:
             self.setBrush(QtGui.QBrush(QtCore.Qt.gray))
-            if self.scene().mouseGrabberItem() == self:
+            if self.scene() and self.scene().mouseGrabberItem() == self:
                 self.ungrabMouse()
 
     def mouseReleaseEvent(self, evt):
@@ -498,6 +575,7 @@ class ControlPointGraphicsItem(QtWidgets.QGraphicsEllipseItem):
         :param evt the mouse even to process
         """
         self.ungrabMouse()
+        # self.control_point.model.model_updated()
 
     def mouseMoveEvent(self, evt):
         """Updates the position of the control point based on mouse
@@ -517,8 +595,6 @@ class ControlPointGraphicsItem(QtWidgets.QGraphicsEllipseItem):
             new_point.x = self.control_point.center.x
 
         self.control_point.set_center(new_point)
-        self.scene().redraw_scene()
-        self.scene().model.synchronize_data()
 
 
 class CurveHandleGraphicsItem(QtWidgets.QGraphicsRectItem):
@@ -555,6 +631,9 @@ class CurveHandleGraphicsItem(QtWidgets.QGraphicsRectItem):
 
         :param is_active flag indicating if an item is selected or not
         """
+        if self.scene() is None:
+            return
+
         if is_active:
             self.setBrush(QtGui.QBrush(QtCore.Qt.red))
             if self.scene().mouseGrabberItem() != self:
@@ -584,11 +663,9 @@ class CurveHandleGraphicsItem(QtWidgets.QGraphicsRectItem):
         )
 
         self.parent.control_point.set_handle(self.index, new_point)
-        self.parent.scene().redraw_scene()
-        self.scene().model.synchronize_data()
 
 
-class CurveScene(QtWidgets.QGraphicsScene):
+class CurveView(QtWidgets.QGraphicsScene):
 
     """Visualization of the entire curve editor UI element."""
 
@@ -601,6 +678,8 @@ class CurveScene(QtWidgets.QGraphicsScene):
         """
         super().__init__(parent)
         self.model = curve_model
+        self.model.content_modified.connect(self.redraw_scene)
+        self.model.content_added.connect(self._populate_from_model)
         self.point_editor = point_editor
 
         self.background_image = QtGui.QImage(
@@ -616,6 +695,14 @@ class CurveScene(QtWidgets.QGraphicsScene):
 
     def _populate_from_model(self):
         """Populates the UI based on content stored in the model."""
+        # Remove old curve path and update control points
+        for item in self.items():
+            if type(item) in [
+                ControlPointGraphicsItem,
+                CurveHandleGraphicsItem
+            ]:
+                self.removeItem(item)
+
         for cp in self.model.get_control_points():
             self.addItem(ControlPointGraphicsItem(cp))
         self.redraw_scene()
@@ -626,9 +713,8 @@ class CurveScene(QtWidgets.QGraphicsScene):
         :param point the center of the control point
         :param handles list of potential handles
         """
-        control_point = self.model.add_control_point(point, handles)
-        self.addItem(ControlPointGraphicsItem(control_point))
-        self.redraw_scene()
+        self.model.add_control_point(point, handles)
+        self._populate_from_model()
 
     def _editor_update(self, value):
         """Callback for changes in the point editor UI.
@@ -647,8 +733,8 @@ class CurveScene(QtWidgets.QGraphicsScene):
             if abs(self.current_item.control_point.center.x) == 1.0:
                 new_point.x = self.current_item.control_point.center.x
             self.current_item.control_point.set_center(new_point)
-            self.model.synchronize_data()
-            self.redraw_scene()
+            self.model.save_to_profile()
+            # self.redraw_scene()
 
     def _select_item(self, item):
         """Handles drawing of an item being selected.
@@ -730,13 +816,11 @@ class CurveScene(QtWidgets.QGraphicsScene):
             # Disallow removing edge points
             if abs(self.current_item.control_point.center.x) == 1.0:
                 return
+
             # Otherwise remove the currently active control point
             self.model.remove_control_point(self.current_item.control_point)
-            self.removeItem(self.current_item)
-            del self.current_item
+            self._populate_from_model()
             self.current_item = None
-
-            self.redraw_scene()
 
     def drawBackground(self, painter, rect):
         """Draws the grid background image.
@@ -750,33 +834,12 @@ class CurveScene(QtWidgets.QGraphicsScene):
         )
 
 
-class Point2D:
-
-    """Represents a 2D point with support for addition and subtraction."""
-
-    def __init__(self, x=0.0, y=0.0):
-        """Creates a new instance.
-
-        :param x the x coordinate
-        :param y the y coordinate
-        """
-        self.x = x
-        self.y = y
-
-    def __add__(self, other):
-        return Point2D(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other):
-        return Point2D(self.x - other.x, self.y - other.y)
-
-    def __str__(self):
-        return "[{:.2f}, {:.2f}]".format(self.x, self.y)
-
-
 class ControlPointEditorWidget(QtWidgets.QWidget):
 
     """Widgets allowing the control point coordinates to be changed
     via text fields."""
+
+    # TODO: how does this synchronize with the points / model?
 
     def __init__(self, parent=None):
         """Creates a new instance.
@@ -848,6 +911,7 @@ class DeadzoneWidget(QtWidgets.QWidget):
         self.left_upper.setMinimum(-1.0)
         self.left_upper.setMaximum(0.0)
         self.left_upper.setSingleStep(0.05)
+
         # Create spin boxes for the right slider
         self.right_lower = DynamicDoubleSpinBox()
         self.right_lower.setSingleStep(0.05)
@@ -965,7 +1029,7 @@ class DeadzoneWidget(QtWidgets.QWidget):
             widget.setUpperPosition(value * self._normalizer)
 
 
-class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
+class ResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     """Widget that allows configuring the response of an axis to
     user inputs."""
@@ -992,19 +1056,19 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         )
 
         # Curve manipulation options
-        # self.curve_symmetry = QtWidgets.QCheckBox("Symmetry")
-        # self.curve_symmetry.stateChanged.connect(self._curve_symmetry_cb)
+        self.curve_symmetry = QtWidgets.QCheckBox("Diagonal Symmetry")
+        self.curve_symmetry.stateChanged.connect(self._curve_symmetry_cb)
 
         self.curve_settings_layout = QtWidgets.QHBoxLayout()
         self.curve_settings_layout.addWidget(QtWidgets.QLabel("Curve Type:"))
         self.curve_settings_layout.addWidget(self.curve_type_selection)
         self.curve_settings_layout.addStretch(1)
-        # self.curve_settings_layout.addWidget(self.curve_symmetry)
+        self.curve_settings_layout.addWidget(self.curve_symmetry)
 
         # Check if we need to add a symmetry mode for handles
         self.handle_symmetry = None
         if self.action_data.mapping_type == "cubic-bezier-spline":
-            self.handle_symmetry = QtWidgets.QCheckBox("Handle symmetry")
+            self.handle_symmetry = QtWidgets.QCheckBox("Force smooth curves")
             self.handle_symmetry.stateChanged.connect(self._handle_symmetry_cb)
             self.curve_settings_layout.addWidget(self.handle_symmetry)
 
@@ -1018,7 +1082,7 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         else:
             raise gremlin.error.ProfileError("Invalid curve type")
         # Graphical curve editor
-        self.curve_scene = CurveScene(
+        self.curve_scene = CurveView(
             self.curve_model,
             self.control_point_editor
         )
@@ -1092,26 +1156,27 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
                 self.handle_symmetry = None
         elif self.action_data.mapping_type == "cubic-bezier-spline":
             if self.handle_symmetry is None:
-                self.handle_symmetry = QtWidgets.QCheckBox("Handle symmetry")
+                self.handle_symmetry = QtWidgets.QCheckBox("Force smooth curves")
                 self.handle_symmetry.stateChanged.connect(
                     self._handle_symmetry_cb
                 )
                 self.curve_settings_layout.addWidget(self.handle_symmetry)
 
         # Recreate the UI components
-        self.curve_scene = CurveScene(
+        self.curve_scene = CurveView(
             self.curve_model,
             self.control_point_editor
         )
         self.curve_view = QtWidgets.QGraphicsView(self.curve_scene)
         self._configure_response_curve_view()
 
-    # def _curve_symmetry_cb(self, state):
-    #     if state == QtCore.Qt.Checked:
-    #
-    #         self.curve_model.set_symmetry_mode(SymmetryMode.Diagonal)
-    #     else:
-    #         self.curve_model.set_symmetry_mode(SymmetryMode.NoSymmetry)
+    def _curve_symmetry_cb(self, state):
+        if state == QtCore.Qt.Checked:
+            self.curve_model.set_symmetry_mode(SymmetryMode.Diagonal)
+        else:
+            self.curve_model.set_symmetry_mode(SymmetryMode.NoSymmetry)
+
+        self.curve_scene.redraw_scene()
 
     def _handle_symmetry_cb(self, state):
         if not isinstance(self.curve_model, CubicBezierSplineModel):
@@ -1121,7 +1186,6 @@ class AxisResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
             return
 
         self.curve_model.set_handle_symmetry(state == QtCore.Qt.Checked)
-
 
     def _configure_response_curve_view(self):
         """Initializes the response curve view components."""
@@ -1177,7 +1241,7 @@ class ResponseCurve(AbstractAction):
     ]
 
     functor = ResponseCurveFunctor
-    widget = AxisResponseCurveWidget
+    widget = ResponseCurveWidget
 
     curve_name_map = {
         "Cubic Spline": "cubic-spline",
