@@ -16,6 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import subprocess
+import sys
+import winreg
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -73,6 +76,13 @@ class OptionsUi(common.BaseDialogUi):
         )
         self.start_minimized.clicked.connect(self._start_minimized)
         self.start_minimized.setChecked(self.config.start_minimized)
+
+        # Start on user login
+        self.start_with_windows = QtWidgets.QCheckBox(
+            "Start Joystick Gremlin with Windows"
+        )
+        self.start_with_windows.clicked.connect(self._start_windows)
+        self.start_with_windows.setChecked(self._start_windows_enabled())
 
         # Show message on mode change
         self.show_mode_change_message = QtWidgets.QCheckBox(
@@ -137,6 +147,7 @@ class OptionsUi(common.BaseDialogUi):
         self.general_layout.addWidget(self.highlight_input)
         self.general_layout.addWidget(self.close_to_systray)
         self.general_layout.addWidget(self.start_minimized)
+        self.general_layout.addWidget(self.start_with_windows)
         self.general_layout.addWidget(self.show_mode_change_message)
         self.general_layout.addLayout(self.default_action_layout)
         self.general_layout.addLayout(self.macro_axis_polling_layout)
@@ -322,6 +333,38 @@ class OptionsUi(common.BaseDialogUi):
         """
         self.config.start_minimized = clicked
         self.config.save()
+
+    def _start_windows(self, clicked):
+        """Set registry entry to launch Joystick Gremlin on login.
+
+        :param clicked True if launch should happen on login, False otherwise
+        """
+        if clicked:
+            path = os.path.abspath(sys.argv[0])
+            subprocess.run(
+                'reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run" /V "Joystick Gremlin" /t REG_SZ /F /D "{}"'.format(path)
+            )
+        else:
+            subprocess.run(
+                'reg delete "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run" /F /V "Joystick Gremlin"'
+            )
+
+    def _start_windows_enabled(self):
+        """Returns whether or not Gremlin should launch on login.
+
+        :return True if Gremlin launches on login, False otherwise
+        """
+        key_handle = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Run"
+            )
+        key_info = winreg.QueryInfoKey(key_handle)
+
+        for i in range(key_info[1]):
+            value_info = winreg.EnumValue(key_handle, i)
+            if value_info[0] == "Joystick Gremlin":
+                return True
+        return False
 
     def _highlight_input(self, clicked):
         """Stores preference for input highlighting.
