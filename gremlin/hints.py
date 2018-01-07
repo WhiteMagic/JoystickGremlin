@@ -19,10 +19,13 @@
 
 import csv
 
+from gremlin.util import resource_path
+
 # Stores the hints and allows Gremlin to grab the ones it needs for display
 hint = {}
 
-with open("doc/hints.csv") as csv_stream:
+
+with open(resource_path("doc/hints.csv")) as csv_stream:
     reader = csv.reader(csv_stream, delimiter=",", quotechar="\"")
     for row in reader:
         hint[row[0]] = row[1]

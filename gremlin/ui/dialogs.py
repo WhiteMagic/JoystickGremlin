@@ -348,6 +348,7 @@ class OptionsUi(common.BaseDialogUi):
             subprocess.run(
                 'reg delete "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run" /F /V "Joystick Gremlin"'
             )
+        self.activateWindow()
 
     def _start_windows_enabled(self):
         """Returns whether or not Gremlin should launch on login.
@@ -639,10 +640,12 @@ class AboutUi(common.BaseDialogUi):
         self.ui = ui_about.Ui_About()
         self.ui.setupUi(self)
 
-        self.ui.about.setHtml(open("about/about.html").read())
+        self.ui.about.setHtml(
+            open(gremlin.util.resource_path("about/about.html")).read()
+        )
 
         self.ui.jg_license.setHtml(
-            open("about/joystick_gremlin.html").read()
+            open(gremlin.util.resource_path("about/joystick_gremlin.html")).read()
         )
 
         license_list = [
@@ -658,7 +661,7 @@ class AboutUi(common.BaseDialogUi):
         ]
         third_party_licenses = ""
         for fname in license_list:
-            third_party_licenses += open(fname).read()
+            third_party_licenses += open(gremlin.util.resource_path(fname)).read()
         self.ui.third_party_licenses.setHtml(third_party_licenses)
 
 

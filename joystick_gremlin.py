@@ -32,7 +32,12 @@ import traceback
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 
-os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.realpath(sys.argv[0]))
+# Figure out the location of the code / executable and change the working
+# directory accordingly
+install_path = os.path.normcase(os.path.dirname(os.path.abspath(sys.argv[0])))
+os.chdir(install_path)
+
+os.environ["PYSDL2_DLL_PATH"] = install_path
 import sdl2.hints
 
 import gremlin.ui.axis_calibration
@@ -1171,6 +1176,8 @@ if __name__ == "__main__":
         action="store_true"
     )
     args = parser.parse_args()
+
+
 
     sys.path.insert(0, gremlin.util.userprofile_path())
     gremlin.util.setup_userprofile()
