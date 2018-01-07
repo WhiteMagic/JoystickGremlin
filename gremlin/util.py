@@ -173,7 +173,33 @@ def script_path():
 
     :return path to the scripts location
     """
-    return os.path.dirname(os.path.realpath(sys.argv[0]))
+    return os.path.normcase(
+        os.path.dirname(os.path.abspath(os.path.realpath(sys.argv[0])))
+    )
+
+
+def userprofile_path():
+    """Returns the path to the user's profile folder, %userprofile%."""
+    return os.path.normcase(os.path.abspath(os.path.join(
+        os.getenv("userprofile"),
+        "Joystick Gremlin")
+    ))
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, handling development and pyinstaller
+    based usage.
+
+    :param relative_path the relative path to the file of interest
+    :return properly normalized resource path
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = script_path()
+
+    return os.path.normcase(os.path.join(base_path, relative_path))
 
 
 def display_error(msg):
@@ -268,14 +294,6 @@ def hat_direction_to_tuple(value):
         "north-west": (-1, 1)
     }
     return lookup[value]
-
-
-def userprofile_path():
-    """Returns the path to the user's profile folder, %userprofile%."""
-    return os.path.abspath(os.path.join(
-        os.getenv("userprofile"),
-        "Joystick Gremlin")
-    )
 
 
 def setup_userprofile():
