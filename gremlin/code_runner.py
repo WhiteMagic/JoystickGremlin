@@ -202,6 +202,7 @@ class CodeRunner:
                 self.event_handler.process_event
             )
             evt_listener.keyboard_event.connect(kb.keyboard_event)
+            evt_listener.gremlin_active = True
 
             input_devices.periodic_registry.start()
             macro.MacroManager().start()
@@ -225,6 +226,7 @@ class CodeRunner:
             evt_lst.joystick_event.disconnect(self.event_handler.process_event)
             evt_lst.virtual_event.disconnect(self.event_handler.process_event)
             evt_lst.keyboard_event.disconnect(kb.keyboard_event)
+            evt_lst.gremlin_active = False
             self.event_handler.mode_changed.disconnect(
                 self._vjoy_curves.mode_changed
             )

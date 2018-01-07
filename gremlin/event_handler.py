@@ -176,6 +176,7 @@ class EventListener(QtCore.QObject):
         self._calibrations = {}
         self._running = True
         self._keyboard_state = {}
+        self.gremlin_active = False
 
         self._init_joysticks()
         self.keyboard_hook.start()
@@ -251,22 +252,25 @@ class EventListener(QtCore.QObject):
 
         :param event the keyboard event
         """
-        # Ignore events we created via the macro system
-        if not event.is_injected:
-            key_id = (event.scan_code, event.is_extended)
-            is_pressed = event.is_pressed
-            is_repeat = self._keyboard_state.get(key_id, False) and is_pressed
-            # Only emit an event if they key is pressed for the first
-            # time or released but not when it's being held down
-            if not is_repeat:
-                self._keyboard_state[key_id] = is_pressed
-                self.keyboard_event.emit(Event(
-                    event_type=common.InputType.Keyboard,
-                    hardware_id=0,
-                    windows_id=0,
-                    identifier=key_id,
-                    is_pressed=is_pressed,
-                ))
+        # Ignore injected keyboard events while Gremlin is active
+        if self.gremlin_active and event.is_injected:
+            return True
+
+        key_id = (event.scan_code, event.is_extended)
+        is_pressed = event.is_pressed
+        is_repeat = self._keyboard_state.get(key_id, False) and is_pressed
+        # Only emit an event if they key is pressed for the first
+        # time or released but not when it's being held down
+        if not is_repeat:
+            self._keyboard_state[key_id] = is_pressed
+            self.keyboard_event.emit(Event(
+                event_type=common.InputType.Keyboard,
+                hardware_id=0,
+                windows_id=0,
+                identifier=key_id,
+                is_pressed=is_pressed,
+            ))
+
         # Allow the windows event to propagate further
         return True
 
