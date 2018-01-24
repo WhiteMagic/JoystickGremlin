@@ -196,7 +196,9 @@ class ChainContainer(gremlin.base_classes.AbstractContainer):
     tag = "chain"
 
     input_types = [
+        gremlin.common.InputType.JoystickAxis,
         gremlin.common.InputType.JoystickButton,
+        gremlin.common.InputType.JoystickHat,
         gremlin.common.InputType.Keyboard
     ]
     interaction_types = [

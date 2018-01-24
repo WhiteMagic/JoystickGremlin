@@ -129,13 +129,17 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
 
     name = "Basic"
     tag = "basic"
-    functor = BasicContainerFunctor
-    widget = BasicContainerWidget
+
     input_types = [
+        gremlin.common.InputType.JoystickAxis,
         gremlin.common.InputType.JoystickButton,
+        gremlin.common.InputType.JoystickHat,
         gremlin.common.InputType.Keyboard
     ]
     interaction_types = []
+
+    functor = BasicContainerFunctor
+    widget = BasicContainerWidget
 
     def __init__(self, parent=None):
         """Creates a new instance.
