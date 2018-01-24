@@ -79,7 +79,9 @@ class InputItemConfiguration(QtWidgets.QFrame):
         container.add_action(
             plugin_manager.get_class(action_name)(container)
         )
-        self.action_model.add_container(container)
+        if len(container.action_sets) > 0:
+            self.action_model.add_container(container)
+        self.action_model.data_changed.emit()
 
     def _add_container(self, container_name):
         """Adds a new contained to the input item.

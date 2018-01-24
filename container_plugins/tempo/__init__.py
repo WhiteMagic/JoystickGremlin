@@ -305,7 +305,7 @@ class TempoContainer(gremlin.base_classes.AbstractContainer):
         :param parent the InputItem this container is linked to
         """
         super().__init__(parent)
-        self.action_sets = [None, None]
+        self.action_sets = [[], []]
         self.delay = 0.5
         self.activate_on = "release"
 
