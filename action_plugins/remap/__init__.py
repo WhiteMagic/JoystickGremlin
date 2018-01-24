@@ -87,16 +87,21 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         if self.action_data.vjoy_device_id not in [0, None]:
             vjoy_dev_id = self.action_data.vjoy_device_id
 
+        # Get the input type which can change depending on the container used
+        input_type = self.action_data.input_type
+        if self.action_data.parent.tag == "hat_buttons":
+            input_type = InputType.JoystickButton
+
         # If no valid input item is selected get the next unused one
         if self.action_data.vjoy_input_id in [0, None]:
             free_inputs = self._get_profile_root().list_unused_vjoy_inputs(
                 self.vjoy_devices
             )
-            input_type = \
-                self.type_to_name_map[self.action_data.input_type].lower()
+
+            input_name = self.type_to_name_map[input_type].lower()
             if vjoy_dev_id == 0:
                 vjoy_dev_id = sorted(free_inputs.keys())[0]
-            input_list = free_inputs[vjoy_dev_id][input_type]
+            input_list = free_inputs[vjoy_dev_id][input_name]
             # If we have an unused item use it, otherwise use the first one
             if len(input_list) > 0:
                 vjoy_input_id = input_list[0]
@@ -107,7 +112,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             vjoy_input_id = self.action_data.vjoy_input_id
 
         self.vjoy_selector.set_selection(
-            self.action_data.input_type,
+            input_type,
             vjoy_dev_id,
             vjoy_input_id
         )
@@ -128,6 +133,8 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
 
 
 class RemapFunctor(gremlin.base_classes.AbstractFunctor):
+
+    """Executes a remap action when called."""
 
     def __init__(self, action):
         super().__init__(action)
