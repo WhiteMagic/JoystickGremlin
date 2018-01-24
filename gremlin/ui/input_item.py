@@ -547,12 +547,13 @@ class ContainerSelector(QtWidgets.QWidget):
     # Signal emitted when a container type is selected
     container_added = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, input_type, parent=None):
         """Creates a new selector instance.
 
         :param parent the parent of this widget
         """
         super().__init__(parent)
+        self.input_type = input_type
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
 
@@ -572,7 +573,8 @@ class ContainerSelector(QtWidgets.QWidget):
         """
         container_list = []
         for entry in gremlin.plugin_manager.ContainerPlugins().repository.values():
-            container_list.append(entry.name)
+            if self.input_type in entry.input_types:
+                container_list.append(entry.name)
         return sorted(container_list)
 
     def _add_container(self, clicked=False):

@@ -121,7 +121,9 @@ class InputItemConfiguration(QtWidgets.QFrame):
             self.item_data.input_type
         )
         self.action_selector.action_added.connect(self._add_action)
-        self.container_selector = input_item.ContainerSelector()
+        self.container_selector = input_item.ContainerSelector(
+            self.item_data.input_type
+        )
         self.container_selector.container_added.connect(self._add_container)
         self.always_execute = QtWidgets.QCheckBox("Always execute")
         self.always_execute.setChecked(self.item_data.always_execute)
