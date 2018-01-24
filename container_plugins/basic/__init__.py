@@ -148,6 +148,41 @@ class BasicContainer(gremlin.base_classes.AbstractContainer):
         """
         super().__init__(parent)
 
+    def add_action(self, action, index=-1):
+        assert isinstance(action, gremlin.base_classes.AbstractAction)
+
+        # Make sure if we're dealing with axis with remap and response curve
+        # actions that they are arranged sensibly
+        if action.get_input_type() == gremlin.common.InputType.JoystickAxis:
+            remap_sets = []
+            curve_sets = []
+            for container in self.parent.containers:
+                for action_set in container.action_sets:
+                    for t_action in action_set:
+                        if t_action.tag == "response-curve":
+                            curve_sets.append(action_set)
+                        elif t_action.tag == "remap":
+                            remap_sets.append(action_set)
+
+            if action.tag == "remap" and len(curve_sets) == 1 and \
+                    len(remap_sets) == 0:
+                curve_sets[0].append(action)
+            elif action.tag == "response-curve" and len(remap_sets) == 1 and \
+                    len(curve_sets) == 0:
+                remap_sets[0].append(action)
+            else:
+                if index == -1:
+                    self.action_sets.append([])
+                    index = len(self.action_sets) - 1
+                self.action_sets[index].append(action)
+        else:
+            if index == -1:
+                self.action_sets.append([])
+                index = len(self.action_sets) - 1
+            self.action_sets[index].append(action)
+
+        self.create_or_delete_virtual_button()
+
     def _parse_xml(self, node):
         """Populates the container with the XML node's contents.
 
