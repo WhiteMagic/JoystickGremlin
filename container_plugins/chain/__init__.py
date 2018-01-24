@@ -153,7 +153,7 @@ class ChainContainerFunctor(gremlin.base_classes.AbstractFunctor):
         self.action_sets = []
         for action_set in container.action_sets:
             self.action_sets.append(
-                gremlin.code_runner.ActionSetExecutionGraph(action_set)
+                gremlin.execution_graph.ActionSetExecutionGraph(action_set)
             )
         self.timeout = container.timeout
 

@@ -22,7 +22,7 @@ import logging
 from xml.etree import ElementTree
 
 import gremlin
-from . import common, error, plugin_manager, profile
+from . import common, error, execution_graph, plugin_manager, profile
 from gremlin.profile import safe_read
 
 

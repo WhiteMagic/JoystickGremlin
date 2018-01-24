@@ -109,7 +109,7 @@ class BasicContainerFunctor(gremlin.base_classes.AbstractFunctor):
 
     def __init__(self, container):
         super().__init__(container)
-        self.action_set = gremlin.code_runner.ActionSetExecutionGraph(
+        self.action_set = gremlin.execution_graph.ActionSetExecutionGraph(
             container.action_sets[0]
         )
 

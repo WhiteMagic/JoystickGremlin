@@ -214,10 +214,10 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
 
     def __init__(self, container):
         super().__init__(container)
-        self.short_set = gremlin.code_runner.ActionSetExecutionGraph(
+        self.short_set = gremlin.execution_graph.ActionSetExecutionGraph(
             container.action_sets[0]
         )
-        self.long_set = gremlin.code_runner.ActionSetExecutionGraph(
+        self.long_set = gremlin.execution_graph.ActionSetExecutionGraph(
             container.action_sets[1]
         )
         self.delay = container.delay

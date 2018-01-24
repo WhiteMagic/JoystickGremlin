@@ -25,6 +25,7 @@ import gremlin.control_action
 import gremlin.documenter
 import gremlin.error
 import gremlin.event_handler
+import gremlin.execution_graph
 import gremlin.fsm
 import gremlin.hid_guardian
 import gremlin.hints
