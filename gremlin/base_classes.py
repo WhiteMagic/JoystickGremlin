@@ -510,6 +510,40 @@ class AbstractContainer(profile.ProfileData):
         else:
             self.virtual_button = None
 
+
+    def generate_callbacks(self):
+        """Returns a list of callback data entries.
+
+        :return list of container callback entries
+        """
+        callbacks = []
+
+        # For a virtual button create a calback that sends VirtualButton
+        # events and another callback that triggers of these events
+        # like a button would.
+        if self.virtual_button is not None:
+            callbacks.append(execution_graph.CallbackData(
+                execution_graph.VirtualButtonProcess(self.virtual_button),
+                None
+            ))
+            callbacks.append(execution_graph.CallbackData(
+                execution_graph.VirtualButtonCallback(self),
+                gremlin.event_handler.Event(
+                    gremlin.common.InputType.VirtualButton,
+                    callbacks[-1][0].virtual_button.identifier,
+                    9999,
+                    9999,
+                    is_pressed=True,
+                    raw_value=True
+                )
+            ))
+        callbacks.append(execution_graph.CallbackData(
+            execution_graph.ContainerCallback(self),
+            None
+        ))
+
+        return callbacks
+
     def from_xml(self, node):
         """Populates the instance with data from the given XML node.
 
@@ -540,6 +574,7 @@ class AbstractContainer(profile.ProfileData):
 
         :param node the XML node to process
         """
+        self.action_sets = []
         for child in node:
             if child.tag == "virtual-button":
                 continue
