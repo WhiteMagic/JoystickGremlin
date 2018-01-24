@@ -134,7 +134,7 @@ class PlaySound(AbstractAction):
         return node
 
     def _is_valid(self):
-        return True
+        return self.sound_file is not None and len(self.sound_file) > 0
 
 
 version = 1
