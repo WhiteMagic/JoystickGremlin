@@ -92,6 +92,17 @@ class CodeRunner:
                 wid = device.windows_id
                 dev_id = util.get_device_id(hid, wid)
                 for mode in device.modes.values():
+
+                    # Add a fake keyboard action which does nothing to the
+                    # callbacks in order to have empty modes be "present"
+                    self.event_handler.add_callback(
+                        0,
+                        mode.name,
+                        None,
+                        lambda x: x,
+                        False
+                    )
+
                     for input_items in mode.config.values():
                         for input_item in input_items.values():
                             # Only add callbacks for input items that actually
