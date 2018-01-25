@@ -24,6 +24,8 @@ import gremlin.ui.common
 import gremlin.ui.input_item
 from container_plugins.basic import BasicContainer
 
+
+# Lookup for direction to index with 4 way hat usage
 _four_lookup = {
     (0, 1): 0,
     (1, 0): 1,
@@ -31,6 +33,7 @@ _four_lookup = {
     (-1, 0): 3
 }
 
+# Lookup for direction to indexs with 8 way hat usage
 _eight_lookup = {
     (0, 1): 0,
     (1, 1): 1,
@@ -42,8 +45,10 @@ _eight_lookup = {
     (-1, 1): 7
 }
 
+# Names for the indices in a 4 way hat case
 _four_names = ["North", "East", "South", "West"]
 
+# Names for the indices in a 8 way hat case
 _eight_names = [
     "North", "North East", "East", "South East", "South",
     "South West", "West", "North West"
@@ -147,6 +152,8 @@ class HatButtonsContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
         :param index the index at which to store the created action
         :param label the name of the action to create
+        :param layout the layout widget to populate
+        :param view_type the visualization type being used
         """
         widget = self._create_action_set_widget(
             self.profile_data.action_sets[index],
@@ -183,9 +190,13 @@ class HatButtonsContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         if len(self.profile_data.action_sets) > 0:
             return ", ".join(a.name for a in self.profile_data.action_sets[0])
         else:
-            return "Basic"
+            return "Hat Buttons"
 
     def _change_button_type(self, state):
+        """Handles changing the number of buttons being used.
+
+        :param state radio button state - not used
+        """
         button_count = 4 if self.four_way.isChecked() else 8
         if button_count != self.profile_data.button_count:
             self.profile_data.button_count = button_count
