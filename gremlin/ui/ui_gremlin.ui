@@ -74,7 +74,6 @@
     <addaction name="actionDeviceInformation"/>
     <addaction name="actionCalibration"/>
     <addaction name="separator"/>
-    <addaction name="actionHTMLCheatsheet"/>
     <addaction name="actionPDFCheatsheet"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>

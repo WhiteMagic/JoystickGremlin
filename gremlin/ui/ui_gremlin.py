@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_gremlin.ui'
+# Form implementation generated from reading ui file 'gremlin\ui\ui_gremlin.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -114,7 +114,6 @@ class Ui_Gremlin(object):
         self.menuTools.addAction(self.actionDeviceInformation)
         self.menuTools.addAction(self.actionCalibration)
         self.menuTools.addSeparator()
-        self.menuTools.addAction(self.actionHTMLCheatsheet)
         self.menuTools.addAction(self.actionPDFCheatsheet)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.actionOptions)

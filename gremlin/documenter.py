@@ -15,177 +15,114 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+from collections import namedtuple
 from PyQt5 import QtGui, QtPrintSupport
 
 from mako.template import Template
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor
+from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, Table, Flowable, PageBreak
 
 import gremlin
 
 
-templates = {
-    "pdf": {
-
-    "tpl_main": Template("""<!DOCTYPE html>
-
-<html>
-
-<head>
-    <meta charset="utf-8">
-
-    <style type="text/css">
-        td.inherit {
-            color: #c0c0c0;
-            width: 100px;
-        }
-        td.input_name {
-            width: 200px;
-        }
-        td.description {
-
-        }
-    </style>
-</head>
-
-<body>
-
-<div>
-%for mode in modes:
-${mode}
-%endfor
-</div>
-
-</body>
-
-</html>"""),
-
-    "tpl_mode": Template("""
-<h4>${mode}</h4>
-
-%for device in devices:
-<table class="table table-condensed table-striped">
-${device}
-</table>
-%endfor
-"""),
-
-    "tpl_device": Template("""
-<tr>
-    <th colspan="3">${device}</th>
-</tr>
-%for entry in data:
-<tr>
-    <td class="input_name">${entry[0]}</td>
-    <td></td>
-    <td class="description">${entry[1]}</td>
-    <td class="inherit">
-    %if entry[2] is not None:
-    ${entry[2]}
-    %endif
-    </td>
-</tr>
-%endfor
-""")
-    },
-
-    "html": {
-
-    "tpl_main": Template("""<!DOCTYPE html>
-
-<html>
-
-<head>
-    <meta charset="utf-8">
-
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-
-    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-
-    <style type="text/css">
-        td.inherit {
-            color: #c0c0c0;
-            width: 100px;
-        }
-        td.input_name {
-            width: 200px;
-        }
-        td.description {
-
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-%for mode in modes:
-${mode}
-%endfor
-</div>
-
-</div>
-
-</body>
-
-</html>"""),
-
-    "tpl_mode": Template("""
-<div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="heading${mode}">
-        <h4 class="panel-title">
-        % if mode_id == 0:
-            <a data-toggle="collapse" data-parent="#accordion"
-                href="#collapse${mode_id}" aria-expanded="true"
-                aria-controls="collapse${mode_id}">
-                ${mode}
-            </a>
-        % else:
-            <a class="collapsed" data-toggle="collapse"
-                data-parent="#accordion" href="#collapse${mode_id}"
-                aria-expanded="false" aria-controls="collapse${mode_id}">
-                ${mode}
-            </a>
-        % endif
-        </h4>
-    </div>
-
-    <div id="collapse${mode_id}" class="panel-collapse collapse in"
-        role="tabpanel" aria-labelledby="heading${mode_id}">
-        <div class="panel-body">
-
-            %for device in devices:
-            <table class="table table-condensed table-striped">
-            ${device}
-            </table>
-            %endfor
-
-        </div>
-    </div>
-</div>
-"""),
-
-    "tpl_device": Template("""
-<tr>
-    <th colspan="3">${device}</th>
-</tr>
-%for entry in data:
-<tr>
-    <td class="input_name">${entry[0]}</td>
-    <td class="description">${entry[1]}</td>
-    <td class="inherit">
-    %if entry[2] is not None:
-    ${entry[2]}
-    %endif
-    </td>
-</tr>
-%endfor
-""")
-    }
+hat_direction_abbrev = {
+    "center": "C",
+    "north": "N",
+    "north-east": "NE",
+    "east": "E",
+    "south-east": "SE",
+    "south": "S",
+    "south-west": "SW",
+    "west": "W",
+    "north-west": "NW"
 }
+
+
+class InputItemData:
+
+    """Represents the the data about a single InputItem entry."""
+
+    style = getSampleStyleSheet()["Normal"]
+
+    def __init__(self, input_item, inherited_from):
+        """Creates a new instance.
+
+        :param input_item the InputItem instance this represents
+        :param inherited_from mode from which this InputItem was inherited
+        """
+        self.input_item = input_item
+        self.inherited_from = inherited_from
+
+    def table_data(self):
+        """Returns the data neccessary to create the data table.
+
+        :return table data entries
+        """
+        containers = self.input_item.containers
+
+        # Extract information about the input item's data
+        container_count = len(containers)
+        actionset_count = [len(c.action_sets) for c in containers]
+        global_desc = self.input_item.description
+        container_desc = [self.extract_description_actions(c) for c in containers]
+
+        # Basic information
+        input_name = format_input_name(
+            self.input_item.input_type,
+            self.input_item.input_id
+        )
+        description = global_desc
+
+        # If it's not a hat we have one input name and each description element
+        # on a line of its own
+        if self.input_item.input_type != gremlin.common.InputType.JoystickHat:
+            additional_desc = ""
+            for c_descs in container_desc:
+                for a_desc in c_descs:
+                    additional_desc += "\n{}".format(a_desc)
+
+            if len(additional_desc) > 0:
+                description += additional_desc
+        else:
+            # Single container with virtual button
+            if container_count == 1 and containers[0].virtual_button:
+                tmp = []
+                for direction in containers[0].virtual_button.directions:
+                    tmp.append("{} {}".format(
+                        input_name,
+                        hat_direction_abbrev[direction]
+                    ))
+                input_name = "\n".join(tmp)
+
+        inherited = Paragraph(
+            "<span color='#c0c0c0'><i>{}</i></span>".format(
+                "" if self.inherited_from is None else self.inherited_from
+            ),
+            InputItemData.style
+        )
+
+        return (
+            input_name,
+            description,
+            inherited
+        )
+
+    def extract_description_actions(self, container):
+        """Returns all description contents from Description actions.
+
+        :param container the container instance to process
+        :return description contents of all Description actions stored within
+            the container
+        """
+        descriptions = []
+        for action_set in container.action_sets:
+            for action in [a for a in action_set if a.tag == "description"]:
+                descriptions.append(action.description)
+        return descriptions
 
 
 def recursive(device, tree, storage):
@@ -205,17 +142,20 @@ def recursive(device, tree, storage):
 
         # Insert actions of parent into parent
         mode = device.modes[parent]
-        for input_type, items in mode.config.items():
+
+        # Aggregate all input items into a single list
+        for items in mode.config.values():
             for item in items.values():
                 if len(item.containers) > 0:
-                    key = (input_type, item.input_id)
-                    storage[parent][key] = (item.description, None)
+                    storage[parent][(item.input_type, item.input_id)] = \
+                        InputItemData(item, None)
 
                     for child in children:
-                        storage[child][key] = (item.description, parent)
+                        storage[child][(item.input_type, item.input_id)] = \
+                            InputItemData(item, parent)
 
         # Recursively process the remainder of the inheritance tree
-        recursive(device,  children, storage)
+        recursive(device, children, storage)
 
 
 def sort_data(data):
@@ -236,71 +176,165 @@ def sort_data(data):
     return sorted_data
 
 
-def generate_cheatsheet(file_format, fname, profile):
-    """Generates HTML documentation of the provided profile.
+class DeviceFloat(Flowable):
 
-    :param file_format the output format
+    """Creates a device header element."""
+
+    def __init__(self, device_name):
+        """Creates a new instance.
+
+        :param device_name name of the device
+        """
+        self._device_name = device_name
+
+    def draw(self):
+        self.canv.setFillColor(HexColor("#364151"))
+        self.canv.rect(-1.25*cm, 0.0, A4[0]+0.1*cm, cm, stroke=False, fill=True)
+        self.canv.setFillColor(HexColor("#ffffff"))
+        self.canv.drawCentredString(
+            A4[0]/2.0,
+            0.35*cm,
+            self._device_name
+        )
+
+    def wrap(self, availWidth, availHeight):
+        return (A4[0]-2*cm, cm)
+
+    def split(self, availWidth, availheight):
+        return []
+
+
+class ModeFloat(Flowable):
+
+    """Creates a mode header element."""
+
+    def __init__(self, mode_name):
+        """Creates a new instance.
+
+        :param mode_name name of the mode
+        """
+        self._mode_name = mode_name
+
+        self._bar_offset = 0.1*cm
+        self._bar_width = 0.25*cm
+        self._bar_height = 0.75*cm
+
+    def _draw_bar(self, path, offset):
+        """Draws a single angle bar element.
+
+        :param path the path element to which to add instructions
+        :param offset the
+        """
+        path.moveTo(offset + self._bar_offset, 0)
+        path.lineTo(offset + self._bar_offset + self._bar_width, 0)
+        path.lineTo(
+            offset + self._bar_height + self._bar_offset + self._bar_width,
+            self._bar_height
+        )
+        path.lineTo(
+            offset + self._bar_height + self._bar_offset,
+            self._bar_height
+        )
+        path.lineTo(offset + self._bar_offset, 0)
+
+        return offset + self._bar_width + self._bar_offset
+
+    def draw(self):
+        self.canv.setFillColor(HexColor("#798593"))
+
+        offset = 7*cm
+
+        path = self.canv.beginPath()
+        path.moveTo(-1.25*cm, 0)
+        path.lineTo(offset, 0)
+        path.lineTo(offset+self._bar_height, self._bar_height)
+        path.lineTo(-1.25*cm, self._bar_height)
+        path.lineTo(-1.25*cm, 0)
+
+        offset = self._draw_bar(path, offset)
+        offset = self._draw_bar(path, offset)
+        offset = self._draw_bar(path, offset)
+
+        self.canv.drawPath(path, stroke=False, fill=True)
+        #self.canv.rect(-0.2*cm, 0.0, A4[0]-2*cm, cm, strike=Fa;se, fill=True)
+        self.canv.setFillColor(HexColor("#000000"))
+        self.canv.setFillColor(HexColor("#ffffff"))
+        self.canv.drawString(
+            0,
+            0.25*cm,
+            self._mode_name
+        )
+
+    def wrap(self, availWidth, availHeight):
+        return (A4[0]-2*cm, 0.75*cm)
+
+    def split(self, availWidth, availheight):
+        return []
+
+
+def generate_cheatsheet(fname, profile):
+    """Generates a cheatsheet of the provided profile.
+
     :param fname the file to store the cheatsheet in
     :param profile the profile to process
     """
-    mode_names = sorted(list(profile.devices.values())[0].modes.keys())
-    device_keys = sorted(profile.devices.keys())
-    device_names = [profile.devices[key].name for key in device_keys]
-    device_name_to_key = {}
-    for i in range(len(device_keys)):
-        device_name_to_key[device_names[i]] = device_keys[i]
+
+    width, height = A4
+
+    styles = getSampleStyleSheet()
+    main_frame = Frame(cm, cm, width-2*cm, height-2*cm, showBoundary=False)
+    main_template = PageTemplate(id="main", frames=[main_frame])
+    doc = BaseDocTemplate(fname, pageTemplates=[main_template])
+
+    story = []
+    style = styles["Normal"]
 
     # Build device actions considering inheritance
     inheritance_tree = profile.build_inheritance_tree()
     device_storage = {}
     for key, device in profile.devices.items():
-        device_storage[key] = {}
-        recursive(device, inheritance_tree, device_storage[key])
+        device_storage[device] = {}
+        recursive(device, inheritance_tree, device_storage[device])
 
-    # Accumulate HTML code for the individual mode and device combinations
-    device_content = {}
-    for mode in mode_names:
-        device_content[mode] = {}
-        for i, dev in enumerate(device_keys):
-            if len(device_storage[dev][mode]) > 0:
-                device_content[mode][dev] =\
-                    templates[file_format]["tpl_device"].render(
-                        data=sort_data(device_storage[dev][mode]),
-                        device=device_names[i]
-                )
+    for dev, dev_data in device_storage.items():
+        dev_float_added = False
+        for mode_name, mode_data in dev_data.items():
+            # Only proceed if we actually have input items available
+            if len(mode_data.values()) == 0:
+                continue
 
-    # Put HTML segments together into a single document
-    mode_content = []
-    for mode in mode_names:
-        if len(device_content[mode]) > 0:
-            devices = []
-            for name in sorted(device_names):
-                if device_name_to_key[name] in device_content[mode]:
-                    devices.append(device_content[mode][device_name_to_key[name]])
+            if not dev_float_added:
+                story.append(DeviceFloat(dev.name))
+                story.append(Spacer(1, 0.25 * cm))
+                dev_float_added = True
 
-            mode_content.append(templates[file_format]["tpl_mode"].render(
-                mode=mode,
-                devices=devices,
-                mode_id=len(mode_content)
+            # Add heading for device and mode combination
+            story.append(ModeFloat(mode_name))
+            table_data = [entry.table_data() for entry in mode_data.values()]
+
+            table_style = style = [
+                ("LINEBELOW", (0, 0), (-1, -2), 0.25, HexColor("#c0c0c0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP")
+            ]
+            if len(table_data) == 1:
+                table_style = []
+            story.append(Table(
+                table_data,
+                colWidths=[
+                    0.15 * (width - 2 * cm),
+                    0.30 * (width - 2 * cm),
+                    0.55 * (width - 2 * cm)
+                ],
+                rowHeights=[None] * len(table_data),
+                style=table_style
             ))
+            story.append(Spacer(1, 0.50 * cm))
 
-    if file_format == "html":
-        # Create a single HTML file
-        with open(fname, "w") as out:
-            out.write(templates[file_format]["tpl_main"]
-                      .render(modes=mode_content))
-    elif file_format == "pdf":
-        doc = QtGui.QTextDocument()
-        doc.setDefaultFont(QtGui.QFont("Courier", 10, QtGui.QFont.Normal))
-        doc.setHtml(templates[file_format]["tpl_main"]
-                    .render(modes=mode_content))
-        printer = QtPrintSupport.QPrinter()
-        printer.setOutputFileName(fname)
-        printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
-        printer.setColorMode(1)
-        printer.setFontEmbeddingEnabled(True)
-        doc.print(printer)
-        printer.newPage()
+        if dev_float_added:
+            del story[-1]
+            story.append(PageBreak())
+
+    doc.build(story)
 
 
 def format_input_name(input_type, identifier):

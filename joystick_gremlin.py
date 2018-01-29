@@ -530,11 +530,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionCalibration.triggered.connect(self.calibration)
-        self.ui.actionHTMLCheatsheet.triggered.connect(
-            lambda: self._create_cheatsheet("html")
-        )
         self.ui.actionPDFCheatsheet.triggered.connect(
-            lambda: self._create_cheatsheet("pdf")
+            lambda: self._create_cheatsheet()
         )
         self.ui.actionOptions.triggered.connect(self.options_dialog)
         self.ui.actionLogDisplay.triggered.connect(
@@ -850,7 +847,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         if window_location:
             self.move(window_location[0], window_location[1])
 
-    def _create_cheatsheet(self, file_format):
+    def _create_cheatsheet(self):
         """Creates the cheatsheet and stores it in the desired place.
 
         :param file_format the format of the cheatsheet, html or pdf
@@ -859,14 +856,10 @@ class GremlinUi(QtWidgets.QMainWindow):
             None,
             "Save cheatsheet",
             gremlin.util.userprofile_path(),
-            "{} files (*.{})".format(file_format.upper(), file_format)
+            "PDF files (*.pdf)"
         )
         if len(fname) > 0:
-            gremlin.documenter.generate_cheatsheet(
-                file_format,
-                fname,
-                self._profile
-            )
+            gremlin.documenter.generate_cheatsheet(fname, self._profile)
 
     def _create_load_profile_fuction(self, fname):
         """Creates a callback to load a specific profile.
