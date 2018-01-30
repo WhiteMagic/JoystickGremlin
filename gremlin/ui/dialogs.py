@@ -650,18 +650,20 @@ class AboutUi(common.BaseDialogUi):
 
         license_list = [
             "about/third_party_licenses.html",
+            "about/mako.html",
             "about/modernuiicons.html",
             "about/pyqt.html",
             "about/pysdl2.html",
             "about/pywin32.html",
             "about/qt5.html",
+            "about/reportlab.html",
             "about/sdl2.html",
             "about/vjoy.html",
-            "about/mako.html",
         ]
         third_party_licenses = ""
         for fname in license_list:
             third_party_licenses += open(gremlin.util.resource_path(fname)).read()
+            third_party_licenses += "<hr>"
         self.ui.third_party_licenses.setHtml(third_party_licenses)
 
 
