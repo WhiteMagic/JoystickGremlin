@@ -24,7 +24,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.lib.colors import HexColor
-from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, Table, Flowable, PageBreak
+from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, Paragraph, \
+    Spacer, Frame, PageTemplate, Table, Flowable, PageBreak
 
 import gremlin
 
