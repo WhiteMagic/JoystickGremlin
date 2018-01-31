@@ -200,7 +200,7 @@ class ProfileConverter:
     """Handle converting and checking profiles."""
 
     # Current profile version number
-    current_version = 5
+    current_version = 6
 
     def __init__(self):
         pass
@@ -239,15 +239,21 @@ class ProfileConverter:
             new_root = self._convert_from_v2(new_root)
             new_root = self._convert_from_v3(new_root)
             new_root = self._convert_from_v4(new_root)
+            new_root = self._convert_from_v5(new_root)
         if old_version == 2:
             new_root = self._convert_from_v2(root)
             new_root = self._convert_from_v3(new_root)
             new_root = self._convert_from_v4(new_root)
+            new_root = self._convert_from_v5(new_root)
         if old_version == 3:
             new_root = self._convert_from_v3(root)
             new_root = self._convert_from_v4(new_root)
+            new_root = self._convert_from_v5(new_root)
         if old_version == 4:
             new_root = self._convert_from_v4(root)
+            new_root = self._convert_from_v5(new_root)
+        if old_version == 5:
+            new_root = self._convert_from_v5(root)
 
         if new_root is not None:
             # Save converted version
@@ -280,6 +286,8 @@ class ProfileConverter:
             return 4
         elif root.tag == "profile" and int(root.get("version")) == 5:
             return 5
+        elif root.tag == "profile" and int(root.get("version")) == 6:
+            return 6
         else:
             raise error.ProfileError(
                 "Invalid profile version encountered"
@@ -500,6 +508,56 @@ class ProfileConverter:
                 container.append(action_set)
 
         return new_root
+
+    def _convert_from_v5(self, root):
+        """Converts v5 profiles to v6 profiles.
+
+        The following operations are performed in this conversion:
+        - Combine axis remaps and response curves into a single basic container
+
+        :param root the v5 profile
+        :return v6 representation of the profile
+        """
+        new_root = copy.deepcopy(root)
+        new_root.set("version", "6")
+        for axis in new_root.iter("axis"):
+            has_remap = False
+            has_curve = False
+            for container in axis:
+                has_remap |= container.find(".[@type='basic']//remap[@axis]") is not None
+                has_curve |= container.find(".[@type='basic']//response-curve") is not None
+
+            # If we have both axis remap and response curve actions place them
+            # all in a single basic container
+            if has_remap and has_curve:
+                new_container = ElementTree.Element("container")
+                new_container.set("type", "basic")
+                new_actionset = ElementTree.Element("action-set")
+
+                # Copy all axis remaps and response curves into the new
+                # action set
+                containers_to_delete = []
+                for container in axis:
+                    remove_container = False
+                    for node in container.findall(".[@type='basic']//remap[@axis]"):
+                        new_actionset.append(node)
+                        remove_container = True
+                    for node in container.findall(".[@type='basic']//response-curve"):
+                        new_actionset.append(node)
+                        remove_container = True
+
+                    if remove_container:
+                        containers_to_delete.append(container)
+
+                new_container.append(new_actionset)
+                axis.append(new_container)
+
+                # Delete containers of
+                for container in containers_to_delete:
+                    axis.remove(container)
+
+        return new_root
+
 
     def _p3_extract_map_to_keyboard(self, input_item):
         """Converts an old macro setup to a map to keyboard action.
