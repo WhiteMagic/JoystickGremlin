@@ -411,6 +411,8 @@ class JoystickConditionWidget(AbstractConditionWidget):
             self.condition_data.comparison = text.lower()
         elif self.condition_data.input_type == InputType.JoystickHat:
             self.condition_data.comparison = text.replace(" ", "-").lower()
+        elif self.condition_data.input_type == InputType.JoystickAxis:
+            self.condition_data.comparison = text.lower()
         else:
             logging.getLogger("system").warning(
                 "Invalid input type encountered: {}".format(
