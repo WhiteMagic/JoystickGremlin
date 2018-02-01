@@ -361,7 +361,6 @@ class CubicSplineModel(AbstractCurveModel):
             if other.identifier == identifier:
                 continue
             elif other.center.x == point.x:
-                print(other.identifier, point.identifier)
                 is_valid = False
         return is_valid
 
