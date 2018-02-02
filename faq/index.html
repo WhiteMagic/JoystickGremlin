@@ -3,8 +3,7 @@
 
     <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>Joystick Gremlin</title>
 
@@ -14,22 +13,18 @@
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 
-    <!-- Bootstrap theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
-
-    <!-- JQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-
-    <!-- Bootstrap JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Javascript -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
     <!-- MathJax -->
     <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
     <!-- Raleway font -->
-    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+    <!--<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>-->
 
     <!-- Custom CSS overrides -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/override.css">
@@ -41,52 +36,51 @@
 
     <body>
 
-        <nav class="navbar navbar-default">
-            <div class="conainer-fluid">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="https://whitemagic.github.io/JoystickGremlin"><img src="https://whitemagic.github.io/JoystickGremlin/images/icon.png"></a>
-                </div>
+            <a class="navbar-brand" href="https://whitemagic.github.io/JoystickGremlin">
+                <img src="https://whitemagic.github.io/JoystickGremlin/images/icon.png">
+            </a>
 
-                <div class="collapse navbar-collapse" id="navbar-collapse">
-                    <ul class="nav navbar-nav">
-                        <!-- Home -->
-                        <li ><a href="https://whitemagic.github.io/JoystickGremlin/">Home</a></li>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <!-- Home -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/">Home</a></li>
 
-                        <!-- Download -->
-                        <li ><a href="https://whitemagic.github.io/JoystickGremlin/download/">Download</a></li>
+                    <!-- Download -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/download/">Download</a></li>
 
-                        <!-- Manual entries -->
-                        <li class="dropdown active">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
-                            
-                            <ul class="dropdown-menu">
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a></li>
-                                <!--<li ><a href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a></li>-->
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a></li>
-                                <li class="active"><a href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+                    <!-- Manual entries -->
+                    <li class="nav-item dropdown active">
+                        <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <li><a href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
-                    </ul>
-                </div>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
+                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
+                        </div>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav navbar-right">
+                    <li class="nav-item"><a class="nav-link" href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
+                </ul>
             </div>
         </nav>
 
         <div class="container">
-            <div class="row">
+            <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h2><a name="6">6. Frequently Asked Questions</a></h2>
+                    <h1 class="mb-5"><a name="7">7. Frequently Asked Questions</a></h1>
 
-<h4>The game does not see Joystick Gremlin inputs, only the original joystick ones.</h4>
+<p class="lead">The game does not see Joystick Gremlin inputs, only the
+original joystick ones.</p>
 <p class="text-justify">
     This wil happen quite often as Joystick Gremlin cannot hide the physical
     devices inputs. To circumvent this issue the <em>Input Repeater</em> tool
@@ -96,8 +90,17 @@
     dialog of the game and it should recognize the virtual joystick's input.
     The input repeater will repeat your input for a duration of five seconds.
 </p>
+<p class="text-justify">
+    An alternative to this is to effectively hide the physical devices from the
+    application such that only the virtual devices are seen. Software like
+    T.A.R.G.E.T is capable of doing this already. By using <a
+   href="https://github.com/nefarius/ViGEm/tree/master/Sys/HidGuardian">HidGuardian</a>
+    any HID device such a joystick can be hidden from all non white-listed
+    applications. Joystick Gremlin can configure which devices should be hidden
+    by HidGuardian in the <em>Options dialog</em>.
+</p>
 
-<h4>How to verify that Joystick Gremlin produces the desired output?</h4>
+<p class="lead">How to verify that Joystick Gremlin produces the desired output?</p>
 <p class="text-justify">
     The simplest way which doesn't require any additional tools is to use the
     Windows game controller program, which can be launched by running
@@ -107,7 +110,7 @@
     which can show information about various joystick devices are:
 </p>
 
-<h4>Macros don't work in-game</h4>
+<p class="lead">Macros don't work in-game</p>
 <p class="text-justify">
     The most likely cause for this is that the game was launched with
     administrator privileges while Joystick Gremlin was launched with normal
@@ -127,7 +130,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: December 25, 2017</p>
+            <p class="text-muted">Last update: February 3, 2018</p>
         </div>
     </div>
 </footer>

@@ -5,11 +5,58 @@
 		<description>New release information for Joystick Gremlin</description>
 		<link>https://whitemagic.github.io/JoystickGremlin</link>
 		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
-		<lastBuildDate>Mon, 25 Dec 2017 00:00:00 +0100</lastBuildDate>
+		<lastBuildDate>Sat, 03 Feb 2018 00:00:00 +1100</lastBuildDate>
+		
+			<item>
+				<title>Release 10</title>
+				<description>&lt;h1&gt;Release 10&lt;/h1&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_10/Joystick.Gremlin.R10.msi&quot;&gt;Download
+    Release 10 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_10/Joystick.Gremlin.R10.zip&quot;&gt;Download
+    Release 10 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
+
+&lt;h2&gt;New Features&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Configuration UI for HIDGuardian&lt;/li&gt;
+    &lt;li&gt;Ability to assign labels to each device&lt;/li&gt;
+    &lt;li&gt;Added UI to swap configurations of identical devices&lt;/li&gt;
+    &lt;li&gt;Ability to turn on and off which events a macro should record&lt;/li&gt;
+    &lt;li&gt;Ability to record and emit mouse button events&lt;/li&gt;
+    &lt;li&gt;Symmetry mode for response curve confiruation&lt;/li&gt;
+    &lt;li&gt;Function added to quickly invert a response curve&lt;/li&gt;
+    &lt;li&gt;Option to launch with Gremlin on Windows launch added&lt;/li&gt;
+    &lt;li&gt;Description action added which allows describing individual containers&lt;/li&gt;
+    &lt;li&gt;Hat to Buttons container added which allows easily turning a hat into four or eight buttons&lt;/li&gt;
+    &lt;li&gt;Rework the cheatsheet generator, preparing for future updates&lt;/li&gt;
+    &lt;li&gt;Keyboard inputs from on screen keyboards can now be used in macro recordings&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;Fixes&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;UI fixes to improve clarity and remove annoyances&lt;/li&gt;
+    &lt;li&gt;Show device ID in each tab if duplicate devices exist&lt;/li&gt;
+    &lt;li&gt;Improve and fix automatic button release logic&lt;/li&gt;
+    &lt;li&gt;Some device initialization fixes&lt;/li&gt;
+    &lt;li&gt;Improve handling of virtual buttons created from axis and hats&lt;/li&gt;
+    &lt;li&gt;Consistent handling of axis motion detection&lt;/li&gt;
+    &lt;li&gt;Improved Sound playback action validity checking&lt;/li&gt;
+    &lt;li&gt;Ensure empty modes are not silently dropped when executing a profile&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sat, 03 Feb 2018 00:00:00 +1100</pubDate>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2018/02/03/Release-10.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2018/02/03/Release-10.html</guid>
+			</item>
 		
 			<item>
 				<title>Release 9.2</title>
-				<description>&lt;h3&gt;Release 9.2&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 9.2&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9.2/Joystick.Gremlin.R9.2.msi&quot;&gt;Download
@@ -21,19 +68,19 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Properly fix virtual axis buttons without breaking response curves&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Mon, 25 Dec 2017 00:00:00 +0100</pubDate>
+				<pubDate>Mon, 25 Dec 2017 00:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/25/Release-9.2.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/25/Release-9.2.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 9.1</title>
-				<description>&lt;h3&gt;Release 9.1&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 9.1&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9.1/Joystick.Gremlin.R9.1.msi&quot;&gt;Download
@@ -45,13 +92,13 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Ability to select the starting mode on a per profile basis or keep the old heuristic system&lt;/li&gt;
     &lt;li&gt;Axis based virtual buttons can now specify an optional activation direction&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Consistent handling of &quot;sufficient&quot; input detection&lt;/li&gt;
     &lt;li&gt;Allow mapping of keyboard keys to other keyboard keys&lt;/li&gt;
@@ -61,14 +108,14 @@
     &lt;li&gt;Properly remember and use information about currently active container tabs&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Thu, 21 Dec 2017 12:00:00 +0100</pubDate>
+				<pubDate>Thu, 21 Dec 2017 12:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/21/Release-9.1.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/21/Release-9.1.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 9</title>
-				<description>&lt;h3&gt;Release 9&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 9&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_9/Joystick.Gremlin.R9.msi&quot;&gt;Download
@@ -80,7 +127,7 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Support for action sets, i.e. collection of actions in a single container&lt;/li&gt;
     &lt;li&gt;Activation conditions for either individual actions or entire containers, triggering based on the action state itself or the state of other inputs&lt;/li&gt;
@@ -91,7 +138,7 @@
     &lt;li&gt;Customizable activation condition for short presses in the Tempo container&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Should no longer crash on media key usage (can't use them yet)&lt;/li&gt;
     &lt;li&gt;Properly release vJoy devices when they are not in use&lt;/li&gt;
@@ -108,14 +155,14 @@
     &lt;li&gt;Fixed macro manager to prevent excessive polling when identical macros are queued up&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sat, 09 Dec 2017 12:00:00 +0100</pubDate>
+				<pubDate>Sat, 09 Dec 2017 12:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/09/Release-9.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/09/Release-9.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 8.1</title>
-				<description>&lt;h3&gt;Release 8.1&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 8.1&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.msi&quot;&gt;Download
@@ -127,7 +174,7 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Ask to save changes when appropriate&lt;/li&gt;
     &lt;li&gt;Temporary mode switch action&lt;/li&gt;
@@ -135,7 +182,7 @@
     &lt;li&gt;Symmetry mode for Bezier curve handles&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;AltGr and Pause should now work properly&lt;/li&gt;
     &lt;li&gt;Reworked cubic Bezier curves&lt;/li&gt;
@@ -143,14 +190,14 @@
     &lt;li&gt;Consistent initial activation mode selection&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sat, 19 Aug 2017 12:00:00 +0200</pubDate>
+				<pubDate>Sat, 19 Aug 2017 12:00:00 +1000</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 8</title>
-				<description>&lt;h3&gt;Release 8&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 8&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.msi&quot;&gt;Download
@@ -162,7 +209,7 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;New container and action system&lt;/li&gt;
     &lt;ul&gt;
@@ -179,7 +226,7 @@
     &lt;li&gt;Basic help / hint system started&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Rewritten UI&lt;/li&gt;
     &lt;li&gt;Code generation changes&lt;/li&gt;
@@ -188,14 +235,14 @@
     &lt;li&gt;Improve vJoy error handling&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sat, 08 Jul 2017 12:00:00 +0200</pubDate>
+				<pubDate>Sat, 08 Jul 2017 12:00:00 +1000</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 7.1</title>
-				<description>&lt;h3&gt;Release 7.1&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 7.1&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7.1/Joystick.Gremlin.R7.1.msi&quot;&gt;Download
@@ -207,27 +254,27 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Display description of inputs in the overview list&lt;/li&gt;
     &lt;li&gt;Default action can be configured via options&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Properly keep vJoy devices alive by using the last known input data&lt;/li&gt;
     &lt;li&gt;Minimize to system tray works again&lt;/li&gt;
     &lt;li&gt;Updated SDL2 library which which hopefully shows all devices&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sun, 26 Feb 2017 12:00:00 +0100</pubDate>
+				<pubDate>Sun, 26 Feb 2017 12:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 7</title>
-				<description>&lt;h3&gt;Release 7&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 7&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7/Joystick.Gremlin.R7.msi&quot;&gt;Download
@@ -239,7 +286,7 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Template system, allows creation of a new profile based on an existing one&lt;/li&gt;
     &lt;li&gt;Profile loading and enabling of Joystick Gremlin via command line arguments&lt;/li&gt;
@@ -247,7 +294,7 @@
     &lt;li&gt;Joystick devices can now be addressed by their name instead of only ID in code&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;TTS system induced crash&lt;/li&gt;
     &lt;li&gt;Handle multiple vJoy devices correctly&lt;/li&gt;
@@ -257,14 +304,14 @@
     &lt;li&gt;Various UI glitches and bugs&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Thu, 22 Dec 2016 12:00:00 +0100</pubDate>
+				<pubDate>Thu, 22 Dec 2016 12:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/12/22/Release-7.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/12/22/Release-7.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 6</title>
-				<description>&lt;h3&gt;Release 6&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 6&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_6/Joystick.Gremlin.R6.msi&quot;&gt;Download
@@ -276,14 +323,14 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Split and merge axis functionality&lt;/li&gt;
     &lt;li&gt;Actions implemented as a plugin system&lt;/li&gt;
     &lt;li&gt;Ability to specify response curves for virtual axes&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;More robust error handling&lt;/li&gt;
     &lt;li&gt;Validate installed version of vJoy&lt;/li&gt;
@@ -292,14 +339,14 @@
     &lt;li&gt;Fix cubic spline implementation&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Thu, 10 Nov 2016 12:00:00 +0100</pubDate>
+				<pubDate>Thu, 10 Nov 2016 12:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/11/10/Release-6.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/11/10/Release-6.html</guid>
 			</item>
 		
 			<item>
 				<title>Release 5</title>
-				<description>&lt;h3&gt;Release 5&lt;/h3&gt;
+				<description>&lt;h1&gt;Release 5&lt;/h1&gt;
 
 &lt;a class=&quot;btn btn-primary&quot;
    href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_5/Joystick.Gremlin.R5.msi&quot;&gt;Download
@@ -311,7 +358,7 @@
 &lt;br/&gt;&lt;br/&gt;
 
 
-&lt;h4&gt;New Features&lt;/h4&gt;
+&lt;h2&gt;New Features&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;System tray icon&lt;/li&gt;
     &lt;li&gt;Periodic function execution&lt;/li&gt;
@@ -319,7 +366,7 @@
     &lt;li&gt;Reworked joystick interface API&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;Fixes&lt;/h4&gt;
+&lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Fix various crashes&lt;/li&gt;
     &lt;li&gt;Fix UI lag&lt;/li&gt;
@@ -327,48 +374,9 @@
     &lt;li&gt;Improved macro recording&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Wed, 29 Jun 2016 12:00:00 +0200</pubDate>
+				<pubDate>Wed, 29 Jun 2016 12:00:00 +1000</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/06/29/Release-5.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/06/29/Release-5.html</guid>
-			</item>
-		
-			<item>
-				<title>Release 4</title>
-				<description>&lt;h3&gt;Release 4&lt;/h3&gt;
-
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_4/Joystick.Gremlin.R4.msi&quot;&gt;Download
-    Release 4 MSI&lt;/a&gt;
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_4/Joystick.Gremlin.R4.zip&quot;&gt;Download
-    Release 4 ZIP&lt;/a&gt;
-
-&lt;br/&gt;&lt;br/&gt;
-
-
-&lt;h4&gt;New Features&lt;/h4&gt;
-&lt;ul&gt;
-    &lt;li&gt;Load and activate profile based on currently active process&lt;/li&gt;
-    &lt;li&gt;Update device list at runtime&lt;/li&gt;
-    &lt;li&gt;Axis range based activation of actions&lt;/li&gt;
-    &lt;li&gt;Shift button condition added for buttons&lt;/li&gt;
-    &lt;li&gt;Ability to quickly create a 1:1 mapping&lt;/li&gt;
-    &lt;li&gt;Ability to rename modes added&lt;/li&gt;
-    &lt;li&gt;New action indicator icons added for quicker overview of used actions&lt;/li&gt;
-    &lt;li&gt;Input repeater usability improved&lt;/li&gt;
-    &lt;li&gt;Bunch of additional usability improvements&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4&gt;Fixes&lt;/h4&gt;
-&lt;ul&gt;
-    &lt;li&gt;Profile loading and saving related improvements&lt;/li&gt;
-    &lt;li&gt;Store data in %userprofile% rather then %APPDATA%&lt;/li&gt;
-    &lt;li&gt;Prevent buttons from being stuck down when switching modes&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Fri, 29 Jan 2016 12:00:00 +0100</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-9.3.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/01/29/Release-9.3.html</guid>
 			</item>
 		
 	</channel>

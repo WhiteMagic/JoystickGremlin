@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Joystick Gremlin</title>
+
+    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/quickstart/">
+
+    <!-- Code highlighting CSS -->
+    <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+    <!-- Javascript -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+    <!-- MathJax -->
+    <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+    <!-- Raleway font -->
+    <!--<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>-->
+
+    <!-- Custom CSS overrides -->
+    <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/override.css">
+
+    <!-- Atom feed -->
+    <link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" type="application/rss+xml" rel="alternate" title="Joystick Gremlin - Changelog" />
+</head>
+
+
+    <body>
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+            <a class="navbar-brand" href="https://whitemagic.github.io/JoystickGremlin">
+                <img src="https://whitemagic.github.io/JoystickGremlin/images/icon.png">
+            </a>
+
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <!-- Home -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/">Home</a></li>
+
+                    <!-- Download -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/download/">Download</a></li>
+
+                    <!-- Manual entries -->
+                    <li class="nav-item dropdown active">
+                        <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
+
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a>
+                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
+                        </div>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav navbar-right">
+                    <li class="nav-item"><a class="nav-link" href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="row mt-4">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <h1><a name="2">2. Quick Start</a></h1>
+
+<h2>2.1 Installation & Setup</h2>
+
+<p class="text-justify">
+    On most sytems installing Joystick Gremlin only requires the installation
+    of <a
+   href="https://sourceforge.net/projects/vjoystick/files/Beta%202.x/2.1.8.31-291116/vJoySetup.exe/download">vJoy</a>
+    and <a href="https://whitemagic.github.io/JoystickGremlin/download">Joystick Gremlin</a> itself. Once
+    vJoy is installed it is advisable to configure the vJoy device(s), using
+    vJoyConf, to contain the desired number of axes, buttons, and hats.
+</p>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-responsive center-block" src="https://whitemagic.github.io/JoystickGremlin/images/vjoy_configuration.png">
+    </div>
+    <div class="col-md-5">
+        <em>VJoy configuration dialog with settings required for proper
+            Joystick Gremlin operation.</em>
+    </div>
+</div>
+
+<div class="bd-callout-warning bd-callout">
+    When configuring the hat instances make sure to select
+    <strong>continuous</strong> for their type.
+</div>
+
+
+<h2>2.2 Simple Profiles</h2>
+
+<p class="text-justify">
+    The following is intended as a simple guide that introduces the
+    concepts used in Joystick Gremlin by way of examples of how common
+    tasks are achieved. One can think of Gremlin as a system that reacts
+    to the user's input. This means that when the user does something
+    Gremlin will react in a way specified by the user. In a sense the
+    following summarizes the way Gremlin operates:
+</p>
+
+<div class="bd-callout">
+    When I press this button on my joystick, I want the following to
+    happen.
+</div>
+
+<p class="text-justify">
+    This is also reflected by the design of the UI which is divided into
+    two halves. The left side lists all the physical inputs of a
+    particular joystick, such as axes, buttons, and hats. The right side
+    lists the actions associated with a particular physical input.
+    Going back to the above idea the left hand side contains the
+    &#8220;<em>When I do</em>&#8221; part while the
+    right hand side reflects the &#8220;<em>Gremlin does</em>&#8221; part.
+
+    <div class="text-center">
+        <img class="img-fluid" src="https://whitemagic.github.io/JoystickGremlin/images/main_window_annotated.png">
+        <em>Joystick Gremlin UI</em>
+    </div>
+</p>
+
+<h3>Basic Mappings</h3>
+
+<p class="text-justify">
+    The simplest type of mappings are remapping a physical input to a
+    virtual one with the <strong>Remap</strong> action. The other basic
+    action is to map a physical input to a keyboard key or combination
+    of keys using the <strong>Map to Keyboard</strong> action. Both of
+    these actions will press and hold their virtual or simulated input
+    for as long as the physical input is pressed.
+</p>
+
+<p class="text-justify">
+    These actions allow merging of multiple physical devices into a
+    single one which can be useful for games that only recognize a
+    single joystick. Mapping joystick buttons to keyboard keys allows
+    using the default bindings of a game without having to rebind
+    everything or if a game doesn't support joystick input.
+</p>
+
+
+<h3>Macros</h3>
+
+<p class="text-justify">
+    Sometimes it's not enough to simply press and hold a button, for
+    example when a sequence of keys needs to be pressed or an axis
+    ramped up in a particular manner. This is where the
+    <strong>Macro</strong> action comes into play. This action allows the
+    recording and customizing of events that should be played back when
+    the associated physical input is pressed.
+</p>
+
+<p class="text-justify">
+    Besides simply executing the macro once upon activation it is also
+    possible to have a macro repeat in a variety of ways:
+    <ul>
+        <li>Repeat a fixed number of times</li>
+        <li>Repeat until the physical input is pressed again</li>
+        <li>Repeat as long as the physical input is pressed</li>
+    </ul>
+</p>
+
+
+<h3>Dealing with Axes</h3>
+
+<p class="text-justify">
+    Axes often require additional configuration by adding deadzones to prevent
+    accidental inputs or a response curves that modify the response to a physical
+    input. This allows increasing or reducing the sensitivity of particular
+    areas of physical input to tailor the axis to a user's preference.  The
+    horizontal axis of the curve editor reflects the physical deflection of the
+    axis from minimum (left) to maximum (right) while the vertical axis
+    reflects to output generated for the corresponding physical input.
+</p>
+
+
+<h2>2.3 Complex Profiles</h2>
+
+<p class="text-justify">
+    While simple profiles as described above are already capable of supporting
+    a large variety of setups, sometimes a bit more complexity is required to
+    create a particular setup. This is where <strong>containers</strong>,
+    <strong>conditions</strong>, and <strong>modes</strong> come into play.
+</p>
+
+<h3>Container</h3>
+
+<p class="text-justify">
+    A container holds one or more actions and is capable of executing
+    additional logic specific to the container. The simplest container type
+    <strong>Basic</strong> simply executes all contained actions. This is the type
+    which we've used implicitly when creating a simple profile. There are
+    currently two more advanced containers, <strong>Tempo</strong> and
+    <strong>Chain</strong>. The tempo container executes different sets of actions
+    depending on how long the corresponding physical input is pressed. This
+    allows using a single button for two different actions where, for example,
+    one is used more often then the other. The chain container contains an
+    arbitrary number of action sets and with each press of the associated
+    physical input the next set of ations in the chain are executed. When the last action
+    set was processed the first one will be run next. This can be used when a
+    single physical button should be used to switch through different actions.
+</p>
+
+<h3>Condition</h3>
+
+<p class="text-justify">
+    Sometimes it can be helpful to control the condition under which an action
+    or container is executed. The execution can thus be conditioned on the state
+    of other input devices such as joysticks or keyboard, as well as the state
+    of the input associated with the action or container. This can be used to
+    implement a shift state which normally executes one action but if a certain
+    button is pressed a different action is executed.
+</p>
+
+<h3>Mode</h3>
+
+<p class="text-justify">
+    In certain situations it can be beneficial to split a profile into several
+    parts, called modes. Each mode can have their own individual set of
+    physical input to action mappings. For example in flight simulators this
+    can be used to have one mode for air combat, one for ground attack, and one
+    for communications. One powerful feature of the mode system is the
+    <strong>inheritance</strong> capability. A mode can inherit from a single
+    parent which results in the child mode executing whatever action their
+    parent defined for a given input if the child has no actions of their own
+    specified. This allows creating basic modes and then fine tuning them in a
+    child mode for particular usage scenarios without having to duplicate
+    common functionalities.
+</p>
+
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        </div>
+
+
+        <footer class="footer">
+    <div class="container">
+        <div class="col-md-offset-2 col-md8">
+            <p class="text-muted">Last update: February 3, 2018</p>
+        </div>
+    </div>
+</footer>
+
+
+    </body>
+
+</html>

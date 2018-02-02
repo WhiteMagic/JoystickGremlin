@@ -3,8 +3,7 @@
 
     <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>Joystick Gremlin</title>
 
@@ -14,22 +13,18 @@
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 
-    <!-- Bootstrap theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
-
-    <!-- JQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-
-    <!-- Bootstrap JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Javascript -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
     <!-- MathJax -->
     <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
     <!-- Raleway font -->
-    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+    <!--<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>-->
 
     <!-- Custom CSS overrides -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/override.css">
@@ -41,50 +36,48 @@
 
     <body>
 
-        <nav class="navbar navbar-default">
-            <div class="conainer-fluid">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="https://whitemagic.github.io/JoystickGremlin"><img src="https://whitemagic.github.io/JoystickGremlin/images/icon.png"></a>
-                </div>
+            <a class="navbar-brand" href="https://whitemagic.github.io/JoystickGremlin">
+                <img src="https://whitemagic.github.io/JoystickGremlin/images/icon.png">
+            </a>
 
-                <div class="collapse navbar-collapse" id="navbar-collapse">
-                    <ul class="nav navbar-nav">
-                        <!-- Home -->
-                        <li ><a href="https://whitemagic.github.io/JoystickGremlin/">Home</a></li>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <!-- Home -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/">Home</a></li>
 
-                        <!-- Download -->
-                        <li ><a href="https://whitemagic.github.io/JoystickGremlin/download/">Download</a></li>
+                    <!-- Download -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/download/">Download</a></li>
 
-                        <!-- Manual entries -->
-                        <li class="dropdown active">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
-                            
-                            <ul class="dropdown-menu">
-                                <li class="active"><a href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a></li>
-                                <!--<li ><a href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a></li>-->
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+                    <!-- Manual entries -->
+                    <li class="nav-item dropdown active">
+                        <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <li><a href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
-                    </ul>
-                </div>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
+                        </div>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav navbar-right">
+                    <li class="nav-item"><a class="nav-link" href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
+                </ul>
             </div>
         </nav>
 
         <div class="container">
-            <div class="row">
+            <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h2><a name="1">1. Overview</a></h2>
+                    <h1><a name="1">1. Overview</a></h1>
 
 <p class="text-justify">
     Joystick Gremlin is a program that allows the configuration of joystick
@@ -108,22 +101,22 @@
         <li>Merging of multiple physical devices into a single virtual device</li>
         <li>Axis response curve and dead zone configuration</li>
         <li>Arbitrary number of modes with inheritance and customizable mode switching</li>
-        <li>Keyboard macros</li>
+        <li>Macros with joystick, keybouard and mouse inputs</li>
         <li>Python scripting support</li>
     </ul>
 </p>
 
 <p class="text-justify">
     Joystick Gremlin provides a graphical user interface, described in <a
-    href="https://whitemagic.github.io/JoystickGremlin/interface">Section 2</a>, which allows commonly
+    href="https://whitemagic.github.io/JoystickGremlin/interface">Section 3</a>, which allows commonly
     performed tasks, such as input remapping, axis response curve setups, and
     macro recording to be performed easily. Functionality that is not accessible
     via the UI can be implemented through custom modules, explained in detail in <a
-    href="https://whitemagic.github.io/JoystickGremlin/custom_modules">Section 3</a>.
+    href="https://whitemagic.github.io/JoystickGremlin/custom_modules">Section 4</a>.
 </p>
 
 
-<h3><a name="1_1">1.1 Installation</a></h3>
+<h2><a name="1_1">1.1 Installation</a></h2>
 
 <p class="text-justify">
     Joystick Gremlin has one major dependency, vJoy which provides virtual
@@ -134,7 +127,19 @@
         <li><a href="https://whitemagic.github.io/JoystickGremlin/download">Joystick Gremlin</a></li>
         <li><a href="http://vjoystick.sourceforge.net/site/">vJoy</a> version 2.1.8 (direct
             download link <a href="https://sourceforge.net/projects/vjoystick/files/Beta%202.x/2.1.8.31-291116/vJoySetup.exe/download">2.1.8 2016-11-29</a>)</li>
-        <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=5555">VC Redistributable  2010 (x86)</a></li>
+    </ul>
+</p>
+
+<p class="text-justify">
+    vJoy creates virtual joysticks which show up as a device in Windows and
+    Joystick Gremlin uses these to forward inputs to them. The VC2010 package
+    is required by Python but is likely already installed. The same goes for
+    the VC2013 package which is required by vJoy but is most likely already
+    installed on the machine. If one or both of these are missing they can be
+    obtained from:
+
+    <ul>
+        <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=5555">VC Redistributable 2010 (x86)</a></li>
         <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=40784">VC Redistributable 2013 (x86)</a>
     </ul>
 </p>
@@ -145,17 +150,9 @@
     libraries.
 </p>
 
-<p class="text-justify">
-    vJoy creates virtual joysticks which show up as a device in Windows and
-    Joystick Gremlin uses these to forward inputs to them. The VC2010 package
-    is required by Python but is likely already installed. The same goes for
-    the VC2013 package which is required by vJoy but is most likely already
-    installed on the machine.
-</p>
 
 
-
-<h4 class="subsection">vJoy Configuration</h4>
+<h3>vJoy Configuration</h3>
 
 <p class="text-justify">
     In order to properly use Joystick Gremlin vJoy has to be configured first.
@@ -179,67 +176,62 @@
 </p>
 
 
-<h3><a name="1_2">1.2 Concepts</a></h3>
+<h2><a name="1_2">1.2 Concepts</a></h2>
 
 <p class="text-justify">
     The following section introduces the terminology used by Joystick Gremlin.
-    We'll explain the different concepts starting with individual actions and
-    ending with a complete profile.
+    Next, the different concepts will be exapleined starting with individual
+    actions and ending with a complete profile.
 </p>
 
-
-<h4 class="subsection">Action</h4>
-<p class="text-justify">
-    An action is something Joystick Gremlin executes in response to the user
-    activating a physical input.  Examples include running a macro, sending
-    button presses to vJoy, or changing to a different mode. Each action has a
-    condition attached to it which can further dictate when an action is to be
-    executed. For buttons the conditions are the state of the button, i.e.
-    pressed or released as well as an optional shift modifier which has be be
-    pressed in order for the action to be run.
-</p>
-
-<h4 class="subsection">Container</h4>
-<p class="text-justify">
-    A container holds one or more actions and uses them in an interesting way.
-    In the most simple case it simply executes the action. More complex cases
-    are where the container decides which action to execute based on the
-    duration a button is held down.
-</p>
-
-<h4 class="subsection">Input</h4>
+<h3>Input</h3>
 <p class="text-justify">
     An input is an axis, button, hat, or keyboard key on a physical device.
-    Each input can have multiple actions assigned to it and these actions
-    can change between the different modes.
 </p>
 
-<h4 class="subsection">Device</h4>
+<h3>Action</h3>
+<p class="text-justify">
+    An action is something Joystick Gremlin executes in response to the user
+    activating a physical input. Examples include running a macro, sending
+    button presses to vJoy, or changing to a different mode. Each action has a
+    condition attached to it which can further dictate when an action is to be
+    executed.
+</p>
+
+<h3>Container</h3>
+<p class="text-justify">
+    A container holds one or more actions and uses them in the manner specific
+    to the particular container. In the simplest case it simply executes the
+    action(s). More complex cases are where the container decides which
+    action(s) to execute based on the duration a button is held down.
+</p>
+
+<h3>Device</h3>
 <p class="text-justify">
     A device is a physical controller connected to the computer such as a
     joystick, pedal, or throttle. Each device has multiple inputs with their
     own associated actions.
 </p>
 
-<h4 class="subsection">Mode</h4>
+<h3>Mode</h3>
 <p class="text-justify">
     A mode is a collection of actions associated with the inputs for each
     connected device. Each mode can inherit from one other mode, his parent.
     If a mode and its parent both define actions for the same input only the
-    actions of the mode and not its parent are used. Similarly, if the mode
-    defines no actions for an input but the parent does the parent's actions
-    are used.  This allows having a common set of base commands that more
-    specialised modes add to or change.
+    actions of the mode and not its parent are used. If the mode defines no
+    actions for an input but the parent does the parent's actions are used.
+    This allows having a common set of base actions that more specialised
+    modes add to or change.
 </p>
 
-<h4 class="subsection">Profile</h4>
+<h3>Profile</h3>
 <p class="text-justify">
     A profile is a folder which contains a XML configuration file together
     with any custom modules used. The profile contains the settings made via
     the user interface for each of the connected peripherals.
 </p>
 
-<h4 class="subsection">Example</h4>
+<h3>Example</h3>
 <p class="text-justify">
     The following is a simple example showing how the above introduced concepts
     work together. The profile contains two modes, <em>Default</em> and
@@ -373,7 +365,7 @@
     </div>
 
     <div class="col-md-4">
-        <img class="img-responsive center-block" src="https://whitemagic.github.io/JoystickGremlin/images/concepts.png">
+        <img class="img-responsive center-block" src="https://whitemagic.github.io/JoystickGremlin/images/concepts.png" width="100%">
         <em>The image shows how the various concepts explained below relate to
             each other.</em>
     </div>
@@ -388,7 +380,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: December 25, 2017</p>
+            <p class="text-muted">Last update: February 3, 2018</p>
         </div>
     </div>
 </footer>

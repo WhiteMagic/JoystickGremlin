@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Joystick Gremlin</title>
+    <title>Release 10</title>
 
-    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/examples/">
+    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/changelog/2018/02/03/Release-10.html">
 
     <!-- Code highlighting CSS -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
@@ -60,9 +60,9 @@
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a>
-                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a>
-                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
+                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
                         </div>
                     </li>
                 </ul>
@@ -77,59 +77,45 @@
             <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h1><a name="6">6. Examples</a></h1>
+                    <h1>Release 10</h1>
 
-<p class="text-justify">
-    In the following simple usage examples of Joystick Gremlin will be shown.
-    These should give you an idea of what is possible and illustrate the use of
-    the UI.
-</p>
+<a class="btn btn-primary"
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_10/Joystick.Gremlin.R10.msi">Download
+    Release 10 MSI</a>
+<a class="btn btn-primary"
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_10/Joystick.Gremlin.R10.zip">Download
+    Release 10 ZIP</a>
 
-
-<h2>Remapping a button</h2>
-<div class="embed-responsive embed-responsive-16by9 text-center">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/JQjbPK7KY08" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
-
-<h2>Remap to keyboard</h2>
-<div class="embed-responsive embed-responsive-16by9 text-center">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/u46ttzUWz7c" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
-
-<h2>Custom axis response curve</h2>
-<div class="embed-responsive embed-responsive-16by9 text-center">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/qrdNbVoCS8Q" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
-
-<h2>Merge axis</h2>
-<div class="embed-responsive embed-responsive-16by9 text-center">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/RO4oioUuUWA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
-
-<h2>Split axis</h2>
-<div class="embed-responsive embed-responsive-16by9 text-center">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/zcCyq4aDpM8" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
-
-<h2>Hat directions as buttons</h2>
-<div class="embed-responsive embed-responsive-16by9 text-center">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/NK-XiLtlf0o" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
-
-<!--<h3>Keyboard macro</h3>-->
-<!--<p class="text-justify"></p>-->
+<br/><br/>
 
 
-<!--<h3>Two modes</h3>-->
-<!--<p class="text-justify"></p>-->
+<h2>New Features</h2>
+<ul>
+    <li>Configuration UI for HIDGuardian</li>
+    <li>Ability to assign labels to each device</li>
+    <li>Added UI to swap configurations of identical devices</li>
+    <li>Ability to turn on and off which events a macro should record</li>
+    <li>Ability to record and emit mouse button events</li>
+    <li>Symmetry mode for response curve confiruation</li>
+    <li>Function added to quickly invert a response curve</li>
+    <li>Option to launch with Gremlin on Windows launch added</li>
+    <li>Description action added which allows describing individual containers</li>
+    <li>Hat to Buttons container added which allows easily turning a hat into four or eight buttons</li>
+    <li>Rework the cheatsheet generator, preparing for future updates</li>
+    <li>Keyboard inputs from on screen keyboards can now be used in macro recordings</li>
+</ul>
 
-
-<!--<h3>Making Joystick Gremlin speak</h3>-->
-<!--<p class="text-justify"></p>-->
-
-
-<!--<h3>Triggering afterburner if the throttle is at 99%</h4>-->
-<!--<p class="text-justify"></p>-->
+<h2>Fixes</h2>
+<ul>
+    <li>UI fixes to improve clarity and remove annoyances</li>
+    <li>Show device ID in each tab if duplicate devices exist</li>
+    <li>Improve and fix automatic button release logic</li>
+    <li>Some device initialization fixes</li>
+    <li>Improve handling of virtual buttons created from axis and hats</li>
+    <li>Consistent handling of axis motion detection</li>
+    <li>Improved Sound playback action validity checking</li>
+    <li>Ensure empty modes are not silently dropped when executing a profile</li>
+</ul>
 
                 </div>
                 <div class="col-md-2"></div>

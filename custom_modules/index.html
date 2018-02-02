@@ -3,8 +3,7 @@
 
     <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>Joystick Gremlin</title>
 
@@ -14,22 +13,18 @@
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 
-    <!-- Bootstrap theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
-
-    <!-- JQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-
-    <!-- Bootstrap JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Javascript -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
     <!-- MathJax -->
     <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
     <!-- Raleway font -->
-    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+    <!--<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>-->
 
     <!-- Custom CSS overrides -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/override.css">
@@ -41,71 +36,68 @@
 
     <body>
 
-        <nav class="navbar navbar-default">
-            <div class="conainer-fluid">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="https://whitemagic.github.io/JoystickGremlin"><img src="https://whitemagic.github.io/JoystickGremlin/images/icon.png"></a>
-                </div>
+            <a class="navbar-brand" href="https://whitemagic.github.io/JoystickGremlin">
+                <img src="https://whitemagic.github.io/JoystickGremlin/images/icon.png">
+            </a>
 
-                <div class="collapse navbar-collapse" id="navbar-collapse">
-                    <ul class="nav navbar-nav">
-                        <!-- Home -->
-                        <li ><a href="https://whitemagic.github.io/JoystickGremlin/">Home</a></li>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <!-- Home -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/">Home</a></li>
 
-                        <!-- Download -->
-                        <li ><a href="https://whitemagic.github.io/JoystickGremlin/download/">Download</a></li>
+                    <!-- Download -->
+                    <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/download/">Download</a></li>
 
-                        <!-- Manual entries -->
-                        <li class="dropdown active">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
-                            
-                            <ul class="dropdown-menu">
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a></li>
-                                <!--<li ><a href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a></li>-->
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a></li>
-                                <li class="active"><a href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a></li>
-                                <li ><a href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+                    <!-- Manual entries -->
+                    <li class="nav-item dropdown active">
+                        <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <li><a href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
-                    </ul>
-                </div>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a>
+                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
+                        </div>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav navbar-right">
+                    <li class="nav-item"><a class="nav-link" href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
+                </ul>
             </div>
         </nav>
 
         <div class="container">
-            <div class="row">
+            <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h2><a name="3">3. Custom Modules</a></h2>
+                    <h1><a name="4">4. Custom Modules</a></h1>
 
 <p class="text-justify">
     While common configuration tasks can be performed directly via the
-    UI, more advanced and specialised configurations require writing
-    custom modules.  Each module is a simple Python script which defines
+    UI, more advanced and specialised configurations may either only be possible or much simpler by using a custom module. Each module is a simple Python script which defines
     the functions (callbacks) triggered in reaction to inputs being
     used. Since the functions are written in Python there is no limit as
     to what can be expressed. The following section assumes some basic
     familiarity with Python. We start with a general overview of the
-    layout of a custom module in <a href="#3_1">Section 3.1</a> which is
-    followed by an quick overview of the API in <a href="#3_2">Section
-    3.2</a> followed by the description of the decorator based callback
-    system in <a href="#3_3">Section 3.3</a> with periodic function
-    callbacks described in <a href="#3_4">Section 3.4</a>. Some words on how
-    to debug custom modules is provided in <a href="#3_5">Section 3.5</a>.
-    Finally, <a href="#3_6">Section 3.6</a> provides a few practical
+    layout of a custom module in <a href="#4_1">Section 4.1</a> which is
+    followed by an quick overview of the API in <a href="#4_2">Section
+    4.2</a> followed by the description of the decorator based callback
+    system in <a href="#4_3">Section 4.3</a> with periodic function
+    callbacks described in <a href="#4_4">Section 4.4</a>. Some words on how
+    to debug custom modules is provided in <a href="#4_5">Section 4.5</a>.
+    Finally, <a href="#4_6">Section 4.6</a> provides a few practical
     examples.
 </p>
 
 
-<h3><a name="3_1">3.1 Principle &amp; Layout of Custom Modules</a></h3>
+<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules</a></h2>
 
 <p class="text-justify">
     Joystick Gremlin uses callbacks, i.e. functions that are executed in
@@ -129,34 +121,42 @@
     event that triggered the execution of the function. Each event is of
     type <code>gremlin.event_handler.Event</code> and contains the
     following data:
-
-    <dl class="dl-horizontal text-justify">
-        <dt><code>event_type</code></dt>
-        <dd>The type of the event, which matches that of the decorator
-            used to decorate the function.</dd>
-        <dt><code>identifier</code></dt>
-        <dd>The identifier of the input, which matches that of the
-            decorator used to decorate the function.</dd>
-        <dt><code>hardware_id</code></dt>
-        <dd>The hardware id of the device, which matches that of the
-            decorator used to decorate the function.</dd>
-        <dt><code>windows_id</code></dt>
-        <dd>The windows id of the device, which matches that of the
-            decorator used to decorate the function.</dd>
-        <dt><code>is_pressed</code></dt>
-        <dd>Boolean flag indicating if a button or key is pressed. This
-            field's value is only valid for joystick buttons and keyboard
-            keys.</dd>
-        <dt><code>value</code></dt>
-        <dd>Value of an axis or hat. In case of an axis the value is in
-            the range \(\left[-1, 1\right]\) and in the
-            case of a hat a tuple (x direction, y direction) is used. This
-            field's value is only valid for joystick axes and hats.</dd>
-        <dt><code>raw_value</code></dt>
-        <dd>The raw axis value, this field is only valid for joystick
-            axes.</dd>
-    </dl>
 </p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5 class="class-title">Event</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-4"><code>event_type</code></dt>
+            <dd class="col-md-8">The type of the event this represents.</dd>
+
+            <dt class="col-md-4"><code>identifier</code></dt>
+            <dd class="col-md-8">The identifier of the event source.</dd>
+
+            <dt class="col-md-4"><code>hardware_id</code></dt>
+            <dd class="col-md-8">Hardware ID assigned to the deivce that created the event.</dd>
+
+            <dt class="col-md-4"><code>windows_id</code></dt>
+            <dd class="col-md-8">Index assigned by Windows to the device that created the event.</dd>
+
+            <dt class="col-md-4"><code>is_pressed</code></dt>
+            <dd class="col-md-8">If the event represents a button or key the value is True for pressed and False for released state.</dd>
+
+            <dt class="col-md-4"><code>value</code></dt>
+            <dd class="col-md-8">Value of an axis or hat. In case of an axis the
+                value is in the range \(\left[-1, 1\right]\)
+                and in the case of a hat a tuple (x direction, y direction) is
+                used. This field's value is only valid for joystick axes and
+                hats.</dd>
+
+            <dt class="col-md-4"><code>raw_value</code></dt>
+            <dd class="col-md-8">The raw axis value, this field is only valid for joystick
+                axes.</dd>
+            </dl>
+    </div>
+</div>
 
 <p class="text-justify">
     From this list the only values that are typically of interest are
@@ -165,7 +165,7 @@
 </p>
 
 
-<h3><a name="3_2">3.2 Plugin API</a></h3>
+<h2><a name="4_2">4.2 Device Access API</a></h2>
 
 <p class="text-justify">
     The following describes the API of the optional variables exposed
@@ -180,8 +180,7 @@
 
 
 
-
-<h4 class="subsection">vJoy</h4>
+<h3>vJoy</h3>
 
 <p class="text-justify">
     Any decorated function that has a parameter named <code>vjoy</code>
@@ -206,7 +205,7 @@
 <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></code></pre></figure>
 
 
-<h4 class="subsection">Joystick State</h4>
+<h3>Joystick State</h3>
 
 <p class="text-justify">
     Any decorated function that has a parameter named <code>joy</code>
@@ -256,7 +255,7 @@
 </p>
 
 
-<h4 class="subsection">Keyboard State</h4>
+<h3>Keyboard State</h3>
 
 <p class="text-justify">
     Any decorated function that has a parameter named
@@ -274,15 +273,17 @@
 </p>
 
 
-<h3><a name="3_3">3.3 Decorator Based User Input Callback Generation</a></h3>
+<h2><a name="4_3">4.3 User Input Callback Generation</a></h2>
 
 <p class="text-justify">
-    Callbacks reacting to user inputs are created by decorating
-    functions using specific decorators. There are two types of
-    decorators, one for joysticks and one for the keyboard. Joystick
-    decorators are created for specific devices using the
-    <code>gremlin.input_devices.JoystickDecorator</code> class as
-    follows:
+    Callbacks reacting to user inputs are created by decorating functions using
+    specific decorators. Here are two useful links if you're not familiar with
+    decorators, <a href="https://www.python.org/dev/peps/pep-0318/">official
+    PEP</a> and an <a href="https://stackoverflow.com/questions/739654/how-to-make-a-chain-of-function-decorators/1594484#1594484">exhaustive
+    StackOverflow answer</a> There are two types of decorators,
+    one for joysticks and one for the keyboard. Joystick decorators are created
+    for specific devices using the
+    <code>gremlin.input_devices.JoystickDecorator</code> class as follows:
 <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">joystick_decorator</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
     <span class="o">&lt;</span><span class="n">device</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="o">&lt;</span><span class="n">device</span> <span class="nb">id</span><span class="o">&gt;</span><span class="p">,</span>
@@ -320,33 +321,34 @@
 
 <p class="text-justify">
     Where <code>&lt;key name&gt;</code> can be either a string representation
-    of the key's name as or an instance of
-    <code>gremlin.marco.Keys.Key</code> which are both defined in the
-    <code>gremlin.macro</code> module.
+    of the key's name as or an instance of <code>gremlin.marco.Key</code> which
+    are both defined in the <code>gremlin.macro</code> module.
 </p>
 
 <p class="text-justify">
     The <code>event</code> parameter of the decorated function is always
-    required and contains the state of the input used in the decoration,
-    as described in <a href="#3_1">Section 3.1</a>.
+    required and contains the state of the input that triggered the callback,
+    the contents of the variable are described in <a href="#4_1">Section
+    4.1</a>.
 </p>
 
 
-<h3><a name="3_4">3.4 Decorator Based Periodic Function Callbacks</a></h3>
+<h2><a name="4_4">4.4 Periodic Function Callbacks</a></h2>
 
 <p class="text-justify">
     In some situations a function needs to be executed at regular
-    intervals. This is facilitated by a decoartor that ensures that the
+    intervals. This is facilitated by a decorator that ensures that the
     function is run at a specified interval while Joystick Gremlin is
     active.
-    </br></br>
-    The decorator takes a single argument that indicates the interval,
-    i.e. the duration, between executions of the function. The callback
-    function can use the same plugin system the user input callbacks to
-    access information, i.e.  <code>vjoy</code>, <code>joy</code>, and
-    <code>keyboard</code>.
-    </br></br>
-    A generic example of periodic function callback is shown below.
+</p>
+
+<p class="text-justify">
+    The decorator takes a single argument that indicates the interval, i.e. the
+    duration, between executions of the function in seconds. The callback
+    function can use the same plugin system as the user input callbacks to gain
+    access to device information, e.g. <code>vjoy</code>, <code>joy</code>, and
+    <code>keyboard</code>. A generic example of periodic function callback is
+    shown below.
 </p>
 
 <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="nd">@gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">periodic</span><span class="p">(</span><span class="o">&lt;</span><span class="n">seconds</span><span class="o">&gt;</span><span class="p">)</span>
@@ -355,7 +357,7 @@
 </p>
 
 
-<h3><a name="3_5">3.5 Debugging</a></h3>
+<h2><a name="4_5">4.5 Debugging</a></h2>
 
 <p class="text-justify">
     To facilitate the debugging of custom modules without setting up the
@@ -373,7 +375,7 @@
 </p>
 
 
-<h3><a name="3_6">3.6 Examples</a></h3>
+<h2><a name="4_6">4.6 Examples</a></h2>
 
 <p class="text-justify">
     In the following a few examples of custom modules are shown. They
@@ -383,7 +385,7 @@
 </p>
 
 
-<h4 class="subsection">Keyboard Controlled Throttle</h4>
+<h3>Keyboard Controlled Throttle</h3>
 
 <p class="text-justify">
     This script allows the user to control an analogue throttle in 1/3rd
@@ -418,7 +420,7 @@
         <span class="n">set_throttle</span><span class="p">(</span><span class="n">vjoy</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span></code></pre></figure>
 
 
-<h4 class="subsection">Joystick Response Curve</h4>
+<h3>Joystick Response Curve</h3>
 
 <p class="text-justify">
     This script configures a response curve which provides more control
@@ -453,7 +455,7 @@
     <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">AxisName</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">curve</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></code></pre></figure>
 
 
-<h4 class="subsection">Mode Switching</h4>
+<h3>Mode Switching</h3>
 
 <p class="text-justify">
     This script presents a few different ways of using mode switching
@@ -495,7 +497,7 @@
         <span class="n">gremlin</span><span class="o">.</span><span class="n">control_action</span><span class="o">.</span><span class="n">switch_mode</span><span class="p">(</span><span class="s2">&quot;Global&quot;</span><span class="p">)</span></code></pre></figure>
 
 
-<h4 class="subsection">Precision Mode</h4>
+<h3>Precision Mode</h3>
 
 <p class="text-justify">
     This script switches to a lower sensitivity curve when any of the weapon
@@ -569,7 +571,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: December 25, 2017</p>
+            <p class="text-muted">Last update: February 3, 2018</p>
         </div>
     </div>
 </footer>
