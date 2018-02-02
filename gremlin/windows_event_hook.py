@@ -300,19 +300,9 @@ class MousedHook:
             else:
                 print(w_param)
 
-            # print(button_id)
             evt = MouseEvent(button_id, is_pressed, False)
             for cb in self._callbacks:
                 cb(evt)
-
-            # Extract data from the message
-            # print(n_code, w_param)
-            # if l_param[2] is not None:
-            #     # print(l_param[0], l_param[1], bin(l_param[2]))
-            #     print(w_param, l_param[2] & (0x0001 << 16))
-            #     #
-            #     #  1 0000 0000 0000 0000
-            #     # 10 0000 0000 0000 0000
 
         # Pass the event on to the next callback in the chain
         return ctypes.windll.user32.CallNextHookEx(

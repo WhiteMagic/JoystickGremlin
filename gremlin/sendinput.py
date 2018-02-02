@@ -164,39 +164,3 @@ def _send_input(*inputs):
     cbSize = ctypes.c_int(ctypes.sizeof(_INPUT))
 
     return ctypes.windll.user32.SendInput(nInputs, pInputs, cbSize)
-
-
-# # for _ in range(10):
-# #     mouse_wheel(1)
-# #     time.sleep(0.2)
-#
-# # mouse_press(MouseButton.Back)
-# # mouse_release(MouseButton.Back)
-# # time.sleep(0.5)
-# # mouse_press(MouseButton.Forward)
-# # mouse_release(MouseButton.Forward)
-#
-# pps = 15
-# step = 1.0
-# delay = 1.0 / (pps / step)
-#
-# while delay < 0.01:
-#     step += 1.0
-#     delay = 1.0 / (pps / step)
-#
-# step = int(step)
-# print(delay, step)
-#
-# # while rate < 0.01:
-# #     rate = 1.0 / pps
-# #     pps
-# #     print(rate)
-# #amount = 1000 / 20
-#
-# # mouse_press(MouseButton.Left)
-# t_start = time.time()
-# while time.time() - t_start < 1:
-#     mouse_relative_motion(step, 0)
-#     time.sleep(delay)
-# # mouse_release(MouseButton.Left)
-#

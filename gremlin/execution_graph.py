@@ -18,8 +18,8 @@
 from abc import abstractmethod, ABCMeta
 from collections import namedtuple
 import copy
+import logging
 
-# from action_plugins.remap import Remap
 from gremlin import actions, base_classes, common, error
 
 
@@ -41,34 +41,6 @@ class ContainerCallback:
             execution graph base callback
         """
         self.execution_graph = ContainerExecutionGraph(container)
-
-        # # Reorder containers such that if those containing remap actions are
-        # # executed last
-        # pre_containers = []
-        # post_containers = []
-        # for i, container in enumerate(input_item.containers):
-        #     # Don't include virtual button based containers they are handled
-        #     # separately
-        #     if container.virtual_button:
-        #         continue
-        #     contains_remap = False
-        #     for action_set in container.action_sets:
-        #         for action in action_set:
-        #             if isinstance(action, action_plugins.remap.Remap):
-        #                 contains_remap |= True
-        #     if contains_remap:
-        #         post_containers.append(i)
-        #     else:
-        #         pre_containers.append(i)
-        #
-        # ordered_containers = []
-        # for i in pre_containers:
-        #     ordered_containers.append(input_item.containers[i])
-        # for i in post_containers:
-        #     ordered_containers.append(input_item.containers[i])
-        #
-        # for container in ordered_containers:
-        #     self.execution_graphs.append(ContainerExecutionGraph(container))
 
     def __call__(self, event):
         """Executes the callback based on the event's content.
@@ -95,10 +67,10 @@ class ContainerCallback:
         shared_value = copy.deepcopy(value)
 
         if event == common.InputType.VirtualButton:
-            self.execution_graph.process_event(event, copy.deepcopy(value))
-            print("VIRTUAL BUTTON CODE PATH")
-            0 / 0
-            # TODO: remove this
+            # TODO: remove this at a future stage
+            logging.getLogger("system").error(
+                "Virtual button code path being used"
+            )
         else:
             self.execution_graph.process_event(event, shared_value)
 
@@ -328,25 +300,6 @@ class ContainerExecutionGraph(AbstractExecutionGraph):
         sequence.append("Action")
 
         self._create_transitions(sequence)
-
-    # def _create_virtual_button(self, container):
-    #     """Creates a VirtualButton object for the provided container.
-    #
-    #     :param container data to use in order to generate the VirtualButton
-    #     """
-    #     input_type = container.get_input_type()
-    #     if input_type == common.InputType.JoystickAxis:
-    #         return actions.AxisButton(
-    #             container.virtual_button.lower_limit,
-    #             container.virtual_button.upper_limit,
-    #             container.virtual_button.direction
-    #         )
-    #     elif input_type == common.InputType.JoystickHat:
-    #         return actions.HatButton(
-    #             container.virtual_button.directions
-    #         )
-    #     else:
-    #         raise error.GremlinError("Invalid virtual button provided")
 
 
 class ActionSetExecutionGraph(AbstractExecutionGraph):
