@@ -8,19 +8,18 @@ layout: default
 
 <p class="text-justify">
     While common configuration tasks can be performed directly via the
-    UI, more advanced and specialised configurations require writing
-    custom modules.  Each module is a simple Python script which defines
+    UI, more advanced and specialised configurations may either only be possible or much simpler by using a custom module. Each module is a simple Python script which defines
     the functions (callbacks) triggered in reaction to inputs being
     used. Since the functions are written in Python there is no limit as
     to what can be expressed. The following section assumes some basic
     familiarity with Python. We start with a general overview of the
-    layout of a custom module in <a href="#3_1">Section 3.1</a> which is
-    followed by an quick overview of the API in <a href="#3_2">Section
-    3.2</a> followed by the description of the decorator based callback
-    system in <a href="#3_3">Section 3.3</a> with periodic function
-    callbacks described in <a href="#3_4">Section 3.4</a>. Some words on how
-    to debug custom modules is provided in <a href="#3_5">Section 3.5</a>.
-    Finally, <a href="#3_6">Section 3.6</a> provides a few practical
+    layout of a custom module in <a href="#4_1">Section 4.1</a> which is
+    followed by an quick overview of the API in <a href="#4_2">Section
+    4.2</a> followed by the description of the decorator based callback
+    system in <a href="#4_3">Section 4.3</a> with periodic function
+    callbacks described in <a href="#4_4">Section 4.4</a>. Some words on how
+    to debug custom modules is provided in <a href="#4_5">Section 4.5</a>.
+    Finally, <a href="#4_6">Section 4.6</a> provides a few practical
     examples.
 </p>
 
@@ -49,34 +48,42 @@ def callback_function(event, <optional parameter list>):
     event that triggered the execution of the function. Each event is of
     type <code>gremlin.event_handler.Event</code> and contains the
     following data:
-
-    <dl class="dl-horizontal text-justify">
-        <dt><code>event_type</code></dt>
-        <dd>The type of the event, which matches that of the decorator
-            used to decorate the function.</dd>
-        <dt><code>identifier</code></dt>
-        <dd>The identifier of the input, which matches that of the
-            decorator used to decorate the function.</dd>
-        <dt><code>hardware_id</code></dt>
-        <dd>The hardware id of the device, which matches that of the
-            decorator used to decorate the function.</dd>
-        <dt><code>windows_id</code></dt>
-        <dd>The windows id of the device, which matches that of the
-            decorator used to decorate the function.</dd>
-        <dt><code>is_pressed</code></dt>
-        <dd>Boolean flag indicating if a button or key is pressed. This
-            field's value is only valid for joystick buttons and keyboard
-            keys.</dd>
-        <dt><code>value</code></dt>
-        <dd>Value of an axis or hat. In case of an axis the value is in
-            the range {% raw %}\(\left[-1, 1\right]\){% endraw %} and in the
-            case of a hat a tuple (x direction, y direction) is used. This
-            field's value is only valid for joystick axes and hats.</dd>
-        <dt><code>raw_value</code></dt>
-        <dd>The raw axis value, this field is only valid for joystick
-            axes.</dd>
-    </dl>
 </p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5 class="class-title">Event</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-4"><code>event_type</code></dt>
+            <dd class="col-md-8">The type of the event this represents.</dd>
+
+            <dt class="col-md-4"><code>identifier</code></dt>
+            <dd class="col-md-8">The identifier of the event source.</dd>
+
+            <dt class="col-md-4"><code>hardware_id</code></dt>
+            <dd class="col-md-8">Hardware ID assigned to the deivce that created the event.</dd>
+
+            <dt class="col-md-4"><code>windows_id</code></dt>
+            <dd class="col-md-8">Index assigned by Windows to the device that created the event.</dd>
+
+            <dt class="col-md-4"><code>is_pressed</code></dt>
+            <dd class="col-md-8">If the event represents a button or key the value is True for pressed and False for released state.</dd>
+
+            <dt class="col-md-4"><code>value</code></dt>
+            <dd class="col-md-8">Value of an axis or hat. In case of an axis the
+                value is in the range {% raw %}\(\left[-1, 1\right]\){% endraw %}
+                and in the case of a hat a tuple (x direction, y direction) is
+                used. This field's value is only valid for joystick axes and
+                hats.</dd>
+
+            <dt class="col-md-4"><code>raw_value</code></dt>
+            <dd class="col-md-8">The raw axis value, this field is only valid for joystick
+                axes.</dd>
+            </dl>
+    </div>
+</div>
 
 <p class="text-justify">
     From this list the only values that are typically of interest are
@@ -85,7 +92,7 @@ def callback_function(event, <optional parameter list>):
 </p>
 
 
-<h2><a name="4_2">4.2 Plugin API</a></h2>
+<h2><a name="4_2">4.2 Device Access API</a></h2>
 
 <p class="text-justify">
     The following describes the API of the optional variables exposed
@@ -193,15 +200,17 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
 </p>
 
 
-<h2><a name="4_3">4.3 Decorator Based User Input Callback Generation</a></h2>
+<h2><a name="4_3">4.3 User Input Callback Generation</a></h2>
 
 <p class="text-justify">
-    Callbacks reacting to user inputs are created by decorating
-    functions using specific decorators. There are two types of
-    decorators, one for joysticks and one for the keyboard. Joystick
-    decorators are created for specific devices using the
-    <code>gremlin.input_devices.JoystickDecorator</code> class as
-    follows:
+    Callbacks reacting to user inputs are created by decorating functions using
+    specific decorators. Here are two useful links if you're not familiar with
+    decorators, <a href="https://www.python.org/dev/peps/pep-0318/">official
+    PEP</a> and an <a href="https://stackoverflow.com/questions/739654/how-to-make-a-chain-of-function-decorators/1594484#1594484">exhaustive
+    StackOverflow answer</a> There are two types of decorators,
+    one for joysticks and one for the keyboard. Joystick decorators are created
+    for specific devices using the
+    <code>gremlin.input_devices.JoystickDecorator</code> class as follows:
 {% highlight python3 %}joystick_decorator = gremlin.input_devices.JoystickDecorator(
     <device name>,
     <device id>,
@@ -239,33 +248,34 @@ def keyboard_callback(event):
 
 <p class="text-justify">
     Where <code>&lt;key name&gt;</code> can be either a string representation
-    of the key's name as or an instance of
-    <code>gremlin.marco.Keys.Key</code> which are both defined in the
-    <code>gremlin.macro</code> module.
+    of the key's name as or an instance of <code>gremlin.marco.Key</code> which
+    are both defined in the <code>gremlin.macro</code> module.
 </p>
 
 <p class="text-justify">
     The <code>event</code> parameter of the decorated function is always
-    required and contains the state of the input used in the decoration,
-    as described in <a href="#3_1">Section 3.1</a>.
+    required and contains the state of the input that triggered the callback,
+    the contents of the variable are described in <a href="#4_1">Section
+    4.1</a>.
 </p>
 
 
-<h2><a name="4_4">4.4 Decorator Based Periodic Function Callbacks</a></h2>
+<h2><a name="4_4">4.4 Periodic Function Callbacks</a></h2>
 
 <p class="text-justify">
     In some situations a function needs to be executed at regular
-    intervals. This is facilitated by a decoartor that ensures that the
+    intervals. This is facilitated by a decorator that ensures that the
     function is run at a specified interval while Joystick Gremlin is
     active.
-    </br></br>
-    The decorator takes a single argument that indicates the interval,
-    i.e. the duration, between executions of the function. The callback
-    function can use the same plugin system the user input callbacks to
-    access information, i.e.  <code>vjoy</code>, <code>joy</code>, and
-    <code>keyboard</code>.
-    </br></br>
-    A generic example of periodic function callback is shown below.
+</p>
+
+<p class="text-justify">
+    The decorator takes a single argument that indicates the interval, i.e. the
+    duration, between executions of the function in seconds. The callback
+    function can use the same plugin system as the user input callbacks to gain
+    access to device information, e.g. <code>vjoy</code>, <code>joy</code>, and
+    <code>keyboard</code>. A generic example of periodic function callback is
+    shown below.
 </p>
 
 {% highlight python3 %}@gremlin.input_devices.periodic(<seconds>)

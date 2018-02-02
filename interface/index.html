@@ -10,9 +10,10 @@ layout: default
 <p class="text-justify">
     In the following the various components of the user interface are
     introduced and their usage described. The UI should be sufficient for most
-    common use cases, however, if functionality is missing user created modules
-    can provide these. Examples of how to achieve certain tasks using the tools
-    provided by Joystick Gremlin are shown in <a href="{{ site.url }}/examples/">5. Examples</a>.
+    common use cases. However, if functionality is missing, user created
+    modules can provide these. Examples of how to achieve certain tasks using
+    the tools provided by Joystick Gremlin are shown in <a href="{{ site.url
+    }}/examples/">5. Examples</a>.
 </p>
 
 <h4>Table of Contents</h4>
@@ -46,8 +47,8 @@ layout: default
             summarised in the table below.</li>
         <li>The right hand portion of the UI shows the list of containers and
             actions associated with the currently selected input. This panel
-            allows the customisation of existing containers and their actions
-            as well as adding new ones.</li>
+            allows configuring the actions to execute when the physical input
+            is used.</li>
         <li>This drop down lists all available actions for this type of input.
             Pressing the "Add" button will embed the selected action in a basic
             container.</li>
@@ -56,7 +57,7 @@ layout: default
             container of the desired type.</li>
         <li>Each container can contain up to three tabs that handle
             various configurations. The <em>Action</em> tab allows the
-            basic configuration of an action. The <em>Condition</em> tab
+            basic configuration of the actions. The <em>Condition</em> tab
             allows fine tuning under which conditions the action or
             container should be executed. Finally the <em>Virtual
             Button</em> allows configuring an axis or hat to be used
@@ -69,8 +70,7 @@ layout: default
         <li>Tool bar which holds the most commonly used actions, from
             left to right:
             <ul>
-                <li>Open an existing profile, discarding the current one and
-                    any unsaved changes to it.</li>
+                <li>Open an existing profile.</li>
                 <li>Activate Joystick Gremlin, when active the button is
                     pressed and a green icon is shown. This also changes the
                     status bar display. Pressing the button while Joystick
@@ -91,56 +91,55 @@ layout: default
         <tr>
             <td width="50px"><img class="img-fluid" src="{{ site.url }}/images/icon_cycle_modes.png"></td>
             <td width="40%">Cycle modes</td>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_description.png"></td>
+            <td>Description</td>
+        </tr><tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_macro.png"></td>
             <td>Macro</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_map_to_keyboard.png"></td>
             <td>Map to keyboard</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_noop.png"></td>
             <td>No-Op</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_pause.png"></td>
             <td>Pause</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_play_sound.png"></td>
             <td>Play sound</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_axis_001.png"></td>
             <td>Remap axis</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_button_001.png"></td>
             <td>Remap button</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_hat_001.png"></td>
             <td>Remap hat</td>
+        </tr>
+        <tr>
             <td width="50px"><img class="img-fluid" src="{{ site.url }}/images/icon_response_curve.png"></td>
             <td>Response curve</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_resume.png"></td>
             <td>Resume</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_split_axis.png"></td>
             <td>Split axis</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_switch_mode.png"></td>
             <td>Switch mode</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_previous_mode.png"></td>
             <td>Switch to previous mode</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_temporary_mode_switch.png"></td>
             <td>Temporary mode switch</td>
-            <td><img class="img-fluid" src="{{ site.url }}/images/icon_text_to_speech.png"></td>
-            <td>Text-to-speech</td>
         </tr>
         <tr>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_text_to_speech.png"></td>
+            <td>Text-to-speech</td>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_pause_resume.png"></td>
             <td>Toggle pause &amp; resume</td>
-            <td></td>
-            <td></td>
         </tr>
         <tr><td></td><td></td><td></td><td></td></tr>
     </table>
@@ -153,10 +152,17 @@ layout: default
 <p class="text-justify">
     Each input has a natural behaviour or type of states it can be in.
     Certain actions, however, require a binary state reflecting that of
-    buttons, i.e.  <em>pressed</em> and <em>released</em>. In order for
+    buttons, i.e. <em>pressed</em> and <em>released</em>. In order for
     axis and hat inputs to support this they require to specify the
     condition under which they should be considered <em>pressed</em> and
     <em>released</em>, effectively turning them into a virtual button.
+</p>
+
+<p class="text-justify">
+    This is often needed, for example when using individual hat directions as
+    buttons when a game doesn't support mapping individual hat directions. A
+    common use with axis is to enable afterburners when the throttle reaches
+    100% thrust. This type of situations are where a virtual button is used.
     The details of these activation conditions is covered next.
 </p>
 
@@ -208,11 +214,10 @@ layout: default
 <h2><a name="3_3">3.3 Activation Conditions</a></h2>
 
 <p class="text-justify">
-    Sometimes executing actions associated with a physical input when
-    said physical input is pressed does not provide enough control or
-    customizability. As such Joystick Gremlin offers the ability to
-    further configure when an single action or the actions inside a
-    container should be executed.
+    Sometimes executing actions when a physical input is pressed is doesn't
+    provide enough control over the execution of actions. To provide additional
+    control over the execution of actions Gremlin allows the user to specify
+    conditions under which action can or cannot be executed.
 </p>
 
 <p class="text-justify">
@@ -234,13 +239,12 @@ layout: default
     </div>
 </div>
 <p class="text-justify">
-    As mentioned in <a href="{{ site.url }}/interface/2_1">2.1.
+    As mentioned in <a href="{{ site.url }}/interface/3_1">3.1.
         Overview</a> the conditions are configured in the condition tab
     present in every container widget. The tab allows placing conditions
     on either every action individually or on the container as a whole.
     These conditions will dictate whether or not a particular action or
-    container is executed when the corresponding physical input is
-    activated.
+    container is executed when the corresponding physical input is used.
 </p>
 <div class="row bottom-gap">
     <div class="col-md-7">
@@ -255,8 +259,7 @@ layout: default
     </div>
 </div>
 <p class="text-justify">
-    There are three types of conditions available that can be checked
-    for:
+    There are three types of conditions available:
     <dl>
         <dt>Action</dt>
         <dd>The <em>Action</em> condition checks whether or not the
@@ -356,7 +359,7 @@ of containers exist.
 
 <p class="text-justify">
     Each action has an activation condition associated with it, see <a
-    href="#2_2">Section 2.2</a>, which can be used for fine grained
+    href="#3_2">Section 3.2</a>, which can be used for fine grained
     control over them. Additionally, each input can also be configured to
     be always executed by checking the <em>Always Execute</em> box, see
     item 2 in the above image. Enabling this option results in actions
@@ -396,7 +399,7 @@ of containers exist.
 <p class="text-justify">
     The remapping actions enable the user to propagate inputs from a
     physical joystick input to an equivalent vJoy input, i.e. axis to
-    axis, button to button, and hat to hat.  This allows the merging of
+    axis, button to button, and hat to hat. This allows the merging of
     multiple physical devices into a single device.
 </p>
 

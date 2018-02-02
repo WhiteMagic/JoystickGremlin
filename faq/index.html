@@ -4,7 +4,7 @@ chapter: faq
 layout: default
 ---
 
-<h1><a name="7">7. Frequently Asked Questions</a></h1>
+<h1 class="mb-5"><a name="7">7. Frequently Asked Questions</a></h1>
 
 <p class="lead">The game does not see Joystick Gremlin inputs, only the
 original joystick ones.</p>
@@ -16,6 +16,15 @@ original joystick ones.</p>
     want to map by either pressing or moving it. Then, activate the remapping
     dialog of the game and it should recognize the virtual joystick's input.
     The input repeater will repeat your input for a duration of five seconds.
+</p>
+<p class="text-justify">
+    An alternative to this is to effectively hide the physical devices from the
+    application such that only the virtual devices are seen. Software like
+    T.A.R.G.E.T is capable of doing this already. By using <a
+   href="https://github.com/nefarius/ViGEm/tree/master/Sys/HidGuardian">HidGuardian</a>
+    any HID device such a joystick can be hidden from all non white-listed
+    applications. Joystick Gremlin can configure which devices should be hidden
+    by HidGuardian in the <em>Options dialog</em>.
 </p>
 
 <p class="lead">How to verify that Joystick Gremlin produces the desired output?</p>

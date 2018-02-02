@@ -56,16 +56,21 @@ area: manual
     lists the actions associated with a particular physical input.
     Going back to the above idea the left hand side contains the
     &#8220;<em>When I do</em>&#8221; part while the
-    right hand side reflects the &#8220;<em>Gremlin does"</em>&#8221; part.
+    right hand side reflects the &#8220;<em>Gremlin does</em>&#8221; part.
+
+    <div class="text-center">
+        <img class="img-fluid" src="{{ site.url }}/images/main_window_annotated.png">
+        <em>Joystick Gremlin UI</em>
+    </div>
 </p>
 
 <h3>Basic Mappings</h3>
 
 <p class="text-justify">
     The simplest type of mappings are remapping a physical input to a
-    virtual one with the <mark>Remap</mark> action. The other basic
+    virtual one with the <strong>Remap</strong> action. The other basic
     action is to map a physical input to a keyboard key or combination
-    of keys using the <mark>Map to Keyboard</mark> action. Both of
+    of keys using the <strong>Map to Keyboard</strong> action. Both of
     these actions will press and hold their virtual or simulated input
     for as long as the physical input is pressed.
 </p>
@@ -85,7 +90,7 @@ area: manual
     Sometimes it's not enough to simply press and hold a button, for
     example when a sequence of keys needs to be pressed or an axis
     ramped up in a particular manner. This is where the
-    <mark>Macro</mark> action comes into play. This action allows the
+    <strong>Macro</strong> action comes into play. This action allows the
     recording and customizing of events that should be played back when
     the associated physical input is pressed.
 </p>
@@ -104,8 +109,8 @@ area: manual
 <h3>Dealing with Axes</h3>
 
 <p class="text-justify">
-    Axes often require additional configuration to add deadzones to prevent
-    accidental inputs or response curves that modify the response to a physical
+    Axes often require additional configuration by adding deadzones to prevent
+    accidental inputs or a response curves that modify the response to a physical
     input. This allows increasing or reducing the sensitivity of particular
     areas of physical input to tailor the axis to a user's preference.  The
     horizontal axis of the curve editor reflects the physical deflection of the
@@ -117,27 +122,31 @@ area: manual
 <h2>2.3 Complex Profiles</h2>
 
 <p class="text-justify">
-    While simple profiles as described above already are capable of supporting
+    While simple profiles as described above are already capable of supporting
     a large variety of setups, sometimes a bit more complexity is required to
-    create a particular setup. This is where <mark>containers</mark>,
-    <mark>conditions</mark>, and <mark>modes</mark> come into play.
+    create a particular setup. This is where <strong>containers</strong>,
+    <strong>conditions</strong>, and <strong>modes</strong> come into play.
 </p>
+
+<h3>Container</h3>
 
 <p class="text-justify">
     A container holds one or more actions and is capable of executing
     additional logic specific to the container. The simplest container type
-    <mark>Basic</mark> simply executes all contained actions. This is the type
+    <strong>Basic</strong> simply executes all contained actions. This is the type
     which we've used implicitly when creating a simple profile. There are
-    currently two more advanced containers, <mark>Tempo</mark> and
-    <mark>Chain</mark>. The tempo container executes different sets of actions
+    currently two more advanced containers, <strong>Tempo</strong> and
+    <strong>Chain</strong>. The tempo container executes different sets of actions
     depending on how long the corresponding physical input is pressed. This
     allows using a single button for two different actions where, for example,
     one is used more often then the other. The chain container contains an
     arbitrary number of action sets and with each press of the associated
-    physical input one of the action sets is executed. When the last action
+    physical input the next set of ations in the chain are executed. When the last action
     set was processed the first one will be run next. This can be used when a
     single physical button should be used to switch through different actions.
 </p>
+
+<h3>Condition</h3>
 
 <p class="text-justify">
     Sometimes it can be helpful to control the condition under which an action
@@ -148,10 +157,18 @@ area: manual
     button is pressed a different action is executed.
 </p>
 
+<h3>Mode</h3>
+
 <p class="text-justify">
     In certain situations it can be beneficial to split a profile into several
     parts, called modes. Each mode can have their own individual set of
     physical input to action mappings. For example in flight simulators this
     can be used to have one mode for air combat, one for ground attack, and one
-    for communications.
+    for communications. One powerful feature of the mode system is the
+    <strong>inheritance</strong> capability. A mode can inherit from a single
+    parent which results in the child mode executing whatever action their
+    parent defined for a given input if the child has no actions of their own
+    specified. This allows creating basic modes and then fine tuning them in a
+    child mode for particular usage scenarios without having to duplicate
+    common functionalities.
 </p>

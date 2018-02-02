@@ -28,18 +28,18 @@ layout: default
         <li>Merging of multiple physical devices into a single virtual device</li>
         <li>Axis response curve and dead zone configuration</li>
         <li>Arbitrary number of modes with inheritance and customizable mode switching</li>
-        <li>Keyboard macros</li>
+        <li>Macros with joystick, keybouard and mouse inputs</li>
         <li>Python scripting support</li>
     </ul>
 </p>
 
 <p class="text-justify">
     Joystick Gremlin provides a graphical user interface, described in <a
-    href="{{ site.url }}/interface">Section 2</a>, which allows commonly
+    href="{{ site.url }}/interface">Section 3</a>, which allows commonly
     performed tasks, such as input remapping, axis response curve setups, and
     macro recording to be performed easily. Functionality that is not accessible
     via the UI can be implemented through custom modules, explained in detail in <a
-    href="{{ site.url }}/custom_modules">Section 3</a>.
+    href="{{ site.url }}/custom_modules">Section 4</a>.
 </p>
 
 
@@ -54,7 +54,19 @@ layout: default
         <li><a href="{{ site.url }}/download">Joystick Gremlin</a></li>
         <li><a href="http://vjoystick.sourceforge.net/site/">vJoy</a> version 2.1.8 (direct
             download link <a href="https://sourceforge.net/projects/vjoystick/files/Beta%202.x/2.1.8.31-291116/vJoySetup.exe/download">2.1.8 2016-11-29</a>)</li>
-        <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=5555">VC Redistributable  2010 (x86)</a></li>
+    </ul>
+</p>
+
+<p class="text-justify">
+    vJoy creates virtual joysticks which show up as a device in Windows and
+    Joystick Gremlin uses these to forward inputs to them. The VC2010 package
+    is required by Python but is likely already installed. The same goes for
+    the VC2013 package which is required by vJoy but is most likely already
+    installed on the machine. If one or both of these are missing they can be
+    obtained from:
+
+    <ul>
+        <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=5555">VC Redistributable 2010 (x86)</a></li>
         <li><a href="http://www.microsoft.com/en-us/download/details.aspx?id=40784">VC Redistributable 2013 (x86)</a>
     </ul>
 </p>
@@ -63,14 +75,6 @@ layout: default
     It's important that the VC Redistributables are the x86 ones, even if
     you're running a x64 system, as vJoy and Python require the 32bit
     libraries.
-</p>
-
-<p class="text-justify">
-    vJoy creates virtual joysticks which show up as a device in Windows and
-    Joystick Gremlin uses these to forward inputs to them. The VC2010 package
-    is required by Python but is likely already installed. The same goes for
-    the VC2013 package which is required by vJoy but is most likely already
-    installed on the machine.
 </p>
 
 
@@ -103,35 +107,30 @@ layout: default
 
 <p class="text-justify">
     The following section introduces the terminology used by Joystick Gremlin.
-    We'll explain the different concepts starting with individual actions and
-    ending with a complete profile.
-</p>
-
-
-<h3>Action</h3>
-<p class="text-justify">
-    An action is something Joystick Gremlin executes in response to the user
-    activating a physical input.  Examples include running a macro, sending
-    button presses to vJoy, or changing to a different mode. Each action has a
-    condition attached to it which can further dictate when an action is to be
-    executed. For buttons the conditions are the state of the button, i.e.
-    pressed or released as well as an optional shift modifier which has be be
-    pressed in order for the action to be run.
-</p>
-
-<h3>Container</h3>
-<p class="text-justify">
-    A container holds one or more actions and uses them in an interesting way.
-    In the most simple case it simply executes the action. More complex cases
-    are where the container decides which action to execute based on the
-    duration a button is held down.
+    Next, the different concepts will be exapleined starting with individual
+    actions and ending with a complete profile.
 </p>
 
 <h3>Input</h3>
 <p class="text-justify">
     An input is an axis, button, hat, or keyboard key on a physical device.
-    Each input can have multiple actions assigned to it and these actions
-    can change between the different modes.
+</p>
+
+<h3>Action</h3>
+<p class="text-justify">
+    An action is something Joystick Gremlin executes in response to the user
+    activating a physical input. Examples include running a macro, sending
+    button presses to vJoy, or changing to a different mode. Each action has a
+    condition attached to it which can further dictate when an action is to be
+    executed.
+</p>
+
+<h3>Container</h3>
+<p class="text-justify">
+    A container holds one or more actions and uses them in the manner specific
+    to the particular container. In the simplest case it simply executes the
+    action(s). More complex cases are where the container decides which
+    action(s) to execute based on the duration a button is held down.
 </p>
 
 <h3>Device</h3>
@@ -146,10 +145,10 @@ layout: default
     A mode is a collection of actions associated with the inputs for each
     connected device. Each mode can inherit from one other mode, his parent.
     If a mode and its parent both define actions for the same input only the
-    actions of the mode and not its parent are used. Similarly, if the mode
-    defines no actions for an input but the parent does the parent's actions
-    are used.  This allows having a common set of base commands that more
-    specialised modes add to or change.
+    actions of the mode and not its parent are used. If the mode defines no
+    actions for an input but the parent does the parent's actions are used.
+    This allows having a common set of base actions that more specialised
+    modes add to or change.
 </p>
 
 <h3>Profile</h3>
