@@ -530,17 +530,18 @@ class AbstractContainer(profile.ProfileData):
                 execution_graph.VirtualButtonCallback(self),
                 gremlin.event_handler.Event(
                     gremlin.common.InputType.VirtualButton,
-                    callbacks[-1][0].virtual_button.identifier,
+                    callbacks[-1].callback.virtual_button.identifier,
                     9999,
                     9999,
                     is_pressed=True,
                     raw_value=True
                 )
             ))
-        callbacks.append(execution_graph.CallbackData(
-            execution_graph.ContainerCallback(self),
-            None
-        ))
+        else:
+            callbacks.append(execution_graph.CallbackData(
+                execution_graph.ContainerCallback(self),
+                None
+            ))
 
         return callbacks
 
