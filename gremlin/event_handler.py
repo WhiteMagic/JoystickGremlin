@@ -242,6 +242,7 @@ class EventListener(QtCore.QObject):
                 ))
         elif event.type in [sdl2.SDL_JOYDEVICEADDED, sdl2.SDL_JOYDEVICEREMOVED]:
             self._init_joysticks()
+            util.setup_duplicate_joysticks()
             self.device_change_event.emit()
 
     def _keyboard_handler(self, event):
