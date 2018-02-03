@@ -1140,7 +1140,7 @@ def configure_logger(config):
 
     logger.debug("-" * 80)
     logger.debug(time.strftime("%Y-%m-%d %H:%M"))
-    logger.debug("Starting Joystick Gremlin R9.2")
+    logger.debug("Starting Joystick Gremlin R10")
     logger.debug("-" * 80)
 
 
@@ -1170,8 +1170,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-
-
+    # Path manging to ensure Gremlin starts independent of the CWD
     sys.path.insert(0, gremlin.util.userprofile_path())
     gremlin.util.setup_userprofile()
 
