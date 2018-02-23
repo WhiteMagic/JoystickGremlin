@@ -239,7 +239,7 @@ def joystick_devices():
                 syslog.debug("vjoy id {:d}: {} - ERROR".format(i, hash_value))
                 should_terminate = True
         except error.VJoyError as e:
-            if e.value != "Requested vJoy device is not available":
+            if not e.value.startswith("Requested vJoy device is not available"):
                 raise error.GremlinError(e.value)
 
     if should_terminate:

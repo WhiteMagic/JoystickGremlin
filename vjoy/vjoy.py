@@ -28,6 +28,17 @@ import gremlin.common
 import gremlin.spline
 
 
+def _error_string(vid, iid, value):
+    """Creates an error string for the given inputs.
+
+    :param vid vjoy device id
+    :param iid input id
+    :param value input value
+    :return string representing the error
+    """
+    return "vjoy: {} input: {} value: {}".format(vid, iid, value)
+
+
 class AxisName(enum.Enum):
 
     """Enumeration of the valid axis names."""
@@ -87,7 +98,9 @@ class Axis:
 
         # If this is not the case our value setter needs to change
         if self._min_value != 0:
-            raise VJoyError("vJoy axis minimum value is not 0")
+            raise VJoyError("vJoy axis minimum value is not 0  - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self._min_value)
+            ))
 
     def set_response_curve(self, spline_type, control_points):
         """Sets the response curve to use for the axis.
@@ -150,7 +163,11 @@ class Axis:
                 self.vjoy_id,
                 self.axis_id
         ):
-            raise VJoyError("Failed setting axis value")
+            raise VJoyError(
+                "Failed setting axis value - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self._value)
+                )
+            )
         self.vjoy_dev.used()
 
     def set_absolute_value(self, value):
@@ -178,7 +195,11 @@ class Axis:
                 self.vjoy_id,
                 self.axis_id
         ):
-            raise VJoyError("Failed setting axis value")
+            raise VJoyError(
+                "Failed setting axis value - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self._value)
+                )
+            )
         self.vjoy_dev.used()
 
 
@@ -219,7 +240,11 @@ class Button:
                 self.vjoy_id,
                 self.button_id
         ):
-            raise VJoyError("Failed updating button state")
+            raise VJoyError(
+                "Failed setting button value - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self._is_pressed)
+                )
+            )
         self.vjoy_dev.used()
 
 
@@ -283,7 +308,9 @@ class Hat:
         elif self.hat_type == HatType.Continuous:
             self._set_continuous_direction(direction)
         else:
-            raise VJoyError("Invalid hat type specified")
+            raise VJoyError("Invalid hat type specified - {}".format(
+                _error_string(self.vjoy_id, self.axis_id, self.direction)
+            ))
         self.vjoy_dev.used()
 
     def _set_discrete_direction(self, direction):
@@ -293,7 +320,9 @@ class Hat:
         """
         if direction not in Hat.to_discrete_direction:
             raise VJoyError(
-                "Invalid direction specified: {}".format(str(direction))
+                "Invalid direction specified - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self._direction)
+                )
             )
 
         self._direction = direction
@@ -302,7 +331,11 @@ class Hat:
                 self.vjoy_id,
                 self.hat_id
         ):
-            raise VJoyError("Failed to set hat direction")
+            raise VJoyError(
+                "Failed to set hat direction - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self._direction)
+                )
+            )
 
     def _set_continuous_direction(self, direction):
         """Sets the direction of a continuous hat.
@@ -311,7 +344,9 @@ class Hat:
         """
         if direction not in Hat.to_continuous_direction:
             raise VJoyError(
-                "Invalid direction specified: {}".format(str(direction))
+                "Invalid direction specified - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, direction)
+                )
             )
 
         self._direction = direction
@@ -320,7 +355,11 @@ class Hat:
                 self.vjoy_id,
                 self.hat_id
         ):
-            raise VJoyError("Failed to set hat direction")
+            raise VJoyError(
+                "Failed to set hat direction - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self._direction)
+                )
+            )
 
 
 class VJoy:
@@ -347,14 +386,18 @@ class VJoy:
             raise VJoyError("Running incompatible vJoy version, 2.1.8 required")
         elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
             logging.getLogger("system").error(
-                "Requested vJoy device is not available"
+                "Requested vJoy device is not available - vid: {}".format(vjoy_id)
             )
-            raise VJoyError("Requested vJoy device is not available")
+            raise VJoyError(
+                "Requested vJoy device is not available - vid: {}".format(vjoy_id)
+            )
         elif not VJoyInterface.AcquireVJD(vjoy_id):
             logging.getLogger("system").error(
-                "Failed to acquire the vJoy device"
+                "Failed to acquire the vJoy device - vid: {}".format(vjoy_id)
             )
-            raise VJoyError("Failed to acquire the vJoy device")
+            raise VJoyError(
+                "Failed to acquire the vJoy device - vid: {}".format(vjoy_id)
+            )
 
         self.vjoy_id = vjoy_id
 
@@ -415,13 +458,17 @@ class VJoy:
         if axis_id is not None:
             if not self.is_axis_valid(axis_id=axis_id):
                 raise VJoyError(
-                    "Invalid axis index requested: {:d}".format(axis_id)
+                    "Invalid axis index requested - {}".format(
+                        _error_string(self.vjoy_id, axis_id, "")
+                    )
                 )
             return self._axis_names[axis_id]
         elif linear_index is not None:
             if not self.is_axis_valid(linear_index=linear_index):
                 raise VJoyError(
-                    "Invalid linear index for axis lookup provided."
+                    "Invalid linear index for axis lookup provided - {}".format(
+                        _error_string(self.vjoy_id, linear_index, "")
+                    )
                 )
             return self._axis_names[self._axis_lookup[linear_index]]
         else:
@@ -435,7 +482,9 @@ class VJoy:
         """
         if not self.is_axis_valid(linear_index=linear_index):
             raise VJoyError(
-                "Invalid linear index for axis lookup provided."
+                "Invalid linear index for axis lookup provided - {}".format(
+                    _error_string(self.vjoy_id, linear_index, "")
+                )
             )
 
         return self._axis_lookup[linear_index]
@@ -450,13 +499,17 @@ class VJoy:
         if axis_id is not None:
             if not self.is_axis_valid(axis_id=axis_id):
                 raise VJoyError(
-                    "Invalid axis index requested: {:d}".format(axis_id)
+                    "Invalid axis index requested - {}".format(
+                        _error_string(self.vjoy_id, axis_id, "")
+                    )
                 )
             return self._axis[axis_id]
         elif linear_index is not None:
             if not self.is_axis_valid(linear_index=linear_index):
                 raise VJoyError(
-                    "Invalid linear index for axis lookup provided."
+                    "Invalid linear index for axis lookup provided - {}".format(
+                        _error_string(self.vjoy_id, linear_index, "")
+                    )
                 )
             return self._axis[self._axis_lookup[linear_index]]
         else:
@@ -469,7 +522,11 @@ class VJoy:
         :return Button object corresponding to the provided index
         """
         if index not in self._button:
-            raise VJoyError("Invalid button index requested: {:d}".format(index))
+            raise VJoyError(
+                "Invalid button index requested - {}".format(
+                    _error_string(self.vjoy_id, index, "")
+                )
+            )
         return self._button[index]
 
     def hat(self, index):
@@ -479,7 +536,11 @@ class VJoy:
         :return Hat object corresponding to the provided index
         """
         if index not in self._hat:
-            raise VJoyError("Invalid hat index requested: {:d}".format(index))
+            raise VJoyError(
+                "Invalid hat index requested - {}".format(
+                    _error_string(self.vjoy_id, index, "")
+                )
+            )
         return self._hat[index]
 
     def is_axis_valid(self, axis_id=None, linear_index=None):
