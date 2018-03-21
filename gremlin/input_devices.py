@@ -129,11 +129,14 @@ class PeriodicRegistry:
             into
         :return new callback with plugins installed
         """
-        signature = inspect.signature(callback)
-        new_callback = self._plugins[0].install(callback, signature)
-        for plugin in self._plugins[1:]:
-            new_callback = plugin.install(new_callback, signature)
-        return new_callback
+        signature = inspect.signature(callback).parameters
+        partial_fn = functools.partial
+        if "self" in signature:
+            partial_fn = functools.partialmethod
+        for plugin in self._plugins:
+            if plugin.keyword in signature:
+                callback = plugin.install(callback, partial_fn)
+        return callback
 
     def _thread_loop(self):
         """Main execution loop run in a separate thread."""
