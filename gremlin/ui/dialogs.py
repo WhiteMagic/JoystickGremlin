@@ -1001,27 +1001,19 @@ class ModuleManagerUi(common.BaseDialogUi):
         self.main_layout.addLayout(self.actions_layout)
 
     def _add_cb(self):
-        """Asks the user for the name of a new module to add to the list
-        of imported modules.
+        """Asks the user to select the path to the module to add."""
 
-        If the name is not a valid python identifier nothing is added.
-        """
-        new_import, input_ok = QtWidgets.QInputDialog.getText(
-            self,
-            "Module name",
-            "Enter the name of the module to import"
+        fname, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "Path to Python module",
+            "C:\\",
+            "Python (*.py)"
         )
-        if input_ok and new_import != "":
-            if not gremlin.util.valid_python_identifier(new_import):
-                gremlin.util.display_error(
-                    "\"{}\" is not a valid python module name"
-                    .format(new_import)
-                )
-            else:
-                import_list = self.model.stringList()
-                import_list.append(new_import)
-                self.model.setStringList(sorted(import_list))
-                self._profile.imports = list(import_list)
+        if fname != "":
+            import_list = self.model.stringList()
+            import_list.append(fname)
+            self.model.setStringList(sorted(import_list))
+            self._profile.imports = list(import_list)
 
     def _delete_cb(self):
         """Removes the currently selected module from the list."""

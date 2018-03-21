@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+import os
 import re
+import sys
 
 import gremlin.common
 from mako.lookup import TemplateLookup
@@ -49,10 +52,39 @@ class CodeGenerator:
             filename="templates/gremlin_code.tpl",
             lookup=tpl_lookup
         )
+        module_imports = self._process_module_imports(config_profile.imports)
         self.code = tpl.render(
             gremlin=gremlin,
-            profile=config_profile,
+            module_imports=module_imports,
         )
+
+    def _process_module_imports(self, imports):
+        # Create fully normalized set of system path names
+        system_paths = [os.path.normcase(os.path.abspath(p)) for p in sys.path]
+
+        # Split each import apart into path and file name and add fully
+        # normalized paths to the list of system paths and maintain a name
+        # of python modules to load
+        module_list = []
+        for fname in imports:
+            path, module_fname = os.path.split(
+                os.path.normcase(os.path.abspath(fname))
+            )
+            module = os.path.splitext(module_fname)[0]
+            if module in module_list:
+                gremlin.util.display_error(
+                    "Duplicate module name \"{}\"".format(module)
+                )
+                logging.getLogger("system").exception(
+                    "Attempted loading a duplicate module \"{}\", aborting.".format(module)
+                )
+            module_list.append(module)
+
+            if path not in system_paths:
+                system_paths.append(path)
+
+        sys.path = system_paths
+        return module_list
 
     def write_code(self, fname):
         """Writes the generated code to the given file.
