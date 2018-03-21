@@ -242,7 +242,7 @@ class Button:
         ):
             raise VJoyError(
                 "Failed setting button value - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._is_pressed)
+                    _error_string(self.vjoy_id, self.button_id, self._is_pressed)
                 )
             )
         self.vjoy_dev.used()
@@ -418,6 +418,19 @@ class VJoy:
 
         # Reset all controls
         self.reset()
+
+    @classmethod
+    def device_available(cls, vjoy_id):
+        """Returns whether or not a device is available.
+
+        :param vjoy_id id of the vjoy device to check
+        :return True if the device is available, False otherwise
+        """
+        dev_free = VJoyInterface.GetVJDStatus(vjoy_id) == VJoyState.Free.value
+        dev_acquire = VJoyInterface.AcquireVJD(vjoy_id)
+        VJoyInterface.RelinquishVJD(vjoy_id)
+
+        return dev_free & dev_acquire
 
     @property
     def axis_count(self):

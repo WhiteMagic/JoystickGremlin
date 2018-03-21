@@ -1221,6 +1221,14 @@ if __name__ == "__main__":
     # Ensure SDL has enough time to detect all joystick devices
     time.sleep(0.1)
 
+    # Retrieve all device information and connect device initialization
+    # routine to device add / remove signal
+    gremlin.joystick_handling.joystick_devices_initialization()
+    event_listener = gremlin.event_handler.EventListener()
+    event_listener.device_change_event.connect(
+        gremlin.joystick_handling.joystick_devices_initialization
+    )
+
     # Check if vJoy is properly setup and if not display an error
     # and terminate Gremlin
     try:
