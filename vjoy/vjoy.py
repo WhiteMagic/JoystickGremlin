@@ -369,6 +369,18 @@ class VJoy:
     # Duration of inactivity after which the keep alive routine is run
     keep_alive_timeout = 60
 
+    # Axis name mapping
+    axis_equivalence = {
+        AxisName.X: 1,
+        AxisName.Y: 2,
+        AxisName.Z: 3,
+        AxisName.RX: 4,
+        AxisName.RY: 5,
+        AxisName.RZ: 6,
+        AxisName.SL0: 7,
+        AxisName.SL1: 8
+    }
+
     def __init__(self, vjoy_id):
         """Creates a new object.
 
@@ -469,6 +481,7 @@ class VJoy:
         :return name of the provided axis
         """
         if axis_id is not None:
+            axis_id = VJoy.axis_equivalence.get(axis_id, axis_id)
             if not self.is_axis_valid(axis_id=axis_id):
                 raise VJoyError(
                     "Invalid axis index requested - {}".format(
@@ -510,6 +523,7 @@ class VJoy:
         :return Axis object corresponding to the provided index
         """
         if axis_id is not None:
+            axis_id = VJoy.axis_equivalence.get(axis_id, axis_id)
             if not self.is_axis_valid(axis_id=axis_id):
                 raise VJoyError(
                     "Invalid axis index requested - {}".format(

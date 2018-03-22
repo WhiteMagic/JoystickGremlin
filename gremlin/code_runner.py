@@ -21,7 +21,7 @@ import time
 import gremlin
 from gremlin import event_handler, execution_graph, input_devices, \
     joystick_handling, macro, util
-
+import vjoy as vjoy_module
 
 
 class CodeRunner:
@@ -286,6 +286,7 @@ class VJoyCurves:
                 for aid, data in device.modes[mode_name].config[
                         gremlin.common.InputType.JoystickAxis
                 ].items():
+                    axis_id = vjoy_module.vjoy.VJoy.axis_equivalence.get(aid, aid)
                     if len(data.containers) > 0 and vjoy[vid].is_axis_valid(aid):
                         action = data.containers[0].action_sets[0][0]
                         vjoy[vid].axis(aid).set_deadzone(*action.deadzone)
