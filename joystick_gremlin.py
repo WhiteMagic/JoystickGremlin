@@ -44,6 +44,7 @@ import gremlin.ui.axis_calibration
 import gremlin.ui.common
 import gremlin.ui.device_tab
 import gremlin.ui.dialogs
+import gremlin.ui.input_viewer
 import gremlin.ui.merge_axis
 import gremlin.ui.profile_creator
 import gremlin.ui.profile_settings
@@ -417,6 +418,22 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.repeater.stop()
             self.status_bar_repeater.setText("")
 
+    def input_viewer(self):
+        """Displays the input viewer dialog."""
+        self.modal_windows["input_viewer"] = \
+            gremlin.ui.input_viewer.InputViewerUi()
+        geom = self.geometry()
+        self.modal_windows["input_viewer"].setGeometry(
+            geom.x() + geom.width() / 2 - 350,
+            geom.y() + geom.height() / 2 - 150,
+            700,
+            300
+        )
+        self.modal_windows["input_viewer"].show()
+        self.modal_windows["input_viewer"].closed.connect(
+            lambda: self._remove_modal_window("input_viewer")
+        )
+
     def load_profile(self):
         """Prompts the user to select a profile file to load."""
         if not self._save_changes_request():
@@ -530,6 +547,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionCalibration.triggered.connect(self.calibration)
+        self.ui.actionInputViewer.triggered.connect(self.input_viewer)
         self.ui.actionPDFCheatsheet.triggered.connect(
             lambda: self._create_cheatsheet()
         )

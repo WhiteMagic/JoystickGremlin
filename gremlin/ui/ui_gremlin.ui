@@ -73,6 +73,7 @@
     <addaction name="actionInputRepeater"/>
     <addaction name="actionDeviceInformation"/>
     <addaction name="actionCalibration"/>
+    <addaction name="actionInputViewer"/>
     <addaction name="separator"/>
     <addaction name="actionPDFCheatsheet"/>
     <addaction name="separator"/>
@@ -236,6 +237,11 @@
   <action name="actionSwapDevices">
    <property name="text">
     <string>Swap Devices</string>
+   </property>
+  </action>
+  <action name="actionInputViewer">
+   <property name="text">
+    <string>Input Viewer</string>
    </property>
   </action>
  </widget>
