@@ -159,6 +159,22 @@ def joystick_devices():
     return _joystick_devices
 
 
+def vjoy_devices():
+    """Returns the list of vJoy devices.
+
+    :return list of vJoy devices
+    """
+    return [dev for dev in _joystick_devices if dev.is_virtual]
+
+
+def physical_devices():
+    """Returns the list of physical devices.
+
+    :return list of physical devices
+    """
+    return [dev for dev in _joystick_devices if not dev.is_virtual]
+
+
 def joystick_devices_initialization():
     """Initializes joystick device information.
 

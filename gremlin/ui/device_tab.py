@@ -33,17 +33,15 @@ class InputItemConfiguration(QtWidgets.QFrame):
     # Signal emitted when the description changes
     description_changed = QtCore.pyqtSignal(str)
 
-    def __init__(self, vjoy_devices, item_data, parent=None):
+    def __init__(self, item_data, parent=None):
         """Creates a new object instance.
 
-        :param vjoy_devices list of vJoy devices
         :param item_data profile data associated with the item
         :param parent the parent of this widget
         """
         super().__init__(parent)
 
         self.item_data = item_data
-        self.vjoy_devices = vjoy_devices
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.button_layout = QtWidgets.QHBoxLayout()
@@ -293,7 +291,6 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
 
     def __init__(
             self,
-            vjoy_devices,
             device,
             device_profile,
             current_mode,
@@ -301,7 +298,6 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
     ):
         """Creates a new object instance.
 
-        :param vjoy_devices list of vJoy devices
         :param device device information about this widget's device
         :param device_profile profile data of the entire device
         :param current_mode currently active mode
@@ -313,7 +309,6 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         self.device_profile = device_profile
         self.current_mode = current_mode
 
-        self.vjoy_devices = vjoy_devices
         self.device = device
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
@@ -387,10 +382,7 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             item.widget().deleteLater()
         self.main_layout.removeItem(item)
 
-        widget = InputItemConfiguration(
-            self.vjoy_devices,
-            item_data
-        )
+        widget = InputItemConfiguration(item_data)
         change_cb = self._create_change_cb(index)
         widget.action_model.data_changed.connect(change_cb)
         widget.description_changed.connect(change_cb)
@@ -443,14 +435,12 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
 
     def __init__(
             self,
-            vjoy_devices,
             device_profile,
             current_mode,
             parent=None
     ):
         """Creates a new object instance.
 
-        :param vjoy_devices list of vJoy devices
         :param device_profile profile data of the entire device
         :param current_mode currently active mode
         :param parent the parent of this widget
@@ -460,8 +450,6 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         # Store parameters
         self.device_profile = device_profile
         self.current_mode = current_mode
-
-        self.vjoy_devices = vjoy_devices
 
         self.main_layout = QtWidgets.QHBoxLayout(self)
         self.left_panel_layout = QtWidgets.QVBoxLayout()
@@ -537,10 +525,7 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         self.main_layout.removeItem(item)
 
         # Create new configuration widget
-        widget = InputItemConfiguration(
-            self.vjoy_devices,
-            item_data
-        )
+        widget = InputItemConfiguration(item_data)
         change_cb = self._create_change_cb(self._index_for_key(index_key))
         widget.action_model.data_changed.connect(change_cb)
         widget.description_changed.connect(change_cb)

@@ -1031,15 +1031,14 @@ class DeviceInformationUi(common.BaseDialogUi):
     """Widget which displays information about all connected joystick
     devices."""
 
-    def __init__(self, devices, parent=None):
+    def __init__(self, parent=None):
         """Creates a new instance.
 
-        :param devices the list of device information objects
         :param parent the parent widget
         """
         super().__init__(parent)
 
-        self.devices = devices
+        self.devices = gremlin.joystick_handling.joystick_devices()
 
         self.setWindowTitle("Device Information")
         self.main_layout = QtWidgets.QGridLayout(self)
@@ -1073,23 +1072,22 @@ class DeviceInformationUi(common.BaseDialogUi):
 
         self.close_button = QtWidgets.QPushButton("Close")
         self.close_button.clicked.connect(lambda: self.close())
-        self.main_layout.addWidget(self.close_button, len(devices)+1, 3)
+        self.main_layout.addWidget(self.close_button, len(self.devices)+1, 3)
 
 
 class SwapDevicesUi(common.BaseDialogUi):
 
     """UI Widget that allows users to swap identical devices."""
 
-    def __init__(self, devices, profile, parent=None):
+    def __init__(self, profile, parent=None):
         """Creates a new instance.
 
-        :param devices the list of devices to use
         :param profile the current profile
         :param parent the parent of this widget
         """
         super().__init__(parent)
 
-        self.devices = devices
+        self.devices = gremlin.joystick_handling.joystick_devices()
         self.profile = profile
 
         self.setWindowTitle("Swap Devices")

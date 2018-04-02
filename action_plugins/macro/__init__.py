@@ -270,11 +270,7 @@ class MacroActionEditor(QtWidgets.QWidget):
         if action is None:
             return
 
-        devices = gremlin.joystick_handling.joystick_devices()
-        vjoy_devices = [dev for dev in devices if dev.is_virtual]
-
         self.ui_elements["vjoy_selector"] = gremlin.ui.common.VJoySelector(
-            vjoy_devices,
             self._modify_vjoy,
             [
                 gremlin.common.InputType.JoystickAxis,

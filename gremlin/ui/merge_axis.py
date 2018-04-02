@@ -139,25 +139,17 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         self.main_layout = QtWidgets.QGridLayout(self.main_widget)
         self.setWidget(self.main_widget)
 
-        # List of joystick like devices
-        joy_devices = gremlin.joystick_handling.joystick_devices()
-        vjoy_devices = [joy for joy in joy_devices if joy.is_virtual]
-        phys_devices = [joy for joy in joy_devices if not joy.is_virtual]
-
         # Selectors for both physical and virtual joystick axis for the
         # mapping selection
         self.vjoy_selector = common.VJoySelector(
-            vjoy_devices,
             change_cb,
             [gremlin.common.InputType.JoystickAxis]
         )
         self.joy1_selector = common.JoystickSelector(
-            phys_devices,
             change_cb,
             [gremlin.common.InputType.JoystickAxis]
         )
         self.joy2_selector = common.JoystickSelector(
-            phys_devices,
             change_cb,
             [gremlin.common.InputType.JoystickAxis]
         )

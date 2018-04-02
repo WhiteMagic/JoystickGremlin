@@ -77,7 +77,6 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         self.tabs = {}
         self.config = gremlin.config.Configuration()
-        self.devices = gremlin.joystick_handling.joystick_devices()
         self.runner = gremlin.code_runner.CodeRunner()
         self.repeater = gremlin.repeater.Repeater(
             [],
@@ -198,7 +197,7 @@ class GremlinUi(QtWidgets.QMainWindow):
     def device_information(self):
         """Opens the device information window."""
         self.modal_windows["device_information"] = \
-            gremlin.ui.dialogs.DeviceInformationUi(self.devices)
+            gremlin.ui.dialogs.DeviceInformationUi()
         geom = self.geometry()
         self.modal_windows["device_information"].setGeometry(
             geom.x() + geom.width() / 2 - 150,
@@ -288,7 +287,7 @@ class GremlinUi(QtWidgets.QMainWindow):
     def swap_devices(self):
         """Opens the UI used to swap devices."""
         self.modal_windows["swap_devices"] = \
-            gremlin.ui.dialogs.SwapDevicesUi(self.devices, self._profile)
+            gremlin.ui.dialogs.SwapDevicesUi(self._profile)
         geom = self.geometry()
         self.modal_windows["swap_devices"].setGeometry(
             geom.x() + geom.width() / 2 - 150,
@@ -360,7 +359,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         container_plugins = gremlin.plugin_manager.ContainerPlugins()
         action_plugins = gremlin.plugin_manager.ActionPlugins()
 
-        vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
         mode = device_profile.modes[self._current_mode]
         input_types = [
             gremlin.common.InputType.JoystickAxis,
@@ -375,9 +373,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         main_profile = device_profile.parent
         for input_type in input_types:
             for entry in mode.config[input_type].values():
-                item_list = main_profile.list_unused_vjoy_inputs(
-                    vjoy_devices
-                )
+                item_list = main_profile.list_unused_vjoy_inputs()
 
                 container = container_plugins.repository["basic"](entry)
                 action = action_plugins.repository["remap"](container)
@@ -463,7 +459,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # For each connected device create a new empty device entry
         # in the new profile
-        for device in [entry for entry in self.devices if not entry.is_virtual]:
+        for device in gremlin.joystick_handling.physical_devices():
             self._profile.initialize_joystick_device(device, ["Default"])
 
         # Create keyboard device entry
@@ -621,8 +617,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.tabs = {}
 
         # Create joystick devices
-        vjoy_devices = [dev for dev in self.devices if dev.is_virtual]
-        phys_devices = [dev for dev in self.devices if not dev.is_virtual]
+        vjoy_devices = gremlin.joystick_handling.vjoy_devices()
+        phys_devices = gremlin.joystick_handling.physical_devices()
         for device in sorted(phys_devices, key=lambda x: x.name):
             device_profile = self._profile.get_device_modes(
                 gremlin.util.device_id(device),
@@ -631,7 +627,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             )
 
             widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
-                vjoy_devices,
                 device,
                 device_profile,
                 self._current_mode
@@ -653,7 +648,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             "keyboard"
         )
         widget = gremlin.ui.device_tab.KeyboardDeviceTabWidget(
-            vjoy_devices,
             device_profile,
             self._current_mode
         )
@@ -669,7 +663,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             )
 
             widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
-                vjoy_devices,
                 device,
                 device_profile,
                 self._current_mode
@@ -1057,9 +1050,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             profile_devices[gremlin.util.device_id(device)] = device.name
 
         physical_devices = {}
-        for device in self.devices:
-            if device.is_virtual:
-                continue
+        for device in gremlin.joystick_handling.physical_devices():
             physical_devices[gremlin.util.device_id(device)] = device.name
 
         # Find profile data that conflicts with currently connected

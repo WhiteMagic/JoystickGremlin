@@ -521,17 +521,16 @@ class JoystickSelector(QtWidgets.QWidget):
 
     """Widget allowing the selection of input items on a physical joystick."""
 
-    def __init__(self, devices, change_cb, valid_types, parent=None):
+    def __init__(self, change_cb, valid_types, parent=None):
         """Creates a new JoystickSelector instance.
 
-        :param devices list of devices to choose from
         :param change_cb function to call when changes occur
         :param valid_types valid input types for selection
         :param parent the parent of this widget
         """
         super().__init__(parent)
 
-        self.devices = devices
+        self.devices = gremlin.joystick_handling.physical_devices()
         self.change_cb = change_cb
         self.valid_types = valid_types
 
