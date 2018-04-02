@@ -205,41 +205,35 @@ class EventListener(QtCore.QObject):
 
         :param event the joystick event
         """
-        # FIXME: this currently prevents forwarding of vJoy inputs to other
-        #   vJoy inputs which might be needed for certain applications, see:
-        #   https://github.com/WhiteMagic/JoystickGremlin/issues/53
         if event.type == sdl2.SDL_JOYAXISMOTION:
-            if self._joystick_guid_map[event.jaxis.which] != 873639358:
-                calib_id = (
-                    self._joystick_guid_map[event.jaxis.which],
-                    event.jaxis.axis + 1
-                )
-                self.joystick_event.emit(Event(
-                    event_type=common.InputType.JoystickAxis,
-                    hardware_id=self._joystick_guid_map[event.jaxis.which],
-                    windows_id=event.jaxis.which,
-                    identifier=event.jaxis.axis + 1,
-                    value=self._calibrations[calib_id](event.jaxis.value),
-                    raw_value=event.jaxis.value
-                ))
+            calib_id = (
+                self._joystick_guid_map[event.jaxis.which],
+                event.jaxis.axis + 1
+            )
+            self.joystick_event.emit(Event(
+                event_type=common.InputType.JoystickAxis,
+                hardware_id=self._joystick_guid_map[event.jaxis.which],
+                windows_id=event.jaxis.which,
+                identifier=event.jaxis.axis + 1,
+                value=self._calibrations[calib_id](event.jaxis.value),
+                raw_value=event.jaxis.value
+            ))
         elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:
-            if self._joystick_guid_map[event.jbutton.which] != 873639358:
-                self.joystick_event.emit(Event(
-                    event_type=common.InputType.JoystickButton,
-                    hardware_id=self._joystick_guid_map[event.jbutton.which],
-                    windows_id=event.jbutton.which,
-                    identifier=event.jbutton.button + 1,
-                    is_pressed=event.jbutton.state == 1
-                ))
+            self.joystick_event.emit(Event(
+                event_type=common.InputType.JoystickButton,
+                hardware_id=self._joystick_guid_map[event.jbutton.which],
+                windows_id=event.jbutton.which,
+                identifier=event.jbutton.button + 1,
+                is_pressed=event.jbutton.state == 1
+            ))
         elif event.type == sdl2.SDL_JOYHATMOTION:
-            if self._joystick_guid_map[event.jhat.which] != 873639358:
-                self.joystick_event.emit(Event(
-                    event_type=common.InputType.JoystickHat,
-                    hardware_id=self._joystick_guid_map[event.jhat.which],
-                    windows_id=event.jhat.which,
-                    identifier=event.jhat.hat + 1,
-                    value=util.convert_sdl_hat(event.jhat.value)
-                ))
+            self.joystick_event.emit(Event(
+                event_type=common.InputType.JoystickHat,
+                hardware_id=self._joystick_guid_map[event.jhat.which],
+                windows_id=event.jhat.which,
+                identifier=event.jhat.hat + 1,
+                value=util.convert_sdl_hat(event.jhat.value)
+            ))
         elif event.type in [sdl2.SDL_JOYDEVICEADDED, sdl2.SDL_JOYDEVICEREMOVED]:
             self._init_joysticks()
             util.setup_duplicate_joysticks()
