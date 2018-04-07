@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
 from xml.etree import ElementTree
 
 from gremlin.common import InputType
@@ -49,8 +50,6 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data profile data managed by this widget
         :param parent the parent of this widget
         """
-        devices = gremlin.joystick_handling.joystick_devices()
-        self.vjoy_devices = [dev for dev in devices if dev.is_virtual]
         super().__init__(action_data, parent)
         assert(isinstance(action_data, Remap))
 
@@ -73,9 +72,9 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             ]
         }
         self.vjoy_selector = gremlin.ui.common.VJoySelector(
-            self.vjoy_devices,
             self.save_changes,
-            input_types[self._get_input_type()]
+            input_types[self._get_input_type()],
+            self.action_data.get_settings().vjoy_as_input
         )
         self.main_layout.addWidget(self.vjoy_selector)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -94,9 +93,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         # If no valid input item is selected get the next unused one
         if self.action_data.vjoy_input_id in [0, None]:
-            free_inputs = self._get_profile_root().list_unused_vjoy_inputs(
-                self.vjoy_devices
-            )
+            free_inputs = self._get_profile_root().list_unused_vjoy_inputs()
 
             input_name = self.type_to_name_map[input_type].lower()
             if vjoy_dev_id == 0:
@@ -111,25 +108,32 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         else:
             vjoy_input_id = self.action_data.vjoy_input_id
 
-        self.vjoy_selector.set_selection(
-            input_type,
-            vjoy_dev_id,
-            vjoy_input_id
-        )
+        try:
+            self.vjoy_selector.set_selection(
+                input_type,
+                vjoy_dev_id,
+                vjoy_input_id
+            )
 
-        # Save changes so the UI updates properly
-        self.save_changes()
+            # Save changes so the UI updates properly
+            self.save_changes()
+        except gremlin.error.GremlinError as e:
+            logging.getLogger("system").error(str(e))
+
 
     def save_changes(self):
         """Saves UI contents to the profile data storage."""
         # Store remap data
-        vjoy_data = self.vjoy_selector.get_selection()
-        self.action_data.vjoy_device_id = vjoy_data["device_id"]
-        self.action_data.vjoy_input_id = vjoy_data["input_id"]
-        self.action_data.input_type = vjoy_data["input_type"]
+        try:
+            vjoy_data = self.vjoy_selector.get_selection()
+            self.action_data.vjoy_device_id = vjoy_data["device_id"]
+            self.action_data.vjoy_input_id = vjoy_data["input_id"]
+            self.action_data.input_type = vjoy_data["input_type"]
 
-        # Signal changes
-        self.action_modified.emit()
+            # Signal changes
+            self.action_modified.emit()
+        except gremlin.error.GremlinError as e:
+            logging.getLogger("system").error(str(e))
 
 
 class RemapFunctor(gremlin.base_classes.AbstractFunctor):

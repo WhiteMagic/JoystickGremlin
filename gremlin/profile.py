@@ -595,6 +595,7 @@ class Settings:
         :param parent the parent profile
         """
         self.parent = parent
+        self.vjoy_as_input = {}
         self.vjoy_initial_values = {}
         self.startup_mode = None
 
@@ -610,6 +611,13 @@ class Settings:
             mode_node = ElementTree.Element("startup-mode")
             mode_node.text = self.startup_mode
             node.append(mode_node)
+
+        # Process vJoy as input settings
+        for vid, value in self.vjoy_as_input.items():
+            if value == True:
+                vjoy_node = ElementTree.Element("vjoy-input")
+                vjoy_node.set("id", str(vid))
+                node.append(vjoy_node)
 
         # Process vJoy axis initial values
         for vid, data in self.vjoy_initial_values.items():
@@ -637,14 +645,21 @@ class Settings:
         if node.find("startup-mode") is not None:
             self.startup_mode = node.find("startup-mode").text
 
-        # Vjoy initialization values
+        # vJoy as input settings
+        self.vjoy_as_input = {}
+        for vjoy_node in node.findall("vjoy-input"):
+            vid = safe_read(vjoy_node, "id", int)
+            self.vjoy_as_input[vid] = True
+
+        # vjoy initialization values
         self.vjoy_initial_values = {}
         for vjoy_node in node.findall("vjoy"):
-            vid = int(vjoy_node.get("id"))
+            vid = safe_read(vjoy_node, "id", int)
             self.vjoy_initial_values[vid] = {}
             for axis_node in vjoy_node.findall("axis"):
-                self.vjoy_initial_values[vid][int(axis_node.get("id"))] = \
-                    float(axis_node.get("value"))
+                aid = safe_read(axis_node, "id", int)
+                value = safe_read(axis_node, "vallue", float, 0.0)
+                self.vjoy_initial_values[vid][aid] = value
 
     def get_initial_vjoy_axis_value(self, vid, aid):
         """Returns the initial value a vJoy axis should use.
@@ -751,15 +766,16 @@ class Profile:
                     root_modes.append(mode_name)
         return list(set(root_modes))
 
-    def list_unused_vjoy_inputs(self, vjoy_data):
+    def list_unused_vjoy_inputs(self):
         """Returns a list of unused vjoy inputs for the given profile.
 
-        :param vjoy_data vjoy devices information
         :return dictionary of unused inputs for each input type
         """
+        vjoy_devices = joystick_handling.vjoy_devices()
+
         # Create list of all inputs provided by the vjoy devices
         vjoy = {}
-        for entry in vjoy_data:
+        for entry in vjoy_devices:
             vjoy[entry.vjoy_id] = {"axis": [], "button": [], "hat": []}
             for i in range(entry.axis_count):
                 vjoy[entry.vjoy_id]["axis"].append(
@@ -1465,6 +1481,16 @@ class ProfileData(metaclass=ABCMeta):
         while not isinstance(item, Device):
             item = item.parent
         return item.type
+
+    def get_settings(self):
+        """Returns the Settings data of the profile.
+
+        :return Setttings object of this profile
+        """
+        item = self.parent
+        while not isinstance(item, Profile):
+            item = item.parent
+        return item.settings
 
     @abstractmethod
     def _parse_xml(self, node):

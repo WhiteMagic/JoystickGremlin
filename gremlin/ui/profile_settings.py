@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 import gremlin.joystick_handling
 import gremlin.ui.common
@@ -25,6 +25,9 @@ import gremlin.ui.common
 class ProfileSettingsWidget(QtWidgets.QWidget):
 
     """Widget allowing changing profile specific settings."""
+
+    # Signal emitted when a change occurs
+    changed = QtCore.pyqtSignal()
 
     def __init__(self, profile_settings, parent=None):
         """Creates a new UI widget.
@@ -44,21 +47,27 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
         """Refreshes the entire UI."""
         gremlin.ui.common.clear_layout(self.main_layout)
         self._create_ui()
+        self.changed.emit()
 
     def _create_ui(self):
         """Creates the UI elements of this widget."""
         # Default start mode selection
         self.main_layout.addWidget(DefaultModeSelector(self.profile_settings))
 
+        # vJoy devices as inputs
+        vjoy_as_input_widget = VJoyAsInputWidget(self.profile_settings)
+        self.main_layout.addWidget(vjoy_as_input_widget)
+        vjoy_as_input_widget.changed.connect(self.refresh_ui)
+
         # vJoy axis initialization value setup
-        # Get list of vjoy devices
-        vjoy_devices = []
-        for device in gremlin.joystick_handling.joystick_devices():
-            if device.is_virtual:
-                vjoy_devices.append(device)
+        vjoy_devices = gremlin.joystick_handling.vjoy_devices()
 
         # Create UI elements
         for device in vjoy_devices:
+            # Only show devices that are not treated as inputs
+            if self.profile_settings.vjoy_as_input.get(device.vjoy_id) == True:
+                continue
+
             widget = QtWidgets.QGroupBox(
                 "{} #{}".format(device.name, device.vjoy_id)
             )
@@ -154,10 +163,17 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
         """Creates the UI elements."""
         vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
         for i in range(self.joy_data.axis_count):
+            # FIXME: This is a workaround to not being able to read a vJoy
+            #   device's axes names when it is grabbed by another process
+            #   and the inability of SDL to provide canoncal axis names
+            axis_name = "Axis {:d}".format(i+1)
+            try:
+                axis_name = vjoy_proxy[self.joy_data.vjoy_id]\
+                    .axis_name(linear_index=i+1)
+            except gremlin.error.VJoyError:
+                pass
             self.main_layout.addWidget(
-                QtWidgets.QLabel("Axis {}".format(
-                    vjoy_proxy[self.joy_data.vjoy_id].axis_name(linear_index=i+1)
-                )),
+                QtWidgets.QLabel(axis_name),
                 i,
                 0
             )
@@ -193,3 +209,71 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
             axis_id,
             value
         )
+
+
+class VJoyAsInputWidget(QtWidgets.QGroupBox):
+
+    """Configures which vJoy devices are treated as physical inputs."""
+
+    # Signal emitted when a change occurs
+    changed = QtCore.pyqtSignal()
+
+    def __init__(self, profile_data, parent=None):
+        """Creates a new instance.
+
+        :param profile_data profile information read and modified by the
+            widget
+        :param parent the paren of this widget
+        """
+        super().__init__(parent)
+
+        self.profile_data = profile_data
+
+        self.setTitle("vJoy as Input")
+        self.main_layout = QtWidgets. QHBoxLayout(self)
+        self.vjoy_layout = QtWidgets.QVBoxLayout()
+
+        self._create_ui()
+
+    def _create_ui(self):
+        """Creates the UI to set physical input state."""
+        devices = gremlin.joystick_handling.joystick_devices()
+        for dev in [dev for dev in devices if dev.is_virtual]:
+            check_box = QtWidgets.QCheckBox("vJoy {:d}".format(dev.vjoy_id))
+            if self.profile_data.vjoy_as_input.get(dev.vjoy_id, False):
+                check_box.setChecked(True)
+            check_box.stateChanged.connect(
+                self._create_update_state_cb(dev.vjoy_id)
+            )
+            self.vjoy_layout.addWidget(check_box)
+
+        # Information label
+        label = QtWidgets.QLabel(
+            "Declaring a vJoy device as an input device will allow it to be"
+            "used like a physical device, i.e. it can be forwarded to other"
+            "vJoy devices. However, this also means that it won't be available"
+            "as a virtual device."
+        )
+        label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+        label.setWordWrap(True)
+        label.setFrameShape(QtWidgets.QFrame.Box)
+        label.setMargin(10)
+
+        self.main_layout.addLayout(self.vjoy_layout)
+        self.main_layout.addWidget(label)
+
+    def _update_state_cb(self, vid, state):
+        """Callback executed when an entry is modified.
+
+        :param vid the id of the vJoy device being modified
+        :param state the state of the checkbox
+        """
+        self.profile_data.vjoy_as_input[vid] = state == QtCore.Qt.Checked
+        self.changed.emit()
+
+    def _create_update_state_cb(self, vid):
+        """Creates the callback allowing handling of state changes.
+
+        :param vid the id of the vJoy device being modified
+        """
+        return lambda x: self._update_state_cb(vid, x)

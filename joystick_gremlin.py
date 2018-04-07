@@ -616,9 +616,11 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.devices.clear()
         self.tabs = {}
 
-        # Create joystick devices
-        vjoy_devices = gremlin.joystick_handling.vjoy_devices()
+        # Device lists
         phys_devices = gremlin.joystick_handling.physical_devices()
+        vjoy_devices = gremlin.joystick_handling.vjoy_devices()
+
+        # Create physical joystick device tabs
         for device in sorted(phys_devices, key=lambda x: x.name):
             device_profile = self._profile.get_device_modes(
                 gremlin.util.device_id(device),
@@ -635,6 +637,32 @@ class GremlinUi(QtWidgets.QMainWindow):
             tab_label = device.name
             if gremlin.util.g_duplicate_devices:
                 tab_label += " ({:d})".format(device.windows_id)
+            self.ui.devices.addTab(widget, tab_label)
+
+        # Create vJoy as input device tabs
+        for device in sorted(vjoy_devices, key=lambda x: x.vjoy_id):
+            # Ignore vJoy as output devices
+            if not self._profile.settings.vjoy_as_input.get(device.vjoy_id, False):
+                continue
+
+            device_profile = self._profile.get_device_modes(
+                gremlin.util.device_id(device),
+                gremlin.profile.DeviceType.Joystick,
+                device.name
+            )
+
+            widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
+                device,
+                device_profile,
+                self._current_mode
+            )
+            self.tabs[gremlin.util.device_id(device)] = widget
+            tab_label = device.name
+            if gremlin.util.g_duplicate_devices:
+                tab_label += " #{:d} ({:d})".format(
+                    device.vjoy_id,
+                    device.windows_id
+                )
             self.ui.devices.addTab(widget, tab_label)
 
         # Create keyboard tab
@@ -654,8 +682,12 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.tabs[gremlin.util.device_id(device_profile)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
-        # Create the vjoy devices tab
+        # Create the vjoy as output device tab
         for device in sorted(vjoy_devices, key=lambda x: x.vjoy_id):
+            # Ignore vJoy as input devices
+            if self._profile.settings.vjoy_as_input.get(device.vjoy_id, False):
+                continue
+
             device_profile = self._profile.get_device_modes(
                 device.vjoy_id,
                 gremlin.profile.DeviceType.VJoy,
@@ -677,6 +709,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         widget = gremlin.ui.profile_settings.ProfileSettingsWidget(
             self._profile.settings
         )
+        widget.changed.connect(self._create_tabs)
         self.ui.devices.addTab(widget, "Settings")
 
     def _setup_icons(self):

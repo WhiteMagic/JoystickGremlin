@@ -190,11 +190,14 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
 
         :param data information about which entries to select
         """
-        self.vjoy_selector.set_selection(
-            gremlin.common.InputType.JoystickAxis,
-            data["vjoy"]["device_id"],
-            data["vjoy"]["axis_id"]
-        )
+        try:
+            self.vjoy_selector.set_selection(
+                gremlin.common.InputType.JoystickAxis,
+                data["vjoy"]["device_id"],
+                data["vjoy"]["axis_id"]
+            )
+        except gremlin.error.GremlinError as e:
+            logging.getLogger("system").error(str(e))
 
         # Create correct physical device id
         joy1_id = data["lower"]["hardware_id"]

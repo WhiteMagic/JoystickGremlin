@@ -61,6 +61,60 @@ class HatType(enum.Enum):
     Continuous = 1
 
 
+
+def device_available(vjoy_id):
+    """Returns whether or not a device is available.
+
+    :param vjoy_id id of the vjoy device to check
+    :return True if the device is available, False otherwise
+    """
+    dev_free = VJoyInterface.GetVJDStatus(vjoy_id) == VJoyState.Free.value
+    dev_acquire = VJoyInterface.AcquireVJD(vjoy_id)
+    VJoyInterface.RelinquishVJD(vjoy_id)
+
+    return dev_free & dev_acquire
+
+def device_exists(vjoy_id):
+    """Returns whether or not a device exists.
+
+    :param vjoy_id id of the vjoy device to check
+    :return True if the device exists, False otherwise
+    """
+    state = VJoyInterface.GetVJDStatus(vjoy_id)
+    return state not in [VJoyState.Missing.value, VJoyState.Unknown.value]
+
+
+def axis_count(vjoy_id):
+    """Returns the number of axes of the given vJoy device.
+
+    :param vjoy_id id of the vjoy device
+    :return number of axes
+    """
+    count = 0
+    for axis in AxisName:
+        if VJoyInterface.GetVJDAxisExist(vjoy_id, axis.value) > 0:
+            count += 1
+    return count
+
+
+def button_count(vjoy_id):
+    """Returns the number of buttons of the given vJoy device.
+
+    :param vjoy_id id of the vjoy device
+    :return number of buttons
+    """
+    return VJoyInterface.GetVJDButtonNumber(vjoy_id)
+
+
+def hat_count(vjoy_id):
+    """Returns the number of hats of the given vJoy device.
+
+    :param vjoy_id id of the vjoy device
+    :return number of hats
+    """
+    return VJoyInterface.GetVJDContPovNumber(vjoy_id)
+
+
 class Axis:
 
     """Represents an analog axis in vJoy, allows setting the value
@@ -430,19 +484,6 @@ class VJoy:
 
         # Reset all controls
         self.reset()
-
-    @classmethod
-    def device_available(cls, vjoy_id):
-        """Returns whether or not a device is available.
-
-        :param vjoy_id id of the vjoy device to check
-        :return True if the device is available, False otherwise
-        """
-        dev_free = VJoyInterface.GetVJDStatus(vjoy_id) == VJoyState.Free.value
-        dev_acquire = VJoyInterface.AcquireVJD(vjoy_id)
-        VJoyInterface.RelinquishVJD(vjoy_id)
-
-        return dev_free & dev_acquire
 
     @property
     def axis_count(self):

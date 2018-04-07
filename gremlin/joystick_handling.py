@@ -247,7 +247,17 @@ def joystick_devices_initialization():
     # as detected by SDL
     should_terminate = False
     for i in range(1, 17):
-        if not vjoy.VJoy.device_available(i):
+        if vjoy.device_exists(i):
+            hash_value = (
+                vjoy.axis_count(i),
+                vjoy.button_count(i),
+                vjoy.hat_count(i)
+            )
+            devices[vjoy_lookup[hash_value]]._vjoy_id = i
+
+        # if vjoy.VJoy.device_exists(i):
+        #     vjoy_proxy[i]
+        if not vjoy.device_available(i):
             continue
 
         vjoy_dev = vjoy_proxy[i]
@@ -258,7 +268,7 @@ def joystick_devices_initialization():
         )
         if hash_value in vjoy_lookup:
             # Set vJoy id and correctly setup the axis id mapping
-            devices[vjoy_lookup[hash_value]]._vjoy_id = vjoy_dev.vjoy_id
+            # devices[vjoy_lookup[hash_value]]._vjoy_id = vjoy_dev.vjoy_id
             axis_mapping = []
             for j in range(vjoy_dev.axis_count):
                 axis_mapping.append((j+1, vjoy_dev.axis_id(j+1)))

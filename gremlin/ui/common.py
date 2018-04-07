@@ -669,17 +669,21 @@ class VJoySelector(QtWidgets.QWidget):
 
     """Widget allowing the selection of vJoy inputs."""
 
-    def __init__(self, vjoy_devices, change_cb, valid_types, parent=None):
+    def __init__(self, change_cb, valid_types, invalid_ids={}, parent=None):
         """Creates a widget to select a vJoy output.
 
-        :param vjoy_devices the list of available vjoy devices
         :param change_cb callback to execute when the widget changes
         :param valid_types the input type to present in the selection
+        :param invalid_ids list of vid values of vjoy devices to not consider
         :param parent of this widget
         """
         QtWidgets.QWidget.__init__(self, parent)
 
-        self.vjoy_devices = vjoy_devices
+        self.vjoy_devices = []
+        for dev in gremlin.joystick_handling.vjoy_devices():
+            if not invalid_ids.get(dev.vjoy_id, False):
+                self.vjoy_devices.append(dev)
+        self.invalid_ids = invalid_ids
         self.change_cb = change_cb
         self.valid_types = valid_types
 
@@ -689,14 +693,22 @@ class VJoySelector(QtWidgets.QWidget):
         self.device_dropdown = None
         self.input_item_dropdowns = {}
 
-        self._create_device_dropdown()
-        self._create_input_dropdown()
+        if len(self.vjoy_devices) > 0:
+            self._create_device_dropdown()
+            self._create_input_dropdown()
+        else:
+            print("BASDASDASD")
 
     def get_selection(self):
         """Returns the current selection of the widget.
 
         :return dictionary containing the current selection
         """
+        if len(self.vjoy_devices) == 0:
+            raise gremlin.error.GremlinError(
+                "No vJoy devices available for virtual output"
+            )
+
         device_selection = self.device_dropdown.currentText()
         vjoy_device_id = int(device_selection.split()[-1])
         input_selection = \
@@ -724,6 +736,12 @@ class VJoySelector(QtWidgets.QWidget):
         :param vjoy_dev_id the id of the vjoy device
         :param vjoy_input_id the id of the input
         """
+        # No vJoy devices available
+        if len(self.vjoy_devices) == 0:
+            raise gremlin.error.GremlinError(
+                "No vJoy devices available for virtual output"
+            )
+
         # Get the appropriate vjoy device identifier
         if vjoy_dev_id is None or vjoy_dev_id <= 0:
             dev_id = -1
