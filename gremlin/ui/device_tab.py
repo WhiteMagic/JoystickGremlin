@@ -258,7 +258,7 @@ class ActionContainerView(common.AbstractView):
         self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
         # Configure the scroll area
-        self.scroll_area.setMinimumWidth(700)
+        self.scroll_area.setMinimumWidth(750)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
 

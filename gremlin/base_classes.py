@@ -62,6 +62,13 @@ class AbstractCondition(metaclass=ABCMeta):
         """
         pass
 
+    def is_valid(self):
+        """Returns whether or not a condition is fully specified.
+
+        :return True if the condition is properly specified, False otherwise
+        """
+        return self.comparison != ""
+
 
 class KeyboardCondition(AbstractCondition):
 
@@ -98,6 +105,14 @@ class KeyboardCondition(AbstractCondition):
         node.set("extended", str(self.is_extended))
         return node
 
+    def is_valid(self):
+        """Returns whether or not a condition is fully specified.
+
+        :return True if the condition is properly specified, False otherwise
+        """
+        return super().is_valid() and \
+               self.scan_code is not None and \
+               self.is_extended is not None
 
 class JoystickCondition(AbstractCondition):
 
@@ -150,6 +165,14 @@ class JoystickCondition(AbstractCondition):
             node.set("range_low", str(self.range[0]))
             node.set("range_high", str(self.range[1]))
         return node
+
+
+    def is_valid(self):
+        """Returns whether or not a condition is fully specified.
+
+        :return True if the condition is properly specified, False otherwise
+        """
+        return super().is_valid() and self.input_type is not None
 
 
 class InputActionCondition(AbstractCondition):
@@ -229,8 +252,8 @@ class ActivationCondition:
         node.set("rule", ActivationCondition.rule_lookup[self.rule])
 
         for condition in self.conditions:
-            node.append(condition.to_xml())
-
+            if condition.is_valid():
+                node.append(condition.to_xml())
         return node
 
 

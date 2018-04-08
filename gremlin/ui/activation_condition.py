@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt5 import QtCore, QtWidgets
+
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import logging
 
-from gremlin import base_classes, input_devices, macro, util
+from gremlin import base_classes, hints, input_devices, macro, util
 from gremlin.common import InputType
 from . import common
 
@@ -64,15 +65,18 @@ class ActivationConditionWidget(QtWidgets.QWidget):
             self._granularity_changed_cb
         )
 
+        self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
+        self.help_button.clicked.connect(self._show_hint)
+
         self.controls_layout = QtWidgets.QHBoxLayout()
-        self.controls_layout.addWidget(QtWidgets.QLabel("Condition on: "))
+        self.controls_layout.addWidget(QtWidgets.QLabel("Apply conditions to"))
         self.controls_layout.addWidget(self.granularity_selector)
+        self.controls_layout.addWidget(self.help_button)
+
         self.controls_layout.addStretch()
 
         self.main_layout.addLayout(self.controls_layout)
         if self.profile_data.activation_condition_type == "container":
-
-
             self.condition_model = ConditionModel(
                 self.profile_data.activation_condition
             )
@@ -107,11 +111,22 @@ class ActivationConditionWidget(QtWidgets.QWidget):
 
         self.activation_condition_modified.emit()
 
+    def _show_hint(self, state):
+        """Shows a help message.
 
-class AbstractConditionWidget(QtWidgets.QWidget):
+        :param state push button state
+        """
+        QtWidgets.QWhatsThis.showText(
+            self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
+            hints.hint.get("cond:granularity", "")
+        )
+
+
+class AbstractConditionWidget(QtWidgets.QGroupBox):
 
     """Abstract class for condition ui widgets."""
 
+    # Signal emitted when a condition is deleted
     deleted = QtCore.pyqtSignal(base_classes.AbstractCondition)
 
     def __init__(self, condition_data, parent=None):
@@ -123,7 +138,11 @@ class AbstractConditionWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.condition_data = condition_data
 
-        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.main_layout = QtWidgets.QGridLayout(self)
+        self.main_layout.setColumnMinimumWidth(0, 75)
+        self.main_layout.setColumnMinimumWidth(1, 150)
+        self.main_layout.setColumnMinimumWidth(2, 20)
+        self.main_layout.setColumnStretch(3, 1)
         self._create_ui()
 
     def _create_ui(self):
@@ -142,10 +161,11 @@ class KeyboardConditionWidget(AbstractConditionWidget):
         :param parent the parent of this widget
         """
         super().__init__(condition_data, parent)
+        self.setTitle("Keyboard Condition")
 
     def _create_ui(self):
         """Creates the configuration UI for this widget."""
-        self.key_label = QtWidgets.QLabel("Not set")
+        self.key_label = QtWidgets.QLabel("")
         if self.condition_data.scan_code is not None:
             self.key_label.setText("<b>{}</b>".format(
                 macro.key_from_code(
@@ -153,9 +173,13 @@ class KeyboardConditionWidget(AbstractConditionWidget):
                     self.condition_data.is_extended
                 ).name
             ))
-        self.record_button = QtWidgets.QPushButton("Change")
+        self.record_button = common.NoKeyboardPushButton(
+            QtGui.QIcon("gfx/button_edit.png"), ""
+        )
         self.record_button.clicked.connect(self._request_user_input)
-        self.delete_button = QtWidgets.QPushButton("Delete")
+        self.delete_button = QtWidgets.QPushButton(
+            QtGui.QIcon("gfx/button_delete.png"), ""
+        )
         self.delete_button.clicked.connect(
             lambda: self.deleted.emit(self.condition_data)
         )
@@ -171,13 +195,14 @@ class KeyboardConditionWidget(AbstractConditionWidget):
             self._comparison_changed_cb
         )
 
-        self.main_layout.addWidget(QtWidgets.QLabel("Activate if"))
-        self.main_layout.addWidget(self.key_label)
-        self.main_layout.addWidget(QtWidgets.QLabel("is"))
-        self.main_layout.addWidget(self.comparison_dropdown)
-        self.main_layout.addStretch()
-        self.main_layout.addWidget(self.record_button)
-        self.main_layout.addWidget(self.delete_button)
+        self.main_layout.addWidget(QtWidgets.QLabel("Activate if"), 0, 0)
+        self.main_layout.addWidget(self.key_label, 0, 1)
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addWidget(
+            self.comparison_dropdown, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
+        self.main_layout.addWidget(self.record_button, 0, 4)
+        self.main_layout.addWidget(self.delete_button, 0, 5)
 
     def _key_pressed_cb(self, key):
         """Updates the UI and model with the newly pressed key information.
@@ -186,7 +211,8 @@ class KeyboardConditionWidget(AbstractConditionWidget):
         """
         self.condition_data.scan_code = key.identifier[0]
         self.condition_data.is_extended = key.identifier[1]
-        self.condition_data.comparison = self.comparison_dropdown.currentText().lower()
+        self.condition_data.comparison = \
+            self.comparison_dropdown.currentText().lower()
         self.key_label.setText("<b>{}</b>".format(
             macro.key_from_code(
                 self.condition_data.scan_code,
@@ -237,27 +263,32 @@ class JoystickConditionWidget(AbstractConditionWidget):
         """
         self.input_event = None
         super().__init__(condition_data, parent)
+        self.setTitle("Joystick Condition")
 
     def _create_ui(self):
         """Creates the configuration UI for this widget."""
         common.clear_layout(self.main_layout)
 
-        self.record_button = QtWidgets.QPushButton("Change")
+        self.record_button = QtWidgets.QPushButton(
+            QtGui.QIcon("gfx/button_edit.png"), ""
+        )
         self.record_button.clicked.connect(self._request_user_input)
-        self.delete_button = QtWidgets.QPushButton("Delete")
+        self.delete_button = QtWidgets.QPushButton(
+            QtGui.QIcon("gfx/button_delete.png"), ""
+        )
         self.delete_button.clicked.connect(
             lambda: self.deleted.emit(self.condition_data)
         )
 
+        self.main_layout.addWidget(QtWidgets.QLabel("Activate if"), 0, 0)
         if self.condition_data.input_type == InputType.JoystickAxis:
             self._axis_ui()
         elif self.condition_data.input_type == InputType.JoystickButton:
             self._button_ui()
         elif self.condition_data.input_type == InputType.JoystickHat:
             self._hat_ui()
-        self.main_layout.addStretch()
-        self.main_layout.addWidget(self.record_button)
-        self.main_layout.addWidget(self.delete_button)
+        self.main_layout.addWidget(self.record_button, 0, 4)
+        self.main_layout.addWidget(self.delete_button, 0, 5)
 
     def _axis_ui(self):
         """Creates the UI needed to configure an axis based condition."""
@@ -265,13 +296,13 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.lower.setMinimum(-1.0)
         self.lower.setMaximum(1.0)
         self.lower.setSingleStep(0.05)
-        self.lower.setDecimals(4)
+        self.lower.setDecimals(3)
         self.lower.setValue(self.condition_data.range[0])
         self.lower.valueChanged.connect(self._range_lower_changed_cb)
         self.upper = common.DynamicDoubleSpinBox()
         self.upper.setMinimum(-1.0)
         self.upper.setMaximum(1.0)
-        self.upper.setDecimals(4)
+        self.upper.setDecimals(3)
         self.upper.setSingleStep(0.05)
         self.upper.setValue(self.condition_data.range[1])
         self.upper.valueChanged.connect(self._range_upper_changed_cb)
@@ -286,16 +317,22 @@ class JoystickConditionWidget(AbstractConditionWidget):
             self._comparison_changed_cb
         )
 
-        self.main_layout.addWidget(QtWidgets.QLabel(
-            "Activate if {} Axis {:d} is".format(
+        range_layout = QtWidgets.QHBoxLayout()
+        range_layout.addWidget(self.comparison_dropdown)
+        range_layout.addWidget(self.lower)
+        range_layout.addWidget(QtWidgets.QLabel("and"))
+        range_layout.addWidget(self.upper)
+
+        input_label = QtWidgets.QLabel("<b>{} Axis {:d}</b>".format(
                 self.condition_data.device_name,
                 self.condition_data.input_id
-            )
-        ))
-        self.main_layout.addWidget(self.comparison_dropdown)
-        self.main_layout.addWidget(self.lower)
-        self.main_layout.addWidget(QtWidgets.QLabel("and"))
-        self.main_layout.addWidget(self.upper)
+            ))
+        input_label.setWordWrap(True)
+        self.main_layout.addWidget(input_label, 0, 1)
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addLayout(
+            range_layout, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
 
     def _button_ui(self):
         """Creates the UI needed to configure a button based condition."""
@@ -309,13 +346,18 @@ class JoystickConditionWidget(AbstractConditionWidget):
             self._comparison_changed_cb
         )
 
-        self.main_layout.addWidget(QtWidgets.QLabel(
-            "Activate if {} Button {:d} is".format(
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b>{} Button {:d}</b>".format(
                 self.condition_data.device_name,
                 self.condition_data.input_id
-            )
-        ))
-        self.main_layout.addWidget(self.comparison_dropdown)
+            )),
+            0,
+            1
+        )
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addWidget(
+            self.comparison_dropdown, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
 
     def _hat_ui(self):
         """Creates the UI needed to configure a hat based condition."""
@@ -333,13 +375,18 @@ class JoystickConditionWidget(AbstractConditionWidget):
             self._comparison_changed_cb
         )
 
-        self.main_layout.addWidget(QtWidgets.QLabel(
-            "Activate if {} Hat {:d} is".format(
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b>{} Hat {:d}</b>".format(
                 self.condition_data.device_name,
                 self.condition_data.input_id
-            )
-        ))
-        self.main_layout.addWidget(self.comparison_dropdown)
+            )),
+            0,
+            1
+        )
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addWidget(
+            self.comparison_dropdown, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
 
     def _input_pressed_cb(self, event):
         """Processes input events to update the UI and model.
@@ -432,6 +479,7 @@ class InputActionConditionWidget(AbstractConditionWidget):
         :param parent the parent of this widget
         """
         super().__init__(condition_data, parent)
+        self.setTitle("Action Condition")
 
     def _create_ui(self):
         """Creates the configuration UI for this widget."""
@@ -447,17 +495,24 @@ class InputActionConditionWidget(AbstractConditionWidget):
         self.state_dropdown.currentTextChanged.connect(
             self._state_selection_changed
         )
-        self.delete_button = QtWidgets.QPushButton("Delete")
+        self.delete_button = QtWidgets.QPushButton(
+            QtGui.QIcon("gfx/button_delete.png"), ""
+        )
         self.delete_button.clicked.connect(
             lambda: self.deleted.emit(self.condition_data)
         )
 
+        self.main_layout.addWidget(QtWidgets.QLabel("Activate when"), 0, 0)
         self.main_layout.addWidget(
-            QtWidgets.QLabel("Activate when (virtual) button is")
+            QtWidgets.QLabel("<b>this (virtual) button</b>"),
+            0,
+            1
         )
-        self.main_layout.addWidget(self.state_dropdown)
-        self.main_layout.addStretch()
-        self.main_layout.addWidget(self.delete_button)
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addWidget(
+            self.state_dropdown, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
+        self.main_layout.addWidget(self.delete_button, 0, 5)
 
     def _state_selection_changed(self, label):
         """Updates the activation state of the condition.
@@ -518,10 +573,18 @@ class ConditionModel(common.AbstractModel):
 
     @property
     def rule(self):
+        """Returns the current application rule for the conditions.
+
+        :return current application rule of conditions
+        """
         return self.condition_data.rule
 
     @rule.setter
     def rule(self, rule):
+        """Sets the application rule of the conditions.
+
+        :param rule the new application type
+        """
         self.condition_data.rule = rule
 
 
@@ -529,15 +592,17 @@ class ConditionView(common.AbstractView):
 
     """Widget visualizing a condition model instance."""
 
+    # Mapping between data and ui classes
     condition_map = {
-        "Keyboard": [base_classes.KeyboardCondition,
-                     KeyboardConditionWidget],
-        "Joystick": [base_classes.JoystickCondition,
-                     JoystickConditionWidget],
-        "Action": [base_classes.InputActionCondition,
-                         InputActionConditionWidget]
+        "Keyboard":
+            [base_classes.KeyboardCondition, KeyboardConditionWidget],
+        "Joystick":
+            [base_classes.JoystickCondition, JoystickConditionWidget],
+        "Action":
+            [base_classes.InputActionCondition, InputActionConditionWidget]
     }
 
+    # Mapping between application rule label and enumeration
     rules_map = {
         "All": base_classes.ActivationRule.All,
         "Any": base_classes.ActivationRule.Any,
@@ -559,23 +624,30 @@ class ConditionView(common.AbstractView):
         self.main_layout.addLayout(self.controls_layout)
         self.main_layout.addLayout(self.conditions_layout)
 
+        # Condition truth rules
         self.rule_selector = QtWidgets.QComboBox()
         self.rule_selector.addItem("All")
         self.rule_selector.addItem("Any")
         self.rule_selector.currentTextChanged.connect(self._rule_changed_cb)
-        self.controls_layout.addWidget(QtWidgets.QLabel("Execute if"))
+        self.controls_layout.addWidget(QtWidgets.QLabel("Requires "))
         self.controls_layout.addWidget(self.rule_selector)
-        self.controls_layout.addWidget(QtWidgets.QLabel("condition(s) are met"))
+        self.controls_layout.addWidget(QtWidgets.QLabel("condition(s) to be met"))
 
+        self.controls_layout.addStretch()
+
+        # Condition selector
         self.condition_selector = QtWidgets.QComboBox()
-        self.condition_selector.addItem("Keyboard")
-        self.condition_selector.addItem("Joystick")
-        self.condition_selector.addItem("Action")
+        self.condition_selector.addItem("Keyboard Condition")
+        self.condition_selector.addItem("Joystick Condition")
+        self.condition_selector.addItem("Action Condition")
         self.condition_add_button = QtWidgets.QPushButton("Add")
         self.condition_add_button.clicked.connect(self._add_condition)
-        self.controls_layout.addWidget(QtWidgets.QLabel("Add condition"))
         self.controls_layout.addWidget(self.condition_selector)
         self.controls_layout.addWidget(self.condition_add_button)
+
+        self.help_button = QtWidgets.QPushButton(QtGui.QIcon("gfx/help"), "")
+        self.help_button.clicked.connect(self._show_hint)
+        self.controls_layout.addWidget(self.help_button)
 
     def redraw(self):
         """Redraws the entire view."""
@@ -596,7 +668,7 @@ class ConditionView(common.AbstractView):
     def _add_condition(self):
         """Adds a condition to the view's model."""
         data_type = ConditionView.condition_map[
-            self.condition_selector.currentText()
+            self.condition_selector.currentText().split()[0]
         ][0]
         self.model.add_condition(data_type())
 
@@ -611,4 +683,14 @@ class ConditionView(common.AbstractView):
         """Updates the view when the model changes."""
         self.rule_selector.setCurrentText(
             ConditionView.rules_map[self.model.rule]
+        )
+
+    def _show_hint(self, state):
+        """Shows a help message regarding the condition types.
+
+        :param state push button state
+        """
+        QtWidgets.QWhatsThis.showText(
+            self.help_button.mapToGlobal(QtCore.QPoint(0, 10)),
+            hints.hint.get("cond:types", "")
         )

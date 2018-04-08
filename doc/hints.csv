@@ -18,3 +18,5 @@
 "basic","<p>Holds a single set of actions that are all executed simultaneously.</p>"
 "tempo","<p>Holds two sets of actions, the first one is executed only on a short press, specified by the delay. The second set is only executed when the input is held longer then the specified delay.</p>"
 "chain","<p>Holds an arbitrary number of action sets, each of which is executed on subsequent activations of the input. The sequence can optionally reset after a specified timeout with no activations.</p>"
+"cond:granularity","Configure granularity of condition configuration. <dl><dt>None</dt><dd>No conditions.</dd><dt>Action</dt><dd>Individual conditions for each action.</dd><dt>Container</dt><dd>Conditions are applied to all actions within a container.</dd></dl>"
+"cond:types","Different types of conditions can be checked for. <dl><dt>Keyboard</dt><dd>Permits using state of keyboard keys as condition.</dd><dt>Joystick</dt><dd>Permits using axis ranges, button states, and hat directions as conditions</dd><dt>Action</dt><dd>Permits using the pressing or releasing of the physical button as a condition. This also works for virtual buttons.</dd></dl>
