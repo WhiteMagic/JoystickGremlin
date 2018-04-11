@@ -30,7 +30,7 @@ class TextToSpeechWidget(gremlin.ui.input_item.AbstractActionWidget):
     """Widget which allows the configuration of TTS actions."""
 
     def __init__(self, action_data, parent=None):
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert isinstance(action_data, TextToSpeech)
 
     def _create_ui(self):

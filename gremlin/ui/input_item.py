@@ -795,18 +795,24 @@ class AbstractActionWidget(QtWidgets.QFrame):
     # Signal which is emitted whenever the widget's contents change
     action_modified = QtCore.pyqtSignal()
 
-    def __init__(self, action_data, parent=None):
+    def __init__(
+            self,
+            action_data,
+            layout_type=QtWidgets.QVBoxLayout,
+            parent=None
+    ):
         """Creates a new instance.
 
         :param action_data the sub-classed AbstractAction instance
             associated with this specific action.
+        :param layout_type type of layout to use for the widget
         :param parent parent widget
         """
         QtWidgets.QFrame.__init__(self, parent)
 
         self.action_data = action_data
 
-        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout = layout_type(self)
 
         self._create_ui()
         self._populate_ui()
@@ -1074,11 +1080,5 @@ class ConditionActionWrapper(AbstractActionWrapper):
             self.condition_view.set_model(self.condition_model)
             self.condition_view.redraw()
             self.main_layout.addWidget(self.condition_view)
-
-            # self.condition_widget = QtWidgets.QGroupBox("Activation Condition")
-            # self.condition_layout = QtWidgets.QVBoxLayout()
-            # self.condition_layout.addWidget(self.condition_view)
-            # self.condition_widget.setLayout(self.condition_layout)
-            # self.main_layout.addWidget(self.condition_widget)
         else:
             action_data.activation_condition = None
