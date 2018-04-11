@@ -558,12 +558,12 @@ class KeyAction(AbstractAction):
             _send_key_up(self.key)
 
 
-class MouseAction(AbstractAction):
+class MouseButtonAction(AbstractAction):
 
     """Mouse button action."""
 
     def __init__(self, button, is_pressed):
-        """Creates a new MouseAction object for use in a macro.
+        """Creates a new MouseButtonAction object for use in a macro.
 
         :param button the button to use in the action
         :param is_pressed True if the button should be pressed, False otherwise
@@ -584,6 +584,23 @@ class MouseAction(AbstractAction):
                 gremlin.sendinput.mouse_press(self.button)
             else:
                 gremlin.sendinput.mouse_release(self.button)
+
+
+class MouseMotionAction(AbstractAction):
+
+    """Mouse motion action."""
+
+    def __init__(self, dx, dy):
+        """Creates a new MouseMotionAction object for use in a macro.
+
+        :param dx change along the X axis
+        :param dy change along the Y axis
+        """
+        self.dx = int(dx)
+        self.dy = int(dy)
+
+    def __call__(self):
+        gremlin.sendinput.mouse_relative_motion(self.dx, self.dy)
 
 
 class PauseAction(AbstractAction):
