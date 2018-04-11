@@ -19,9 +19,11 @@
 import ctypes
 import ctypes.wintypes
 import enum
+import math
+import threading
 import time
 
-from gremlin.common import MouseButton
+from gremlin.common import MouseButton, SingletonDecorator
 
 
 """Defines flags used when specifying MOUSEINPUT structures.
@@ -53,6 +55,95 @@ https://msdn.microsoft.com/en-us/library/ms646270(v=vs.85).aspx
 """
 INPUT_MOUSE = 0
 INPUT_KEYBOARD = 1
+
+
+@SingletonDecorator
+class MouseController:
+
+    """Centralizes sending mouse events in a organized manner."""
+
+    def __init__(self):
+        """Creates a new instance."""
+        self._delta_x = 0
+        self._delta_y = 0
+        self._acceleration = 0.0
+        self._max_speed = 0
+        self._last_start_time = time.time()
+
+        self._is_running = False
+        self._thread = threading.Thread(target=self._control_loop)
+
+    @property
+    def acceleration(self):
+        return self._acceleration
+
+    @acceleration.setter
+    def acceleration(self, value):
+        self._acceleration = float(value)
+
+    @property
+    def dx(self):
+        return self._delta_x
+
+    @dx.setter
+    def dx(self, value):
+        self._last_start_time = time.time()
+        self._delta_x = int(value)
+
+    @property
+    def dy(self):
+        return self._delta_y
+
+    @dy.setter
+    def dy(self, value):
+        self._last_start_time = time.time()
+        self._delta_y = int(value)
+
+    @property
+    def max_speed(self):
+        return self._max_speed
+
+    @max_speed.setter
+    def max_speed(self, value):
+        self._max_speed = int(value)
+
+    def start(self):
+        """Starts the thread that will send motions when required."""
+        if not self._is_running:
+            self._thread = threading.Thread(target=self._control_loop)
+            self._thread.start()
+
+    def stop(self):
+        """Stops the thread that sends motion events."""
+        if self._thread.is_alive():
+            self._is_running = False
+            self._thread.join()
+
+    def _control_loop(self):
+        """Loop responsible for creating and sending mouse motion events."""
+        self._is_running = True
+        while self._is_running:
+            # Only send motion events if they are non zero
+            if self._delta_x == 0 and self._delta_y == 0:
+                time.sleep(0.01)
+                continue
+
+            delta_x = self._delta_x
+            delta_y = self._delta_y
+            # Handle acceleration enabled motions
+            if self._acceleration > 0.0:
+                change = self.acceleration * \
+                         (time.time() - self._last_start_time)
+                if delta_x != 0:
+                    delta_x = min(self.max_speed, change + abs(delta_x))
+                    delta_x = int(round(math.copysign(delta_x, self._delta_x)))
+                if delta_y != 0:
+                    delta_y = min(self.max_speed, change + abs(delta_y))
+                    delta_y = int(round(math.copysign(delta_y, self._delta_y)))
+
+            # Send mouse motion event and then sleep
+            mouse_relative_motion(delta_x, delta_y)
+            time.sleep(0.01)
 
 
 class _MOUSEINPUT(ctypes.Structure):
