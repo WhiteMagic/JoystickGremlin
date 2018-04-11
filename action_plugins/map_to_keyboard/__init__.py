@@ -38,7 +38,7 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data the data managed by this widget
         :param parent the parent of this widget
         """
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
 
     def _create_ui(self):
         """Creates the UI components."""

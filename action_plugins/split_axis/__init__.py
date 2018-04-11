@@ -35,7 +35,7 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data profile.InputItem data for this widget
         :param parent of this widget
         """
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert isinstance(action_data, SplitAxis)
 
     def _create_ui(self):

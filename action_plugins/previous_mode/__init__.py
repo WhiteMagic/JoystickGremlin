@@ -30,7 +30,7 @@ class PreviousModeWidget(gremlin.ui.input_item.AbstractActionWidget):
     """Widget associated with the action of switching to the previous mode."""
 
     def __init__(self, action_data, parent=None):
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert(isinstance(action_data, PreviousMode))
 
     def _create_ui(self):

@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import collections
 import logging
 import os
 import pickle
@@ -35,6 +36,11 @@ class MacroActionEditor(QtWidgets.QWidget):
 
     """Widget displaying macro action settings and permitting their change."""
 
+    ActionTypeData = collections.namedtuple(
+        "ActionTypeData",
+        ["name", "create_ui", "action_type"]
+    )
+
     def __init__(self, model, index, parent=None):
         """Creates a new editor widget.
 
@@ -47,11 +53,36 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.index = index
 
         self.action_types = {
-            "Joystick": self._joystick_ui,
-            "Keyboard": self._keyboard_ui,
-            "Pause": self._pause_ui,
-            "vJoy": self._vjoy_ui,
-            "Mouse": self._mouse_ui,
+            "Joystick": MacroActionEditor.ActionTypeData(
+                "Joystick",
+                self._joystick_ui,
+                gremlin.macro.JoystickAction
+            ),
+            "Keyboard": MacroActionEditor.ActionTypeData(
+                "Keyboard",
+                self._keyboard_ui,
+                gremlin.macro.KeyAction
+            ),
+            "Mouse Button": MacroActionEditor.ActionTypeData(
+                "Mouse Button",
+                self._mouse_button_ui,
+                gremlin.macro.MouseButtonAction
+            ),
+            "Mouse Motion": MacroActionEditor.ActionTypeData(
+                "Mouse Motion",
+                self._mouse_motion_ui,
+                gremlin.macro.MouseMotionAction
+            ),
+            "Pause": MacroActionEditor.ActionTypeData(
+                "Pause",
+                self._pause_ui,
+                gremlin.macro.PauseAction
+            ),
+            "vJoy": MacroActionEditor.ActionTypeData(
+                "vJoy",
+                self._vjoy_ui,
+                gremlin.macro.VJoyAction
+            )
         }
 
         self.setMinimumWidth(200)
@@ -82,21 +113,30 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.action_selector.currentTextChanged.disconnect(self._change_action)
 
         entry = self.model.get_entry(self.index.row())
-        if isinstance(entry, gremlin.macro.JoystickAction):
-            self.action_selector.setCurrentText("Joystick")
-            self._joystick_ui()
-        elif isinstance(entry, gremlin.macro.KeyAction):
-            self.action_selector.setCurrentText("Keyboard")
-            self._keyboard_ui()
-        elif isinstance(entry, gremlin.macro.MouseAction):
-            self.action_selector.setCurrentText("Mouse")
-            self._mouse_ui()
-        elif isinstance(entry, gremlin.macro.PauseAction):
-            self.action_selector.setCurrentText("Pause")
-            self._pause_ui()
-        elif isinstance(entry, gremlin.macro.VJoyAction):
-            self.action_selector.setCurrentText("vJoy")
-            self._vjoy_ui()
+        for data in self.action_types.values():
+            if isinstance(entry, data.action_type):
+                print(data)
+                self.action_selector.setCurrentText(data.name)
+                data.create_ui()
+
+        # if isinstance(entry, gremlin.macro.JoystickAction):
+        #     self.action_selector.setCurrentText("Joystick")
+        #     self._joystick_ui()
+        # elif isinstance(entry, gremlin.macro.KeyAction):
+        #     self.action_selector.setCurrentText("Keyboard")
+        #     self._keyboard_ui()
+        # elif isinstance(entry, gremlin.macro.MouseButtonAction):
+        #     self.action_selector.setCurrentText("Mouse Button")
+        #     self._mouse_button_ui()
+        # elif isinstance(entry, gremlin.macro.MouseMotionAction):
+        #     self.action_selector.setCurrentText("Mouse Motion")
+        #     self._mouse_motion_ui()
+        # elif isinstance(entry, gremlin.macro.PauseAction):
+        #     self.action_selector.setCurrentText("Pause")
+        #     self._pause_ui()
+        # elif isinstance(entry, gremlin.macro.VJoyAction):
+        #     self.action_selector.setCurrentText("vJoy")
+        #     self._vjoy_ui()
 
         self.action_selector.currentTextChanged.connect(self._change_action)
 
@@ -129,12 +169,17 @@ class MacroActionEditor(QtWidgets.QWidget):
                 ),
                 self.index.row()
             )
-        elif value == "Mouse":
+        elif value == "Mouse Button":
             self.model.set_entry(
-                gremlin.macro.MouseAction(
+                gremlin.macro.MouseButtonAction(
                     gremlin.common.MouseButton.Left,
                     True
                 ),
+                self.index.row()
+            )
+        elif value == "Mouse Motion":
+            self.model.set_entry(
+                gremlin.macro.MouseMotionAction(0, 0),
                 self.index.row()
             )
         elif value == "Pause":
@@ -205,7 +250,7 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.action_layout.addWidget(self.ui_elements["key_press"])
         self.action_layout.addWidget(self.ui_elements["key_release"])
 
-    def _mouse_ui(self):
+    def _mouse_button_ui(self):
         """Creates and populates the MouseAction editor UI."""
         action = self.model.get_entry(self.index.row())
         if action is None:
@@ -238,13 +283,39 @@ class MacroActionEditor(QtWidgets.QWidget):
             else:
                 self.ui_elements["mouse_release"].setChecked(True)
 
-            self.ui_elements["mouse_press"].toggled.connect(self._modify_mouse_state)
-            self.ui_elements["mouse_release"].toggled.connect(self._modify_mouse_state)
+            self.ui_elements["mouse_press"].toggled.connect(
+                self._modify_mouse_button
+            )
+            self.ui_elements["mouse_release"].toggled.connect(
+                self._modify_mouse_button
+            )
 
         self.action_layout.addWidget(self.ui_elements["mouse_label"])
         self.action_layout.addWidget(self.ui_elements["mouse_input"])
         self.action_layout.addWidget(self.ui_elements["mouse_press"])
         self.action_layout.addWidget(self.ui_elements["mouse_release"])
+
+    def _mouse_motion_ui(self):
+        self.ui_elements["dx_label"] = QtWidgets.QLabel("Change in X")
+        self.ui_elements["dx_spinbox"] = QtWidgets.QSpinBox()
+        self.ui_elements["dx_spinbox"].setRange(-1e5, 1e5)
+        self.ui_elements["dx_spinbox"].setValue(0)
+        self.ui_elements["dy_label"] = QtWidgets.QLabel("Change in Y")
+        self.ui_elements["dy_spinbox"] = QtWidgets.QSpinBox()
+        self.ui_elements["dy_spinbox"].setRange(-1e5, 1e5)
+        self.ui_elements["dy_spinbox"].setValue(0)
+
+        self.ui_elements["dx_spinbox"].valueChanged.connect(
+            self._modify_mouse_motion
+        )
+        self.ui_elements["dy_spinbox"].valueChanged.connect(
+            self._modify_mouse_motion
+        )
+
+        self.action_layout.addWidget(self.ui_elements["dx_label"])
+        self.action_layout.addWidget(self.ui_elements["dx_spinbox"])
+        self.action_layout.addWidget(self.ui_elements["dy_label"])
+        self.action_layout.addWidget(self.ui_elements["dy_spinbox"])
 
     def _pause_ui(self):
         """Creates and populates the PauseAction editor UI."""
@@ -360,9 +431,15 @@ class MacroActionEditor(QtWidgets.QWidget):
         action.is_pressed = self.ui_elements["key_press"].isChecked()
         self._update_model()
 
-    def _modify_mouse_state(self, state):
+    def _modify_mouse_button(self, state):
         action = self.model.get_entry(self.index.row())
         action.is_pressed = self.ui_elements["mouse_press"].isChecked()
+        self._update_model()
+
+    def _modify_mouse_motion(self, _):
+        action = self.model.get_entry(self.index.row())
+        action.dx = self.ui_elements["dx_spinbox"].value()
+        action.dy = self.ui_elements["dy_spinbox"].value()
         self._update_model()
 
     def _update_pause(self, value):
@@ -438,7 +515,7 @@ class MacroActionEditor(QtWidgets.QWidget):
         self._update_model()
         gremlin.ui.common.clear_layout(self.action_layout)
         self.ui_elements = {}
-        self._mouse_ui()
+        self._mouse_button_ui()
 
     def _modify_vjoy(self):
         action = self.model.get_entry(self.index.row())
@@ -533,7 +610,7 @@ class MacroListModel(QtCore.QAbstractListModel):
                     "Press" if entry.is_pressed else "Release",
                     entry.key.name
                 )
-            elif isinstance(entry, gremlin.macro.MouseAction):
+            elif isinstance(entry, gremlin.macro.MouseButtonAction):
                 if entry.button in [
                     gremlin.common.MouseButton.WheelDown,
                     gremlin.common.MouseButton.WheelUp,
@@ -546,6 +623,11 @@ class MacroListModel(QtCore.QAbstractListModel):
                         "Press" if entry.is_pressed else "Release",
                         gremlin.common.MouseButton.to_string(entry.button)
                     )
+            elif isinstance(entry, gremlin.macro.MouseMotionAction):
+                return "Move mouse by x: {:d} y: {:d}".format(
+                    entry.dx,
+                    entry.dy
+                )
             elif isinstance(entry, gremlin.macro.PauseAction):
                 return "Pause for {:.4f} s".format(entry.duration)
             elif isinstance(entry, gremlin.macro.VJoyAction):
@@ -563,7 +645,7 @@ class MacroListModel(QtCore.QAbstractListModel):
             elif isinstance(entry, gremlin.macro.KeyAction):
                 action = "press" if entry.is_pressed else "release"
                 return MacroListModel.icon_lookup[action]
-            elif isinstance(entry, gremlin.macro.MouseAction):
+            elif isinstance(entry, gremlin.macro.MouseButtonAction):
                 action = "press" if entry.is_pressed else "release"
                 return MacroListModel.icon_lookup[action]
             else:
@@ -1004,7 +1086,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data the data of the macro action
         :param parent the parent of the widget
         """
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert(isinstance(action_data, Macro))
 
         self._polling_rate = \
@@ -1299,7 +1381,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
                 time.time() - max(self._recording_times.values())
             ))
 
-        action = gremlin.macro.MouseAction(event.identifier, event.is_pressed)
+        action = gremlin.macro.MouseButtonAction(event.identifier, event.is_pressed)
         self._recording_times["mouse"] = time.time()
         self._append_entry(action)
 
@@ -1471,7 +1553,7 @@ class Macro(AbstractAction):
                 )
                 self.sequence.append(key_action)
             elif child.tag == "mouse":
-                mouse_action = gremlin.macro.MouseAction(
+                mouse_action = gremlin.macro.MouseButtonAction(
                     gremlin.common.MouseButton(safe_read(child, "button", int)),
                     gremlin.profile.parse_bool(child.get("press"))
                 )
@@ -1524,7 +1606,7 @@ class Macro(AbstractAction):
                 action_node.set("extended", str(entry.key.is_extended))
                 action_node.set("press", str(entry.is_pressed))
                 action_list.append(action_node)
-            elif isinstance(entry, gremlin.macro.MouseAction):
+            elif isinstance(entry, gremlin.macro.MouseButtonAction):
                 action_node = ElementTree.Element("mouse")
                 action_node.set("button", str(entry.button.value))
                 action_node.set("press", str(entry.is_pressed))

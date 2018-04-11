@@ -31,7 +31,7 @@ class NoOpActionWidget(AbstractActionWidget):
     """Widget for the NoOp action."""
 
     def __init__(self, action_data, parent=None):
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert(isinstance(action_data, NoOpAction))
 
     def _create_ui(self):

@@ -50,7 +50,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data profile data managed by this widget
         :param parent the parent of this widget
         """
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert(isinstance(action_data, Remap))
 
     def _create_ui(self):

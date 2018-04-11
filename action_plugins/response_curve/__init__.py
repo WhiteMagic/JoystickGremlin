@@ -1046,7 +1046,7 @@ class ResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data the data associated with this specific action.
         :param parent parent widget
         """
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
 
         self.is_inverted = False
         self.symmetry_mode_on = False

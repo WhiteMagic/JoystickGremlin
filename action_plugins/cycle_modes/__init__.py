@@ -30,7 +30,7 @@ class CycleModesWidget(gremlin.ui.input_item.AbstractActionWidget):
     """Widget allowing the configuration of a list of modes to cycle."""
 
     def __init__(self, action_data, parent=None):
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert(isinstance(action_data, CycleModes))
 
     def _create_ui(self):

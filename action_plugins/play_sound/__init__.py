@@ -30,7 +30,7 @@ class PlaySoundWidget(gremlin.ui.input_item.AbstractActionWidget):
     """Widget for the resume action."""
 
     def __init__(self, action_data, parent=None):
-        super().__init__(action_data, parent)
+        super().__init__(action_data, parent=parent)
         assert isinstance(action_data, PlaySound)
 
     def _create_ui(self):
