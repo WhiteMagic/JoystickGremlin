@@ -72,6 +72,8 @@ _AxisButtonDirection_to_enum_lookup = {
 
 class MouseButton(enum.Enum):
 
+    """Enumeration of all possible mouse buttons."""
+
     Left = 1
     Right = 2
     Middle = 3
