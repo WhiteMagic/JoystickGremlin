@@ -20,7 +20,7 @@ import time
 
 import gremlin
 from gremlin import event_handler, execution_graph, input_devices, \
-    joystick_handling, macro, util
+    joystick_handling, macro, sendinput, util
 import vjoy as vjoy_module
 
 
@@ -221,6 +221,8 @@ class CodeRunner:
             self.event_handler.change_mode(start_mode)
             self.event_handler.resume()
             self._running = True
+
+            sendinput.MouseController().start()
         except ImportError as e:
             util.display_error(
                 "Unable to launch due to missing custom modules: {}"
@@ -252,6 +254,7 @@ class CodeRunner:
         input_devices.periodic_registry.clear()
 
         macro.MacroManager().stop()
+        sendinput.MouseController().stop()
 
         # Remove all claims on VJoy devices
         joystick_handling.VJoyProxy.reset()
