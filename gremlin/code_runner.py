@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+import logging
 import time
 
 import gremlin
@@ -121,6 +122,11 @@ class CodeRunner:
                             # on the input item's content
                             callbacks = []
                             for container in input_item.containers:
+                                if not container.is_valid():
+                                    logging.getLogger("system").warn(
+                                        "Incomplete container ignored"
+                                    )
+                                    continue
                                 callbacks.extend(container.generate_callbacks())
 
                             for cb_data in callbacks:
