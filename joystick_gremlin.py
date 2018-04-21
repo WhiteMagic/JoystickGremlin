@@ -609,7 +609,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.tray_icon.setContextMenu(self.ui.tray_menu)
         self.ui.tray_icon.show()
 
-    def _create_tabs(self):
+    def _create_tabs(self, activate_tab=None):
         """Creates the tabs of the configuration dialog representing
         the different connected devices.
         """
@@ -709,8 +709,14 @@ class GremlinUi(QtWidgets.QMainWindow):
         widget = gremlin.ui.profile_settings.ProfileSettingsWidget(
             self._profile.settings
         )
-        widget.changed.connect(self._create_tabs)
+        widget.changed.connect(lambda: self._create_tabs("Settings"))
         self.ui.devices.addTab(widget, "Settings")
+
+        # Select specified tab if one is selected
+        if activate_tab is not None:
+            for i in range(self.ui.devices.count()):
+                if self.ui.devices.tabText(i) == activate_tab:
+                    self.ui.devices.setCurrentIndex(i)
 
     def _setup_icons(self):
         """Sets the icons of all QAction items."""
