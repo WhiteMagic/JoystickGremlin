@@ -659,6 +659,12 @@ class AbstractContainer(profile.ProfileData):
         """
         # Check state of the container
         state = self._is_container_valid()
+
+        # Check that no action set is empty
+        for actions in [a for a in self.action_sets if a is not None]:
+            if len(actions) == 0:
+                state = False
+
         # Check state of all linked actions
         for actions in [a for a in self.action_sets if a is not None]:
             for action in actions:
