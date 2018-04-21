@@ -43,11 +43,12 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
 
         self._create_ui()
 
-    def refresh_ui(self):
+    def refresh_ui(self, emit_change=False):
         """Refreshes the entire UI."""
         gremlin.ui.common.clear_layout(self.main_layout)
         self._create_ui()
-        self.changed.emit()
+        if emit_change:
+            self.changed.emit()
 
     def _create_ui(self):
         """Creates the UI elements of this widget."""
@@ -57,7 +58,7 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
         # vJoy devices as inputs
         vjoy_as_input_widget = VJoyAsInputWidget(self.profile_settings)
         self.main_layout.addWidget(vjoy_as_input_widget)
-        vjoy_as_input_widget.changed.connect(self.refresh_ui)
+        vjoy_as_input_widget.changed.connect(lambda: self.refresh_ui(True))
 
         # vJoy axis initialization value setup
         vjoy_devices = gremlin.joystick_handling.vjoy_devices()
