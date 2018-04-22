@@ -143,7 +143,8 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         # mapping selection
         self.vjoy_selector = common.VJoySelector(
             change_cb,
-            [gremlin.common.InputType.JoystickAxis]
+            [gremlin.common.InputType.JoystickAxis],
+            profile_data.settings.vjoy_as_input
         )
         self.joy1_selector = common.JoystickSelector(
             change_cb,
