@@ -22,6 +22,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
 
+
 # Mapping from types to display names
 input_type_to_name = {
     gremlin.common.InputType.JoystickAxis: "Axis",

@@ -115,28 +115,8 @@ class MacroActionEditor(QtWidgets.QWidget):
         entry = self.model.get_entry(self.index.row())
         for data in self.action_types.values():
             if isinstance(entry, data.action_type):
-                print(data)
                 self.action_selector.setCurrentText(data.name)
                 data.create_ui()
-
-        # if isinstance(entry, gremlin.macro.JoystickAction):
-        #     self.action_selector.setCurrentText("Joystick")
-        #     self._joystick_ui()
-        # elif isinstance(entry, gremlin.macro.KeyAction):
-        #     self.action_selector.setCurrentText("Keyboard")
-        #     self._keyboard_ui()
-        # elif isinstance(entry, gremlin.macro.MouseButtonAction):
-        #     self.action_selector.setCurrentText("Mouse Button")
-        #     self._mouse_button_ui()
-        # elif isinstance(entry, gremlin.macro.MouseMotionAction):
-        #     self.action_selector.setCurrentText("Mouse Motion")
-        #     self._mouse_motion_ui()
-        # elif isinstance(entry, gremlin.macro.PauseAction):
-        #     self.action_selector.setCurrentText("Pause")
-        #     self._pause_ui()
-        # elif isinstance(entry, gremlin.macro.VJoyAction):
-        #     self.action_selector.setCurrentText("vJoy")
-        #     self._vjoy_ui()
 
         self.action_selector.currentTextChanged.connect(self._change_action)
 
