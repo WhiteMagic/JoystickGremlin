@@ -169,7 +169,7 @@ class EventListener(QtCore.QObject):
         QtCore.QObject.__init__(self)
         self.keyboard_hook = windows_event_hook.KeyboardHook()
         self.keyboard_hook.register(self._keyboard_handler)
-        self.mouse_hook = windows_event_hook.MousedHook()
+        self.mouse_hook = windows_event_hook.MouseHook()
         self.mouse_hook.register(self._mouse_handler)
         self._joysticks = {}
         self._joystick_guid_map = {}
