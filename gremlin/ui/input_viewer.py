@@ -340,6 +340,8 @@ class ButtonState(QtWidgets.QGroupBox):
         """
         super().__init__(parent)
 
+        self._event_times = {}
+
         if device.is_virtual:
             self.setTitle("{} #{:d} - Buttons".format(device.name, device.vjoy_id))
         else:
@@ -362,7 +364,13 @@ class ButtonState(QtWidgets.QGroupBox):
         :param event the event with which to update the state display
         """
         if event.event_type == gremlin.common.InputType.JoystickButton:
+            # Delay reacting such that the visualization can happen before we
+            # change it again.
+            if time.time() - self._event_times.get(event.identifier, 0.0) < 0.05:
+                time.sleep(0.05)
+
             self.buttons[event.identifier].setDown(event.is_pressed)
+            self._event_times[event.identifier] = time.time()
 
 
 class HatState(QtWidgets.QGroupBox):
