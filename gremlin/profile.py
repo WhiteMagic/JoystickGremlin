@@ -19,6 +19,7 @@ import copy
 import logging
 import shutil
 from abc import abstractmethod, ABCMeta
+import os
 from xml.dom import minidom
 from xml.etree import ElementTree
 
@@ -200,7 +201,7 @@ class ProfileConverter:
     """Handle converting and checking profiles."""
 
     # Current profile version number
-    current_version = 6
+    current_version = 7
 
     def __init__(self):
         pass
@@ -240,20 +241,27 @@ class ProfileConverter:
             new_root = self._convert_from_v3(new_root)
             new_root = self._convert_from_v4(new_root)
             new_root = self._convert_from_v5(new_root)
+            new_root = self._convert_from_v6(new_root, fname)
         if old_version == 2:
             new_root = self._convert_from_v2(root)
             new_root = self._convert_from_v3(new_root)
             new_root = self._convert_from_v4(new_root)
             new_root = self._convert_from_v5(new_root)
+            new_root = self._convert_from_v6(new_root, fname)
         if old_version == 3:
             new_root = self._convert_from_v3(root)
             new_root = self._convert_from_v4(new_root)
             new_root = self._convert_from_v5(new_root)
+            new_root = self._convert_from_v6(new_root, fname)
         if old_version == 4:
             new_root = self._convert_from_v4(root)
             new_root = self._convert_from_v5(new_root)
+            new_root = self._convert_from_v6(new_root, fname)
         if old_version == 5:
             new_root = self._convert_from_v5(root)
+            new_root = self._convert_from_v6(new_root, fname)
+        if old_version == 6:
+            new_root = self._convert_from_v6(root, fname)
 
         if new_root is not None:
             # Save converted version
@@ -288,6 +296,8 @@ class ProfileConverter:
             return 5
         elif root.tag == "profile" and int(root.get("version")) == 6:
             return 6
+        elif root.tag == "profile" and int(root.get("version")) == 7:
+            return 7
         else:
             raise error.ProfileError(
                 "Invalid profile version encountered"
@@ -558,6 +568,23 @@ class ProfileConverter:
 
         return new_root
 
+    def _convert_from_v6(self, root, fname):
+        """Convert from a V6 profile to V7.
+
+        This conversion only requires to modify the custom module loading bit
+        which requires turning the module name into the full path. This
+        requires the path to the initial profile as the module has to be in
+        the same subfolder.
+        """
+        base_path = os.path.normcase(os.path.dirname(os.path.abspath(fname)))
+
+        for module in root.findall("import/module"):
+            module.attrib["name"] = os.path.normpath("{}\{}.py".format(
+                base_path,
+                module.attrib["name"]
+            ))
+
+        return root
 
     def _p3_extract_map_to_keyboard(self, input_item):
         """Converts an old macro setup to a map to keyboard action.
@@ -894,7 +921,7 @@ class Profile:
         """
         # Generate XML document
         root = ElementTree.Element("profile")
-        root.set("version", "6")
+        root.set("version", "7")
 
         # Device settings
         devices = ElementTree.Element("devices")
