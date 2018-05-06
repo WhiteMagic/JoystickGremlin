@@ -578,6 +578,7 @@ class ProfileConverter:
         """
         base_path = os.path.normcase(os.path.dirname(os.path.abspath(fname)))
 
+        root.attrib["version"] = "7"
         for module in root.findall("import/module"):
             module.attrib["name"] = os.path.normpath("{}\{}.py".format(
                 base_path,
