@@ -25,7 +25,6 @@ import gremlin
 from . import common, ui_about
 
 
-
 class VisualizationType(enum.Enum):
 
     """Enumeration of possible visualization types."""
@@ -213,7 +212,10 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
         self.setLayout(QtWidgets.QHBoxLayout())
 
         el = gremlin.event_handler.EventListener()
-        if vis_type == VisualizationType.AxisTemporal:
+        if vis_type == VisualizationType.AxisCurrent:
+            self._create_current_axis()
+            el.joystick_event.connect(self._current_axis_update)
+        elif vis_type == VisualizationType.AxisTemporal:
             self._create_temporal_axis()
             el.joystick_event.connect(self._temporal_axis_update)
         elif vis_type == VisualizationType.ButtonHat:
@@ -243,6 +245,12 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
             self.layout().addWidget(widget)
         self.layout().addStretch(1)
 
+    def _create_current_axis(self):
+        """Creates display for current axes data."""
+        self.widgets = [AxesCurrentState(self.device_data)]
+        for widget in self.widgets:
+            self.layout().addWidget(widget)
+
     def _create_temporal_axis(self):
         """Creates display for temporal axes data."""
         self.widgets = [AxesTimeline(self.device_data)]
@@ -254,6 +262,17 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
 
         :param event the event to use in the update
         """
+        event_id = gremlin.util.get_device_id(
+            event.hardware_id,
+            event.windows_id
+        )
+        if self.device_id != event_id:
+            return
+
+        for widget in self.widgets:
+            widget.process_event(event)
+
+    def _current_axis_update(self, event):
         event_id = gremlin.util.get_device_id(
             event.hardware_id,
             event.windows_id
@@ -409,6 +428,81 @@ class AxesTimeline(QtWidgets.QGroupBox):
         :param series_id id of the axes to which to add the value
         """
         self.plot_widget.add_point(value, series_id)
+
+
+class AxesCurrentState(QtWidgets.QGroupBox):
+
+    """Displays the current state of all axes on a device."""
+
+    def __init__(self, device, parent=None):
+        """Creates a new instance.
+
+        :param device the device of which to display the axes sate
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+
+        if device.is_virtual:
+            self.setTitle("{} #{:d} - Axes".format(device.name, device.vjoy_id))
+        else:
+            self.setTitle("{} - Axes".format(device.name))
+
+        self.axes = [None]
+        axes_layout = QtWidgets.QHBoxLayout()
+        for i in range(device.axis_count):
+            axis = AxisStateWidget(i+1)
+            axis.set_value(0.0)
+            self.axes.append(axis)
+            axes_layout.addWidget(axis)
+        axes_layout.addStretch()
+        self.setLayout(axes_layout)
+
+    def process_event(self, event):
+        """Updates state visualization based on the given event.
+
+        :param event the event with which to update the state display
+        """
+        if event.event_type == gremlin.common.InputType.JoystickAxis:
+            self.axes[event.identifier].set_value(event.value)
+
+
+class AxisStateWidget(QtWidgets.QWidget):
+
+    """Visualizes the current state of an axis."""
+
+    # Scaling factor for the [-1, 1] input to make ensure proper visualization
+    scale_factor = 10000
+
+    def __init__(self, axis_id, parent=None):
+        """Creates a new instance.
+
+        :param axis_id id of the axis, used in the label
+        :param parent the parent of this widget
+        """
+        super().__init__(parent)
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.progress = QtWidgets.QProgressBar()
+        self.progress.setRange(
+            -AxisStateWidget.scale_factor,
+            AxisStateWidget.scale_factor
+        )
+        self.progress.setOrientation(QtCore.Qt.Vertical)
+
+        self.readout = QtWidgets.QLabel()
+        self.label = QtWidgets.QLabel("Axis {}".format(axis_id))
+
+        self.main_layout.addWidget(self.label)
+        self.main_layout.addWidget(self.progress)
+        self.main_layout.addWidget(self.readout)
+
+    def set_value(self, value):
+        """Sets the value shown by the widget.
+
+        :param value new value to show
+        """
+        self.progress.setValue(AxisStateWidget.scale_factor * value)
+        self.readout.setText("{:d} %".format(int(100 * value)))
 
 
 class HatWidget(QtWidgets.QWidget):
