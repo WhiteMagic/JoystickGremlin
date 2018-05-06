@@ -266,6 +266,8 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
             # Long press
             else:
                 self.long_set.process_event(event, value)
+                if self.activate_on == "press":
+                    self.short_set.process_event(event, value)
 
             self.timer = None
 
