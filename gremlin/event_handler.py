@@ -180,14 +180,14 @@ class EventListener(QtCore.QObject):
 
         self._init_joysticks()
         self.keyboard_hook.start()
-        self.mouse_hook.start()
+        # self.mouse_hook.start()
         Thread(target=self._run).start()
 
     def terminate(self):
         """Stops the loop from running."""
         self._running = False
         self.keyboard_hook.stop()
-        self.mouse_hook.stop()
+        # self.mouse_hook.stop()
 
     def _run(self):
         """Starts the event loop."""

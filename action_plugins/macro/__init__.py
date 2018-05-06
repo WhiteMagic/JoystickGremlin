@@ -1368,6 +1368,9 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
     def _record_cb(self):
         """Starts the recording of key presses."""
         if self.button_record.isChecked():
+            # Enable mouse event hooking
+            gremlin.windows_event_hook.MouseHook().start()
+
             # Record keystrokes
             gremlin.shared_state.set_suspend_input_highlighting(True)
             self._recording = True
@@ -1383,6 +1386,9 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             el.joystick_event.disconnect(self._create_joystick_action)
             el.keyboard_event.disconnect(self._create_key_action)
             el.mouse_event.disconnect(self._create_mouse_action)
+
+            # Disable mouse event hooking
+            gremlin.windows_event_hook.MouseHook().stop()
 
     def _pause_cb(self):
         """Adds a pause macro action to the list."""
