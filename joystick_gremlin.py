@@ -748,7 +748,18 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionCalibration.setIcon(
             QtGui.QIcon("gfx/calibration.svg")
         )
-        self.ui.actionAbout.setIcon(QtGui.QIcon("gfx/about.svg"))
+        self.ui.actionInputViewer.setIcon(
+            QtGui.QIcon("gfx/input_viewer.svg")
+        )
+        self.ui.actionLogDisplay.setIcon(
+            QtGui.QIcon("gfx/logview.svg")
+        )
+        self.ui.actionOptions.setIcon(
+            QtGui.QIcon("gfx/options.svg")
+        )
+        self.ui.actionAbout.setIcon(
+            QtGui.QIcon("gfx/about.svg")
+        )
 
         # Toolbar actions
         activate_icon = QtGui.QIcon()
