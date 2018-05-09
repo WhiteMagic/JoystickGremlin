@@ -412,6 +412,18 @@ class AxesTimeline(QtWidgets.QGroupBox):
 
     """Visualizes axes state as a timeline."""
 
+    color_list = {
+        1: "#e41a1c",
+        2: "#377eb8",
+        3: "#4daf4a",
+        4: "#984ea3",
+        5: "#ff7f00",
+        6: "#ffff33",
+        7: "#a65628",
+        8: "#f781bf"
+    }
+
+
     def __init__(self, device, parent=None):
         """Creates a new instance.
 
@@ -427,7 +439,18 @@ class AxesTimeline(QtWidgets.QGroupBox):
 
         self.setLayout(QtWidgets.QVBoxLayout())
         self.plot_widget = TimeLinePlotWidget()
+        self.legend_layout = QtWidgets.QHBoxLayout()
+        self.legend_layout.addStretch()
+        for i in range(1, device.axis_count+1):
+            label = QtWidgets.QLabel("Axis {:d}".format(i))
+            label.setStyleSheet(
+                "QLabel {{ color: {}; font-weight: bold }}".format(
+                    AxesTimeline.color_list[i]
+                )
+            )
+            self.legend_layout.addWidget(label)
         self.layout().addWidget(self.plot_widget)
+        self.layout().addLayout(self.legend_layout)
 
     def add_point(self, value, series_id):
         """Adds a new point to the timline.
