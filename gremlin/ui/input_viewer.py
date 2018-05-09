@@ -176,7 +176,7 @@ class InputViewerArea(QtWidgets.QScrollArea):
             hint = widget.minimumSizeHint()
             height = max(height, hint.height())
             width = max(width, hint.width())
-        self.setMinimumSize(QtCore.QSize(width, height))
+        self.setMinimumSize(QtCore.QSize(width+40, height))
 
     def remove_widget(self, widget):
         """Removes a widget from the visualization area.
