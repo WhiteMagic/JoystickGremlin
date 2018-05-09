@@ -22,7 +22,7 @@ import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import gremlin
-from . import common, ui_about
+from . import common
 
 
 class VisualizationType(enum.Enum):
@@ -55,7 +55,7 @@ class VisualizationSelector(QtWidgets.QWidget):
         devices = gremlin.joystick_handling.joystick_devices()
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        for dev in devices:
+        for dev in sorted(devices, key=lambda x: (x.name, x.vjoy_id)):
             if dev.is_virtual:
                 box = QtWidgets.QGroupBox("{} #{:d}".format(
                     dev.name,
