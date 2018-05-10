@@ -752,7 +752,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             QtGui.QIcon("gfx/input_viewer.svg")
         )
         self.ui.actionLogDisplay.setIcon(
-            QtGui.QIcon("gfx/logview.svg")
+            QtGui.QIcon("gfx/logview.png")
         )
         self.ui.actionOptions.setIcon(
             QtGui.QIcon("gfx/options.svg")
