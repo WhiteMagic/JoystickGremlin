@@ -1229,6 +1229,11 @@ if __name__ == "__main__":
         help="Enable Joystick Gremlin upon launch",
         action="store_true"
     )
+    parser.add_argument(
+        "--start-minimized",
+        help="Start Joystick Gremlin minimized",
+        action="store_true"
+    )
     args = parser.parse_args()
 
     # Path manging to ensure Gremlin starts independent of the CWD
@@ -1336,6 +1341,8 @@ if __name__ == "__main__":
     if args.enable:
         ui.ui.actionActivate.setChecked(True)
         ui.activate(True)
+    if args.start_minimized:
+        ui.setHidden(True)
 
     # Run UI
     app.exec_()
