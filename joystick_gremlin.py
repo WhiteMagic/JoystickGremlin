@@ -330,6 +330,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 self._last_active_mode(),
                 self._profile
             )
+            self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon_active.ico"))
         else:
             # Stop running the code
             self.runner.stop()
@@ -341,6 +342,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 gremlin.ui.device_tab.KeyboardDeviceTabWidget
             ]:
                 self.ui.devices.currentWidget().refresh()
+            self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon.ico"))
 
     def create_1to1_mapping(self):
         """Creates a 1 to 1 mapping of the given device to the first
