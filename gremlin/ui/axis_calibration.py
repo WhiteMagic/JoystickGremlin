@@ -31,10 +31,7 @@ class CalibrationUi(common.BaseDialogUi):
         :param parent the parent widget of this object
         """
         super().__init__(parent)
-        self.devices = [
-            dev for dev in gremlin.joystick_handling.joystick_devices()
-            if not dev.is_virtual
-        ]
+        self.devices = gremlin.joystick_handling.physical_devices()
         self.current_selection_id = 0
 
         # Create the required layouts
@@ -46,6 +43,16 @@ class CalibrationUi(common.BaseDialogUi):
 
     def _create_ui(self):
         """Creates all widgets required for the user interface."""
+        # If there are no devices available show a message about this and abort
+        if len(self.devices) == 0:
+            label = QtWidgets.QLabel("No devices present for calibration")
+            label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+            label.setWordWrap(True)
+            label.setFrameShape(QtWidgets.QFrame.Box)
+            label.setMargin(10)
+            self.main_layout.addWidget(label)
+            return
+
         # Device selection drop down
         self.device_dropdown = QtWidgets.QComboBox()
         self.device_dropdown.currentIndexChanged.connect(
@@ -146,8 +153,11 @@ class CalibrationUi(common.BaseDialogUi):
 
         :param event the close event
         """
-        el = gremlin.event_handler.EventListener()
-        el.joystick_event.disconnect(self._handle_event)
+        # Only disconnect from the joystick event handler if we have actual
+        # devices, as otherwise we never connected to it
+        if len(self.devices) > 0:
+            el = gremlin.event_handler.EventListener()
+            el.joystick_event.disconnect(self._handle_event)
         super().closeEvent(event)
 
 
