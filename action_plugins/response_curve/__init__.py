@@ -113,6 +113,8 @@ class ControlPoint:
         is valid.
 
         :param point the new center position of the control point
+        :param emit_model_update if True a message will be emitted when the
+            model changes
         """
         if self._model.is_valid_point(point, self.identifier):
             # Update handle locations if any are present

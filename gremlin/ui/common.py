@@ -737,6 +737,10 @@ class VJoySelector(QtWidgets.QWidget):
         :param vjoy_dev_id the id of the vjoy device
         :param vjoy_input_id the id of the input
         """
+        # Initialize variables
+        dev_id = -1
+        btn_id = -1
+
         # No vJoy devices available
         if len(self.vjoy_devices) == 0:
             raise gremlin.error.GremlinError(

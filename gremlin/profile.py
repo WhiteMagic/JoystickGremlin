@@ -748,10 +748,10 @@ class Profile:
             new_mode = new_device.modes[mode]
             for i in range(device.axis_count):
                 new_mode.get_data(InputType.JoystickAxis, device.axis(i)[1])
-            for id in range(1, device.buttons+1):
-                new_mode.get_data(InputType.JoystickButton, id)
-            for id in range(1, device.hats+1):
-                new_mode.get_data(InputType.JoystickHat, id)
+            for i in range(1, device.buttons+1):
+                new_mode.get_data(InputType.JoystickButton, i)
+            for i in range(1, device.hats+1):
+                new_mode.get_data(InputType.JoystickHat, i)
 
     def build_inheritance_tree(self):
         """Returns a tree structure encoding the inheritance between the

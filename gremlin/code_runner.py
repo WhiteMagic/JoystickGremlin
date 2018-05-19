@@ -123,7 +123,7 @@ class CodeRunner:
                             callbacks = []
                             for container in input_item.containers:
                                 if not container.is_valid():
-                                    logging.getLogger("system").warn(
+                                    logging.getLogger("system").warning(
                                         "Incomplete container ignored"
                                     )
                                     continue

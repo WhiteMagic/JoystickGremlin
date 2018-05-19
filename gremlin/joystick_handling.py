@@ -133,6 +133,9 @@ class JoystickDeviceData:
     def vjoy_id(self):
         return self._vjoy_id
 
+    def set_vjoy_id(self, vjoy_id):
+        self._vjoy_id = vjoy_id
+
     def __hash__(self):
         return hash((self.hardware_id, self.windows_id))
 
@@ -213,8 +216,8 @@ def joystick_devices_initialization():
         if old_dev not in devices:
             device_removed = True
             syslog.debug("Removed: name={} windows_id={:d}".format(
-                new_dev.name,
-                new_dev.windows_id
+                old_dev.name,
+                old_dev.windows_id
             ))
 
     if not device_added and not device_removed:
@@ -253,7 +256,7 @@ def joystick_devices_initialization():
                 vjoy.button_count(i),
                 vjoy.hat_count(i)
             )
-            devices[vjoy_lookup[hash_value]]._vjoy_id = i
+            devices[vjoy_lookup[hash_value]].set_vjoy_id(i)
 
         # if vjoy.VJoy.device_exists(i):
         #     vjoy_proxy[i]

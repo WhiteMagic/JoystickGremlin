@@ -661,7 +661,7 @@ class ConditionView(common.AbstractView):
             data = self.model.data(i)
             condition_widget = lookup[type(data)](data)
             condition_widget.deleted.connect(
-                lambda data: self.model.delete_condition(data)
+                lambda local_data: self.model.delete_condition(local_data)
             )
             self.conditions_layout.addWidget(condition_widget)
 

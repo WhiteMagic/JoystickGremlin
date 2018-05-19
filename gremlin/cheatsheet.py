@@ -186,6 +186,7 @@ class DeviceFloat(Flowable):
 
         :param device_name name of the device
         """
+        super().__init__()
         self._device_name = device_name
 
     def draw(self):
@@ -214,6 +215,7 @@ class ModeFloat(Flowable):
 
         :param mode_name name of the mode
         """
+        super().__init__()
         self._mode_name = mode_name
 
         self._bar_offset = 0.1*cm
