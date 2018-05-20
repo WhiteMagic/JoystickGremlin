@@ -181,6 +181,9 @@ class OptionsUi(common.BaseDialogUi):
         self.executable_remove = QtWidgets.QPushButton()
         self.executable_remove.setIcon(QtGui.QIcon("gfx/button_delete.png"))
         self.executable_remove.clicked.connect(self._remove_executable)
+        self.executable_edit = QtWidgets.QPushButton()
+        self.executable_edit.setIcon(QtGui.QIcon("gfx/button_edit.png"))
+        self.executable_edit.clicked.connect(self._edit_executable)
         self.executable_list = QtWidgets.QPushButton()
         self.executable_list.setIcon(QtGui.QIcon("gfx/list_show.png"))
         self.executable_list.clicked.connect(self._list_executables)
@@ -189,6 +192,7 @@ class OptionsUi(common.BaseDialogUi):
         self.executable_layout.addWidget(self.executable_selection)
         self.executable_layout.addWidget(self.executable_add)
         self.executable_layout.addWidget(self.executable_remove)
+        self.executable_layout.addWidget(self.executable_edit)
         self.executable_layout.addWidget(self.executable_list)
         self.executable_layout.addStretch()
 
@@ -393,6 +397,29 @@ class OptionsUi(common.BaseDialogUi):
             self.executable_selection.setCurrentIndex(
                 self.executable_selection.findText(fname)
             )
+
+    def _edit_executable(self):
+        """Allows editing the path of an executable."""
+        new_text, flag = QtWidgets.QInputDialog.getText(
+            self,
+            "Change Executable / RegExp",
+            "Change the executable text or enter a regular expression to use.",
+            QtWidgets.QLineEdit.Normal,
+            self.executable_selection.currentText()
+        )
+
+        # If the user did click on ok update the entry
+        old_entry = self.executable_selection.currentText()
+        if flag:
+            if old_entry not in self.config.get_executable_list():
+                self._add_executable(new_text)
+            else:
+                self.config.set_profile(
+                    new_text,
+                    self.config.get_profile(old_entry)
+                )
+                self.config.remove_profile(old_entry)
+                self.populate_executables(new_text)
 
     def _new_executable(self):
         """Prompts the user to select a new executable to add to the
