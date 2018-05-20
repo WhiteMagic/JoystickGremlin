@@ -128,9 +128,14 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         min_speed = self.min_speed.value()
         max_speed = self.max_speed.value()
         if min_speed > max_speed:
-            self.max_speed.setValue(min_speed)
-        if max_speed < min_speed:
-            self.min_speed.setValue(max_speed)
+            # Maximum value was decreased below minimum
+            if max_speed != self.action_data.max_speed:
+                min_speed = max_speed
+            # Minimum value was increased above maximum
+            elif min_speed != self.action_data.min_speed:
+                max_speed = min_speed
+        self.min_speed.setValue(min_speed)
+        self.max_speed.setValue(max_speed)
 
         self.action_data.axis = "x" if self.x_axis.isChecked() else "y"
         self.action_data.min_speed = min_speed
@@ -144,9 +149,15 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         min_speed = self.min_speed.value()
         max_speed = self.max_speed.value()
         if min_speed > max_speed:
-            self.max_speed.setValue(min_speed)
-        if max_speed < min_speed:
-            self.min_speed.setValue(max_speed)
+            # Maximum value was decreased below minimum
+            if max_speed != self.action_data.max_speed:
+                min_speed = max_speed
+            # Minimum value was increased above maximum
+            elif min_speed != self.action_data.min_speed:
+                max_speed = min_speed
+        self.min_speed.setValue(min_speed)
+        self.max_speed.setValue(max_speed)
+
         self.action_data.min_speed = min_speed
         self.action_data.max_speed = max_speed
 
