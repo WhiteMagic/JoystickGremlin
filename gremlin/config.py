@@ -145,8 +145,7 @@ class Configuration:
             self.save()
 
     def get_profile(self, exec_path):
-        """Returns the path to the profile associated with the given
-        executable.
+        """Returns the path to the profile associated with the given executable.
 
         :param exec_path the path to the executable for which to
             return the profile
