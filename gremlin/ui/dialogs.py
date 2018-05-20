@@ -302,7 +302,7 @@ class OptionsUi(common.BaseDialogUi):
         """
         self.profile_field.textChanged.disconnect(self._update_profile)
         self.executable_selection.clear()
-        executable_list = sorted(self.config.get_executable_list())
+        executable_list = self.config.get_executable_list()
         for path in executable_list:
             self.executable_selection.addItem(path)
         self.profile_field.textChanged.connect(self._update_profile)
