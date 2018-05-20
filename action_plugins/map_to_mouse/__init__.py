@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import math
 import threading
 import time
 import os
@@ -212,8 +213,9 @@ class MapToMouseFunctor(AbstractFunctor):
 
     def _process_axis_event(self, event, value):
         delta_motion = round(
-            self.min_speed + value.current * (self.max_speed - self.min_speed)
+            self.min_speed + abs(value.current) * (self.max_speed - self.min_speed)
         )
+        delta_motion = math.copysign(delta_motion, value.current)
         delta_motion = 0.0 if abs(value.current) < 0.05 else delta_motion
 
         if self.axis == "x":
