@@ -54,12 +54,18 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
             self._create_hat_ui()
 
     def _create_axis_ui(self):
+        """Creates the UI for axis setups."""
         self.axis_layout = QtWidgets.QHBoxLayout()
         self.x_axis = QtWidgets.QRadioButton("X Axis")
         self.x_axis.setChecked(True)
         self.y_axis = QtWidgets.QRadioButton("Y Axis")
 
-        self.main_layout.addWidget(QtWidgets.QLabel("Control"), 0, 0, QtCore.Qt.AlignLeft)
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("Control"),
+            0,
+            0,
+            QtCore.Qt.AlignLeft
+        )
         self.main_layout.addWidget(self.x_axis, 0, 1, QtCore.Qt.AlignLeft)
         self.main_layout.addWidget(self.y_axis, 0, 2, 1, 2, QtCore.Qt.AlignLeft)
 
@@ -79,6 +85,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self._connect_axis()
 
     def _create_hat_ui(self):
+        """Creates the UI for hat setups."""
         self.min_speed = QtWidgets.QSpinBox()
         self.min_speed.setRange(0, 1e5)
         self.max_speed = QtWidgets.QSpinBox()
@@ -106,6 +113,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
             self._populate_hat_ui()
 
     def _populate_axis_ui(self):
+        """Populates axis UI elements with data."""
         self._disconnect_axis()
         if self.action_data.axis == "x":
             self.x_axis.setChecked(True)
@@ -117,6 +125,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self._connect_axis()
 
     def _populate_hat_ui(self):
+        """Populates hat UI elements with data."""
         self._disconnect_hat()
         self.min_speed.setValue(self.action_data.min_speed)
         self.max_speed.setValue(self.action_data.max_speed)
@@ -124,8 +133,10 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self._connect_hat()
 
     def _update_axis(self):
+        """Updates the axis data with UI information."""
         self._disconnect_axis()
 
+        # Update speed values
         min_speed = self.min_speed.value()
         max_speed = self.max_speed.value()
         if min_speed > max_speed:
@@ -145,8 +156,10 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self._connect_axis()
 
     def _update_hat(self):
+        """Updates the hat data with UI information."""
         self._disconnect_hat()
 
+        # Update speed values
         min_speed = self.min_speed.value()
         max_speed = self.max_speed.value()
         if min_speed > max_speed:
@@ -161,29 +174,32 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         self.action_data.min_speed = min_speed
         self.action_data.max_speed = max_speed
-
         self.action_data.acceleration = self.acceleration.value()
 
         self._connect_hat()
 
     def _connect_axis(self):
+        """Connects all axis input element to their callbacks."""
         self.x_axis.toggled.connect(self._update_axis)
         self.y_axis.toggled.connect(self._update_axis)
         self.min_speed.valueChanged.connect(self._update_axis)
         self.max_speed.valueChanged.connect(self._update_axis)
 
     def _disconnect_axis(self):
+        """Disconnects all axis input element from their callbacks."""
         self.x_axis.toggled.disconnect(self._update_axis)
         self.y_axis.toggled.disconnect(self._update_axis)
         self.min_speed.valueChanged.disconnect(self._update_axis)
         self.max_speed.valueChanged.disconnect(self._update_axis)
 
     def _connect_hat(self):
+        """Connects all hat input elements to their callbacks."""
         self.min_speed.valueChanged.connect(self._update_hat)
         self.max_speed.valueChanged.connect(self._update_hat)
         self.acceleration.valueChanged.connect(self._update_hat)
 
     def _disconnect_hat(self):
+        """Disconnects all hat input elements from their callbacks."""
         self.min_speed.valueChanged.disconnect(self._update_hat)
         self.max_speed.valueChanged.disconnect(self._update_hat)
         self.acceleration.valueChanged.disconnect(self._update_hat)
@@ -191,7 +207,18 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
 
 class MapToMouseFunctor(AbstractFunctor):
 
+    """Implements the functionality required to move a mouse cursor.
+
+    This moves the mouse curser by issuing relative motion commands. This is
+    only implemented for axis and hat inputs as they can control a cursor
+    properly with a single input, at least partially.
+    """
+
     def __init__(self, action):
+        """Creates a new functor with the provided data.
+
+        :param action contains parameters to use with the functor
+        """
         super().__init__(action)
 
         self.axis = action.axis
@@ -212,6 +239,11 @@ class MapToMouseFunctor(AbstractFunctor):
         )
 
     def _process_axis_event(self, event, value):
+        """Processes events destined for an axis.
+
+        :param event the event triggering the code executiong
+        :param value the current value of the event chain
+        """
         delta_motion = round(
             self.min_speed + abs(value.current) * (self.max_speed - self.min_speed)
         )
@@ -224,6 +256,11 @@ class MapToMouseFunctor(AbstractFunctor):
             self.mouse_controller.dy = delta_motion
 
     def _process_hat_event(self, event, value):
+        """Processes events destined for a hat.
+
+        :param event the event triggering the code executiong
+        :param value the current value of the event chain
+        """
         self.mouse_controller.acceleration = self.acceleration
         self.mouse_controller.dx = value.current[0] * self.min_speed
         self.mouse_controller.dy = -value.current[1] * self.min_speed
