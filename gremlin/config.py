@@ -128,7 +128,10 @@ class Configuration:
 
         :return list of executable paths
         """
-        return list(self._data["profiles"].keys())
+        return list(sorted(
+            self._data["profiles"].keys(),
+            key=lambda x: x.lower())
+        )
 
     def remove_profile(self, exec_path):
         """Removes the executable from the configuration.
