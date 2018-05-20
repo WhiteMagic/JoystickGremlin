@@ -2,6 +2,7 @@
 "description","<p>Allows adding a description to a container</p>"
 "macro","<p>Permits recording of keyboard sequences as a macro.</p><p>A macro can be executed in <i>exclusive</i> mode which means no other macro will run at the same time. Additionally three repeat modes exist: <i>count, toggle,</i> and <i>hold</i>.</p><p>Macro actions can be rearranged via drag & drop as well as changed on an individual basis.</p>"
 "map-to-keyboard","<p>Allows mapping of inputs to a single or sequence of keys to be pressed at the same time. The keys are held as long as the original physical inputs are held down.</p>"
+"map-to-mouse","<p>Allows mapping of inputs to control mouse movements.</p>"
 "noop","<p>This actions is a no operation, i.e. it doesn't do anything and can be used as a placeholder for when an action is needed, but none is wanted.</p>"
 "pause","<p>Pauses the execution of any Gremlin callbacks.</p><p>When pause only inputs marked with <i>Always execute</i> will run.</p>"
 "play-sound","<p>Plays the specified sound file back, with the ability to modify the volume of the playback.</p>"
