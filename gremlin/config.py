@@ -16,8 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import logging
 import time
 import os
+import re
 
 from PyQt5 import QtCore
 
@@ -151,6 +153,50 @@ class Configuration:
         :return profile associated with the given executable
         """
         return self._data["profiles"].get(exec_path, None)
+
+    def get_profile_with_regex(self, exec_path):
+        """Returns the path to the profile associated with the given executable.
+
+        This considers all path entries that do not resolve to an actual file
+        in the system as a regular expression. Regular expressions will be
+        searched in order after true files have been checked.
+
+        :param exec_path the path to the executable for which to
+            return the profile
+        :return profile associated with the given executable
+        """
+        # Handle the normal case where the path matches directly
+        profile_path = self.get_profile(exec_path)
+        if profile_path is not None:
+            logging.getLogger("system").info(
+                "Found exact match for {}, returning {}".format(
+                    exec_path,
+                    profile_path
+                )
+            )
+            return profile_path
+
+        # Handle non files by treating them as regular expressions, returning
+        # the first successful match.
+        for key, value in sorted(
+                self._data["profiles"].items(),
+                key=lambda x: x[0].lower()
+        ):
+            # Ignore valid files
+            if os.path.exists(key):
+                continue
+
+            # Treat key as regular expression and attempt to match it to the
+            # provided executable path
+            if re.search(key, exec_path) is not None:
+                logging.getLogger("system").info(
+                    "Found regex match in {} for {}, returning {}".format(
+                        key,
+                        exec_path,
+                        value
+                    )
+                )
+                return value
 
     def set_profile(self, exec_path, profile_path):
         """Stores the executable and profile combination.
