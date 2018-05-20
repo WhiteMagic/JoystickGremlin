@@ -304,9 +304,9 @@ class MapToKeyboard(AbstractAction):
         ]
 
         self.axis = None
-        self.min_speed = 0
-        self.max_speed = 0
-        self.acceleration = 0
+        self.min_speed = 5
+        self.max_speed = 15
+        self.acceleration = 1.0
 
     def icon(self):
         """Returns the icon to use for this action.
