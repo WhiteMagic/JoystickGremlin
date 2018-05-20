@@ -831,7 +831,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param path the path to the currently active process executable
         """
-        profile_path = self.config.get_profile(path)
+        profile_path = self.config.get_profile_with_regex(path)
         if profile_path:
             if self._profile_fname != profile_path:
                 self.ui.actionActivate.setChecked(False)
