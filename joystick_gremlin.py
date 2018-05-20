@@ -49,7 +49,6 @@ import gremlin.ui.merge_axis
 import gremlin.ui.profile_creator
 import gremlin.ui.profile_settings
 
-
 from gremlin.ui.ui_gremlin import Ui_Gremlin
 
 
@@ -1201,7 +1200,7 @@ def configure_logger(config):
 
     logger.debug("-" * 80)
     logger.debug(time.strftime("%Y-%m-%d %H:%M"))
-    logger.debug("Starting Joystick Gremlin R10")
+    logger.debug("Starting Joystick Gremlin R11")
     logger.debug("-" * 80)
 
 

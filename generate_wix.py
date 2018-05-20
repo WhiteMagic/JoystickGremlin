@@ -223,11 +223,12 @@ def create_document():
             # "Id": "769bf0f8-ba2c-45fb-bc92-d521ed81e721", # 9.0.0
             # "Id": "83417e4c-5acc-49fe-9938-0624a681e6e5", # 9.1.0
             # "Id": "ce0c7c9f-8bcc-4676-a96b-da602968e85e", # 9.2.0
-            "Id": "bec63861-eeae-4f75-bb01-3a76cab1c319", # 10.0.0
+            # "Id": "bec63861-eeae-4f75-bb01-3a76cab1c319", # 10.0.0
+            "Id": "5598cb71-2825-4a78-8f4b-682aefd14323", # 11.0.0
             "UpgradeCode": "0464914b-97da-4889-8699-bcde4e767517",
             "Language": "1033",
             "Codepage": "1252",
-            "Version": "10.0.0"
+            "Version": "11.0.0"
         })
     mug = create_node("MajorUpgrade",
         {
@@ -240,7 +241,7 @@ def create_document():
         {
             "Id": "*",
             "Keywords": "Installer",
-            "Description": "Joystick Gremlin R10 Installer",
+            "Description": "Joystick Gremlin R11 Installer",
             "Manufacturer": "H2IK",
             "InstallerVersion": "100",
             "Languages": "1033",
