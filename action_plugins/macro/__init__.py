@@ -180,7 +180,7 @@ class MacroActionEditor(QtWidgets.QWidget):
 
         # Update the UI elements
         self._update_model()
-        self.action_types[value]()
+        self.action_types[value].create_ui()
 
     def _joystick_ui(self):
         """Creates and populates the JoystickAction editor UI."""
