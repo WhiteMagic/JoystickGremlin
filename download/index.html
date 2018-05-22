@@ -79,49 +79,42 @@
                 <div class="col-md-8">
                     <div class="row">
     <div class="col-md-6">
-        <h1>Release 10</h1>
+        <h1>Release 11</h1>
     </div>
     <div class="col-md-6 text-right">
-        <h1><small>2018-02-03</small></h1>
+        <h1><small>2018-05-20</small></h1>
     </div>
 </div>
 
 <a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_10/Joystick.Gremlin.R10.msi">Download
-    Release 10 MSI</a>
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_11/Joystick.Gremlin.R11.msi">Download
+    Release 11 MSI</a>
 <a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_10/Joystick.Gremlin.R10.zip">Download
-    Release 10 ZIP</a>
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_11/Joystick.Gremlin.R11.zip">Download
+    Release 11 ZIP</a>
 
 <br/><br/>
 
 
 <h2>New Features</h2>
 <ul>
-    <li>Configuration UI for HIDGuardian</li>
-    <li>Ability to assign labels to each device</li>
-    <li>Added UI to swap configurations of identical devices</li>
-    <li>Ability to turn on and off which events a macro should record</li>
-    <li>Ability to record and emit mouse button events</li>
-    <li>Symmetry mode for response curve confiruation</li>
-    <li>Function added to quickly invert a response curve</li>
-    <li>Option to launch with Gremlin on Windows launch added</li>
-    <li>Description action added which allows describing individual containers</li>
-    <li>Hat to Buttons container added which allows easily turning a hat into four or eight buttons</li>
-    <li>Rework the cheatsheet generator, preparing for future updates</li>
-    <li>Keyboard inputs from on screen keyboards can now be used in macro recordings</li>
+    <li>Custom modules now loaded using absolute filename</li>
+    <li>Input visualization added</li>
+    <li>Ability to use vJoy devices as physical inputs devices</li>
+    <li>Ability to control relative mouse movements via macros and new actions</li>
+    <li>Show state of Gremlin in the system tray icon</li>
+    <li>New startup option <code>--start-minimized</code> added</li>
+    <li>Automatic module loading now supports regular expressions instead of executable paths</li>
 </ul>
 
 <h2>Fixes</h2>
 <ul>
-    <li>UI fixes to improve clarity and remove annoyances</li>
-    <li>Show device ID in each tab if duplicate devices exist</li>
-    <li>Improve and fix automatic button release logic</li>
-    <li>Some device initialization fixes</li>
-    <li>Improve handling of virtual buttons created from axis and hats</li>
-    <li>Consistent handling of axis motion detection</li>
-    <li>Improved Sound playback action validity checking</li>
-    <li>Ensure empty modes are not silently dropped when executing a profile</li>
+    <li>Fixed periodic function decorator</li>
+    <li>Better handling of loading of vJoy device information</li>
+    <li>Cleaned up presentation of conditions</li>
+    <li>Fix issues with profile execution logic generation</li>
+    <li>Improved windows event hooking</li>
+    <li>Tempo container fixes</li>
 </ul>
 
                 </div>
@@ -133,7 +126,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: February 3, 2018</p>
+            <p class="text-muted">Last update: May 22, 2018</p>
         </div>
     </div>
 </footer>

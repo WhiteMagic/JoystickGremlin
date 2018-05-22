@@ -5,7 +5,47 @@
 		<description>New release information for Joystick Gremlin</description>
 		<link>https://whitemagic.github.io/JoystickGremlin</link>
 		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
-		<lastBuildDate>Sat, 03 Feb 2018 00:00:00 +1100</lastBuildDate>
+		<lastBuildDate>Sun, 20 May 2018 00:00:00 +1000</lastBuildDate>
+		
+			<item>
+				<title>Release 11</title>
+				<description>&lt;h1&gt;Release 11&lt;/h1&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_11/Joystick.Gremlin.R11.msi&quot;&gt;Download
+    Release 11 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_11/Joystick.Gremlin.R11.zip&quot;&gt;Download
+    Release 11 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
+
+&lt;h2&gt;New Features&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Custom modules now loaded using absolute filename&lt;/li&gt;
+    &lt;li&gt;Input visualization added&lt;/li&gt;
+    &lt;li&gt;Ability to use vJoy devices as physical inputs devices&lt;/li&gt;
+    &lt;li&gt;Ability to control relative mouse movements via macros and new actions&lt;/li&gt;
+    &lt;li&gt;Show state of Gremlin in the system tray icon&lt;/li&gt;
+    &lt;li&gt;New startup option &lt;code&gt;--start-minimized&lt;/code&gt; added&lt;/li&gt;
+    &lt;li&gt;Automatic module loading now supports regular expressions instead of executable paths&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;Fixes&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Fixed periodic function decorator&lt;/li&gt;
+    &lt;li&gt;Better handling of loading of vJoy device information&lt;/li&gt;
+    &lt;li&gt;Cleaned up presentation of conditions&lt;/li&gt;
+    &lt;li&gt;Fix issues with profile execution logic generation&lt;/li&gt;
+    &lt;li&gt;Improved windows event hooking&lt;/li&gt;
+    &lt;li&gt;Tempo container fixes&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sun, 20 May 2018 00:00:00 +1000</pubDate>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2018/05/20/Release-11.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2018/05/20/Release-11.html</guid>
+			</item>
 		
 			<item>
 				<title>Release 10</title>
@@ -342,41 +382,6 @@
 				<pubDate>Thu, 10 Nov 2016 12:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/11/10/Release-6.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/11/10/Release-6.html</guid>
-			</item>
-		
-			<item>
-				<title>Release 5</title>
-				<description>&lt;h1&gt;Release 5&lt;/h1&gt;
-
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_5/Joystick.Gremlin.R5.msi&quot;&gt;Download
-    Release 5 MSI&lt;/a&gt;
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_5/Joystick.Gremlin.R5.zip&quot;&gt;Download
-    Release 5 ZIP&lt;/a&gt;
-
-&lt;br/&gt;&lt;br/&gt;
-
-
-&lt;h2&gt;New Features&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;System tray icon&lt;/li&gt;
-    &lt;li&gt;Periodic function execution&lt;/li&gt;
-    &lt;li&gt;Log viewer&lt;/li&gt;
-    &lt;li&gt;Reworked joystick interface API&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;Fixes&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;Fix various crashes&lt;/li&gt;
-    &lt;li&gt;Fix UI lag&lt;/li&gt;
-    &lt;li&gt;vJoy issue checking and handling&lt;/li&gt;
-    &lt;li&gt;Improved macro recording&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Wed, 29 Jun 2016 12:00:00 +1000</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/06/29/Release-5.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/06/29/Release-5.html</guid>
 			</item>
 		
 	</channel>
