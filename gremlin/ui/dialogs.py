@@ -70,6 +70,13 @@ class OptionsUi(common.BaseDialogUi):
         self.close_to_systray.clicked.connect(self._close_to_systray)
         self.close_to_systray.setChecked(self.config.close_to_tray)
 
+        # Activate profile on launch
+        self.activate_on_launch = QtWidgets.QCheckBox(
+            "Activate profile on launch"
+        )
+        self.activate_on_launch.clicked.connect(self._activate_on_launch)
+        self.activate_on_launch.setChecked(self.config.activate_on_launch)
+
         # Start minimized option
         self.start_minimized = QtWidgets.QCheckBox(
             "Start Joystick Gremlin minimized"
@@ -146,6 +153,7 @@ class OptionsUi(common.BaseDialogUi):
 
         self.general_layout.addWidget(self.highlight_input)
         self.general_layout.addWidget(self.close_to_systray)
+        self.general_layout.addWidget(self.activate_on_launch)
         self.general_layout.addWidget(self.start_minimized)
         self.general_layout.addWidget(self.start_with_windows)
         self.general_layout.addWidget(self.show_mode_change_message)
@@ -320,6 +328,14 @@ class OptionsUi(common.BaseDialogUi):
         :param clicked whether or not the checkbox is ticked
         """
         self.config.autoload_profiles = clicked
+        self.config.save()
+
+    def _activate_on_launch(self, clicked):
+        """Stores activation of profile on launch preference.
+
+        :param clicked whether or not the checkbox is ticked
+        """
+        self.config.activate_on_launch = clicked
         self.config.save()
 
     def _close_to_systray(self, clicked):

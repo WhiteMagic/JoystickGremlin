@@ -333,6 +333,24 @@ class Configuration:
         self.save()
 
     @property
+    def activate_on_launch(self):
+        """Returns whether or not to activate the profile on launch.
+
+        :return True if the profile is to be activate on launch, False otherwise
+        """
+        return self._data.get("activate_on_launch", False)
+
+
+    @activate_on_launch.setter
+    def activate_on_launch(self, value):
+        """Sets whether or not to activate the profile on launch.
+
+        :param value aactivate profile on launch if True, or not if False
+        """
+        self._data["activate_on_launch"] = bool(value)
+        self.save()
+
+    @property
     def close_to_tray(self):
         """Returns whether or not to minimze the application when closing it.
 

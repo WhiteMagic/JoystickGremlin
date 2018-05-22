@@ -900,6 +900,10 @@ class GremlinUi(QtWidgets.QMainWindow):
         else:
             self.process_monitor.stop()
 
+        if self.config.activate_on_launch:
+            self.ui.actionActivate.setChecked(True)
+            self.activate(True)
+
     def apply_window_settings(self):
         """Restores the stored window geometry settings."""
         window_size = self.config.window_size
