@@ -23,8 +23,10 @@ layout: default
     <li><a href="#3_3">Activation Conditions</a></li>
     <li><a href="#3_4">Containers</a></li>
     <li><a href="#3_5">Actions</a></li>
-    <li><a href="#3_6">Tools</a></li>
-    <li><a href="#3_7">Command Line Options</a></li>
+    <li><a href="#3_6">Profile Settings</a></li>
+    <li><a href="#3_7">Tools</a></li>
+    <li><a href="#3_8">Options</a></li>
+    <li><a href="#3_9">Command Line Options</a></li>
 </ul>
 
 
@@ -100,46 +102,52 @@ layout: default
             <td>Map to keyboard</td>
         </tr>
         <tr>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_map_to_mouse.png"></td>
+            <td>Map to Mouse</td>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_noop.png"></td>
             <td>No-Op</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_pause.png"></td>
             <td>Pause</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_play_sound.png"></td>
             <td>Play sound</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_axis_001.png"></td>
             <td>Remap axis</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_button_001.png"></td>
             <td>Remap button</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_remap_hat_001.png"></td>
             <td>Remap hat</td>
-        </tr>
-        <tr>
             <td width="50px"><img class="img-fluid" src="{{ site.url }}/images/icon_response_curve.png"></td>
             <td>Response curve</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_resume.png"></td>
             <td>Resume</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_split_axis.png"></td>
             <td>Split axis</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_switch_mode.png"></td>
             <td>Switch mode</td>
-        </tr>
-        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_previous_mode.png"></td>
             <td>Switch to previous mode</td>
-            <td><img class="img-fluid" src="{{ site.url }}/images/icon_temporary_mode_switch.png"></td>
-            <td>Temporary mode switch</td>
         </tr>
         <tr>
+            <td><img class="img-fluid" src="{{ site.url }}/images/icon_temporary_mode_switch.png"></td>
+            <td>Temporary mode switch</td>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_text_to_speech.png"></td>
             <td>Text-to-speech</td>
+        </tr>
+        <tr>
             <td><img class="img-fluid" src="{{ site.url }}/images/icon_pause_resume.png"></td>
             <td>Toggle pause &amp; resume</td>
+            <td></td>
+            <td></td>
         </tr>
         <tr><td></td><td></td><td></td><td></td></tr>
     </table>
@@ -492,15 +500,15 @@ of containers exist.
         <img class="img-fluid center-block" src="{{ site.url }}/images/action_macro.png">
     </div>
     <div class="col-md-5">
-        <em>Macro action dialogue allowing the recording of key press
+        <em>Macro action dialogue allowing the recording of event
             sequences.</em>
     </div>
 </div>
 
 <p class="text-justify">
-    The macro dialogue allows the creation of keyboard
-    macros. The macro can contain any combination of key presses and
-    releases, as well as pauses between individual actions.
+    The macro dialogue allows the creation of macros capable of emitting
+    keyoard, mouse, and joystick events with timing information between
+    individual events.
 </p>
 
 <p class="text-justify">
@@ -512,6 +520,45 @@ of containers exist.
     selected entry. The length of the pause can be modified by double
     clicking the entry. Selecting an entry allows it to be moved up and down
     using the <em>Up</em> and <em>Down</em> buttons.
+</p>
+
+<p class="text-justify">
+The stopwatch icon <img src="{{ site.url }}/images/gfx_icon_time.png"></img> allows recording the input
+    delays when recording a macro. The buttons with labels
+    <kbd>A</kbd>xis, <kbd>B</kbd>utton, <kbd>H</kbd>at,
+    <kbd>K</kbd>eyboard, and <kbd>M</kbd>ouse allow enabling or
+    disabling those specific input events when recording a macro.
+</p>
+
+<p class="text-justify">
+    Clicking on any entry in the action list allows modifying that entry
+    as appropriate for the input. Alternatively the entire action can
+    also be changed through the dialog on the right hand side of the
+    action. In the bottom right corner, the <em>Macro Settings</em>
+    section allows changing the behaviour of the macro.
+    <em>Exclusive</em> ensures that no other macro is running when this
+    one is executing. The dropdown allows selecting a repeat mode for
+    the macro.
+
+    <dl class="text-justify">
+        <dt>None</dt>
+        <dd>The macro is executed exactly once.</dd>
+
+        <dt>Count</dt>
+        <dd>The macro is executed as often as specified with the
+        specified delay between subsequent executions.</dd>
+
+        <dt>Hold</dt>
+        <dd>The macro is executed as long as the (virtual) button is
+        held down with a configurable delay between subsequent
+        executions of the macro.</dd>
+
+        <dt>Toggle</dt>
+        <dd>On the first press of the (virtual) button the macro is
+        started and will repeatedly execute with the specified delay
+        between executions until the (virtual) button is pressed
+        again.</dd>
+    </dl>
 </p>
 
 <p class="bd-callout bd-callout-warning text-justify">
@@ -538,6 +585,33 @@ of containers exist.
     linked to a single physical input, such as a button. The specified keyboard
     sequence is pressed when the physical button is pressed and released when
     it is released.
+</p>
+
+
+<h3>Map to Mouse</h3>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_map_to_mouse_axis.png">
+    </div>
+    <div class="col-md-5">
+        <em>Mapping an axis to a mouse direction, X or Y with speed range.</em>
+    </div>
+</div>
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/action_map_to_mouse_hat.png">
+    </div>
+    <div class="col-md-5">
+        <em>Mapping a hat to mouse directional control with speed range.</em>
+    </div>
+</div>
+
+<p class="text-justify">
+    This action allows using joystick axes or a hat to control the relative
+    motion of the mouse cursor. The speed values are in pixels per step while
+    the acceleration on the hat regulates how long it takes to go from the
+    slowest to the fastest movement speed.
 </p>
 
 
@@ -762,7 +836,85 @@ of containers exist.
 </p>
 
 
-<h2><a name="3_6">3.6 Tools</a></h2>
+
+<h2><a name="3_6">3.6 Profile Settings</a></h2>
+
+<p class="text-justify">
+    The <em>Settings</em> tab allows configuring settings that
+    apply to the entire profile. This includes:
+    <ul>
+        <li>Defining how the initial mode is selected</li>
+        <li>Defining which vJoy devices are to be treated as physical
+            inputs rather then outputs</li>
+        <li>Configuring the initial value of vJoy output axis on
+            activation</li>
+    </ul>
+</p>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/tab_settings.png">
+    </div>
+    <div class="col-md-5">
+        <em>Profile settings tab showing three vJoy devices and their
+            configuration</em>
+    </div>
+</div>
+</br>
+
+
+<h3>Startup Mode</h3>
+
+<p class="text-justify">
+    By default Gremlin uses a heuristic to figure out which mode to
+    select upon activation of a profile. The mode selected is either the
+    one that was active upon deactivation of Gremlin or the first mode
+    without a parent in alphabetical order.
+</p>
+
+<p class="text-justify">
+    If this heuristic is not suitable the drop down allows the selection
+    of any of the modes present in the profile to be selected as the
+    initial mode.
+</p>
+
+
+<h3>vJoy as Input</h3>
+
+<p class="text-justify">
+    In certain scenarios it can be desirable to have Gremlin treat a
+    vJoy device as an input, e.g. when another program feeds a vJoy
+    device but doesn't offer some features that Gremlin does. By
+    checking the box next to the vJoy devices it will be treated as an
+    input rather then output device.
+</p>
+
+<p class="text-justify">
+    When a vJoy device is declared as an input device Gremlin will no
+    longer show it as a target in the Remap action and other similar
+    actions. However, a tab for that vJoy device will appear which
+    allows adding actions to all the axes, buttons, and hats of the vJoy
+    device remapping to other vJoy (output) devices.
+</p>
+
+<p class="bd-callout bd-callout-warning text-justify">
+    This features was newly introduced in Release 11 and as such may
+    still contain bugs and unforeseen interactions with other parts of
+    Gremlin.
+</p>
+
+
+<h3>Initial vJoy Axes Values</h3>
+
+<p class="text-justify">
+    By default Gremlin sets all vJoy axes to a value of 0.0, i.e.
+    centered. In some situations this is not ideal, for example a
+    throttle, and as such this section allows setting the initial value
+    to use for each axis.
+</p>
+
+
+<h2><a name="3_7">3.7 Tools</a></h2>
 
 <p class="text-justify">
     In the following section the various tools provided by Joystick
@@ -794,6 +946,12 @@ of containers exist.
     selecting the "None" entry.
 </p>
 
+<p class="text-justify">
+    A mode that inhertits from another is typicalled called a
+    <em>child</em> and will perform the same actions as its
+    <em>parent</em> when no actions are defined for a particular input.
+</p>
+
 
 <h3>User Module Manager</h3>
 
@@ -808,23 +966,20 @@ of containers exist.
 </div>
 
 <p class="text-justify">
-    While the UI allows to perform common tasks there will be functionality
-    that is not present. However, by using custom modules, described in <a
-    href="{{ site.url }}/custom_modules">Section 3</a>, the limitations of
-    the UI can easily be overcome.  The module configuration dialogue is
-    accessed via <em>Tools > Manage Custom Modules</em>. The modules listed
-    there will be loaded in conjunction with the UI based configuration,
-    allowing the use of the UI for common tasks and implementing specialised
-    functionality in a custom module.  Modules are added via the <em>Add</em>
-    button and likewise removed by selecting the desired module and pressing the
+    While the UI allows to perform common tasks there will be
+    functionality that is not present. However, by using custom modules,
+    described in <a href="{{ site.url }}/custom_modules">Section 3</a>,
+    the limitations of the UI can easily be overcome. The module
+    configuration dialogue is accessed via <em>Tools > Manage Custom
+    Modules</em>. The modules listed there will be loaded in conjunction
+    with the UI based configuration, allowing the use of the UI for
+    common tasks and implementing specialised functionality in a custom
+    module. Modules are added via the <em>Add</em> button which prompts
+    the selection of the file on the system. Likewise removing modules
+    is done by selecting the desired module and pressing the
     <em>Delete</em> button.
 </p>
 
-<p class="bd-callout bd-callout-warning text-justify">
-    In order for Joystick Gremlin to successfully load the additional
-    modules they have to be placed in the same folder as the profile
-    file itself.
-</p>
 
 <h3>Merge Axis</h3>
 
@@ -912,6 +1067,26 @@ of containers exist.
     of the currently selected device to the configuration file.
 </p>
 
+<h3>Input Viewer</h3>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_input_viewer.png">
+    </div>
+    <div class="col-md-5">
+        <em>The input viewer allows visualizing the values of axes, buttons,
+            and hats of all devices recognized by Gremlin.</em>
+    </div>
+</div>
+</br>
+
+<p class="text-justify">
+    The input viewer allows visualizing the input from the physical as well as
+    virtual devices. The window shows recognized devices and data
+    visualizations for their inputs on the left hand side while the
+    visualizations themselves will be shown in the right hand side of the
+    window.
+</p>
 
 <h3>Cheatsheet Generation</h3>
 <p class="text-justify">
@@ -982,13 +1157,36 @@ of containers exist.
     possible from this screen.
 </p>
 
+<h3>Swap Devices</h3>
 
-<h3>Options</h3>
+<p class="text-justify">
+    When multiple identical devices are present Gremlin relies on the ID
+    assigned to them by Windows in addition to the hardware ID to
+    identify devices. This can sometimes fail when Windows reassigns its
+    IDs. To work around this issue the <em>Swap Devices</em> dialog
+    allows swapping the configuration from one device to another
+    identical one.
+</p>
+
+<div class="row bottom-gap">
+    <div class="col-md-7">
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_swap_devices.png">
+    </div>
+    <div class="col-md-5">
+        <em>This dialog allows swapping the actions assigned to
+            identical devices between each other.</em>
+    </div>
+</div>
+
+
+<h2><a name="3_8">3.8 Options</a></h2>
 <div class="row bottom-gap">
     <div class="col-md-7">
         <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_options_general.png">
         </br>
         <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_options_profiles.png">
+        </br>
+        <img class="img-fluid center-block" src="{{ site.url }}/images/dialog_options_hidguardian.png">
     </div>
     <div class="col-md-5">
         <em>The options dialogue which is used to set some default
@@ -998,10 +1196,11 @@ of containers exist.
 </div>
 <p class="text-justify">
     There are several user controllable options in Joystick Gremlin
-    which can be controlled via the options dialogue, accessible via
+    which can be controlled via the options dialogue, accessible through
     <em>Tools > Options</em>.    
 </p>
 
+<h3>General</h3>
 <p class="text-justify">
     The following options are accessible via the <em>General</em> tab:
     <dl class="text-justify">
@@ -1023,6 +1222,7 @@ of containers exist.
     </dl>
 </p>
 
+<h3>Profiles</h3>
 <p class="text-justify">
     The <em>Profiles</em> tab exposes the following options:
     <dl class="text-justify">
@@ -1031,15 +1231,54 @@ of containers exist.
             activate the profile assigned to the currently active
             application.</dd>
     </dl>
-    The drop down menu and input fields allow selecting the executable and the
-    profile associated with it. When an executable specified in this list is
-    active the profile associated with it is automatically loaded and
-    activated. Once the profile stops being the active one Joystick Gremlin is
-    automatically stopped.
+</p>
+
+<p class="text-justify">
+    The drop down menu and input fields allow selecting the executable
+    and the profile associated with it. When an executable specified in
+    this list is active the profile associated with it is automatically
+    loaded and activated. Once the profile stops being the active one
+    Joystick Gremlin is automatically stopped.
+</p>
+<p class="text-justify">
+    The edit icon allows changing the path of the selected executable or
+    to enter a regular expression that will be used to match against the
+    foreground process. Joystick Gremln will first attempt to find a
+    direct match for an existing file and once this fails attempt to use
+    the remaining entries as regular expressions, picking the first
+    successful match.
+</p>
+
+<h3>HidGuardian</h3>
+
+<p class="text-justify">
+    HidGuardian is a tool that solves the problem of a game seeing both
+    the physical device and the virtual device at the same time and
+    processing these inputs in unwanted ways. HidGuardian is capable of
+    hiding those physical devices from all non whitelisted programs,
+    thus effectively allowing games to be fooled into believing only the
+    virtual devices exist.
+</p>
+
+<p class="text-justify">
+    If Gremlin is started with admin priviliedges and <a
+    href="https://github.com/ViGEm/HidGuardian">HidGuardian</a>
+    (ideally installed through <a
+    href="https://autohotkey.com/boards/viewtopic.php?t=34890">this
+    tool</a>) is present this tab allows hiding and unhiding devices.
+    Once a device's status was changed it has to be unplugged and replugged
+    for HidGuardian to be able to use it.
+</p>
+
+<p class="bd-callout bd-callout-warning text-justify">
+    This feature as well as HidGuardian are still in development. In
+    fact HidGuardian is undergoing rework and as such newer versions
+    will not work with Gremlin and this feature will be updated once
+    HidGuardian has stabilized.
 </p>
 
 
-<h2><a name="3_7">3.7 Command Line Options</a></h2>
+<h2><a name="3_9">3.9 Command Line Options</a></h2>
 
 Joystick Gremlin allows controlling the following options via command line
 parameters:
@@ -1057,3 +1296,8 @@ profile to load Joystick Gremlin will load the specified profile.
 
 Passing the <code>--enable</code> flag will enable Joystick Gremlin once the
 program has been fully loaded.
+
+<h3>Start Minimized</h3>
+
+Passing the <code>--start-minimized</code> option to Joystick Gremlin will
+cause it to launch minimized.
