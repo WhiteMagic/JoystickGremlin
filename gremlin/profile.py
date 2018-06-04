@@ -686,7 +686,7 @@ class Settings:
             self.vjoy_initial_values[vid] = {}
             for axis_node in vjoy_node.findall("axis"):
                 aid = safe_read(axis_node, "id", int)
-                value = safe_read(axis_node, "vallue", float, 0.0)
+                value = safe_read(axis_node, "value", float, 0.0)
                 self.vjoy_initial_values[vid][aid] = value
 
     def get_initial_vjoy_axis_value(self, vid, aid):
