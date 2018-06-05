@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
@@ -40,13 +42,27 @@ class MergeAxisUi(common.BaseDialogUi):
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.merge_layout = QtWidgets.QVBoxLayout()
 
-        self.add_button = QtWidgets.QPushButton("New Axis")
-        self.add_button.clicked.connect(self._add_entry)
+        # If there are no valid output vJoy devices present we can't show
+        # the merge dialog.
+        if len(self._output_vjoy_devices()) == 0:
+            label = QtWidgets.QLabel(
+                "No virtual devices available for axis merging. Either no "
+                "vJoy devices are configured or all vJoy devices are defined "
+                "as physical inputs."
+            )
+            label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
+            label.setWordWrap(True)
+            label.setFrameShape(QtWidgets.QFrame.Box)
+            label.setMargin(10)
+            self.main_layout.addWidget(label)
+        else:
+            self.add_button = QtWidgets.QPushButton("New Axis")
+            self.add_button.clicked.connect(self._add_entry)
 
-        self.main_layout.addLayout(self.merge_layout)
-        self.main_layout.addWidget(self.add_button)
+            self.main_layout.addLayout(self.merge_layout)
+            self.main_layout.addWidget(self.add_button)
 
-        self.from_profile()
+            self.from_profile()
 
     def _add_entry(self, without_saving=False):
         """Adds a new axis to merge configuration entry."""
@@ -103,10 +119,36 @@ class MergeAxisUi(common.BaseDialogUi):
 
     def from_profile(self):
         """Populates the merge axis entries of the ui from the profile data."""
+        entries_to_remove = []
         for entry in self.profile_data.merge_axes:
-            self._add_entry(True)
-            new_entry = self.entries[-1]
-            new_entry.select(entry)
+            # Show an error if the desired vJoy device is no longer available
+            # as an output
+            if self.profile_data.settings.vjoy_as_input.get(
+                    entry["vjoy"]["device_id"],
+                    False
+            ):
+                entries_to_remove.append(entry)
+                gremlin.util.display_error(
+                    "vJoy device {} used as physical input".format(
+                        entry["vjoy"]["device_id"]
+                    )
+                )
+            else:
+                self._add_entry(True)
+                new_entry = self.entries[-1]
+                new_entry.select(entry)
+
+        for entry in entries_to_remove:
+            del self.profile_data.merge_axes[
+                self.profile_data.merge_axes.index(entry)
+            ]
+
+    def _output_vjoy_devices(self):
+        output_devices = []
+        for dev in gremlin.joystick_handling.vjoy_devices():
+            if not self.profile_data.settings.vjoy_as_input.get(dev.vjoy_id, False):
+                output_devices.append(dev)
+        return output_devices
 
 
 class MergeAxisEntry(QtWidgets.QDockWidget):
