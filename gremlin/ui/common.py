@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import enum
+import logging
 import threading
 
 from PyQt5 import QtWidgets, QtCore, QtGui
@@ -531,7 +532,22 @@ class JoystickSelector(QtWidgets.QWidget):
         """
         super().__init__(parent)
 
-        self.devices = gremlin.joystick_handling.physical_devices()
+        # Filter out any devices that can not provide any inputs of the
+        # desired type
+        self.devices = []
+        for dev in gremlin.joystick_handling.physical_devices():
+            input_counts = {
+                gremlin.common.InputType.JoystickAxis: dev.axis_count,
+                gremlin.common.InputType.JoystickButton: dev.buttons,
+                gremlin.common.InputType.JoystickHat: dev.hats
+            }
+            count = 0
+            for type in valid_types:
+                count += input_counts[type]
+
+            if count > 0:
+                self.devices.append(dev)
+
         self.change_cb = change_cb
         self.valid_types = valid_types
 
@@ -558,20 +574,25 @@ class JoystickSelector(QtWidgets.QWidget):
         """
         selection_id = self.device_dropdown.currentIndex()
 
+        hardware_id = None
+        windows_id = None
+        input_id = None
+        input_type = None
+
         if selection_id != -1:
             input_selection = \
                 self.input_item_dropdowns[selection_id].currentText()
 
             arr = input_selection.split()
-            windows_id = self._index_to_device_map[selection_id].windows_id
-            hardware_id = self._index_to_device_map[selection_id].hardware_id
-            input_type = name_to_input_type[arr[0]]
-            input_id = int(arr[1])
-        else:
-            hardware_id = None
-            windows_id = None
-            input_id = None
-            input_type = None
+            if len(arr) == 2:
+                windows_id = self._index_to_device_map[selection_id].windows_id
+                hardware_id = self._index_to_device_map[selection_id].hardware_id
+                input_type = name_to_input_type[arr[0]]
+                input_id = int(arr[1])
+            else:
+                logging.getLogger("system").warning(
+                    "Reading axis selection failed, treating as no selection."
+                )
 
         return {
             "hardware_id": hardware_id,
