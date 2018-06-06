@@ -146,7 +146,12 @@ class MergeAxisUi(common.BaseDialogUi):
     def _output_vjoy_devices(self):
         output_devices = []
         for dev in gremlin.joystick_handling.vjoy_devices():
-            if not self.profile_data.settings.vjoy_as_input.get(dev.vjoy_id, False):
+            is_virtual = not self.profile_data.settings.vjoy_as_input.get(
+                dev.vjoy_id,
+                False
+            )
+            has_axes = dev.axis_count > 0
+            if is_virtual and has_axes:
                 output_devices.append(dev)
         return output_devices
 
