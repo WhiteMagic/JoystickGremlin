@@ -701,10 +701,23 @@ class VJoySelector(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self, parent)
 
+        # Filter out devices that don't have none of the required inputs as
+        # well as those vJoy devices that are treated as physical inputs
         self.vjoy_devices = []
         for dev in gremlin.joystick_handling.vjoy_devices():
-            if not invalid_ids.get(dev.vjoy_id, False):
+            input_counts = {
+                gremlin.common.InputType.JoystickAxis: dev.axis_count,
+                gremlin.common.InputType.JoystickButton: dev.buttons,
+                gremlin.common.InputType.JoystickHat: dev.hats
+            }
+
+            count = 0
+            for type in valid_types:
+                count += input_counts[type]
+
+            if not invalid_ids.get(dev.vjoy_id, False) and count > 0:
                 self.vjoy_devices.append(dev)
+
         self.invalid_ids = invalid_ids
         self.change_cb = change_cb
         self.valid_types = valid_types
@@ -715,11 +728,8 @@ class VJoySelector(QtWidgets.QWidget):
         self.device_dropdown = None
         self.input_item_dropdowns = {}
 
-        if len(self.vjoy_devices) > 0:
-            self._create_device_dropdown()
-            self._create_input_dropdown()
-        else:
-            print("BASDASDASD")
+        self._create_device_dropdown()
+        self._create_input_dropdown()
 
     def get_selection(self):
         """Returns the current selection of the widget.
