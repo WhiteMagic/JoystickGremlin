@@ -784,9 +784,13 @@ class GremlinUi(QtWidgets.QMainWindow):
 
     def _device_change_cb(self):
         """Handles addition and removal of joystick devices."""
+        # Update device tabs
         self.devices = gremlin.joystick_handling.joystick_devices()
         self._create_tabs()
 
+        # Stop Gremlin execution
+        self.ui.actionActivate.setChecked(False)
+        self.activate(False)
     def _joystick_input_selection(self, event):
         """Handles joystick events to select the appropriate input item.
 
