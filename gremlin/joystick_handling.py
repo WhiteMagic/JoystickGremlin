@@ -17,9 +17,11 @@
 
 
 import logging
+import time
+
 import sdl2
 
-from . import error
+from . import error, util
 from vjoy import vjoy
 
 # List of all joystick devices
@@ -46,9 +48,18 @@ class VJoyProxy:
                     "Integer ID for vjoy device ID expected"
                 )
 
-            device = vjoy.VJoy(key)
-            VJoyProxy.vjoy_devices[key] = device
-            return device
+            try:
+                device = vjoy.VJoy(key)
+                VJoyProxy.vjoy_devices[key] = device
+                return device
+            except error.VJoyError as e:
+                logging.getLogger("system").error(
+                    "Failed accesing vJoy id={}, error is: {}".format(
+                        key,
+                        e
+                    )
+                )
+                raise e
 
     @classmethod
     def reset(cls):
@@ -257,10 +268,12 @@ def joystick_devices_initialization():
                 vjoy.hat_count(i)
             )
             devices[vjoy_lookup[hash_value]].set_vjoy_id(i)
+            syslog.debug("vJoy id {:d} exists".format(i))
+        else:
+            continue
 
-        # if vjoy.VJoy.device_exists(i):
-        #     vjoy_proxy[i]
         if not vjoy.device_available(i):
+            syslog.debug("vJoy id {:} can't be acquired".format(i))
             continue
 
         vjoy_dev = vjoy_proxy[i]
