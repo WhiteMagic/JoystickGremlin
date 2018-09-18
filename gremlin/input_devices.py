@@ -36,6 +36,7 @@ class CallbackRegistry:
     def __init__(self):
         """Creates a new callback registry instance."""
         self._registry = {}
+        self._current_id = 0
 
     def add(self, callback, event, mode, always_execute=False):
         """Adds a new callback to the registry.
@@ -47,7 +48,8 @@ class CallbackRegistry:
             is paused
         """
         device_id = util.device_id(event)
-        function_name = callback.__name__
+        self._current_id += 1
+        function_name = "{}_{:d}".format(callback.__name__, self._current_id)
 
         if device_id not in self._registry:
             self._registry[device_id] = {}
@@ -56,15 +58,8 @@ class CallbackRegistry:
 
         if event not in self._registry[device_id][mode]:
             self._registry[device_id][mode][event] = {}
-        if function_name not in self._registry[device_id][mode][event]:
-            self._registry[device_id][mode][event][function_name] = \
-                (callback, always_execute)
-        else:
-            logging.getLogger("system").warning(
-                "Function with name {} exists multiple times".format(
-                    function_name
-                )
-            )
+        self._registry[device_id][mode][event][function_name] = \
+            (callback, always_execute)
 
     @property
     def registry(self):
