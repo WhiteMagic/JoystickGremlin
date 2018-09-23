@@ -30,7 +30,43 @@ class InputType(enum.Enum):
     JoystickHat = 4
     Mouse = 5
     VirtualButton = 6
-    Count = 7
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _InputType_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _InputType_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+_InputType_to_string_lookup = {
+    InputType.JoystickAxis: "axis",
+    InputType.JoystickButton: "button",
+    InputType.JoystickHat: "hat",
+    InputType.Keyboard: "key",
+}
+
+_InputType_to_enum_lookup = {
+    "axis": InputType.JoystickAxis,
+    "button": InputType.JoystickButton,
+    "hat": InputType.JoystickHat,
+    "key": InputType.Keyboard
+}
+
+
+# Mapping from InputType values to their textual representation
+input_type_to_name = {
+    InputType.Keyboard: "Keyboard",
+    InputType.JoystickAxis: "Axis",
+    InputType.JoystickButton: "Button",
+    InputType.JoystickHat: "Hat"
+}
 
 
 class AxisButtonDirection(enum.Enum):
@@ -119,6 +155,55 @@ _MouseButton_to_enum_lookup = {
 }
 
 
+class VariableType(enum.Enum):
+
+    """Enumeration of all supported variable types."""
+
+    Int = 1
+    Float = 2
+    String = 3
+    Bool = 4
+    PhysicalInput = 5
+    VirtualInput = 6
+    Mode = 7
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _VariableType_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _VariableType_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+
+
+_VariableType_to_string_lookup = {
+    VariableType.Int: "Int",
+    VariableType.Float: "Float",
+    VariableType.String: "String",
+    VariableType.Bool: "Bool",
+    VariableType.PhysicalInput: "PhysicalInput",
+    VariableType.VirtualInput: "VirtualInput",
+    VariableType.Mode: "Mode"
+}
+
+_VariableType_to_enum_lookup = {
+    "Int": VariableType.Int,
+    "Float": VariableType.Float,
+    "String": VariableType.String,
+    "Bool": VariableType.Bool,
+    "PhysicalInput": VariableType.PhysicalInput,
+    "VirtualInput": VariableType.VirtualInput,
+    "Mode": VariableType.Mode
+}
+
+
 def index_to_direction(direction):
     """Returns a direction index to a direction name.
 
@@ -136,54 +221,6 @@ def index_to_direction(direction):
         8: "Up & Left"
     }
     return lookup[int(direction)]
-
-
-def input_type_to_tag(input_type):
-    """Returns the XML tag corresponding to the given InputType enum.
-
-    :param input_type InputType enum to translate into a XML tag
-    :return XML tag corresponding to the provided InputType enum
-    """
-    lookup = {
-        InputType.JoystickAxis: "axis",
-        InputType.JoystickButton: "button",
-        InputType.JoystickHat: "hat",
-        InputType.Keyboard: "key",
-    }
-    if input_type in lookup:
-        return lookup[input_type]
-    else:
-        raise gremlin.error.ProfileError(
-            "Invalid input type specified {}".format(input_type)
-        )
-
-def tag_to_input_type(tag):
-    """Returns the InputType corresponding to the provided tag.
-
-    :param tag textual representation of the input type
-    :return InputType corresponding to the given tag
-    """
-    lookup = {
-        "axis": InputType.JoystickAxis,
-        "button": InputType.JoystickButton,
-        "hat": InputType.JoystickHat,
-        "key": InputType.Keyboard
-    }
-    if tag in lookup:
-        return lookup[tag]
-    else:
-        raise gremlin.error.ProfileError(
-            "Invalid input type specified {}".format(tag)
-        )
-
-
-# Mapping from InputType values to their textual representation
-input_type_to_name = {
-    InputType.Keyboard: "Keyboard",
-    InputType.JoystickAxis: "Axis",
-    InputType.JoystickButton: "Button",
-    InputType.JoystickHat: "Hat"
-}
 
 
 # Mapping from hat direction tuples to their textual representation
@@ -243,3 +280,31 @@ class DeviceType(enum.Enum):
     Keyboard = 1
     Joystick = 2
     VJoy = 3
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _DeviceType_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _DeviceType_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
+
+_DeviceType_to_string_lookup = {
+    DeviceType.Keyboard: "keyboard",
+    DeviceType.Joystick: "joystick",
+    DeviceType.VJoy: "vjoy"
+}
+
+
+_DeviceType_to_enum_lookup = {
+    "keyboard": DeviceType.Keyboard,
+    "joystick": DeviceType.Joystick,
+    "vjoy": DeviceType.VJoy
+}

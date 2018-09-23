@@ -138,7 +138,7 @@ class JoystickCondition(AbstractCondition):
         """
         self.comparison = safe_read(node, "comparison")
 
-        self.input_type = profile.tag_to_input_type(safe_read(node, "input"))
+        self.input_type = common.InputType.to_enum(safe_read(node, "input"))
         self.input_id = safe_read(node, "id", int)
         self.device_id = safe_read(node, "device_id", int)
         self.windows_id = safe_read(node, "windows_id", int)
@@ -156,7 +156,7 @@ class JoystickCondition(AbstractCondition):
         """
         node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
-        node.set("input", common.input_type_to_tag(self.input_type))
+        node.set("input", common.InputType.to_string(self.input_type))
         node.set("id", str(self.input_id))
         node.set("device_id", str(self.device_id))
         node.set("windows_id", str(self.windows_id))

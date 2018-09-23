@@ -24,28 +24,8 @@ from xml.dom import minidom
 from xml.etree import ElementTree
 
 import action_plugins
-from gremlin.common import DeviceType, InputType, \
-    input_type_to_tag, tag_to_input_type
+from gremlin.common import DeviceType, InputType, VariableType
 from . import error, joystick_handling, plugin_manager, util
-
-
-def type_name_to_device_type(type_name):
-    """Returns the DeviceType representing the provided textual value.
-
-    :param type_name the DeviceType textual representation
-    :return DeviceType enum value
-    """
-    lookup = {
-        "keyboard": DeviceType.Keyboard,
-        "joystick": DeviceType.Joystick,
-        "vjoy": DeviceType.VJoy
-    }
-    if type_name in lookup:
-        return lookup[type_name]
-    else:
-        raise error.ProfileError(
-            "Invalid device type specified {}".format(type_name)
-        )
 
 
 def mode_list(node):
@@ -65,25 +45,6 @@ def mode_list(node):
         mode_names.extend(device.modes.keys())
 
     return sorted(list(set(mode_names)), key=lambda x: x.lower())
-
-
-def device_type_to_type_name(device_type):
-    """Returns the textual representation of a DeviceType enum entry.
-
-    :param device_type DeviceType enum entry to convert to string
-    :return textual representation of the provided DeviceType enum
-    """
-    lookup = {
-        DeviceType.Keyboard: "keyboard",
-        DeviceType.Joystick: "joystick",
-        DeviceType.VJoy: "vjoy"
-    }
-    if device_type in lookup:
-        return lookup[device_type]
-    else:
-        raise error.ProfileError(
-            "Invalid DeviceType enum entry provided {}".format(device_type)
-        )
 
 
 def read_bool(node, key, default_value=False):
@@ -123,24 +84,6 @@ def parse_bool(value):
             raise error.ProfileError(
                 "Invalid bool value used: {}".format(value)
             )
-    except TypeError:
-        raise error.ProfileError(
-            "Invalid type provided: {}".format(type(value))
-        )
-
-
-def parse_float(value):
-    """Returns the float representation of the provided value.
-
-    :param value the value as string to parse
-    :return representation of value as float
-    """
-    try:
-        return float(value)
-    except ValueError:
-        raise error.ProfileError(
-            "Invalid float value used: {}".format(value)
-        )
     except TypeError:
         raise error.ProfileError(
             "Invalid type provided: {}".format(type(value))
@@ -835,7 +778,7 @@ class Profile:
 
         # Remove all remap actions from the list of available inputs
         for act in remap_actions:
-            type_name = input_type_to_tag(act.input_type)
+            type_name = InputType.to_string(act.input_type)
             if act.vjoy_input_id in [0, None] \
                     or act.vjoy_device_id in [0, None] \
                     or act.vjoy_input_id not in vjoy[act.vjoy_device_id][type_name]:
@@ -1129,7 +1072,7 @@ class Device:
         self.label = safe_read(node, "label", default_value=self.name)
         self.hardware_id = int(node.get("id"))
         self.windows_id = int(node.get("windows_id"))
-        self.type = type_name_to_device_type(node.get("type"))
+        self.type = DeviceType.to_enum(node.get("type"))
 
         # If we have duplicate devices check if this device is a duplicate, if
         # not fix the windows_id in case it no longer matches
@@ -1159,7 +1102,7 @@ class Device:
         node.set("label", self.label)
         node.set("id", str(self.hardware_id))
         node.set("windows_id", str(self.windows_id))
-        node.set("type", device_type_to_type_name(self.type))
+        node.set("type", DeviceType.to_string(self.type))
         for mode in sorted(self.modes.values(), key=lambda x: x.name):
             node.append(mode.to_xml())
         return node
@@ -1309,7 +1252,7 @@ class InputItem:
         :param node XML node to parse
         """
         container_name_map = plugin_manager.ContainerPlugins().tag_map
-        self.input_type = tag_to_input_type(node.tag)
+        self.input_type = InputType.to_enum(node.tag)
         self.input_id = int(node.get("id"))
         self.description = node.get("description")
         self.always_execute = parse_bool(node.get("always-execute", "False"))
@@ -1331,7 +1274,7 @@ class InputItem:
 
         :return XML node representing this object
         """
-        node = ElementTree.Element(input_type_to_tag(self.input_type))
+        node = ElementTree.Element(InputType.to_string(self.input_type))
         if self.input_type == InputType.Keyboard:
             node.set("id", str(self.input_id[0]))
             node.set("extended", str(self.input_id[1]))

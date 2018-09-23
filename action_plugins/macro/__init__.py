@@ -1521,7 +1521,7 @@ class Macro(AbstractAction):
             if child.tag == "joystick":
                 joy_action = gremlin.macro.JoystickAction(
                     safe_read(child, "device_id", int),
-                    gremlin.common.tag_to_input_type(
+                    gremlin.common.InputType.to_enum(
                         safe_read(child, "input_type")
                     ),
                     safe_read(child, "input_id", int),
@@ -1551,7 +1551,7 @@ class Macro(AbstractAction):
             elif child.tag == "vjoy":
                 vjoy_action = gremlin.macro.VJoyAction(
                     safe_read(child, "vjoy_id", int),
-                    gremlin.common.tag_to_input_type(
+                    gremlin.common.InputType.to_enum(
                         safe_read(child, "input_type")
                     ),
                     safe_read(child, "input_id", int),
@@ -1581,7 +1581,7 @@ class Macro(AbstractAction):
                 joy_node.set("device_id", str(entry.device_id))
                 joy_node.set(
                     "input_type",
-                    gremlin.common.input_type_to_tag(entry.input_type)
+                    gremlin.common.InputType.to_string(entry.input_type)
                 )
                 joy_node.set("input_id", str(entry.input_id))
                 joy_node.set("value", self._joy_value_to_str(entry))
@@ -1606,7 +1606,7 @@ class Macro(AbstractAction):
                 vjoy_node.set("vjoy_id", str(entry.vjoy_id))
                 vjoy_node.set(
                     "input_type",
-                    gremlin.common.input_type_to_tag(entry.input_type)
+                    gremlin.common.InputType.to_string(entry.input_type)
                 )
                 vjoy_node.set("input_id", str(entry.input_id))
                 vjoy_node.set("value", self._joy_value_to_str(entry))
