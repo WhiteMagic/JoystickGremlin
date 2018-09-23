@@ -125,6 +125,28 @@ def safe_read(node, key, type_cast=None, default_value=None):
     return value
 
 
+def safe_format(value, data_type, formatter=str):
+    """Returns a formatted value ensuring type correctness.
+
+    This function ensures that the value being formated is of correct type
+    before attempting formatting. Raises an exception on non-matching data
+    types.
+
+    :param value the value to format
+    :param data_type expected data type of the value
+    :param formatter function to format value with
+    :return value formatted according to formatter
+    """
+    if isinstance(value, data_type):
+        return formatter(value)
+    else:
+        raise error.ProfileError("Value \"{}\" has type {} when {} is expected".format(
+            value,
+            type(value),
+            data_type
+        ))
+
+
 def extract_remap_actions(action_sets):
     """Returns a list of remap actions from a list of actions.
 
@@ -580,24 +602,24 @@ class Settings:
         # Startup mode
         if self.startup_mode is not None:
             mode_node = ElementTree.Element("startup-mode")
-            mode_node.text = self.startup_mode
+            mode_node.text = safe_format(self.startup_mode, str)
             node.append(mode_node)
 
         # Process vJoy as input settings
         for vid, value in self.vjoy_as_input.items():
             if value == True:
                 vjoy_node = ElementTree.Element("vjoy-input")
-                vjoy_node.set("id", str(vid))
+                vjoy_node.set("id", safe_format(vid, int))
                 node.append(vjoy_node)
 
         # Process vJoy axis initial values
         for vid, data in self.vjoy_initial_values.items():
             vjoy_node = ElementTree.Element("vjoy")
-            vjoy_node.set("id", str(vid))
+            vjoy_node.set("id", safe_format(vid, int))
             for aid, value in data.items():
                 axis_node = ElementTree.Element("axis")
-                axis_node.set("id", str(aid))
-                axis_node.set("value", str(value))
+                axis_node.set("id", safe_format(aid, int))
+                axis_node.set("value", safe_format(value, float))
                 vjoy_node.append(axis_node)
             node.append(vjoy_node)
 
@@ -894,17 +916,23 @@ class Profile:
         # Merge axis data
         for entry in self.merge_axes:
             node = ElementTree.Element("merge-axis")
-            node.set("mode", str(entry["mode"]))
+            node.set("mode", safe_format(entry["mode"], str))
             for tag in ["vjoy"]:
                 sub_node = ElementTree.Element(tag)
-                sub_node.set("device", str(entry[tag]["device_id"]))
-                sub_node.set("axis", str(entry[tag]["axis_id"]))
+                sub_node.set(
+                    "device",
+                    safe_format(entry[tag]["device_id"], int)
+                )
+                sub_node.set("axis", safe_format(entry[tag]["axis_id"], int))
                 node.append(sub_node)
             for tag in ["lower", "upper"]:
                 sub_node = ElementTree.Element(tag)
-                sub_node.set("id", str(entry[tag]["hardware_id"]))
-                sub_node.set("windows_id", str(entry[tag]["windows_id"]))
-                sub_node.set("axis", str(entry[tag]["axis_id"]))
+                sub_node.set("id", safe_format(entry[tag]["hardware_id"], int))
+                sub_node.set(
+                    "windows_id",
+                    safe_format(entry[tag]["windows_id"], int)
+                )
+                sub_node.set("axis", safe_format(entry[tag]["axis_id"], int))
                 node.append(sub_node)
             root.append(node)
 
@@ -994,6 +1022,7 @@ class Profile:
         entry = {
             "mode": node.get("mode", None)
         }
+        # TODO: apply safe reading to these
         for tag in ["vjoy"]:
             entry[tag] = {
                 "device_id": int(node.find(tag).get("device")),
@@ -1070,9 +1099,9 @@ class Device:
         """
         self.name = node.get("name")
         self.label = safe_read(node, "label", default_value=self.name)
-        self.hardware_id = int(node.get("id"))
-        self.windows_id = int(node.get("windows_id"))
-        self.type = DeviceType.to_enum(node.get("type"))
+        self.hardware_id = safe_read(node, "id", int)
+        self.windows_id = safe_read(node, "windows_id", int)
+        self.type = DeviceType.to_enum(safe_read(node, "type", str))
 
         # If we have duplicate devices check if this device is a duplicate, if
         # not fix the windows_id in case it no longer matches
@@ -1098,10 +1127,10 @@ class Device:
         """
         node_tag = "device" if self.type != DeviceType.VJoy else "vjoy-device"
         node = ElementTree.Element(node_tag)
-        node.set("name", self.name)
-        node.set("label", self.label)
-        node.set("id", str(self.hardware_id))
-        node.set("windows_id", str(self.windows_id))
+        node.set("name", safe_format(self.name, str))
+        node.set("label", safe_format(self.label, str))
+        node.set("id", safe_format(self.hardware_id, int))
+        node.set("windows_id", safe_format(self.windows_id, int))
         node.set("type", DeviceType.to_string(self.type))
         for mode in sorted(self.modes.values(), key=lambda x: x.name):
             node.append(mode.to_xml())
@@ -1141,7 +1170,7 @@ class Mode:
             except error.VJoyError:
                 joystick_handling.VJoyProxy().reset()
 
-        self.name = node.get("name")
+        self.name = safe_read(node, "name", str)
         self.inherit = node.get("inherit", None)
         for child in node:
             item = InputItem(self)
@@ -1163,9 +1192,9 @@ class Mode:
         :return XML node representing this object's data
         """
         node = ElementTree.Element("mode")
-        node.set("name", self.name)
+        node.set("name", safe_format(self.name, str))
         if self.inherit is not None:
-            node.set("inherit", self.inherit)
+            node.set("inherit", safe_format(self.inherit, str))
         input_types = [
             InputType.JoystickAxis,
             InputType.JoystickButton,
@@ -1253,11 +1282,11 @@ class InputItem:
         """
         container_name_map = plugin_manager.ContainerPlugins().tag_map
         self.input_type = InputType.to_enum(node.tag)
-        self.input_id = int(node.get("id"))
-        self.description = node.get("description")
-        self.always_execute = parse_bool(node.get("always-execute", "False"))
+        self.input_id = safe_read(node, "id", int)
+        self.description = safe_read(node, "description", str)
+        self.always_execute = read_bool(node, "always-execute", False)
         if self.input_type == InputType.Keyboard:
-            self.input_id = (self.input_id, parse_bool(node.get("extended")))
+            self.input_id = (self.input_id, read_bool(node, "extended"))
         for child in node:
             container_type = child.attrib["type"]
             if container_type not in container_name_map:
@@ -1276,16 +1305,16 @@ class InputItem:
         """
         node = ElementTree.Element(InputType.to_string(self.input_type))
         if self.input_type == InputType.Keyboard:
-            node.set("id", str(self.input_id[0]))
-            node.set("extended", str(self.input_id[1]))
+            node.set("id", safe_format(self.input_id[0], int))
+            node.set("extended", safe_format(self.input_id[1], bool))
         else:
-            node.set("id", str(self.input_id))
+            node.set("id", safe_format(self.input_id, int))
 
         if self.always_execute:
             node.set("always-execute", "True")
 
         if self.description:
-            node.set("description", self.description)
+            node.set("description", safe_format(self.description, str))
         else:
             node.set("description", "")
 
