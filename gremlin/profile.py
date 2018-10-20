@@ -829,6 +829,7 @@ class Profile:
             device = Device(self)
             device.from_xml(child)
             self.devices[util.device_id(device)] = device
+
         # Parse each vjoy device into separate DeviceConfiguration objects
         for child in root.iter("vjoy-device"):
             device = Device(self)
@@ -1360,7 +1361,7 @@ class ProfileData(metaclass=ABCMeta):
     """Base class for all items holding profile data.
 
     This is primarily used for containers and actions to represent their
-    configuration and to easily load, store, and generate code from them.
+    configuration and to easily load and store them.
     """
 
     def __init__(self, parent):
