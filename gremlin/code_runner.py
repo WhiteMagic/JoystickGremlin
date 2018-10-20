@@ -90,23 +90,24 @@ class CodeRunner:
                             )
                             callback_count += 1
 
+            # Add a fake keyboard action which does nothing to the callbacks
+            # in every mode in order to have empty modes be "present"
+            for mode_name in gremlin.profile.mode_list(profile):
+                self.event_handler.add_callback(
+                    0,
+                    mode_name,
+                    None,
+                    lambda x: x,
+                    False
+                )
+
+
             # Create input callbacks based on the profile's content
             for device in profile.devices.values():
                 hid = device.hardware_id
                 wid = device.windows_id
                 dev_id = util.get_device_id(hid, wid)
                 for mode in device.modes.values():
-
-                    # Add a fake keyboard action which does nothing to the
-                    # callbacks in order to have empty modes be "present"
-                    self.event_handler.add_callback(
-                        0,
-                        mode.name,
-                        None,
-                        lambda x: x,
-                        False
-                    )
-
                     for input_items in mode.config.values():
                         for input_item in input_items.values():
                             # Only add callbacks for input items that actually
@@ -193,6 +194,7 @@ class CodeRunner:
                     merge_axis.update_axis2,
                     False
                 )
+
 
             # Create vJoy response curve setups
             self._vjoy_curves.profile_data = profile.vjoy_devices
