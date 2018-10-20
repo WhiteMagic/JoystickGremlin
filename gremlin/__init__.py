@@ -17,12 +17,12 @@
 
 import gremlin.actions
 import gremlin.base_classes
+import gremlin.cheatsheet
 import gremlin.code_generator
 import gremlin.code_runner
 import gremlin.common
 import gremlin.config
 import gremlin.control_action
-import gremlin.cheatsheet
 import gremlin.error
 import gremlin.event_handler
 import gremlin.execution_graph
