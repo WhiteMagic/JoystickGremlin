@@ -809,7 +809,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         if not isinstance(widget, gremlin.ui.device_tab.JoystickDeviceTabWidget):
             return
 
-        # If we want to act on the given even figure out which button
+        # If we want to act on the given event figure out which button
         # needs to be pressed and press is
         if gremlin.util.device_id(event) == \
                 gremlin.util.device_id(widget.device_profile):
