@@ -16,7 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+import importlib
 import logging
+import random
+import string
 import time
 
 import gremlin
@@ -75,8 +78,8 @@ class CodeRunner:
             # Create callbacks fom the user code
             callback_count = 0
             for dev_id, modes in input_devices.callback_registry.registry.items():
-                for mode, callbacks in modes.items():
-                    for event, callback_list in callbacks.items():
+                for mode, events in modes.items():
+                    for event, callback_list in events.items():
                         for callback in callback_list.values():
                             self.event_handler.add_callback(
                                 dev_id,
@@ -271,6 +274,7 @@ class CodeRunner:
             list(self._inheritance_tree.keys())[0]
         self.event_handler._previous_mode =\
             list(self._inheritance_tree.keys())[0]
+        input_devices.callback_registry.clear()
 
 
 class VJoyCurves:
