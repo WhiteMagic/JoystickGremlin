@@ -476,6 +476,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._profile_fname = None
         self._current_mode = None
         self._update_window_title()
+        gremlin.shared_state.current_profile = self._profile
 
         # Create a default mode
         for device in self._profile.devices.values():
@@ -963,6 +964,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self._profile = new_profile
             self._profile_fname = fname
             self._update_window_title()
+            gremlin.shared_state.current_profile = self._profile
 
             self._current_mode = sorted(self._profile.get_root_modes())[0]
             self._create_tabs()

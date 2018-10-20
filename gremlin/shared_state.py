@@ -32,6 +32,9 @@ _suspend_input_highlighting = False
 # Timer used to disable input highlighting with a delay
 _suspend_timer = None
 
+# Holds the currently active profile
+current_profile = None
+
 
 def suspend_input_highlighting():
     """Returns whether or not input highlighting is suspended.
