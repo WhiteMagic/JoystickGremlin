@@ -20,6 +20,58 @@ import enum
 import gremlin.error
 
 
+class DeviceIdentifier:
+
+    """Represents device identity.
+
+    Transparently handles case with duplicate and non-duplicate devices, taking
+    care of using the minimally required features to distinguish different
+    devices.
+    """
+
+    # Storage for duplicate device state information
+    _duplicate_device = {}
+
+    # Value shift amount for hash computation
+    ShiftHardwareId = 0
+    ShiftWindowsId = 32
+
+    def __init__(self, hardware_id, windows_id):
+        """Creates a new instance.
+
+        :param hardware_id hardware id of the device
+        :param windows_id windows id of the device
+        """
+        self._hardware_id = hardware_id
+        self._windows_id = windows_id
+
+    def __eq__(self, other):
+        """Returns whether this instance is identical to the other one.
+
+        :return True if this and other are identical, False otherwise
+        """
+        return hash(self) == hash(other)
+
+    def __hash__(self):
+        """Returns the hash value of this instance.
+
+        :return hash value of this instance
+        """
+        hash_val = 0
+        hash_val += self._hardware_id << DeviceIdentifier.ShiftHardwareId
+        windows_id = 0
+        if DeviceIdentifier._duplicate_device.get(self._hardware_id, False):
+            hash_val += self._windows_id
+        hash_val += windows_id << DeviceIdentifier.ShiftWindowsId
+
+        return hash_val
+
+    @classmethod
+    def reset(cls):
+        """Resets the device identifier class storage."""
+        DeviceIdentifier._duplicate_device = {}
+
+
 class InputType(enum.Enum):
 
     """Enumeration of possible input types."""
