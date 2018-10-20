@@ -804,9 +804,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         if gremlin.shared_state.suspend_input_highlighting():
             return
 
-        # Only handle events for the currently active device
+        # Do not attempt to highlight inputs on non device tabs
         widget = self.ui.devices.currentWidget()
-        if isinstance(widget, gremlin.ui.profile_settings.ProfileSettingsWidget):
+        if not isinstance(widget, gremlin.ui.device_tab.JoystickDeviceTabWidget):
             return
 
         # If we want to act on the given even figure out which button
