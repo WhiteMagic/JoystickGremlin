@@ -1210,7 +1210,7 @@ def configure_logger(config):
 
     logger.debug("-" * 80)
     logger.debug(time.strftime("%Y-%m-%d %H:%M"))
-    logger.debug("Starting Joystick Gremlin R11")
+    logger.debug("Starting Joystick Gremlin R11.1")
     logger.debug("-" * 80)
 
 
