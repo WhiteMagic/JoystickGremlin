@@ -1355,66 +1355,6 @@ class InputItem:
         return hash((device_id, mode, self.input_type, self.input_id))
 
 
-class CodeBlock:
-
-    """Storage for arbitrary code blocks generated from profile data."""
-
-    def __init__(self):
-        """Creates a new empty instance."""
-        self._storage = {}
-
-    def store(self, key, code):
-        """Stores the provided code in a named block.
-
-        If there is already a block with an identical name the new code is
-        appended to the already existing code.
-
-        :param key the name of the block in which to store the code
-        :param code the code to store in the named block
-        """
-        if key not in self._storage:
-            self._storage[key] = ""
-        self._storage[key] += code
-
-    def retrieve(self, key):
-        """Returns the code stored in a named block.
-
-        :param key the name of the block to return
-        :return the code stored in the given block
-        """
-        if key not in self._storage:
-            raise error.GremlinError(
-                "Invalid code attribute '{}' requested".format(key)
-            )
-        return self._storage[key]
-
-    def keys(self):
-        """Returns a list of all block names.
-
-        :return list of all block names
-        """
-        return self._storage.keys()
-
-    def __getattr__(self, key):
-        """Returns the code stored in a named block.
-
-        :param key the name of the block to return
-        :return the code stored in the given block
-        """
-        return self.retrieve(key)
-
-    def combine(self, other):
-        """Combines two CodeBlock instances.
-
-        The other CodeBlock is merged into the current one, appending code
-        from identical blocks to the already existing ones.
-
-        :param other the CodeBlock instance to merge into this one
-        """
-        for key in other.keys():
-            self.store(key, other.retrieve(key))
-
-
 class ProfileData(metaclass=ABCMeta):
 
     """Base class for all items holding profile data.
