@@ -20,6 +20,20 @@ import enum
 import gremlin.error
 
 
+class SingletonDecorator:
+
+    """Decorator turning a class into a singleton."""
+
+    def __init__(self, klass):
+        self.klass = klass
+        self.instance = None
+
+    def __call__(self, *args, **kwargs):
+        if self.instance is None:
+            self.instance = self.klass(*args, **kwargs)
+        return self.instance
+
+
 class DeviceIdentifier:
 
     """Represents device identity.
@@ -309,20 +323,6 @@ vjoy_axis_names = [
     "Slider",
     "Dial"
 ]
-
-
-class SingletonDecorator:
-
-    """Decorator turning a class into a singleton."""
-
-    def __init__(self, klass):
-        self.klass = klass
-        self.instance = None
-
-    def __call__(self, *args, **kwargs):
-        if self.instance is None:
-            self.instance = self.klass(*args, **kwargs)
-        return self.instance
 
 
 class DeviceType(enum.Enum):
