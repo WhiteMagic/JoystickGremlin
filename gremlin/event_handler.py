@@ -171,23 +171,25 @@ class EventListener(QtCore.QObject):
         self.keyboard_hook.register(self._keyboard_handler)
         self.mouse_hook = windows_event_hook.MouseHook()
         self.mouse_hook.register(self._mouse_handler)
-        self._joysticks = {}
-        self._joystick_guid_map = {}
+
+        # Mapping from windows id (SDL id) to hardware id
+        self._winid_to_devid = {}
+        # Calibration function for each axis of all devices
         self._calibrations = {}
+
         self._running = True
         self._keyboard_state = {}
         self.gremlin_active = False
 
         self._init_joysticks()
         self.keyboard_hook.start()
-        # self.mouse_hook.start()
+
         Thread(target=self._run).start()
 
     def terminate(self):
         """Stops the loop from running."""
         self._running = False
         self.keyboard_hook.stop()
-        # self.mouse_hook.stop()
 
     def _run(self):
         """Starts the event loop."""
@@ -206,22 +208,22 @@ class EventListener(QtCore.QObject):
         :param event the joystick event
         """
         if event.type == sdl2.SDL_JOYAXISMOTION:
-            calib_id = (
-                self._joystick_guid_map[event.jaxis.which],
+            calibration_key = (
+                self._winid_to_devid[event.jaxis.which],
                 event.jaxis.axis + 1
             )
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickAxis,
-                hardware_id=self._joystick_guid_map[event.jaxis.which],
+                hardware_id=self._winid_to_devid[event.jaxis.which].hardware_id,
                 windows_id=event.jaxis.which,
                 identifier=event.jaxis.axis + 1,
-                value=self._calibrations[calib_id](event.jaxis.value),
+                value=self._calibrations[calibration_key](event.jaxis.value),
                 raw_value=event.jaxis.value
             ))
         elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickButton,
-                hardware_id=self._joystick_guid_map[event.jbutton.which],
+                hardware_id=self._winid_to_devid[event.jbutton.which].hardware_id,
                 windows_id=event.jbutton.which,
                 identifier=event.jbutton.button + 1,
                 is_pressed=event.jbutton.state == 1
@@ -229,14 +231,15 @@ class EventListener(QtCore.QObject):
         elif event.type == sdl2.SDL_JOYHATMOTION:
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickHat,
-                hardware_id=self._joystick_guid_map[event.jhat.which],
+                hardware_id=self._winid_to_devid[event.jhat.which].hardware_id,
                 windows_id=event.jhat.which,
                 identifier=event.jhat.hat + 1,
                 value=util.convert_sdl_hat(event.jhat.value)
             ))
         elif event.type in [sdl2.SDL_JOYDEVICEADDED, sdl2.SDL_JOYDEVICEREMOVED]:
+            # Ensure all joystick devices are properly initialized
+            joystick_handling.joystick_devices_initialization()
             self._init_joysticks()
-            util.setup_duplicate_joysticks()
             self.device_change_event.emit()
 
     def _keyboard_handler(self, event):
@@ -293,42 +296,21 @@ class EventListener(QtCore.QObject):
         """Initializes joystick devices."""
         for i in range(sdl2.joystick.SDL_NumJoysticks()):
             joy = sdl2.SDL_JoystickOpen(i)
-            if joy is None:
-                logging.getLogger("system").error(
-                    "Invalid joystick device at id {}".format(i)
-                )
-            else:
-                guid = self._get_device_guid(joy)
-                self._joysticks[guid] = joy
-                self._joystick_guid_map[sdl2.SDL_JoystickInstanceID(joy)] = guid
-                self._load_calibrations(guid)
+            if joy is not None:
+                dev_id = util.device_identifier_from_sdl(joy)
+                self._winid_to_devid[sdl2.SDL_JoystickInstanceID(joy)] = dev_id
+                self._load_calibrations(joy)
 
-    def _get_device_guid(self, device):
-        """Returns the GUID of the provided device.
-
-        :param device SDL2 joystick device for which to get the GUID
-        :return GUID for the provided device
-        """
-        vendor_id = sdl2.SDL_JoystickGetVendor(device)
-        product_id = sdl2.SDL_JoystickGetProduct(device)
-        return (vendor_id << 16) + product_id
-
-    def _load_calibrations(self, guid):
+    def _load_calibrations(self, joy):
         """Loads the calibration data for the given joystick.
 
-        :param guid the id of the joystick to load the calibration
-            data for
+        :param joy SDL joystick instance
         """
         cfg = config.Configuration()
-        for i in range(sdl2.SDL_JoystickNumAxes(self._joysticks[guid])):
-            if util.device_id is None:
-                limits = cfg.get_calibration(guid, i + 1)
-            else:
-                device = joystick_handling.JoystickDeviceData(
-                    self._joysticks[guid]
-                )
-                limits = cfg.get_calibration(util.device_id(device), i + 1)
-            self._calibrations[(guid, i+1)] = \
+        dev_id = util.device_identifier_from_sdl(joy)
+        for i in range(sdl2.SDL_JoystickNumAxes(joy)):
+            limits = cfg.get_calibration(dev_id, i+1)
+            self._calibrations[(dev_id, i+1)] = \
                 util.create_calibration_function(
                     limits[0],
                     limits[1],
