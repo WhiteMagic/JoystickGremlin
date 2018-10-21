@@ -34,6 +34,47 @@ class SingletonDecorator:
         return self.instance
 
 
+@SingletonDecorator
+class DeviceRegistry:
+
+    """Keeps track of the devices currently known."""
+
+    def __init__(self):
+        """Initializes the singleton instance."""
+        self._devices = {}
+
+    def is_duplicate(self, identifier):
+        """Returns whether or not a device is a duplicate.
+
+        :param identifier DeviceIdentifier instance of the device to check
+        :return True if there are multiple device, False otherwise
+        """
+        assert(isinstance(identifier, DeviceIdentifier))
+        assert(identifier.hardware_id in self._devices)
+
+        return len(self._devices[identifier.hardware_id]) != 1
+
+    def reset(self):
+        """Clears the registry."""
+        self._devices = {}
+
+    def register(self, hardware_id, windows_id):
+        """Register a possibly new identifier with the system.
+
+        :param hardware_id device hardware id
+        :param windows_id device windows id
+        """
+        if hardware_id in self._devices:
+            new_entry = True
+            for win_id in self._devices[hardware_id]:
+                if win_id == windows_id:
+                    new_entry = False
+            if new_entry:
+                self._devices[hardware_id].append(windows_id)
+        else:
+            self._devices[hardware_id] = [windows_id]
+
+
 class DeviceIdentifier:
 
     """Represents device identity.
@@ -42,9 +83,6 @@ class DeviceIdentifier:
     care of using the minimally required features to distinguish different
     devices.
     """
-
-    # Storage for duplicate device state information
-    _duplicate_device = {}
 
     # Value shift amount for hash computation
     ShiftHardwareId = 0
@@ -58,6 +96,7 @@ class DeviceIdentifier:
         """
         self._hardware_id = hardware_id
         self._windows_id = windows_id
+        self._is_duplicate = DeviceRegistry().is_duplicate(self)
 
     def __eq__(self, other):
         """Returns whether this instance is identical to the other one.
@@ -74,16 +113,29 @@ class DeviceIdentifier:
         hash_val = 0
         hash_val += self._hardware_id << DeviceIdentifier.ShiftHardwareId
         windows_id = 0
-        if DeviceIdentifier._duplicate_device.get(self._hardware_id, False):
+        if self._is_duplicate:
             hash_val += self._windows_id
         hash_val += windows_id << DeviceIdentifier.ShiftWindowsId
 
         return hash_val
 
-    @classmethod
-    def reset(cls):
-        """Resets the device identifier class storage."""
-        DeviceIdentifier._duplicate_device = {}
+    def __str__(self):
+        """Returns a string representation of the identifier.
+
+        :return string representation
+        """
+        if self._is_duplicate:
+            return "{}_{}".format(self._hardware_id, self._windows_id)
+        else:
+            return "{}".format(self._hardware_id)
+
+    @property
+    def hardware_id(self):
+        return self._hardware_id
+
+    @property
+    def windows_id(self):
+        return self._windows_id
 
 
 class InputType(enum.Enum):
