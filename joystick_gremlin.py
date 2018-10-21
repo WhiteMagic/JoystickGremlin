@@ -1331,6 +1331,8 @@ if __name__ == "__main__":
         app.exec_()
 
         gremlin.joystick_handling.VJoyProxy.reset()
+        event_listener = gremlin.event_handler.EventListener()
+        event_listener.terminate()
         sys.exit(0)
 
     # Setup device key generator based on whether or not we have
