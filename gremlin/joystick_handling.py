@@ -106,6 +106,10 @@ class JoystickDeviceData:
         self._buttons = sdl2.SDL_JoystickNumButtons(device)
         self._hats = sdl2.SDL_JoystickNumHats(device)
         self._vjoy_id = 0
+        self._device_id = common.DeviceIdentifier(
+            self._hardware_id,
+            self._windows_id
+        )
 
     @property
     def hardware_id(self):
@@ -153,14 +157,18 @@ class JoystickDeviceData:
     def vjoy_id(self):
         return self._vjoy_id
 
+    @property
+    def device_id(self):
+        return self._device_id
+
     def set_vjoy_id(self, vjoy_id):
         self._vjoy_id = vjoy_id
 
     def __hash__(self):
-        return hash((self.hardware_id, self.windows_id))
+        return hash(self._device_id)
 
     def __eq__(self, other):
-        return hash(self) == hash(other)
+        return self._device_id == other.device_id
 
 
 def get_device_guid(device):

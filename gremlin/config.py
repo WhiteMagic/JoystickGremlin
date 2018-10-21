@@ -93,8 +93,7 @@ class Configuration:
         :param dev_id the id of the device
         :param limits the calibration data for each of the axes
         """
-        hid, wid = util.extract_ids(dev_id)
-        identifier = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
+        identifier = str(dev_id)
         if identifier in self._data["calibration"]:
             del self._data["calibration"][identifier]
         self._data["calibration"][identifier] = {}
@@ -115,8 +114,7 @@ class Configuration:
         :param axis_id the id of the desired axis
         :return the calibration data for the desired axis
         """
-        hid, wid = util.extract_ids(dev_id)
-        identifier = str(hid) if wid == -1 else "{}_{}".format(hid, wid)
+        identifier = str(dev_id)
         axis_name = "axis_{}".format(axis_id)
         if identifier not in self._data["calibration"]:
             return [-32768, 0, 32767]

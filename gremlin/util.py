@@ -352,6 +352,18 @@ def extract_ids(dev_id):
         return dev_id, -1
 
 
+def device_identifier_from_sdl(device):
+    """Returns a DeviceIdentifier instance for the given SDL device.
+
+    :param device SDL joystick device
+    :return DeviceIdentifier instance
+    """
+    return common.DeviceIdentifier(
+        joystick_handling.get_device_guid(device),
+        sdl2.SDL_JoystickInstanceID(device)
+    )
+
+
 def get_device_id(hardware_id, windows_id):
     """Returns the correct device id given both hardware and windows id.
 
