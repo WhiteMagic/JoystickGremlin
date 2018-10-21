@@ -71,7 +71,11 @@ class VJoyProxy:
 
 class JoystickDeviceData:
 
-    """Represents data about a joystick like input device."""
+    """Represents data about a joystick like input device.
+
+    Instances can be compared for equality which uses the DeviceIdentifier
+    instance associated with this object.
+    """
 
     def __init__(self, device):
         """Initializes the device data based on the given device.
@@ -86,11 +90,16 @@ class JoystickDeviceData:
         if name_object is None:
             self._name = "Unknown device"
             logging.getLogger("system").error(
-                "Encountered an invalid device name"
+                "Encountered an invalid device name for device {:d}".format(
+                    self._windows_id
+                )
             )
         else:
             self._name = name_object.decode("utf-8")
         self._is_virtual = self._name == "vJoy Device"
+
+        # Default mapping from axis id to physical axis number. This defaults
+        # to a linear 1:1 mapping but for vJoy devices can change
         self._axes = []
         for i in range(sdl2.SDL_JoystickNumAxes(device)):
             self._axes.append((i+1, i+1))

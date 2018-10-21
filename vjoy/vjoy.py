@@ -63,7 +63,7 @@ class HatType(enum.Enum):
 
 
 def device_available(vjoy_id):
-    """Returns whether or not a device is available.
+    """Returns whether or not a device is available, i.e. can be acquired.
 
     :param vjoy_id id of the vjoy device to check
     :return True if the device is available, False otherwise
@@ -74,8 +74,12 @@ def device_available(vjoy_id):
 
     return dev_free & dev_acquire
 
+
 def device_exists(vjoy_id):
     """Returns whether or not a device exists.
+
+    A device that exists may be acquired by a different process and thus not
+    usable by Gremlin.
 
     :param vjoy_id id of the vjoy device to check
     :return True if the device exists, False otherwise
