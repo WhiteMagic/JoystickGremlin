@@ -640,12 +640,21 @@ def input_item_index_lookup(index, input_items):
     hat_count = len(input_items.config[InputType.JoystickHat])
     key_count = len(input_items.config[InputType.Keyboard])
 
+    # Since vJoy axes are not guaranteed to be sequentially numbered, i.e.
+    # id 3 is not always the Z axis, we have to use the proper lookup to get
+    # the correct query index.
+    axis_index = index + 1
+    if input_items.parent.type == gremlin.common.DeviceType.VJoy:
+        for dev in gremlin.joystick_handling.vjoy_devices():
+            if input_items.parent.hardware_id == dev.vjoy_id:
+                axis_index = dev.axis(index)[1]
+                break
+
     if key_count > 0:
         return input_items.get_data(InputType.Keyboard, index)
     else:
         if index < axis_count:
-
-            return input_items.get_data(InputType.JoystickAxis, index + 1)
+            return input_items.get_data(InputType.JoystickAxis, axis_index)
         elif index < axis_count + button_count:
             return input_items.get_data(
                 InputType.JoystickButton,
