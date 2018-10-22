@@ -701,6 +701,10 @@ class VJoySelector(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self, parent)
 
+        # vJoy proxy will be used to grab vJoy devices here and to hold onto
+        # them until the entire UI element has been built
+        vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
+
         # Filter out devices that don't have none of the required inputs as
         # well as those vJoy devices that are treated as physical inputs
         self.vjoy_devices = []
@@ -716,7 +720,13 @@ class VJoySelector(QtWidgets.QWidget):
                 count += input_counts[type]
 
             if not invalid_ids.get(dev.vjoy_id, False) and count > 0:
-                self.vjoy_devices.append(dev)
+                # Attempt to acquire the vJoy device, if this succeeds we
+                # add it to the dropdown otherwise it will be skipped
+                try:
+                    vjoy_proxy[dev.vjoy_id]
+                    self.vjoy_devices.append(dev)
+                except gremlin.error.VJoyError:
+                    pass
 
         self.invalid_ids = invalid_ids
         self.change_cb = change_cb
@@ -730,6 +740,8 @@ class VJoySelector(QtWidgets.QWidget):
 
         self._create_device_dropdown()
         self._create_input_dropdown()
+
+        vjoy_proxy.reset()
 
     def get_selection(self):
         """Returns the current selection of the widget.
@@ -813,6 +825,14 @@ class VJoySelector(QtWidgets.QWidget):
             btn_id = 0
             vjoy_dev_id = sorted(self.input_item_dropdowns.keys())[0]
 
+            if vjoy_dev_id is not None and vjoy_dev_id > 0 and vjoy_input_id >= 0:
+                raise gremlin.error.VJoyError(
+                    "vJoy device {} input {} is not available".format(
+                        vjoy_dev_id,
+                        vjoy_input_id
+                    )
+                )
+
         # Select and display correct combo boxes and entries within
         self.device_dropdown.setCurrentIndex(dev_id)
         for entry in self.input_item_dropdowns.values():
@@ -866,8 +886,6 @@ class VJoySelector(QtWidgets.QWidget):
             selection.activated.connect(self.change_cb)
             self.main_layout.addWidget(selection)
             self.input_item_dropdowns[dev.vjoy_id] = selection
-
-        vjoy_proxy.reset()
 
         # Show the "None" selection entry
         first_key = sorted(self.input_item_dropdowns.keys())[0]
