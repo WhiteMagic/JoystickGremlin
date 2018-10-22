@@ -301,8 +301,10 @@ class VJoyCurves:
                 for aid, data in device.modes[mode_name].config[
                         gremlin.common.InputType.JoystickAxis
                 ].items():
+                    # Get integer axis id in case an axis enum was used
                     axis_id = vjoy_module.vjoy.VJoy.axis_equivalence.get(aid, aid)
-                    if len(data.containers) > 0 and vjoy[vid].is_axis_valid(aid):
+
+                    if len(data.containers) > 0 and vjoy[vid].is_axis_valid(axis_id):
                         action = data.containers[0].action_sets[0][0]
                         vjoy[vid].axis(aid).set_deadzone(*action.deadzone)
                         vjoy[vid].axis(aid).set_response_curve(
