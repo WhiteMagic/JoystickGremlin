@@ -24,6 +24,7 @@ from xml.etree import ElementTree
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
+from gremlin import util
 import gremlin.ui.common
 import gremlin.ui.input_item
 
@@ -104,6 +105,11 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
                     self.action_data.axis2[1]
                 )
         except gremlin.error.GremlinError as e:
+            util.display_error(
+                "A needed vJoy device is not accessible: {}\n\n".format(e) +
+                "Default values have been set for the input, but they are "
+                "not what has been specified."
+            )
             logging.getLogger("system").error(str(e))
 
     def save_changes(self):

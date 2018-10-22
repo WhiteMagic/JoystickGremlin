@@ -245,6 +245,11 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
                 data["vjoy"]["axis_id"]
             )
         except gremlin.error.GremlinError as e:
+            gremlin.util.display_error(
+                "A needed vJoy device is not accessible: {}\n\n".format(e) +
+                "Default values have been set for the input, but they are "
+                "not what has been specified."
+            )
             logging.getLogger("system").error(str(e))
 
         # Create correct physical device id

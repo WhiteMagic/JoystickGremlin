@@ -20,7 +20,7 @@ import logging
 from xml.etree import ElementTree
 
 from gremlin.common import InputType
-from gremlin import input_devices, joystick_handling
+from gremlin import input_devices, joystick_handling, util
 import gremlin.ui.common
 import gremlin.ui.input_item
 
@@ -118,6 +118,11 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             # Save changes so the UI updates properly
             self.save_changes()
         except gremlin.error.GremlinError as e:
+            util.display_error(
+                "A needed vJoy device is not accessible: {}\n\n".format(e) +
+                "Default values have been set for the input, but they are "
+                "not what has been specified."
+            )
             logging.getLogger("system").error(str(e))
 
 
