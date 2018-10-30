@@ -29,15 +29,6 @@ from PyQt5 import QtCore, QtWidgets
 import sdl2
 from . import common, error, joystick_handling
 
-# Flag indicating that multiple physical devices with the same name exist
-g_duplicate_devices = False
-
-
-# Symbol used for the function that will compute the device id. This
-# will change based on whether or not multiple devices of the same
-# type are connected
-device_id = None
-
 
 # Table storing which modules have been imported already
 g_loaded_modules = {}
@@ -89,24 +80,6 @@ def is_user_admin():
     :return True if user has admin rights, False otherwise
     """
     return ctypes.windll.shell32.IsUserAnAdmin() == 1
-
-
-def setup_duplicate_devices(device_id_fn, duplicate_devices):
-    """Configures the device id generation method.
-
-    Depending on whether or not multiple identical devices are present on the
-    system the function used to generate device IDs have to be swapped. This
-    function does all the handling and setting of information for this.
-
-    :param device_id_fn the function to use in order to generate device IDs
-    :param duplicate_devices flag indicating if multiple identical devices
-        are present in the system or not
-    """
-    global device_id
-    global g_duplicate_devices
-
-    device_id = device_id_fn
-    g_duplicate_devices = duplicate_devices
 
 
 def axis_calibration(value, minimum, center, maximum):
@@ -312,46 +285,6 @@ def setup_userprofile():
         )
 
 
-def device_id_duplicates(device):
-    """Returns a unique id for the provided device.
-
-    This function is intended to be used when device of identical type
-    are present.
-
-    :param device the object with device related information
-    :return unique identifier of this device
-    """
-    return device.hardware_id, device.windows_id
-
-
-def device_id_unique(device):
-    """Returns a unique id for the provided device.
-
-    This function is intended to be used when all devices are
-    distinguishable by their hardware id.
-
-    :param device the object with device related information
-    :return unique identifier of this device
-    """
-    return device.hardware_id
-
-
-def extract_ids(dev_id):
-    """Returns hardware and windows id of a device_id.
-
-    Only if g_duplicate_devices is true will there be a windows id
-    present. If it is not present -1 will be returned
-
-    :param dev_id the device_id from which to extract the individual
-        ids
-    :return hardware_id and windows_id
-    """
-    if g_duplicate_devices:
-        return dev_id[0], dev_id[1]
-    else:
-        return dev_id, -1
-
-
 def device_identifier_from_sdl(device):
     """Returns a DeviceIdentifier instance for the given SDL device.
 
@@ -364,8 +297,6 @@ def device_identifier_from_sdl(device):
     )
 
 
-def get_device_id(hardware_id, windows_id):
-    """Returns the correct device id given both hardware and windows id.
 def get_device_identifier(data):
     try:
         return common.DeviceIdentifier(
@@ -376,33 +307,6 @@ def get_device_identifier(data):
         raise error.GremlinError(
             "Extracting device id from unsupported type {}".format(type(data))
         )
-
-    :param hardware_id the hardware id of the device
-    :param windows_id the windows id of the device
-    :return correct combination of hardware and windows id
-    """
-    if g_duplicate_devices:
-        return hardware_id, windows_id
-    else:
-        return hardware_id
-
-
-def setup_duplicate_joysticks():
-    """Detects if multiple identical devices are connected and performs
-    appropriate setup.
-    """
-    devices = joystick_handling.joystick_devices()
-
-    # Check if we have duplicate items
-    entries = [dev.hardware_id for dev in devices]
-    duplicate_devices = len(entries) != len(set(entries))
-
-    # Create appropriate device_id generator
-    if duplicate_devices:
-        device_id_fn = device_id_duplicates
-    else:
-        device_id_fn = device_id_unique
-    setup_duplicate_devices(device_id_fn, duplicate_devices)
 
 
 def clear_layout(layout):
