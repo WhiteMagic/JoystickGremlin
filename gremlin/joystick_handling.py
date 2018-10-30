@@ -232,6 +232,8 @@ def joystick_devices_initialization():
     # non duplicate devices transparently.
     devreg = common.DeviceRegistry()
     devreg.reset()
+    # Register the fake keyboard device
+    devreg.register(0, 0)
 
     # Process all connected devices in order to properly initialize the
     # device registry
