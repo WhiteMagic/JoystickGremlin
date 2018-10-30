@@ -1321,10 +1321,6 @@ if __name__ == "__main__":
         event_listener.terminate()
         sys.exit(0)
 
-    # Setup device key generator based on whether or not we have
-    # duplicate devices connected.
-    gremlin.util.setup_duplicate_joysticks()
-
     # Initialize action plugins
     gremlin.plugin_manager.ActionPlugins()
     gremlin.plugin_manager.ContainerPlugins()
