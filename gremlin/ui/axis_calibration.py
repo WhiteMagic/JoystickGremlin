@@ -118,7 +118,7 @@ class CalibrationUi(common.BaseDialogUi):
     def _save_calibration(self):
         """Saves the current calibration data to the hard drive."""
         cfg = gremlin.config.Configuration()
-        dev_id = gremlin.util.device_id(
+        dev_id = gremlin.util.get_device_identifier(
             self.devices[self.current_selection_id]
         )
         cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
@@ -141,10 +141,10 @@ class CalibrationUi(common.BaseDialogUi):
 
         :param event the event to process
         """
-        selection_id = gremlin.util.device_id(
+        selection_id = gremlin.util.get_device_identifier(
             self.devices[self.current_selection_id]
         )
-        if gremlin.util.device_id(event) == selection_id \
+        if gremlin.util.get_device_identifier(event) == selection_id \
                 and event.event_type == gremlin.common.InputType.JoystickAxis:
             self.axes[event.identifier-1].set_current(event.raw_value)
 

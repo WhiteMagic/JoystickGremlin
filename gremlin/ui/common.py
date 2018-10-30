@@ -564,7 +564,7 @@ class JoystickSelector(QtWidgets.QWidget):
         for i, device in enumerate(
                 sorted(self.devices, key=lambda x: x.windows_id)
         ):
-            self._device_id_to_index_map[gremlin.util.device_id(device)] = i
+            self._device_id_to_index_map[gremlin.util.get_device_identifier(device)] = i
             self._index_to_device_map[i] = device
 
     def get_selection(self):

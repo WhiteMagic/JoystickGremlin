@@ -1136,22 +1136,7 @@ class SwapDevicesUi(common.BaseDialogUi):
         self.setWindowTitle("Swap Devices")
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
-        if not gremlin.util.g_duplicate_devices:
-            self._create_info_ui()
-        else:
-            self._create_swap_ui()
-
-    def _create_info_ui(self):
-        """Displays explanatory message when no duplicate devices are present."""
-        label = QtWidgets.QLabel(
-            "Swapping devices is only available when duplicate devices "
-            "are present."
-        )
-        label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
-        label.setWordWrap(True)
-        label.setFrameShape(QtWidgets.QFrame.Box)
-        label.setMargin(10)
-        self.main_layout.addWidget(label)
+        self._create_swap_ui()
 
     def _create_swap_ui(self):
         """Displays possible groups of swappable devices."""
@@ -1224,8 +1209,8 @@ class SwapDevicesUi(common.BaseDialogUi):
             if key == (event.hardware_id, event.windows_id) \
                     and device != device_1:
                 device_2 = device
-        key_1 = gremlin.util.device_id(device_1)
-        key_2 = gremlin.util.device_id(device_2)
+        key_1 = gremlin.util.get_device_identifier(device_1)
+        key_2 = gremlin.util.get_device_identifier(device_2)
 
         # Swap profile data and entries
         device_1.windows_id, device_2.windows_id = \

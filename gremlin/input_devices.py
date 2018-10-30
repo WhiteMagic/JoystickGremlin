@@ -47,7 +47,7 @@ class CallbackRegistry:
         :param always_execute if True the callback is run even if Gremlin
             is paused
         """
-        device_id = util.device_id(event)
+        device_id = gremlin.util.get_device_identifier(event)
         self._current_id += 1
         function_name = "{}_{:d}".format(callback.__name__, self._current_id)
 
@@ -689,11 +689,10 @@ def _button(button_id, device_id, mode, always_execute=False):
         def wrapper_fn(*args, **kwargs):
             callback(*args, **kwargs)
 
-        hid, wid = util.extract_ids(device_id)
         event = event_handler.Event(
             event_type=common.InputType.JoystickButton,
-            hardware_id=hid,
-            windows_id=wid,
+            hardware_id=device_id.hardware_id,
+            windows_id=device_id.windows_id,
             identifier=button_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)
@@ -719,11 +718,10 @@ def _hat(hat_id, device_id, mode, always_execute=False):
         def wrapper_fn(*args, **kwargs):
             callback(*args, **kwargs)
 
-        hid, wid = util.extract_ids(device_id)
         event = event_handler.Event(
             event_type=common.InputType.JoystickHat,
-            hardware_id=hid,
-            windows_id=wid,
+            hardware_id=device_id.hardware_id,
+            windows_id=device_id.windows_id,
             identifier=hat_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)
@@ -749,11 +747,10 @@ def _axis(axis_id, device_id, mode, always_execute=False):
         def wrapper_fn(*args, **kwargs):
             callback(*args, **kwargs)
 
-        hid, wid = util.extract_ids(device_id)
         event = event_handler.Event(
             event_type=common.InputType.JoystickAxis,
-            hardware_id=hid,
-            windows_id=wid,
+            hardware_id=device_id.hardware_id,
+            windows_id=device_id.windows_id,
             identifier=axis_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)

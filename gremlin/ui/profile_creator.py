@@ -69,7 +69,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
 
         # Add a new binding
         else:
-            device_id = util.device_id(event)
+            device_id = gremlin.util.get_device_identifier(event)
 
             # Get the input item to be mapped then modify it and set it again
             item = self.new_profile.devices[device_id].modes[mode].get_data(
@@ -288,7 +288,7 @@ class ModeBindings(QtWidgets.QWidget):
         device_lookup = {}
         for dev in devices:
             device_lookup[dev.hardware_id] = dev.name
-        device_lookup[util.get_device_id(0, 0)] = "Keyboard"
+        device_lookup[common.DeviceIdentifier(0, 0)] = "Keyboard"
         return device_lookup
 
 

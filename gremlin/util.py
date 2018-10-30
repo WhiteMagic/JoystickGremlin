@@ -27,7 +27,7 @@ import time
 from PyQt5 import QtCore, QtWidgets
 
 import sdl2
-from . import error, joystick_handling
+from . import common, error, joystick_handling
 
 # Flag indicating that multiple physical devices with the same name exist
 g_duplicate_devices = False
@@ -366,6 +366,16 @@ def device_identifier_from_sdl(device):
 
 def get_device_id(hardware_id, windows_id):
     """Returns the correct device id given both hardware and windows id.
+def get_device_identifier(data):
+    try:
+        return common.DeviceIdentifier(
+            data.hardware_id,
+            data.windows_id
+        )
+    except AttributeError:
+        raise error.GremlinError(
+            "Extracting device id from unsupported type {}".format(type(data))
+        )
 
     :param hardware_id the hardware id of the device
     :param windows_id the windows id of the device

@@ -106,7 +106,7 @@ class CodeRunner:
             for device in profile.devices.values():
                 hid = device.hardware_id
                 wid = device.windows_id
-                dev_id = util.get_device_id(hid, wid)
+                dev_id = gremlin.common.DeviceIdentifier(hid, wid)
                 for mode in device.modes.values():
                     for input_items in mode.config.values():
                         for input_item in input_items.values():
@@ -144,7 +144,7 @@ class CodeRunner:
                                     )
                                 else:
                                     self.event_handler.add_callback(
-                                        util.get_device_id(9999, 9999),
+                                        gremlin.common.DeviceIdentifier(9999, 9999),
                                         mode.name,
                                         cb_data.event,
                                         cb_data.callback,
@@ -167,7 +167,7 @@ class CodeRunner:
                     identifier=entry["lower"]["axis_id"]
                 )
                 self.event_handler.add_callback(
-                    util.get_device_id(
+                    gremlin.common.DeviceIdentifier(
                         entry["lower"]["hardware_id"],
                         entry["lower"]["windows_id"]
                     ),
@@ -185,7 +185,7 @@ class CodeRunner:
                     identifier=entry["upper"]["axis_id"]
                 )
                 self.event_handler.add_callback(
-                    util.get_device_id(
+                    gremlin.common.DeviceIdentifier(
                         entry["upper"]["hardware_id"],
                         entry["upper"]["windows_id"]
                     ),

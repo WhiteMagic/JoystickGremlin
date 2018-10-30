@@ -469,7 +469,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         keyboard_device.hardware_id = 0
         keyboard_device.windows_id = 0
         keyboard_device.type = gremlin.profile.DeviceType.Keyboard
-        self._profile.devices[gremlin.util.device_id(keyboard_device)] = \
+        self._profile.devices[gremlin.common.DeviceIdentifier(0, 0)] = \
             keyboard_device
 
         # Update profile information
@@ -625,7 +625,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Create physical joystick device tabs
         for device in sorted(phys_devices, key=lambda x: x.name):
             device_profile = self._profile.get_device_modes(
-                gremlin.util.device_id(device),
+                device.device_id,
                 gremlin.profile.DeviceType.Joystick,
                 device.name
             )
@@ -635,10 +635,9 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device_profile,
                 self._current_mode
             )
-            self.tabs[gremlin.util.device_id(device)] = widget
-            tab_label = device.name
-            if gremlin.util.g_duplicate_devices:
-                tab_label += " ({:d})".format(device.windows_id)
+            self.tabs[device.device_id] = widget
+            tab_label = device.name.strip()
+            tab_label += " ({:d})".format(device.windows_id)
             self.ui.devices.addTab(widget, tab_label)
 
         # Create vJoy as input device tabs
@@ -648,7 +647,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 continue
 
             device_profile = self._profile.get_device_modes(
-                gremlin.util.device_id(device),
+                gremlin.util.get_device_identifier(device),
                 gremlin.profile.DeviceType.Joystick,
                 device.name
             )
@@ -658,22 +657,17 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device_profile,
                 self._current_mode
             )
-            self.tabs[gremlin.util.device_id(device)] = widget
-            tab_label = device.name
-            if gremlin.util.g_duplicate_devices:
-                tab_label += " #{:d} ({:d})".format(
-                    device.vjoy_id,
-                    device.windows_id
-                )
+            self.tabs[gremlin.util.get_device_identifier(device)] = widget
+            tab_label = device.name.strip()
+            tab_label += " #{:d} ({:d})".format(
+                device.vjoy_id,
+                device.windows_id
+            )
             self.ui.devices.addTab(widget, tab_label)
 
         # Create keyboard tab
         device_profile = self._profile.get_device_modes(
-            gremlin.util.device_id(
-                gremlin.event_handler.Event.from_key(
-                    gremlin.macro.key_from_name("space")
-                )
-            ),
+            gremlin.common.DeviceIdentifier(0, 0),
             gremlin.profile.DeviceType.Keyboard,
             "keyboard"
         )
@@ -681,7 +675,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             device_profile,
             self._current_mode
         )
-        self.tabs[gremlin.util.device_id(device_profile)] = widget
+        self.tabs[gremlin.common.DeviceIdentifier(0, 0)] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
         # Create the vjoy as output device tab
@@ -701,7 +695,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device_profile,
                 self._current_mode
             )
-            self.tabs[gremlin.util.device_id(device)] = widget
+            self.tabs[device.device_id] = widget
             self.ui.devices.addTab(
                 widget,
                 "{} #{:d}".format(device.name, device.vjoy_id)
@@ -811,8 +805,8 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # If we want to act on the given event figure out which button
         # needs to be pressed and press is
-        if gremlin.util.device_id(event) == \
-                gremlin.util.device_id(widget.device_profile):
+        if gremlin.util.get_device_identifier(event) == \
+                gremlin.util.get_device_identifier(widget.device_profile):
             if self._should_process_input(event):
                 widget.input_item_list_view.select_item(event)
 
@@ -1108,11 +1102,11 @@ class GremlinUi(QtWidgets.QMainWindow):
             # Ignore the keyboard
             if device.hardware_id == 0:
                 continue
-            profile_devices[gremlin.util.device_id(device)] = device.name
+            profile_devices[gremlin.util.get_device_identifier(device)] = device.name
 
         physical_devices = {}
         for device in gremlin.joystick_handling.physical_devices():
-            physical_devices[gremlin.util.device_id(device)] = device.name
+            physical_devices[gremlin.util.get_device_identifier(device)] = device.name
 
         # Find profile data that conflicts with currently connected
         # hardware and warn the user

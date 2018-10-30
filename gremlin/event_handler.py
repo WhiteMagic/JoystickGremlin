@@ -124,8 +124,7 @@ class Event:
                 << Event.ShiftIdentifier
         else:
             hash_val += self.identifier << Event.ShiftIdentifier
-        if util.g_duplicate_devices:
-            hash_val += self.windows_id << Event.ShiftSystemId
+        hash_val += self.windows_id << Event.ShiftSystemId
         hash_val += self.hardware_id << Event.ShiftDeviceId
 
         return hash_val
@@ -488,7 +487,7 @@ class EventHandler(QtCore.QObject):
         """
         # Obtain callbacks matching the event
         callback_list = []
-        device_id = util.device_id(event)
+        device_id = util.get_device_identifier(event)
         if device_id in self.callbacks:
             callback_list = self.callbacks[device_id].get(
                 self._active_mode, {}

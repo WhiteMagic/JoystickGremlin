@@ -203,7 +203,7 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
         super().__init__(parent)
 
         self.device_data = device_data
-        self.device_id = gremlin.util.get_device_id(
+        self.device_id = gremlin.common.DeviceIdentifier(
             self.device_data.hardware_id,
             self.device_data.windows_id
         )
@@ -262,10 +262,7 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
 
         :param event the event to use in the update
         """
-        event_id = gremlin.util.get_device_id(
-            event.hardware_id,
-            event.windows_id
-        )
+        event_id = gremlin.util.get_device_identifier(event)
         if self.device_id != event_id:
             return
 
@@ -273,10 +270,7 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
             widget.process_event(event)
 
     def _current_axis_update(self, event):
-        event_id = gremlin.util.get_device_id(
-            event.hardware_id,
-            event.windows_id
-        )
+        event_id = gremlin.util.get_device_identifier(event)
         if self.device_id != event_id:
             return
 
@@ -288,10 +282,7 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
 
         :param event the event to use in the update
         """
-        event_id = gremlin.util.get_device_id(
-            event.hardware_id,
-            event.windows_id
-        )
+        event_id = gremlin.util.get_device_identifier(event)
         if self.device_id != event_id:
             return
 

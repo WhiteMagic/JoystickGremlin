@@ -25,7 +25,7 @@ from xml.etree import ElementTree
 
 import action_plugins
 from gremlin.common import DeviceType, InputType, VariableType
-from . import error, joystick_handling, plugin_manager, util
+from . import common, error, joystick_handling, plugin_manager, util
 
 
 def mode_list(node):
@@ -706,7 +706,7 @@ class Profile:
         new_device.hardware_id = device.hardware_id
         new_device.windows_id = device.windows_id
         new_device.type = DeviceType.Joystick
-        self.devices[util.device_id(new_device)] = new_device
+        self.devices[device.device_id] = new_device
 
         for mode in modes:
             new_device.ensure_mode_exists(mode)
@@ -828,7 +828,7 @@ class Profile:
         for child in root.iter("device"):
             device = Device(self)
             device.from_xml(child)
-            self.devices[util.device_id(device)] = device
+            self.devices[util.get_device_identifier(device)] = device
 
         # Parse each vjoy device into separate DeviceConfiguration objects
         for child in root.iter("vjoy-device"):
@@ -846,7 +846,7 @@ class Profile:
             if dev.is_virtual and dev.vjoy_id not in self.vjoy_devices:
                 add_device = True
             elif not dev.is_virtual and \
-                    util.device_id(dev) not in self.devices:
+                    util.get_device_identifier(dev) not in self.devices:
                 add_device = True
 
             if add_device:
@@ -861,7 +861,7 @@ class Profile:
                     new_device.type = DeviceType.Joystick
                     new_device.hardware_id = dev.hardware_id
                     new_device.windows_id = dev.windows_id
-                    self.devices[util.device_id(new_device)] = new_device
+                    self.devices[util.get_device_identifier(new_device)] = new_device
 
                 # Create required modes
                 for mode in mode_list(new_device):
@@ -968,11 +968,10 @@ class Profile:
         else:
             if device_id not in self.devices:
                 # Create the device
-                hid, wid = util.extract_ids(device_id)
                 device = Device(self)
                 device.name = device_name
-                device.hardware_id = hid
-                device.windows_id = wid
+                device.hardware_id = device_id.hardware_id
+                device.windows_id = device_id.windows_id
 
                 # Set the correct device type
                 device.type = DeviceType.Joystick
@@ -1104,9 +1103,8 @@ class Device:
         self.windows_id = safe_read(node, "windows_id", int)
         self.type = DeviceType.to_enum(safe_read(node, "type", str))
 
-        # If we have duplicate devices check if this device is a duplicate, if
-        # not fix the windows_id in case it no longer matches
-        if util.g_duplicate_devices and self.type == DeviceType.Joystick:
+        # Fix windows id of devices in case they've changed
+        if self.type == DeviceType.Joystick:
             device_counts = {}
             windows_ids = {}
             for dev in joystick_handling.joystick_devices():
@@ -1350,7 +1348,7 @@ class InputItem:
 
         :return hash of this InputItem instance
         """
-        device_id = util.device_id(self.parent.parent)
+        device_id = util.get_device_identifier(self.parent.parent)
         mode = self.parent.name
 
         return hash((device_id, mode, self.input_type, self.input_id))
