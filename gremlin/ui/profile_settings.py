@@ -41,11 +41,32 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
+        # Create required scroll UI elements
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_widget = QtWidgets.QWidget()
+        self.scroll_layout = QtWidgets.QVBoxLayout()
+
+        # Configure the widget holding the layout with all the buttons
+        self.scroll_widget.setLayout(self.scroll_layout)
+        self.scroll_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Expanding
+        )
+        self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+        # Configure the scroll area
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_widget)
+
+        # Add the scroll area to the main layout
+        self.main_layout.addWidget(self.scroll_area)
+
         self._create_ui()
 
     def refresh_ui(self, emit_change=False):
         """Refreshes the entire UI."""
-        gremlin.ui.common.clear_layout(self.main_layout)
+        gremlin.ui.common.clear_layout(self.scroll_layout)
         self._create_ui()
         if emit_change:
             self.changed.emit()
@@ -53,11 +74,11 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
     def _create_ui(self):
         """Creates the UI elements of this widget."""
         # Default start mode selection
-        self.main_layout.addWidget(DefaultModeSelector(self.profile_settings))
+        self.scroll_layout.addWidget(DefaultModeSelector(self.profile_settings))
 
         # vJoy devices as inputs
         vjoy_as_input_widget = VJoyAsInputWidget(self.profile_settings)
-        self.main_layout.addWidget(vjoy_as_input_widget)
+        self.scroll_layout.addWidget(vjoy_as_input_widget)
         vjoy_as_input_widget.changed.connect(lambda: self.refresh_ui(True))
 
         # vJoy axis initialization value setup
@@ -77,9 +98,9 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
                 self.profile_settings
             ))
 
-            self.main_layout.addWidget(widget)
+            self.scroll_layout.addWidget(widget)
 
-        self.main_layout.addStretch(1)
+        self.scroll_layout.addStretch(1)
 
         # Information label
         label = QtWidgets.QLabel(
@@ -90,7 +111,7 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
         label.setWordWrap(True)
         label.setFrameShape(QtWidgets.QFrame.Box)
         label.setMargin(10)
-        self.main_layout.addWidget(label)
+        self.scroll_layout.addWidget(label)
 
 
 class DefaultModeSelector(QtWidgets.QGroupBox):
