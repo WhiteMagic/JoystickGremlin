@@ -43,6 +43,16 @@ Joystick Gremlin uses the following software and resources:
 - [Mako](http://www.makotemplates.org/)
 - [Modern UI Icons](http://modernuiicons.com/)
 
+Currently the 32bit version of Python is needed and the following packages should be installed via PiP to get the source running:
+ 
+ - PyQT5
+ - pypiwin32
+ 
+In order to enable proper debugging with an IDE the line
+```
+sys.excepthook = exception_hook
+```
+in `joystick_gremlin.py` has to be commented out.
 
 Generating the MSI Installer
 ----------------------------
