@@ -376,6 +376,8 @@ class HatState(QtWidgets.QGroupBox):
         """
         super().__init__(parent)
 
+        self._event_times = {}
+
         if device.is_virtual:
             self.setTitle("{} #{:d} - Hats".format(device.name, device.vjoy_id))
         else:
@@ -396,7 +398,13 @@ class HatState(QtWidgets.QGroupBox):
         :param event the event with which to update the state display
         """
         if event.event_type == gremlin.common.InputType.JoystickHat:
+            # Delay reacting such that the visualization can happen before we
+            # change it again.
+            if time.time() - self._event_times.get(event.identifier, 0.0) < 0.05:
+                time.sleep(0.05)
+
             self.hats[event.identifier].set_angle(event.value)
+            self._event_times[event.identifier] = time.time()
 
 
 class AxesTimeline(QtWidgets.QGroupBox):
