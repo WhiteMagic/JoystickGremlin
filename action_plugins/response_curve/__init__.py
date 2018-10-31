@@ -195,6 +195,7 @@ class AbstractCurveModel(QtCore.QObject):
             cp.center.y = -cp.center.y
             for handle in cp.handles:
                 handle.y = -handle.y
+        self.save_to_profile()
         self.content_modified.emit()
 
     def model_updated(self):
