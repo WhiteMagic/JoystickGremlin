@@ -63,6 +63,13 @@ class OptionsUi(common.BaseDialogUi):
         self.highlight_input.clicked.connect(self._highlight_input)
         self.highlight_input.setChecked(self.config.highlight_input)
 
+        # Switch to highlighted device
+        self.highlight_device = QtWidgets.QCheckBox(
+            "Highlight swaps device tabs"
+        )
+        self.highlight_device.clicked.connect(self._highlight_device)
+        self.highlight_device.setChecked(self.config.highlight_device)
+
         # Close to system tray option
         self.close_to_systray = QtWidgets.QCheckBox(
             "Closing minimizes to system tray"
@@ -152,6 +159,7 @@ class OptionsUi(common.BaseDialogUi):
         self.macro_axis_minimum_change_layout.addStretch()
 
         self.general_layout.addWidget(self.highlight_input)
+        self.general_layout.addWidget(self.highlight_device)
         self.general_layout.addWidget(self.close_to_systray)
         self.general_layout.addWidget(self.activate_on_launch)
         self.general_layout.addWidget(self.start_minimized)
@@ -393,6 +401,14 @@ class OptionsUi(common.BaseDialogUi):
         :param clicked whether or not the checkbox is ticked
         """
         self.config.highlight_input = clicked
+        self.config.save()
+
+    def _highlight_device(self, clicked):
+        """Stores preference for device highlighting.
+
+        :param clicked whether or not the checkbox is ticked
+        """
+        self.config.highlight_device = clicked
         self.config.save()
 
     def _list_executables(self):
