@@ -789,6 +789,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Stop Gremlin execution
         self.ui.actionActivate.setChecked(False)
         self.activate(False)
+
     def _joystick_input_selection(self, event):
         """Handles joystick events to select the appropriate input item.
 
@@ -806,12 +807,28 @@ class GremlinUi(QtWidgets.QMainWindow):
         if not isinstance(widget, gremlin.ui.device_tab.JoystickDeviceTabWidget):
             return
 
+        # Get device id of the event and check if this matches the currently
+        # active tab
+        device_id = gremlin.common.DeviceIdentifier(
+            event.hardware_id, event.windows_id
+        )
+
+        if device_id not in self.tabs:
+            return
+
+        tab_switch_needed = self.ui.devices.currentWidget() != self.tabs[device_id]
+
+        # Switch to the tab corresponding to the event's device if the option
+        # is set in the options
+        if self.config.highlight_device and tab_switch_needed:
+            self.ui.devices.setCurrentWidget(self.tabs[device_id])
+            tab_switch_needed = False
+            time.sleep(0.1)
+
         # If we want to act on the given event figure out which button
         # needs to be pressed and press is
-        if gremlin.util.get_device_identifier(event) == \
-                gremlin.util.get_device_identifier(widget.device_profile):
-            if self._should_process_input(event):
-                widget.input_item_list_view.select_item(event)
+        if not tab_switch_needed and self._should_process_input(event):
+            widget.input_item_list_view.select_item(event)
 
     def _mode_changed_cb(self, new_mode):
         """Updates the current mode to the provided one.
