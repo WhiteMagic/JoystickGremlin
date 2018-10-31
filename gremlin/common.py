@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import enum
+import logging
 
 import gremlin.error
 
@@ -50,9 +51,17 @@ class DeviceRegistry:
         :return True if there are multiple device, False otherwise
         """
         assert(isinstance(identifier, DeviceIdentifier))
-        assert(identifier.hardware_id in self._devices)
-
-        return len(self._devices[identifier.hardware_id]) != 1
+        #assert(identifier.hardware_id in self._devices)
+        if identifier.hardware_id not in self._devices:
+            logging.getLogger("system").warning(
+                "Identifier for non existent device created: {} {}".format(
+                    identifier.hardware_id,
+                    identifier.windows_id
+                )
+            )
+            return False
+        else:
+            return len(self._devices[identifier.hardware_id]) != 1
 
     def reset(self):
         """Clears the registry."""

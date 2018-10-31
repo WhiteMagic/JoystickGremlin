@@ -187,6 +187,8 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
         if activation_condition:
             for condition in activation_condition.conditions:
                 if isinstance(condition, gremlin.base_classes.InputActionCondition):
+                    # Remap like actions typically have an always activation
+                    # condition associated with them
                     if condition.comparison != "always":
                         needs_auto_release = False
 
