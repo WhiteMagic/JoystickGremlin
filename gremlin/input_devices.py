@@ -579,8 +579,7 @@ class ButtonReleaseActions(QtCore.QObject):
         """
         if evt in self._registry and not evt.is_pressed:
             for entry in self._registry[evt]:
-                if entry[1] is None or entry[1] != self._current_mode:
-                    entry[0]()
+                entry[0]()
             self._registry[evt] = []
 
     def _mode_changed_cb(self, mode):
