@@ -1151,6 +1151,7 @@ class ResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
             "Cubic Spline": CubicSplineModel,
             "Cubic Bezier Spline": CubicBezierSplineModel
         }
+
         # Create new model
         if curve_type == "Cubic Spline":
             self.action_data.control_points = [(-1.0, -1.0), (1.0, 1.0)]
@@ -1175,6 +1176,7 @@ class ResponseCurveWidget(gremlin.ui.input_item.AbstractActionWidget):
                     self._handle_symmetry_cb
                 )
                 self.curve_settings_layout.addWidget(self.handle_symmetry)
+        self.curve_symmetry.setChecked(False)
 
         # Recreate the UI components
         self.curve_scene = CurveView(
