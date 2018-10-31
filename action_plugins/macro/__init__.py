@@ -285,6 +285,16 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.ui_elements["dy_spinbox"].setRange(-1e5, 1e5)
         self.ui_elements["dy_spinbox"].setValue(0)
 
+        # Populate boxes with values
+        if self.model.get_entry(self.index.row()) is not None:
+            self.ui_elements["dx_spinbox"].setValue(
+                self.model.get_entry(self.index.row()).dx
+            )
+        if self.model.get_entry(self.index.row()) is not None:
+            self.ui_elements["dy_spinbox"].setValue(
+                self.model.get_entry(self.index.row()).dy
+            )
+
         self.ui_elements["dx_spinbox"].valueChanged.connect(
             self._modify_mouse_motion
         )
