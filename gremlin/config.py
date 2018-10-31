@@ -314,6 +314,31 @@ class Configuration:
             self.save()
 
     @property
+    def highlight_device(self):
+        """Returns whether or not highlighting swaps device tabs.
+
+        This enables / disables the feature where using a physical input
+        automatically swaps to the correct device tab.
+
+        :return True if the feature is enabled, False otherwise
+        """
+        return self._data.get("highlight_device", False)
+
+    @highlight_device.setter
+    def highlight_device(self, value):
+        """Sets whether or not to swap device tabs to highlight inputs.
+
+        This enables / disables the feature where using a physical input
+        automatically swaps to the correct device tab.
+
+        :param value Flag indicating whether or not to enable / disable the
+            feature
+        """
+        if type(value) == bool:
+            self._data["highlight_device"] = value
+            self.save()
+
+    @property
     def mode_change_message(self):
         """Returns whether or not to show a windows notification on mode change.
 
