@@ -1544,6 +1544,12 @@ class Macro(AbstractAction):
                     gremlin.profile.parse_bool(child.get("press"))
                 )
                 self.sequence.append(mouse_action)
+            elif child.tag == "mouse-motion":
+                mouse_motion = gremlin.macro.MouseMotionAction(
+                    safe_read(child, "dx", int, 0),
+                    safe_read(child, "dy", int, 0)
+                )
+                self.sequence.append(mouse_motion)
             elif child.tag == "pause":
                 self.sequence.append(
                     gremlin.macro.PauseAction(float(child.get("duration")))
@@ -1596,6 +1602,11 @@ class Macro(AbstractAction):
                 action_node = ElementTree.Element("mouse")
                 action_node.set("button", str(entry.button.value))
                 action_node.set("press", str(entry.is_pressed))
+                action_list.append(action_node)
+            elif isinstance(entry, gremlin.macro.MouseMotionAction):
+                action_node = ElementTree.Element("mouse-motion")
+                action_node.set("dx", str(entry.dx))
+                action_node.set("dy", str(entry.dy))
                 action_list.append(action_node)
             elif isinstance(entry, gremlin.macro.PauseAction):
                 pause_node = ElementTree.Element("pause")
