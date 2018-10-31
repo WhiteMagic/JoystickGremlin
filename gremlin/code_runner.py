@@ -209,7 +209,7 @@ class CodeRunner:
             for vid, data in settings.vjoy_initial_values.items():
                 vjoy_proxy = joystick_handling.VJoyProxy()[vid]
                 for aid, value in data.items():
-                    vjoy_proxy.axis(aid).set_absolute_value(value)
+                    vjoy_proxy.axis(linear_index=aid).set_absolute_value(value)
 
             # Connect signals
             evt_listener = event_handler.EventListener()
