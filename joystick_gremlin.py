@@ -65,6 +65,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui = Ui_Gremlin()
         self.ui.setupUi(self)
 
+        self._resize_count = 0
+
         # Process monitor
         self.process_monitor = gremlin.process_monitor.ProcessMonitor()
         self.process_monitor.process_changed.connect(
@@ -157,15 +159,16 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param evt event information
         """
-        if evt.size().width() != 800 and evt.size().height() != 600:
+        if self._resize_count > 1:
             self.config.window_size = [evt.size().width(), evt.size().height()]
+        self._resize_count += 1
 
     def moveEvent(self, evt):
         """Handle changing the position of the window.
 
         :param evt event information
         """
-        if evt.pos().x() != 0 and evt.pos().y() != 0:
+        if self._resize_count > 1:
             self.config.window_location = [evt.pos().x(), evt.pos().y()]
 
     # +---------------------------------------------------------------
