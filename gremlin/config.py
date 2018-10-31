@@ -292,7 +292,7 @@ class Configuration:
     def highlight_input(self):
         """Returns whether or not to highlight inputs.
 
-        This enable / disables the feature where using a physical input
+        This enables / disables the feature where using a physical input
         automatically selects it in the UI.
 
         :return True if the feature is enabled, False otherwise
@@ -303,7 +303,7 @@ class Configuration:
     def highlight_input(self, value):
         """Sets whether or not to highlight inputs.
 
-        This enable / disables the feature where using a physical input
+        This enables / disables the feature where using a physical input
         automatically selects it in the UI.
 
         :param value Flag indicating whether or not to enable / disable the
