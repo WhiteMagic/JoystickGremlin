@@ -47,7 +47,7 @@ class CallbackRegistry:
         :param always_execute if True the callback is run even if Gremlin
             is paused
         """
-        device_id = gremlin.util.get_device_identifier(event)
+        device_id = util.get_device_identifier(event)
         self._current_id += 1
         function_name = "{}_{:d}".format(callback.__name__, self._current_id)
 
