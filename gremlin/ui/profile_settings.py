@@ -61,21 +61,19 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
         vjoy_as_input_widget.changed.connect(lambda: self.refresh_ui(True))
 
         # vJoy axis initialization value setup
-        vjoy_devices = gremlin.joystick_handling.vjoy_devices()
-
-        # Create UI elements
-        for device in vjoy_devices:
+        for dev in sorted(
+                gremlin.joystick_handling.vjoy_devices(),
+                key=lambda x: x.vjoy_id
+        ):
             # Only show devices that are not treated as inputs
-            if self.profile_settings.vjoy_as_input.get(device.vjoy_id) == True:
+            if self.profile_settings.vjoy_as_input.get(dev.vjoy_id) == True:
                 continue
 
-            widget = QtWidgets.QGroupBox(
-                "{} #{}".format(device.name, device.vjoy_id)
-            )
+            widget = QtWidgets.QGroupBox("{} #{}".format(dev.name, dev.vjoy_id))
             box_layout = QtWidgets.QVBoxLayout()
             widget.setLayout(box_layout)
             box_layout.addWidget(VJoyAxisDefaultsWidget(
-                device,
+                dev,
                 self.profile_settings
             ))
 
