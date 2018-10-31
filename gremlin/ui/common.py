@@ -1180,6 +1180,7 @@ class InputListenerWidget(QtWidgets.QFrame):
                 gremlin.common.InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.connect(self._joy_event_cb)
         elif gremlin.common.InputType.Mouse in self._event_types:
+            gremlin.windows_event_hook.MouseHook().start()
             event_listener.mouse_event.connect(self._mouse_event_cb)
 
     def _joy_event_cb(self, event):
@@ -1261,6 +1262,9 @@ class InputListenerWidget(QtWidgets.QFrame):
             event_listener.joystick_event.disconnect(self._joy_event_cb)
         elif gremlin.common.InputType.Mouse in self._event_types:
             event_listener.mouse_event.disconnect(self._mouse_event_cb)
+
+        # Stop mouse hook in case it is running
+        gremlin.windows_event_hook.MouseHook().stop()
 
         # Delay unsuspending input highlighting to allow an axis that's being
         # moved to return to its center without triggering an input highlight
