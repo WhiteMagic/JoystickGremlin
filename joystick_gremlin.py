@@ -1283,6 +1283,8 @@ if __name__ == "__main__":
         "format": "%(asctime)s %(message)s"
     })
 
+    syslog = logging.getLogger("system")
+
     # Unhandled exception traceback
     # TODO: Re-enable for release
     # TODO: Re-enable exception capturing for profile loading
@@ -1313,6 +1315,7 @@ if __name__ == "__main__":
     # Check if vJoy is properly setup and if not display an error
     # and terminate Gremlin
     try:
+        syslog.info("Checking vJoy installation")
         vjoy_working = len([
             dev for dev in gremlin.joystick_handling.joystick_devices()
             if dev.is_virtual
@@ -1342,11 +1345,13 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # Initialize action plugins
+    syslog.info("Initializing plugins")
     gremlin.plugin_manager.ActionPlugins()
     gremlin.plugin_manager.ContainerPlugins()
 
     # Create Gremlin UI
     ui = GremlinUi()
+    syslog.info("Gremlin UI created")
 
     # Handle user provided command line arguments
     if args.profile is not None and os.path.isfile(args.profile):
@@ -1358,7 +1363,9 @@ if __name__ == "__main__":
         ui.setHidden(True)
 
     # Run UI
+    syslog.info("Gremlin UI launching")
     app.exec_()
+    syslog.info("Gremlin UI terminated")
 
     # Terminate potentially running EventListener loop
     event_listener = gremlin.event_handler.EventListener()
@@ -1373,4 +1380,5 @@ if __name__ == "__main__":
 
     hg.remove_process(os.getpid())
 
+    syslog.info("Terminating Gremlin")
     sys.exit(0)

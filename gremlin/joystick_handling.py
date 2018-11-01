@@ -226,6 +226,7 @@ def joystick_devices_initialization():
     _joystick_init_lock.acquire()
 
     syslog = logging.getLogger("system")
+    syslog.info("Initializing joystick devices")
     syslog.debug("{:d} joysticks detected".format(sdl2.SDL_NumJoysticks()))
 
     # Register all devices with the device registry to handle duplicate and
