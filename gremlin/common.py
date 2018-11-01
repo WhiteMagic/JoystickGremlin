@@ -123,7 +123,7 @@ class DeviceIdentifier:
         hash_val += self._hardware_id << DeviceIdentifier.ShiftHardwareId
         windows_id = 0
         if self._is_duplicate:
-            hash_val += self._windows_id
+            windows_id = self._windows_id
         hash_val += windows_id << DeviceIdentifier.ShiftWindowsId
 
         return hash_val
