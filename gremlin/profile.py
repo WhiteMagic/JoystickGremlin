@@ -823,6 +823,7 @@ class Profile:
 
         tree = ElementTree.parse(fname)
         root = tree.getroot()
+        self.update_windows_ids(root)
 
         # Parse each device into separate DeviceConfiguration objects
         for child in root.iter("device"):
@@ -1013,6 +1014,41 @@ class Profile:
 
         return is_empty
 
+    def update_windows_ids(self, root):
+        dev_reg = common.DeviceRegistry()
+        device_map = {}
+
+        # Fix device nodes
+        for node in root.findall("./devices/device"):
+            hid = safe_read(node, "id", int, -1)
+            wid = safe_read(node, "windows_id", int, -1)
+
+            windows_ids = dev_reg.by_hardware_id(hid)
+            if len(windows_ids) == 1:
+                device_map[hid] = wid
+                if wid not in windows_ids:
+                    node.set("windows_id", windows_ids[0])
+
+        # Fix condition nodes
+        for node in root.findall(".//condition"):
+            hid = safe_read(node, "device_id", int, -1)
+            wid = safe_read(node, "windows_id", int, -1)
+
+            if hid in device_map and wid != device_map[hid]:
+                node.set("windows_id", device_map[hid])
+
+        # Fix axis merging
+        for node in root.findall(".//merge-axis"):
+            for child in [n for n in node if n.tag in ["lower", "upper"]]:
+                hid = safe_read(child, "id", int, -1)
+                wid = safe_read(child, "windows_id", int, -1)
+                if hid in device_map and wid != device_map[hid]:
+                    child.set("windows_id", device_map[hid])
+
+        # Fix macros
+        # TODO: Leave these broken until we get rid of windows and hardware id
+        #       alltogether
+
     def _parse_merge_axis(self, node):
         """Parses merge axis entries.
 
@@ -1037,19 +1073,19 @@ class Profile:
 
         # If we have duplicate devices check if this device is a duplicate, if
         # not fix the windows_id in case it no longer matches
-        if util.g_duplicate_devices:
-            device_counts = {}
-            windows_ids = {}
-            for dev in joystick_handling.joystick_devices():
-                device_counts[dev.hardware_id] = \
-                    device_counts.get(dev.hardware_id, 0) + 1
-                windows_ids[dev.hardware_id] = dev.windows_id
-
-            for tag in ["lower", "upper"]:
-                # Only one device exists, override system id
-                if device_counts.get(entry[tag]["hardware_id"], 0) == 1:
-                    entry[tag]["windows_id"] = \
-                        windows_ids[entry[tag]["hardware_id"]]
+        # if util.g_duplicate_devices:
+        #     device_counts = {}
+        #     windows_ids = {}
+        #     for dev in joystick_handling.joystick_devices():
+        #         device_counts[dev.hardware_id] = \
+        #             device_counts.get(dev.hardware_id, 0) + 1
+        #         windows_ids[dev.hardware_id] = dev.windows_id
+        #
+        #     for tag in ["lower", "upper"]:
+        #         # Only one device exists, override system id
+        #         if device_counts.get(entry[tag]["hardware_id"], 0) == 1:
+        #             entry[tag]["windows_id"] = \
+        #                 windows_ids[entry[tag]["hardware_id"]]
 
         return entry
 
@@ -1102,17 +1138,6 @@ class Device:
         self.hardware_id = safe_read(node, "id", int)
         self.windows_id = safe_read(node, "windows_id", int)
         self.type = DeviceType.to_enum(safe_read(node, "type", str))
-
-        # Fix windows id of devices in case they've changed
-        if self.type == DeviceType.Joystick:
-            device_counts = {}
-            windows_ids = {}
-            for dev in joystick_handling.joystick_devices():
-                device_counts[dev.hardware_id] = \
-                    device_counts.get(dev.hardware_id, 0) + 1
-                windows_ids[dev.hardware_id] = dev.windows_id
-            if device_counts.get(self.hardware_id, 0) == 1:
-                self.windows_id = windows_ids[self.hardware_id]
 
         for child in node:
             mode = Mode(self)
@@ -1256,6 +1281,11 @@ class Mode:
         :return True if data exists, False otherwise
         """
         return input_id in self.config[input_type]
+
+    def all_input_items(self):
+        for input_type in self.config.values():
+            for input_item in input_type.values():
+                yield input_item
 
 
 class InputItem:
