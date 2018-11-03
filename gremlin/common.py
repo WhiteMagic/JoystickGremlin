@@ -51,7 +51,7 @@ class DeviceRegistry:
         :return True if there are multiple device, False otherwise
         """
         assert(isinstance(identifier, DeviceIdentifier))
-        #assert(identifier.hardware_id in self._devices)
+
         if identifier.hardware_id not in self._devices:
             logging.getLogger("system").warning(
                 "Identifier for non existent device created: {} {}".format(
@@ -62,6 +62,15 @@ class DeviceRegistry:
             return False
         else:
             return len(self._devices[identifier.hardware_id]) != 1
+
+    def by_hardware_id(self, hardware_id):
+        """Returns all windows ids associated with the given hardware id.
+
+        :param hardware_id hardware id for which to return corresponding
+            windows ids
+        :return list of windows ids corresponding to the given hardware id
+        """
+        return self._devices.get(hardware_id, [])
 
     def reset(self):
         """Clears the registry."""
