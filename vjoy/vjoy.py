@@ -21,6 +21,7 @@ import enum
 import logging
 import threading
 import time
+import os
 
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 from gremlin.error import VJoyError
@@ -202,6 +203,8 @@ class Axis:
 
         :param value the position of the axis in the range [-1, 1]
         """
+        self.vjoy_dev.ensure_ownership()
+
         # Log an error on invalid data but continue processing by clamping
         # the values in the next step
         if 1.0 - abs(value) < -0.001:
@@ -292,6 +295,7 @@ class Button:
         :param is_pressed True if the button is pressed, False otherwise
         """
         assert(isinstance(is_pressed, bool))
+        self.vjoy_dev.ensure_ownership()
         self._is_pressed = is_pressed
         if not VJoyInterface.SetBtn(
                 self._is_pressed,
@@ -361,6 +365,8 @@ class Hat:
 
         :param direction the new direction of the hat
         """
+        self.vjoy_dev.ensure_ownership()
+
         if self.hat_type == HatType.Discrete:
             self._set_discrete_direction(direction)
         elif self.hat_type == HatType.Continuous:
@@ -470,6 +476,7 @@ class VJoy:
             )
 
         self.vjoy_id = vjoy_id
+        self.pid = os.getpid()
 
         # Initialize all controls
         self._axis_lookup = {}
@@ -488,6 +495,28 @@ class VJoy:
 
         # Reset all controls
         self.reset()
+
+    def ensure_ownership(self):
+        """Ensure this devices is still owned by the process.
+
+        This object can only be constructed if it successfully acquires the
+        vjoy device and destroys itself when relinquishing control. Therfore,
+        it cannot ever not own the vJoy device.
+
+        Under certain circumstances the vJoy devices are reset (issue #129).
+        By checking for ownership and reacquiring if needed this can be solved.
+        """
+        if self.pid != VJoyInterface.GetOwnerPid(self.vjoy_id):
+            print("...")
+            if not VJoyInterface.AcquireVJD(self.vjoy_id):
+                logging.getLogger("system").error(
+                    "Failed to re-acquire the vJoy device - vid: {}".format(
+                        self.vjoy_id
+                ))
+                raise VJoyError(
+                    "Failed to re-acquire the vJoy device - vid: {}".format(
+                        self.vjoy_id
+                ))
 
     @property
     def axis_count(self):
