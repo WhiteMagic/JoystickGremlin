@@ -105,6 +105,10 @@ class VJoyInterface:
         },
 
         # Device management
+        "GetOwnerPid": {
+            "arguments": [ctypes.c_uint],
+            "returns": ctypes.c_int
+        },
         "AcquireVJD": {
             "arguments": [ctypes.c_uint],
             "returns": ctypes.c_bool
