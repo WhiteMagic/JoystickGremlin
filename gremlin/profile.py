@@ -235,11 +235,6 @@ class ProfileConverter:
             dom_xml = minidom.parseString(ugly_xml)
             with open(fname, "w") as out:
                 out.write(dom_xml.toprettyxml(indent="    ", newl="\n"))
-
-            util.display_error(
-                "Profile has been converted, please check the error log for "
-                "potential issues."
-            )
         else:
             raise error.ProfileError("Failed to convert profile")
 
