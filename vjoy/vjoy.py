@@ -507,7 +507,6 @@ class VJoy:
         By checking for ownership and reacquiring if needed this can be solved.
         """
         if self.pid != VJoyInterface.GetOwnerPid(self.vjoy_id):
-            print("...")
             if not VJoyInterface.AcquireVJD(self.vjoy_id):
                 logging.getLogger("system").error(
                     "Failed to re-acquire the vJoy device - vid: {}".format(
