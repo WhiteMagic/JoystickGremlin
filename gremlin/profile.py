@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import codecs
 import copy
 import logging
 import shutil
@@ -937,9 +938,9 @@ class Profile:
         root.append(self.settings.to_xml())
 
         # Serialize XML document
-        ugly_xml = ElementTree.tostring(root, encoding="unicode")
+        ugly_xml = ElementTree.tostring(root, encoding="utf-8")
         dom_xml = minidom.parseString(ugly_xml)
-        with open(fname, "w") as out:
+        with codecs.open(fname, "w", "utf-8-sig") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
     def get_device_modes(self, device_id, device_type, device_name=None):
