@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import codecs
+import collections
 import copy
 import logging
 import shutil
@@ -26,7 +27,15 @@ from xml.etree import ElementTree
 
 import action_plugins
 from gremlin.common import DeviceType, InputType, VariableType
-from . import common, error, joystick_handling, plugin_manager, util
+from . import base_classes, common, error, joystick_handling, \
+    plugin_manager, util
+
+
+# Data struct representing profile information of a device
+ProfileDeviceInformation = collections.namedtuple(
+    "ProfileDeviceInformation",
+    ["device_id", "name", "containers", "conditions", "merge_axis"]
+)
 
 
 def mode_list(node):
@@ -572,6 +581,276 @@ class ProfileConverter:
             break
 
         return node
+
+
+class ProfileModifier:
+
+    """Modifies profile contents and provides overview information."""
+
+    def __init__(self, profile):
+        """Creates a modifier for a specifc profile.
+
+        :param profile the profile to be modified
+        """
+        self.profile = profile
+
+    def device_information_list(self):
+        """Returns the list of device information present in the profile.
+
+        :return list of devices used in the profile and information about them
+        """
+        device_ids = []
+        for device_id in self.profile.devices:
+            device_ids.append((device_id.hardware_id, device_id.windows_id))
+        for cond in self.all_conditions():
+            if isinstance(cond, base_classes.JoystickCondition):
+                device_ids.append((cond.device_id, cond.windows_id))
+        for entry in self.profile.merge_axes:
+            for key in ["lower", "upper"]:
+                device_ids.append((
+                    entry[key]["hardware_id"], entry[key]["windows_id"]
+                ))
+
+        device_names = self.device_names()
+        device_info = []
+        for devid in set(device_ids):
+            device_info.append(ProfileDeviceInformation(
+                common.DeviceIdentifier(devid[0], devid[1]),
+                device_names[devid[0]],
+                self.container_count(devid),
+                self.condition_count(devid),
+                self.merge_axis_count(devid)
+            ))
+
+        return device_info
+
+    def container_count(self, hid_wid_tuple):
+        """Returns the number of containers associated with a device.
+
+        :param hid_wid_tuple tuple of hardware and windows id
+        :return number of containers associated with the given device
+        """
+        count = 0
+        for device_id, device in self.profile.devices.items():
+            if self._equal_ids(device_id, hid_wid_tuple):
+                for mode in device.modes.values():
+                    for input_items in mode.config.values():
+                        for input_item in input_items.values():
+                            count += len(input_item.containers)
+        return count
+
+    def condition_count(self, hid_wid_tuple):
+        """Returns the number of conditions associated with a device.
+
+        :param hid_wid_tuple tuple of hardware and windows id
+        :return number of conditions associated with the given device
+        """
+        count = 0
+        for cond in self.all_conditions():
+            if (cond.device_id, cond.windows_id) == hid_wid_tuple:
+                count += 1
+        return count
+
+    def merge_axis_count(self, hid_wid_tuple):
+        """Returns the number of merge axes associated with a device.
+
+        :param hid_wid_tuple tuple of hardware and windows id
+        :return number of merge axes associated with the given device
+        """
+        count = 0
+        for entry in self.profile.merge_axes:
+            for key in ["lower", "upper"]:
+                cur_hw_id = (
+                    entry[key]["hardware_id"], entry[key]["windows_id"]
+                )
+                if cur_hw_id == hid_wid_tuple:
+                    count += 1
+        return count
+
+    def change_device_id(self, source_id, target_id):
+        """Performs actions neccessary to move all data from source to target.
+
+        Moves all profile content from a given source device to the desired
+        target device.
+
+        :param source_id identifier of the source device
+        :param target_id identifier of the target device
+        """
+
+        if source_id.hardware_id == target_id.hardware_id and \
+                source_id.windows_id == target_id.windows_id:
+            logging.getLogger("system").warning(
+                "Source and target device are identical"
+            )
+            return
+
+        self.change_device_actions(source_id, target_id)
+        self.change_conditions(source_id, target_id)
+        self.change_merge_axis(source_id, target_id)
+
+
+    def change_device_actions(self, source_id, target_id):
+        """Moves actions from the source device to the target device.
+
+        :param source_id identifier of the source device
+        :param target_id identifier of the target device
+        """
+        source_dev = self._get_device(source_id)
+        target_dev = self._get_device(target_id)
+
+        # Can't move anything from a non-existent source device
+        if source_dev is None:
+            logging.getLogger("system").warning(
+                "Specified a source device that doesn't exist"
+            )
+            return
+
+        # Retrieve target device information structure to get its name and
+        # properly initialize modes if needed
+        target_hardware_device = None
+        for dev in joystick_handling.joystick_devices():
+            if util.get_device_identifier(dev) == target_id:
+                target_hardware_device = dev
+
+        # If there is no target device we can turn the source device into the
+        # target device
+        if target_dev is None:
+            if target_hardware_device is None:
+                logging.getLogger("system").warning(
+                    "Target device which is not present specified"
+                )
+                return
+            source_dev.hardware_id = target_id.hardware_id
+            source_dev.windows_id = target_id.windows_id
+            source_dev.name = target_hardware_device.name
+            return
+
+        # Ensure modes present in the source device exist in the target device
+        for mode_name in source_dev.modes:
+            target_dev.ensure_mode_exists(mode_name, target_hardware_device)
+
+        # Move container entries from source to target as long as there is a
+        # matching input item available
+        for mode in source_dev.modes.values():
+            target_mode = target_dev.modes[mode.name]
+            for input_items in mode.config.values():
+                for input_item in input_items.values():
+                    input_type = input_item.input_type
+                    input_id = input_item.input_id
+
+                    if input_id not in target_mode.config[input_type]:
+                        logging.getLogger("system").warn(
+                            "Source input id not present in target device"
+                        )
+                        continue
+
+                    # Move containers from source to target input item
+                    target_input_item = target_mode.config[input_type][input_id]
+
+                    for container in input_item.containers:
+                        container.parent = target_input_item
+                        target_mode.config[input_type] \
+                            [input_id].containers.append(container)
+
+                    # Remove all containers from the source device
+                    input_item.containers = []
+
+    def change_conditions(self, source_id, target_id):
+        """Modifies conditions to use the target device instead of the
+        source device.
+
+        :param source_id identifier of the source device
+        :param target_id identifier of the target device
+        """
+        # TODO: Does not ensure conditions are valid, i.e. missing inputs
+        target_hardware_device = None
+        for dev in joystick_handling.joystick_devices():
+            if util.get_device_identifier(dev) == target_id:
+                target_hardware_device = dev
+
+        for condition in self.all_conditions():
+            if isinstance(condition, base_classes.JoystickCondition):
+                if condition.device_id == source_id.hardware_id and \
+                        condition.windows_id == source_id.windows_id:
+                    condition.device_id = target_id.hardware_id
+                    condition.windows_id = target_id.windows_id
+                    condition.device_name = target_hardware_device.name
+
+    def change_merge_axis(self, source_id, target_id):
+        """Modifies merge axis entries to use the target device instead of the
+        source device.
+
+        :param source_id identifier of the source device
+        :param target_id identifier of the target device
+        """
+        # TODO: Does not ensure assignemts are valid, i.e. missing axis
+        for entry in self.profile.merge_axes:
+            for key in ["lower", "upper"]:
+                if entry[key]["hardware_id"] == source_id.hardware_id and \
+                        entry[key]["windows_id"] == source_id.windows_id:
+                    entry[key]["hardware_id"] = target_id.hardware_id
+                    entry[key]["windows_id"] = target_id.windows_id
+
+    def device_names(self):
+        """Returns a mapping from hardware ids to device names.
+
+        :return mapping of hardware ids to device names
+        """
+        name_map = {}
+        for device in self.profile.devices.values():
+            name_map[device.hardware_id] = device.name
+        for cond in self.all_conditions():
+            if isinstance(cond, base_classes.JoystickCondition):
+                name_map[cond.device_id] = cond.device_name
+        return name_map
+
+    def all_conditions(self):
+        """Returns a list of all conditions.
+
+        :return list of all conditions
+        """
+        all_conditions = []
+        for device in self.profile.devices.values():
+            for mode in device.modes.values():
+                for input_items in mode.config.values():
+                    for input_item in input_items.values():
+                        for container in input_item.containers:
+                            if container.activation_condition is not None:
+                                all_conditions.extend(
+                                    container.activation_condition.conditions
+                                )
+        return all_conditions
+
+    def _get_device(self, device_id):
+        """Returns the device corresponding to a given identifier.
+
+        :return device matching the identifier if present
+        """
+        for devid, device in self.profile.devices.items():
+            if devid.hardware_id == device_id.hardware_id and \
+                    devid.windows_id == device_id.windows_id:
+                return device
+        return None
+
+    def _equal_ids(self, device_id, hid_wid_tuple):
+        """Returns whether two device identifications are identical.
+
+        This requires the first parameter to be a DeviceIdentifier intance and
+        the second one a tuple of hardware and windows id. This is needed as
+        DeviceIdentifier equality copmarison takes device duplition into
+        account while we want to always differentiate based on windows id.
+
+        :param device_id DeviceIdentifier instance
+        :param hid_wid_tuple tuple of hardware id and windows id
+        :return True if hardware and windows id both match, False otherwise
+        """
+        assert isinstance(device_id, common.DeviceIdentifier),\
+            "Requires DeviceIdentifier instance"
+        assert isinstance(hid_wid_tuple, tuple) and len(hid_wid_tuple) == 2, \
+            "Tuple of length 2 needed"
+
+        return device_id.hardware_id == hid_wid_tuple[0] and \
+            device_id.windows_id == hid_wid_tuple[1]
 
 
 class Settings:
