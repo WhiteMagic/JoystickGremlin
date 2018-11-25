@@ -1098,7 +1098,6 @@ class Profile:
 
         tree = ElementTree.parse(fname)
         root = tree.getroot()
-        self.update_windows_ids(root)
 
         # Parse each device into separate DeviceConfiguration objects
         for child in root.iter("device"):
@@ -1156,6 +1155,8 @@ class Profile:
 
         # Parse settings entries
         self.settings.from_xml(root.find("settings"))
+
+        self._update_windows_ids()
 
     def to_xml(self, fname):
         """Generates XML code corresponding to this profile.
@@ -1289,40 +1290,36 @@ class Profile:
 
         return is_empty
 
-    def update_windows_ids(self, root):
-        dev_reg = common.DeviceRegistry()
-        device_map = {}
+    def _update_windows_ids(self):
+        """Updates the windows ids of profile entries for the current setup.
 
-        # Fix device nodes
-        for node in root.findall("./devices/device"):
-            hid = safe_read(node, "id", int, -1)
-            wid = safe_read(node, "windows_id", int, -1)
+        This will update devices which have matched hardware id but mismatched
+        windows id to consolidate the settings associated with those devices
+        into a single physical one.
+
+        No action will be taken on devices which have multiple identical
+        devices connected as no clear associations are possible.
+        """
+        # TODO: This will not update macros, however, these are much messier
+        #       and as such will be left unchanged until windows and hardware
+        #       ids are fully replaced.
+        dev_reg = common.DeviceRegistry()
+        profile_modifier = ProfileModifier(self)
+
+        # Check each device found and attempt to find a unique connected
+        # device and if present attempt reassinging the profile data to the
+        # connected device.
+        for device in profile_modifier.device_information_list():
+            hid = device.device_id.hardware_id
+            wid = device.device_id.windows_id
 
             windows_ids = dev_reg.by_hardware_id(hid)
-            if len(windows_ids) == 1:
-                device_map[hid] = wid
-                if wid not in windows_ids:
-                    node.set("windows_id", windows_ids[0])
-
-        # Fix condition nodes
-        for node in root.findall(".//condition"):
-            hid = safe_read(node, "device_id", int, -1)
-            wid = safe_read(node, "windows_id", int, -1)
-
-            if hid in device_map and wid != device_map[hid]:
-                node.set("windows_id", device_map[hid])
-
-        # Fix axis merging
-        for node in root.findall(".//merge-axis"):
-            for child in [n for n in node if n.tag in ["lower", "upper"]]:
-                hid = safe_read(child, "id", int, -1)
-                wid = safe_read(child, "windows_id", int, -1)
-                if hid in device_map and wid != device_map[hid]:
-                    child.set("windows_id", device_map[hid])
-
-        # Fix macros
-        # TODO: Leave these broken until we get rid of windows and hardware id
-        #       alltogether
+            # Unique device but mismatched windows id, fix this up
+            if len(windows_ids) == 1 and wid not in windows_ids:
+                profile_modifier.change_device_id(
+                    device.device_id,
+                    common.DeviceIdentifier(hid, windows_ids[0])
+                )
 
     def _parse_merge_axis(self, node):
         """Parses merge axis entries.
