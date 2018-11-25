@@ -18,7 +18,6 @@
 import os
 import subprocess
 import sys
-import winreg
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -1146,101 +1145,89 @@ class SwapDevicesUi(common.BaseDialogUi):
         """
         super().__init__(parent)
 
-        self.devices = gremlin.joystick_handling.joystick_devices()
         self.profile = profile
 
+        # Create UI elements
         self.setWindowTitle("Swap Devices")
         self.main_layout = QtWidgets.QVBoxLayout(self)
-
         self._create_swap_ui()
 
     def _create_swap_ui(self):
         """Displays possible groups of swappable devices."""
         common.clear_layout(self.main_layout)
 
-        # Generate list of duplicate device instances
-        device_groups = {}
-        for dev in [dev for dev in self.devices if not dev.is_virtual]:
-            if dev.hardware_id not in device_groups:
-                device_groups[dev.hardware_id] = []
-            device_groups[dev.hardware_id].append(dev)
+        profile_modifier = gremlin.profile.ProfileModifier(self.profile)
+        device_list = profile_modifier.device_information_list()
 
-        duplicate_devices = []
-        for key, value in device_groups.items():
-            if len(value) > 1:
-                duplicate_devices.append(value)
+        device_layout = QtWidgets.QGridLayout()
+        for i, data in enumerate(device_list):
+            # Ignore the keyboard
+            if data.device_id.hardware_id == 0:
+                continue
 
-        # Create groups for each device
-        for group in duplicate_devices:
-            widget = QtWidgets.QGroupBox(group[0].name)
+            # Ignore devices with no remappable entries
+            if (data.containers + data.conditions + data.merge_axis) == 0:
+                continue
 
-            group_layout = QtWidgets.QGridLayout()
-            profile_data = self._profile_data(group[0].hardware_id)
-            for i, entry in enumerate(profile_data):
-                group_layout.addWidget(QtWidgets.QLabel(entry.label), i, 0)
 
-                record_button = QtWidgets.QPushButton(
-                    "Assigned Device: {:d}".format(entry.windows_id)
+            # UI elements for this devic
+            name = QtWidgets.QLabel(data.name)
+            name.setAlignment(QtCore.Qt.AlignTop)
+            labels = QtWidgets.QLabel("Containers\nConditions\nMerge Axis")
+            counts = QtWidgets.QLabel("{:d}\n{:d}\n{:d}".format(
+                data.containers, data.conditions, data.merge_axis
+            ))
+            counts.setAlignment(QtCore.Qt.AlignRight)
+            record_button = QtWidgets.QPushButton(
+                "Assigned to: {:d} - {:}".format(
+                    data.device_id.windows_id, data.name
                 )
-                record_button.clicked.connect(
-                    self._create_request_user_input_cb(
-                        group[0].hardware_id,
-                        entry
-                    )
-                )
-                group_layout.addWidget(record_button, i, 1)
-            widget.setLayout(group_layout)
-            self.main_layout.addWidget(widget)
-            self.main_layout.addStretch()
+            )
+            record_button.clicked.connect(
+                self._create_request_user_input_cb(data.device_id)
+            )
 
-    def _create_request_user_input_cb(self, hardware_id, device_profile):
-        """Creates the callback allowing user to press a button to select a device.
+            # Combine labels and counts into it's own layout
+            layout = QtWidgets.QHBoxLayout()
+            layout.addWidget(labels)
+            layout.addWidget(counts)
+            layout.addStretch()
 
-        :param hardware_id the hardware_id of the device we're interested in
-        :param device_profile the profile data of the device of interest
+            # Put everything together
+            device_layout.addWidget(name, i, 0)
+            device_layout.addLayout(layout, i, 1)
+            device_layout.addWidget(record_button, i, 2, QtCore.Qt.AlignTop)
+
+        self.main_layout.addLayout(device_layout)
+        self.main_layout.addStretch()
+
+    def _create_request_user_input_cb(self, device_id):
+        """Creates the callback handling user device selection.
+
+        :param device_id idenfication of the associated device
         :return callback function for user input selection handling
         """
-        def filter_function(event):
-            return event.hardware_id == hardware_id
-
         return lambda: self._request_user_input(
-            filter_function,
-            lambda event: self._user_input_cb(event, device_profile)
+            lambda event: self._user_input_cb(event, device_id)
         )
 
-    def _user_input_cb(self, event, device_profile):
+    def _user_input_cb(self, event, device_id):
         """Processes input events to update the UI and model.
 
         :param event the input event to process
-        :param device_profile the profile data of the current device
+        :param device_id identifier of the selected device
         """
-        # No change, nothing else to do
-        if device_profile.windows_id == event.windows_id:
-            return
+        profile_modifier = gremlin.profile.ProfileModifier(self.profile)
+        profile_modifier.change_device_id(
+            device_id,
+            gremlin.util.get_device_identifier(event)
+        )
 
-        # Find the device with which we can swap
-        device_1 = device_profile
-        device_2 = None
-        for key, device in self.profile.devices.items():
-            if key == (event.hardware_id, event.windows_id) \
-                    and device != device_1:
-                device_2 = device
-        key_1 = gremlin.util.get_device_identifier(device_1)
-        key_2 = gremlin.util.get_device_identifier(device_2)
-
-        # Swap profile data and entries
-        device_1.windows_id, device_2.windows_id = \
-            device_2.windows_id, device_1.windows_id
-        self.profile.devices[key_1], self.profile.devices[key_2] = \
-            self.profile.devices[key_2], self.profile.devices[key_1]
-
-        # Update the UI
         self._create_swap_ui()
 
-    def _request_user_input(self, filter_func, callback):
+    def _request_user_input(self, callback):
         """Prompts the user for the input to bind to this item.
 
-        :param filter_func function filtering out undesired inputs
         :param callback function to call with the accepted input
         """
         self.input_dialog = common.InputListenerWidget(
@@ -1251,8 +1238,7 @@ class SwapDevicesUi(common.BaseDialogUi):
                 gremlin.common.InputType.JoystickHat
             ],
             return_kb_event=False,
-            multi_keys=False,
-            filter_func=filter_func
+            multi_keys=False
         )
 
         # Display the dialog centered in the middle of the UI
@@ -1268,15 +1254,3 @@ class SwapDevicesUi(common.BaseDialogUi):
             150
         )
         self.input_dialog.show()
-
-    def _profile_data(self, hardware_id):
-        """Returns the profile data for the given hardware id.
-
-        :param hardware_id hardware id for which to retrieve profile data
-        :return profile data corresponding to the given hardware id
-        """
-        data = []
-        for dev in self.profile.devices.values():
-            if dev.hardware_id == hardware_id:
-                data.append(dev)
-        return data
