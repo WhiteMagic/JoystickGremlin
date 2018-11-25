@@ -387,12 +387,13 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             item.widget().deleteLater()
         self.main_layout.removeItem(item)
 
-        widget = InputItemConfiguration(item_data)
-        change_cb = self._create_change_cb(index)
-        widget.action_model.data_changed.connect(change_cb)
-        widget.description_changed.connect(change_cb)
+        if item_data is not None:
+            widget = InputItemConfiguration(item_data)
+            change_cb = self._create_change_cb(index)
+            widget.action_model.data_changed.connect(change_cb)
+            widget.description_changed.connect(change_cb)
 
-        self.main_layout.addWidget(widget)
+            self.main_layout.addWidget(widget)
 
     def mode_changed_cb(self, mode):
         """Handles mode change.
