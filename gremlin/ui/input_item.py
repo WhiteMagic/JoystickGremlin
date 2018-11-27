@@ -267,6 +267,7 @@ class InputItemListView(common.AbstractView):
 
         # Go through all entries in the layout, deselecting those that are
         # actual widgets and selecting the previously selected one
+        valid_index = False
         for i in range(self.scroll_layout.count()):
             item = self.scroll_layout.itemAt(i)
             if item.widget():
@@ -276,8 +277,9 @@ class InputItemListView(common.AbstractView):
                     palette.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
                     item.widget().setAutoFillBackground(True)
                     item.widget().setPalette(palette)
+                    valid_index = True
 
-        if emit_signal:
+        if emit_signal and valid_index:
             self.item_selected.emit(index)
 
 
