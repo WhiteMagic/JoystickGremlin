@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
 import math
 import threading
 import time
@@ -29,14 +30,14 @@ from gremlin.common import InputType
 from gremlin.error import GremlinError
 from gremlin.input_devices import ButtonReleaseActions
 from gremlin.sendinput import mouse_relative_motion
-from gremlin.profile import safe_read
+from gremlin.profile import read_bool, safe_read, safe_format
 import gremlin.ui.common
 import gremlin.ui.input_item
 
 
 class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
 
-    """UI widget for mapping inputs to keyboard key combinations."""
+    """UI widget for mapping inputs to mouse motion or buttons."""
 
     def __init__(self, action_data, parent=None):
         """Creates a new instance.
@@ -44,48 +45,75 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         :param action_data the data managed by this widget
         :param parent the parent of this widget
         """
-        super().__init__(action_data, QtWidgets.QGridLayout, parent=parent)
+        super().__init__(action_data, QtWidgets.QVBoxLayout, parent=parent)
 
     def _create_ui(self):
         """Creates the UI components."""
+        # Layouts to use
+        self.mode_layout = QtWidgets.QHBoxLayout()
+
+        self.button_widget = QtWidgets.QWidget()
+        self.button_layout = QtWidgets.QGridLayout(self.button_widget)
+        self.motion_widget = QtWidgets.QWidget()
+        self.motion_layout = QtWidgets.QGridLayout(self.motion_widget)
+
+        self.main_layout.addLayout(self.mode_layout)
+        self.main_layout.addWidget(self.button_widget)
+        self.main_layout.addWidget(self.motion_widget)
+
+        self.button_group = QtWidgets.QButtonGroup()
+        self.button_radio = QtWidgets.QRadioButton("Button")
+        self.motion_radio = QtWidgets.QRadioButton("Motion")
+        self.button_group.addButton(self.button_radio)
+        self.button_group.addButton(self.motion_radio)
+        self.mode_layout.addWidget(self.button_radio)
+        self.mode_layout.addWidget(self.motion_radio)
+        self.button_radio.clicked.connect(self._change_mode)
+        self.motion_radio.clicked.connect(self._change_mode)
+
+        self.button_widget.hide()
+        self.motion_widget.hide()
+
+        # Create the different UI elements
+        self._create_mouse_button_ui()
+        input_type = self.action_data.get_input_type()
         if self.action_data.get_input_type() == InputType.JoystickAxis:
             self._create_axis_ui()
-        elif self.action_data.get_input_type() == InputType.JoystickHat:
-            self._create_hat_ui()
+        else:
+            self._create_button_hat_ui()
 
     def _create_axis_ui(self):
         """Creates the UI for axis setups."""
-        self.axis_layout = QtWidgets.QHBoxLayout()
         self.x_axis = QtWidgets.QRadioButton("X Axis")
         self.x_axis.setChecked(True)
         self.y_axis = QtWidgets.QRadioButton("Y Axis")
 
-        self.main_layout.addWidget(
+        self.motion_layout.addWidget(
             QtWidgets.QLabel("Control"),
             0,
             0,
             QtCore.Qt.AlignLeft
         )
-        self.main_layout.addWidget(self.x_axis, 0, 1, QtCore.Qt.AlignLeft)
-        self.main_layout.addWidget(self.y_axis, 0, 2, 1, 2, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(self.x_axis, 0, 1, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(self.y_axis, 0, 2, 1, 2, QtCore.Qt.AlignLeft)
 
         self.min_speed = QtWidgets.QSpinBox()
         self.min_speed.setRange(0, 1e5)
         self.max_speed = QtWidgets.QSpinBox()
         self.max_speed.setRange(0, 1e5)
-        self.main_layout.addWidget(
+        self.motion_layout.addWidget(
             QtWidgets.QLabel("Minimum speed"), 1, 0, QtCore.Qt.AlignLeft
         )
-        self.main_layout.addWidget(self.min_speed, 1, 1, QtCore.Qt.AlignLeft)
-        self.main_layout.addWidget(
+        self.motion_layout.addWidget(self.min_speed, 1, 1, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(
             QtWidgets.QLabel("Maximum speed"), 1, 2, QtCore.Qt.AlignLeft
         )
-        self.main_layout.addWidget(self.max_speed, 1, 3, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(self.max_speed, 1, 3, QtCore.Qt.AlignLeft)
 
         self._connect_axis()
 
-    def _create_hat_ui(self):
-        """Creates the UI for hat setups."""
+    def _create_button_hat_ui(self):
+        """Creates the UI for button setups."""
         self.min_speed = QtWidgets.QSpinBox()
         self.min_speed.setRange(0, 1e5)
         self.max_speed = QtWidgets.QSpinBox()
@@ -95,27 +123,49 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.acceleration.setValue(0.0)
         self.acceleration.setDecimals(2)
         self.acceleration.setSingleStep(0.1)
+        self.direction = QtWidgets.QSpinBox()
+        self.direction.setRange(0, 359)
 
-        self.main_layout.addWidget(QtWidgets.QLabel("Minimum speed"), 0, 0)
-        self.main_layout.addWidget(self.min_speed, 0, 1, QtCore.Qt.AlignLeft)
-        self.main_layout.addWidget(QtWidgets.QLabel("Maximum speed"), 0, 2)
-        self.main_layout.addWidget(self.max_speed, 0, 3, QtCore.Qt.AlignLeft)
-        self.main_layout.addWidget(QtWidgets.QLabel("Acceleration"), 0, 4)
-        self.main_layout.addWidget(self.acceleration, 0, 5, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(QtWidgets.QLabel("Minimum speed"), 0, 0)
+        self.motion_layout.addWidget(self.min_speed, 0, 1, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(QtWidgets.QLabel("Maximum speed"), 0, 2)
+        self.motion_layout.addWidget(self.max_speed, 0, 3, QtCore.Qt.AlignLeft)
 
-        self._connect_hat()
+        self.motion_layout.addWidget(QtWidgets.QLabel("Acceleration"), 1, 0)
+        self.motion_layout.addWidget(self.acceleration, 1, 1, QtCore.Qt.AlignLeft)
+        if self.action_data.get_input_type() in [
+            InputType.JoystickButton, InputType.Keyboard
+        ]:
+            self.motion_layout.addWidget(QtWidgets.QLabel("Direction"), 1, 2)
+            self.motion_layout.addWidget(self.direction, 1, 3, QtCore.Qt.AlignLeft)
+
+        self._connect_button_hat()
+
+    def _create_mouse_button_ui(self):
+        self.mouse_button = gremlin.ui.common.NoKeyboardPushButton(
+            gremlin.common.MouseButton.to_string(self.action_data.button_id)
+        )
+        self.mouse_button.clicked.connect(self._request_user_input)
+
+        self.button_layout.addWidget(QtWidgets.QLabel("Mouse Button"), 0, 0)
+        self.button_layout.addWidget(self.mouse_button, 0, 1)
 
     def _populate_ui(self):
         """Populates the UI components."""
         if self.action_data.get_input_type() == InputType.JoystickAxis:
             self._populate_axis_ui()
-        elif self.action_data.get_input_type() == InputType.JoystickHat:
-            self._populate_hat_ui()
+        else:
+            self._populate_button_hat_ui()
+        self._populate_mouse_button_ui()
+
+        self.motion_radio.setChecked(self.action_data.motion_input)
+        self.button_radio.setChecked(not self.action_data.motion_input)
+        self._change_mode()
 
     def _populate_axis_ui(self):
         """Populates axis UI elements with data."""
         self._disconnect_axis()
-        if self.action_data.axis == "x":
+        if self.action_data.direction == 90:
             self.x_axis.setChecked(True)
         else:
             self.y_axis.setChecked(True)
@@ -124,13 +174,19 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.max_speed.setValue(self.action_data.max_speed)
         self._connect_axis()
 
-    def _populate_hat_ui(self):
-        """Populates hat UI elements with data."""
-        self._disconnect_hat()
+    def _populate_button_hat_ui(self):
+        """Populates button UI elements with data."""
+        self._disconnect_button_hat()
         self.min_speed.setValue(self.action_data.min_speed)
         self.max_speed.setValue(self.action_data.max_speed)
         self.acceleration.setValue(self.action_data.acceleration)
-        self._connect_hat()
+        self.direction.setValue(self.action_data.direction)
+        self._connect_button_hat()
+
+    def _populate_mouse_button_ui(self):
+        self.mouse_button.setText(
+            gremlin.common.MouseButton.to_string(self.action_data.button_id)
+        )
 
     def _update_axis(self):
         """Updates the axis data with UI information."""
@@ -149,15 +205,15 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.min_speed.setValue(min_speed)
         self.max_speed.setValue(max_speed)
 
-        self.action_data.axis = "x" if self.x_axis.isChecked() else "y"
+        self.action_data.direction = 90 if self.x_axis.isChecked() else 0
         self.action_data.min_speed = min_speed
         self.action_data.max_speed = max_speed
 
         self._connect_axis()
 
-    def _update_hat(self):
-        """Updates the hat data with UI information."""
-        self._disconnect_hat()
+    def _update_button_hat(self):
+        """Updates the button data with UI information."""
+        self._disconnect_button_hat()
 
         # Update speed values
         min_speed = self.min_speed.value()
@@ -175,34 +231,75 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_data.min_speed = min_speed
         self.action_data.max_speed = max_speed
         self.action_data.acceleration = self.acceleration.value()
+        self.action_data.direction = self.direction.value()
 
-        self._connect_hat()
+        self._connect_button_hat()
+
+    def _update_mouse_button(self, event):
+        self.action_data.button_id = event.identifier
+        self.mouse_button.setText(
+            gremlin.common.MouseButton.to_string(self.action_data.button_id)
+        )
 
     def _connect_axis(self):
-        """Connects all axis input element to their callbacks."""
+        """Connects all axis input elements to their callbacks."""
         self.x_axis.toggled.connect(self._update_axis)
         self.y_axis.toggled.connect(self._update_axis)
         self.min_speed.valueChanged.connect(self._update_axis)
         self.max_speed.valueChanged.connect(self._update_axis)
 
     def _disconnect_axis(self):
-        """Disconnects all axis input element from their callbacks."""
+        """Disconnects all axis input elements from their callbacks."""
         self.x_axis.toggled.disconnect(self._update_axis)
         self.y_axis.toggled.disconnect(self._update_axis)
         self.min_speed.valueChanged.disconnect(self._update_axis)
         self.max_speed.valueChanged.disconnect(self._update_axis)
 
-    def _connect_hat(self):
-        """Connects all hat input elements to their callbacks."""
-        self.min_speed.valueChanged.connect(self._update_hat)
-        self.max_speed.valueChanged.connect(self._update_hat)
-        self.acceleration.valueChanged.connect(self._update_hat)
+    def _connect_button_hat(self):
+        """Connects all button input elements to their callbacks."""
+        self.min_speed.valueChanged.connect(self._update_button_hat)
+        self.max_speed.valueChanged.connect(self._update_button_hat)
+        self.acceleration.valueChanged.connect(self._update_button_hat)
+        self.direction.valueChanged.connect(self._update_button_hat)
 
-    def _disconnect_hat(self):
-        """Disconnects all hat input elements from their callbacks."""
-        self.min_speed.valueChanged.disconnect(self._update_hat)
-        self.max_speed.valueChanged.disconnect(self._update_hat)
-        self.acceleration.valueChanged.disconnect(self._update_hat)
+    def _disconnect_button_hat(self):
+        """Disconnects all button input elements to their callbacks."""
+        self.min_speed.valueChanged.disconnect(self._update_button_hat)
+        self.max_speed.valueChanged.disconnect(self._update_button_hat)
+        self.acceleration.valueChanged.disconnect(self._update_button_hat)
+        self.direction.valueChanged.disconnect(self._update_button_hat)
+
+    def _change_mode(self):
+        self.action_data.motion_input = self.motion_radio.isChecked()
+        if self.action_data.motion_input:
+            self.button_widget.hide()
+            self.motion_widget.show()
+        else:
+            self.button_widget.show()
+            self.motion_widget.hide()
+        # TODO: trigger ui redoo thingy
+
+    def _request_user_input(self):
+        """Prompts the user for the input to bind to this item."""
+        self.button_press_dialog = gremlin.ui.common.InputListenerWidget(
+            self._update_mouse_button,
+            [InputType.Mouse],
+            return_kb_event=False
+        )
+
+        # Display the dialog centered in the middle of the UI
+        root = self
+        while root.parent():
+            root = root.parent()
+        geom = root.geometry()
+
+        self.button_press_dialog.setGeometry(
+            geom.x() + geom.width() / 2 - 150,
+            geom.y() + geom.height() / 2 - 75,
+            300,
+            150
+        )
+        self.button_press_dialog.show()
 
 
 class MapToMouseFunctor(AbstractFunctor):
@@ -221,41 +318,54 @@ class MapToMouseFunctor(AbstractFunctor):
         """
         super().__init__(action)
 
-        self.axis = action.axis
+        self.motion_input = action.motion_input
+        self.button_id = action.button_id
         self.min_speed = action.min_speed
         self.max_speed = action.max_speed
         self.acceleration = action.acceleration
+        self.direction = action.direction
 
         self.mouse_controller = gremlin.sendinput.MouseController()
 
-        if action.get_input_type() == InputType.JoystickAxis:
-            self.process_event = lambda x, y: self._process_axis_event(x, y)
-        elif action.get_input_type() == InputType.JoystickHat:
-            self.process_event = lambda x, y: self._process_hat_event(x, y)
-
     def process_event(self, event, value):
-        raise GremlinError(
-            "MapToMouseFunctor.process_event should never be called"
-        )
+        if self.motion_input:
+            if event.event_type == InputType.JoystickAxis:
+                self._perform_axis_motion(event, value)
+            elif event.event_type == InputType.JoystickHat:
+                self._perform_hat_motion(event, value)
+            else:
+                self._perform_button_motion(event, value)
+        else:
+            self._perform_mouse_button(event, value)
 
-    def _process_axis_event(self, event, value):
+    def _perform_mouse_button(self, event, value):
+        pass
+
+    def _perform_axis_motion(self, event, value):
         """Processes events destined for an axis.
 
         :param event the event triggering the code executiong
         :param value the current value of the event chain
         """
-        delta_motion = round(
-            self.min_speed + abs(value.current) * (self.max_speed - self.min_speed)
-        )
+        delta_motion = self.min_speed + abs(value.current) * \
+                       (self.max_speed - self.min_speed)
         delta_motion = math.copysign(delta_motion, value.current)
         delta_motion = 0.0 if abs(value.current) < 0.05 else delta_motion
 
-        if self.axis == "x":
+        if self.direction == 90:
             self.mouse_controller.dx = delta_motion
         else:
             self.mouse_controller.dy = delta_motion
 
-    def _process_hat_event(self, event, value):
+    def _perform_button_motion(self, event, value):
+        self.mouse_controller.acceleration = self.acceleration
+        self.mouse_controller.max_speed = self.max_speed
+
+        rad = gremlin.util.deg2rad(self.direction)
+        self.mouse_controller.dx = math.sin(rad) * self.min_speed
+        self.mouse_controller.dy = math.cos(rad) * self.min_speed
+
+    def _perform_hat_motion(self, event, value):
         """Processes events destined for a hat.
 
         :param event the event triggering the code executiong
@@ -272,7 +382,7 @@ class MapToMouseFunctor(AbstractFunctor):
             self.mouse_controller.dy = 0
 
 
-class MapToKeyboard(AbstractAction):
+class MapToMouse(AbstractAction):
 
     """Action data for the map to mouse action.
 
@@ -286,6 +396,7 @@ class MapToKeyboard(AbstractAction):
     default_button_activation = (True, True)
     input_types = [
         InputType.JoystickAxis,
+        InputType.JoystickButton,
         InputType.JoystickHat,
     ]
 
@@ -300,12 +411,21 @@ class MapToKeyboard(AbstractAction):
         super().__init__(parent)
         assert self.get_input_type() in [
             InputType.JoystickAxis,
+            InputType.JoystickButton,
             InputType.JoystickHat
         ]
 
-        self.axis = None
+        # Flag whether or not this is mouse motion or button press
+        self.motion_input = False
+        # Mouse button enum
+        self.button_id = gremlin.common.MouseButton.Left
+        # Angle of motion, 0 is up and 90 is right, etc.
+        self.direction = 0
+        # Minimum motion speed in pixels / sec
         self.min_speed = 5
+        # Maximum motion speed in pixels / sec
         self.max_speed = 15
+        # Acceleration in pixels / sec^2
         self.acceleration = 1.0
 
     def icon(self):
@@ -321,6 +441,9 @@ class MapToKeyboard(AbstractAction):
         :return True if an activation condition is required for this particular
             action instance, False otherwise
         """
+        # Need virtual buttons for button inputs on axes and hats
+        if self.get_input_type() in [InputType.JoystickAxis, InputType.JoystickHat]:
+            return not self.motion_input
         return False
 
     def _parse_xml(self, node):
@@ -329,7 +452,17 @@ class MapToKeyboard(AbstractAction):
         :param node the node whose content should be used to populate this
             instance
         """
-        self.axis = safe_read(node, "axis", default_value="x")
+        self.motion_input = read_bool(node, "motion_input", False)
+        try:
+            self.button_id = gremlin.common.MouseButton(
+                safe_read(node, "button_id", int, 1)
+            )
+        except ValueError as e:
+            logging.getLogger("system").warn(
+                "Invalid mouse identifier in profile: {:}".format(e)
+            )
+            self.button_id = gremlin.common.MouseButton.Left
+        self.direction = safe_read(node, "direction", int, 0)
         self.min_speed = safe_read(node, "min-speed", int, 5)
         self.max_speed = safe_read(node, "max-speed", int, 5)
         self.acceleration = safe_read(node, "acceleration", float, 0.0)
@@ -340,14 +473,14 @@ class MapToKeyboard(AbstractAction):
         :return XML node containing the information of this  instance
         """
         node = ElementTree.Element("map-to-mouse")
-        if self.get_input_type() == InputType.JoystickAxis:
-            node.set("axis", str(self.axis))
-            node.set("min-speed", str(self.min_speed))
-            node.set("max-speed", str(self.max_speed))
-        elif self.get_input_type() == InputType.JoystickHat:
-            node.set("min-speed", str(self.min_speed))
-            node.set("max-speed", str(self.max_speed))
-            node.set("acceleration", str(self.acceleration))
+
+        node.set("motion_input", safe_format(self.motion_input, bool))
+        node.set("button_id", safe_format(self.button_id.value, int))
+        node.set("direction", safe_format(self.direction, int))
+        node.set("min-speed", safe_format(self.min_speed, int))
+        node.set("max-speed", safe_format(self.max_speed, int))
+        node.set("acceleration", safe_format(self.acceleration, float))
+
         return node
 
     def _is_valid(self):
@@ -360,4 +493,4 @@ class MapToKeyboard(AbstractAction):
 
 version = 1
 name = "map-to-mouse"
-create = MapToKeyboard
+create = MapToMouse

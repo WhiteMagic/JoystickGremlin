@@ -18,7 +18,6 @@
 
 import ctypes
 import ctypes.wintypes
-import enum
 import math
 import threading
 import time
@@ -64,51 +63,90 @@ class MouseController:
 
     def __init__(self):
         """Creates a new instance."""
+        self._direction = 0
+        self._min_velocity = 0
+        self._max_velocity = 0
+        self._time_to_max = 0.0
+        self._dx = 0
+        self._dy = 0
+
+        self._last_start_time = time.time()
+
         self._delta_x = 0
         self._delta_y = 0
-        self._acceleration = 0.0
-        self._max_speed = 0
-        self._last_start_time = time.time()
+        self._dx_time_inc = 0
+        self._dy_time_inc = 0
+        self._next_dx_update = 0
+        self._next_dy_update = 0
 
         self._is_running = False
         self._thread = threading.Thread(target=self._control_loop)
 
+    def set_accelerated_motion(self, direction, min_speed, max_speed, time_to_max):
+        self._direction = direction
+        self._min_velocity = min_speed
+        self._max_velocity = max_speed
+        self._time_to_max = time_to_max
+
+    # @property
+    # def dx(self):
+    #     return self._delta_x
+    #
+    # @dx.setter
+    # def dx(self, value):
+    #     self._delta_x = value
+    #     self._min_velocity = 0
+    #     self._max_velocity = 0
+    #     self._time_to_max = 0
+    #     self._last_start_time = time.time()
+    #     self._delta_x = math.ceil(abs(value) / 100.0)
+    #     if self._delta_x == 0:
+    #         self._dx_time_inc = 0.01
+    #     else:
+    #         self._dx_time_inc = 1.0 / (abs(value) / self._delta_x)
+    #         self._delta_x = int(math.copysign(self._delta_x, value))
+    #
+    # @property
+    # def dy(self):
+    #     return self._delta_y
+    #
+    # @dy.setter
+    # def dy(self, value):
+    #     self._last_start_time = time.time()
+    #     self._delta_y = math.ceil(abs(value) / 100.0)
+    #     if self._delta_y == 0:
+    #         self._dy_time_inc = 0.01
+    #     else:
+    #         self._dy_time_inc = 1.0 / (abs(value) / self._delta_y)
+    #         self._delta_y = int(math.copysign(self._delta_y, value))
+
     @property
-    def acceleration(self):
-        return self._acceleration
+    def min_velocity(self):
+        return self._min_velocity
 
-    @acceleration.setter
-    def acceleration(self, value):
-        self._acceleration = float(value)
-
-    @property
-    def dx(self):
-        return self._delta_x
-
-    @dx.setter
-    def dx(self, value):
-        self._last_start_time = time.time()
-        self._delta_x = int(value)
+    @min_velocity.setter
+    def min_velocity(self, value):
+        self._min_velocity = int(value)
 
     @property
-    def dy(self):
-        return self._delta_y
+    def max_velocity(self):
+        return self._max_velocity
 
-    @dy.setter
-    def dy(self, value):
-        self._last_start_time = time.time()
-        self._delta_y = int(value)
+    @max_velocity.setter
+    def max_velocity(self, value):
+        self._max_velocity = int(value)
 
     @property
-    def max_speed(self):
-        return self._max_speed
+    def time_to_max(self):
+        return self._time_to_max
 
-    @max_speed.setter
-    def max_speed(self, value):
-        self._max_speed = int(value)
+    @time_to_max.setter
+    def time_to_max(self, value):
+        self._time_to_max = float(value)
 
     def start(self):
         """Starts the thread that will send motions when required."""
+        self._last_start_time = time.time()
         if not self._is_running:
             self._thread = threading.Thread(target=self._control_loop)
             self._thread.start()
@@ -122,27 +160,46 @@ class MouseController:
     def _control_loop(self):
         """Loop responsible for creating and sending mouse motion events."""
         self._is_running = True
+
         while self._is_running:
             # Only send motion events if they are non zero
-            if self._delta_x == 0 and self._delta_y == 0:
+            if self._delta_x == 0 and self._delta_y == 0 and self._acceleration == 0:
                 time.sleep(0.01)
                 continue
 
-            delta_x = self._delta_x
-            delta_y = self._delta_y
-            # Handle acceleration enabled motions
-            if self._acceleration > 0.0:
-                change = self.acceleration * \
-                         (time.time() - self._last_start_time)
-                if delta_x != 0:
-                    delta_x = min(self.max_speed, change + abs(delta_x))
-                    delta_x = int(round(math.copysign(delta_x, self._delta_x)))
-                if delta_y != 0:
-                    delta_y = min(self.max_speed, change + abs(delta_y))
-                    delta_y = int(round(math.copysign(delta_y, self._delta_y)))
+            delta_x = 0
+            delta_y = 0
+
+            cur_time = time.time()
+            delta_t2 = (cur_time - self._last_start_time) ** 2
+            if self._next_dx_update < cur_time:
+                delta_x = min(
+                    abs(self._delta_x) + 0.5 * self._acceleration * delta_t2,
+                    self.max_speed
+                )
+                self._next_dx_update += self._dx_time_inc
+                if self._next_dx_update < cur_time:
+                    self._next_dx_update = cur_time + self._dx_time_inc
+            if self._next_dy_update < cur_time:
+                delta_y = min(
+                    abs(self._delta_y) + 0.5 * self._acceleration * delta_t2,
+                    self.max_speed
+                )
+                self._next_dy_update += self._dy_time_inc
+                if self._next_dy_update < cur_time:
+                    self._next_dy_update = cur_time + self._dy_time_inc
+
+            #print(delta_x, self._next_dx_update, cur_time)
 
             # Send mouse motion event and then sleep
-            mouse_relative_motion(delta_x, delta_y)
+            if delta_x != 0 or delta_y != 0:
+                mouse_relative_motion(
+                    int(math.copysign(delta_x, self._delta_x)),
+                    int(math.copysign(delta_y, self._delta_y))
+                )
+
+                # print(delta_x, delta_y)
+
             time.sleep(0.01)
 
 
