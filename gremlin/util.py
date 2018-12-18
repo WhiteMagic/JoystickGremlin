@@ -18,6 +18,7 @@
 import ctypes
 import importlib
 import logging
+import math
 import os
 import re
 import sys
@@ -354,3 +355,11 @@ def load_module(name):
     else:
         g_loaded_modules[name] = importlib.import_module(name)
     return g_loaded_modules[name]
+
+def deg2rad(angle):
+    """Returns radian value of the provided angle in degree.
+
+    :param angle angle in degrees
+    :return angle in radian
+    """
+    return angle * (math.pi / 180.0)
