@@ -31,6 +31,7 @@ from gremlin.error import GremlinError
 from gremlin.input_devices import ButtonReleaseActions
 from gremlin.sendinput import mouse_relative_motion
 from gremlin.profile import read_bool, safe_read, safe_format
+from gremlin.util import rad2deg
 import gremlin.ui.common
 import gremlin.ui.input_item
 
@@ -352,18 +353,27 @@ class MapToMouseFunctor(AbstractFunctor):
         delta_motion = math.copysign(delta_motion, value.current)
         delta_motion = 0.0 if abs(value.current) < 0.05 else delta_motion
 
-        if self.direction == 90:
-            self.mouse_controller.dx = delta_motion
-        else:
-            self.mouse_controller.dy = delta_motion
+        dx = delta_motion if self.direction == 90 else None
+        dy = delta_motion if self.direction != 90 else None
+        self.mouse_controller.set_absolute_motion(dx, dy)
 
     def _perform_button_motion(self, event, value):
-        self.mouse_controller.acceleration = self.acceleration
-        self.mouse_controller.max_speed = self.max_speed
+        # self.mouse_controller.acceleration = self.acceleration
+        # self.mouse_controller.max_speed = self.max_speed
+        #
+        # rad = gremlin.util.deg2rad(self.direction)
+        # self.mouse_controller.dx = math.sin(rad) * self.min_speed
+        # self.mouse_controller.dy = math.cos(rad) * self.min_speed
 
-        rad = gremlin.util.deg2rad(self.direction)
-        self.mouse_controller.dx = math.sin(rad) * self.min_speed
-        self.mouse_controller.dy = math.cos(rad) * self.min_speed
+        if event.is_pressed:
+            self.mouse_controller.set_accelerated_motion(
+                self.direction,
+                self.min_speed,
+                self.max_speed,
+                self.acceleration
+            )
+        else:
+            self.mouse_controller.set_absolute_motion(0, 0)
 
     def _perform_hat_motion(self, event, value):
         """Processes events destined for a hat.
@@ -371,15 +381,18 @@ class MapToMouseFunctor(AbstractFunctor):
         :param event the event triggering the code executiong
         :param value the current value of the event chain
         """
-        self.mouse_controller.acceleration = self.acceleration
-        self.mouse_controller.dx = value.current[0] * self.min_speed
-        self.mouse_controller.dy = -value.current[1] * self.min_speed
-        self.mouse_controller.max_speed = self.max_speed
+        # print(value.current)
 
         if value.current == (0, 0):
-            self.mouse_controller.acceleration = 0.0
-            self.mouse_controller.dx = 0
-            self.mouse_controller.dy = 0
+            self.mouse_controller.set_absolute_motion(0, 0)
+            print("ABORT ABORT ABORT")
+        else:
+            self.mouse_controller.set_accelerated_motion(
+                rad2deg(math.atan2(-value.current[1], value.current[0])) + 90.0,
+                self.min_speed,
+                self.max_speed,
+                self.acceleration
+            )
 
 
 class MapToMouse(AbstractAction):
