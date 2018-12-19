@@ -363,3 +363,11 @@ def deg2rad(angle):
     :return angle in radian
     """
     return angle * (math.pi / 180.0)
+
+def rad2deg(angle):
+    """Returns degree value of the provided angle in radian.
+
+    :param angle angle in radian
+    :return angle in degree
+    """
+    return angle * (180.0 / math.pi)
