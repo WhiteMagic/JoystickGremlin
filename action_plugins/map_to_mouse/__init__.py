@@ -26,7 +26,7 @@ from xml.etree import ElementTree
 from PyQt5 import QtCore, QtWidgets
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
-from gremlin.common import InputType
+from gremlin.common import InputType, MouseButton
 from gremlin.error import GremlinError
 from gremlin.input_devices import ButtonReleaseActions
 from gremlin.sendinput import mouse_relative_motion
@@ -34,6 +34,7 @@ from gremlin.profile import read_bool, safe_read, safe_format
 from gremlin.util import rad2deg
 import gremlin.ui.common
 import gremlin.ui.input_item
+import gremlin.sendinput
 
 
 class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
@@ -319,6 +320,7 @@ class MapToMouseFunctor(AbstractFunctor):
         """
         super().__init__(action)
 
+        self.config = action
         self.motion_input = action.motion_input
         self.button_id = action.button_id
         self.min_speed = action.min_speed
@@ -340,7 +342,19 @@ class MapToMouseFunctor(AbstractFunctor):
             self._perform_mouse_button(event, value)
 
     def _perform_mouse_button(self, event, value):
-        pass
+        assert self.config.motion_input == False
+
+        if self.config.button_id in [MouseButton.WheelDown, MouseButton.WheelUp]:
+            if value.current:
+                direction = -1
+                if self.config.button_id == MouseButton.WheelDown:
+                    direction = 1
+                gremlin.sendinput.mouse_wheel(direction)
+        else:
+            if value.current:
+                gremlin.sendinput.mouse_press(self.config.button_id)
+            else:
+                gremlin.sendinput.mouse_release(self.config.button_id)
 
     def _perform_axis_motion(self, event, value):
         """Processes events destined for an axis.
