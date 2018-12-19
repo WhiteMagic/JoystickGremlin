@@ -18,8 +18,6 @@
 
 import logging
 import math
-import threading
-import time
 import os
 from xml.etree import ElementTree
 
@@ -27,9 +25,6 @@ from PyQt5 import QtCore, QtWidgets
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType, MouseButton
-from gremlin.error import GremlinError
-from gremlin.input_devices import ButtonReleaseActions
-from gremlin.sendinput import mouse_relative_motion
 from gremlin.profile import read_bool, safe_read, safe_format
 from gremlin.util import rad2deg
 import gremlin.ui.common
@@ -321,17 +316,10 @@ class MapToMouseFunctor(AbstractFunctor):
         super().__init__(action)
 
         self.config = action
-        self.motion_input = action.motion_input
-        self.button_id = action.button_id
-        self.min_speed = action.min_speed
-        self.max_speed = action.max_speed
-        self.acceleration = action.acceleration
-        self.direction = action.direction
-
         self.mouse_controller = gremlin.sendinput.MouseController()
 
     def process_event(self, event, value):
-        if self.motion_input:
+        if self.config.motion_input:
             if event.event_type == InputType.JoystickAxis:
                 self._perform_axis_motion(event, value)
             elif event.event_type == InputType.JoystickHat:
@@ -362,29 +350,22 @@ class MapToMouseFunctor(AbstractFunctor):
         :param event the event triggering the code executiong
         :param value the current value of the event chain
         """
-        delta_motion = self.min_speed + abs(value.current) * \
-                       (self.max_speed - self.min_speed)
+        delta_motion = self.config.min_speed + abs(value.current) * \
+                       (self.config.max_speed - self.config.min_speed)
         delta_motion = math.copysign(delta_motion, value.current)
         delta_motion = 0.0 if abs(value.current) < 0.05 else delta_motion
 
-        dx = delta_motion if self.direction == 90 else None
-        dy = delta_motion if self.direction != 90 else None
+        dx = delta_motion if self.config.direction == 90 else None
+        dy = delta_motion if self.config.direction != 90 else None
         self.mouse_controller.set_absolute_motion(dx, dy)
 
     def _perform_button_motion(self, event, value):
-        # self.mouse_controller.acceleration = self.acceleration
-        # self.mouse_controller.max_speed = self.max_speed
-        #
-        # rad = gremlin.util.deg2rad(self.direction)
-        # self.mouse_controller.dx = math.sin(rad) * self.min_speed
-        # self.mouse_controller.dy = math.cos(rad) * self.min_speed
-
         if event.is_pressed:
             self.mouse_controller.set_accelerated_motion(
-                self.direction,
-                self.min_speed,
-                self.max_speed,
-                self.acceleration
+                self.config.direction,
+                self.config.min_speed,
+                self.config.max_speed,
+                self.config.acceleration
             )
         else:
             self.mouse_controller.set_absolute_motion(0, 0)
@@ -395,17 +376,14 @@ class MapToMouseFunctor(AbstractFunctor):
         :param event the event triggering the code executiong
         :param value the current value of the event chain
         """
-        # print(value.current)
-
         if value.current == (0, 0):
             self.mouse_controller.set_absolute_motion(0, 0)
-            print("ABORT ABORT ABORT")
         else:
             self.mouse_controller.set_accelerated_motion(
                 rad2deg(math.atan2(-value.current[1], value.current[0])) + 90.0,
-                self.min_speed,
-                self.max_speed,
-                self.acceleration
+                self.config.min_speed,
+                self.config.max_speed,
+                self.config.acceleration
             )
 
 
