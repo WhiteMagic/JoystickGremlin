@@ -115,11 +115,11 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.min_speed.setRange(0, 1e5)
         self.max_speed = QtWidgets.QSpinBox()
         self.max_speed.setRange(0, 1e5)
-        self.acceleration = gremlin.ui.common.DynamicDoubleSpinBox()
-        self.acceleration.setRange(0.0, 100.0)
-        self.acceleration.setValue(0.0)
-        self.acceleration.setDecimals(2)
-        self.acceleration.setSingleStep(0.1)
+        self.time_to_max_speed = gremlin.ui.common.DynamicDoubleSpinBox()
+        self.time_to_max_speed.setRange(0.0, 100.0)
+        self.time_to_max_speed.setValue(0.0)
+        self.time_to_max_speed.setDecimals(2)
+        self.time_to_max_speed.setSingleStep(0.1)
         self.direction = QtWidgets.QSpinBox()
         self.direction.setRange(0, 359)
 
@@ -128,8 +128,8 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.motion_layout.addWidget(QtWidgets.QLabel("Maximum speed"), 0, 2)
         self.motion_layout.addWidget(self.max_speed, 0, 3, QtCore.Qt.AlignLeft)
 
-        self.motion_layout.addWidget(QtWidgets.QLabel("Acceleration"), 1, 0)
-        self.motion_layout.addWidget(self.acceleration, 1, 1, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(QtWidgets.QLabel("Time to maximum speed"), 1, 0)
+        self.motion_layout.addWidget(self.time_to_max_speed, 1, 1, QtCore.Qt.AlignLeft)
         if self.action_data.get_input_type() in [
             InputType.JoystickButton, InputType.Keyboard
         ]:
@@ -176,7 +176,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self._disconnect_button_hat()
         self.min_speed.setValue(self.action_data.min_speed)
         self.max_speed.setValue(self.action_data.max_speed)
-        self.acceleration.setValue(self.action_data.acceleration)
+        self.time_to_max_speed.setValue(self.action_data.time_to_max_speed)
         self.direction.setValue(self.action_data.direction)
         self._connect_button_hat()
 
@@ -227,7 +227,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         self.action_data.min_speed = min_speed
         self.action_data.max_speed = max_speed
-        self.action_data.acceleration = self.acceleration.value()
+        self.action_data.time_to_max_speed = self.time_to_max_speed.value()
         self.action_data.direction = self.direction.value()
 
         self._connect_button_hat()
@@ -256,14 +256,14 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         """Connects all button input elements to their callbacks."""
         self.min_speed.valueChanged.connect(self._update_button_hat)
         self.max_speed.valueChanged.connect(self._update_button_hat)
-        self.acceleration.valueChanged.connect(self._update_button_hat)
+        self.time_to_max_speed.valueChanged.connect(self._update_button_hat)
         self.direction.valueChanged.connect(self._update_button_hat)
 
     def _disconnect_button_hat(self):
         """Disconnects all button input elements to their callbacks."""
         self.min_speed.valueChanged.disconnect(self._update_button_hat)
         self.max_speed.valueChanged.disconnect(self._update_button_hat)
-        self.acceleration.valueChanged.disconnect(self._update_button_hat)
+        self.time_to_max_speed.valueChanged.disconnect(self._update_button_hat)
         self.direction.valueChanged.disconnect(self._update_button_hat)
 
     def _change_mode(self):
@@ -365,7 +365,7 @@ class MapToMouseFunctor(AbstractFunctor):
                 self.config.direction,
                 self.config.min_speed,
                 self.config.max_speed,
-                self.config.acceleration
+                self.config.time_to_max_speed
             )
         else:
             self.mouse_controller.set_absolute_motion(0, 0)
@@ -383,7 +383,7 @@ class MapToMouseFunctor(AbstractFunctor):
                 rad2deg(math.atan2(-value.current[1], value.current[0])) + 90.0,
                 self.config.min_speed,
                 self.config.max_speed,
-                self.config.acceleration
+                self.config.time_to_max_speed
             )
 
 
@@ -430,8 +430,8 @@ class MapToMouse(AbstractAction):
         self.min_speed = 5
         # Maximum motion speed in pixels / sec
         self.max_speed = 15
-        # Acceleration in pixels / sec^2
-        self.acceleration = 1.0
+        # Time to reach maximum speed in sec
+        self.time_to_max_speed = 1.0
 
     def icon(self):
         """Returns the icon to use for this action.
@@ -470,7 +470,7 @@ class MapToMouse(AbstractAction):
         self.direction = safe_read(node, "direction", int, 0)
         self.min_speed = safe_read(node, "min-speed", int, 5)
         self.max_speed = safe_read(node, "max-speed", int, 5)
-        self.acceleration = safe_read(node, "acceleration", float, 0.0)
+        self.time_to_max_speed = safe_read(node, "time-to-max-speed", float, 0.0)
 
     def _generate_xml(self):
         """Returns an XML node containing this instance's information.
@@ -484,7 +484,7 @@ class MapToMouse(AbstractAction):
         node.set("direction", safe_format(self.direction, int))
         node.set("min-speed", safe_format(self.min_speed, int))
         node.set("max-speed", safe_format(self.max_speed, int))
-        node.set("acceleration", safe_format(self.acceleration, float))
+        node.set("time-to-max-speed", safe_format(self.time_to_max_speed, float))
 
         return node
 
