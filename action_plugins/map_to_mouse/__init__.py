@@ -73,7 +73,6 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
 
         # Create the different UI elements
         self._create_mouse_button_ui()
-        input_type = self.action_data.get_input_type()
         if self.action_data.get_input_type() == InputType.JoystickAxis:
             self._create_axis_ui()
         else:
