@@ -274,7 +274,10 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         else:
             self.button_widget.show()
             self.motion_widget.hide()
-        # TODO: trigger ui redoo thingy
+
+        # Emit modification signal to ensure virtual button settings
+        # are updated correctly
+        self.action_modified.emit()
 
     def _request_user_input(self):
         """Prompts the user for the input to bind to this item."""
