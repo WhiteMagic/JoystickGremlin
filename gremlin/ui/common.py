@@ -1178,6 +1178,7 @@ class InputListenerWidget(QtWidgets.QFrame):
         self._multi_keys = multi_keys
         self.filter_func = filter_func
 
+        self._abort_timer = threading.Timer(1.0, self.close)
         self._multi_key_storage = []
 
         # Create and configure the ui overlay
@@ -1185,7 +1186,7 @@ class InputListenerWidget(QtWidgets.QFrame):
         self.main_layout.addWidget(QtWidgets.QLabel(
             """<center>Please press the desired {}.
             <br/><br/>
-            Pressing ESC aborts.</center>""".format(
+            Hold ESC for one second to abort.</center>""".format(
                 self._valid_event_types_string()
             )
         ))
@@ -1252,29 +1253,40 @@ class InputListenerWidget(QtWidgets.QFrame):
 
         # Return immediately once the first key press is detected
         if not self._multi_keys:
-            if gremlin.common.InputType.Keyboard in self._event_types and \
-                    key != gremlin.macro.key_from_name("esc"):
+            if event.is_pressed and key == gremlin.macro.key_from_name("esc"):
+                if not self._abort_timer.is_alive():
+                    self._abort_timer.start()
+            elif not event.is_pressed and \
+                    gremlin.common.InputType.Keyboard in self._event_types:
                 if not self._return_kb_event:
                     self.callback(key)
                 else:
                     self.callback(event)
-                self.close()
-            elif key == gremlin.macro.key_from_name("esc"):
+                self._abort_timer.cancel()
                 self.close()
         # Record all key presses and return on the first key release
         else:
             if event.is_pressed:
-                if gremlin.common.InputType.Keyboard in self._event_types and \
-                                key != gremlin.macro.key_from_name("esc"):
+                if gremlin.common.InputType.Keyboard in self._event_types:
                     if not self._return_kb_event:
                         self._multi_key_storage.append(key)
                     else:
                         self._multi_key_storage.append(event)
-                elif key == gremlin.macro.key_from_name("esc"):
-                    self.close()
+                if key == gremlin.macro.key_from_name("esc"):
+                    # Start a timer and close if it expires, aborting the
+                    # user input request
+                    if not self._abort_timer.is_alive():
+                        self._abort_timer.start()
             else:
+                self._abort_timer.cancel()
                 self.callback(self._multi_key_storage)
                 self.close()
+
+        # Ensure the timer is cancelled and reset in case the ESC is released
+        # and we're not looking to return keyboard events
+        if key == gremlin.macro.key_from_name("esc") and not event.is_pressed:
+            self._abort_timer.cancel()
+            self._abort_timer = threading.Timer(1.0, self.close)
 
     def _mouse_event_cb(self, event):
         self.callback(event)
