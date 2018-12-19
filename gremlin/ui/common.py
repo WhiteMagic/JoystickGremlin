@@ -191,7 +191,10 @@ class NoKeyboardPushButton(QtWidgets.QPushButton):
 
 class DynamicDoubleSpinBox(QtWidgets.QDoubleSpinBox):
 
-    """Implements a double spin box which dynamically overwrite entries."""
+    """Implements a double spin box which dynamically overwrites entries."""
+
+    valid_chars = [str(v) for v in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
+    decimal_point = "."
 
     def __init__(self, parent=None):
         """Create a new instance with the specified parent.
@@ -199,6 +202,11 @@ class DynamicDoubleSpinBox(QtWidgets.QDoubleSpinBox):
         :param parent the parent of this widget
         """
         super().__init__(parent)
+        DynamicDoubleSpinBox.decimal_point = self.locale().decimalPoint()
+        if DynamicDoubleSpinBox.decimal_point not in DynamicDoubleSpinBox.valid_chars:
+            DynamicDoubleSpinBox.valid_chars.append(
+                DynamicDoubleSpinBox.decimal_point
+            )
 
     def validate(self, text, pos):
         """Validates the provided string.
@@ -210,8 +218,28 @@ class DynamicDoubleSpinBox(QtWidgets.QDoubleSpinBox):
         :param pos the position in the string
         """
         try:
-            fmt = "{{:.{:d}f}}".format(self.decimals())
-            return super().validate(fmt.format(float(text)), pos)
+            # Discard invalid characters
+            if 0 <= pos-1 < len(text):
+                if text[pos-1] not in DynamicDoubleSpinBox.valid_chars:
+                    text = text[:pos-1] + text[pos:]
+                    pos -= 1
+
+            # Replace empty parts with the value 0
+            parts = text.split(self.locale().decimalPoint())
+            for part in parts:
+                if len(part) == 0:
+                    part = "0"
+
+            # Convert number to a string representation we can convert to
+            # a float so we can truncate the decimal places as required
+            value_string = "{}.{}".format(parts[0], parts[1])
+            format_string = "{{:.{:d}f}}".format(self.decimals())
+            value_string = format_string.format(float(value_string))
+
+            # Use decimal place separator dictated by the locale settings
+            text = value_string.replace(".", DynamicDoubleSpinBox.decimal_point)
+
+            return super().validate(text, pos)
         except ValueError:
             return super().validate(text, pos)
 
