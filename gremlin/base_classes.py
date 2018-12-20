@@ -116,6 +116,7 @@ class KeyboardCondition(AbstractCondition):
                self.scan_code is not None and \
                self.is_extended is not None
 
+
 class JoystickCondition(AbstractCondition):
 
     """Joystick state based condition.
