@@ -240,7 +240,7 @@ class DynamicDoubleSpinBox(QtWidgets.QDoubleSpinBox):
             text = value_string.replace(".", DynamicDoubleSpinBox.decimal_point)
 
             return super().validate(text, pos)
-        except ValueError:
+        except (ValueError, IndexError):
             return super().validate(text, pos)
 
 
