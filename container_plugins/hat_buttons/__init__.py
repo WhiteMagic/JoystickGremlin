@@ -254,7 +254,6 @@ class HatButtonsContainer(gremlin.base_classes.AbstractContainer):
         self.button_count = 4
         self.action_sets = [[], [], [], []]
 
-
     def generate_callbacks(self):
         """Returns a list of callback data entries.
 
@@ -269,10 +268,14 @@ class HatButtonsContainer(gremlin.base_classes.AbstractContainer):
 
         callbacks = []
 
-        # For a virtual button create a calback that sends VirtualButton
+        # For a virtual button create a callback that sends VirtualButton
         # events and another callback that triggers of these events
         # like a button would.
         for i, action_set in enumerate(self.action_sets):
+            # Ignore directions with no associated actions
+            if len(action_set) == 0:
+                continue
+
             # Callback generating virtual button events
             callbacks.append(gremlin.execution_graph.CallbackData(
                 gremlin.execution_graph.VirtualButtonProcess(
@@ -332,7 +335,10 @@ class HatButtonsContainer(gremlin.base_classes.AbstractContainer):
 
         :return True if the container is configured properly, False otherwise
         """
-        return len(self.action_sets) in [4, 8]
+        count = 0
+        for action_set in self.action_sets:
+            count += len(action_set)
+        return count > 0
 
 
 # Plugin definitions

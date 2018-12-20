@@ -536,7 +536,6 @@ class AbstractContainer(profile.ProfileData):
         else:
             self.virtual_button = None
 
-
     def generate_callbacks(self):
         """Returns a list of callback data entries.
 
@@ -544,7 +543,7 @@ class AbstractContainer(profile.ProfileData):
         """
         callbacks = []
 
-        # For a virtual button create a calback that sends VirtualButton
+        # For a virtual button create a callback that sends VirtualButton
         # events and another callback that triggers of these events
         # like a button would.
         if self.virtual_button is not None:
@@ -663,19 +662,25 @@ class AbstractContainer(profile.ProfileData):
         # Check state of the container
         state = self._is_container_valid()
 
-        # Check that no action set is empty
-        for actions in [a for a in self.action_sets if a is not None]:
-            if len(actions) == 0:
-                state = False
-
         # Check state of all linked actions
         for actions in [a for a in self.action_sets if a is not None]:
             for action in actions:
-                if action is None:
-                    state = False
-                else:
-                    state = state & action.is_valid()
+                state = state & action.is_valid()
         return state
+
+        # # Check that no action set is empty
+        # for actions in [a for a in self.action_sets if a is not None]:
+        #     if len(actions) == 0:
+        #         state = False
+
+        # # Check state of all linked actions
+        # for actions in [a for a in self.action_sets if a is not None]:
+        #     for action in actions:
+        #         if action is None:
+        #             state = False
+        #         else:
+        #             state = state & action.is_valid()
+        # return state
 
     @abstractmethod
     def _is_container_valid(self):

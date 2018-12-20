@@ -19,6 +19,7 @@ from abc import abstractmethod, ABCMeta
 from collections import namedtuple
 import copy
 import logging
+import time
 
 from gremlin import actions, base_classes, common, error
 
@@ -166,7 +167,7 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
         # a "release" event is sent.
         process_again = False
 
-        while self.current_index is not None:
+        while self.current_index is not None and len(self.functors) > 0:
             functor = self.functors[self.current_index]
             result = functor.process_event(event, value)
 

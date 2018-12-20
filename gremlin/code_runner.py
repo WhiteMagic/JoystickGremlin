@@ -101,7 +101,6 @@ class CodeRunner:
                     False
                 )
 
-
             # Create input callbacks based on the profile's content
             for device in profile.devices.values():
                 hid = device.hardware_id
