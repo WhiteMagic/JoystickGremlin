@@ -250,8 +250,8 @@ class EventListener(QtCore.QObject):
         :param event the keyboard event
         """
         # Ignore injected keyboard events while Gremlin is active
-        if self.gremlin_active and event.is_injected:
-            return True
+        # if self.gremlin_active and event.is_injected:
+        #     return True
 
         key_id = (event.scan_code, event.is_extended)
         is_pressed = event.is_pressed
