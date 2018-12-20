@@ -229,7 +229,8 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
         self.event_press = None
 
     def process_event(self, event, value):
-        # TODO: Currently this does not handle hat or axis inputs
+        # TODO: Currently this does not handle hat or axis events, however
+        #       virtual buttons created on those inputs is supported
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
                 "Invalid data type received in Tempo container: {}".format(
