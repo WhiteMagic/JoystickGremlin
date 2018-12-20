@@ -101,7 +101,7 @@ class Configuration:
         for i, limit in enumerate(limits):
             if limit[2] - limit[0] == 0:
                 continue
-            axis_name = "axis_{}".format(i)
+            axis_name = "axis_{}".format(i+1)
             self._data["calibration"][identifier][axis_name] = [
                 limit[0], limit[1], limit[2]
             ]
