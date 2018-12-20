@@ -141,6 +141,10 @@ def recursive(device, tree, storage):
             if child not in storage:
                 storage[child] = {}
 
+        # In case the parent mode doesn't exist skip this recursion level
+        if parent not in device.modes:
+            continue
+
         # Insert actions of parent into parent
         mode = device.modes[parent]
 
