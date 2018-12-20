@@ -190,6 +190,18 @@ class EventListener(QtCore.QObject):
         self._running = False
         self.keyboard_hook.stop()
 
+    def reload_calibrations(self):
+        """Reloads the calibration data from the configuration file."""
+        cfg = config.Configuration()
+        for key in self._calibrations:
+            limits = cfg.get_calibration(key[0], key[1])
+            self._calibrations[key] = \
+                util.create_calibration_function(
+                    limits[0],
+                    limits[1],
+                    limits[2]
+                )
+
     def _run(self):
         """Starts the event loop."""
         while self._running:

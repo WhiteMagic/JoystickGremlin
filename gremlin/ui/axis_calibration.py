@@ -122,6 +122,7 @@ class CalibrationUi(common.BaseDialogUi):
             self.devices[self.current_selection_id]
         )
         cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
+        gremlin.event_handler.EventListener().reload_calibrations()
 
     def _create_axes(self, index):
         """Creates the axis calibration widget for the current device.
