@@ -60,11 +60,11 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         # Device selection
         self.split_device_layout = QtWidgets.QHBoxLayout()
         self.vjoy_selector_1 = gremlin.ui.common.VJoySelector(
-            self.save_changes,
+            self._create_vjoy_selector_callback(1),
             [InputType.JoystickAxis]
         )
         self.vjoy_selector_2 = gremlin.ui.common.VJoySelector(
-            self.save_changes,
+            self._create_vjoy_selector_callback(2),
             [InputType.JoystickAxis]
         )
         self.split_device_layout.addWidget(self.vjoy_selector_1)
@@ -75,8 +75,6 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.main_layout.addLayout(self.split_device_layout)
 
     def _populate_ui(self):
-        # FIXME: this seemed to act like a check for initialization
-        # if self.action_data.is_valid:
         self.split_slider.setValue(self.action_data.center_point * 1e5)
         self.split_readout.setValue(self.action_data.center_point)
         try:
@@ -112,23 +110,49 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             )
             logging.getLogger("system").error(str(e))
 
-    def save_changes(self):
-        try:
-            tmp = self.vjoy_selector_1.get_selection()
-            self.action_data.axis1 = (tmp["device_id"], tmp["input_id"])
-            tmp = self.vjoy_selector_2.get_selection()
-            self.action_data.axis2 = (tmp["device_id"], tmp["input_id"])
-            self.action_data.center_point = self.split_readout.value()
-        except gremlin.error.GremlinError as e:
-            logging.getLogger("system").error(str(e))
+    def save_vjoy_selection(self, axis_id):
+        """Stores the data of a vJoy selector.
+
+        A separate method to handle saving the vJoy selection changes is needed
+        to prevent overwriting of valid data when updating center point data.
+
+        Parameters
+        ----------
+        axis_id : int
+            Identifier of the axis to save the data of
+        """
+        if axis_id == 1:
+            data = self.vjoy_selector_1.get_selection()
+            self.action_data.axis1 = (data["device_id"], data["input_id"])
+        elif axis_id == 2:
+            data = self.vjoy_selector_2.get_selection()
+            self.action_data.axis2 = (data["device_id"], data["input_id"])
+
+    def save_center_point(self):
+        self.action_data.center_point = self.split_readout.value()
 
     def _update_readout(self, value):
         self.split_readout.setValue(value / 1e5)
-        self.save_changes()
+        self.save_center_point()
 
     def _update_slider(self, value):
         self.split_slider.setValue(value * 1e5)
-        self.save_changes()
+        self.save_center_point()
+
+    def _create_vjoy_selector_callback(self, axis_id):
+        """Returns a lambda expression updating the specified axis.
+
+        Parameters
+        ----------
+        axis_id : int
+            Identifier of the axis to save the data of
+        Returns
+        -------
+        lambda
+            Callable lambda expression which will update the specified axis
+            information
+        """
+        return lambda: self.save_vjoy_selection(axis_id)
 
 
 class SplitAxisFunctor(AbstractFunctor):
