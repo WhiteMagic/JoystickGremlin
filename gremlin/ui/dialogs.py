@@ -18,6 +18,7 @@
 import os
 import subprocess
 import sys
+import winreg
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
