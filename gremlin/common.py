@@ -53,12 +53,13 @@ class DeviceRegistry:
         assert(isinstance(identifier, DeviceIdentifier))
 
         if identifier.hardware_id not in self._devices:
-            logging.getLogger("system").warning(
-                "Identifier for non existent device created: {} {}".format(
-                    identifier.hardware_id,
-                    identifier.windows_id
+            if identifier.hardware_id != 9999:
+                logging.getLogger("system").warning(
+                    "Identifier for non existent device created: {} {}".format(
+                        identifier.hardware_id,
+                        identifier.windows_id
+                    )
                 )
-            )
             return False
         else:
             return len(self._devices[identifier.hardware_id]) != 1
