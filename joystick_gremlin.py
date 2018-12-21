@@ -1285,10 +1285,11 @@ if __name__ == "__main__":
 
     syslog = logging.getLogger("system")
 
-    # Unhandled exception traceback
-    # TODO: Re-enable for release
-    # TODO: Re-enable exception capturing for profile loading
-    sys.excepthook = exception_hook
+    # Show unhandled exceptions to the user when running a compiled version
+    # of Joystick Gremlin
+    executable_name = os.path.split(sys.executable)[-1]
+    if executable_name == "joystick_gremlin.exe":
+        sys.excepthook = exception_hook
 
     # Initialize HidGuardian before we let SDL grab joystick data
     hg = gremlin.hid_guardian.HidGuardian()
