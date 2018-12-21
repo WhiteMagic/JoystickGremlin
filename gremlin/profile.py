@@ -176,7 +176,7 @@ class ProfileConverter:
     """Handle converting and checking profiles."""
 
     # Current profile version number
-    current_version = 7
+    current_version = 8
 
     def __init__(self):
         pass
@@ -217,26 +217,34 @@ class ProfileConverter:
             new_root = self._convert_from_v4(new_root)
             new_root = self._convert_from_v5(new_root)
             new_root = self._convert_from_v6(new_root, fname)
+            new_root = self._convert_from_v7(new_root)
         if old_version == 2:
             new_root = self._convert_from_v2(root)
             new_root = self._convert_from_v3(new_root)
             new_root = self._convert_from_v4(new_root)
             new_root = self._convert_from_v5(new_root)
             new_root = self._convert_from_v6(new_root, fname)
+            new_root = self._convert_from_v7(new_root)
         if old_version == 3:
             new_root = self._convert_from_v3(root)
             new_root = self._convert_from_v4(new_root)
             new_root = self._convert_from_v5(new_root)
             new_root = self._convert_from_v6(new_root, fname)
+            new_root = self._convert_from_v7(new_root)
         if old_version == 4:
             new_root = self._convert_from_v4(root)
             new_root = self._convert_from_v5(new_root)
             new_root = self._convert_from_v6(new_root, fname)
+            new_root = self._convert_from_v7(new_root)
         if old_version == 5:
             new_root = self._convert_from_v5(root)
             new_root = self._convert_from_v6(new_root, fname)
+            new_root = self._convert_from_v7(new_root)
         if old_version == 6:
             new_root = self._convert_from_v6(root, fname)
+            new_root = self._convert_from_v7(new_root)
+        if old_version == 7:
+            new_root = self._convert_from_v7(root)
 
         if new_root is not None:
             # Save converted version
@@ -268,6 +276,8 @@ class ProfileConverter:
             return 6
         elif root.tag == "profile" and int(root.get("version")) == 7:
             return 7
+        elif root.tag == "profile" and int(root.get("version")) == 8:
+            return 8
         else:
             raise error.ProfileError(
                 "Invalid profile version encountered"
@@ -554,6 +564,38 @@ class ProfileConverter:
                 base_path,
                 module.attrib["name"]
             ))
+
+        return root
+
+    def _convert_from_v7(self, root):
+        """Convert from a V7 profile to V8.
+
+        This updates map to mouse actions to the new format.
+
+        Parameters
+        ----------
+        root : ElementTree
+            Root of the XML tree being modified
+
+        Returns
+        -------
+        ElementTree
+            Modified XML root element
+        """
+        root.attrib["version"] = "8"
+
+        for node in root.findall(".//map-to-mouse"):
+            node.set("time-to-max-speed", node.get("acceleration", "1.0"))
+
+            axis = node.get("axis")
+            direction = node.get("direction", 0)
+            if axis == "x":
+                direction = 90
+            elif axis == "y":
+                direction = 0
+            node.set("direction", str(direction))
+            node.set("button_id", "1")
+            node.set("motion_input", "True")
 
         return root
 
