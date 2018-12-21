@@ -976,7 +976,7 @@ class TitleBar(QtWidgets.QFrame):
     """Represents a titlebar for use with dock widgets.
 
     This titlebar behaves like the default DockWidget title bar with the
-    exception that it has a "help" button which will display some informaiton
+    exception that it has a "help" button which will display some information
     about the content of the widget.
     """
 

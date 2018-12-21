@@ -91,7 +91,8 @@ class Repeater(QtCore.QObject):
 
         :param event the event to process
         """
-        # Ignore VJoy events as well as events occuring when events are repeated
+        # Ignore VJoy events as well as events occurring when
+        # events are repeated
         if self.is_running or event.hardware_id == self._vjoy_device_id:
             return
 

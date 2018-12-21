@@ -162,7 +162,7 @@ class ChainContainerFunctor(gremlin.base_classes.AbstractFunctor):
         self.last_value = None
 
         # Determine if we need to switch the action index after a press or
-        # release event. Only for container conditions this is neccessary to
+        # release event. Only for container conditions this is necessary to
         # ensure proper cycling.
         self.switch_on_press = False
         if container.activation_condition_type == "container":

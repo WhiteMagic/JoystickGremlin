@@ -305,7 +305,7 @@ class MapToMouseFunctor(AbstractFunctor):
 
     """Implements the functionality required to move a mouse cursor.
 
-    This moves the mouse curser by issuing relative motion commands. This is
+    This moves the mouse cursor by issuing relative motion commands. This is
     only implemented for axis and hat inputs as they can control a cursor
     properly with a single input, at least partially.
     """
@@ -349,7 +349,7 @@ class MapToMouseFunctor(AbstractFunctor):
     def _perform_axis_motion(self, event, value):
         """Processes events destined for an axis.
 
-        :param event the event triggering the code executiong
+        :param event the event triggering the code execution
         :param value the current value of the event chain
         """
         delta_motion = self.config.min_speed + abs(value.current) * \
@@ -375,7 +375,7 @@ class MapToMouseFunctor(AbstractFunctor):
     def _perform_hat_motion(self, event, value):
         """Processes events destined for a hat.
 
-        :param event the event triggering the code executiong
+        :param event the event triggering the code execution
         :param value the current value of the event chain
         """
         if value.current == (0, 0):

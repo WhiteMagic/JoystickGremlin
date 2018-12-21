@@ -26,7 +26,7 @@ from . import base_classes, common, event_handler, fsm, input_devices, \
 def smart_all(conditions):
     """Returns True if all conditions are True, False otherwise.
 
-    Employs short circuiting in order to prevent unnecessary evalutions.
+    Employs short circuiting in order to prevent unnecessary evaluations.
 
     :param conditions the conditions to check
     :return True if all conditions are True, False otherwise
@@ -40,7 +40,7 @@ def smart_all(conditions):
 def smart_any(conditions):
     """Returns True if any conditions is True, False if none is True.
 
-    Employs short circuiting in order to prevent unnecessary evalutions.
+    Employs short circuiting in order to prevent unnecessary evaluations.
 
     :param conditions the conditions to check
     :return True if at least one condition is True, False otherwise
@@ -146,7 +146,7 @@ class AbstractCondition(metaclass=ABCMeta):
 
 class KeyboardCondition(AbstractCondition):
 
-    """Condition veryfing the state of keyboard keys.
+    """Condition verifying the state of keyboard keys.
 
     The conditions that can be checked on a keyboard is whether or not a
     particular key is pressed or released.

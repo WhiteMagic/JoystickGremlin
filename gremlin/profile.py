@@ -138,7 +138,7 @@ def safe_read(node, key, type_cast=None, default_value=None):
 def safe_format(value, data_type, formatter=str):
     """Returns a formatted value ensuring type correctness.
 
-    This function ensures that the value being formated is of correct type
+    This function ensures that the value being formatted is of correct type
     before attempting formatting. Raises an exception on non-matching data
     types.
 
@@ -710,7 +710,7 @@ class ProfileModifier:
         return count
 
     def change_device_id(self, source_id, target_id):
-        """Performs actions neccessary to move all data from source to target.
+        """Performs actions necessary to move all data from source to target.
 
         Moves all profile content from a given source device to the desired
         target device.
@@ -825,7 +825,7 @@ class ProfileModifier:
         :param source_id identifier of the source device
         :param target_id identifier of the target device
         """
-        # TODO: Does not ensure assignemts are valid, i.e. missing axis
+        # TODO: Does not ensure assignments are valid, i.e. missing axis
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
                 if entry[key]["hardware_id"] == source_id.hardware_id and \
@@ -877,9 +877,9 @@ class ProfileModifier:
     def _equal_ids(self, device_id, hid_wid_tuple):
         """Returns whether two device identifications are identical.
 
-        This requires the first parameter to be a DeviceIdentifier intance and
+        This requires the first parameter to be a DeviceIdentifier instance and
         the second one a tuple of hardware and windows id. This is needed as
-        DeviceIdentifier equality copmarison takes device duplition into
+        DeviceIdentifier equality comparison takes device duplication into
         account while we want to always differentiate based on windows id.
 
         :param device_id DeviceIdentifier instance
@@ -1349,7 +1349,7 @@ class Profile:
         profile_modifier = ProfileModifier(self)
 
         # Check each device found and attempt to find a unique connected
-        # device and if present attempt reassinging the profile data to the
+        # device and if present attempt re-assigning the profile data to the
         # connected device.
         for device in profile_modifier.device_information_list():
             hid = device.device_id.hardware_id
@@ -1768,7 +1768,7 @@ class ProfileData(metaclass=ABCMeta):
     def get_settings(self):
         """Returns the Settings data of the profile.
 
-        :return Setttings object of this profile
+        :return Settings object of this profile
         """
         item = self.parent
         while not isinstance(item, Profile):

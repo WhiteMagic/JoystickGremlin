@@ -185,7 +185,7 @@ class VJoyAxisDefaultsWidget(QtWidgets.QWidget):
         for i in range(self.joy_data.axis_count):
             # FIXME: This is a workaround to not being able to read a vJoy
             #   device's axes names when it is grabbed by another process
-            #   and the inability of SDL to provide canoncal axis names
+            #   and the inability of SDL to provide canonical axis names
             axis_name = "Axis {:d}".format(i+1)
             try:
                 axis_name = vjoy_proxy[self.joy_data.vjoy_id]\

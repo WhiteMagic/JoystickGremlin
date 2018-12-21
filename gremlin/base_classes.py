@@ -56,7 +56,7 @@ class AbstractCondition(metaclass=ABCMeta):
 
     @abstractmethod
     def to_xml(self):
-        """Returns an XML node containing the obejcts data.
+        """Returns an XML node containing the objects data.
 
         :return XML node containing the object's data
         """
@@ -94,7 +94,7 @@ class KeyboardCondition(AbstractCondition):
         self.is_extended = profile.parse_bool(safe_read(node, "extended"))
 
     def to_xml(self):
-        """Returns an XML node containing the obejcts data.
+        """Returns an XML node containing the objects data.
 
         :return XML node containing the object's data
         """
@@ -123,7 +123,7 @@ class JoystickCondition(AbstractCondition):
     """
 
     def __init__(self):
-        """Creates a new instace."""
+        """Creates a new instance."""
         super().__init__()
         self.device_id = 0
         self.windows_id = 0
@@ -151,7 +151,7 @@ class JoystickCondition(AbstractCondition):
             ]
 
     def to_xml(self):
-        """Returns an XML node containing the obejcts data.
+        """Returns an XML node containing the objects data.
 
         :return XML node containing the object's data
         """
@@ -196,7 +196,7 @@ class InputActionCondition(AbstractCondition):
         self.comparison = safe_read(node, "comparison")
 
     def to_xml(self):
-        """Returns an XML node containing the obejcts data.
+        """Returns an XML node containing the objects data.
 
         :return XML node containing the object's data
         """

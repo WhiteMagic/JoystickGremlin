@@ -182,7 +182,7 @@ class CubicBezierSpline:
                     index = i
                     break
 
-        # Linearly intepolate the lookup table data
+        # Linearly interpolate the lookup table data
         interval = [0, len(self._lookup[index])]
         searching = True
         while searching:

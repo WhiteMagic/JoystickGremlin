@@ -500,7 +500,7 @@ class VJoy:
         """Ensure this devices is still owned by the process.
 
         This object can only be constructed if it successfully acquires the
-        vjoy device and destroys itself when relinquishing control. Therfore,
+        vjoy device and destroys itself when relinquishing control. Therefore,
         it cannot ever not own the vJoy device.
 
         Under certain circumstances the vJoy devices are reset (issue #129).

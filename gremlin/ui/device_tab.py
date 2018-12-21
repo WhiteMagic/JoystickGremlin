@@ -627,7 +627,7 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
 
 
 def input_item_index_lookup(index, input_items):
-    """Returns the profile data belonding to the provided index.
+    """Returns the profile data belonging to the provided index.
 
     This function determines which actual input item a given index refers to
     and then returns the content for it.

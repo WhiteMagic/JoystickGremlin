@@ -29,7 +29,7 @@ from vjoy import vjoy
 # List of all joystick devices
 _joystick_devices = []
 
-# Joystick initializataion lock
+# Joystick initialization lock
 _joystick_init_lock = threading.Lock()
 
 
@@ -60,7 +60,7 @@ class VJoyProxy:
                 return device
             except error.VJoyError as e:
                 logging.getLogger("system").error(
-                    "Failed accesing vJoy id={}, error is: {}".format(
+                    "Failed accessing vJoy id={}, error is: {}".format(
                         key,
                         e
                     )
@@ -260,7 +260,7 @@ def joystick_devices_initialization():
             devices.append(JoystickDeviceData(joy))
 
     # Compare existing versus observed devices and only proceed if there
-    # is a change to avoid unneccessary work.
+    # is a change to avoid unnecessary work.
     device_added = False
     device_removed = False
     for new_dev in devices:

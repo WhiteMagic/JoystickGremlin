@@ -99,7 +99,7 @@ class AbstractModel(QtCore.QObject):
         """Returns the data entry stored at the provided index.
 
         :param index the index for which to return data
-        :return data storead at the given index
+        :return data stored at the given index
         """
         pass
 
@@ -984,7 +984,7 @@ class ActionSelector(QtWidgets.QWidget):
         return sorted(action_list)
 
     def _add_action(self, clicked=False):
-        """Handles selecting of an acition to be added.
+        """Handles selecting of an action to be added.
 
         :param clicked flag indicating whether or not the action resulted from
             a click
@@ -1306,7 +1306,7 @@ class InputListenerWidget(QtWidgets.QFrame):
         # Stop mouse hook in case it is running
         gremlin.windows_event_hook.MouseHook().stop()
 
-        # Delay unsuspending input highlighting to allow an axis that's being
+        # Delay un-suspending input highlighting to allow an axis that's being
         # moved to return to its center without triggering an input highlight
         gremlin.shared_state.delayed_input_highlighting_suspension()
         super().closeEvent(evt)

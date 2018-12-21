@@ -33,7 +33,7 @@ _four_lookup = {
     (-1, 0): 3
 }
 
-# Lookup for direction to indexs with 8 way hat usage
+# Lookup for direction to indices with 8 way hat usage
 _eight_lookup = {
     (0, 1): 0,
     (1, 1): 1,

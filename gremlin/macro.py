@@ -48,7 +48,7 @@ def _create_function(lib_name, fn_name, param_types, return_type):
     :param lib_name name of the library to retrieve a function handle from
     :param fn_name name of the function
     :param param_types input parameter types
-    :param return_type retuyrn parameter type
+    :param return_type return parameter type
     :return function handle
     """
     fn = getattr(ctypes.WinDLL(lib_name), fn_name)

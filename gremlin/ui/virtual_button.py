@@ -232,7 +232,7 @@ class VirtualHatButtonWidget(AbstractVirtualButtonWidget):
         """Creates a state change callback.
 
         :param direction the direction for which to customize the callback
-        :retuyrn callback function to update the state of a direction
+        :return callback function to update the state of a direction
         """
         return lambda x: self._state_changed(direction, x)
 

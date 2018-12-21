@@ -48,7 +48,7 @@ class VisualizationSelector(QtWidgets.QWidget):
     def __init__(self, parent=None):
         """Creates a new instance.
 
-        :param parent the parent of this wiedget
+        :param parent the parent of this widget
         """
         super().__init__(parent)
 

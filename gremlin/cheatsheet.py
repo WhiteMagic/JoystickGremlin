@@ -59,7 +59,7 @@ class InputItemData:
         self.inherited_from = inherited_from
 
     def table_data(self):
-        """Returns the data neccessary to create the data table.
+        """Returns the data necessary to create the data table.
 
         :return table data entries
         """

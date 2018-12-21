@@ -573,7 +573,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             action = self.ui.menuRecent.addAction(
                 gremlin.util.truncate(entry, 5, 40)
             )
-            action.triggered.connect(self._create_load_profile_fuction(entry))
+            action.triggered.connect(self._create_load_profile_function(entry))
 
     def _create_statusbar(self):
         """Creates the ui widgets used in the status bar."""
@@ -946,7 +946,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         if len(fname) > 0:
             gremlin.cheatsheet.generate_cheatsheet(fname, self._profile)
 
-    def _create_load_profile_fuction(self, fname):
+    def _create_load_profile_function(self, fname):
         """Creates a callback to load a specific profile.
 
         :param fname path to the profile to load
