@@ -1,6 +1,6 @@
 echo "Starting to build Gremlin ..."
 C:
-cd Users\Ivan Dolvich\PycharmProjects\JoystickGremlin
+cd C:\Users\Ivan\PycharmProjects\JoystickGremlin
 
 echo "Building executable ..."
 pyinstaller -y --clean joystick_gremlin.spec
