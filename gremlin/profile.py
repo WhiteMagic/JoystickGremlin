@@ -588,7 +588,7 @@ class ProfileModifier:
     """Modifies profile contents and provides overview information."""
 
     def __init__(self, profile):
-        """Creates a modifier for a specifc profile.
+        """Creates a modifier for a specific profile.
 
         :param profile the profile to be modified
         """
@@ -647,7 +647,7 @@ class ProfileModifier:
         """
         count = 0
         for cond in self.all_conditions():
-            if (cond.device_id, cond.windows_id) == hid_wid_tuple:
+            if cond == base_classes.JoystickCondition:
                 count += 1
         return count
 

@@ -81,8 +81,6 @@ class KeyboardCondition(AbstractCondition):
     def __init__(self):
         """Creates a new instance."""
         super().__init__()
-        self.device_id = 0
-        self.windows_id = 0
         self.scan_code = None
         self.is_extended = None
 
