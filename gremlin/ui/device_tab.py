@@ -538,7 +538,6 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
 
         self.main_layout.addWidget(widget)
 
-
         # Refresh item list view and select correct entry
         self.input_item_list_view.redraw()
         self.input_item_list_view.select_item(

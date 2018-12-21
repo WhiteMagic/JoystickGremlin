@@ -108,7 +108,6 @@ class PlaySound(AbstractAction):
     functor = PlaySoundFunctor
     widget = PlaySoundWidget
 
-
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
 

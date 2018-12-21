@@ -213,7 +213,7 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.ui_elements["key_input"] = \
             gremlin.ui.common.NoKeyboardPushButton(action.key.name)
         self.ui_elements["key_input"].clicked.connect(
-            lambda: self._request_user_input([gremlin.common.InputType.Keyboard])
+            lambda: self._request_user_input([InputType.Keyboard])
         )
         self.ui_elements["key_press"] = QtWidgets.QRadioButton("Press")
         self.ui_elements["key_release"] = QtWidgets.QRadioButton("Release")
@@ -1632,7 +1632,6 @@ class Macro(AbstractAction):
                 vjoy_node.set("input_id", str(entry.input_id))
                 vjoy_node.set("value", self._joy_value_to_str(entry))
                 action_list.append(vjoy_node)
-
 
         node.append(action_list)
         return node

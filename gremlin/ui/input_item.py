@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import enum
-import logging
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
@@ -319,7 +318,6 @@ class ActionSetView(common.AbstractView):
         Edit = 4
         Add = 5
         Count = 6
-
 
     # Signal emitted when an interaction is triggered on an action
     interacted = QtCore.pyqtSignal(Interactions)
@@ -737,8 +735,9 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     def _create_action_set_widget(self, action_set_data, label, view_type):
         """Adds an action widget to the container.
 
-        :param widget the widget to be added
+        :param action_set_data data of the actions which form the action set
         :param label the label to show in the title
+        :param view_type visualization type
         :return wrapped widget
         """
         action_set_model = ActionSetModel(action_set_data)
@@ -944,7 +943,10 @@ class TitleBarButton(QtWidgets.QAbstractButton):
         options.state |= QtWidgets.QStyle.State_AutoRaise
 
         if self.style().styleHint(QtWidgets.QStyle.SH_DockWidget_ButtonsHaveFrame):
-            if self.isEnabled() and self.underMouse() and not self.isChecked() and not self.isDown():
+            if self.isEnabled() \
+                    and self.underMouse() \
+                    and not self.isChecked() \
+                    and not self.isDown():
                 options.state |= QtWidgets.QStyle.State_Raised
             if self.isChecked():
                 options.state |= QtWidgets.QStyle.State_On

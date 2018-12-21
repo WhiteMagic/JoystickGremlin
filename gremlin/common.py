@@ -182,6 +182,7 @@ class InputType(enum.Enum):
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
+
 _InputType_to_string_lookup = {
     InputType.JoystickAxis: "axis",
     InputType.JoystickButton: "button",
@@ -317,7 +318,6 @@ class VariableType(enum.Enum):
             return _VariableType_to_enum_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
-
 
 
 _VariableType_to_string_lookup = {

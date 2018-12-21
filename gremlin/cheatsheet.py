@@ -15,16 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import namedtuple
-from PyQt5 import QtGui, QtPrintSupport
-
-from mako.template import Template
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.lib.colors import HexColor
-from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, Paragraph, \
+from reportlab.platypus import BaseDocTemplate, Paragraph, \
     Spacer, Frame, PageTemplate, Table, Flowable, PageBreak
 
 import gremlin
@@ -127,7 +122,8 @@ class InputItemData:
 
 
 def recursive(device, tree, storage):
-    """Recursively parses a profile and stores the contents in the required form.
+    """Recursively parses a profile and stores the contents in
+    the required form.
 
     :param device the device of interest
     :param tree the subtree currently being processed
@@ -263,7 +259,6 @@ class ModeFloat(Flowable):
         offset = self._draw_bar(path, offset)
 
         self.canv.drawPath(path, stroke=False, fill=True)
-        #self.canv.rect(-0.2*cm, 0.0, A4[0]-2*cm, cm, strike=Fa;se, fill=True)
         self.canv.setFillColor(HexColor("#000000"))
         self.canv.setFillColor(HexColor("#ffffff"))
         self.canv.drawString(

@@ -50,8 +50,7 @@ class Repeater(QtCore.QObject):
         self._update_func = update_func
         self._timeout = time.time()
         self._vjoy_device_id = [
-            dev.hardware_id for dev in joystick_handling.joystick_devices()
-                if dev.is_virtual
+            dev.hardware_id for dev in joystick_handling.joystick_devices() if dev.is_virtual
         ][0]
         self._event_registry = {}
 

@@ -87,7 +87,7 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
                 key=lambda x: x.vjoy_id
         ):
             # Only show devices that are not treated as inputs
-            if self.profile_settings.vjoy_as_input.get(dev.vjoy_id) == True:
+            if self.profile_settings.vjoy_as_input.get(dev.vjoy_id) is True:
                 continue
 
             widget = QtWidgets.QGroupBox("{} #{}".format(dev.name, dev.vjoy_id))

@@ -289,7 +289,8 @@ class HatButtonsContainer(gremlin.base_classes.AbstractContainer):
             basic_container = BasicContainer()
             basic_container.action_sets = [action_set]
             basic_container.activation_condition = self.activation_condition
-            basic_container.activation_condition_type = self.activation_condition_type
+            basic_container.activation_condition_type = \
+                self.activation_condition_type
 
             # Callback reacting to virtual button events
             callbacks.append(gremlin.execution_graph.CallbackData(

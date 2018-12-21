@@ -62,7 +62,6 @@ class HatType(enum.Enum):
     Continuous = 1
 
 
-
 def device_available(vjoy_id):
     """Returns whether or not a device is available, i.e. can be acquired.
 

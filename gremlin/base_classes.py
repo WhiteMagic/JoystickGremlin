@@ -111,8 +111,8 @@ class KeyboardCondition(AbstractCondition):
         :return True if the condition is properly specified, False otherwise
         """
         return super().is_valid() and \
-               self.scan_code is not None and \
-               self.is_extended is not None
+            self.scan_code is not None and \
+            self.is_extended is not None
 
 
 class JoystickCondition(AbstractCondition):
@@ -166,7 +166,6 @@ class JoystickCondition(AbstractCondition):
             node.set("range_low", str(self.range[0]))
             node.set("range_high", str(self.range[1]))
         return node
-
 
     def is_valid(self):
         """Returns whether or not a condition is fully specified.

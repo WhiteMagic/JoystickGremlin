@@ -142,7 +142,8 @@ class ChainContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :return title to use for the container
         """
         return "Chain: {}".format(" -> ".join(
-            [", ".join([a.name for a in actions]) for actions in self.profile_data.action_sets])
+            [", ".join([a.name for a in actions])
+                for actions in self.profile_data.action_sets])
         )
 
 

@@ -570,8 +570,8 @@ class JoystickSelector(QtWidgets.QWidget):
                 gremlin.common.InputType.JoystickHat: dev.hats
             }
             count = 0
-            for type in valid_types:
-                count += input_counts[type]
+            for valid_type in valid_types:
+                count += input_counts[valid_type]
 
             if count > 0:
                 self.devices.append(dev)
@@ -592,7 +592,9 @@ class JoystickSelector(QtWidgets.QWidget):
         for i, device in enumerate(
                 sorted(self.devices, key=lambda x: x.windows_id)
         ):
-            self._device_id_to_index_map[gremlin.util.get_device_identifier(device)] = i
+            self._device_id_to_index_map[
+                gremlin.util.get_device_identifier(device)
+            ] = i
             self._index_to_device_map[i] = device
 
     def get_selection(self):
@@ -744,8 +746,8 @@ class VJoySelector(QtWidgets.QWidget):
             }
 
             count = 0
-            for type in valid_types:
-                count += input_counts[type]
+            for valid_type in valid_types:
+                count += input_counts[valid_type]
 
             if not invalid_ids.get(dev.vjoy_id, False) and count > 0:
                 # Attempt to acquire the vJoy device, if this succeeds we

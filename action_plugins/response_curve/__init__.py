@@ -816,7 +816,8 @@ class CurveView(QtWidgets.QGraphicsScene):
                 ))
 
     def keyPressEvent(self, evt):
-        """Removes the currently selected control point if the Del key is pressed.
+        """Removes the currently selected control point if the Del
+        key is pressed.
 
         :param evt the keyboard event to process.
         """

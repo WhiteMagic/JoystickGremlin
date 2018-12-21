@@ -631,7 +631,9 @@ class ConditionView(common.AbstractView):
         self.rule_selector.currentTextChanged.connect(self._rule_changed_cb)
         self.controls_layout.addWidget(QtWidgets.QLabel("Requires "))
         self.controls_layout.addWidget(self.rule_selector)
-        self.controls_layout.addWidget(QtWidgets.QLabel("condition(s) to be met"))
+        self.controls_layout.addWidget(
+            QtWidgets.QLabel("condition(s) to be met")
+        )
 
         self.controls_layout.addStretch()
 

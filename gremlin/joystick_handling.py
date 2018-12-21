@@ -33,7 +33,6 @@ _joystick_devices = []
 _joystick_init_lock = threading.Lock()
 
 
-
 class VJoyProxy:
 
     """Manages the usage of vJoy and allows shared access all callbacks."""
@@ -248,7 +247,6 @@ def joystick_devices_initialization():
                 sdl2.SDL_JoystickInstanceID(joy)
             )
 
-
     # Process all devices again to detect those that have been added and those
     # that have been removed since the last time this function ran.
 
@@ -284,7 +282,6 @@ def joystick_devices_initialization():
     if not device_added and not device_removed:
         _joystick_init_lock.release()
         return
-
 
     # In order to associate vJoy devices and their ids correctly with SDL
     # device ids a hash is constructed from the number of axes, buttons, and

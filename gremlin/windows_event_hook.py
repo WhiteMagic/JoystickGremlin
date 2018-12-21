@@ -16,11 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import atexit
 import ctypes
 from ctypes import wintypes
 import threading
-import time
 
 import gremlin.common
 
@@ -104,7 +102,6 @@ WM_XBUTTONUP    = 0x020C
 WM_MOUSEHWHEEL  = 0x020E
 
 
-
 class KBDLLHOOKSTRUCT(ctypes.Structure):
 
     """Data structure used with keuboard callbacks."""
@@ -119,7 +116,6 @@ class KBDLLHOOKSTRUCT(ctypes.Structure):
 LPKBDLLHOOKSTRUCT = ctypes.POINTER(KBDLLHOOKSTRUCT)
 
 
-
 class MSLLHOOKSTRUCT(ctypes.Structure):
 
     """Data structure used with mouse callbacks."""
@@ -131,7 +127,6 @@ class MSLLHOOKSTRUCT(ctypes.Structure):
         ("time",        wintypes.DWORD),
         ("dwExtraInfo", wintypes.WPARAM)
     )
-
 LPMSLLHOOKSTRUCT = ctypes.POINTER(MSLLHOOKSTRUCT)
 
 

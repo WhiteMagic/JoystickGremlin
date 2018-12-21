@@ -200,7 +200,7 @@ class AcceleratedMouseMotion(MouseMotion):
         :param value the length of the direction vector
         """
         return value * math.cos(deg2rad(direction)),\
-               value * math.sin(deg2rad(direction))
+            value * math.sin(deg2rad(direction))
 
     def __call__(self):
         """Returns the change in x and y for this point in time.

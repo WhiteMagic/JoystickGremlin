@@ -730,7 +730,6 @@ class ProfileModifier:
         self.change_conditions(source_id, target_id)
         self.change_merge_axis(source_id, target_id)
 
-
     def change_device_actions(self, source_id, target_id):
         """Moves actions from the source device to the target device.
 
@@ -781,7 +780,7 @@ class ProfileModifier:
                     input_id = input_item.input_id
 
                     if input_id not in target_mode.config[input_type]:
-                        logging.getLogger("system").warn(
+                        logging.getLogger("system").warning(
                             "Source input id not present in target device"
                         )
                         continue
@@ -924,7 +923,7 @@ class Settings:
 
         # Process vJoy as input settings
         for vid, value in self.vjoy_as_input.items():
-            if value == True:
+            if value is True:
                 vjoy_node = ElementTree.Element("vjoy-input")
                 vjoy_node.set("id", safe_format(vid, int))
                 node.append(vjoy_node)
@@ -1437,10 +1436,10 @@ class Device:
         if device is not None:
             for i in range(device.axis_count):
                 mode.get_data(InputType.JoystickAxis, device.axis(i)[1])
-            for id in range(1, device.buttons + 1):
-                mode.get_data(InputType.JoystickButton, id)
-            for id in range(1, device.hats + 1):
-                mode.get_data(InputType.JoystickHat, id)
+            for idx in range(1, device.buttons + 1):
+                mode.get_data(InputType.JoystickButton, idx)
+            for idx in range(1, device.hats + 1):
+                mode.get_data(InputType.JoystickHat, idx)
 
     def from_xml(self, node):
         """Populates this device based on the xml data.

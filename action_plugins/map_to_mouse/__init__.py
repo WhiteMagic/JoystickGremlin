@@ -127,13 +127,19 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.motion_layout.addWidget(QtWidgets.QLabel("Maximum speed"), 0, 2)
         self.motion_layout.addWidget(self.max_speed, 0, 3, QtCore.Qt.AlignLeft)
 
-        self.motion_layout.addWidget(QtWidgets.QLabel("Time to maximum speed"), 1, 0)
-        self.motion_layout.addWidget(self.time_to_max_speed, 1, 1, QtCore.Qt.AlignLeft)
+        self.motion_layout.addWidget(
+            QtWidgets.QLabel("Time to maximum speed"), 1, 0
+        )
+        self.motion_layout.addWidget(
+            self.time_to_max_speed, 1, 1, QtCore.Qt.AlignLeft
+        )
         if self.action_data.get_input_type() in [
             InputType.JoystickButton, InputType.Keyboard
         ]:
             self.motion_layout.addWidget(QtWidgets.QLabel("Direction"), 1, 2)
-            self.motion_layout.addWidget(self.direction, 1, 3, QtCore.Qt.AlignLeft)
+            self.motion_layout.addWidget(
+                self.direction, 1, 3, QtCore.Qt.AlignLeft
+            )
 
         self._connect_button_hat()
 
@@ -332,7 +338,7 @@ class MapToMouseFunctor(AbstractFunctor):
             self._perform_mouse_button(event, value)
 
     def _perform_mouse_button(self, event, value):
-        assert self.config.motion_input == False
+        assert self.config.motion_input is False
 
         if self.config.button_id in [MouseButton.WheelDown, MouseButton.WheelUp]:
             if value.current:
@@ -353,7 +359,7 @@ class MapToMouseFunctor(AbstractFunctor):
         :param value the current value of the event chain
         """
         delta_motion = self.config.min_speed + abs(value.current) * \
-                       (self.config.max_speed - self.config.min_speed)
+                (self.config.max_speed - self.config.min_speed)
         delta_motion = math.copysign(delta_motion, value.current)
         delta_motion = 0.0 if abs(value.current) < 0.05 else delta_motion
 
@@ -465,7 +471,7 @@ class MapToMouse(AbstractAction):
                 safe_read(node, "button_id", int, 1)
             )
         except ValueError as e:
-            logging.getLogger("system").warn(
+            logging.getLogger("system").warning(
                 "Invalid mouse identifier in profile: {:}".format(e)
             )
             self.button_id = gremlin.common.MouseButton.Left

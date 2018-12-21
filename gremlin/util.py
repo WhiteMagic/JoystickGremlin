@@ -356,6 +356,7 @@ def load_module(name):
         g_loaded_modules[name] = importlib.import_module(name)
     return g_loaded_modules[name]
 
+
 def deg2rad(angle):
     """Returns radian value of the provided angle in degree.
 
@@ -363,6 +364,7 @@ def deg2rad(angle):
     :return angle in radian
     """
     return angle * (math.pi / 180.0)
+
 
 def rad2deg(angle):
     """Returns degree value of the provided angle in radian.

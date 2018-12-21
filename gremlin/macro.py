@@ -295,7 +295,8 @@ class MacroManager:
                 for i, entry in enumerate(self._queue):
                     # Terminate macro if needed
                     if entry.state is False:
-                        if entry.macro.id in self._flags and self._flags[entry.macro.id]:
+                        if entry.macro.id in self._flags \
+                                and self._flags[entry.macro.id]:
                             # Terminate currently running macro
                             with self._flags_lock:
                                 self._flags[entry.macro.id] = False

@@ -363,7 +363,6 @@ class Configuration:
         """
         return self._data.get("activate_on_launch", False)
 
-
     @activate_on_launch.setter
     def activate_on_launch(self, value):
         """Sets whether or not to activate the profile on launch.

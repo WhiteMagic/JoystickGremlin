@@ -422,7 +422,6 @@ class AxesTimeline(QtWidgets.QGroupBox):
         8: "#f781bf"
     }
 
-
     def __init__(self, device, parent=None):
         """Creates a new instance.
 

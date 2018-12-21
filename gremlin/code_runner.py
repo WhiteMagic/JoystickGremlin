@@ -15,15 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy
-import importlib
 import logging
-import random
-import string
-import time
 
 import gremlin
-from gremlin import event_handler, execution_graph, input_devices, \
+from gremlin import event_handler, input_devices, \
     joystick_handling, macro, sendinput, util
 import vjoy as vjoy_module
 
@@ -193,7 +188,6 @@ class CodeRunner:
                     merge_axis.update_axis2,
                     False
                 )
-
 
             # Create vJoy response curve setups
             self._vjoy_curves.profile_data = profile.vjoy_devices

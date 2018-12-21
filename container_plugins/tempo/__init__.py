@@ -72,7 +72,6 @@ class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.options_layout.addWidget(self.activate_press)
         self.options_layout.addWidget(self.activate_release)
 
-
         self.action_layout.addLayout(self.options_layout)
 
         if self.profile_data.action_sets[0] is None:

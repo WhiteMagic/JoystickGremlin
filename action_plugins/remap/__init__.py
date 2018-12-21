@@ -19,6 +19,7 @@
 import logging
 from xml.etree import ElementTree
 
+from gremlin.base_classes import InputActionCondition
 from gremlin.common import InputType
 from gremlin import input_devices, joystick_handling, util
 import gremlin.ui.common
@@ -125,7 +126,6 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             )
             logging.getLogger("system").error(str(e))
 
-
     def save_changes(self):
         """Saves UI contents to the profile data storage."""
         # Store remap data
@@ -186,7 +186,7 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
         needs_auto_release = True
         if activation_condition:
             for condition in activation_condition.conditions:
-                if isinstance(condition, gremlin.base_classes.InputActionCondition):
+                if isinstance(condition, InputActionCondition):
                     # Remap like actions typically have an always activation
                     # condition associated with them
                     if condition.comparison != "always":
@@ -212,7 +212,6 @@ class Remap(gremlin.base_classes.AbstractAction):
 
     functor = RemapFunctor
     widget = RemapWidget
-
 
     def __init__(self, parent):
         """Creates a new instance.
