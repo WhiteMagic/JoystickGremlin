@@ -476,7 +476,7 @@ class MacroActionEditor(QtWidgets.QWidget):
     def _modify_joystick(self, event):
         self.model.set_entry(
             gremlin.macro.JoystickAction(
-                event.windows_id,
+                event.device_id.windows_id,
                 event.event_type,
                 event.identifier,
                 event.value
@@ -1328,7 +1328,7 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
                     time.time() - max(self._recording_times.values())
                 ))
             action = gremlin.macro.JoystickAction(
-                event.windows_id,
+                event.device_id.windows_id,
                 event.event_type,
                 event.identifier,
                 event.is_pressed if event.event_type == InputType.JoystickButton \

@@ -505,7 +505,8 @@ class JoystickAction(AbstractAction):
     def __init__(self, device_id, input_type, input_id, value):
         """Creates a new JoystickAction instance for use in a macro.
 
-        :param device_id id of the device from which the input is generated
+        :param device_id id the windows id of the device from which
+            the input is generated
         :param input_type type of input being generated
         :param input_id id of the input being generated
         :param value the value of the generated input
@@ -521,14 +522,14 @@ class JoystickAction(AbstractAction):
         if self.input_type == gremlin.common.InputType.JoystickButton:
             event = gremlin.event_handler.Event(
                 event_type=self.input_type,
-                device_id=self.device_id,
+                device_id=el._winid_to_devid[self.device_id],
                 identifier=self.input_id,
                 is_pressed=self.value
             )
         else:
             event = gremlin.event_handler.Event(
                 event_type=self.input_type,
-                device_id=self.device_id,
+                device_id=el._winid_to_devid[self.device_id],
                 identifier=self.input_id,
                 value=self.value
             )
