@@ -357,7 +357,8 @@ class ButtonState(QtWidgets.QGroupBox):
             if time.time() - self._event_times.get(event.identifier, 0.0) < 0.05:
                 time.sleep(0.05)
 
-            self.buttons[event.identifier].setDown(event.is_pressed)
+            state = event.is_pressed if event.is_pressed is not None else False
+            self.buttons[event.identifier].setDown(state)
             self._event_times[event.identifier] = time.time()
 
 
