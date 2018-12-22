@@ -1206,7 +1206,7 @@ class Profile:
         """
         # Generate XML document
         root = ElementTree.Element("profile")
-        root.set("version", "7")
+        root.set("version", "8")
 
         # Device settings
         devices = ElementTree.Element("devices")
