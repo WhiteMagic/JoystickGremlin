@@ -58,8 +58,7 @@ class Event:
             self,
             event_type,
             identifier,
-            hardware_id,
-            windows_id,
+            device_id,
             value=None,
             is_pressed=None,
             raw_value=None
@@ -69,9 +68,8 @@ class Event:
         :param event_type the type of the event, one of the EventType
             values
         :param identifier the identifier of the event source
-        :param hardware_id the hardware identifier of the device which
-            created the event
-        :param windows_id the index of the device as assigned by windows
+        :param device_id DeviceIdentifier instance of the device causing
+            this event
         :param value the value of a joystick axis or hat
         :param is_pressed boolean flag indicating if a button or key
         :param raw_value the raw SDL value of the axis
@@ -79,8 +77,7 @@ class Event:
         """
         self.event_type = event_type
         self.identifier = identifier
-        self.hardware_id = hardware_id
-        self.windows_id = windows_id
+        self.device_id = device_id
         self.is_pressed = is_pressed
         self.value = value
         self.raw_value = raw_value
@@ -93,8 +90,7 @@ class Event:
         return Event(
             self.event_type,
             self.identifier,
-            self.hardware_id,
-            self.windows_id,
+            self.device_id,
             self.value,
             self.is_pressed,
             self.raw_value
@@ -124,8 +120,7 @@ class Event:
                 << Event.ShiftIdentifier
         else:
             hash_val += self.identifier << Event.ShiftIdentifier
-        hash_val += self.windows_id << Event.ShiftSystemId
-        hash_val += self.hardware_id << Event.ShiftDeviceId
+        hash_val += hash(self.device_id)
 
         return hash_val
 
@@ -140,8 +135,7 @@ class Event:
         return Event(
             event_type=common.InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
-            hardware_id=0,
-            windows_id=0
+            device_id=common.DeviceIdentifier(0, 0)
         )
 
 
@@ -225,8 +219,10 @@ class EventListener(QtCore.QObject):
             )
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickAxis,
-                hardware_id=self._winid_to_devid[event.jaxis.which].hardware_id,
-                windows_id=event.jaxis.which,
+                device_id=common.DeviceIdentifier(
+                    self._winid_to_devid[event.jaxis.which].hardware_id,
+                    event.jaxis.which
+                ),
                 identifier=event.jaxis.axis + 1,
                 value=self._calibrations[calibration_key](event.jaxis.value),
                 raw_value=event.jaxis.value
@@ -234,16 +230,20 @@ class EventListener(QtCore.QObject):
         elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickButton,
-                hardware_id=self._winid_to_devid[event.jbutton.which].hardware_id,
-                windows_id=event.jbutton.which,
+                device_id=common.DeviceIdentifier(
+                    self._winid_to_devid[event.jbutton.which].hardware_id,
+                    event.jbutton.which
+                ),
                 identifier=event.jbutton.button + 1,
                 is_pressed=event.jbutton.state == 1
             ))
         elif event.type == sdl2.SDL_JOYHATMOTION:
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickHat,
-                hardware_id=self._winid_to_devid[event.jhat.which].hardware_id,
-                windows_id=event.jhat.which,
+                device_id=common.DeviceIdentifier(
+                    self._winid_to_devid[event.jhat.which].hardware_id,
+                    event.jhat.which
+                ),
                 identifier=event.jhat.hat + 1,
                 value=util.convert_sdl_hat(event.jhat.value)
             ))
@@ -274,8 +274,7 @@ class EventListener(QtCore.QObject):
             self._keyboard_state[key_id] = is_pressed
             self.keyboard_event.emit(Event(
                 event_type=common.InputType.Keyboard,
-                hardware_id=0,
-                windows_id=0,
+                device_id=common.DeviceIdentifier(0, 0),
                 identifier=key_id,
                 is_pressed=is_pressed,
             ))
@@ -295,8 +294,7 @@ class EventListener(QtCore.QObject):
         if not event.is_injected:
             self.mouse_event.emit(Event(
                 event_type=common.InputType.Mouse,
-                hardware_id=0,
-                windows_id=0,
+                device_id=common.DeviceIdentifier(0, 0),
                 identifier=event.button_id,
                 is_pressed=event.is_pressed,
             ))
@@ -499,9 +497,13 @@ class EventHandler(QtCore.QObject):
         """
         # Obtain callbacks matching the event
         callback_list = []
-        device_id = util.get_device_identifier(event)
-        if device_id in self.callbacks:
-            callback_list = self.callbacks[device_id].get(
+        if event.device_id in self.callbacks:
+            # for evt in self.callbacks[device_id].get(self._active_mode, {}):
+            #     if device_id == util.get_device_identifier(evt):
+            #         callback_list = self.callbacks[device_id][self._active_mode][evt]
+            #         break
+
+            callback_list = self.callbacks[event.device_id].get(
                 self._active_mode, {}
             ).get(event, [])
 

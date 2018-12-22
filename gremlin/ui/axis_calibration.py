@@ -145,7 +145,7 @@ class CalibrationUi(common.BaseDialogUi):
         selection_id = gremlin.util.get_device_identifier(
             self.devices[self.current_selection_id]
         )
-        if gremlin.util.get_device_identifier(event) == selection_id \
+        if event.device_id == selection_id \
                 and event.event_type == gremlin.common.InputType.JoystickAxis:
             self.axes[event.identifier-1].set_current(event.raw_value)
 

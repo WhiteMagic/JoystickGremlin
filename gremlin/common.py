@@ -144,9 +144,9 @@ class DeviceIdentifier:
         :return string representation
         """
         if self._is_duplicate:
-            return "{}_{}".format(self._hardware_id, self._windows_id)
+            return "DI: {}_{}".format(self._hardware_id, self._windows_id)
         else:
-            return "{}".format(self._hardware_id)
+            return "DI: {}".format(self._hardware_id)
 
     @property
     def hardware_id(self):

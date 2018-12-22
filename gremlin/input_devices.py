@@ -47,18 +47,17 @@ class CallbackRegistry:
         :param always_execute if True the callback is run even if Gremlin
             is paused
         """
-        device_id = util.get_device_identifier(event)
         self._current_id += 1
         function_name = "{}_{:d}".format(callback.__name__, self._current_id)
 
-        if device_id not in self._registry:
-            self._registry[device_id] = {}
-        if mode not in self._registry[device_id]:
-            self._registry[device_id][mode] = {}
+        if event.device_id not in self._registry:
+            self._registry[event.device_id] = {}
+        if mode not in self._registry[event.device_id]:
+            self._registry[event.device_id][mode] = {}
 
-        if event not in self._registry[device_id][mode]:
-            self._registry[device_id][mode][event] = {}
-        self._registry[device_id][mode][event][function_name] = \
+        if event not in self._registry[event.device_id][mode]:
+            self._registry[event.device_id][mode][event] = {}
+        self._registry[event.device_id][mode][event][function_name] = \
             (callback, always_execute)
 
     @property
@@ -690,8 +689,7 @@ def _button(button_id, device_id, mode, always_execute=False):
 
         event = event_handler.Event(
             event_type=common.InputType.JoystickButton,
-            hardware_id=device_id.hardware_id,
-            windows_id=device_id.windows_id,
+            device_id=device_id,
             identifier=button_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)
@@ -719,8 +717,7 @@ def _hat(hat_id, device_id, mode, always_execute=False):
 
         event = event_handler.Event(
             event_type=common.InputType.JoystickHat,
-            hardware_id=device_id.hardware_id,
-            windows_id=device_id.windows_id,
+            device_id=device_id,
             identifier=hat_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)
@@ -748,8 +745,7 @@ def _axis(axis_id, device_id, mode, always_execute=False):
 
         event = event_handler.Event(
             event_type=common.InputType.JoystickAxis,
-            hardware_id=device_id.hardware_id,
-            windows_id=device_id.windows_id,
+            device_id=device_id,
             identifier=axis_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)

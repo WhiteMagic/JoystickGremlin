@@ -298,8 +298,7 @@ class HatButtonsContainer(gremlin.base_classes.AbstractContainer):
                 gremlin.event_handler.Event(
                     gremlin.common.InputType.VirtualButton,
                     callbacks[-1].callback.virtual_button.identifier,
-                    9999,
-                    9999,
+                    device_id=gremlin.common.DeviceIdentifier(9999, 9999),
                     is_pressed=True,
                     raw_value=True
                 )

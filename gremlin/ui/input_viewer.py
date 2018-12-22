@@ -262,16 +262,14 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
 
         :param event the event to use in the update
         """
-        event_id = gremlin.util.get_device_identifier(event)
-        if self.device_id != event_id:
+        if self.device_id != event.device_id:
             return
 
         for widget in self.widgets:
             widget.process_event(event)
 
     def _current_axis_update(self, event):
-        event_id = gremlin.util.get_device_identifier(event)
-        if self.device_id != event_id:
+        if self.device_id != event.device_id:
             return
 
         for widget in self.widgets:
@@ -282,8 +280,7 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
 
         :param event the event to use in the update
         """
-        event_id = gremlin.util.get_device_identifier(event)
-        if self.device_id != event_id:
+        if self.device_id != event.device_id:
             return
 
         if event.event_type == gremlin.common.InputType.JoystickAxis:

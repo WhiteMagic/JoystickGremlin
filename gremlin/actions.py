@@ -323,8 +323,7 @@ class VirtualButton(metaclass=ABCMeta):
         event = event_handler.Event(
             common.InputType.VirtualButton,
             self._identifier,
-            9999,
-            9999,
+            device_id=common.DeviceIdentifier(9999, 9999),
             is_pressed=self._is_pressed,
             raw_value=self._is_pressed
         )
@@ -337,8 +336,7 @@ class VirtualButton(metaclass=ABCMeta):
         event = event_handler.Event(
             common.InputType.VirtualButton,
             self._identifier,
-            9999,
-            9999,
+            device_id=common.DeviceIdentifier(9999, 9999),
             is_pressed=self._is_pressed,
             raw_value=self._is_pressed
         )

@@ -69,10 +69,8 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
 
         # Add a new binding
         else:
-            device_id = gremlin.util.get_device_identifier(event)
-
             # Get the input item to be mapped then modify it and set it again
-            item = self.new_profile.devices[device_id].modes[mode].get_data(
+            item = self.new_profile.devices[event.device_id].modes[mode].get_data(
                 event.event_type,
                 event.identifier
             )
@@ -81,7 +79,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
             item.always_execute = input_item.always_execute
             item.description = input_item.description
 
-            self.new_profile.devices[device_id].modes[mode].set_data(
+            self.new_profile.devices[event.device_id].modes[mode].set_data(
                 item.input_type,
                 item.input_id,
                 item

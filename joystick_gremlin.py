@@ -809,19 +809,15 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Get device id of the event and check if this matches the currently
         # active tab
-        device_id = gremlin.common.DeviceIdentifier(
-            event.hardware_id, event.windows_id
-        )
-
-        if device_id not in self.tabs:
+        if event.device_id not in self.tabs:
             return
 
-        tab_switch_needed = self.ui.devices.currentWidget() != self.tabs[device_id]
+        tab_switch_needed = self.ui.devices.currentWidget() != self.tabs[event.device_id]
 
         # Switch to the tab corresponding to the event's device if the option
         # is set in the options
         if self.config.highlight_device and tab_switch_needed:
-            self.ui.devices.setCurrentWidget(self.tabs[device_id])
+            self.ui.devices.setCurrentWidget(self.tabs[event.device_id])
             tab_switch_needed = False
             time.sleep(0.1)
 

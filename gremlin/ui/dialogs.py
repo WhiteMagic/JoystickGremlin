@@ -1221,7 +1221,7 @@ class SwapDevicesUi(common.BaseDialogUi):
         profile_modifier = gremlin.profile.ProfileModifier(self.profile)
         profile_modifier.change_device_id(
             device_id,
-            gremlin.util.get_device_identifier(event)
+            event.device_id
         )
 
         self._create_swap_ui()

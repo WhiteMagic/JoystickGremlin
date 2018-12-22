@@ -521,16 +521,14 @@ class JoystickAction(AbstractAction):
         if self.input_type == gremlin.common.InputType.JoystickButton:
             event = gremlin.event_handler.Event(
                 event_type=self.input_type,
-                hardware_id=el._winid_to_devid[self.device_id].hardware_id,
-                windows_id=self.device_id,
+                device_id=self.device_id,
                 identifier=self.input_id,
                 is_pressed=self.value
             )
         else:
             event = gremlin.event_handler.Event(
                 event_type=self.input_type,
-                hardware_id=el._winid_to_devid[self.device_id].hardware_id,
-                windows_id=self.device_id,
+                device_id=self.device_id,
                 identifier=self.input_id,
                 value=self.value
             )

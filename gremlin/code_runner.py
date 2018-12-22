@@ -111,8 +111,7 @@ class CodeRunner:
 
                             event = event_handler.Event(
                                 event_type=input_item.input_type,
-                                hardware_id=hid,
-                                windows_id=wid,
+                                device_id=gremlin.common.DeviceIdentifier(hid, wid),
                                 identifier=input_item.input_id
                             )
 
@@ -156,15 +155,14 @@ class CodeRunner:
                 # Lower axis callback
                 event = event_handler.Event(
                     event_type=gremlin.common.InputType.JoystickAxis,
-                    hardware_id=entry["lower"]["hardware_id"],
-                    windows_id=entry["lower"]["windows_id"],
-                    identifier=entry["lower"]["axis_id"]
-                )
-                self.event_handler.add_callback(
-                    gremlin.common.DeviceIdentifier(
+                    device_id=gremlin.common.DeviceIdentifier(
                         entry["lower"]["hardware_id"],
                         entry["lower"]["windows_id"]
                     ),
+                    identifier=entry["lower"]["axis_id"]
+                )
+                self.event_handler.add_callback(
+                    event.device_id,
                     entry["mode"],
                     event,
                     merge_axis.update_axis1,
@@ -174,15 +172,14 @@ class CodeRunner:
                 # Upper axis callback
                 event = event_handler.Event(
                     event_type=gremlin.common.InputType.JoystickAxis,
-                    hardware_id=entry["upper"]["hardware_id"],
-                    windows_id=entry["upper"]["windows_id"],
-                    identifier=entry["upper"]["axis_id"]
-                )
-                self.event_handler.add_callback(
-                    gremlin.common.DeviceIdentifier(
+                    device_id=gremlin.common.DeviceIdentifier(
                         entry["upper"]["hardware_id"],
                         entry["upper"]["windows_id"]
                     ),
+                    identifier=entry["upper"]["axis_id"]
+                )
+                self.event_handler.add_callback(
+                    event.device_id,
                     entry["mode"],
                     event,
                     merge_axis.update_axis2,
