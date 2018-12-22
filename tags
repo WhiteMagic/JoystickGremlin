@@ -1,0 +1,739 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	0.0.0	/45968eff/
+.bd-callout	_site/css/override.css	/^.bd-callout {$/;"	c
+.bd-callout	css/override.css	/^.bd-callout {$/;"	c
+.bd-callout code	_site/css/override.css	/^.bd-callout code {$/;"	s
+.bd-callout code	css/override.css	/^.bd-callout code {$/;"	s
+.bd-callout h4	_site/css/override.css	/^.bd-callout h4 {$/;"	s
+.bd-callout h4	css/override.css	/^.bd-callout h4 {$/;"	s
+.bd-callout p:last-child	_site/css/override.css	/^.bd-callout p:last-child {$/;"	s
+.bd-callout p:last-child	css/override.css	/^.bd-callout p:last-child {$/;"	s
+.bd-callout+.bd-callout	_site/css/override.css	/^.bd-callout+.bd-callout {$/;"	c
+.bd-callout+.bd-callout	css/override.css	/^.bd-callout+.bd-callout {$/;"	c
+.bd-callout-danger	_site/css/override.css	/^.bd-callout-danger {$/;"	c
+.bd-callout-danger	css/override.css	/^.bd-callout-danger {$/;"	c
+.bd-callout-danger h4	_site/css/override.css	/^.bd-callout-danger h4 {$/;"	s
+.bd-callout-danger h4	css/override.css	/^.bd-callout-danger h4 {$/;"	s
+.bd-callout-info	_site/css/override.css	/^.bd-callout-info {$/;"	c
+.bd-callout-info	css/override.css	/^.bd-callout-info {$/;"	c
+.bd-callout-info h4	_site/css/override.css	/^.bd-callout-info h4 {$/;"	s
+.bd-callout-info h4	css/override.css	/^.bd-callout-info h4 {$/;"	s
+.bd-callout-warning	_site/css/override.css	/^.bd-callout-warning {$/;"	c
+.bd-callout-warning	css/override.css	/^.bd-callout-warning {$/;"	c
+.bd-callout-warning h4	_site/css/override.css	/^.bd-callout-warning h4 {$/;"	s
+.bd-callout-warning h4	css/override.css	/^.bd-callout-warning h4 {$/;"	s
+.bottom-gap	_site/css/override.css	/^.bottom-gap$/;"	c
+.bottom-gap	css/override.css	/^.bottom-gap$/;"	c
+.footer	_site/css/override.css	/^.footer$/;"	c
+.footer	css/override.css	/^.footer$/;"	c
+.highlight .bp	_site/css/github.css	/^.highlight .bp { color: #999999 } \/* Name.Builtin.Pseudo *\/$/;"	c
+.highlight .bp	css/github.css	/^.highlight .bp { color: #999999 } \/* Name.Builtin.Pseudo *\/$/;"	c
+.highlight .c	_site/css/github.css	/^.highlight .c { color: #999988; font-style: italic } \/* Comment *\/$/;"	c
+.highlight .c	css/github.css	/^.highlight .c { color: #999988; font-style: italic } \/* Comment *\/$/;"	c
+.highlight .c1	_site/css/github.css	/^.highlight .c1 { color: #999988; font-style: italic } \/* Comment.Single *\/$/;"	c
+.highlight .c1	css/github.css	/^.highlight .c1 { color: #999988; font-style: italic } \/* Comment.Single *\/$/;"	c
+.highlight .cm	_site/css/github.css	/^.highlight .cm { color: #999988; font-style: italic } \/* Comment.Multiline *\/$/;"	c
+.highlight .cm	css/github.css	/^.highlight .cm { color: #999988; font-style: italic } \/* Comment.Multiline *\/$/;"	c
+.highlight .cp	_site/css/github.css	/^.highlight .cp { color: #999999; font-weight: bold; font-style: italic } \/* Comment.Preproc *\/$/;"	c
+.highlight .cp	css/github.css	/^.highlight .cp { color: #999999; font-weight: bold; font-style: italic } \/* Comment.Preproc *\/$/;"	c
+.highlight .cs	_site/css/github.css	/^.highlight .cs { color: #999999; font-weight: bold; font-style: italic } \/* Comment.Special *\/$/;"	c
+.highlight .cs	css/github.css	/^.highlight .cs { color: #999999; font-weight: bold; font-style: italic } \/* Comment.Special *\/$/;"	c
+.highlight .err	_site/css/github.css	/^.highlight .err { color: #a61717; background-color: #e3d2d2 } \/* Error *\/$/;"	c
+.highlight .err	css/github.css	/^.highlight .err { color: #a61717; background-color: #e3d2d2 } \/* Error *\/$/;"	c
+.highlight .gd	_site/css/github.css	/^.highlight .gd { color: #000000; background-color: #ffdddd } \/* Generic.Deleted *\/$/;"	c
+.highlight .gd	css/github.css	/^.highlight .gd { color: #000000; background-color: #ffdddd } \/* Generic.Deleted *\/$/;"	c
+.highlight .ge	_site/css/github.css	/^.highlight .ge { color: #000000; font-style: italic } \/* Generic.Emph *\/$/;"	c
+.highlight .ge	css/github.css	/^.highlight .ge { color: #000000; font-style: italic } \/* Generic.Emph *\/$/;"	c
+.highlight .gh	_site/css/github.css	/^.highlight .gh { color: #999999 } \/* Generic.Heading *\/$/;"	c
+.highlight .gh	css/github.css	/^.highlight .gh { color: #999999 } \/* Generic.Heading *\/$/;"	c
+.highlight .gi	_site/css/github.css	/^.highlight .gi { color: #000000; background-color: #ddffdd } \/* Generic.Inserted *\/$/;"	c
+.highlight .gi	css/github.css	/^.highlight .gi { color: #000000; background-color: #ddffdd } \/* Generic.Inserted *\/$/;"	c
+.highlight .go	_site/css/github.css	/^.highlight .go { color: #888888 } \/* Generic.Output *\/$/;"	c
+.highlight .go	css/github.css	/^.highlight .go { color: #888888 } \/* Generic.Output *\/$/;"	c
+.highlight .gp	_site/css/github.css	/^.highlight .gp { color: #555555 } \/* Generic.Prompt *\/$/;"	c
+.highlight .gp	css/github.css	/^.highlight .gp { color: #555555 } \/* Generic.Prompt *\/$/;"	c
+.highlight .gr	_site/css/github.css	/^.highlight .gr { color: #aa0000 } \/* Generic.Error *\/$/;"	c
+.highlight .gr	css/github.css	/^.highlight .gr { color: #aa0000 } \/* Generic.Error *\/$/;"	c
+.highlight .gs	_site/css/github.css	/^.highlight .gs { font-weight: bold } \/* Generic.Strong *\/$/;"	c
+.highlight .gs	css/github.css	/^.highlight .gs { font-weight: bold } \/* Generic.Strong *\/$/;"	c
+.highlight .gt	_site/css/github.css	/^.highlight .gt { color: #aa0000 } \/* Generic.Traceback *\/$/;"	c
+.highlight .gt	css/github.css	/^.highlight .gt { color: #aa0000 } \/* Generic.Traceback *\/$/;"	c
+.highlight .gu	_site/css/github.css	/^.highlight .gu { color: #aaaaaa } \/* Generic.Subheading *\/$/;"	c
+.highlight .gu	css/github.css	/^.highlight .gu { color: #aaaaaa } \/* Generic.Subheading *\/$/;"	c
+.highlight .hll	_site/css/github.css	/^.highlight .hll { background-color: #ffffcc }$/;"	c
+.highlight .hll	css/github.css	/^.highlight .hll { background-color: #ffffcc }$/;"	c
+.highlight .il	_site/css/github.css	/^.highlight .il { color: #009999 } \/* Literal.Number.Integer.Long *\/$/;"	c
+.highlight .il	css/github.css	/^.highlight .il { color: #009999 } \/* Literal.Number.Integer.Long *\/$/;"	c
+.highlight .k	_site/css/github.css	/^.highlight .k { color: #000000; font-weight: bold } \/* Keyword *\/$/;"	c
+.highlight .k	css/github.css	/^.highlight .k { color: #000000; font-weight: bold } \/* Keyword *\/$/;"	c
+.highlight .kc	_site/css/github.css	/^.highlight .kc { color: #000000; font-weight: bold } \/* Keyword.Constant *\/$/;"	c
+.highlight .kc	css/github.css	/^.highlight .kc { color: #000000; font-weight: bold } \/* Keyword.Constant *\/$/;"	c
+.highlight .kd	_site/css/github.css	/^.highlight .kd { color: #000000; font-weight: bold } \/* Keyword.Declaration *\/$/;"	c
+.highlight .kd	css/github.css	/^.highlight .kd { color: #000000; font-weight: bold } \/* Keyword.Declaration *\/$/;"	c
+.highlight .kn	_site/css/github.css	/^.highlight .kn { color: #000000; font-weight: bold } \/* Keyword.Namespace *\/$/;"	c
+.highlight .kn	css/github.css	/^.highlight .kn { color: #000000; font-weight: bold } \/* Keyword.Namespace *\/$/;"	c
+.highlight .kp	_site/css/github.css	/^.highlight .kp { color: #000000; font-weight: bold } \/* Keyword.Pseudo *\/$/;"	c
+.highlight .kp	css/github.css	/^.highlight .kp { color: #000000; font-weight: bold } \/* Keyword.Pseudo *\/$/;"	c
+.highlight .kr	_site/css/github.css	/^.highlight .kr { color: #000000; font-weight: bold } \/* Keyword.Reserved *\/$/;"	c
+.highlight .kr	css/github.css	/^.highlight .kr { color: #000000; font-weight: bold } \/* Keyword.Reserved *\/$/;"	c
+.highlight .kt	_site/css/github.css	/^.highlight .kt { color: #445588; font-weight: bold } \/* Keyword.Type *\/$/;"	c
+.highlight .kt	css/github.css	/^.highlight .kt { color: #445588; font-weight: bold } \/* Keyword.Type *\/$/;"	c
+.highlight .m	_site/css/github.css	/^.highlight .m { color: #009999 } \/* Literal.Number *\/$/;"	c
+.highlight .m	css/github.css	/^.highlight .m { color: #009999 } \/* Literal.Number *\/$/;"	c
+.highlight .mf	_site/css/github.css	/^.highlight .mf { color: #009999 } \/* Literal.Number.Float *\/$/;"	c
+.highlight .mf	css/github.css	/^.highlight .mf { color: #009999 } \/* Literal.Number.Float *\/$/;"	c
+.highlight .mh	_site/css/github.css	/^.highlight .mh { color: #009999 } \/* Literal.Number.Hex *\/$/;"	c
+.highlight .mh	css/github.css	/^.highlight .mh { color: #009999 } \/* Literal.Number.Hex *\/$/;"	c
+.highlight .mi	_site/css/github.css	/^.highlight .mi { color: #009999 } \/* Literal.Number.Integer *\/$/;"	c
+.highlight .mi	css/github.css	/^.highlight .mi { color: #009999 } \/* Literal.Number.Integer *\/$/;"	c
+.highlight .mo	_site/css/github.css	/^.highlight .mo { color: #009999 } \/* Literal.Number.Oct *\/$/;"	c
+.highlight .mo	css/github.css	/^.highlight .mo { color: #009999 } \/* Literal.Number.Oct *\/$/;"	c
+.highlight .na	_site/css/github.css	/^.highlight .na { color: #008080 } \/* Name.Attribute *\/$/;"	c
+.highlight .na	css/github.css	/^.highlight .na { color: #008080 } \/* Name.Attribute *\/$/;"	c
+.highlight .nb	_site/css/github.css	/^.highlight .nb { color: #0086B3 } \/* Name.Builtin *\/$/;"	c
+.highlight .nb	css/github.css	/^.highlight .nb { color: #0086B3 } \/* Name.Builtin *\/$/;"	c
+.highlight .nc	_site/css/github.css	/^.highlight .nc { color: #445588; font-weight: bold } \/* Name.Class *\/$/;"	c
+.highlight .nc	css/github.css	/^.highlight .nc { color: #445588; font-weight: bold } \/* Name.Class *\/$/;"	c
+.highlight .nd	_site/css/github.css	/^.highlight .nd { color: #3c5d5d; font-weight: bold } \/* Name.Decorator *\/$/;"	c
+.highlight .nd	css/github.css	/^.highlight .nd { color: #3c5d5d; font-weight: bold } \/* Name.Decorator *\/$/;"	c
+.highlight .ne	_site/css/github.css	/^.highlight .ne { color: #990000; font-weight: bold } \/* Name.Exception *\/$/;"	c
+.highlight .ne	css/github.css	/^.highlight .ne { color: #990000; font-weight: bold } \/* Name.Exception *\/$/;"	c
+.highlight .nf	_site/css/github.css	/^.highlight .nf { color: #990000; font-weight: bold } \/* Name.Function *\/$/;"	c
+.highlight .nf	css/github.css	/^.highlight .nf { color: #990000; font-weight: bold } \/* Name.Function *\/$/;"	c
+.highlight .ni	_site/css/github.css	/^.highlight .ni { color: #800080 } \/* Name.Entity *\/$/;"	c
+.highlight .ni	css/github.css	/^.highlight .ni { color: #800080 } \/* Name.Entity *\/$/;"	c
+.highlight .nl	_site/css/github.css	/^.highlight .nl { color: #990000; font-weight: bold } \/* Name.Label *\/$/;"	c
+.highlight .nl	css/github.css	/^.highlight .nl { color: #990000; font-weight: bold } \/* Name.Label *\/$/;"	c
+.highlight .nn	_site/css/github.css	/^.highlight .nn { color: #555555 } \/* Name.Namespace *\/$/;"	c
+.highlight .nn	css/github.css	/^.highlight .nn { color: #555555 } \/* Name.Namespace *\/$/;"	c
+.highlight .no	_site/css/github.css	/^.highlight .no { color: #008080 } \/* Name.Constant *\/$/;"	c
+.highlight .no	css/github.css	/^.highlight .no { color: #008080 } \/* Name.Constant *\/$/;"	c
+.highlight .nt	_site/css/github.css	/^.highlight .nt { color: #000080 } \/* Name.Tag *\/$/;"	c
+.highlight .nt	css/github.css	/^.highlight .nt { color: #000080 } \/* Name.Tag *\/$/;"	c
+.highlight .nv	_site/css/github.css	/^.highlight .nv { color: #008080 } \/* Name.Variable *\/$/;"	c
+.highlight .nv	css/github.css	/^.highlight .nv { color: #008080 } \/* Name.Variable *\/$/;"	c
+.highlight .o	_site/css/github.css	/^.highlight .o { color: #000000; font-weight: bold } \/* Operator *\/$/;"	c
+.highlight .o	css/github.css	/^.highlight .o { color: #000000; font-weight: bold } \/* Operator *\/$/;"	c
+.highlight .ow	_site/css/github.css	/^.highlight .ow { color: #000000; font-weight: bold } \/* Operator.Word *\/$/;"	c
+.highlight .ow	css/github.css	/^.highlight .ow { color: #000000; font-weight: bold } \/* Operator.Word *\/$/;"	c
+.highlight .s	_site/css/github.css	/^.highlight .s { color: #d01040 } \/* Literal.String *\/$/;"	c
+.highlight .s	css/github.css	/^.highlight .s { color: #d01040 } \/* Literal.String *\/$/;"	c
+.highlight .s1	_site/css/github.css	/^.highlight .s1 { color: #d01040 } \/* Literal.String.Single *\/$/;"	c
+.highlight .s1	css/github.css	/^.highlight .s1 { color: #d01040 } \/* Literal.String.Single *\/$/;"	c
+.highlight .s2	_site/css/github.css	/^.highlight .s2 { color: #d01040 } \/* Literal.String.Double *\/$/;"	c
+.highlight .s2	css/github.css	/^.highlight .s2 { color: #d01040 } \/* Literal.String.Double *\/$/;"	c
+.highlight .sb	_site/css/github.css	/^.highlight .sb { color: #d01040 } \/* Literal.String.Backtick *\/$/;"	c
+.highlight .sb	css/github.css	/^.highlight .sb { color: #d01040 } \/* Literal.String.Backtick *\/$/;"	c
+.highlight .sc	_site/css/github.css	/^.highlight .sc { color: #d01040 } \/* Literal.String.Char *\/$/;"	c
+.highlight .sc	css/github.css	/^.highlight .sc { color: #d01040 } \/* Literal.String.Char *\/$/;"	c
+.highlight .sd	_site/css/github.css	/^.highlight .sd { color: #d01040 } \/* Literal.String.Doc *\/$/;"	c
+.highlight .sd	css/github.css	/^.highlight .sd { color: #d01040 } \/* Literal.String.Doc *\/$/;"	c
+.highlight .se	_site/css/github.css	/^.highlight .se { color: #d01040 } \/* Literal.String.Escape *\/$/;"	c
+.highlight .se	css/github.css	/^.highlight .se { color: #d01040 } \/* Literal.String.Escape *\/$/;"	c
+.highlight .sh	_site/css/github.css	/^.highlight .sh { color: #d01040 } \/* Literal.String.Heredoc *\/$/;"	c
+.highlight .sh	css/github.css	/^.highlight .sh { color: #d01040 } \/* Literal.String.Heredoc *\/$/;"	c
+.highlight .si	_site/css/github.css	/^.highlight .si { color: #d01040 } \/* Literal.String.Interpol *\/$/;"	c
+.highlight .si	css/github.css	/^.highlight .si { color: #d01040 } \/* Literal.String.Interpol *\/$/;"	c
+.highlight .sr	_site/css/github.css	/^.highlight .sr { color: #009926 } \/* Literal.String.Regex *\/$/;"	c
+.highlight .sr	css/github.css	/^.highlight .sr { color: #009926 } \/* Literal.String.Regex *\/$/;"	c
+.highlight .ss	_site/css/github.css	/^.highlight .ss { color: #990073 } \/* Literal.String.Symbol *\/$/;"	c
+.highlight .ss	css/github.css	/^.highlight .ss { color: #990073 } \/* Literal.String.Symbol *\/$/;"	c
+.highlight .sx	_site/css/github.css	/^.highlight .sx { color: #d01040 } \/* Literal.String.Other *\/$/;"	c
+.highlight .sx	css/github.css	/^.highlight .sx { color: #d01040 } \/* Literal.String.Other *\/$/;"	c
+.highlight .vc	_site/css/github.css	/^.highlight .vc { color: #008080 } \/* Name.Variable.Class *\/$/;"	c
+.highlight .vc	css/github.css	/^.highlight .vc { color: #008080 } \/* Name.Variable.Class *\/$/;"	c
+.highlight .vg	_site/css/github.css	/^.highlight .vg { color: #008080 } \/* Name.Variable.Global *\/$/;"	c
+.highlight .vg	css/github.css	/^.highlight .vg { color: #008080 } \/* Name.Variable.Global *\/$/;"	c
+.highlight .vi	_site/css/github.css	/^.highlight .vi { color: #008080 } \/* Name.Variable.Instance *\/$/;"	c
+.highlight .vi	css/github.css	/^.highlight .vi { color: #008080 } \/* Name.Variable.Instance *\/$/;"	c
+.highlight .w	_site/css/github.css	/^.highlight .w { color: #bbbbbb } \/* Text.Whitespace *\/$/;"	c
+.highlight .w	css/github.css	/^.highlight .w { color: #bbbbbb } \/* Text.Whitespace *\/$/;"	c
+.subsection	_site/css/override.css	/^.subsection$/;"	c
+.subsection	css/override.css	/^.subsection$/;"	c
+1	_site/overview/index.html	/^                    <h1><a name="1">1. Overview<\/a><\/h1>$/;"	a
+1	overview/index.html	/^<h1><a name="1">1. Overview<\/a><\/h1>$/;"	a
+1. Overview	_site/overview/index.html	/^                    <h1><a name="1">1. Overview<\/a><\/h1>$/;"	h
+1. Overview	overview/index.html	/^<h1><a name="1">1. Overview<\/a><\/h1>$/;"	h
+1.1 Installation	_site/overview/index.html	/^<h2><a name="1_1">1.1 Installation<\/a><\/h2>$/;"	i
+1.1 Installation	overview/index.html	/^<h2><a name="1_1">1.1 Installation<\/a><\/h2>$/;"	i
+1.2 Concepts	_site/overview/index.html	/^<h2><a name="1_2">1.2 Concepts<\/a><\/h2>$/;"	i
+1.2 Concepts	overview/index.html	/^<h2><a name="1_2">1.2 Concepts<\/a><\/h2>$/;"	i
+1_1	_site/overview/index.html	/^<h2><a name="1_1">1.1 Installation<\/a><\/h2>$/;"	a
+1_1	overview/index.html	/^<h2><a name="1_1">1.1 Installation<\/a><\/h2>$/;"	a
+1_2	_site/overview/index.html	/^<h2><a name="1_2">1.2 Concepts<\/a><\/h2>$/;"	a
+1_2	overview/index.html	/^<h2><a name="1_2">1.2 Concepts<\/a><\/h2>$/;"	a
+2	_site/interface/index.html	/^                    <h1><a name="2">3. User Interface<\/a><\/h1>$/;"	a
+2	_site/quickstart/index.html	/^                    <h1><a name="2">2. Quick Start<\/a><\/h1>$/;"	a
+2	interface/index.html	/^<h1><a name="2">3. User Interface<\/a><\/h1>$/;"	a
+2	quickstart/index.html	/^<h1><a name="2">2. Quick Start<\/a><\/h1>$/;"	a
+2. Quick Start	_site/quickstart/index.html	/^                    <h1><a name="2">2. Quick Start<\/a><\/h1>$/;"	h
+2. Quick Start	quickstart/index.html	/^<h1><a name="2">2. Quick Start<\/a><\/h1>$/;"	h
+2.1 Installation & Setup	_site/quickstart/index.html	/^<h2>2.1 Installation & Setup<\/h2>$/;"	i
+2.1 Installation & Setup	quickstart/index.html	/^<h2>2.1 Installation & Setup<\/h2>$/;"	i
+2.2 Simple Profiles	_site/quickstart/index.html	/^<h2>2.2 Simple Profiles<\/h2>$/;"	i
+2.2 Simple Profiles	quickstart/index.html	/^<h2>2.2 Simple Profiles<\/h2>$/;"	i
+2.3 Complex Profiles	_site/quickstart/index.html	/^<h2>2.3 Complex Profiles<\/h2>$/;"	i
+2.3 Complex Profiles	quickstart/index.html	/^<h2>2.3 Complex Profiles<\/h2>$/;"	i
+2018-05-20	_site/download/index.html	/^        <h1><small>2018-05-20<\/small><\/h1>$/;"	h
+2018-12-22	download/index.html	/^        <h1><small>2018-12-22<\/small><\/h1>$/;"	h
+3. User Interface	_site/interface/index.html	/^                    <h1><a name="2">3. User Interface<\/a><\/h1>$/;"	h
+3. User Interface	interface/index.html	/^<h1><a name="2">3. User Interface<\/a><\/h1>$/;"	h
+3.1 Overview	_site/interface/index.html	/^<h2><a name="3_1">3.1 Overview<\/a><\/h2>$/;"	i
+3.1 Overview	interface/index.html	/^<h2><a name="3_1">3.1 Overview<\/a><\/h2>$/;"	i
+3.2 Virtual Buttons	_site/interface/index.html	/^<h2><a name="3_2">3.2 Virtual Buttons<\/a><\/h2>$/;"	i
+3.2 Virtual Buttons	interface/index.html	/^<h2><a name="3_2">3.2 Virtual Buttons<\/a><\/h2>$/;"	i
+3.3 Activation Conditions	_site/interface/index.html	/^<h2><a name="3_3">3.3 Activation Conditions<\/a><\/h2>$/;"	i
+3.3 Activation Conditions	interface/index.html	/^<h2><a name="3_3">3.3 Activation Conditions<\/a><\/h2>$/;"	i
+3.4 Containers	_site/interface/index.html	/^<h2><a name="3_4">3.4 Containers<\/a><\/h2>$/;"	i
+3.4 Containers	interface/index.html	/^<h2><a name="3_4">3.4 Containers<\/a><\/h2>$/;"	i
+3.5 Actions	_site/interface/index.html	/^<h2><a name="3_5">3.5 Actions<\/a><\/h2>$/;"	i
+3.5 Actions	interface/index.html	/^<h2><a name="3_5">3.5 Actions<\/a><\/h2>$/;"	i
+3.6 Profile Settings	_site/interface/index.html	/^<h2><a name="3_6">3.6 Profile Settings<\/a><\/h2>$/;"	i
+3.6 Profile Settings	interface/index.html	/^<h2><a name="3_6">3.6 Profile Settings<\/a><\/h2>$/;"	i
+3.7 Tools	_site/interface/index.html	/^<h2><a name="3_7">3.7 Tools<\/a><\/h2>$/;"	i
+3.7 Tools	interface/index.html	/^<h2><a name="3_7">3.7 Tools<\/a><\/h2>$/;"	i
+3.8 Options	_site/interface/index.html	/^<h2><a name="3_8">3.8 Options<\/a><\/h2>$/;"	i
+3.8 Options	interface/index.html	/^<h2><a name="3_8">3.8 Options<\/a><\/h2>$/;"	i
+3.9 Command Line Options	_site/interface/index.html	/^<h2><a name="3_9">3.9 Command Line Options<\/a><\/h2>$/;"	i
+3.9 Command Line Options	interface/index.html	/^<h2><a name="3_9">3.9 Command Line Options<\/a><\/h2>$/;"	i
+3_1	_site/interface/index.html	/^<h2><a name="3_1">3.1 Overview<\/a><\/h2>$/;"	a
+3_1	interface/index.html	/^<h2><a name="3_1">3.1 Overview<\/a><\/h2>$/;"	a
+3_2	_site/interface/index.html	/^<h2><a name="3_2">3.2 Virtual Buttons<\/a><\/h2>$/;"	a
+3_2	interface/index.html	/^<h2><a name="3_2">3.2 Virtual Buttons<\/a><\/h2>$/;"	a
+3_3	_site/interface/index.html	/^<h2><a name="3_3">3.3 Activation Conditions<\/a><\/h2>$/;"	a
+3_3	interface/index.html	/^<h2><a name="3_3">3.3 Activation Conditions<\/a><\/h2>$/;"	a
+3_4	_site/interface/index.html	/^<h2><a name="3_4">3.4 Containers<\/a><\/h2>$/;"	a
+3_4	interface/index.html	/^<h2><a name="3_4">3.4 Containers<\/a><\/h2>$/;"	a
+3_5	_site/interface/index.html	/^<h2><a name="3_5">3.5 Actions<\/a><\/h2>$/;"	a
+3_5	interface/index.html	/^<h2><a name="3_5">3.5 Actions<\/a><\/h2>$/;"	a
+3_6	_site/interface/index.html	/^<h2><a name="3_6">3.6 Profile Settings<\/a><\/h2>$/;"	a
+3_6	interface/index.html	/^<h2><a name="3_6">3.6 Profile Settings<\/a><\/h2>$/;"	a
+3_7	_site/interface/index.html	/^<h2><a name="3_7">3.7 Tools<\/a><\/h2>$/;"	a
+3_7	interface/index.html	/^<h2><a name="3_7">3.7 Tools<\/a><\/h2>$/;"	a
+3_8	_site/interface/index.html	/^<h2><a name="3_8">3.8 Options<\/a><\/h2>$/;"	a
+3_8	interface/index.html	/^<h2><a name="3_8">3.8 Options<\/a><\/h2>$/;"	a
+3_9	_site/interface/index.html	/^<h2><a name="3_9">3.9 Command Line Options<\/a><\/h2>$/;"	a
+3_9	interface/index.html	/^<h2><a name="3_9">3.9 Command Line Options<\/a><\/h2>$/;"	a
+4	_site/custom_modules/index.html	/^                    <h1><a name="4">4. Custom Modules<\/a><\/h1>$/;"	a
+4	custom_modules/index.html	/^<h1><a name="4">4. Custom Modules<\/a><\/h1>$/;"	a
+4. Custom Modules	_site/custom_modules/index.html	/^                    <h1><a name="4">4. Custom Modules<\/a><\/h1>$/;"	h
+4. Custom Modules	custom_modules/index.html	/^<h1><a name="4">4. Custom Modules<\/a><\/h1>$/;"	h
+4.1 Principle &amp; Layout of Custom Modules	_site/custom_modules/index.html	/^<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules<\/a><\/h2>$/;"	i
+4.1 Principle &amp; Layout of Custom Modules	custom_modules/index.html	/^<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules<\/a><\/h2>$/;"	i
+4.2 Device Access API	_site/custom_modules/index.html	/^<h2><a name="4_2">4.2 Device Access API<\/a><\/h2>$/;"	i
+4.2 Device Access API	custom_modules/index.html	/^<h2><a name="4_2">4.2 Device Access API<\/a><\/h2>$/;"	i
+4.3 User Input Callback Generation	_site/custom_modules/index.html	/^<h2><a name="4_3">4.3 User Input Callback Generation<\/a><\/h2>$/;"	i
+4.3 User Input Callback Generation	custom_modules/index.html	/^<h2><a name="4_3">4.3 User Input Callback Generation<\/a><\/h2>$/;"	i
+4.4 Periodic Function Callbacks	_site/custom_modules/index.html	/^<h2><a name="4_4">4.4 Periodic Function Callbacks<\/a><\/h2>$/;"	i
+4.4 Periodic Function Callbacks	custom_modules/index.html	/^<h2><a name="4_4">4.4 Periodic Function Callbacks<\/a><\/h2>$/;"	i
+4.5 Debugging	_site/custom_modules/index.html	/^<h2><a name="4_5">4.5 Debugging<\/a><\/h2>$/;"	i
+4.5 Debugging	custom_modules/index.html	/^<h2><a name="4_5">4.5 Debugging<\/a><\/h2>$/;"	i
+4.6 Examples	_site/custom_modules/index.html	/^<h2><a name="4_6">4.6 Examples<\/a><\/h2>$/;"	i
+4.6 Examples	custom_modules/index.html	/^<h2><a name="4_6">4.6 Examples<\/a><\/h2>$/;"	i
+4_1	_site/custom_modules/index.html	/^<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules<\/a><\/h2>$/;"	a
+4_1	custom_modules/index.html	/^<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules<\/a><\/h2>$/;"	a
+4_2	_site/custom_modules/index.html	/^<h2><a name="4_2">4.2 Device Access API<\/a><\/h2>$/;"	a
+4_2	custom_modules/index.html	/^<h2><a name="4_2">4.2 Device Access API<\/a><\/h2>$/;"	a
+4_3	_site/custom_modules/index.html	/^<h2><a name="4_3">4.3 User Input Callback Generation<\/a><\/h2>$/;"	a
+4_3	custom_modules/index.html	/^<h2><a name="4_3">4.3 User Input Callback Generation<\/a><\/h2>$/;"	a
+4_4	_site/custom_modules/index.html	/^<h2><a name="4_4">4.4 Periodic Function Callbacks<\/a><\/h2>$/;"	a
+4_4	custom_modules/index.html	/^<h2><a name="4_4">4.4 Periodic Function Callbacks<\/a><\/h2>$/;"	a
+4_5	_site/custom_modules/index.html	/^<h2><a name="4_5">4.5 Debugging<\/a><\/h2>$/;"	a
+4_5	custom_modules/index.html	/^<h2><a name="4_5">4.5 Debugging<\/a><\/h2>$/;"	a
+4_6	_site/custom_modules/index.html	/^<h2><a name="4_6">4.6 Examples<\/a><\/h2>$/;"	a
+4_6	custom_modules/index.html	/^<h2><a name="4_6">4.6 Examples<\/a><\/h2>$/;"	a
+5	_site/technical_design/index.html	/^                    <h1><a name="5">5. Technical Design<\/a><\/h1>$/;"	a
+5	technical_design/index.html	/^<h1><a name="5">5. Technical Design<\/a><\/h1>$/;"	a
+5. Technical Design	_site/technical_design/index.html	/^                    <h1><a name="5">5. Technical Design<\/a><\/h1>$/;"	h
+5. Technical Design	technical_design/index.html	/^<h1><a name="5">5. Technical Design<\/a><\/h1>$/;"	h
+5.1 Input Handling	_site/technical_design/index.html	/^<h2><a name="5_1">5.1 Input Handling<\/a><\/h2>$/;"	i
+5.1 Input Handling	technical_design/index.html	/^<h2><a name="5_1">5.1 Input Handling<\/a><\/h2>$/;"	i
+5.2 Macro System	_site/technical_design/index.html	/^<h2><a name="5_2">5.2 Macro System<\/a><\/h2>$/;"	i
+5.2 Macro System	technical_design/index.html	/^<h2><a name="5_2">5.2 Macro System<\/a><\/h2>$/;"	i
+5.3 Action and Container System	_site/technical_design/index.html	/^<h2><a name="5_3">5.3 Action and Container System<\/a><\/h2>$/;"	i
+5.3 Action and Container System	technical_design/index.html	/^<h2><a name="5_3">5.3 Action and Container System<\/a><\/h2>$/;"	i
+5.4 XML Profile Storage	_site/technical_design/index.html	/^<h2><a name="5_4">5.4 XML Profile Storage<\/a><\/h2>$/;"	i
+5.4 XML Profile Storage	technical_design/index.html	/^<h2><a name="5_4">5.4 XML Profile Storage<\/a><\/h2>$/;"	i
+5_1	_site/technical_design/index.html	/^<h2><a name="5_1">5.1 Input Handling<\/a><\/h2>$/;"	a
+5_1	technical_design/index.html	/^<h2><a name="5_1">5.1 Input Handling<\/a><\/h2>$/;"	a
+5_2	_site/technical_design/index.html	/^<h2><a name="5_2">5.2 Macro System<\/a><\/h2>$/;"	a
+5_2	technical_design/index.html	/^<h2><a name="5_2">5.2 Macro System<\/a><\/h2>$/;"	a
+5_3	_site/technical_design/index.html	/^<h2><a name="5_3">5.3 Action and Container System<\/a><\/h2>$/;"	a
+5_3	technical_design/index.html	/^<h2><a name="5_3">5.3 Action and Container System<\/a><\/h2>$/;"	a
+5_4	_site/technical_design/index.html	/^<h2><a name="5_4">5.4 XML Profile Storage<\/a><\/h2>$/;"	a
+5_4	technical_design/index.html	/^<h2><a name="5_4">5.4 XML Profile Storage<\/a><\/h2>$/;"	a
+6	_site/examples/index.html	/^                    <h1><a name="6">6. Examples<\/a><\/h1>$/;"	a
+6	examples/index.html	/^<h1><a name="6">6. Examples<\/a><\/h1>$/;"	a
+6. Examples	_site/examples/index.html	/^                    <h1><a name="6">6. Examples<\/a><\/h1>$/;"	h
+6. Examples	examples/index.html	/^<h1><a name="6">6. Examples<\/a><\/h1>$/;"	h
+7	_site/faq/index.html	/^                    <h1 class="mb-5"><a name="7">7. Frequently Asked Questions<\/a><\/h1>$/;"	a
+7	faq/index.html	/^<h1 class="mb-5"><a name="7">7. Frequently Asked Questions<\/a><\/h1>$/;"	a
+7. Frequently Asked Questions	_site/faq/index.html	/^                    <h1 class="mb-5"><a name="7">7. Frequently Asked Questions<\/a><\/h1>$/;"	h
+7. Frequently Asked Questions	faq/index.html	/^<h1 class="mb-5"><a name="7">7. Frequently Asked Questions<\/a><\/h1>$/;"	h
+8	_site/changelog/index.html	/^                    <h1><a name="8">8. Changelog<\/a><\/h1>$/;"	a
+8	changelog/index.html	/^<h1><a name="8">8. Changelog<\/a><\/h1>$/;"	a
+8. Changelog	_site/changelog/index.html	/^                    <h1><a name="8">8. Changelog<\/a><\/h1>$/;"	h
+8. Changelog	changelog/index.html	/^<h1><a name="8">8. Changelog<\/a><\/h1>$/;"	h
+Action	_site/overview/index.html	/^<h3>Action<\/h3>$/;"	j
+Action	overview/index.html	/^<h3>Action<\/h3>$/;"	j
+Axis	_site/interface/index.html	/^<h3>Axis<\/h3>$/;"	j
+Axis	interface/index.html	/^<h3>Axis<\/h3>$/;"	j
+Basic	_site/interface/index.html	/^<h3>Basic<\/h3>$/;"	j
+Basic	interface/index.html	/^<h3>Basic<\/h3>$/;"	j
+Basic Mappings	_site/quickstart/index.html	/^<h3>Basic Mappings<\/h3>$/;"	j
+Basic Mappings	quickstart/index.html	/^<h3>Basic Mappings<\/h3>$/;"	j
+Button and Keyboard Key	_site/interface/index.html	/^<h3>Button and Keyboard Key<\/h3>$/;"	j
+Button and Keyboard Key	interface/index.html	/^<h3>Button and Keyboard Key<\/h3>$/;"	j
+Calibration	_site/interface/index.html	/^<h3>Calibration<\/h3>$/;"	j
+Calibration	interface/index.html	/^<h3>Calibration<\/h3>$/;"	j
+Chain	_site/interface/index.html	/^<h3>Chain<\/h3>$/;"	j
+Chain	interface/index.html	/^<h3>Chain<\/h3>$/;"	j
+Change Mode	_site/interface/index.html	/^<h3>Change Mode<\/h3>$/;"	j
+Change Mode	interface/index.html	/^<h3>Change Mode<\/h3>$/;"	j
+Cheatsheet Generation	_site/interface/index.html	/^<h3>Cheatsheet Generation<\/h3>$/;"	j
+Cheatsheet Generation	interface/index.html	/^<h3>Cheatsheet Generation<\/h3>$/;"	j
+Condition	_site/quickstart/index.html	/^<h3>Condition<\/h3>$/;"	j
+Condition	quickstart/index.html	/^<h3>Condition<\/h3>$/;"	j
+Container	_site/overview/index.html	/^<h3>Container<\/h3>$/;"	j
+Container	_site/quickstart/index.html	/^<h3>Container<\/h3>$/;"	j
+Container	overview/index.html	/^<h3>Container<\/h3>$/;"	j
+Container	quickstart/index.html	/^<h3>Container<\/h3>$/;"	j
+Create 1:1 Mapping	_site/interface/index.html	/^<h3>Create 1:1 Mapping<\/h3>$/;"	j
+Create 1:1 Mapping	interface/index.html	/^<h3>Create 1:1 Mapping<\/h3>$/;"	j
+Custom axis response curve	_site/examples/index.html	/^<h2>Custom axis response curve<\/h2>$/;"	i
+Custom axis response curve	examples/index.html	/^<h2>Custom axis response curve<\/h2>$/;"	i
+Cycle Modes	_site/interface/index.html	/^<h3>Cycle Modes<\/h3>$/;"	j
+Cycle Modes	interface/index.html	/^<h3>Cycle Modes<\/h3>$/;"	j
+Dealing with Axes	_site/quickstart/index.html	/^<h3>Dealing with Axes<\/h3>$/;"	j
+Dealing with Axes	quickstart/index.html	/^<h3>Dealing with Axes<\/h3>$/;"	j
+Device	_site/overview/index.html	/^<h3>Device<\/h3>$/;"	j
+Device	overview/index.html	/^<h3>Device<\/h3>$/;"	j
+Device Information	_site/interface/index.html	/^<h3>Device Information<\/h3>$/;"	j
+Device Information	interface/index.html	/^<h3>Device Information<\/h3>$/;"	j
+Enabling on Launch	_site/interface/index.html	/^<h3>Enabling on Launch<\/h3>$/;"	j
+Enabling on Launch	interface/index.html	/^<h3>Enabling on Launch<\/h3>$/;"	j
+Example	_site/overview/index.html	/^<h3>Example<\/h3>$/;"	j
+Example	overview/index.html	/^<h3>Example<\/h3>$/;"	j
+Fixes	_site/changelog/2015/03/28/Release-2.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2015/10/18/Release-3.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2016/01/29/Release-4.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2016/06/29/Release-5.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2016/11/10/Release-6.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2016/12/22/Release-7.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2017/02/26/Release-7.1.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2017/07/08/Release-8.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2017/08/19/Release-8.1.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2017/12/09/Release-9.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2017/12/21/Release-9.1.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2017/12/25/Release-9.2.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2018/02/03/Release-10.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2018/02/03/Release-12.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/changelog/2018/05/20/Release-11.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	_site/download/index.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2015-03-28-Release 2.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2015-10-18-Release 3.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2016-01-29-Release 4.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2016-06-29-Release 5.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2016-11-10-Release 6.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2016-12-22-Release 7.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2017-02-26-Release 7.1.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2017-07-08-Release 8.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2017-08-19-Release 8.1.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2017-12-09-Release 9.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2017-12-12-Release 9.1.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2017-12-25-Release 9.2.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2018-02-03-Release 10.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2018-05-20-Release 11.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	changelog/_posts/2018-12-22-Release 12.html	/^<h2>Fixes<\/h2>$/;"	i
+Fixes	download/index.html	/^<h2>Fixes<\/h2>$/;"	i
+General	_site/interface/index.html	/^<h3>General<\/h3>$/;"	j
+General	interface/index.html	/^<h3>General<\/h3>$/;"	j
+Hat	_site/interface/index.html	/^<h3>Hat<\/h3>$/;"	j
+Hat	interface/index.html	/^<h3>Hat<\/h3>$/;"	j
+Hat directions as buttons	_site/examples/index.html	/^<h2>Hat directions as buttons<\/h2>$/;"	i
+Hat directions as buttons	examples/index.html	/^<h2>Hat directions as buttons<\/h2>$/;"	i
+HidGuardian	_site/interface/index.html	/^<h3>HidGuardian<\/h3>$/;"	j
+HidGuardian	interface/index.html	/^<h3>HidGuardian<\/h3>$/;"	j
+Initial vJoy Axes Values	_site/interface/index.html	/^<h3>Initial vJoy Axes Values<\/h3>$/;"	j
+Initial vJoy Axes Values	interface/index.html	/^<h3>Initial vJoy Axes Values<\/h3>$/;"	j
+Input	_site/overview/index.html	/^<h3>Input<\/h3>$/;"	j
+Input	overview/index.html	/^<h3>Input<\/h3>$/;"	j
+Input Repeater	_site/interface/index.html	/^<h3>Input Repeater<\/h3>$/;"	j
+Input Repeater	interface/index.html	/^<h3>Input Repeater<\/h3>$/;"	j
+Input Viewer	_site/interface/index.html	/^<h3>Input Viewer<\/h3>$/;"	j
+Input Viewer	interface/index.html	/^<h3>Input Viewer<\/h3>$/;"	j
+Joystick Gremlin	_site/index.html	/^    <h1 class="display-3">Joystick Gremlin<\/h1>$/;"	h
+Joystick Gremlin	index.html	/^    <h1 class="display-3">Joystick Gremlin<\/h1>$/;"	h
+Joystick Response Curve	_site/custom_modules/index.html	/^<h3>Joystick Response Curve<\/h3>$/;"	j
+Joystick Response Curve	custom_modules/index.html	/^<h3>Joystick Response Curve<\/h3>$/;"	j
+Joystick State	_site/custom_modules/index.html	/^<h3>Joystick State<\/h3>$/;"	j
+Joystick State	custom_modules/index.html	/^<h3>Joystick State<\/h3>$/;"	j
+Keyboard Controlled Throttle	_site/custom_modules/index.html	/^<h3>Keyboard Controlled Throttle<\/h3>$/;"	j
+Keyboard Controlled Throttle	custom_modules/index.html	/^<h3>Keyboard Controlled Throttle<\/h3>$/;"	j
+Keyboard State	_site/custom_modules/index.html	/^<h3>Keyboard State<\/h3>$/;"	j
+Keyboard State	custom_modules/index.html	/^<h3>Keyboard State<\/h3>$/;"	j
+Log viewer	_site/interface/index.html	/^<h3>Log viewer<\/h3>$/;"	j
+Log viewer	interface/index.html	/^<h3>Log viewer<\/h3>$/;"	j
+Macro	_site/interface/index.html	/^<h3>Macro<\/h3>$/;"	j
+Macro	interface/index.html	/^<h3>Macro<\/h3>$/;"	j
+Macros	_site/quickstart/index.html	/^<h3>Macros<\/h3>$/;"	j
+Macros	quickstart/index.html	/^<h3>Macros<\/h3>$/;"	j
+Map to Keyboard	_site/interface/index.html	/^<h3>Map to Keyboard<\/h3>$/;"	j
+Map to Keyboard	interface/index.html	/^<h3>Map to Keyboard<\/h3>$/;"	j
+Map to Mouse	_site/interface/index.html	/^<h3>Map to Mouse<\/h3>$/;"	j
+Map to Mouse	interface/index.html	/^<h3>Map to Mouse<\/h3>$/;"	j
+Merge Axis	_site/interface/index.html	/^<h3>Merge Axis<\/h3>$/;"	j
+Merge Axis	interface/index.html	/^<h3>Merge Axis<\/h3>$/;"	j
+Merge axis	_site/examples/index.html	/^<h2>Merge axis<\/h2>$/;"	i
+Merge axis	examples/index.html	/^<h2>Merge axis<\/h2>$/;"	i
+Mode	_site/overview/index.html	/^<h3>Mode<\/h3>$/;"	j
+Mode	_site/quickstart/index.html	/^<h3>Mode<\/h3>$/;"	j
+Mode	overview/index.html	/^<h3>Mode<\/h3>$/;"	j
+Mode	quickstart/index.html	/^<h3>Mode<\/h3>$/;"	j
+Mode Manager	_site/interface/index.html	/^<h3>Mode Manager<\/h3>$/;"	j
+Mode Manager	interface/index.html	/^<h3>Mode Manager<\/h3>$/;"	j
+Mode Switching	_site/custom_modules/index.html	/^<h3>Mode Switching<\/h3>$/;"	j
+Mode Switching	custom_modules/index.html	/^<h3>Mode Switching<\/h3>$/;"	j
+New Features	_site/changelog/2015/03/28/Release-2.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2015/10/18/Release-3.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2016/01/29/Release-4.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2016/06/29/Release-5.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2016/11/10/Release-6.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2016/12/22/Release-7.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2017/02/26/Release-7.1.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2017/07/08/Release-8.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2017/08/19/Release-8.1.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2017/12/09/Release-9.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2017/12/21/Release-9.1.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2018/02/03/Release-10.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2018/02/03/Release-12.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/changelog/2018/05/20/Release-11.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	_site/download/index.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2015-03-28-Release 2.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2015-10-18-Release 3.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2016-01-29-Release 4.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2016-06-29-Release 5.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2016-11-10-Release 6.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2016-12-22-Release 7.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2017-02-26-Release 7.1.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2017-07-08-Release 8.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2017-08-19-Release 8.1.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2017-12-09-Release 9.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2017-12-12-Release 9.1.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2018-02-03-Release 10.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2018-05-20-Release 11.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	changelog/_posts/2018-12-22-Release 12.html	/^<h2>New Features<\/h2>$/;"	i
+New Features	download/index.html	/^<h2>New Features<\/h2>$/;"	i
+No Operation	_site/interface/index.html	/^<h3>No Operation<\/h3>$/;"	j
+No Operation	interface/index.html	/^<h3>No Operation<\/h3>$/;"	j
+Pause, Resume &amp; Toggle	_site/interface/index.html	/^<h3>Pause, Resume &amp; Toggle<\/h3>$/;"	j
+Pause, Resume &amp; Toggle	interface/index.html	/^<h3>Pause, Resume &amp; Toggle<\/h3>$/;"	j
+Play Sound	_site/interface/index.html	/^<h3>Play Sound<\/h3>$/;"	j
+Play Sound	interface/index.html	/^<h3>Play Sound<\/h3>$/;"	j
+Precision Mode	_site/custom_modules/index.html	/^<h3>Precision Mode<\/h3>$/;"	j
+Precision Mode	custom_modules/index.html	/^<h3>Precision Mode<\/h3>$/;"	j
+Profile	_site/overview/index.html	/^<h3>Profile<\/h3>$/;"	j
+Profile	overview/index.html	/^<h3>Profile<\/h3>$/;"	j
+Profile Creator	_site/interface/index.html	/^<h3>Profile Creator<\/h3>$/;"	j
+Profile Creator	interface/index.html	/^<h3>Profile Creator<\/h3>$/;"	j
+Profile Loading	_site/interface/index.html	/^<h3>Profile Loading<\/h3>$/;"	j
+Profile Loading	interface/index.html	/^<h3>Profile Loading<\/h3>$/;"	j
+Profiles	_site/interface/index.html	/^<h3>Profiles<\/h3>$/;"	j
+Profiles	interface/index.html	/^<h3>Profiles<\/h3>$/;"	j
+Release 10	_site/changelog/2018/02/03/Release-10.html	/^                    <h1>Release 10<\/h1>$/;"	h
+Release 10	_site/changelog/2018/02/03/Release-12.html	/^                    <h1>Release 10<\/h1>$/;"	h
+Release 10	changelog/_posts/2018-02-03-Release 10.html	/^<h1>Release 10<\/h1>$/;"	h
+Release 11	_site/changelog/2018/05/20/Release-11.html	/^                    <h1>Release 11<\/h1>$/;"	h
+Release 11	_site/download/index.html	/^        <h1>Release 11<\/h1>$/;"	h
+Release 11	changelog/_posts/2018-05-20-Release 11.html	/^<h1>Release 11<\/h1>$/;"	h
+Release 12	changelog/_posts/2018-12-22-Release 12.html	/^<h1>Release 12<\/h1>$/;"	h
+Release 12	download/index.html	/^        <h1>Release 12<\/h1>$/;"	h
+Release 2	_site/changelog/2015/03/28/Release-2.html	/^                    <h1>Release 2<\/h1>$/;"	h
+Release 2	changelog/_posts/2015-03-28-Release 2.html	/^<h1>Release 2<\/h1>$/;"	h
+Release 3	_site/changelog/2015/10/18/Release-3.html	/^                    <h1>Release 3<\/h1>$/;"	h
+Release 3	changelog/_posts/2015-10-18-Release 3.html	/^<h1>Release 3<\/h1>$/;"	h
+Release 4	_site/changelog/2016/01/29/Release-4.html	/^                    <h1>Release 4<\/h1>$/;"	h
+Release 4	changelog/_posts/2016-01-29-Release 4.html	/^<h1>Release 4<\/h1>$/;"	h
+Release 5	_site/changelog/2016/06/29/Release-5.html	/^                    <h1>Release 5<\/h1>$/;"	h
+Release 5	changelog/_posts/2016-06-29-Release 5.html	/^<h1>Release 5<\/h1>$/;"	h
+Release 6	_site/changelog/2016/11/10/Release-6.html	/^                    <h1>Release 6<\/h1>$/;"	h
+Release 6	changelog/_posts/2016-11-10-Release 6.html	/^<h1>Release 6<\/h1>$/;"	h
+Release 7	_site/changelog/2016/12/22/Release-7.html	/^                    <h1>Release 7<\/h1>$/;"	h
+Release 7	changelog/_posts/2016-12-22-Release 7.html	/^<h1>Release 7<\/h1>$/;"	h
+Release 7.1	_site/changelog/2017/02/26/Release-7.1.html	/^                    <h1>Release 7.1<\/h1>$/;"	h
+Release 7.1	changelog/_posts/2017-02-26-Release 7.1.html	/^<h1>Release 7.1<\/h1>$/;"	h
+Release 8	_site/changelog/2017/07/08/Release-8.html	/^                    <h1>Release 8<\/h1>$/;"	h
+Release 8	changelog/_posts/2017-07-08-Release 8.html	/^<h1>Release 8<\/h1>$/;"	h
+Release 8.1	_site/changelog/2017/08/19/Release-8.1.html	/^                    <h1>Release 8.1<\/h1>$/;"	h
+Release 8.1	changelog/_posts/2017-08-19-Release 8.1.html	/^<h1>Release 8.1<\/h1>$/;"	h
+Release 9	_site/changelog/2017/12/09/Release-9.html	/^                    <h1>Release 9<\/h1>$/;"	h
+Release 9	changelog/_posts/2017-12-09-Release 9.html	/^<h1>Release 9<\/h1>$/;"	h
+Release 9.1	_site/changelog/2017/12/21/Release-9.1.html	/^                    <h1>Release 9.1<\/h1>$/;"	h
+Release 9.1	changelog/_posts/2017-12-12-Release 9.1.html	/^<h1>Release 9.1<\/h1>$/;"	h
+Release 9.2	_site/changelog/2017/12/25/Release-9.2.html	/^                    <h1>Release 9.2<\/h1>$/;"	h
+Release 9.2	changelog/_posts/2017-12-25-Release 9.2.html	/^<h1>Release 9.2<\/h1>$/;"	h
+Remap to keyboard	_site/examples/index.html	/^<h2>Remap to keyboard<\/h2>$/;"	i
+Remap to keyboard	examples/index.html	/^<h2>Remap to keyboard<\/h2>$/;"	i
+Remapping	_site/interface/index.html	/^<h3>Remapping<\/h3>$/;"	j
+Remapping	interface/index.html	/^<h3>Remapping<\/h3>$/;"	j
+Remapping a button	_site/examples/index.html	/^<h2>Remapping a button<\/h2>$/;"	i
+Remapping a button	examples/index.html	/^<h2>Remapping a button<\/h2>$/;"	i
+Response Curve	_site/interface/index.html	/^<h3>Response Curve<\/h3>$/;"	j
+Response Curve	interface/index.html	/^<h3>Response Curve<\/h3>$/;"	j
+Split Axis	_site/interface/index.html	/^<h3>Split Axis<\/h3>$/;"	j
+Split Axis	interface/index.html	/^<h3>Split Axis<\/h3>$/;"	j
+Split axis	_site/examples/index.html	/^<h2>Split axis<\/h2>$/;"	i
+Split axis	examples/index.html	/^<h2>Split axis<\/h2>$/;"	i
+Start Minimized	_site/interface/index.html	/^<h3>Start Minimized<\/h3>$/;"	j
+Start Minimized	interface/index.html	/^<h3>Start Minimized<\/h3>$/;"	j
+Startup Mode	_site/interface/index.html	/^<h3>Startup Mode<\/h3>$/;"	j
+Startup Mode	interface/index.html	/^<h3>Startup Mode<\/h3>$/;"	j
+Swap Devices	_site/interface/index.html	/^<h3>Swap Devices<\/h3>$/;"	j
+Swap Devices	interface/index.html	/^<h3>Swap Devices<\/h3>$/;"	j
+Switch to Previous Mode	_site/interface/index.html	/^<h3>Switch to Previous Mode<\/h3>$/;"	j
+Switch to Previous Mode	interface/index.html	/^<h3>Switch to Previous Mode<\/h3>$/;"	j
+Tempo	_site/interface/index.html	/^<h3>Tempo<\/h3>$/;"	j
+Tempo	interface/index.html	/^<h3>Tempo<\/h3>$/;"	j
+Temporary Mode Switch	_site/interface/index.html	/^<h3>Temporary Mode Switch<\/h3>$/;"	j
+Temporary Mode Switch	interface/index.html	/^<h3>Temporary Mode Switch<\/h3>$/;"	j
+Text to Speech	_site/interface/index.html	/^<h3>Text to Speech<\/h3>$/;"	j
+Text to Speech	interface/index.html	/^<h3>Text to Speech<\/h3>$/;"	j
+User Module Manager	_site/interface/index.html	/^<h3>User Module Manager<\/h3>$/;"	j
+User Module Manager	interface/index.html	/^<h3>User Module Manager<\/h3>$/;"	j
+active_curve	_site/custom_modules/precision_mode.py	/^active_curve = default_curve$/;"	v
+active_curve	custom_modules/precision_mode.py	/^active_curve = default_curve$/;"	v
+active_weapon_groups	_site/custom_modules/precision_mode.py	/^active_weapon_groups = {}$/;"	v
+active_weapon_groups	custom_modules/precision_mode.py	/^active_weapon_groups = {}$/;"	v
+base	_site/images/concepts.svg	/^     inkscape:window-maximized="1" \/>$/;"	i
+base	_site/images/main_window_annotated.svg	/^     inkscape:snap-global="false">$/;"	i
+base	images/concepts.svg	/^     inkscape:window-maximized="1" \/>$/;"	i
+base	images/main_window_annotated.svg	/^     inkscape:snap-global="false">$/;"	i
+body	_site/css/override.css	/^body$/;"	s
+body	css/override.css	/^body$/;"	s
+chfs	_site/custom_modules/mode_switching.py	/^chfs = gremlin.input_devices.JoystickDecorator($/;"	v
+chfs	_site/custom_modules/response_curve.py	/^chfs = gremlin.input_devices.JoystickDecorator($/;"	v
+chfs	custom_modules/mode_switching.py	/^chfs = gremlin.input_devices.JoystickDecorator($/;"	v
+chfs	custom_modules/response_curve.py	/^chfs = gremlin.input_devices.JoystickDecorator($/;"	v
+curve	_site/custom_modules/response_curve.py	/^curve = CubicSpline([$/;"	v
+curve	custom_modules/response_curve.py	/^curve = CubicSpline([$/;"	v
+cycle_modes	_site/custom_modules/mode_switching.py	/^def cycle_modes(event):$/;"	f
+cycle_modes	custom_modules/mode_switching.py	/^def cycle_modes(event):$/;"	f
+default_curve	_site/custom_modules/precision_mode.py	/^default_curve = CubicSpline($/;"	v
+default_curve	custom_modules/precision_mode.py	/^default_curve = CubicSpline($/;"	v
+defs2	_site/images/concepts.svg	/^     id="defs2" \/>$/;"	i
+defs2	_site/images/main_window_annotated.svg	/^     id="defs2" \/>$/;"	i
+defs2	images/concepts.svg	/^     id="defs2" \/>$/;"	i
+defs2	images/main_window_annotated.svg	/^     id="defs2" \/>$/;"	i
+g4650	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4650	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4655	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4655	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4660	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4660	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4665	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4665	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4665-6	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4665-6	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4670	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4670	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4675	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4675	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4680	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4680	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4685	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+g4685	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100">$/;"	i
+guide4553	_site/images/main_window_annotated.svg	/^       inkscape:locked="false" \/>$/;"	i
+guide4553	images/main_window_annotated.svg	/^       inkscape:locked="false" \/>$/;"	i
+guide4555	_site/images/main_window_annotated.svg	/^       inkscape:locked="false" \/>$/;"	i
+guide4555	images/main_window_annotated.svg	/^       inkscape:locked="false" \/>$/;"	i
+html	_site/css/override.css	/^html$/;"	s
+html	css/override.css	/^html$/;"	s
+image883	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+image883	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+layer1	_site/images/concepts.svg	/^     id="layer1">$/;"	i
+layer1	_site/images/main_window_annotated.svg	/^     id="layer1">$/;"	i
+layer1	images/concepts.svg	/^     id="layer1">$/;"	i
+layer1	images/main_window_annotated.svg	/^     id="layer1">$/;"	i
+metadata5	_site/images/concepts.svg	/^     id="metadata5">$/;"	i
+metadata5	_site/images/main_window_annotated.svg	/^     id="metadata5">$/;"	i
+metadata5	images/concepts.svg	/^     id="metadata5">$/;"	i
+metadata5	images/main_window_annotated.svg	/^     id="metadata5">$/;"	i
+mode_list	_site/custom_modules/mode_switching.py	/^mode_list = gremlin.control_action.ModeList($/;"	v
+mode_list	custom_modules/mode_switching.py	/^mode_list = gremlin.control_action.ModeList($/;"	v
+pitch	_site/custom_modules/precision_mode.py	/^def pitch(event, vjoy):$/;"	f
+pitch	_site/custom_modules/response_curve.py	/^def pitch(event, vjoy):$/;"	f
+pitch	custom_modules/precision_mode.py	/^def pitch(event, vjoy):$/;"	f
+pitch	custom_modules/response_curve.py	/^def pitch(event, vjoy):$/;"	f
+precision_curve	_site/custom_modules/precision_mode.py	/^precision_curve = CubicSpline($/;"	v
+precision_curve	custom_modules/precision_mode.py	/^precision_curve = CubicSpline($/;"	v
+rect4485	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4485	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4487	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4487	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4489	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4489	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4491	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4491	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4491-1	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4491-1	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4493	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4493	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4493-7	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4493-7	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4496	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-1	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-1	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-2	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-2	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-3	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-3	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-4	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-4	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-47	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-47	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-47-4	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-47-4	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-5	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-5	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-6	_site/images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4496-6	images/main_window_annotated.svg	/^       inkscape:export-ydpi="100" \/>$/;"	i
+rect4541	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4541	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4541-0	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4541-0	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4541-0-3	_site/images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4541-0-3	images/concepts.svg	/^       inkscape:export-ydpi="200" \/>$/;"	i
+rect4553	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-1	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-1	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-5	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-5	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-6	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-6	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-7	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-7	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-8	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-8	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-8-8	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-8-8	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-9	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-9	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-92	_site/images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+rect4553-92	images/main_window_annotated.svg	/^         style="fill:#ffffff;fill-opacity:0.66976743;stroke:#000000;stroke-width:0.52916664;stro/;"	i
+set_throttle	_site/custom_modules/keyboard_throttle.py	/^def set_throttle(vjoy, value):$/;"	f
+set_throttle	custom_modules/keyboard_throttle.py	/^def set_throttle(vjoy, value):$/;"	f
+set_weapon_group	_site/custom_modules/precision_mode.py	/^def set_weapon_group(gid, is_pressed):$/;"	f
+set_weapon_group	custom_modules/precision_mode.py	/^def set_weapon_group(gid, is_pressed):$/;"	f
+switch_to_global	_site/custom_modules/mode_switching.py	/^def switch_to_global(event):$/;"	f
+switch_to_global	custom_modules/mode_switching.py	/^def switch_to_global(event):$/;"	f
+temporary_mode_switch	_site/custom_modules/mode_switching.py	/^def temporary_mode_switch(event):$/;"	f
+temporary_mode_switch	custom_modules/mode_switching.py	/^def temporary_mode_switch(event):$/;"	f
+text4497	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-3	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-3	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-31	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-31	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-4	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-4	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-4-8	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-4-8	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-9	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-9	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-9-3	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4497-9-3	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4545	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4545	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4545-4	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4545-4	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4545-4-8	_site/images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4545-4-8	images/concepts.svg	/^       inkscape:export-ydpi="200"><tspan$/;"	i
+text4551	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-0	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-0	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-3	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-3	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-4	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-4	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-5	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-5	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-5-4	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-5-4	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-7	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-7	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-8	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-8	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-9	_site/images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+text4551-9	images/main_window_annotated.svg	/^         xml:space="preserve"><tspan$/;"	i
+throttle_0	_site/custom_modules/keyboard_throttle.py	/^def throttle_0(event, vjoy):$/;"	f
+throttle_0	custom_modules/keyboard_throttle.py	/^def throttle_0(event, vjoy):$/;"	f
+throttle_100	_site/custom_modules/keyboard_throttle.py	/^def throttle_100(event, vjoy):$/;"	f
+throttle_100	custom_modules/keyboard_throttle.py	/^def throttle_100(event, vjoy):$/;"	f
+throttle_33	_site/custom_modules/keyboard_throttle.py	/^def throttle_33(event, vjoy):$/;"	f
+throttle_33	custom_modules/keyboard_throttle.py	/^def throttle_33(event, vjoy):$/;"	f
+throttle_66	_site/custom_modules/keyboard_throttle.py	/^def throttle_66(event, vjoy):$/;"	f
+throttle_66	custom_modules/keyboard_throttle.py	/^def throttle_66(event, vjoy):$/;"	f
+tm16000	_site/custom_modules/precision_mode.py	/^tm16000 = gremlin.input_devices.JoystickDecorator($/;"	v
+tm16000	custom_modules/precision_mode.py	/^tm16000 = gremlin.input_devices.JoystickDecorator($/;"	v
+tspan4495	_site/images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Profile<\/tspan><\/text>$/;"	i
+tspan4495	images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Profile<\/tspan><\/text>$/;"	i
+tspan4495-1	_site/images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Container<\/tspan><\/text>$/;"	i
+tspan4495-1	images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Container<\/tspan><\/text>$/;"	i
+tspan4495-1-5	_site/images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Container<\/tspan><\/text>$/;"	i
+tspan4495-1-5	images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Container<\/tspan><\/text>$/;"	i
+tspan4495-5	_site/images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Device<\/tspan><\/text>$/;"	i
+tspan4495-5	images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Device<\/tspan><\/text>$/;"	i
+tspan4495-8	_site/images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Mode<\/tspan><\/text>$/;"	i
+tspan4495-8	images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Mode<\/tspan><\/text>$/;"	i
+tspan4495-84	_site/images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Input<\/tspan><\/text>$/;"	i
+tspan4495-84	images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Input<\/tspan><\/text>$/;"	i
+tspan4495-84-7	_site/images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Input<\/tspan><\/text>$/;"	i
+tspan4495-84-7	images/concepts.svg	/^         style="font-size:8.46666622px;stroke-width:0.26458332">Input<\/tspan><\/text>$/;"	i
+tspan4543	_site/images/concepts.svg	/^         style="stroke-width:0.26458332">Action<\/tspan><\/text>$/;"	i
+tspan4543	images/concepts.svg	/^         style="stroke-width:0.26458332">Action<\/tspan><\/text>$/;"	i
+tspan4543-7	_site/images/concepts.svg	/^         style="stroke-width:0.26458332">Action<\/tspan><\/text>$/;"	i
+tspan4543-7	images/concepts.svg	/^         style="stroke-width:0.26458332">Action<\/tspan><\/text>$/;"	i
+tspan4543-7-1	_site/images/concepts.svg	/^         style="stroke-width:0.26458332">Action<\/tspan><\/text>$/;"	i
+tspan4543-7-1	images/concepts.svg	/^         style="stroke-width:0.26458332">Action<\/tspan><\/text>$/;"	i
+tspan4549	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">1<\/tspan><\/text>$/;"	i
+tspan4549	images/main_window_annotated.svg	/^           sodipodi:role="line">1<\/tspan><\/text>$/;"	i
+tspan4549-1	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">2<\/tspan><\/text>$/;"	i
+tspan4549-1	images/main_window_annotated.svg	/^           sodipodi:role="line">2<\/tspan><\/text>$/;"	i
+tspan4549-2	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">3<\/tspan><\/text>$/;"	i
+tspan4549-2	images/main_window_annotated.svg	/^           sodipodi:role="line">3<\/tspan><\/text>$/;"	i
+tspan4549-25	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">9<\/tspan><\/text>$/;"	i
+tspan4549-25	images/main_window_annotated.svg	/^           sodipodi:role="line">9<\/tspan><\/text>$/;"	i
+tspan4549-26	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">7<\/tspan><\/text>$/;"	i
+tspan4549-26	images/main_window_annotated.svg	/^           sodipodi:role="line">7<\/tspan><\/text>$/;"	i
+tspan4549-6	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">6<\/tspan><\/text>$/;"	i
+tspan4549-6	images/main_window_annotated.svg	/^           sodipodi:role="line">6<\/tspan><\/text>$/;"	i
+tspan4549-8	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">8<\/tspan><\/text>$/;"	i
+tspan4549-8	images/main_window_annotated.svg	/^           sodipodi:role="line">8<\/tspan><\/text>$/;"	i
+tspan4549-9	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">4<\/tspan><\/text>$/;"	i
+tspan4549-9	images/main_window_annotated.svg	/^           sodipodi:role="line">4<\/tspan><\/text>$/;"	i
+tspan4549-9-7	_site/images/main_window_annotated.svg	/^           sodipodi:role="line">5<\/tspan><\/text>$/;"	i
+tspan4549-9-7	images/main_window_annotated.svg	/^           sodipodi:role="line">5<\/tspan><\/text>$/;"	i
+vJoy	_site/custom_modules/index.html	/^<h3>vJoy<\/h3>$/;"	j
+vJoy	custom_modules/index.html	/^<h3>vJoy<\/h3>$/;"	j
+vJoy Configuration	_site/overview/index.html	/^<h3>vJoy Configuration<\/h3>$/;"	j
+vJoy Configuration	overview/index.html	/^<h3>vJoy Configuration<\/h3>$/;"	j
+vJoy as Input	_site/interface/index.html	/^<h3>vJoy as Input<\/h3>$/;"	j
+vJoy as Input	interface/index.html	/^<h3>vJoy as Input<\/h3>$/;"	j
+weapon_group_1	_site/custom_modules/precision_mode.py	/^def weapon_group_1(event, vjoy):$/;"	f
+weapon_group_1	custom_modules/precision_mode.py	/^def weapon_group_1(event, vjoy):$/;"	f
+weapon_group_2	_site/custom_modules/precision_mode.py	/^def weapon_group_2(event, vjoy):$/;"	f
+weapon_group_2	custom_modules/precision_mode.py	/^def weapon_group_2(event, vjoy):$/;"	f
+weapon_group_3	_site/custom_modules/precision_mode.py	/^def weapon_group_3(event, vjoy):$/;"	f
+weapon_group_3	custom_modules/precision_mode.py	/^def weapon_group_3(event, vjoy):$/;"	f
+yaw	_site/custom_modules/precision_mode.py	/^def yaw(event, vjoy):$/;"	f
+yaw	_site/custom_modules/response_curve.py	/^def yaw(event, vjoy):$/;"	f
+yaw	custom_modules/precision_mode.py	/^def yaw(event, vjoy):$/;"	f
+yaw	custom_modules/response_curve.py	/^def yaw(event, vjoy):$/;"	f

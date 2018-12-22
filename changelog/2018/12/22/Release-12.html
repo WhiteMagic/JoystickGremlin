@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Release 8.1</title>
+    <title>Release 12</title>
 
-    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html">
+    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/changelog/2018/12/22/Release-12.html">
 
     <!-- Code highlighting CSS -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
@@ -77,32 +77,71 @@
             <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h1>Release 8.1</h1>
+                    <h1>Release 12</h1>
 
 <a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.msi">Download
-    Release 8.1 MSI</a>
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_12/Joystick.Gremlin.R12.msi">Download
+    Release 12 MSI</a>
 <a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.zip">Download
-    Release 8.1 ZIP</a>
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_12/Joystick.Gremlin.R12.zip">Download
+    Release 12 ZIP</a>
 
 <br/><br/>
 
 
+<div class="bd-callout bd-callout-warning">
+<p class="text-justify">
+    Due to addition of a dedicated device identification handler class all
+    existing custom modules will have to be modified. The modification requires
+    the straight forward change of the decorators.
+</p>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">t16000</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
+    <span class="s2">&quot;T16000.M&quot;</span><span class="p">,</span>
+    <span class="mi">72331539</span><span class="p">,</span>
+    <span class="s2">&quot;Default&quot;</span>
+<span class="p">)</span></code></pre></figure>
+<p class="text-justify">
+    needs to be replaced with
+</p>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">t16000</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
+    <span class="s2">&quot;T16000.M&quot;</span><span class="p">,</span>
+    <span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">DeviceIdentifier</span><span class="p">(</span><span class="mi">72331539</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="s2">&quot;Default&quot;</span>
+<span class="p">)</span></code></pre></figure>
+<p class="text-justify">
+    The benefit of this is that no matter whether or not you use duplicate
+    devices the code is the same and it allows the implementation of a
+    forthcoming feature.
+</p>
+</div>
+
 <h2>New Features</h2>
 <ul>
-    <li>Ask to save changes when appropriate</li>
-    <li>Temporary mode switch action</li>
-    <li>Sound playback action</li>
-    <li>Symmetry mode for Bezier curve handles</li>
+    <li>Reworked automatic update of profile device information to account for windows id changes</li>
+    <li>New tool to move configuration from (unused) devices to other devices <emph>Tools -> Swap Devices</emph></li>
+    <li>Map to mouse now supports button clicks and more motion control</li>
+    <li>Option to enable profile on launch</li>
+    <li>Option added to switch between tabs based on physical device usage</li>
+    <li>Unified handling of device identities to prevent issues when moving between duplicate / non-duplicate setups</li>
+    <li>Containers are now considered valid if they can be partially executed</li>
 </ul>
 
 <h2>Fixes</h2>
 <ul>
-    <li>AltGr and Pause should now work properly</li>
-    <li>Reworked cubic Bezier curves</li>
-    <li>Properly store curve type changes</li>
-    <li>Consistent initial activation mode selection</li>
+    <li>Fix offset by one bug in the axis calibration usage</li>
+    <li>Don't ignore injected keyboard events as that breaks conditions etc.</li>
+    <li>Make value input boxes behave correctly with different decimal place character</li>
+    <li>Save profiles as UTF-8 to prevent issues with non ASCII characters</li>
+    <li>More robust recovery of vJoy device ownership</li>
+    <li>Input viewer should now show hat activations of very short duration</li>
+    <li>Response curves save changes when inverting the curve</li>
+    <li>More robust reading and writing of XML profiles</li>
+    <li>Handle device changes while Gremlin is active</li>
+    <li>Better handling of incompatible inputs in the UI</li>
+    <li>Reworked input device detection and handling logic</li>
+    <li>vJoy default value should be properly set again</li>
+    <li>Fix Gremlin not terminating if vJoy issues are encountered</li>
+    <li>Detect and handle a bunch of scenarios that would cause Gremlin to crash previously</li>
 </ul>
 
                 </div>
