@@ -393,12 +393,12 @@ class JoystickConditionWidget(AbstractConditionWidget):
 
         :param event the input event to process
         """
-        self.condition_data.device_id = event.hardware_id
-        self.condition_data.windows_id = event.windows_id
+        self.condition_data.device_id = event.device_id.hardware_id
+        self.condition_data.windows_id = event.device_id.windows_id
         self.condition_data.input_type = event.event_type
         self.condition_data.input_id = event.identifier
         self.condition_data.device_name = \
-            input_devices.JoystickProxy()[event.windows_id].name
+            input_devices.JoystickProxy()[event.device_id.windows_id].name
         if event.event_type == InputType.JoystickAxis:
             self.condition_data.comparison = "inside"
         elif event.event_type == InputType.JoystickButton:
