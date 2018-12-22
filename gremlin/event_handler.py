@@ -498,11 +498,6 @@ class EventHandler(QtCore.QObject):
         # Obtain callbacks matching the event
         callback_list = []
         if event.device_id in self.callbacks:
-            # for evt in self.callbacks[device_id].get(self._active_mode, {}):
-            #     if device_id == util.get_device_identifier(evt):
-            #         callback_list = self.callbacks[device_id][self._active_mode][evt]
-            #         break
-
             callback_list = self.callbacks[event.device_id].get(
                 self._active_mode, {}
             ).get(event, [])
