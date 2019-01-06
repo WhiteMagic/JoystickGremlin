@@ -446,9 +446,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             "XML files (*.xml)"
         )
         if fname != "":
-            self._do_load_profile(fname)
-            self.config.last_profile = fname
-            self._create_recent_profiles()
+            self._load_recent_profile(fname)
 
     def new_profile(self):
         """Creates a new empty profile."""
@@ -515,6 +513,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         if fname != "":
             self._profile.to_xml(fname)
             self._profile_fname = fname
+            self.config.last_profile = fname
+            self._create_recent_profiles()
         self._update_window_title()
 
     # +---------------------------------------------------------------
