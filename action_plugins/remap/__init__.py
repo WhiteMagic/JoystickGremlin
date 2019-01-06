@@ -22,6 +22,8 @@ from xml.etree import ElementTree
 from gremlin.base_classes import InputActionCondition
 from gremlin.common import InputType
 from gremlin import input_devices, joystick_handling, util
+from gremlin.error import ProfileError
+from gremlin.profile import safe_read
 import gremlin.ui.common
 import gremlin.ui.input_item
 
@@ -270,24 +272,28 @@ class Remap(gremlin.base_classes.AbstractAction):
 
         :param node XML node with which to populate the storage
         """
-        if "axis" in node.attrib:
-            self.input_type = InputType.JoystickAxis
-            self.vjoy_input_id = int(node.get("axis"))
-        elif "button" in node.attrib:
-            self.input_type = InputType.JoystickButton
-            self.vjoy_input_id = int(node.get("button"))
-        elif "hat" in node.attrib:
-            self.input_type = InputType.JoystickHat
-            self.vjoy_input_id = int(node.get("hat"))
-        elif "keyboard" in node.attrib:
-            self.input_type = InputType.Keyboard
-            self.vjoy_input_id = int(node.get("button"))
-        else:
-            raise gremlin.error.GremlinError(
-                "Invalid remap type provided: {}".format(node.attrib)
-            )
+        try:
+            if "axis" in node.attrib:
+                self.input_type = InputType.JoystickAxis
+                self.vjoy_input_id = safe_read(node, "axis", int)
+            elif "button" in node.attrib:
+                self.input_type = InputType.JoystickButton
+                self.vjoy_input_id = safe_read(node, "button", int)
+            elif "hat" in node.attrib:
+                self.input_type = InputType.JoystickHat
+                self.vjoy_input_id = safe_read(node, "hat", int)
+            elif "keyboard" in node.attrib:
+                self.input_type = InputType.Keyboard
+                self.vjoy_input_id = safe_read(node, "button", int)
+            else:
+                raise gremlin.error.GremlinError(
+                    "Invalid remap type provided: {}".format(node.attrib)
+                )
 
-        self.vjoy_device_id = int(node.get("vjoy"))
+            self.vjoy_device_id = safe_read(node, "vjoy", int)
+        except ProfileError:
+            self.vjoy_input_id = None
+            self.vjoy_device_id = None
 
     def _generate_xml(self):
         """Returns an XML node encoding this action's data.
@@ -313,7 +319,7 @@ class Remap(gremlin.base_classes.AbstractAction):
 
         :return True if the action is configured correctly, False otherwise
         """
-        return True
+        return not(self.vjoy_device_id is None or self.vjoy_input_id is None)
 
 
 version = 1
