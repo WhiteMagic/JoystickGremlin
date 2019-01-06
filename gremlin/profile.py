@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2018 Lionel Ott
+# Copyright (C) 2015 - 2019 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -1796,4 +1796,8 @@ class ProfileData(metaclass=ABCMeta):
         
         :return True if all required variables are set, False otherwise
         """
+        pass
+
+    #@abstractmethod
+    def _sanitize(self):
         pass
