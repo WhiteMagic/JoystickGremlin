@@ -918,8 +918,9 @@ class VJoySelector(QtWidgets.QWidget):
             self.input_item_dropdowns[dev.vjoy_id] = selection
 
         # Show the "None" selection entry
-        first_key = sorted(self.input_item_dropdowns.keys())[0]
-        self.input_item_dropdowns[first_key].setVisible(True)
+        if len(self.input_item_dropdowns.keys()) > 0:
+            first_key = sorted(self.input_item_dropdowns.keys())[0]
+            self.input_item_dropdowns[first_key].setVisible(True)
 
     def _update_device(self, index):
         """Handles changing the vJoy device selection.
