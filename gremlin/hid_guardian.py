@@ -224,14 +224,21 @@ class HidGuardian:
 
         # Process each entry to extract vendor and product id
         device_data = []
-        split_regex = re.compile("HID\\\\VID_([a-zA-Z0-9]+)&PID_([a-zA-Z0-9]+)")
+        split_regex = re.compile("HID\\\\VID_(.{4})&PID_(.{4})")
         for entry in data[0]:
             match = split_regex.match(entry)
             if match:
-                device_data.append((
-                    int(match.group(1), 16),
-                    int(match.group(2), 16)
-                ))
+                try:
+                    device_data.append((
+                        int(match.group(1), 16),
+                        int(match.group(2), 16)
+                    ))
+                except ValueError:
+                    gremlin.util.display_error(
+                        "Failed to extract vendor and product id for HidGuardian entry:\n\n{}"
+                            .format(entry)
+                    )
+
 
         return device_data
 
