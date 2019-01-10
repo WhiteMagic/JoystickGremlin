@@ -224,7 +224,7 @@ class HidGuardian:
 
         # Process each entry to extract vendor and product id
         device_data = []
-        split_regex = re.compile("HID\\\\VID_(.+)&PID_(.+)")
+        split_regex = re.compile("HID\\\\VID_([a-zA-Z0-9]+)&PID_([a-zA-Z0-9]+)")
         for entry in data[0]:
             match = split_regex.match(entry)
             if match:
