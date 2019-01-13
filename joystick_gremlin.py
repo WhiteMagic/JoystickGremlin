@@ -638,7 +638,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             )
             self.tabs[device.device_guid] = widget
             tab_label = device.name.strip()
-            tab_label += " ({:d})".format(device.windows_id)
             self.ui.devices.addTab(widget, tab_label)
 
         # Create vJoy as input device tabs
@@ -660,10 +659,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             )
             self.tabs[device.device_guid] = widget
             tab_label = device.name.strip()
-            tab_label += " #{:d} ({:d})".format(
-                device.vjoy_id,
-                device.windows_id
-            )
+            tab_label += " #{:d}".format(device.vjoy_id)
             self.ui.devices.addTab(widget, tab_label)
 
         # Create keyboard tab
