@@ -336,7 +336,7 @@ class ButtonState(QtWidgets.QGroupBox):
 
         self.buttons = [None]
         button_layout = QtWidgets.QGridLayout()
-        for i in range(device.buttons):
+        for i in range(device.button_count):
             btn = QtWidgets.QPushButton(str(i+1))
             btn.setStyleSheet(ButtonState.style_sheet)
             btn.setDisabled(True)
@@ -377,7 +377,7 @@ class HatState(QtWidgets.QGroupBox):
 
         self.hats = [None]
         hat_layout = QtWidgets.QGridLayout()
-        for i in range(device.hats):
+        for i in range(device.hat_count):
             hat = HatWidget()
             self.hats.append(hat)
             hat_layout.addWidget(hat, int(i / 2), int(i % 2))

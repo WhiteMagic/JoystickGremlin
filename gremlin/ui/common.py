@@ -741,8 +741,8 @@ class VJoySelector(QtWidgets.QWidget):
         for dev in gremlin.joystick_handling.vjoy_devices():
             input_counts = {
                 gremlin.common.InputType.JoystickAxis: dev.axis_count,
-                gremlin.common.InputType.JoystickButton: dev.buttons,
-                gremlin.common.InputType.JoystickHat: dev.hats
+                gremlin.common.InputType.JoystickButton: dev.button_count,
+                gremlin.common.InputType.JoystickHat: dev.hat_count
             }
 
             count = 0
@@ -882,8 +882,8 @@ class VJoySelector(QtWidgets.QWidget):
         """Creates the vJoy input item selection drop downs."""
         count_map = {
             gremlin.common.InputType.JoystickAxis: lambda x: x.axis_count,
-            gremlin.common.InputType.JoystickButton: lambda x: x.buttons,
-            gremlin.common.InputType.JoystickHat: lambda x: x.hats
+            gremlin.common.InputType.JoystickButton: lambda x: x.button_count,
+            gremlin.common.InputType.JoystickHat: lambda x: x.hat_count
         }
 
         self.input_item_dropdowns = {}
