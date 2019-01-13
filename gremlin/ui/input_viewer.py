@@ -21,6 +21,8 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import dill
+
 import gremlin
 from . import common
 
@@ -203,10 +205,7 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
         super().__init__(parent)
 
         self.device_data = device_data
-        self.device_id = gremlin.common.DeviceIdentifier(
-            self.device_data.hardware_id,
-            self.device_data.windows_id
-        )
+        self.device_guid = device_data.device_guid
         self.vis_type = vis_type
         self.widgets = []
         self.setLayout(QtWidgets.QHBoxLayout())
@@ -262,14 +261,14 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
 
         :param event the event to use in the update
         """
-        if self.device_id != event.device_id:
+        if self.device_guid != event.device_guid:
             return
 
         for widget in self.widgets:
             widget.process_event(event)
 
     def _current_axis_update(self, event):
-        if self.device_id != event.device_id:
+        if self.device_guid != event.device_guid:
             return
 
         for widget in self.widgets:
@@ -280,7 +279,7 @@ class JoystickDeviceWidget(QtWidgets.QWidget):
 
         :param event the event to use in the update
         """
-        if self.device_id != event.device_id:
+        if self.device_guid != event.device_guid:
             return
 
         if event.event_type == gremlin.common.InputType.JoystickAxis:

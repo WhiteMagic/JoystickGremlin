@@ -626,7 +626,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Create physical joystick device tabs
         for device in sorted(phys_devices, key=lambda x: x.name):
             device_profile = self._profile.get_device_modes(
-                device.device_id,
+                device.device_guid,
                 gremlin.profile.DeviceType.Joystick,
                 device.name
             )
@@ -636,7 +636,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device_profile,
                 self._current_mode
             )
-            self.tabs[device.device_id] = widget
+            self.tabs[device.device_guid] = widget
             tab_label = device.name.strip()
             tab_label += " ({:d})".format(device.windows_id)
             self.ui.devices.addTab(widget, tab_label)
@@ -648,7 +648,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 continue
 
             device_profile = self._profile.get_device_modes(
-                gremlin.util.get_device_identifier(device),
+                device.device_guid,
                 gremlin.profile.DeviceType.Joystick,
                 device.name
             )
@@ -658,7 +658,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device_profile,
                 self._current_mode
             )
-            self.tabs[gremlin.util.get_device_identifier(device)] = widget
+            self.tabs[device.device_guid] = widget
             tab_label = device.name.strip()
             tab_label += " #{:d} ({:d})".format(
                 device.vjoy_id,
@@ -696,7 +696,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device_profile,
                 self._current_mode
             )
-            self.tabs[device.device_id] = widget
+            self.tabs[device.device_guid] = widget
             self.ui.devices.addTab(
                 widget,
                 "{} #{:d}".format(device.name, device.vjoy_id)
@@ -807,15 +807,16 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Get device id of the event and check if this matches the currently
         # active tab
-        if event.device_id not in self.tabs:
+        if event.device_guid not in self.tabs:
             return
 
-        tab_switch_needed = self.ui.devices.currentWidget() != self.tabs[event.device_id]
+        tab_switch_needed = self.ui.devices.currentWidget() \
+                            != self.tabs[event.device_guid]
 
         # Switch to the tab corresponding to the event's device if the option
         # is set in the options
         if self.config.highlight_device and tab_switch_needed:
-            self.ui.devices.setCurrentWidget(self.tabs[event.device_id])
+            self.ui.devices.setCurrentWidget(self.tabs[event.device_guid])
             tab_switch_needed = False
             time.sleep(0.1)
 

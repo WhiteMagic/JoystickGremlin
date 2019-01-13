@@ -253,14 +253,8 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
             logging.getLogger("system").error(str(e))
 
         # Create correct physical device id
-        joy1_id = gremlin.common.DeviceIdentifier(
-            data["lower"]["hardware_id"],
-            data["lower"]["windows_id"]
-        )
-        joy2_id = gremlin.common.DeviceIdentifier(
-            data["upper"]["hardware_id"],
-            data["upper"]["windows_id"]
-        )
+        joy1_id = data["lower"]["device_guid"]
+        joy2_id = data["upper"]["device_guid"]
 
         self.joy1_selector.set_selection(
             gremlin.common.InputType.JoystickAxis,

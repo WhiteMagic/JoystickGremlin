@@ -49,9 +49,8 @@ class Repeater(QtCore.QObject):
         self._stop_timer = threading.Timer(5.0, self.stop)
         self._update_func = update_func
         self._timeout = time.time()
-        self._vjoy_device_id = [
-            dev.hardware_id for dev in joystick_handling.joystick_devices() if dev.is_virtual
-        ][0]
+        self._vjoy_device_guids = \
+            [dev.device_guid for dev in joystick_handling.vjoy_devices()]
         self._event_registry = {}
 
     @property
@@ -93,7 +92,7 @@ class Repeater(QtCore.QObject):
         # Ignore VJoy events as well as events occurring when
         # events are repeated
         if self.is_running or \
-                event.device_id.hardware_id == self._vjoy_device_id:
+                event.device_guid in self._vjoy_device_guids:
             return
 
         if not input_devices.JoystickInputSignificant().should_process(event):

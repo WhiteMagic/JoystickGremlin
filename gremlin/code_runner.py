@@ -100,9 +100,6 @@ class CodeRunner:
 
             # Create input callbacks based on the profile's content
             for device in profile.devices.values():
-                hid = device.hardware_id
-                wid = device.windows_id
-                dev_id = gremlin.common.DeviceIdentifier(hid, wid)
                 for mode in device.modes.values():
                     for input_items in mode.config.values():
                         for input_item in input_items.values():
@@ -113,7 +110,7 @@ class CodeRunner:
 
                             event = event_handler.Event(
                                 event_type=input_item.input_type,
-                                device_id=gremlin.common.DeviceIdentifier(hid, wid),
+                                device_guid=device.device_guid,
                                 identifier=input_item.input_id
                             )
 
@@ -131,7 +128,7 @@ class CodeRunner:
                             for cb_data in callbacks:
                                 if cb_data.event is None:
                                     self.event_handler.add_callback(
-                                        dev_id,
+                                        device.device_guid,
                                         mode.name,
                                         event,
                                         cb_data.callback,
@@ -157,14 +154,11 @@ class CodeRunner:
                 # Lower axis callback
                 event = event_handler.Event(
                     event_type=gremlin.common.InputType.JoystickAxis,
-                    device_id=gremlin.common.DeviceIdentifier(
-                        entry["lower"]["hardware_id"],
-                        entry["lower"]["windows_id"]
-                    ),
+                    device_guid=entry["lower"]["device_guid"],
                     identifier=entry["lower"]["axis_id"]
                 )
                 self.event_handler.add_callback(
-                    event.device_id,
+                    event.device_guid,
                     entry["mode"],
                     event,
                     merge_axis.update_axis1,
@@ -174,14 +168,11 @@ class CodeRunner:
                 # Upper axis callback
                 event = event_handler.Event(
                     event_type=gremlin.common.InputType.JoystickAxis,
-                    device_id=gremlin.common.DeviceIdentifier(
-                        entry["upper"]["hardware_id"],
-                        entry["upper"]["windows_id"]
-                    ),
+                    device_guid=entry["upper"]["device_guid"],
                     identifier=entry["upper"]["axis_id"]
                 )
                 self.event_handler.add_callback(
-                    event.device_id,
+                    event.device_guid,
                     entry["mode"],
                     event,
                     merge_axis.update_axis2,

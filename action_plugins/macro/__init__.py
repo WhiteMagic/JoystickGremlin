@@ -476,7 +476,7 @@ class MacroActionEditor(QtWidgets.QWidget):
     def _modify_joystick(self, event):
         self.model.set_entry(
             gremlin.macro.JoystickAction(
-                event.device_id.windows_id,
+                event.device_guid,
                 event.event_type,
                 event.identifier,
                 event.value
@@ -586,7 +586,7 @@ class MacroListModel(QtCore.QAbstractListModel):
             if isinstance(entry, gremlin.macro.JoystickAction):
                 cur_joystick = None
                 for joy in gremlin.joystick_handling.joystick_devices():
-                    if joy.windows_id == entry.device_id:
+                    if joy.device_guid == entry.device_guid:
                         cur_joystick = joy
 
                 return "{} {} {} - {}".format(
@@ -1327,12 +1327,14 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
                 self._append_entry(gremlin.macro.PauseAction(
                     time.time() - max(self._recording_times.values())
                 ))
+            value = event.is_pressed
+            if event.event_type != InputType.JoystickButton:
+                value = event.value
             action = gremlin.macro.JoystickAction(
-                event.device_id.windows_id,
+                event.device_guid,
                 event.event_type,
                 event.identifier,
-                event.is_pressed if event.event_type == InputType.JoystickButton \
-                    else event.value
+                value
             )
             self._recording_times[event] = time.time()
             self._recording_values[event] = event.value
