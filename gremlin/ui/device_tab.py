@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
+
 from PyQt5 import QtWidgets, QtCore
 
 import container_plugins.basic
@@ -640,27 +642,63 @@ def input_item_index_lookup(index, input_items):
     hat_count = len(input_items.config[InputType.JoystickHat])
     key_count = len(input_items.config[InputType.Keyboard])
 
-    # Since vJoy axes are not guaranteed to be sequentially numbered, i.e.
-    # id 3 is not always the Z axis, we have to use the proper lookup to get
-    # the correct query index.
-    axis_index = index + 1
-    if input_items.parent.type == gremlin.common.DeviceType.VJoy:
-        for dev in gremlin.joystick_handling.vjoy_devices():
-            if input_items.parent.hardware_id == dev.vjoy_id:
-                axis_index = dev.axis(index)[1]
-                break
-
     if key_count > 0:
+        if not input_items.has_data(InputType.Keyboard, index):
+            logging.getLogger("system").error(
+                "Attempting to retrieve non existent input, "
+                "type={} index={}".format(
+                    InputType.to_string(InputType.Keyboard),
+                    index
+                )
+            )
         return input_items.get_data(InputType.Keyboard, index)
     else:
         if index < axis_count:
-            return input_items.get_data(InputType.JoystickAxis, axis_index)
+            # Handle non continuous axis setups
+            axis_keys = sorted(input_items.config[InputType.JoystickAxis].keys())
+            if not input_items.has_data(InputType.JoystickAxis, axis_keys[index]):
+                logging.getLogger("system").error(
+                    "Attempting to retrieve non existent input, "
+                    "type={} index={}".format(
+                        InputType.to_string(InputType.JoystickAxis),
+                        axis_keys[index]
+                    )
+                )
+
+            return input_items.get_data(
+                InputType.JoystickAxis,
+                axis_keys[index]
+            )
         elif index < axis_count + button_count:
+            if not input_items.has_data(
+                    InputType.JoystickButton,
+                    index - axis_count + 1
+            ):
+                logging.getLogger("system").error(
+                    "Attempting to retrieve non existent input, "
+                    "type={} index={}".format(
+                        InputType.to_string(InputType.JoystickButton),
+                        index - axis_count + 1
+                    )
+                )
+
             return input_items.get_data(
                 InputType.JoystickButton,
                 index - axis_count + 1
             )
         elif index < axis_count + button_count + hat_count:
+            if not input_items.has_data(
+                    InputType.JoystickHat,
+                    axis_count + button_count + hat_count
+            ):
+                logging.getLogger("system").error(
+                    "Attempting to retrieve non existent input, "
+                    "type={} index={}".format(
+                        InputType.to_string(InputType.JoystickHat),
+                        index - axis_count - button_count + 1
+                    )
+                )
+
             return input_items.get_data(
                 InputType.JoystickHat,
                 index - axis_count - button_count + 1

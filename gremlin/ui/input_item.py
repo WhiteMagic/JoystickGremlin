@@ -144,7 +144,17 @@ class InputItemListModel(common.AbstractModel):
             offset_map[InputType.JoystickButton] + \
             len(input_items.config[InputType.JoystickButton])
 
-        return offset_map[event.event_type] + event.identifier - 1
+        if event.event_type == InputType.JoystickAxis:
+            # Generate a mapping from axis index to linear axis index
+            axis_index_to_linear_index = {}
+            axis_keys = sorted(input_items.config[InputType.JoystickAxis].keys())
+            for l_idx, a_idx in enumerate(axis_keys):
+                axis_index_to_linear_index[a_idx] = l_idx
+
+            return offset_map[event.event_type] + \
+                   axis_index_to_linear_index[event.identifier]
+        else:
+            return offset_map[event.event_type] + event.identifier - 1
 
 
 class InputItemListView(common.AbstractView):
@@ -259,6 +269,9 @@ class InputItemListView(common.AbstractView):
         :param emit_signal flag indicating whether or not a signal is to be
             emitted when the item is being selected
         """
+        # If the index is actually an event we have to correctly translate the
+        # event into an index, taking the possible non-contiguous nature of
+        # axes into account
         if isinstance(index, gremlin.event_handler.Event):
             index = self.model.event_to_index(index)
         self.current_index = index
@@ -815,7 +828,6 @@ class AbstractActionWidget(QtWidgets.QFrame):
         self.action_data = action_data
 
         self.main_layout = layout_type(self)
-
         self._create_ui()
         self._populate_ui()
 
