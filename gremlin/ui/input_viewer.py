@@ -42,7 +42,7 @@ class VisualizationSelector(QtWidgets.QWidget):
 
     # Event emitted when the visualization configuration changes
     changed = QtCore.pyqtSignal(
-        gremlin.joystick_handling.JoystickDeviceData,
+        dill.DeviceSummary,
         VisualizationType,
         bool
     )
