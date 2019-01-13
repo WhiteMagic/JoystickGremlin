@@ -300,6 +300,17 @@ def clear_layout(layout):
         layout.removeItem(child)
 
 
+dill_hat_lookup = {
+    -1: (0, 0),
+    0: (0, 1),
+    4500: (1, 1),
+    9000: (1, 0),
+    13500: (1, -1),
+    18000: (0, -1),
+    22500: (-1, -1),
+    27000: (-1, 0),
+    31500: (-1, 1)
+}
 
 
 def load_module(name):
