@@ -18,11 +18,10 @@
 
 import logging
 import threading
-import time
 
-import sdl2
+import dill
 
-from . import common, error, util
+from . import common, error
 from vjoy import vjoy
 
 
@@ -113,36 +112,19 @@ def joystick_devices_initialization():
 
     syslog = logging.getLogger("system")
     syslog.info("Initializing joystick devices")
-    syslog.debug("{:d} joysticks detected".format(sdl2.SDL_NumJoysticks()))
-
-    # Register all devices with the device registry to handle duplicate and
-    # non duplicate devices transparently.
-    devreg = common.DeviceRegistry()
-    devreg.reset()
-    # Register the fake keyboard device
-    devreg.register(0, 0)
+    syslog.debug(
+        "{:d} joysticks detected".format(dill.DILL.get_device_count())
+    )
 
     # Process all connected devices in order to properly initialize the
     # device registry
-    for i in range(sdl2.SDL_NumJoysticks()):
-        joy = sdl2.SDL_JoystickOpen(i)
-        if joy is None:
-            syslog.error("Invalid joystick device at id {}".format(i))
-        else:
-            devreg.register(
-                get_device_guid(joy),
-                sdl2.SDL_JoystickInstanceID(joy)
-            )
+    devices = []
+    for i in range(dill.DILL.get_device_count()):
+        info = dill.DILL.get_device_information_by_index(i)
+        devices.append(info)
 
     # Process all devices again to detect those that have been added and those
     # that have been removed since the last time this function ran.
-
-    # Accumulate all devices
-    devices = []
-    for i in range(sdl2.SDL_NumJoysticks()):
-        joy = sdl2.SDL_JoystickOpen(i)
-        if joy is not None:
-            devices.append(JoystickDeviceData(joy))
 
     # Compare existing versus observed devices and only proceed if there
     # is a change to avoid unnecessary work.
@@ -151,18 +133,16 @@ def joystick_devices_initialization():
     for new_dev in devices:
         if new_dev not in _joystick_devices:
             device_added = True
-            syslog.debug("Added: name={} windows_id={:d} hardware_id={:d}".format(
+            syslog.debug("Added: name={} guid={}".format(
                 new_dev.name,
-                new_dev.windows_id,
-                new_dev.hardware_id
+                new_dev.device_guid
             ))
     for old_dev in _joystick_devices:
         if old_dev not in devices:
             device_removed = True
-            syslog.debug("Removed: name={} windows_id={:d} hardware_id={:d}".format(
+            syslog.debug("Removed: name={} guid={}".format(
                 old_dev.name,
-                old_dev.windows_id,
-                old_dev.hardware_id
+                old_dev.device_guid
             ))
 
     # Terminate if no change occurred
@@ -178,9 +158,9 @@ def joystick_devices_initialization():
 
     vjoy_lookup = {}
     for dev in [dev for dev in devices if dev.is_virtual]:
-        hash_value = (dev.axis_count, dev.buttons, dev.hats)
+        hash_value = (dev.axis_count, dev.button_count, dev.hat_count)
         syslog.debug(
-            "vJoy windows id {:d}: {}".format(dev.windows_id, hash_value)
+            "vJoy guid={}: {}".format(dev.device_guid, hash_value)
         )
 
         # Only unique combinations of axes, buttons, and hats are allowed
@@ -221,7 +201,7 @@ def joystick_devices_initialization():
             should_terminate = True
             syslog.debug(
                 "vjoy id {:d}: {} - ERROR - vJoy device exists "
-                "SDL is missing".format(i, hash_value)
+                "but DILL does not see it".format(i, hash_value)
             )
 
         # If the device can be acquired, configure the mapping from
@@ -231,10 +211,10 @@ def joystick_devices_initialization():
             try:
                 vjoy_dev = vjoy_proxy[i]
 
-                axis_mapping = []
-                for j in range(vjoy_dev.axis_count):
-                    axis_mapping.append((j + 1, vjoy_dev.axis_id(j + 1)))
-                vjoy_lookup[hash_value].set_axis_mapping(axis_mapping)
+                # axis_mapping = []
+                # for j in range(vjoy_dev.axis_count):
+                #     axis_mapping.append((j + 1, vjoy_dev.axis_id(j + 1)))
+                # vjoy_lookup[hash_value].set_axis_mapping(axis_mapping)
             except error.VJoyError as e:
                 syslog.debug("vJoy id {:} can't be acquired".format(i))
 
