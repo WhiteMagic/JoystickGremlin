@@ -79,3 +79,11 @@ class HidGuardianError(GremlinError):
 
     def __init__(self, value):
         super().__init__(value)
+
+
+class DILError(GremlinError):
+
+    """Exception raised when an error occurs within the DIL module."""
+
+    def __init__(self, value):
+        super().__init__(value)
