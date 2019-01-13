@@ -32,6 +32,8 @@ import traceback
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 
+import dill
+
 # Figure out the location of the code / executable and change the working
 # directory accordingly
 install_path = os.path.normcase(os.path.dirname(os.path.abspath(sys.argv[0])))
@@ -470,8 +472,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         keyboard_device.hardware_id = 0
         keyboard_device.windows_id = 0
         keyboard_device.type = gremlin.profile.DeviceType.Keyboard
-        self._profile.devices[gremlin.common.DeviceIdentifier(0, 0)] = \
-            keyboard_device
+        self._profile.devices[dill.GUID_Keyboard] = keyboard_device
 
         # Update profile information
         self._profile_fname = None
@@ -670,7 +671,7 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         # Create keyboard tab
         device_profile = self._profile.get_device_modes(
-            gremlin.common.DeviceIdentifier(0, 0),
+            dill.GUID_Keyboard,
             gremlin.profile.DeviceType.Keyboard,
             "keyboard"
         )
@@ -678,7 +679,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             device_profile,
             self._current_mode
         )
-        self.tabs[gremlin.common.DeviceIdentifier(0, 0)] = widget
+        self.tabs[dill.GUID_Keyboard] = widget
         self.ui.devices.addTab(widget, "Keyboard")
 
         # Create the vjoy as output device tab

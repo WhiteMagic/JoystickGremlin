@@ -20,6 +20,8 @@ import copy
 
 from PyQt5 import QtWidgets
 
+import dill
+
 from gremlin import common, joystick_handling, macro, util
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -285,8 +287,8 @@ class ModeBindings(QtWidgets.QWidget):
         devices = joystick_handling.joystick_devices()
         device_lookup = {}
         for dev in devices:
-            device_lookup[dev.hardware_id] = dev.name
-        device_lookup[common.DeviceIdentifier(0, 0)] = "Keyboard"
+            device_lookup[dev.device_guid] = dev.name
+        device_lookup[dill.GUID_Keyboard] = "Keyboard"
         return device_lookup
 
 
