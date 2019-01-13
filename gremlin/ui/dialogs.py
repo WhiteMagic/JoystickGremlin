@@ -1104,8 +1104,9 @@ class DeviceInformationUi(common.BaseDialogUi):
         self.main_layout.addWidget(QtWidgets.QLabel("<b>Axes</b>"), 0, 1)
         self.main_layout.addWidget(QtWidgets.QLabel("<b>Buttons</b>"), 0, 2)
         self.main_layout.addWidget(QtWidgets.QLabel("<b>Hats</b>"), 0, 3)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>System ID</b>"), 0, 4)
-        self.main_layout.addWidget(QtWidgets.QLabel("<b>Hardware ID</b>"), 0, 5)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>Vendor ID</b>"), 0, 4)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>Product ID</b>"), 0, 5)
+        self.main_layout.addWidget(QtWidgets.QLabel("<b>GUID"), 0, 6)
 
         for i, entry in enumerate(self.devices):
             self.main_layout.addWidget(
@@ -1115,17 +1116,23 @@ class DeviceInformationUi(common.BaseDialogUi):
                 QtWidgets.QLabel(str(entry.axis_count)), i+1, 1
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.buttons)), i+1, 2
+                QtWidgets.QLabel(str(entry.button_count)), i+1, 2
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.hats)), +i+1, 3
+                QtWidgets.QLabel(str(entry.hat_count)), i+1, 3
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.windows_id)), i+1, 4
+                QtWidgets.QLabel("{:X}".format(entry.vendor_id)), i+1, 4
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel(str(entry.hardware_id)), i+1, 5
+                QtWidgets.QLabel("{:X}".format(entry.product_id)), i+1, 5
             )
+            guid_field = QtWidgets.QLineEdit()
+            guid_field.setText(str(entry.device_guid))
+            guid_field.setReadOnly(True)
+            guid_field.setMinimumWidth(230)
+            guid_field.setMaximumWidth(230)
+            self.main_layout.addWidget(guid_field, i+1, 6)
 
         self.close_button = QtWidgets.QPushButton("Close")
         self.close_button.clicked.connect(lambda: self.close())
