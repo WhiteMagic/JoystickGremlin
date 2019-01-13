@@ -352,11 +352,6 @@ class ButtonState(QtWidgets.QGroupBox):
         :param event the event with which to update the state display
         """
         if event.event_type == gremlin.common.InputType.JoystickButton:
-            # Delay reacting such that the visualization can happen before we
-            # change it again.
-            if time.time() - self._event_times.get(event.identifier, 0.0) < 0.05:
-                time.sleep(0.05)
-
             state = event.is_pressed if event.is_pressed is not None else False
             self.buttons[event.identifier].setDown(state)
             self._event_times[event.identifier] = time.time()
@@ -396,11 +391,6 @@ class HatState(QtWidgets.QGroupBox):
         :param event the event with which to update the state display
         """
         if event.event_type == gremlin.common.InputType.JoystickHat:
-            # Delay reacting such that the visualization can happen before we
-            # change it again.
-            if time.time() - self._event_times.get(event.identifier, 0.0) < 0.05:
-                time.sleep(0.05)
-
             self.hats[event.identifier].set_angle(event.value)
             self._event_times[event.identifier] = time.time()
 
