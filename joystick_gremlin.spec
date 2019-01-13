@@ -29,7 +29,7 @@ added_files.extend(action_plugins_files)
 added_files.extend(container_plugins_files)
 added_binaries = [
     ("vjoy/vJoyInterface.dll", "."),
-    ("SDL2.dll", "."),
+    ("dil/di_listener.dll", "."),
 ]
 
 a = Analysis(
