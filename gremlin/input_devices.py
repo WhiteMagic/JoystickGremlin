@@ -24,7 +24,7 @@ import threading
 
 from PyQt5 import QtCore
 
-import sdl2
+from dill import DILL
 
 from . import common, error, event_handler, joystick_handling, macro, util
 
@@ -178,70 +178,76 @@ periodic_registry = PeriodicRegistry()
 
 class JoystickWrapper:
 
-    """Wraps SDL2 joysticks and presents an API similar to vjoy."""
+    """Wraps joysticks and presents an API similar to vjoy."""
 
     class Input:
 
         """Represents a joystick input."""
 
-        def __init__(self, joystick, index):
+        def __init__(self, joystick_guid, index):
             """Creates a new instance.
 
-            :param joystick the SDL joystick instance this input belongs to
+            :param joystick_guid the GUID of the device instance
             :param index the index of the input
             """
-            self._joystick = joystick
+            self._joystick_guid = joystick_guid
             self._index = index
 
     class Axis(Input):
 
         """Represents a single axis of a joystick."""
 
-        def __init__(self, joystick, index):
-            super().__init__(joystick, index)
+        def __init__(self, joystick_guid, index):
+            super().__init__(joystick_guid, index)
 
         @property
         def value(self):
-            return sdl2.SDL_JoystickGetAxis(
-                self._joystick, self._index
-            ) / float(32768)
+            return DILL.get_axis(self._joystick_guid, self.index) / float(32768)
 
     class Button(Input):
 
         """Represents a single button of a joystick."""
 
-        def __init__(self, joystick, index):
-            super().__init__(joystick, index)
+        def __init__(self, joystick_guid, index):
+            super().__init__(joystick_guid, index)
 
         @property
         def is_pressed(self):
-            return sdl2.SDL_JoystickGetButton(self._joystick, self._index) == 1
+            return DILL.get_button(self._joystick_guid, self.index)
 
     class Hat(Input):
 
         """Represents a single hat of a joystick,"""
 
-        def __init__(self, joystick, index):
-            super().__init__(joystick, index)
+        def __init__(self, joystick_guid, index):
+            super().__init__(joystick_guid, index)
 
         @property
         def direction(self):
-            return util.convert_sdl_hat(sdl2.SDL_JoystickGetHat(
-                self._joystick, self._index)
-            )
+            return util.dill_hat_lookup[
+                DILL.get_hat(self._joystick_guid, self.index)
+            ]
 
-    def __init__(self, jid):
+    def __init__(self, device_guid):
         """Creates a new wrapper object for the given object id.
 
-        :param jid the id of the joystick instance to wrap
+        :param device_guid the GUID of the joystick instance to wrap
         """
-        if jid > sdl2.joystick.SDL_NumJoysticks():
-            raise error.GremlinError("No device with the provided ID exist")
-        self._joystick = sdl2.SDL_JoystickOpen(jid)
+        if DILL.device_exists(device_guid) is False:
+            raise error.GremlinError("No device with the provided GUID exist")
+        self._device_guid = device_guid
         self._axis = self._init_axes()
         self._buttons = self._init_buttons()
         self._hats = self._init_hats()
-        self._name = sdl2.joystick.SDL_JoystickNameForIndex(jid).decode("utf-8")
+        self._info = DILL.get_device_information_by_guid(self._device_guid)
+
+    @property
+    def device_guid(self):
+        """Returns the GUID of the joystick.
+
+        :return GUID for this joystick
+        """
+        return self._device_guid
 
     @property
     def name(self):
@@ -249,14 +255,7 @@ class JoystickWrapper:
 
         :return name of the joystick
         """
-        return self._name
-
-    def windows_id(self):
-        """Returns the system id of the wrapped joystick.
-
-        :return system id of this device
-        """
-        return sdl2.joystick.SDL_JoystickInstanceID(self._joystick)
+        return self._info.name
 
     def axis(self, index):
         """Returns the current value of the axis with the given index.
@@ -293,7 +292,7 @@ class JoystickWrapper:
 
         :return number of axes
         """
-        return sdl2.SDL_JoystickNumAxes(self._joystick)
+        return self._info.axis_count
 
     def _init_axes(self):
         """Initializes the axes of the joystick.
@@ -301,8 +300,8 @@ class JoystickWrapper:
         :return list of JoystickWrapper.Axis objects
         """
         axes = []
-        for i in range(sdl2.SDL_JoystickNumAxes(self._joystick)):
-            axes.append(JoystickWrapper.Axis(self._joystick, i))
+        for i in range(self._info.axis_count):
+            axes.append(JoystickWrapper.Axis(self._device_guid, i))
         return axes
 
     def _init_buttons(self):
@@ -311,8 +310,8 @@ class JoystickWrapper:
         :return list of JoystickWrapper.Button objects
         """
         buttons = []
-        for i in range(sdl2.SDL_JoystickNumButtons(self._joystick)):
-            buttons.append(JoystickWrapper.Button(self._joystick, i))
+        for i in range(self._info.button_count):
+            buttons.append(JoystickWrapper.Button(self._device_guid, i))
         return buttons
 
     def _init_hats(self):
@@ -321,8 +320,8 @@ class JoystickWrapper:
         :return list of JoystickWrapper.Hat objects
         """
         hats = []
-        for i in range(sdl2.SDL_JoystickNumHats(self._joystick)):
-            hats.append(JoystickWrapper.Hat(self._joystick, i))
+        for i in range(self._info.hat_count):
+            hats.append(JoystickWrapper.Hat(self._device_guid, i))
         return hats
 
 
@@ -346,10 +345,9 @@ class JoystickProxy:
             # The id used to open the device is not the same as the
             # system_id reported by SDL, hence we grab all devices and
             # store them using their system_id
-            for i in range(sdl2.joystick.SDL_NumJoysticks()):
+            for i in range(DILL.get_device_count()):
                 joy = JoystickWrapper(i)
-                JoystickProxy.joystick_devices[joy.windows_id()] = joy
-                JoystickProxy.joystick_devices[joy.name] = joy
+                JoystickProxy.joystick_devices[joy.device_guid()] = joy
 
         if key not in JoystickProxy.joystick_devices:
             raise error.GremlinError(
