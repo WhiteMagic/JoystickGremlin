@@ -278,9 +278,9 @@ class ModeBindings(QtWidgets.QWidget):
         return lambda x: self.update_cb(self.mode, input_item, x)
 
     def _get_device_names(self):
-        """Creates a dictionary mapping device hardware ids to their names.
+        """Creates a dictionary mapping device GUID ids to their names.
 
-        :return dictionary mapping device hardware id to the corresponding name
+        :return dictionary mapping device GUID to the corresponding name
         """
         devices = joystick_handling.joystick_devices()
         device_lookup = {}

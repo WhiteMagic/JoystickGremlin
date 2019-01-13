@@ -36,10 +36,8 @@ Joystick Gremlin uses the following software and resources:
 - [pyinstaller](http://www.pyinstaller.org/)
 - [PyQT5](http://www.riverbankcomputing.co.uk/software/pyqt/intro)
 - [PyWin32](http://sourceforge.net/projects/pywin32)
-- [SDL2](https://www.libsdl.org/)
 - [vJoy](http://vjoystick.sourceforge.net)
 - [Python 3.4](https://www.python.org)
-- [PySDL2](https://bitbucket.org/marcusva/py-sdl2/)
 - [Mako](http://www.makotemplates.org/)
 - [Modern UI Icons](http://modernuiicons.com/)
 

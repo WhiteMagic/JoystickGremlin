@@ -712,11 +712,9 @@ class AboutUi(common.BaseDialogUi):
             "about/mako.html",
             "about/modernuiicons.html",
             "about/pyqt.html",
-            "about/pysdl2.html",
             "about/pywin32.html",
             "about/qt5.html",
             "about/reportlab.html",
-            "about/sdl2.html",
             "about/vjoy.html",
         ]
         third_party_licenses = ""

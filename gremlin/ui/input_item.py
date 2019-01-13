@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import enum
-
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
