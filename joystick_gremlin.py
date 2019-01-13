@@ -39,9 +39,6 @@ import dill
 install_path = os.path.normcase(os.path.dirname(os.path.abspath(sys.argv[0])))
 os.chdir(install_path)
 
-os.environ["PYSDL2_DLL_PATH"] = install_path
-import sdl2.hints
-
 import gremlin.ui.axis_calibration
 import gremlin.ui.common
 import gremlin.ui.device_tab
@@ -1292,13 +1289,8 @@ if __name__ == "__main__":
     hg = gremlin.hid_guardian.HidGuardian()
     hg.add_process(os.getpid())
 
-    # Initialize SDL
-    sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
-    sdl2.SDL_SetHint(
-                sdl2.hints.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS,
-                ctypes.c_char_p(b"1")
-    )
-    sdl2.ext.init()
+    # Initialize DirectInputListener
+    # DILL.init()
 
     # Create user interface
     app_id = u"joystick.gremlin"
