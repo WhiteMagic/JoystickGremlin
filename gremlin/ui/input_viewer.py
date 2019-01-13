@@ -426,11 +426,16 @@ class AxesTimeline(QtWidgets.QGroupBox):
         self.plot_widget = TimeLinePlotWidget()
         self.legend_layout = QtWidgets.QHBoxLayout()
         self.legend_layout.addStretch()
-        for i in range(1, device.axis_count+1):
-            label = QtWidgets.QLabel("Axis {:d}".format(i))
+        for i in range(device.axis_count):
+            label = QtWidgets.QLabel(
+                "Axis {:d}".format(device.axis_map[i].axis_index)
+            )
             label.setStyleSheet(
                 "QLabel {{ color: {}; font-weight: bold }}".format(
-                    AxesTimeline.color_list[i]
+                    AxesTimeline.color_list.get(
+                        device.axis_map[i].axis_index,
+                        "#000000"
+                    )
                 )
             )
             self.legend_layout.addWidget(label)
