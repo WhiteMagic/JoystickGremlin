@@ -17,6 +17,8 @@
 
 import logging
 
+import dill
+
 import gremlin
 from gremlin import event_handler, input_devices, \
     joystick_handling, macro, sendinput, util
@@ -137,7 +139,7 @@ class CodeRunner:
                                     )
                                 else:
                                     self.event_handler.add_callback(
-                                        gremlin.common.DeviceIdentifier(9999, 9999),
+                                        dill.GUID_Virtual,
                                         mode.name,
                                         cb_data.event,
                                         cb_data.callback,

@@ -19,6 +19,8 @@ from abc import abstractmethod, ABCMeta
 from functools import partial
 import logging
 
+import dill
+
 from . import base_classes, common, event_handler, fsm, input_devices, \
     macro, util
 
@@ -323,7 +325,7 @@ class VirtualButton(metaclass=ABCMeta):
         event = event_handler.Event(
             common.InputType.VirtualButton,
             self._identifier,
-            device_id=common.DeviceIdentifier(9999, 9999),
+            device_guid=dill.GUID_Virtual,
             is_pressed=self._is_pressed,
             raw_value=self._is_pressed
         )
@@ -336,7 +338,7 @@ class VirtualButton(metaclass=ABCMeta):
         event = event_handler.Event(
             common.InputType.VirtualButton,
             self._identifier,
-            device_id=common.DeviceIdentifier(9999, 9999),
+            device_guid=dill.GUID_Virtual,
             is_pressed=self._is_pressed,
             raw_value=self._is_pressed
         )

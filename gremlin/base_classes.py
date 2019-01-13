@@ -21,6 +21,8 @@ import enum
 import logging
 from xml.etree import ElementTree
 
+import dill
+
 import gremlin
 from . import common, error, execution_graph, plugin_manager, profile
 from gremlin.profile import safe_read
@@ -553,7 +555,7 @@ class AbstractContainer(profile.ProfileData):
                 gremlin.event_handler.Event(
                     gremlin.common.InputType.VirtualButton,
                     callbacks[-1].callback.virtual_button.identifier,
-                    device_id=gremlin.common.DeviceIdentifier(9999, 9999),
+                    device_guid=dill.GUID_Virtual,
                     is_pressed=True,
                     raw_value=True
                 )

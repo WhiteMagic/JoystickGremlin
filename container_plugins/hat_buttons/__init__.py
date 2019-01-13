@@ -19,6 +19,8 @@ from xml.etree import ElementTree
 
 from PyQt5 import QtWidgets
 
+import dill
+
 import gremlin
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -298,7 +300,7 @@ class HatButtonsContainer(gremlin.base_classes.AbstractContainer):
                 gremlin.event_handler.Event(
                     gremlin.common.InputType.VirtualButton,
                     callbacks[-1].callback.virtual_button.identifier,
-                    device_id=gremlin.common.DeviceIdentifier(9999, 9999),
+                    device_guid=dill.GUID_Virtual,
                     is_pressed=True,
                     raw_value=True
                 )
