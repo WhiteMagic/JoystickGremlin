@@ -27,7 +27,6 @@ import time
 
 from PyQt5 import QtCore, QtWidgets
 
-import sdl2
 from . import common, error, joystick_handling
 
 
@@ -286,30 +285,6 @@ def setup_userprofile():
         )
 
 
-def device_identifier_from_sdl(device):
-    """Returns a DeviceIdentifier instance for the given SDL device.
-
-    :param device SDL joystick device
-    :return DeviceIdentifier instance
-    """
-    return common.DeviceIdentifier(
-        joystick_handling.get_device_guid(device),
-        sdl2.SDL_JoystickInstanceID(device)
-    )
-
-
-def get_device_identifier(data):
-    try:
-        return common.DeviceIdentifier(
-            data.hardware_id,
-            data.windows_id
-        )
-    except AttributeError:
-        raise error.GremlinError(
-            "Extracting device id from unsupported type {}".format(type(data))
-        )
-
-
 def clear_layout(layout):
     """Removes all items from the given layout.
 
@@ -325,22 +300,6 @@ def clear_layout(layout):
         layout.removeItem(child)
 
 
-def convert_sdl_hat(value):
-    """Converts the SDL hat representation to the Gremlin one.
-
-    :param value the hat state representation as used by SDL
-    :return the hat representation corresponding to the SDL one
-    """
-    direction = [0, 0]
-    if value & sdl2.SDL_HAT_UP:
-        direction[1] = 1
-    elif value & sdl2.SDL_HAT_DOWN:
-        direction[1] = -1
-    if value & sdl2.SDL_HAT_RIGHT:
-        direction[0] = 1
-    elif value & sdl2.SDL_HAT_LEFT:
-        direction[0] = -1
-    return tuple(direction)
 
 
 def load_module(name):
