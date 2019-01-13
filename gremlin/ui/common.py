@@ -731,10 +731,6 @@ class VJoySelector(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self, parent)
 
-        # vJoy proxy will be used to grab vJoy devices here and to hold onto
-        # them until the entire UI element has been built
-        vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
-
         # Filter out devices that don't have none of the required inputs as
         # well as those vJoy devices that are treated as physical inputs
         self.vjoy_devices = []
@@ -745,18 +741,13 @@ class VJoySelector(QtWidgets.QWidget):
                 gremlin.common.InputType.JoystickHat: dev.hat_count
             }
 
-            count = 0
+            has_inputs = False
             for valid_type in valid_types:
-                count += input_counts[valid_type]
+                if input_counts[valid_type] > 0:
+                    has_inputs = True
 
-            if not invalid_ids.get(dev.vjoy_id, False) and count > 0:
-                # Attempt to acquire the vJoy device, if this succeeds we
-                # add it to the dropdown otherwise it will be skipped
-                try:
-                    vjoy_proxy[dev.vjoy_id]
-                    self.vjoy_devices.append(dev)
-                except gremlin.error.VJoyError:
-                    pass
+            if not invalid_ids.get(dev.vjoy_id, False) and has_inputs:
+                self.vjoy_devices.append(dev)
 
         self.invalid_ids = invalid_ids
         self.change_cb = change_cb
@@ -770,8 +761,6 @@ class VJoySelector(QtWidgets.QWidget):
 
         self._create_device_dropdown()
         self._create_input_dropdown()
-
-        vjoy_proxy.reset()
 
     def get_selection(self):
         """Returns the current selection of the widget.
@@ -830,11 +819,10 @@ class VJoySelector(QtWidgets.QWidget):
 
         # Retrieve the index of the correct entry in the combobox
         if dev_id != -1:
-            vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
             if input_type == gremlin.common.InputType.JoystickAxis:
                 input_name = "{} {}".format(
                     input_type_to_name[input_type],
-                    vjoy_proxy[vjoy_dev_id].axis_name(axis_id=vjoy_input_id)
+                    gremlin.util.axis_name_lookup[vjoy_input_id]
                 )
             else:
                 input_name = "{} {:d}".format(
@@ -845,8 +833,6 @@ class VJoySelector(QtWidgets.QWidget):
                 btn_id = self.input_item_dropdowns[vjoy_dev_id].findText(input_name)
             except KeyError:
                 btn_id = -1
-
-            vjoy_proxy.reset()
 
         # If either of the provided entries results in an invalid selection
         # we simply select the first valid thing we come across
@@ -888,8 +874,6 @@ class VJoySelector(QtWidgets.QWidget):
 
         self.input_item_dropdowns = {}
 
-        vjoy_proxy = gremlin.joystick_handling.VJoyProxy()
-
         # Create input item selections for the vjoy devices, each
         # selection will be invisible unless it is selected as the
         # active device
@@ -899,11 +883,11 @@ class VJoySelector(QtWidgets.QWidget):
 
             # Add items based on the input type
             for input_type in self.valid_types:
-                for i in range(1, count_map[input_type](dev)+1):
+                for i in range(count_map[input_type](dev)):
                     if input_type == gremlin.common.InputType.JoystickAxis:
                         selection.addItem("{} {}".format(
                             input_type_to_name[input_type],
-                            vjoy_proxy[dev.vjoy_id].axis_name(linear_index=i)
+                            gremlin.util.axis_name_lookup[dev.axis_map[i].axis_index]
                         ))
                     else:
                         selection.addItem("{} {:d}".format(

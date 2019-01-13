@@ -313,6 +313,18 @@ dill_hat_lookup = {
 }
 
 
+axis_name_lookup = {
+    1: "X",
+    2: "Y",
+    3: "Z",
+    4: "X Rotation",
+    5: "Y Rotation",
+    6: "Z Rotation",
+    7: "Slider",
+    8: "Dial"
+}
+
+
 def load_module(name):
     """Imports  the given module.
 
