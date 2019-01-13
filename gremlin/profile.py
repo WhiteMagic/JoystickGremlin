@@ -641,27 +641,24 @@ class ProfileModifier:
 
         :return list of devices used in the profile and information about them
         """
-        device_ids = []
-        for device_id in self.profile.devices:
-            device_ids.append((device_id.hardware_id, device_id.windows_id))
+        device_guids = []
+        for device_guid in self.profile.devices:
+            device_guids.append(device_guid)
         for cond in self.all_conditions():
             if isinstance(cond, base_classes.JoystickCondition):
-                device_ids.append((cond.device_id, cond.windows_id))
+                device_guids.append(cond.device_guid)
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
-                device_ids.append((
-                    entry[key]["hardware_id"], entry[key]["windows_id"]
-                ))
+                device_guids.append(entry[key]["device_guid"])
 
         device_names = self.device_names()
         device_info = []
-        for devid in set(device_ids):
+        for device_guid in set(device_guids):
             device_info.append(ProfileDeviceInformation(
-                common.DeviceIdentifier(devid[0], devid[1]),
-                device_names[devid[0]],
-                self.container_count(devid),
-                self.condition_count(devid),
-                self.merge_axis_count(devid)
+                device_guid,
+                self.container_count(device_guid),
+                self.condition_count(device_guid),
+                self.merge_axis_count(device_guid)
             ))
 
         return device_info
@@ -873,26 +870,6 @@ class ProfileModifier:
                 return device
         return None
 
-    def _equal_ids(self, device_id, hid_wid_tuple):
-        """Returns whether two device identifications are identical.
-
-        This requires the first parameter to be a DeviceIdentifier instance and
-        the second one a tuple of hardware and windows id. This is needed as
-        DeviceIdentifier equality comparison takes device duplication into
-        account while we want to always differentiate based on windows id.
-
-        :param device_id DeviceIdentifier instance
-        :param hid_wid_tuple tuple of hardware id and windows id
-        :return True if hardware and windows id both match, False otherwise
-        """
-        assert isinstance(device_id, common.DeviceIdentifier),\
-            "Requires DeviceIdentifier instance"
-        assert isinstance(hid_wid_tuple, tuple) and len(hid_wid_tuple) == 2, \
-            "Tuple of length 2 needed"
-
-        return device_id.hardware_id == hid_wid_tuple[0] and \
-            device_id.windows_id == hid_wid_tuple[1]
-
 
 class Settings:
 
@@ -1019,19 +996,22 @@ class Profile:
         """
         new_device = Device(self)
         new_device.name = device.name
-        new_device.hardware_id = device.hardware_id
-        new_device.windows_id = device.windows_id
+        new_device.device_guid = device.device_guid
         new_device.type = DeviceType.Joystick
-        self.devices[device.device_id] = new_device
+        self.devices[device.device_guid] = new_device
 
         for mode in modes:
             new_device.ensure_mode_exists(mode)
             new_mode = new_device.modes[mode]
+            # Touch every input to ensure it gets default initialized
             for i in range(device.axis_count):
-                new_mode.get_data(InputType.JoystickAxis, device.axis(i)[1])
-            for i in range(1, device.buttons+1):
+                new_mode.get_data(
+                    InputType.JoystickAxis,
+                    device.axis_map[i].axis_index
+                )
+            for i in range(1, device.button_count+1):
                 new_mode.get_data(InputType.JoystickButton, i)
-            for i in range(1, device.hats+1):
+            for i in range(1, device.hat_count+1):
                 new_mode.get_data(InputType.JoystickHat, i)
 
     def build_inheritance_tree(self):
@@ -1088,11 +1068,11 @@ class Profile:
             vjoy[entry.vjoy_id] = {"axis": [], "button": [], "hat": []}
             for i in range(entry.axis_count):
                 vjoy[entry.vjoy_id]["axis"].append(
-                    entry.axis(i)[1]
+                    entry.axis_map[i].axis_index
                 )
-            for i in range(entry.buttons):
+            for i in range(entry.button_count):
                 vjoy[entry.vjoy_id]["button"].append(i+1)
-            for i in range(entry.hats):
+            for i in range(entry.hat_count):
                 vjoy[entry.vjoy_id]["hat"].append(i+1)
 
         # List all input types
@@ -1264,39 +1244,37 @@ class Profile:
         with codecs.open(fname, "w", "utf-8-sig") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
-    def get_device_modes(self, device_id, device_type, device_name=None):
+    def get_device_modes(self, device_guid, device_type, device_name=None):
         """Returns the modes associated with the given device.
 
-        :param device_id the key composed of hardware and windows id
+        :param device_guid the device's GUID
         :param device_type the type of the device being queried
         :param device_name the name of the device
         :return all modes for the specified device
         """
         if device_type == DeviceType.VJoy:
-            if device_id not in self.vjoy_devices:
+            if device_guid not in self.vjoy_devices:
                 # Create the device
                 device = Device(self)
                 device.name = device_name
-                device.hardware_id = device_id
-                device.windows_id = device_id
+                device.device_guid = device_guid
                 device.type = DeviceType.VJoy
-                self.vjoy_devices[device_id] = device
-            return self.vjoy_devices[device_id]
+                self.vjoy_devices[device_guid] = device
+            return self.vjoy_devices[device_guid]
 
         else:
-            if device_id not in self.devices:
+            if device_guid not in self.devices:
                 # Create the device
                 device = Device(self)
                 device.name = device_name
-                device.hardware_id = device_id.hardware_id
-                device.windows_id = device_id.windows_id
+                device.device_guid = device_guid
 
                 # Set the correct device type
                 device.type = DeviceType.Joystick
                 if device_name == "keyboard":
                     device.type = DeviceType.Keyboard
-                self.devices[device_id] = device
-            return self.devices[device_id]
+                self.devices[device_guid] = device
+            return self.devices[device_guid]
 
     def empty(self):
         """Returns whether or not a profile is empty.
@@ -1331,37 +1309,6 @@ class Profile:
 
         return is_empty
 
-    def _update_windows_ids(self):
-        """Updates the windows ids of profile entries for the current setup.
-
-        This will update devices which have matched hardware id but mismatched
-        windows id to consolidate the settings associated with those devices
-        into a single physical one.
-
-        No action will be taken on devices which have multiple identical
-        devices connected as no clear associations are possible.
-        """
-        # TODO: This will not update macros, however, these are much messier
-        #       and as such will be left unchanged until windows and hardware
-        #       ids are fully replaced.
-        dev_reg = common.DeviceRegistry()
-        profile_modifier = ProfileModifier(self)
-
-        # Check each device found and attempt to find a unique connected
-        # device and if present attempt re-assigning the profile data to the
-        # connected device.
-        for device in profile_modifier.device_information_list():
-            hid = device.device_id.hardware_id
-            wid = device.device_id.windows_id
-
-            windows_ids = dev_reg.by_hardware_id(hid)
-            # Unique device but mismatched windows id, fix this up
-            if len(windows_ids) == 1 and wid not in windows_ids:
-                profile_modifier.change_device_id(
-                    device.device_id,
-                    common.DeviceIdentifier(hid, windows_ids[0])
-                )
-
     def _parse_merge_axis(self, node):
         """Parses merge axis entries.
 
@@ -1384,22 +1331,6 @@ class Profile:
                 "axis_id": int(node.find(tag).get("axis"))
             }
 
-        # If we have duplicate devices check if this device is a duplicate, if
-        # not fix the windows_id in case it no longer matches
-        # if util.g_duplicate_devices:
-        #     device_counts = {}
-        #     windows_ids = {}
-        #     for dev in joystick_handling.joystick_devices():
-        #         device_counts[dev.hardware_id] = \
-        #             device_counts.get(dev.hardware_id, 0) + 1
-        #         windows_ids[dev.hardware_id] = dev.windows_id
-        #
-        #     for tag in ["lower", "upper"]:
-        #         # Only one device exists, override system id
-        #         if device_counts.get(entry[tag]["hardware_id"], 0) == 1:
-        #             entry[tag]["windows_id"] = \
-        #                 windows_ids[entry[tag]["hardware_id"]]
-
         return entry
 
 
@@ -1415,8 +1346,7 @@ class Device:
         self.parent = parent
         self.name = None
         self.label = ""
-        self.hardware_id = None
-        self.windows_id = None
+        self.device_guid = None
         self.modes = {}
         self.type = None
 
@@ -1435,10 +1365,13 @@ class Device:
 
         if device is not None:
             for i in range(device.axis_count):
-                mode.get_data(InputType.JoystickAxis, device.axis(i)[1])
-            for idx in range(1, device.buttons + 1):
+                mode.get_data(
+                    InputType.JoystickAxis,
+                    device.axis_map[i].axis_index
+                )
+            for idx in range(1, device.button_count + 1):
                 mode.get_data(InputType.JoystickButton, idx)
-            for idx in range(1, device.hats + 1):
+            for idx in range(1, device.hat_count + 1):
                 mode.get_data(InputType.JoystickHat, idx)
 
     def from_xml(self, node):
@@ -1691,10 +1624,12 @@ class InputItem:
 
         :return hash of this InputItem instance
         """
-        device_id = util.get_device_identifier(self.parent.parent)
-        mode = self.parent.name
-
-        return hash((device_id, mode, self.input_type, self.input_id))
+        return hash((
+            self.parent.parent.device_guid,
+            self.parent.name,
+            self.input_type,
+            self.input_id)
+        )
 
 
 class ProfileData(metaclass=ABCMeta):
