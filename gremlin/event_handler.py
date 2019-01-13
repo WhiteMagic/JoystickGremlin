@@ -23,9 +23,7 @@ from threading import Thread
 
 from PyQt5 import QtCore
 
-import sdl2
-import sdl2.ext
-
+import dill
 from . import common, config, error, joystick_handling, windows_event_hook, \
     macro, util
 
@@ -49,16 +47,11 @@ class Event:
     whether or not the key's scan code is extended one.
     """
 
-    ShiftEventId = 36
-    ShiftDeviceId = 0
-    ShiftSystemId = 32
-    ShiftIdentifier = 40
-
     def __init__(
             self,
             event_type,
             identifier,
-            device_id,
+            device_guid,
             value=None,
             is_pressed=None,
             raw_value=None
@@ -68,8 +61,7 @@ class Event:
         :param event_type the type of the event, one of the EventType
             values
         :param identifier the identifier of the event source
-        :param device_id DeviceIdentifier instance of the device causing
-            this event
+        :param device_guid Device GUID identifying the device causing this event
         :param value the value of a joystick axis or hat
         :param is_pressed boolean flag indicating if a button or key
         :param raw_value the raw SDL value of the axis
@@ -77,7 +69,7 @@ class Event:
         """
         self.event_type = event_type
         self.identifier = identifier
-        self.device_id = device_id
+        self.device_guid = device_guid
         self.is_pressed = is_pressed
         self.value = value
         self.raw_value = raw_value
@@ -90,7 +82,7 @@ class Event:
         return Event(
             self.event_type,
             self.identifier,
-            self.device_id,
+            self.device_guid,
             self.value,
             self.is_pressed,
             self.raw_value
@@ -112,17 +104,20 @@ class Event:
 
         :return integer hash value of this event
         """
-        hash_val = 0
-        hash_val += self.event_type.value << Event.ShiftEventId
         if self.event_type == common.InputType.Keyboard:
-            extended_val = 1 << 8 if self.identifier[1] else 0
-            hash_val += (extended_val + int(self.identifier[0])) \
-                << Event.ShiftIdentifier
+            return hash((
+                self.device_guid,
+                self.event_type.value,
+                self.identifier,
+                1 if self.identifier[1] else 0
+            ))
         else:
-            hash_val += self.identifier << Event.ShiftIdentifier
-        hash_val += hash(self.device_id)
-
-        return hash_val
+            return hash((
+                self.device_guid,
+                self.event_type.value,
+                self.identifier,
+                0
+            ))
 
     @staticmethod
     def from_key(key):
@@ -135,7 +130,7 @@ class Event:
         return Event(
             event_type=common.InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
-            device_id=common.DeviceIdentifier(0, 0)
+            device_guid=dill.GUID_Keyboard
         )
 
 
@@ -165,8 +160,6 @@ class EventListener(QtCore.QObject):
         self.mouse_hook = windows_event_hook.MouseHook()
         self.mouse_hook.register(self._mouse_handler)
 
-        # Mapping from windows id (SDL id) to hardware id
-        self._winid_to_devid = {}
         # Calibration function for each axis of all devices
         self._calibrations = {}
 
@@ -174,7 +167,7 @@ class EventListener(QtCore.QObject):
         self._keyboard_state = {}
         self.gremlin_active = False
 
-        self._init_joysticks()
+        #self._init_joysticks()
         self.keyboard_hook.start()
 
         Thread(target=self._run).start()
@@ -198,60 +191,57 @@ class EventListener(QtCore.QObject):
 
     def _run(self):
         """Starts the event loop."""
+        dill.DILL.init()
+        #time.sleep(1)
+        dill.DILL.set_device_change_callback(self._joystick_device_handler)
+        dill.DILL.set_input_event_callback(self._joystick_event_handler)
         while self._running:
-            # Process joystick events
-            for event in sdl2.ext.get_events():
-                self._joystick_handler(event)
-            time.sleep(0.001)
+            # Keep this thread alive until we are done
+            time.sleep(0.1)
 
-    def _joystick_handler(self, event):
+    def _joystick_event_handler(self, data):
         """Callback for joystick events.
 
         The handler converts the event data into a signal which is then
         emitted.
 
-        :param event the joystick event
+        :param data the joystick event
         """
-        if event.type == sdl2.SDL_JOYAXISMOTION:
-            calibration_key = (
-                self._winid_to_devid[event.jaxis.which],
-                event.jaxis.axis + 1
-            )
+        event = dill.InputEvent(data)
+
+        if event.input_type == dill.InputType.Axis:
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickAxis,
-                device_id=common.DeviceIdentifier(
-                    self._winid_to_devid[event.jaxis.which].hardware_id,
-                    event.jaxis.which
-                ),
-                identifier=event.jaxis.axis + 1,
-                value=self._calibrations[calibration_key](event.jaxis.value),
-                raw_value=event.jaxis.value
+                device_guid=event.device_guid,
+                identifier=event.input_index,
+                value=self._apply_calibration(event),
+                raw_value=event.value
             ))
-        elif event.type in [sdl2.SDL_JOYBUTTONDOWN, sdl2.SDL_JOYBUTTONUP]:
+        elif event.input_type == dill.InputType.Button:
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickButton,
-                device_id=common.DeviceIdentifier(
-                    self._winid_to_devid[event.jbutton.which].hardware_id,
-                    event.jbutton.which
-                ),
-                identifier=event.jbutton.button + 1,
-                is_pressed=event.jbutton.state == 1
+                device_guid=event.device_guid,
+                identifier=event.input_index,
+                is_pressed=event.value == 1
             ))
-        elif event.type == sdl2.SDL_JOYHATMOTION:
+        elif event.input_type == dill.InputType.Hat:
             self.joystick_event.emit(Event(
                 event_type=common.InputType.JoystickHat,
-                device_id=common.DeviceIdentifier(
-                    self._winid_to_devid[event.jhat.which].hardware_id,
-                    event.jhat.which
-                ),
-                identifier=event.jhat.hat + 1,
-                value=util.convert_sdl_hat(event.jhat.value)
+                device_guid=event.device_guid,
+                identifier=event.input_index,
+                value=util.dill_hat_lookup[event.value]
             ))
-        elif event.type in [sdl2.SDL_JOYDEVICEADDED, sdl2.SDL_JOYDEVICEREMOVED]:
-            # Ensure all joystick devices are properly initialized
-            joystick_handling.joystick_devices_initialization()
-            self._init_joysticks()
-            self.device_change_event.emit()
+
+    def _joystick_device_handler(self, data, action):
+        """Callback for device change events.
+
+        This is called when a device is added or removed from the system.
+
+        :param data information about the device changing state
+        """
+        joystick_handling.joystick_devices_initialization()
+        self._init_joysticks()
+        self.device_change_event.emit()
 
     def _keyboard_handler(self, event):
         """Callback for keyboard events.
@@ -274,7 +264,7 @@ class EventListener(QtCore.QObject):
             self._keyboard_state[key_id] = is_pressed
             self.keyboard_event.emit(Event(
                 event_type=common.InputType.Keyboard,
-                device_id=common.DeviceIdentifier(0, 0),
+                device_guid=dill.GUID_Keyboard,
                 identifier=key_id,
                 is_pressed=is_pressed,
             ))
@@ -294,32 +284,37 @@ class EventListener(QtCore.QObject):
         if not event.is_injected:
             self.mouse_event.emit(Event(
                 event_type=common.InputType.Mouse,
-                device_id=common.DeviceIdentifier(0, 0),
+                device_guid=dill.GUID_Keyboard,
                 identifier=event.button_id,
                 is_pressed=event.is_pressed,
             ))
         # Allow the windows event to propagate further
         return True
 
+    def _apply_calibration(self, event):
+        key = (event.device_guid, event.input_index)
+        if key in self._calibrations:
+            return self._calibrations[key](event.value)
+        else:
+            return util.axis_calibration(event.value, -32768, 0, 32767)
+
     def _init_joysticks(self):
         """Initializes joystick devices."""
-        for i in range(sdl2.joystick.SDL_NumJoysticks()):
-            joy = sdl2.SDL_JoystickOpen(i)
-            if joy is not None:
-                dev_id = util.device_identifier_from_sdl(joy)
-                self._winid_to_devid[sdl2.SDL_JoystickInstanceID(joy)] = dev_id
-                self._load_calibrations(joy)
+        for dev_info in joystick_handling.joystick_devices():
+            self._load_calibrations(dev_info)
 
-    def _load_calibrations(self, joy):
+    def _load_calibrations(self, device_info):
         """Loads the calibration data for the given joystick.
 
-        :param joy SDL joystick instance
+        :param device_info information about the device
         """
         cfg = config.Configuration()
-        dev_id = util.device_identifier_from_sdl(joy)
-        for i in range(sdl2.SDL_JoystickNumAxes(joy)):
-            limits = cfg.get_calibration(dev_id, i+1)
-            self._calibrations[(dev_id, i+1)] = \
+        for entry in device_info.axis_map:
+            limits = cfg.get_calibration(
+                device_info.device_guid,
+                entry.axis_index
+            )
+            self._calibrations[(device_info.device_guid, entry.axis_index)] = \
                 util.create_calibration_function(
                     limits[0],
                     limits[1],
@@ -497,8 +492,8 @@ class EventHandler(QtCore.QObject):
         """
         # Obtain callbacks matching the event
         callback_list = []
-        if event.device_id in self.callbacks:
-            callback_list = self.callbacks[event.device_id].get(
+        if event.device_guid in self.callbacks:
+            callback_list = self.callbacks[event.device_guid].get(
                 self._active_mode, {}
             ).get(event, [])
 
