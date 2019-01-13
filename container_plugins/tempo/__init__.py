@@ -239,7 +239,7 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
             return False
 
         # Copy state when input is pressed
-        if isinstance(value.current, bool) and value.current:
+        if value.current:
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
@@ -257,12 +257,14 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
                 self.timer.cancel()
 
                 if self.activate_on == "release":
-                    self.short_set.process_event(
+                    threading.Thread(target=lambda: self._short_press(
                         self.event_press,
-                        self.value_press
-                    )
-                    time.sleep(0.1)
-                self.short_set.process_event(event, value)
+                        self.value_press,
+                        event,
+                        value
+                    )).start()
+                else:
+                    self.short_set.process_event(event, value)
             # Long press
             else:
                 self.long_set.process_event(event, value)
@@ -272,6 +274,18 @@ class TempoContainerFunctor(gremlin.base_classes.AbstractFunctor):
             self.timer = None
 
         return True
+
+    def _short_press(self, event_p, value_p, event_r, value_r):
+        """Callback executed for a short press action.
+
+        :param event_p event to press the action
+        :param value_p value to press the action
+        :param event_r event to release the action
+        :param value_r value to release the action
+        """
+        self.short_set.process_event(event_p, value_p)
+        time.sleep(0.05)
+        self.short_set.process_event(event_r, value_r)
 
     def _long_press(self):
         """Callback executed, when the delay expires."""
