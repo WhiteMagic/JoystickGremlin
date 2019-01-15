@@ -566,14 +566,16 @@ class JoystickSelector(QtWidgets.QWidget):
         for dev in gremlin.joystick_handling.physical_devices():
             input_counts = {
                 gremlin.common.InputType.JoystickAxis: dev.axis_count,
-                gremlin.common.InputType.JoystickButton: dev.buttons,
-                gremlin.common.InputType.JoystickHat: dev.hats
+                gremlin.common.InputType.JoystickButton: dev.button_count,
+                gremlin.common.InputType.JoystickHat: dev.hat_count
             }
-            count = 0
-            for valid_type in valid_types:
-                count += input_counts[valid_type]
 
-            if count > 0:
+            has_inputs = False
+            for valid_type in valid_types:
+                if input_counts.get(valid_type, 0) > 0:
+                    has_inputs = True
+
+            if has_inputs:
                 self.devices.append(dev)
 
         self.change_cb = change_cb
@@ -590,11 +592,9 @@ class JoystickSelector(QtWidgets.QWidget):
         self._device_id_to_index_map = {}
         self._index_to_device_map = {}
         for i, device in enumerate(
-                sorted(self.devices, key=lambda x: x.windows_id)
+                sorted(self.devices, key=lambda x: (x.name, x.device_guid))
         ):
-            self._device_id_to_index_map[
-                gremlin.util.get_device_identifier(device)
-            ] = i
+            self._device_id_to_index_map[device.device_guid] = i
             self._index_to_device_map[i] = device
 
     def get_selection(self):
@@ -604,8 +604,7 @@ class JoystickSelector(QtWidgets.QWidget):
         """
         selection_id = self.device_dropdown.currentIndex()
 
-        hardware_id = None
-        windows_id = None
+        device_guid = None
         input_id = None
         input_type = None
 
@@ -615,18 +614,16 @@ class JoystickSelector(QtWidgets.QWidget):
 
             arr = input_selection.split()
             if len(arr) == 2:
-                windows_id = self._index_to_device_map[selection_id].windows_id
-                hardware_id = self._index_to_device_map[selection_id].hardware_id
+                device_guid = self._index_to_device_map[selection_id].device_guid
                 input_type = name_to_input_type[arr[0]]
-                input_id = int(arr[1])
+                input_id = gremlin.util.axis_index_lookup[arr[1]]
             else:
                 logging.getLogger("system").warning(
                     "Reading axis selection failed, treating as no selection."
                 )
 
         return {
-            "hardware_id": hardware_id,
-            "windows_id": windows_id,
+            "device_guid": device_guid,
             "input_id": input_id,
             "input_type": input_type
         }
@@ -665,7 +662,7 @@ class JoystickSelector(QtWidgets.QWidget):
     def _create_device_dropdown(self):
         """Creates the vJoy device selection drop downs."""
         self.device_dropdown = QtWidgets.QComboBox(self)
-        for device in sorted(self.devices, key=lambda x: x.windows_id):
+        for device in sorted(self.devices, key=lambda x: (x.name, x.device_guid)):
             self.device_dropdown.addItem(device.name)
         self.main_layout.addWidget(self.device_dropdown)
         self.device_dropdown.activated.connect(self._update_device)
@@ -674,26 +671,31 @@ class JoystickSelector(QtWidgets.QWidget):
         """Creates the vJoy input item selection drop downs."""
         count_map = {
             gremlin.common.InputType.JoystickAxis: lambda x: x.axis_count,
-            gremlin.common.InputType.JoystickButton: lambda x: x.buttons,
-            gremlin.common.InputType.JoystickHat: lambda x: x.hats
+            gremlin.common.InputType.JoystickButton: lambda x: x.button_count,
+            gremlin.common.InputType.JoystickHat: lambda x: x.hat_count
         }
 
         self.input_item_dropdowns = []
 
-        # Create input item selections for the vjoy devices, each
-        # selection will be invisible unless it is selected as the
-        # active device
-        for device in sorted(self.devices, key=lambda x: x.windows_id):
+        # Create input item selections for the devices. Each selection
+        # will be invisible unless it is selected as the active device
+        for device in sorted(self.devices, key=lambda x: (x.name, x.device_guid)):
             selection = QtWidgets.QComboBox(self)
             selection.setMaxVisibleItems(20)
 
             # Add items based on the input type
             for input_type in self.valid_types:
-                for i in range(1, count_map[input_type](device)+1):
-                    selection.addItem("{} {:d}".format(
-                        input_type_to_name[input_type],
-                        i
-                    ))
+                for i in range(count_map[input_type](device)):
+                    if input_type == gremlin.common.InputType.JoystickAxis:
+                        selection.addItem("{} {}".format(
+                            input_type_to_name[input_type],
+                            gremlin.util.axis_name_lookup[device.axis_map[i].axis_index]
+                        ))
+                    else:
+                        selection.addItem("{} {:d}".format(
+                            input_type_to_name[input_type],
+                            i+1
+                        ))
 
             # Add the selection and hide it
             selection.setVisible(False)
@@ -743,7 +745,7 @@ class VJoySelector(QtWidgets.QWidget):
 
             has_inputs = False
             for valid_type in valid_types:
-                if input_counts[valid_type] > 0:
+                if input_counts.get(valid_type, 0) > 0:
                     has_inputs = True
 
             if not invalid_ids.get(dev.vjoy_id, False) and has_inputs:
@@ -892,7 +894,7 @@ class VJoySelector(QtWidgets.QWidget):
                     else:
                         selection.addItem("{} {:d}".format(
                             input_type_to_name[input_type],
-                            i
+                            i+1
                         ))
 
             # Add the selection and hide it
