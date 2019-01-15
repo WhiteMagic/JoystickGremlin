@@ -323,7 +323,7 @@ class HatButtonsContainer(gremlin.base_classes.AbstractContainer):
         :return XML node representing the data of this container
         """
         node = ElementTree.Element("container")
-        node.set("type", "hat_buttons")
+        node.set("type", HatButtonsContainer.tag)
         node.set("button-count", str(self.button_count))
         for action_set in self.action_sets:
             as_node = ElementTree.Element("action-set")
