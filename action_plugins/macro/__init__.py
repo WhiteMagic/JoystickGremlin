@@ -27,7 +27,7 @@ from xml.etree import ElementTree
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.macro
-from gremlin.profile import safe_read
+from gremlin.profile import safe_read, parse_guid, write_guid
 from gremlin.ui.common import NoKeyboardPushButton
 import gremlin.ui.input_item
 
@@ -1532,11 +1532,11 @@ class Macro(AbstractAction):
         for child in node.find("actions"):
             if child.tag == "joystick":
                 joy_action = gremlin.macro.JoystickAction(
-                    safe_read(child, "device_id", int),
+                    parse_guid(child.get("device-guid")),
                     gremlin.common.InputType.to_enum(
-                        safe_read(child, "input_type")
+                        safe_read(child, "input-type")
                     ),
-                    safe_read(child, "input_id", int),
+                    safe_read(child, "input-id", int),
                     safe_read(child, "value")
                 )
                 self._str_to_joy_value(joy_action)
@@ -1544,7 +1544,7 @@ class Macro(AbstractAction):
             elif child.tag == "key":
                 key_action = gremlin.macro.KeyAction(
                     gremlin.macro.key_from_code(
-                        int(child.get("scan_code")),
+                        int(child.get("scan-code")),
                         gremlin.profile.parse_bool(child.get("extended"))
                     ),
                     gremlin.profile.parse_bool(child.get("press"))
@@ -1568,11 +1568,11 @@ class Macro(AbstractAction):
                 )
             elif child.tag == "vjoy":
                 vjoy_action = gremlin.macro.VJoyAction(
-                    safe_read(child, "vjoy_id", int),
+                    safe_read(child, "vjoy-id", int),
                     gremlin.common.InputType.to_enum(
-                        safe_read(child, "input_type")
+                        safe_read(child, "input-type")
                     ),
-                    safe_read(child, "input_id", int),
+                    safe_read(child, "input-id", int),
                     safe_read(child, "value")
                 )
                 self._str_to_joy_value(vjoy_action)
@@ -1596,17 +1596,17 @@ class Macro(AbstractAction):
         for entry in self.sequence:
             if isinstance(entry, gremlin.macro.JoystickAction):
                 joy_node = ElementTree.Element("joystick")
-                joy_node.set("device_id", str(entry.device_id))
+                joy_node.set("device-guid", write_guid(entry.device_guid))
                 joy_node.set(
-                    "input_type",
+                    "input-type",
                     gremlin.common.InputType.to_string(entry.input_type)
                 )
-                joy_node.set("input_id", str(entry.input_id))
+                joy_node.set("input-id", str(entry.input_id))
                 joy_node.set("value", self._joy_value_to_str(entry))
                 action_list.append(joy_node)
             elif isinstance(entry, gremlin.macro.KeyAction):
                 action_node = ElementTree.Element("key")
-                action_node.set("scan_code", str(entry.key.scan_code))
+                action_node.set("scan-code", str(entry.key.scan_code))
                 action_node.set("extended", str(entry.key.is_extended))
                 action_node.set("press", str(entry.is_pressed))
                 action_list.append(action_node)
@@ -1626,12 +1626,12 @@ class Macro(AbstractAction):
                 action_list.append(pause_node)
             elif isinstance(entry, gremlin.macro.VJoyAction):
                 vjoy_node = ElementTree.Element("vjoy")
-                vjoy_node.set("vjoy_id", str(entry.vjoy_id))
+                vjoy_node.set("vjoy-id", str(entry.vjoy_id))
                 vjoy_node.set(
-                    "input_type",
+                    "input-type",
                     gremlin.common.InputType.to_string(entry.input_type)
                 )
-                vjoy_node.set("input_id", str(entry.input_id))
+                vjoy_node.set("input-id", str(entry.input_id))
                 vjoy_node.set("value", self._joy_value_to_str(entry))
                 action_list.append(vjoy_node)
 

@@ -177,7 +177,7 @@ class MapToKeyboard(AbstractAction):
 
         for child in node.findall("key"):
             self.keys.append((
-                int(child.get("scan_code")),
+                int(child.get("scan-code")),
                 gremlin.profile.parse_bool(child.get("extended"))
             ))
 
@@ -189,7 +189,7 @@ class MapToKeyboard(AbstractAction):
         node = ElementTree.Element("map-to-keyboard")
         for key in self.keys:
             key_node = ElementTree.Element("key")
-            key_node.set("scan_code", str(key[0]))
+            key_node.set("scan-code", str(key[0]))
             key_node.set("extended", str(key[1]))
             node.append(key_node)
         return node

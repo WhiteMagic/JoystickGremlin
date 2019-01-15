@@ -21,9 +21,9 @@ import os
 from PyQt5 import QtCore, QtWidgets
 from xml.etree import ElementTree
 
-
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
+from gremlin.profile import parse_guid, safe_read, safe_format, write_guid
 from gremlin import util
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -207,16 +207,19 @@ class SplitAxis(AbstractAction):
 
     def _parse_xml(self, node):
         self.center_point = float(node.get("center-point"))
-        self.axis1 = (int(node.get("device1")), int(node.get("axis1")))
-        self.axis2 = (int(node.get("device2")), int(node.get("axis2")))
+        self.device_low_guid = parse_guid(node.get("device-low-guid"))
+        self.device_high_guid = parse_guid(node.get("device-high-guid"))
+        self.device_low_axis = safe_read(node, "device-low-axis", int)
+        self.device_high_axis = safe_read(node, "device-high-axis", int)
 
     def _generate_xml(self):
         node = ElementTree.Element("split-axis")
-        node.set("center-point", str(self.center_point))
-        node.set("device1", str(self.axis1[0]))
-        node.set("axis1", str(self.axis1[1]))
-        node.set("device2", str(self.axis2[0]))
-        node.set("axis2", str(self.axis2[1]))
+        node.set("center-point", safe_format(self.center_point, float))
+        node.set("device-low-guid", write_guid(self.device_low_guid))
+        node.set("device-high-guid", write_guid(self.device_high_guid))
+        node.set("device-low-axis", safe_format(self.device_low_axis, int))
+        node.set("device-high-axis", safe_format(self.device_high_axis, int))
+
         return node
 
     def _is_valid(self):

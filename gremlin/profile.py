@@ -15,15 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from abc import abstractmethod, ABCMeta
 import codecs
 import collections
 import copy
 import logging
-import shutil
-from abc import abstractmethod, ABCMeta
 import os
+import shutil
+import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
+
+import dill
 
 import action_plugins
 from gremlin.common import DeviceType, InputType, VariableType
@@ -98,6 +101,35 @@ def parse_bool(value):
         raise error.ProfileError(
             "Invalid type provided: {}".format(type(value))
         )
+
+
+def parse_guid(value):
+    """Reads a string GUID representation into the internal data format.
+
+    This transforms a GUID of the form {B4CA5720-11D0-11E9-8002-444553540000}
+    into the underlying raw and exposed objects used within Gremlin.
+
+    :param value the string representation of the GUID
+    :param dill.GUID object representing the provided value
+    """
+    tmp = uuid.UUID(value)
+    raw_guid = dill._GUID()
+    raw_guid.Data1 = int.from_bytes(tmp.bytes[0:4], "big")
+    raw_guid.Data2 = int.from_bytes(tmp.bytes[4:6], "big")
+    raw_guid.Data3 = int.from_bytes(tmp.bytes[6:8], "big")
+    for i in range(8):
+        raw_guid.Data4[i] = tmp.bytes[8 + i]
+
+    return dill.GUID(raw_guid)
+
+
+def write_guid(guid):
+    """Returns the string representation of a GUID object.
+
+    :param guid the GUID object to turn into a string
+    :return string representation of the guid object
+    """
+    return str(guid)
 
 
 def safe_read(node, key, type_cast=None, default_value=None):
@@ -649,9 +681,8 @@ class ProfileModifier:
                 device_guids.append(cond.device_guid)
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
-                device_guids.append(entry[key]["device_guid"])
+                device_guids.append(entry[key]["device-guid"])
 
-        device_names = self.device_names()
         device_info = []
         for device_guid in set(device_guids):
             device_info.append(ProfileDeviceInformation(
@@ -1124,13 +1155,13 @@ class Profile:
         for child in root.iter("device"):
             device = Device(self)
             device.from_xml(child)
-            self.devices[util.get_device_identifier(device)] = device
+            self.devices[device.device_guid] = device
 
         # Parse each vjoy device into separate DeviceConfiguration objects
         for child in root.iter("vjoy-device"):
             device = Device(self)
             device.from_xml(child)
-            self.vjoy_devices[device.hardware_id] = device
+            self.vjoy_devices[device.device_guid] = device
 
         # Ensure that the profile contains an entry for every existing
         # device even if it was not part of the loaded XML and
@@ -1141,8 +1172,7 @@ class Profile:
             add_device = False
             if dev.is_virtual and dev.vjoy_id not in self.vjoy_devices:
                 add_device = True
-            elif not dev.is_virtual and \
-                    util.get_device_identifier(dev) not in self.devices:
+            elif not dev.is_virtual and dev.device_guid not in self.devices:
                 add_device = True
 
             if add_device:
@@ -1150,14 +1180,12 @@ class Profile:
                 new_device.name = dev.name
                 if dev.is_virtual:
                     new_device.type = DeviceType.VJoy
-                    new_device.hardware_id = dev.vjoy_id
-                    new_device.windows_id = dev.vjoy_id
-                    self.vjoy_devices[dev.vjoy_id] = new_device
+                    new_device.device_guid = dev.device_guid
+                    self.vjoy_devices[dev.device_guid] = new_device
                 else:
                     new_device.type = DeviceType.Joystick
-                    new_device.hardware_id = dev.hardware_id
-                    new_device.windows_id = dev.windows_id
-                    self.devices[util.get_device_identifier(new_device)] = new_device
+                    new_device.device_guid = dev.device_guid
+                    self.devices[dev.device_guid] = new_device
 
                 # Create required modes
                 for mode in mode_list(new_device):
@@ -1177,8 +1205,6 @@ class Profile:
         # Parse settings entries
         self.settings.from_xml(root.find("settings"))
 
-        self._update_windows_ids()
-
     def to_xml(self, fname):
         """Generates XML code corresponding to this profile.
 
@@ -1192,7 +1218,7 @@ class Profile:
         devices = ElementTree.Element("devices")
         device_list = sorted(
             self.devices.values(),
-            key=lambda x: (x.hardware_id, x.windows_id)
+            key=lambda x: (x.name, x.device_guid)
         )
         for device in device_list:
             devices.append(device.to_xml())
@@ -1226,11 +1252,7 @@ class Profile:
                 node.append(sub_node)
             for tag in ["lower", "upper"]:
                 sub_node = ElementTree.Element(tag)
-                sub_node.set("id", safe_format(entry[tag]["hardware_id"], int))
-                sub_node.set(
-                    "windows_id",
-                    safe_format(entry[tag]["windows_id"], int)
-                )
+                sub_node.set("id", safe_format(entry[tag]["device_guid"], str))
                 sub_node.set("axis", safe_format(entry[tag]["axis_id"], int))
                 node.append(sub_node)
             root.append(node)
@@ -1321,13 +1343,12 @@ class Profile:
         # TODO: apply safe reading to these
         for tag in ["vjoy"]:
             entry[tag] = {
-                "device_id": int(node.find(tag).get("device")),
+                "vjoy_id": int(node.find(tag).get("vjoy-id")),
                 "axis_id": int(node.find(tag).get("axis"))
             }
         for tag in ["lower", "upper"]:
             entry[tag] = {
-                "hardware_id": int(node.find(tag).get("id")),
-                "windows_id": int(node.find(tag).get("windows_id")),
+                "device_guid": parse_guid(node.find(tag).get("device-guid")),
                 "axis_id": int(node.find(tag).get("axis"))
             }
 
@@ -1381,8 +1402,7 @@ class Device:
         """
         self.name = node.get("name")
         self.label = safe_read(node, "label", default_value=self.name)
-        self.hardware_id = safe_read(node, "id", int)
-        self.windows_id = safe_read(node, "windows_id", int)
+        self.device_guid = parse_guid(node.get("device_guid"))
         self.type = DeviceType.to_enum(safe_read(node, "type", str))
 
         for child in node:
@@ -1399,8 +1419,7 @@ class Device:
         node = ElementTree.Element(node_tag)
         node.set("name", safe_format(self.name, str))
         node.set("label", safe_format(self.label, str))
-        node.set("id", safe_format(self.hardware_id, int))
-        node.set("windows_id", safe_format(self.windows_id, int))
+        node.set("device-guid", write_guid(self.device_guid))
         node.set("type", DeviceType.to_string(self.type))
         for mode in sorted(self.modes.values(), key=lambda x: x.name):
             node.append(mode.to_xml())

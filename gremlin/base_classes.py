@@ -127,8 +127,7 @@ class JoystickCondition(AbstractCondition):
     def __init__(self):
         """Creates a new instance."""
         super().__init__()
-        self.device_id = 0
-        self.windows_id = 0
+        self.device_guid = 0
         self.input_type = None
         self.input_id = 0
         self.range = [0.0, 0.0]

@@ -465,10 +465,10 @@ class MapToMouse(AbstractAction):
         :param node the node whose content should be used to populate this
             instance
         """
-        self.motion_input = read_bool(node, "motion_input", False)
+        self.motion_input = read_bool(node, "motion-input", False)
         try:
             self.button_id = gremlin.common.MouseButton(
-                safe_read(node, "button_id", int, 1)
+                safe_read(node, "button-id", int, 1)
             )
         except ValueError as e:
             logging.getLogger("system").warning(
@@ -487,8 +487,8 @@ class MapToMouse(AbstractAction):
         """
         node = ElementTree.Element("map-to-mouse")
 
-        node.set("motion_input", safe_format(self.motion_input, bool))
-        node.set("button_id", safe_format(self.button_id.value, int))
+        node.set("motion-input", safe_format(self.motion_input, bool))
+        node.set("button-id", safe_format(self.button_id.value, int))
         node.set("direction", safe_format(self.direction, int))
         node.set("min-speed", safe_format(self.min_speed, int))
         node.set("max-speed", safe_format(self.max_speed, int))
