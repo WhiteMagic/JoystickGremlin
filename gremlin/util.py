@@ -324,6 +324,17 @@ axis_name_lookup = {
     8: "Dial"
 }
 
+axis_index_lookup = {
+    "X": 1,
+    "Y": 2,
+    "Z": 3,
+    "X Rotation": 4,
+    "Y Rotation": 5,
+    "Z Rotation": 6,
+    "Slider": 7,
+    "Dial": 8
+}
+
 
 def load_module(name):
     """Imports  the given module.
