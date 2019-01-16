@@ -332,29 +332,27 @@ class JoystickProxy:
     # Dictionary of initialized joystick devices
     joystick_devices = {}
 
-    def __getitem__(self, key):
+    def __getitem__(self, device_guid):
         """Returns the requested joystick instance.
 
-        If the joystick instance exists it is returned directly,
-        otherwise it is first created and then returned.
+        If the joystick instance exists it is returned directly, otherwise
+        it is first created and then returned.
 
-        :param key id of the joystick device
+        :param device_guid GUID of the joystick device
         :return the corresponding joystick device
         """
-        if len(JoystickProxy.joystick_devices) == 0:
-            # The id used to open the device is not the same as the
-            # system_id reported by SDL, hence we grab all devices and
-            # store them using their system_id
-            for i in range(DILL.get_device_count()):
-                joy = JoystickWrapper(i)
-                JoystickProxy.joystick_devices[joy.device_guid()] = joy
+        if device_guid not in JoystickProxy.joystick_devices:
+            # If the device exists add process it and add it, otherwise throw
+            # an exception
+            if DILL.device_exists(device_guid):
+                joy = JoystickWrapper(device_guid)
+                JoystickProxy.joystick_devices[device_guid] = joy
+            else:
+                raise error.DILLError(
+                    "No device with guid {} exists".format(device_guid)
+                )
 
-        if key not in JoystickProxy.joystick_devices:
-            raise error.GremlinError(
-                "No device with the provided identifier: {} exists".format(key)
-            )
-        else:
-            return JoystickProxy.joystick_devices[key]
+        return JoystickProxy.joystick_devices[device_guid]
 
 
 class VJoyPlugin:
