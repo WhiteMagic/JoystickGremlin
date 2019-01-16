@@ -255,18 +255,18 @@ class ModeBindings(QtWidgets.QWidget):
         bound_input = self.bound_inputs[input_item]
 
         # Special handling of keyboards
-        if bound_input.parent.parent.hardware_id == 0:
+        if bound_input.parent.parent.device_guid == dill.GUID_Keyboard:
             key_name = macro.key_from_code(
                 bound_input.input_id[0],
                 bound_input.input_id[1]
             ).name
             return "{} - {}".format(
-                self.device_names[bound_input.parent.parent.hardware_id],
+                self.device_names[bound_input.parent.parent.device_guid],
                 key_name
             )
         else:
             return "{} - {} {}".format(
-                self.device_names[bound_input.parent.parent.hardware_id],
+                self.device_names[bound_input.parent.parent.device_guid],
                 gremlin.common.input_type_to_name[bound_input.input_type],
                 bound_input.input_id
             )

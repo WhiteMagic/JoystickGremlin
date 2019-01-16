@@ -466,8 +466,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Create keyboard device entry
         keyboard_device = gremlin.profile.Device(self._profile)
         keyboard_device.name = "keyboard"
-        keyboard_device.hardware_id = 0
-        keyboard_device.windows_id = 0
+        keyboard_device.device_guid = dill.GUID_Keyboard
         keyboard_device.type = gremlin.profile.DeviceType.Keyboard
         self._profile.devices[dill.GUID_Keyboard] = keyboard_device
 
@@ -1011,8 +1010,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         :param device the device for which to return the profile
         :return profile for the provided device
         """
-        if device.hardware_id in self._profile.devices:
-            device_profile = self._profile.devices[device.hardware_id]
+        if device.device_guid in self._profile.devices:
+            device_profile = self._profile.devices[device.device_guid]
         else:
             device_profile = {}
 
@@ -1111,26 +1110,13 @@ class GremlinUi(QtWidgets.QMainWindow):
         profile_devices = {}
         for device in profile_data.devices.values():
             # Ignore the keyboard
-            if device.hardware_id == 0:
+            if device.device_guid == dill.GUID_Keyboard:
                 continue
-            profile_devices[gremlin.util.get_device_identifier(device)] = device.name
+            profile_devices[device.device_guid] = device.name
 
         physical_devices = {}
         for device in gremlin.joystick_handling.physical_devices():
-            physical_devices[gremlin.util.get_device_identifier(device)] = device.name
-
-        # Find profile data that conflicts with currently connected
-        # hardware and warn the user
-        hardware_id_clash = False
-        for dev_id, dev_name in physical_devices.items():
-            if dev_id in profile_devices and profile_devices[dev_id] != dev_name:
-                hardware_id_clash = True
-
-        if hardware_id_clash:
-            gremlin.util.display_error(
-                "The profile contains duplicate / wrong device ids. "
-                "The profile may no longer work as intended."
-            )
+            physical_devices[device.device_guid] = device.name
 
     def _set_joystick_input_highlighting(self, is_enabled):
         """Enables / disables the highlighting of the current input

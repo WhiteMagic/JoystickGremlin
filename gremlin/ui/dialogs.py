@@ -22,6 +22,8 @@ import winreg
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import dill
+
 import gremlin
 from . import common, ui_about
 
@@ -1168,13 +1170,12 @@ class SwapDevicesUi(common.BaseDialogUi):
         device_layout = QtWidgets.QGridLayout()
         for i, data in enumerate(device_list):
             # Ignore the keyboard
-            if data.device_id.hardware_id == 0:
+            if data.device_guid == dill.GUID_Keyboard:
                 continue
 
             # Ignore devices with no remappable entries
             if (data.containers + data.conditions + data.merge_axis) == 0:
                 continue
-
 
             # UI elements for this devic
             name = QtWidgets.QLabel(data.name)
