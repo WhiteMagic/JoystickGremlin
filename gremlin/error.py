@@ -16,6 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
+
+
 class GremlinError(Exception):
 
     """Generic exception raised for gremlin related errors.
@@ -25,6 +28,7 @@ class GremlinError(Exception):
     """
 
     def __init__(self, value):
+        logging.getLogger("system").exception(value)
         self.value = value
 
     def __str__(self):
