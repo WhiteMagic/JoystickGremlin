@@ -1451,14 +1451,6 @@ class Mode:
 
         :param node XML node to parse
         """
-        vjoy_device = None
-        if self.parent.name == "vJoy Device":
-            vjoy_proxy = joystick_handling.VJoyProxy()
-            try:
-                vjoy_device = vjoy_proxy[self.parent.hardware_id]
-            except error.VJoyError:
-                joystick_handling.VJoyProxy().reset()
-
         self.name = safe_read(node, "name", str)
         self.inherit = node.get("inherit", None)
         for child in node:
@@ -1466,9 +1458,9 @@ class Mode:
             item.from_xml(child)
 
             store_item = True
-            if vjoy_device is not None and \
-                    item.input_type == InputType.JoystickAxis:
-                store_item = vjoy_device.is_axis_valid(axis_id=item.input_id)
+            if item.input_type == InputType.JoystickAxis:
+                joy = input_devices.JoystickProxy()[self.parent.device_guid]
+                store_item = joy.is_axis_valid(item.input_id)
 
             if store_item:
                 self.config[item.input_type][item.input_id] = item

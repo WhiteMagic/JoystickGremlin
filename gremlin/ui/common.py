@@ -782,9 +782,8 @@ class VJoySelector(QtWidgets.QWidget):
         arr = input_selection.split()
         vjoy_input_type = name_to_input_type[arr[0]]
         if vjoy_input_type == gremlin.common.InputType.JoystickAxis:
-            vjoy_input_id = gremlin.common.vjoy_axis_names.index(
-                " ".join(arr[1:])
-            ) + 1
+            axis_name = " ".join(arr[1:])
+            vjoy_input_id = gremlin.common.AxisNames.to_enum(axis_name).value
         else:
             vjoy_input_id = int(arr[1])
 

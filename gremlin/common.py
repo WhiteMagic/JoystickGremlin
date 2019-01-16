@@ -85,6 +85,59 @@ input_type_to_name = {
 }
 
 
+class AxisNames(enum.Enum):
+
+    X = 1
+    Y = 2
+    Z = 3
+    RX = 4
+    RY = 5
+    RZ = 6
+    SLIDER = 7
+    DIAL = 8
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _AxisNames_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid AxisName lookup, {}".format(value)
+            )
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _AxisNames_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid AxisName lookup, {}".format(value)
+            )
+
+
+_AxisNames_to_string_lookup = {
+    AxisNames.X: "X",
+    AxisNames.Y: "Y",
+    AxisNames.Z: "Z",
+    AxisNames.RX: "Rotation X",
+    AxisNames.RY: "Rotation Y",
+    AxisNames.RZ: "Rotation Z",
+    AxisNames.SLIDER: "Slider",
+    AxisNames.DIAL: "Dial"
+}
+
+_AxisNames_to_enum_lookup = {
+    "X": AxisNames.X,
+    "Y": AxisNames.Y,
+    "Z": AxisNames.Z,
+    "Rotation X": AxisNames.RX,
+    "Rotation Y": AxisNames.RY,
+    "Rotation Z": AxisNames.RZ,
+    "Slider": AxisNames.SLIDER,
+    "Dial": AxisNames.DIAL
+}
+
+
 class AxisButtonDirection(enum.Enum):
 
     """Possible activation directions for axis button instances."""
@@ -259,19 +312,6 @@ direction_tuple_lookup = {
     "West": (-1, 0),
     "North West": (-1, 1)
 }
-
-
-# Names of vJoy axis according to their index
-vjoy_axis_names = [
-    "X",
-    "Y",
-    "Z",
-    "X Rotation",
-    "Y Rotation",
-    "Z Rotation",
-    "Slider",
-    "Dial"
-]
 
 
 class DeviceType(enum.Enum):

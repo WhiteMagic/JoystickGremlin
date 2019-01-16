@@ -227,7 +227,9 @@ class InputItemListView(common.AbstractView):
                 label = key.name.capitalize()
             elif data.parent.parent.type == DeviceType.VJoy:
                 assert(data.input_type == InputType.JoystickAxis)
-                label = gremlin.common.vjoy_axis_names[data.input_id-1]
+                label = gremlin.common.AxisNames.to_string(
+                    gremlin.common.AxisNames(data.input_id)
+                )
             identifier = InputIdentifier(
                 data.input_type,
                 data.input_id,

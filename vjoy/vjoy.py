@@ -742,7 +742,9 @@ class VJoy:
         for i, axis in enumerate(AxisName):
             if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value) > 0:
                 axes[i+1] = Axis(self, axis.value)
-                self._axis_names[i+1] = gremlin.common.vjoy_axis_names[i]
+                self._axis_names[i+1] = gremlin.common.AxisNames.to_string(
+                    gremlin.common.AxisNames(i+1)
+                )
                 self._axis_lookup[len(self._axis_names)] = i+1
                 self._axis_lookup[axis] = i+1
         return axes
