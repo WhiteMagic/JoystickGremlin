@@ -257,6 +257,16 @@ class JoystickWrapper:
         """
         return self._info.name
 
+    def is_axis_valid(self, axis_index):
+        """Returns whether or not the specified axis exists for this device.
+
+        :param axis_index the index of the axis in the AxisNames enum
+        :return True the specified axis exists, False otherwise
+        """
+        for i in range(self._info.axis_count):
+            if self._info.axis_map[i].axis_index == axis_index:
+                return True
+        return False
     def axis(self, index):
         """Returns the current value of the axis with the given index.
 
