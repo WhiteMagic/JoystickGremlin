@@ -234,12 +234,14 @@ class JoystickWrapper:
         :param device_guid the GUID of the joystick instance to wrap
         """
         if DILL.device_exists(device_guid) is False:
-            raise error.GremlinError("No device with the provided GUID exist")
+            raise error.GremlinError(
+                "No device with the provided GUID {} exist".format(device_guid)
+            )
         self._device_guid = device_guid
+        self._info = DILL.get_device_information_by_guid(self._device_guid)
         self._axis = self._init_axes()
         self._buttons = self._init_buttons()
         self._hats = self._init_hats()
-        self._info = DILL.get_device_information_by_guid(self._device_guid)
 
     @property
     def device_guid(self):
@@ -267,6 +269,7 @@ class JoystickWrapper:
             if self._info.axis_map[i].axis_index == axis_index:
                 return True
         return False
+
     def axis(self, index):
         """Returns the current value of the axis with the given index.
 
