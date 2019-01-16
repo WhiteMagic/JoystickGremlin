@@ -38,26 +38,26 @@ _GUID_SysKeyboard.Data1 = 0x6F1D2B61
 _GUID_SysKeyboard.Data2 = 0xD5A0
 _GUID_SysKeyboard.Data3 = 0x11CF
 _GUID_SysKeyboard.Data4[0] = 0xBF
-_GUID_SysKeyboard.Data4[0] = 0xC7
-_GUID_SysKeyboard.Data4[0] = 0x44
-_GUID_SysKeyboard.Data4[0] = 0x45
-_GUID_SysKeyboard.Data4[0] = 0x53
-_GUID_SysKeyboard.Data4[0] = 0x54
-_GUID_SysKeyboard.Data4[0] = 0x00
-_GUID_SysKeyboard.Data4[0] = 0x00
+_GUID_SysKeyboard.Data4[1] = 0xC7
+_GUID_SysKeyboard.Data4[2] = 0x44
+_GUID_SysKeyboard.Data4[3] = 0x45
+_GUID_SysKeyboard.Data4[4] = 0x53
+_GUID_SysKeyboard.Data4[5] = 0x54
+_GUID_SysKeyboard.Data4[6] = 0x00
+_GUID_SysKeyboard.Data4[7] = 0x00
 
 _GUID_Virtual = _GUID()
 _GUID_SysKeyboard.Data1 = 0x89d5e905
 _GUID_SysKeyboard.Data2 = 0x1e26
 _GUID_SysKeyboard.Data3 = 0x4c52
 _GUID_SysKeyboard.Data4[0] = 0xad
-_GUID_SysKeyboard.Data4[0] = 0x46
-_GUID_SysKeyboard.Data4[0] = 0x7b
-_GUID_SysKeyboard.Data4[0] = 0xcc
-_GUID_SysKeyboard.Data4[0] = 0x06
-_GUID_SysKeyboard.Data4[0] = 0xdf
-_GUID_SysKeyboard.Data4[0] = 0x4c
-_GUID_SysKeyboard.Data4[0] = 0x20
+_GUID_SysKeyboard.Data4[1] = 0x46
+_GUID_SysKeyboard.Data4[2] = 0x7b
+_GUID_SysKeyboard.Data4[3] = 0xcc
+_GUID_SysKeyboard.Data4[4] = 0x06
+_GUID_SysKeyboard.Data4[5] = 0xdf
+_GUID_SysKeyboard.Data4[6] = 0x4c
+_GUID_SysKeyboard.Data4[7] = 0x20
 
 
 class _JoystickInputData(ctypes.Structure):
