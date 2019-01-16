@@ -151,14 +151,18 @@ class AxisButtonDirection(enum.Enum):
         try:
             return _AxisButtonDirection_to_string_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError("Invalid type in lookup")
+            raise gremlin.error.GremlinError(
+                "Invalid AxisButtonDirection lookup, {}".format(value)
+            )
 
     @staticmethod
     def to_enum(value):
         try:
             return _AxisButtonDirection_to_enum_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError("Invalid type in lookup")
+            raise gremlin.error.GremlinError(
+                "Invalid AxisButtonDirection lookup, {}".format(value)
+            )
 
 
 _AxisButtonDirection_to_string_lookup = {
