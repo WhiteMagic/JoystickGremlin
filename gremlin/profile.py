@@ -112,15 +112,20 @@ def parse_guid(value):
     :param value the string representation of the GUID
     :param dill.GUID object representing the provided value
     """
-    tmp = uuid.UUID(value)
-    raw_guid = dill._GUID()
-    raw_guid.Data1 = int.from_bytes(tmp.bytes[0:4], "big")
-    raw_guid.Data2 = int.from_bytes(tmp.bytes[4:6], "big")
-    raw_guid.Data3 = int.from_bytes(tmp.bytes[6:8], "big")
-    for i in range(8):
-        raw_guid.Data4[i] = tmp.bytes[8 + i]
+    try:
+        tmp = uuid.UUID(value)
+        raw_guid = dill._GUID()
+        raw_guid.Data1 = int.from_bytes(tmp.bytes[0:4], "big")
+        raw_guid.Data2 = int.from_bytes(tmp.bytes[4:6], "big")
+        raw_guid.Data3 = int.from_bytes(tmp.bytes[6:8], "big")
+        for i in range(8):
+            raw_guid.Data4[i] = tmp.bytes[8 + i]
 
-    return dill.GUID(raw_guid)
+        return dill.GUID(raw_guid)
+    except ValueError as e:
+        msg = "Failed parsing GUID from value {}".format(value)
+        logging.getLogger("system").error(msg)
+        raise error.ProfileError(msg)
 
 
 def write_guid(guid):
