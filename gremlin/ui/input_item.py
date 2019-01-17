@@ -221,21 +221,13 @@ class InputItemListView(common.AbstractView):
             data = self.model.data(index)
             if data.input_type not in self.shown_input_types:
                 continue
-            label = str(data.input_id)
-            if data.input_type == InputType.Keyboard:
-                key = gremlin.macro.key_from_code(*data.input_id)
-                label = key.name.capitalize()
-            elif data.parent.parent.type == DeviceType.VJoy:
-                assert(data.input_type == InputType.JoystickAxis)
-                label = gremlin.common.AxisNames.to_string(
-                    gremlin.common.AxisNames(data.input_id)
-                )
+
             identifier = InputIdentifier(
                 data.input_type,
                 data.input_id,
                 data.parent.parent.type
             )
-            widget = InputItemButton(label, identifier)
+            widget = InputItemButton(identifier)
             widget.create_action_icons(data)
             widget.update_description(data.description)
             widget.selected.connect(self._create_selection_callback(index))
@@ -471,18 +463,21 @@ class InputItemButton(QtWidgets.QFrame):
     # Signal emitted whenever this button is pressed
     selected = QtCore.pyqtSignal(InputIdentifier)
 
-    def __init__(self, label, identifier, parent=None):
+    def __init__(self, identifier, parent=None):
         """Creates a new instance.
 
-        :param label the label / number of the input item
         :param identifier identifying information about the button
         :param parent the parent widget
         """
         QtWidgets.QFrame.__init__(self, parent)
         self.identifier = identifier
-        self.label = str(label)
 
-        self._label_widget = QtWidgets.QLabel(self._create_button_label())
+        self._label_widget = QtWidgets.QLabel(
+            gremlin.common.input_to_ui_string(
+                self.identifier.input_type,
+                self.identifier.input_id
+            )
+        )
         self._description_widget = QtWidgets.QLabel("")
         self._icon_layout = QtWidgets.QHBoxLayout()
         self._icons = []
@@ -530,16 +525,6 @@ class InputItemButton(QtWidgets.QFrame):
         :param event the mouse event
         """
         self.selected.emit(self.identifier)
-
-    def _create_button_label(self):
-        """Creates the label to display on this button.
-
-        :return label to use for this button
-        """
-        return "{} {}".format(
-            common.input_type_to_name[self.identifier.input_type],
-            self.label
-        )
 
 
 class ActionLabel(QtWidgets.QLabel):
