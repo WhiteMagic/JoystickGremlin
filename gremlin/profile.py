@@ -30,14 +30,14 @@ import dill
 
 import action_plugins
 from gremlin.common import DeviceType, InputType, VariableType
-from . import base_classes, common, error, joystick_handling, \
+from . import base_classes, common, error, input_devices, joystick_handling, \
     plugin_manager, util
 
 
 # Data struct representing profile information of a device
 ProfileDeviceInformation = collections.namedtuple(
     "ProfileDeviceInformation",
-    ["device_id", "name", "containers", "conditions", "merge_axis"]
+    ["device_guid", "name", "containers", "conditions", "merge_axis"]
 )
 
 
@@ -123,9 +123,9 @@ def parse_guid(value):
 
         return dill.GUID(raw_guid)
     except ValueError as e:
-        msg = "Failed parsing GUID from value {}".format(value)
-        logging.getLogger("system").error(msg)
-        raise error.ProfileError(msg)
+        raise error.ProfileError(
+            "Failed parsing GUID from value {}".format(value)
+        )
 
 
 def write_guid(guid):
@@ -357,7 +357,7 @@ class ProfileConverter:
         # Get hardware ids of the connected devices
         device_name_map = {}
         for device in joystick_handling.joystick_devices():
-            device_name_map[device.name] = device.hardware_id
+            device_name_map[device.name] = device.device_guid
 
         # Fix the device entries in the provided document
         new_root = copy.deepcopy(root)
@@ -736,41 +736,40 @@ class ProfileModifier:
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
                 cur_hw_id = (
-                    entry[key]["hardware_id"], entry[key]["windows_id"]
+                    entry[key]["device_guid"], entry[key]["device_guid"]
                 )
                 if cur_hw_id == hid_wid_tuple:
                     count += 1
         return count
 
-    def change_device_id(self, source_id, target_id):
+    def change_device_guid(self, source_guid, target_guid):
         """Performs actions necessary to move all data from source to target.
 
         Moves all profile content from a given source device to the desired
         target device.
 
-        :param source_id identifier of the source device
-        :param target_id identifier of the target device
+        :param source_guid identifier of the source device
+        :param target_guid identifier of the target device
         """
 
-        if source_id.hardware_id == target_id.hardware_id and \
-                source_id.windows_id == target_id.windows_id:
+        if source_guid == target_guid:
             logging.getLogger("system").warning(
                 "Source and target device are identical"
             )
             return
 
-        self.change_device_actions(source_id, target_id)
-        self.change_conditions(source_id, target_id)
-        self.change_merge_axis(source_id, target_id)
+        self.change_device_actions(source_guid, target_guid)
+        self.change_conditions(source_guid, target_guid)
+        self.change_merge_axis(source_guid, target_guid)
 
-    def change_device_actions(self, source_id, target_id):
+    def change_device_actions(self, source_guid, target_guid):
         """Moves actions from the source device to the target device.
 
         :param source_id identifier of the source device
         :param target_id identifier of the target device
         """
-        source_dev = self._get_device(source_id)
-        target_dev = self._get_device(target_id)
+        source_dev = self._get_device(source_guid)
+        target_dev = self._get_device(target_guid)
 
         # Can't move anything from a non-existent source device
         if source_dev is None:
@@ -783,7 +782,7 @@ class ProfileModifier:
         # properly initialize modes if needed
         target_hardware_device = None
         for dev in joystick_handling.joystick_devices():
-            if util.get_device_identifier(dev) == target_id:
+            if dev.device_guid == target_guid:
                 target_hardware_device = dev
 
         # If there is no target device we can turn the source device into the
@@ -794,8 +793,7 @@ class ProfileModifier:
                     "Target device which is not present specified"
                 )
                 return
-            source_dev.hardware_id = target_id.hardware_id
-            source_dev.windows_id = target_id.windows_id
+            source_dev.device_guid = target_guid
             source_dev.name = target_hardware_device.name
             return
 
@@ -829,25 +827,23 @@ class ProfileModifier:
                     # Remove all containers from the source device
                     input_item.containers = []
 
-    def change_conditions(self, source_id, target_id):
+    def change_conditions(self, source_guid, target_guid):
         """Modifies conditions to use the target device instead of the
         source device.
 
-        :param source_id identifier of the source device
-        :param target_id identifier of the target device
+        :param source_guid identifier of the source device
+        :param target_guid identifier of the target device
         """
         # TODO: Does not ensure conditions are valid, i.e. missing inputs
         target_hardware_device = None
         for dev in joystick_handling.joystick_devices():
-            if util.get_device_identifier(dev) == target_id:
+            if dev.device_guid == target_guid:
                 target_hardware_device = dev
 
         for condition in self.all_conditions():
             if isinstance(condition, base_classes.JoystickCondition):
-                if condition.device_id == source_id.hardware_id and \
-                        condition.windows_id == source_id.windows_id:
-                    condition.device_id = target_id.hardware_id
-                    condition.windows_id = target_id.windows_id
+                if condition.device_guid == source_guid:
+                    condition.device_guid = target_guid
                     condition.device_name = target_hardware_device.name
 
     def change_merge_axis(self, source_id, target_id):
@@ -860,10 +856,8 @@ class ProfileModifier:
         # TODO: Does not ensure assignments are valid, i.e. missing axis
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
-                if entry[key]["hardware_id"] == source_id.hardware_id and \
-                        entry[key]["windows_id"] == source_id.windows_id:
-                    entry[key]["hardware_id"] = target_id.hardware_id
-                    entry[key]["windows_id"] = target_id.windows_id
+                if entry[key]["device_guid"] == source_guid:
+                    entry[key]["device_guid"] = target_guid
 
     def device_names(self):
         """Returns a mapping from hardware ids to device names.
@@ -872,10 +866,10 @@ class ProfileModifier:
         """
         name_map = {}
         for device in self.profile.devices.values():
-            name_map[device.hardware_id] = device.name
+            name_map[device.device_guid] = device.name
         for cond in self.all_conditions():
             if isinstance(cond, base_classes.JoystickCondition):
-                name_map[cond.device_id] = cond.device_name
+                name_map[cond.device_guid] = cond.device_name
         return name_map
 
     def all_conditions(self):
@@ -895,14 +889,13 @@ class ProfileModifier:
                                 )
         return all_conditions
 
-    def _get_device(self, device_id):
+    def _get_device(self, device_guid):
         """Returns the device corresponding to a given identifier.
 
-        :return device matching the identifier if present
+        :return device_guid matching the identifier if present
         """
         for devid, device in self.profile.devices.items():
-            if devid.hardware_id == device_id.hardware_id and \
-                    devid.windows_id == device_id.windows_id:
+            if devid.device_guid == device_guid:
                 return device
         return None
 
@@ -1131,6 +1124,7 @@ class Profile:
                             )
 
         # Remove all remap actions from the list of available inputs
+        # FIXME: Is this still up to date with all the GUID based changes?
         for act in remap_actions:
             type_name = InputType.to_string(act.input_type)
             if act.vjoy_input_id in [0, None] \
@@ -1250,15 +1244,15 @@ class Profile:
             for tag in ["vjoy"]:
                 sub_node = ElementTree.Element(tag)
                 sub_node.set(
-                    "device",
-                    safe_format(entry[tag]["device_id"], int)
+                    "vjoy-id",
+                    safe_format(entry[tag]["vjoy_id"], int)
                 )
-                sub_node.set("axis", safe_format(entry[tag]["axis_id"], int))
+                sub_node.set("axis-id", safe_format(entry[tag]["axis_id"], int))
                 node.append(sub_node)
             for tag in ["lower", "upper"]:
                 sub_node = ElementTree.Element(tag)
-                sub_node.set("id", safe_format(entry[tag]["device_guid"], str))
-                sub_node.set("axis", safe_format(entry[tag]["axis_id"], int))
+                sub_node.set("device-guid", safe_format(entry[tag]["device_guid"], str))
+                sub_node.set("axis-id", safe_format(entry[tag]["axis_id"], int))
                 node.append(sub_node)
             root.append(node)
 
@@ -1349,12 +1343,12 @@ class Profile:
         for tag in ["vjoy"]:
             entry[tag] = {
                 "vjoy_id": int(node.find(tag).get("vjoy-id")),
-                "axis_id": int(node.find(tag).get("axis"))
+                "axis_id": int(node.find(tag).get("axis-id"))
             }
         for tag in ["lower", "upper"]:
             entry[tag] = {
                 "device_guid": parse_guid(node.find(tag).get("device-guid")),
-                "axis_id": int(node.find(tag).get("axis"))
+                "axis_id": int(node.find(tag).get("axis-id"))
             }
 
         return entry
@@ -1407,7 +1401,7 @@ class Device:
         """
         self.name = node.get("name")
         self.label = safe_read(node, "label", default_value=self.name)
-        self.device_guid = parse_guid(node.get("device_guid"))
+        self.device_guid = parse_guid(node.get("device-guid"))
         self.type = DeviceType.to_enum(safe_read(node, "type", str))
 
         for child in node:
