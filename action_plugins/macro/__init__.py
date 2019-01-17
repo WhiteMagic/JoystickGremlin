@@ -591,7 +591,7 @@ class MacroListModel(QtCore.QAbstractListModel):
 
                 return "{} {} {} - {}".format(
                     cur_joystick.name,
-                    gremlin.common.input_type_to_name[entry.input_type],
+                    InputType.to_string(entry.input_type).capitalize(),
                     entry.input_id,
                     MacroListModel.value_format[entry.input_type](entry)
                 )
@@ -623,7 +623,7 @@ class MacroListModel(QtCore.QAbstractListModel):
             elif isinstance(entry, gremlin.macro.VJoyAction):
                 return "vJoy {} {} {} - {}".format(
                     entry.vjoy_id,
-                    gremlin.common.input_type_to_name[entry.input_type],
+                    InputType.to_string(entry.input_type).capitalize(),
                     entry.input_id,
                     MacroListModel.value_format[entry.input_type](entry)
                 )

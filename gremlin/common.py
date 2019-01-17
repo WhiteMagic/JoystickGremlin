@@ -76,15 +76,6 @@ _InputType_to_enum_lookup = {
 }
 
 
-# Mapping from InputType values to their textual representation
-input_type_to_name = {
-    InputType.Keyboard: "Keyboard",
-    InputType.JoystickAxis: "Axis",
-    InputType.JoystickButton: "Button",
-    InputType.JoystickHat: "Hat"
-}
-
-
 class AxisNames(enum.Enum):
 
     X = 1
@@ -116,23 +107,23 @@ class AxisNames(enum.Enum):
 
 
 _AxisNames_to_string_lookup = {
-    AxisNames.X: "X",
-    AxisNames.Y: "Y",
-    AxisNames.Z: "Z",
-    AxisNames.RX: "Rotation X",
-    AxisNames.RY: "Rotation Y",
-    AxisNames.RZ: "Rotation Z",
+    AxisNames.X: "X Axis",
+    AxisNames.Y: "Y Axis",
+    AxisNames.Z: "Z Axis",
+    AxisNames.RX: "X Rotation",
+    AxisNames.RY: "Y Rotation",
+    AxisNames.RZ: "Z Rotation",
     AxisNames.SLIDER: "Slider",
     AxisNames.DIAL: "Dial"
 }
 
 _AxisNames_to_enum_lookup = {
-    "X": AxisNames.X,
-    "Y": AxisNames.Y,
-    "Z": AxisNames.Z,
-    "Rotation X": AxisNames.RX,
-    "Rotation Y": AxisNames.RY,
-    "Rotation Z": AxisNames.RZ,
+    "X Axis": AxisNames.X,
+    "Y Axis": AxisNames.Y,
+    "Z Axis": AxisNames.Z,
+    "X Rotation": AxisNames.RX,
+    "Y Rotation": AxisNames.RY,
+    "Z Rotation": AxisNames.RZ,
     "Slider": AxisNames.SLIDER,
     "Dial": AxisNames.DIAL
 }
@@ -177,6 +168,24 @@ _AxisButtonDirection_to_enum_lookup = {
     "above": AxisButtonDirection.Above,
     "below": AxisButtonDirection.Below
 }
+
+
+def input_to_ui_string(input_type, input_id):
+    """Returns a string for UI usage of an input.
+
+    :param input_type the InputType being shown
+    :param input_id the corresponding id
+    :return string for UI usage of the given data
+    """
+    if input_type == InputType.JoystickAxis:
+        return AxisNames.to_string(AxisNames(input_id))
+    elif input_type == InputType.Keyboard:
+        return gremlin.macro.key_from_code(*input_id).name
+    else:
+        return "{} {}".format(
+            InputType.to_string(input_type).capitalize(),
+            input_id
+        )
 
 
 class MouseButton(enum.Enum):
