@@ -87,8 +87,8 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             else:
                 self.vjoy_selector_1.set_selection(
                     InputType.JoystickAxis,
-                    self.action_data.axis1[0],
-                    self.action_data.axis1[1]
+                    self.action_data.device_low_guid,
+                    self.action_data.device_low_axis
                 )
             if self.action_data.axis2 is None:
                 self.vjoy_selector_2.set_selection(
@@ -99,10 +99,13 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             else:
                 self.vjoy_selector_2.set_selection(
                     InputType.JoystickAxis,
-                    self.action_data.axis2[0],
-                    self.action_data.axis2[1]
+                    self.action_data.device_high_guid,
+                    self.action_data.device_high_axis
                 )
         except gremlin.error.GremlinError as e:
+            # FIXME: This error here should only have been needed due to the
+            #        vJoy selector attempting to acquire a vJoy device, this
+            #        should no longer occur, check if this here is still needed
             util.display_error(
                 "A needed vJoy device is not accessible: {}\n\n".format(e) +
                 "Default values have been set for the input, but they are "
@@ -123,10 +126,12 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         """
         if axis_id == 1:
             data = self.vjoy_selector_1.get_selection()
-            self.action_data.axis1 = (data["device_id"], data["input_id"])
+            self.action_data.device_low_guid = data["device_guid"]
+            self.action_data.device_low_axis = data["input_id"]
         elif axis_id == 2:
             data = self.vjoy_selector_2.get_selection()
-            self.action_data.axis2 = (data["device_id"], data["input_id"])
+            self.action_data.device_high_guid = data["device_guid"]
+            self.action_data.device_high_axis = data["input_id"]
 
     def save_center_point(self):
         self.action_data.center_point = self.split_readout.value()
