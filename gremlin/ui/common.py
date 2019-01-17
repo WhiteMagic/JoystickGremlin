@@ -16,26 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import enum
-import logging
 import threading
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
-
-
-# Mapping from types to display names
-input_type_to_name = {
-    gremlin.common.InputType.JoystickAxis: "Axis",
-    gremlin.common.InputType.JoystickButton: "Button",
-    gremlin.common.InputType.JoystickHat: "Hat",
-    gremlin.common.InputType.Keyboard: "",
-}
-name_to_input_type = {
-    "Axis": gremlin.common.InputType.JoystickAxis,
-    "Button": gremlin.common.InputType.JoystickButton,
-    "Hat": gremlin.common.InputType.JoystickHat
-}
 
 
 class ContainerViewTypes(enum.Enum):
@@ -547,7 +532,142 @@ class DualSlider(QtWidgets.QWidget):
         painter.drawComplexControl(QtWidgets.QStyle.CC_Slider, option_upper)
 
 
-class JoystickSelector(QtWidgets.QWidget):
+class AbstractInputSelector(QtWidgets.QWidget):
+
+    def __init__(self, change_cb, valid_types, parent=None):
+        super().__init__(parent)
+
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        self.change_cb = change_cb
+        self.valid_types = valid_types
+        self.device_list = []
+
+        self.device_dropdown = None
+        self.input_item_dropdowns = []
+        self._device_id_registry = []
+        self._input_type_registry = []
+
+        self._initialize()
+        self._create_device_dropdown()
+        self._create_input_dropdown()
+
+    def get_selection(self):
+        device_id = None
+        input_id = None
+        input_type = None
+
+        device_index = self.device_dropdown.currentIndex()
+        if device_index != -1:
+            device_id = self._device_id_registry[device_index]
+            input_index = self.input_item_dropdowns[device_index].currentIndex()
+            input_type = self._input_type_registry[device_index][input_index]
+            input_value = self.input_item_dropdowns[device_index].currentText()
+
+            if input_type == gremlin.common.InputType.JoystickAxis:
+                input_id = gremlin.common.AxisNames.to_enum(input_value).value
+            else:
+                input_id = int(input_value.split()[-1])
+
+        return {
+            "device_id": device_id,
+            "input_id": input_id,
+            "input_type": input_type
+        }
+
+    def set_selection(self, input_type, device_id, input_id):
+        if device_id not in self._device_id_registry:
+            return
+
+        # Get the index of the combo box associated with this device
+        dev_id = self._device_id_registry.index(device_id)
+
+        # Retrieve the index of the correct entry in the combobox
+        input_name = gremlin.common.input_to_ui_string(input_type, input_id)
+        entry_id = self.input_item_dropdowns[dev_id].findText(input_name)
+
+        # Select and display correct combo boxes and entries within
+        self.device_dropdown.setCurrentIndex(dev_id)
+        for entry in self.input_item_dropdowns:
+            entry.setVisible(False)
+        self.input_item_dropdowns[dev_id].setVisible(True)
+        self.input_item_dropdowns[dev_id].setCurrentIndex(entry_id)
+
+    def _update_device(self, index):
+        # Hide all selection dropdowns
+        for entry in self.input_item_dropdowns:
+            entry.setVisible(False)
+
+        # Show correct dropdown
+        self.input_item_dropdowns[index].setVisible(True)
+        self.input_item_dropdowns[index].setCurrentIndex(0)
+        self.change_cb()
+
+    def _initialize(self):
+        raise gremlin.error.MissingImplementationError(
+            "Missing implementation of AbstractInputSelector._initialize"
+        )
+
+    def _format_device_name(self, device):
+        raise gremlin.error.MissingImplementationError(
+            "Missing implementation of AbstractInputSelector._format_device_name"
+        )
+
+    def _device_identifier(self, device):
+        raise gremlin.error.MissingImplementationError(
+            "Missing implementation of AbstractInputSelector._device_identifier"
+        )
+
+    def _create_device_dropdown(self):
+        self.device_dropdown = QtWidgets.QComboBox(self)
+        for device in self.device_list:
+            self.device_dropdown.addItem(self._format_device_name(device))
+            self._device_id_registry.append(self._device_identifier(device))
+        self.main_layout.addWidget(self.device_dropdown)
+        self.device_dropdown.activated.connect(self._update_device)
+
+    def _create_input_dropdown(self):
+        count_map = {
+            gremlin.common.InputType.JoystickAxis: lambda x: x.axis_count,
+            gremlin.common.InputType.JoystickButton: lambda x: x.button_count,
+            gremlin.common.InputType.JoystickHat: lambda x: x.hat_count
+        }
+
+        self.input_item_dropdowns = []
+        self._input_type_registry = []
+
+        # Create input item selections for the devices. Each selection
+        # will be invisible unless it is selected as the active device
+        for device in self.device_list:
+            selection = QtWidgets.QComboBox(self)
+            selection.setMaxVisibleItems(20)
+            self._input_type_registry.append([])
+
+            # Add items based on the input type
+            for input_type in self.valid_types:
+                for i in range(count_map[input_type](device)):
+                    input_id = i+1
+                    if input_type == gremlin.common.InputType.JoystickAxis:
+                        input_id = device.axis_map[i].axis_index
+
+                    selection.addItem(gremlin.common.input_to_ui_string(
+                        input_type,
+                        input_id
+                    ))
+                    self._input_type_registry[-1].append(input_type)
+
+            # Add the selection and hide it
+            selection.setVisible(False)
+            selection.activated.connect(self.change_cb)
+            self.main_layout.addWidget(selection)
+            self.input_item_dropdowns.append(selection)
+
+        # Show the first entry by default
+        if len(self.input_item_dropdowns) > 0:
+            self.input_item_dropdowns[0].setVisible(True)
+
+
+class JoystickSelector(AbstractInputSelector):
 
     """Widget allowing the selection of input items on a physical joystick."""
 
@@ -558,12 +678,14 @@ class JoystickSelector(QtWidgets.QWidget):
         :param valid_types valid input types for selection
         :param parent the parent of this widget
         """
-        super().__init__(parent)
+        super().__init__(change_cb, valid_types, parent)
 
-        # Filter out any devices that can not provide any inputs of the
-        # desired type
-        self.devices = []
-        for dev in gremlin.joystick_handling.physical_devices():
+    def _initialize(self):
+        potential_devices = sorted(
+            gremlin.joystick_handling.physical_devices(),
+            key=lambda x: (x.name, x.device_guid)
+        )
+        for dev in potential_devices:
             input_counts = {
                 gremlin.common.InputType.JoystickAxis: dev.axis_count,
                 gremlin.common.InputType.JoystickButton: dev.button_count,
@@ -571,155 +693,21 @@ class JoystickSelector(QtWidgets.QWidget):
             }
 
             has_inputs = False
-            for valid_type in valid_types:
+            for valid_type in self.valid_types:
                 if input_counts.get(valid_type, 0) > 0:
                     has_inputs = True
 
             if has_inputs:
-                self.devices.append(dev)
+                self.device_list.append(dev)
 
-        self.change_cb = change_cb
-        self.valid_types = valid_types
+    def _format_device_name(self, device):
+        return device.name
 
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-
-        self.device_dropdown = None
-        self.input_item_dropdowns = []
-
-        self._create_device_dropdown()
-        self._create_input_dropdown()
-
-        self._device_id_to_index_map = {}
-        self._index_to_device_map = {}
-        for i, device in enumerate(
-                sorted(self.devices, key=lambda x: (x.name, x.device_guid))
-        ):
-            self._device_id_to_index_map[device.device_guid] = i
-            self._index_to_device_map[i] = device
-
-    def get_selection(self):
-        """Returns information about the currently selected entry.
-
-        :return dictionary containing selection information
-        """
-        selection_id = self.device_dropdown.currentIndex()
-
-        device_guid = None
-        input_id = None
-        input_type = None
-
-        if selection_id != -1:
-            input_selection = \
-                self.input_item_dropdowns[selection_id].currentText()
-
-            arr = input_selection.split()
-            if len(arr) == 2:
-                device_guid = self._index_to_device_map[selection_id].device_guid
-                input_type = name_to_input_type[arr[0]]
-                input_id = gremlin.util.axis_index_lookup[arr[1]]
-            else:
-                logging.getLogger("system").warning(
-                    "Reading axis selection failed, treating as no selection."
-                )
-
-        return {
-            "device_guid": device_guid,
-            "input_id": input_id,
-            "input_type": input_type
-        }
-
-    def set_selection(self, input_type, device_id, input_id):
-        """Sets the current selection to the provided values.
-
-        :param input_type the type of input
-        :param device_id the id of the device
-        :param input_id the id of the input
-        """
-        # Get the appropriate vjoy device identifier
-        dev_id = None
-        if device_id not in [0, None] and \
-                device_id in self._device_id_to_index_map:
-            dev_id = self._device_id_to_index_map[device_id]
-
-        # If we have no device simply stop here
-        if dev_id is None:
-            return
-
-        # Retrieve the index of the correct entry in the combobox
-        input_name = "{} {:d}".format(
-            input_type_to_name[input_type],
-            input_id
-        )
-        btn_id = self.input_item_dropdowns[dev_id].findText(input_name)
-
-        # Select and display correct combo boxes and entries within
-        self.device_dropdown.setCurrentIndex(dev_id)
-        for entry in self.input_item_dropdowns:
-            entry.setVisible(False)
-        self.input_item_dropdowns[dev_id].setVisible(True)
-        self.input_item_dropdowns[dev_id].setCurrentIndex(btn_id)
-
-    def _create_device_dropdown(self):
-        """Creates the vJoy device selection drop downs."""
-        self.device_dropdown = QtWidgets.QComboBox(self)
-        for device in sorted(self.devices, key=lambda x: (x.name, x.device_guid)):
-            self.device_dropdown.addItem(device.name)
-        self.main_layout.addWidget(self.device_dropdown)
-        self.device_dropdown.activated.connect(self._update_device)
-
-    def _create_input_dropdown(self):
-        """Creates the vJoy input item selection drop downs."""
-        count_map = {
-            gremlin.common.InputType.JoystickAxis: lambda x: x.axis_count,
-            gremlin.common.InputType.JoystickButton: lambda x: x.button_count,
-            gremlin.common.InputType.JoystickHat: lambda x: x.hat_count
-        }
-
-        self.input_item_dropdowns = []
-
-        # Create input item selections for the devices. Each selection
-        # will be invisible unless it is selected as the active device
-        for device in sorted(self.devices, key=lambda x: (x.name, x.device_guid)):
-            selection = QtWidgets.QComboBox(self)
-            selection.setMaxVisibleItems(20)
-
-            # Add items based on the input type
-            for input_type in self.valid_types:
-                for i in range(count_map[input_type](device)):
-                    if input_type == gremlin.common.InputType.JoystickAxis:
-                        selection.addItem("{} {}".format(
-                            input_type_to_name[input_type],
-                            gremlin.util.axis_name_lookup[device.axis_map[i].axis_index]
-                        ))
-                    else:
-                        selection.addItem("{} {:d}".format(
-                            input_type_to_name[input_type],
-                            i+1
-                        ))
-
-            # Add the selection and hide it
-            selection.setVisible(False)
-            selection.activated.connect(self.change_cb)
-            self.main_layout.addWidget(selection)
-            self.input_item_dropdowns.append(selection)
-
-        # Show the "None" selection entry
-        if len(self.input_item_dropdowns) > 0:
-            self.input_item_dropdowns[0].setVisible(True)
-
-    def _update_device(self, index):
-        """Handles changing the vJoy device selection.
-
-        :param index vjoy device index
-        """
-        for entry in self.input_item_dropdowns:
-            entry.setVisible(False)
-        self.input_item_dropdowns[index].setVisible(True)
-        self.input_item_dropdowns[index].setCurrentIndex(0)
-        self.change_cb()
+    def _device_identifier(self, device):
+        return device.device_guid
 
 
-class VJoySelector(QtWidgets.QWidget):
+class VJoySelector(AbstractInputSelector):
 
     """Widget allowing the selection of vJoy inputs."""
 
@@ -731,12 +719,15 @@ class VJoySelector(QtWidgets.QWidget):
         :param invalid_ids list of vid values of vjoy devices to not consider
         :param parent of this widget
         """
-        QtWidgets.QWidget.__init__(self, parent)
+        self.invalid_ids = invalid_ids
+        super().__init__(change_cb, valid_types, parent)
 
-        # Filter out devices that don't have none of the required inputs as
-        # well as those vJoy devices that are treated as physical inputs
-        self.vjoy_devices = []
-        for dev in gremlin.joystick_handling.vjoy_devices():
+    def _initialize(self):
+        potential_devices = sorted(
+            gremlin.joystick_handling.vjoy_devices(),
+            key=lambda x: x.vjoy_id
+        )
+        for dev in potential_devices:
             input_counts = {
                 gremlin.common.InputType.JoystickAxis: dev.axis_count,
                 gremlin.common.InputType.JoystickButton: dev.button_count,
@@ -744,186 +735,18 @@ class VJoySelector(QtWidgets.QWidget):
             }
 
             has_inputs = False
-            for valid_type in valid_types:
+            for valid_type in self.valid_types:
                 if input_counts.get(valid_type, 0) > 0:
                     has_inputs = True
 
-            if not invalid_ids.get(dev.vjoy_id, False) and has_inputs:
-                self.vjoy_devices.append(dev)
+            if not self.invalid_ids.get(dev.vjoy_id, False) and has_inputs:
+                self.device_list.append(dev)
 
-        self.invalid_ids = invalid_ids
-        self.change_cb = change_cb
-        self.valid_types = valid_types
+    def _format_device_name(self, device):
+        return "vJoy Device {:d}".format(device.vjoy_id)
 
-        self.main_layout = QtWidgets.QVBoxLayout()
-        self.setLayout(self.main_layout)
-
-        self.device_dropdown = None
-        self.input_item_dropdowns = {}
-
-        self._create_device_dropdown()
-        self._create_input_dropdown()
-
-    def get_selection(self):
-        """Returns the current selection of the widget.
-
-        :return dictionary containing the current selection
-        """
-        if len(self.vjoy_devices) == 0:
-            raise gremlin.error.GremlinError(
-                "No vJoy devices available for virtual output"
-            )
-
-        device_selection = self.device_dropdown.currentText()
-        vjoy_device_id = int(device_selection.split()[-1])
-        input_selection = \
-            self.input_item_dropdowns[vjoy_device_id].currentText()
-
-        arr = input_selection.split()
-        vjoy_input_type = name_to_input_type[arr[0]]
-        if vjoy_input_type == gremlin.common.InputType.JoystickAxis:
-            axis_name = " ".join(arr[1:])
-            vjoy_input_id = gremlin.common.AxisNames.to_enum(axis_name).value
-        else:
-            vjoy_input_id = int(arr[1])
-
-        return {
-            "device_id": vjoy_device_id,
-            "input_id": vjoy_input_id,
-            "input_type": vjoy_input_type
-        }
-
-    def set_selection(self, input_type, vjoy_dev_id, vjoy_input_id):
-        """Sets the widget's entries to the provided values.
-
-        :param input_type the input type
-        :param vjoy_dev_id the id of the vjoy device
-        :param vjoy_input_id the id of the input
-        """
-        # Initialize variables
-        dev_id = -1
-        btn_id = -1
-
-        # No vJoy devices available
-        if len(self.vjoy_devices) == 0:
-            raise gremlin.error.GremlinError(
-                "No vJoy devices available for virtual output"
-            )
-
-        # Get the appropriate vjoy device identifier
-        if vjoy_dev_id is None or vjoy_dev_id <= 0:
-            dev_id = -1
-        else:
-            dev_id = self.device_dropdown.findText(
-                "vJoy Device {:d}".format(vjoy_dev_id)
-            )
-
-        # Retrieve the index of the correct entry in the combobox
-        if dev_id != -1:
-            if input_type == gremlin.common.InputType.JoystickAxis:
-                input_name = "{} {}".format(
-                    input_type_to_name[input_type],
-                    gremlin.util.axis_name_lookup[vjoy_input_id]
-                )
-            else:
-                input_name = "{} {:d}".format(
-                    input_type_to_name[input_type],
-                    vjoy_input_id
-                )
-            try:
-                btn_id = self.input_item_dropdowns[vjoy_dev_id].findText(input_name)
-            except KeyError:
-                btn_id = -1
-
-        # If either of the provided entries results in an invalid selection
-        # we simply select the first valid thing we come across
-        if dev_id == -1 or btn_id == -1:
-            dev_id = 0
-            btn_id = 0
-            vjoy_dev_id = sorted(self.input_item_dropdowns.keys())[0]
-
-            if vjoy_dev_id is not None and vjoy_dev_id > 0 and vjoy_input_id >= 0:
-                raise gremlin.error.VJoyError(
-                    "vJoy device {} input {} is not available".format(
-                        vjoy_dev_id,
-                        vjoy_input_id
-                    )
-                )
-
-        # Select and display correct combo boxes and entries within
-        self.device_dropdown.setCurrentIndex(dev_id)
-        for entry in self.input_item_dropdowns.values():
-            entry.setVisible(False)
-        self.input_item_dropdowns[vjoy_dev_id].setVisible(True)
-        self.input_item_dropdowns[vjoy_dev_id].setCurrentIndex(btn_id)
-
-    def _create_device_dropdown(self):
-        """Creates the vJoy device selection drop downs."""
-        self.device_dropdown = QtWidgets.QComboBox(self)
-        for dev in sorted(self.vjoy_devices, key=lambda x: x.vjoy_id):
-            self.device_dropdown.addItem("vJoy Device {:d}".format(dev.vjoy_id))
-        self.main_layout.addWidget(self.device_dropdown)
-        self.device_dropdown.activated.connect(self._update_device)
-
-    def _create_input_dropdown(self):
-        """Creates the vJoy input item selection drop downs."""
-        count_map = {
-            gremlin.common.InputType.JoystickAxis: lambda x: x.axis_count,
-            gremlin.common.InputType.JoystickButton: lambda x: x.button_count,
-            gremlin.common.InputType.JoystickHat: lambda x: x.hat_count
-        }
-
-        self.input_item_dropdowns = {}
-
-        # Create input item selections for the vjoy devices, each
-        # selection will be invisible unless it is selected as the
-        # active device
-        for dev in self.vjoy_devices:
-            selection = QtWidgets.QComboBox(self)
-            selection.setMaxVisibleItems(20)
-
-            # Add items based on the input type
-            for input_type in self.valid_types:
-                for i in range(count_map[input_type](dev)):
-                    if input_type == gremlin.common.InputType.JoystickAxis:
-                        selection.addItem("{} {}".format(
-                            input_type_to_name[input_type],
-                            gremlin.util.axis_name_lookup[dev.axis_map[i].axis_index]
-                        ))
-                    else:
-                        selection.addItem("{} {:d}".format(
-                            input_type_to_name[input_type],
-                            i+1
-                        ))
-
-            # Add the selection and hide it
-            selection.setVisible(False)
-            selection.activated.connect(self.change_cb)
-            self.main_layout.addWidget(selection)
-            self.input_item_dropdowns[dev.vjoy_id] = selection
-
-        # Show the "None" selection entry
-        if len(self.input_item_dropdowns.keys()) > 0:
-            first_key = sorted(self.input_item_dropdowns.keys())[0]
-            self.input_item_dropdowns[first_key].setVisible(True)
-
-    def _update_device(self, index):
-        """Handles changing the vJoy device selection.
-
-        :param index vjoy device index
-        """
-        # Hide all selection dropdowns
-        for entry in self.input_item_dropdowns.values():
-            entry.setVisible(False)
-
-        # Extract vjoy id
-        device_selection = self.device_dropdown.itemText(index)
-        vjoy_device_id = int(device_selection.split()[-1])
-
-        # Show correct dropdown
-        self.input_item_dropdowns[vjoy_device_id].setVisible(True)
-        self.input_item_dropdowns[vjoy_device_id].setCurrentIndex(0)
-        self.change_cb()
+    def _device_identifier(self, device):
+        return device.vjoy_id
 
 
 class ActionSelector(QtWidgets.QWidget):
