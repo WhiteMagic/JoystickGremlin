@@ -50,14 +50,14 @@ class CallbackRegistry:
         self._current_id += 1
         function_name = "{}_{:d}".format(callback.__name__, self._current_id)
 
-        if event.device_id not in self._registry:
-            self._registry[event.device_id] = {}
-        if mode not in self._registry[event.device_id]:
-            self._registry[event.device_id][mode] = {}
+        if event.device_guid not in self._registry:
+            self._registry[event.device_guid] = {}
+        if mode not in self._registry[event.device_guid]:
+            self._registry[event.device_guid][mode] = {}
 
-        if event not in self._registry[event.device_id][mode]:
-            self._registry[event.device_id][mode][event] = {}
-        self._registry[event.device_id][mode][event][function_name] = \
+        if event not in self._registry[event.device_guid][mode]:
+            self._registry[event.device_guid][mode][event] = {}
+        self._registry[event.device_guid][mode][event][function_name] = \
             (callback, always_execute)
 
     @property
@@ -485,24 +485,24 @@ class JoystickDecorator:
 
     """Creates customized decorators for physical joystick devices."""
 
-    def __init__(self, name, device_id, mode):
+    def __init__(self, name, device_guid, mode):
         """Creates a new instance with customized decorators.
 
         :param name the name of the device
-        :param device_id the device id in the system
+        :param device_guid the device id in the system
         :param mode the mode in which the decorated functions
             should be active
         """
         self.name = name
         self.mode = mode
         self.axis = functools.partial(
-            _axis, device_id=device_id, mode=mode
+            _axis, device_guid=device_guid, mode=mode
         )
         self.button = functools.partial(
-            _button, device_id=device_id, mode=mode
+            _button, device_guid=device_guid, mode=mode
         )
         self.hat = functools.partial(
-            _hat, device_id=device_id, mode=mode
+            _hat, device_guid=device_guid, mode=mode
         )
 
 
@@ -680,11 +680,11 @@ class JoystickInputSignificant:
         return event.value != (0, 0)
 
 
-def _button(button_id, device_id, mode, always_execute=False):
+def _button(button_id, device_guid, mode, always_execute=False):
     """Decorator for button callbacks.
 
     :param button_id the id of the button on the physical joystick
-    :param device_id the id of input device
+    :param device_guid the GUID of input device
     :param mode the mode in which this callback is active
     :param always_execute if True the decorated function is executed
         even when the program is not listening to inputs
@@ -698,7 +698,7 @@ def _button(button_id, device_id, mode, always_execute=False):
 
         event = event_handler.Event(
             event_type=common.InputType.JoystickButton,
-            device_id=device_id,
+            device_guid=device_guid,
             identifier=button_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)
@@ -708,11 +708,11 @@ def _button(button_id, device_id, mode, always_execute=False):
     return wrap
 
 
-def _hat(hat_id, device_id, mode, always_execute=False):
+def _hat(hat_id, device_guid, mode, always_execute=False):
     """Decorator for hat callbacks.
 
     :param hat_id the id of the button on the physical joystick
-    :param device_id the id of input device
+    :param device_guid the GUID of input device
     :param mode the mode in which this callback is active
     :param always_execute if True the decorated function is executed
         even when the program is not listening to inputs
@@ -726,7 +726,7 @@ def _hat(hat_id, device_id, mode, always_execute=False):
 
         event = event_handler.Event(
             event_type=common.InputType.JoystickHat,
-            device_id=device_id,
+            device_guid=device_guid,
             identifier=hat_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)
@@ -736,11 +736,11 @@ def _hat(hat_id, device_id, mode, always_execute=False):
     return wrap
 
 
-def _axis(axis_id, device_id, mode, always_execute=False):
+def _axis(axis_id, device_guid, mode, always_execute=False):
     """Decorator for axis callbacks.
 
     :param axis_id the id of the axis on the physical joystick
-    :param device_id the id of input device
+    :param device_guid the GUID of input device
     :param mode the mode in which this callback is active
     :param always_execute if True the decorated function is executed
         even when the program is not listening to inputs
@@ -754,7 +754,7 @@ def _axis(axis_id, device_id, mode, always_execute=False):
 
         event = event_handler.Event(
             event_type=common.InputType.JoystickAxis,
-            device_id=device_id,
+            device_guid=device_guid,
             identifier=axis_id
         )
         callback_registry.add(wrapper_fn, event, mode, always_execute)

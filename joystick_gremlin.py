@@ -681,7 +681,7 @@ class GremlinUi(QtWidgets.QMainWindow):
                 continue
 
             device_profile = self._profile.get_device_modes(
-                device.vjoy_id,
+                device.device_guid,
                 gremlin.profile.DeviceType.VJoy,
                 device.name
             )

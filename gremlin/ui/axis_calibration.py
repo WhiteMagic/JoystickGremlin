@@ -51,6 +51,7 @@ class CalibrationUi(common.BaseDialogUi):
             label.setFrameShape(QtWidgets.QFrame.Box)
             label.setMargin(10)
             self.main_layout.addWidget(label)
+
             return
 
         # Device selection drop down
@@ -118,10 +119,10 @@ class CalibrationUi(common.BaseDialogUi):
     def _save_calibration(self):
         """Saves the current calibration data to the hard drive."""
         cfg = gremlin.config.Configuration()
-        dev_id = gremlin.util.get_device_identifier(
-            self.devices[self.current_selection_id]
+        cfg.set_calibration(
+            self.devices[self.current_selection_id].device_guid,
+            [axis.limits for axis in self.axes]
         )
-        cfg.set_calibration(dev_id, [axis.limits for axis in self.axes])
         gremlin.event_handler.EventListener().reload_calibrations()
 
     def _create_axes(self, index):
@@ -142,10 +143,7 @@ class CalibrationUi(common.BaseDialogUi):
 
         :param event the event to process
         """
-        selection_id = gremlin.util.get_device_identifier(
-            self.devices[self.current_selection_id]
-        )
-        if event.device_id == selection_id \
+        if event.device_guid == self.devices[self.current_selection_id].device_guid \
                 and event.event_type == gremlin.common.InputType.JoystickAxis:
             self.axes[event.identifier-1].set_current(event.raw_value)
 

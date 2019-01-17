@@ -25,7 +25,7 @@ import dill
 
 import gremlin
 from . import common, error, execution_graph, plugin_manager, profile
-from gremlin.profile import safe_read
+from gremlin.profile import parse_guid, safe_read, write_guid
 
 
 class ActivationRule(enum.Enum):
@@ -92,7 +92,7 @@ class KeyboardCondition(AbstractCondition):
         :param node the XML node to parse for data
         """
         self.comparison = safe_read(node, "comparison")
-        self.scan_code = safe_read(node, "scan_code", int)
+        self.scan_code = safe_read(node, "scan-code", int)
         self.is_extended = profile.parse_bool(safe_read(node, "extended"))
 
     def to_xml(self):
@@ -103,7 +103,7 @@ class KeyboardCondition(AbstractCondition):
         node = ElementTree.Element("condition")
         node.set("input", "keyboard")
         node.set("comparison", str(self.comparison))
-        node.set("scan_code", str(self.scan_code))
+        node.set("scan-code", str(self.scan_code))
         node.set("extended", str(self.is_extended))
         return node
 
@@ -142,13 +142,12 @@ class JoystickCondition(AbstractCondition):
 
         self.input_type = common.InputType.to_enum(safe_read(node, "input"))
         self.input_id = safe_read(node, "id", int)
-        self.device_id = safe_read(node, "device_id", int)
-        self.windows_id = safe_read(node, "windows_id", int)
-        self.device_name = safe_read(node, "device_name")
+        self.device_guid = parse_guid(node.get("device-guid"))
+        self.device_name = safe_read(node, "device-name")
         if self.input_type == common.InputType.JoystickAxis:
             self.range = [
-                safe_read(node, "range_low", float),
-                safe_read(node, "range_high", float)
+                safe_read(node, "range-low", float),
+                safe_read(node, "range-high", float)
             ]
 
     def to_xml(self):
@@ -160,12 +159,11 @@ class JoystickCondition(AbstractCondition):
         node.set("comparison", str(self.comparison))
         node.set("input", common.InputType.to_string(self.input_type))
         node.set("id", str(self.input_id))
-        node.set("device_id", str(self.device_id))
-        node.set("windows_id", str(self.windows_id))
-        node.set("device_name", str(self.device_name))
+        node.set("device-guid", write_guid(self.device_guid))
+        node.set("device-name", str(self.device_name))
         if self.input_type == common.InputType.JoystickAxis:
-            node.set("range_low", str(self.range[0]))
-            node.set("range_high", str(self.range[1]))
+            node.set("range-low", str(self.range[0]))
+            node.set("range-high", str(self.range[1]))
         return node
 
     def is_valid(self):

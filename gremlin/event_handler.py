@@ -367,10 +367,10 @@ class EventHandler(QtCore.QObject):
         if plugin.keyword not in self.plugins:
             self.plugins[plugin.keyword] = plugin
 
-    def add_callback(self, device_id, mode, event, callback, permanent=False):
+    def add_callback(self, device_guid, mode, event, callback, permanent=False):
         """Installs the provided callback for the given event.
 
-        :param device_id the id of the device the callback is
+        :param device_guid the GUID of the device the callback is
             associated with
         :param mode the mode the callback belongs to
         :param event the event for which to install the callback
@@ -379,13 +379,13 @@ class EventHandler(QtCore.QObject):
         :param permanent if True the callback is always active even
             if the system is paused
         """
-        if device_id not in self.callbacks:
-            self.callbacks[device_id] = {}
-        if mode not in self.callbacks[device_id]:
-            self.callbacks[device_id][mode] = {}
-        if event not in self.callbacks[device_id][mode]:
-            self.callbacks[device_id][mode][event] = []
-        self.callbacks[device_id][mode][event].append((
+        if device_guid not in self.callbacks:
+            self.callbacks[device_guid] = {}
+        if mode not in self.callbacks[device_guid]:
+            self.callbacks[device_guid][mode] = {}
+        if event not in self.callbacks[device_guid][mode]:
+            self.callbacks[device_guid][mode][event] = []
+        self.callbacks[device_guid][mode][event].append((
             self._install_plugins(callback),
             permanent
         ))
@@ -402,11 +402,11 @@ class EventHandler(QtCore.QObject):
         # handlers for the available events
         for parent, children in inheritance_tree.items():
             # Each device is treated separately
-            for device_id in self.callbacks:
+            for device_guid in self.callbacks:
                 # Only attempt to copy handlers if we have any available in
                 # the parent mode
-                if parent in self.callbacks[device_id]:
-                    device_cb = self.callbacks[device_id]
+                if parent in self.callbacks[device_guid]:
+                    device_cb = self.callbacks[device_guid]
                     parent_cb = device_cb[parent]
                     # Copy the handlers into each child mode, unless they
                     # have their own handlers already defined

@@ -26,6 +26,8 @@ from gremlin import common, joystick_handling, macro, util
 import gremlin.ui.common
 import gremlin.ui.input_item
 
+# TODO: Retire this entire bit here as the action library will replace it
+#       in it's entirety
 
 class ProfileCreator(gremlin.ui.common.BaseDialogUi):
 
@@ -72,7 +74,7 @@ class ProfileCreator(gremlin.ui.common.BaseDialogUi):
         # Add a new binding
         else:
             # Get the input item to be mapped then modify it and set it again
-            item = self.new_profile.devices[event.device_id].modes[mode].get_data(
+            item = self.new_profile.devices[event.device_guid].modes[mode].get_data(
                 event.event_type,
                 event.identifier
             )

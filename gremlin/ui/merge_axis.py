@@ -106,11 +106,11 @@ class MergeAxisUi(common.BaseDialogUi):
                     "axis_id": vjoy_sel["input_id"]
                 },
                 "lower": {
-                    "device_guid": joy1_sel["device_guid"],
+                    "device_guid": joy1_sel["device_id"],
                     "axis_id": joy1_sel["input_id"]
                 },
                 "upper": {
-                    "device_guid": joy2_sel["device_guid"],
+                    "device_guid": joy2_sel["device_id"],
                     "axis_id": joy2_sel["input_id"]
                 }
             })

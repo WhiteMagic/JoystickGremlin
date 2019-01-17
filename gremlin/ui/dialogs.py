@@ -1186,12 +1186,10 @@ class SwapDevicesUi(common.BaseDialogUi):
             ))
             counts.setAlignment(QtCore.Qt.AlignRight)
             record_button = QtWidgets.QPushButton(
-                "Assigned to: {:d} - {:}".format(
-                    data.device_id.windows_id, data.name
-                )
+                "Assigned to: {:d} - {:}".format(data.device_guid, data.name)
             )
             record_button.clicked.connect(
-                self._create_request_user_input_cb(data.device_id)
+                self._create_request_user_input_cb(data.device_guid)
             )
 
             # Combine labels and counts into it's own layout
@@ -1208,26 +1206,26 @@ class SwapDevicesUi(common.BaseDialogUi):
         self.main_layout.addLayout(device_layout)
         self.main_layout.addStretch()
 
-    def _create_request_user_input_cb(self, device_id):
+    def _create_request_user_input_cb(self, device_guid):
         """Creates the callback handling user device selection.
 
-        :param device_id idenfication of the associated device
+        :param device_guid GUID of the associated device
         :return callback function for user input selection handling
         """
         return lambda: self._request_user_input(
-            lambda event: self._user_input_cb(event, device_id)
+            lambda event: self._user_input_cb(event, device_guid)
         )
 
-    def _user_input_cb(self, event, device_id):
+    def _user_input_cb(self, event, device_guid):
         """Processes input events to update the UI and model.
 
         :param event the input event to process
-        :param device_id identifier of the selected device
+        :param device_guid GUID of the selected device
         """
         profile_modifier = gremlin.profile.ProfileModifier(self.profile)
-        profile_modifier.change_device_id(
-            device_id,
-            event.device_id
+        profile_modifier.change_device_guid(
+            device_guid,
+            event.device_guid
         )
 
         self._create_swap_ui()

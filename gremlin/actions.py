@@ -194,7 +194,7 @@ class JoystickCondition(AbstractCondition):
         :param condition the condition to check against
         """
         super().__init__(condition.comparison)
-        self.windows_id = condition.windows_id
+        self.device_guid = condition.device_guid
         self.input_type = condition.input_type
         self.input_id = condition.input_id
         self.condition = condition
@@ -206,7 +206,7 @@ class JoystickCondition(AbstractCondition):
         :param value the possibly modified value
         :return True if the condition is satisfied, False otherwise
         """
-        joy = input_devices.JoystickProxy()[self.windows_id]
+        joy = input_devices.JoystickProxy()[self.device_guid]
 
         if self.input_type == common.InputType.JoystickAxis:
             in_range = self.condition.range[0] <= \
