@@ -397,7 +397,7 @@ class JoystickConditionWidget(AbstractConditionWidget):
         self.condition_data.input_type = event.event_type
         self.condition_data.input_id = event.identifier
         self.condition_data.device_name = \
-            input_devices.JoystickProxy()[event.device_id.windows_id].name
+            input_devices.JoystickProxy()[event.device_guid].name
         if event.event_type == InputType.JoystickAxis:
             self.condition_data.comparison = "inside"
         elif event.event_type == InputType.JoystickButton:
