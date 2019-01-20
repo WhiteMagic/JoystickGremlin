@@ -202,7 +202,7 @@ class JoystickWrapper:
 
         @property
         def value(self):
-            return DILL.get_axis(self._joystick_guid, self.index) / float(32768)
+            return DILL.get_axis(self._joystick_guid, self._index) / float(32768)
 
     class Button(Input):
 
@@ -213,7 +213,8 @@ class JoystickWrapper:
 
         @property
         def is_pressed(self):
-            return DILL.get_button(self._joystick_guid, self.index)
+            val = DILL.get_button(self._joystick_guid, self._index)
+            return val #DILL.get_button(self._joystick_guid, self._index)
 
     class Hat(Input):
 
@@ -225,7 +226,7 @@ class JoystickWrapper:
         @property
         def direction(self):
             return util.dill_hat_lookup[
-                DILL.get_hat(self._joystick_guid, self.index)
+                DILL.get_hat(self._joystick_guid, self._index)
             ]
 
     def __init__(self, device_guid):
@@ -278,7 +279,13 @@ class JoystickWrapper:
         :param index the index of the axis to return to value of
         :return the current value of the axis
         """
-        return self._axis[index-1]
+        if index not in self._axis:
+            raise error.GremlinError(
+                "Invalid axis {} specified for device {}".format(
+                    index,
+                    self._device_guid
+            ))
+        return self._axis[index]
 
     def button(self, index):
         """Returns the current state of the button with the given index.
@@ -288,7 +295,14 @@ class JoystickWrapper:
         :param index the index of the axis to return to value of
         :return the current state of the button
         """
-        return self._buttons[index-1]
+        if not (0 < index < len(self._buttons)):
+            raise error.GremlinError(
+                "Invalid button {} specified for device {}".format(
+                    index,
+                    self._device_guid
+                )
+            )
+        return self._buttons[index]
 
     def hat(self, index):
         """Returns the current state of the hat with the given index.
@@ -298,7 +312,14 @@ class JoystickWrapper:
         :param index the index of the hat to return to value of
         :return the current state of the hat
         """
-        return self._hats[index-1]
+        if not (0 < index < len(self._hats)):
+            raise error.GremlinError(
+                "Invalid hat {} specified for device {}".format(
+                    index,
+                    self._device_guid
+                )
+            )
+        return self._hats[index]
 
     def axis_count(self):
         """Returns the number of axis of the joystick.
@@ -312,9 +333,10 @@ class JoystickWrapper:
 
         :return list of JoystickWrapper.Axis objects
         """
-        axes = []
+        axes = {}
         for i in range(self._info.axis_count):
-            axes.append(JoystickWrapper.Axis(self._device_guid, i))
+            aid = self._info.axis_map[i].axis_index
+            axes[aid] = JoystickWrapper.Axis(self._device_guid, aid)
         return axes
 
     def _init_buttons(self):
@@ -322,9 +344,9 @@ class JoystickWrapper:
 
         :return list of JoystickWrapper.Button objects
         """
-        buttons = []
+        buttons = [None,]
         for i in range(self._info.button_count):
-            buttons.append(JoystickWrapper.Button(self._device_guid, i))
+            buttons.append(JoystickWrapper.Button(self._device_guid, i+1))
         return buttons
 
     def _init_hats(self):
@@ -332,9 +354,9 @@ class JoystickWrapper:
 
         :return list of JoystickWrapper.Hat objects
         """
-        hats = []
+        hats = [None,]
         for i in range(self._info.hat_count):
-            hats.append(JoystickWrapper.Hat(self._device_guid, i))
+            hats.append(JoystickWrapper.Hat(self._device_guid, i+1))
         return hats
 
 
