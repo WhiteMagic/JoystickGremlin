@@ -1186,7 +1186,7 @@ class SwapDevicesUi(common.BaseDialogUi):
             ))
             counts.setAlignment(QtCore.Qt.AlignRight)
             record_button = QtWidgets.QPushButton(
-                "Assigned to: {:d} - {:}".format(data.device_guid, data.name)
+                "Assigned to: {} - {}".format(data.device_guid, data.name)
             )
             record_button.clicked.connect(
                 self._create_request_user_input_cb(data.device_guid)
