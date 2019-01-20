@@ -411,6 +411,7 @@ class MapToMouse(AbstractAction):
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
+        InputType.Keyboard
     ]
 
     functor = MapToMouseFunctor
@@ -422,11 +423,6 @@ class MapToMouse(AbstractAction):
         :param parent the container this action is part of
         """
         super().__init__(parent)
-        assert self.get_input_type() in [
-            InputType.JoystickAxis,
-            InputType.JoystickButton,
-            InputType.JoystickHat
-        ]
 
         # Flag whether or not this is mouse motion or button press
         self.motion_input = False
