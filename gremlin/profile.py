@@ -678,9 +678,7 @@ class ProfileModifier:
 
         :return list of devices used in the profile and information about them
         """
-        device_guids = []
-        for device_guid in self.profile.devices:
-            device_guids.append(device_guid)
+        device_guids = list(self.profile.devices.keys())
         for cond in self.all_conditions():
             if isinstance(cond, base_classes.JoystickCondition):
                 device_guids.append(cond.device_guid)
@@ -689,9 +687,10 @@ class ProfileModifier:
                 device_guids.append(entry[key]["device-guid"])
 
         device_info = []
-        for device_guid in set(device_guids):
+        for device_guid, device in self.profile.devices.items():
             device_info.append(ProfileDeviceInformation(
                 device_guid,
+                device.name,
                 self.container_count(device_guid),
                 self.condition_count(device_guid),
                 self.merge_axis_count(device_guid)
@@ -699,25 +698,25 @@ class ProfileModifier:
 
         return device_info
 
-    def container_count(self, hid_wid_tuple):
+    def container_count(self, device_guid):
         """Returns the number of containers associated with a device.
 
-        :param hid_wid_tuple tuple of hardware and windows id
+        :param device_guid GUID of the target device
         :return number of containers associated with the given device
         """
         count = 0
-        for device_id, device in self.profile.devices.items():
-            if self._equal_ids(device_id, hid_wid_tuple):
+        for dev_guid, device in self.profile.devices.items():
+            if dev_guid == device_guid:
                 for mode in device.modes.values():
                     for input_items in mode.config.values():
                         for input_item in input_items.values():
                             count += len(input_item.containers)
         return count
 
-    def condition_count(self, hid_wid_tuple):
+    def condition_count(self, device_guid):
         """Returns the number of conditions associated with a device.
 
-        :param hid_wid_tuple tuple of hardware and windows id
+        :param device_guid GUID of the target device
         :return number of conditions associated with the given device
         """
         count = 0
@@ -726,19 +725,16 @@ class ProfileModifier:
                 count += 1
         return count
 
-    def merge_axis_count(self, hid_wid_tuple):
+    def merge_axis_count(self, device_guid):
         """Returns the number of merge axes associated with a device.
 
-        :param hid_wid_tuple tuple of hardware and windows id
+        :param device_guid GUID of the target device
         :return number of merge axes associated with the given device
         """
         count = 0
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
-                cur_hw_id = (
-                    entry[key]["device_guid"], entry[key]["device_guid"]
-                )
-                if cur_hw_id == hid_wid_tuple:
+                if entry[key]["device_guid"] == hid_wid_tuple:
                     count += 1
         return count
 
@@ -894,8 +890,8 @@ class ProfileModifier:
 
         :return device_guid matching the identifier if present
         """
-        for devid, device in self.profile.devices.items():
-            if devid.device_guid == device_guid:
+        for dev_guid, device in self.profile.devices.items():
+            if dev_guid == device_guid:
                 return device
         return None
 
