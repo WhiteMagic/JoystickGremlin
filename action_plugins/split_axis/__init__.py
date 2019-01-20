@@ -23,7 +23,7 @@ from xml.etree import ElementTree
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
-from gremlin.profile import parse_guid, safe_read, safe_format, write_guid
+from gremlin.profile import safe_read, safe_format
 from gremlin import util
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -78,7 +78,8 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.split_slider.setValue(self.action_data.center_point * 1e5)
         self.split_readout.setValue(self.action_data.center_point)
         try:
-            if self.action_data.axis1 is None:
+            if self.action_data.device_low_vjoy_id is None or \
+                    self.action_data.device_low_axis is None:
                 self.vjoy_selector_1.set_selection(
                     InputType.JoystickAxis,
                     -1,
@@ -87,10 +88,11 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             else:
                 self.vjoy_selector_1.set_selection(
                     InputType.JoystickAxis,
-                    self.action_data.device_low_guid,
+                    self.action_data.device_low_vjoy_id,
                     self.action_data.device_low_axis
                 )
-            if self.action_data.axis2 is None:
+            if self.action_data.device_high_vjoy_id is None or \
+                    self.action_data.device_high_axis is None:
                 self.vjoy_selector_2.set_selection(
                     InputType.JoystickAxis,
                     -1,
@@ -99,9 +101,12 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             else:
                 self.vjoy_selector_2.set_selection(
                     InputType.JoystickAxis,
-                    self.action_data.device_high_guid,
+                    self.action_data.device_high_vjoy_id,
                     self.action_data.device_high_axis
                 )
+
+            self.save_vjoy_selection(1)
+            self.save_vjoy_selection(2)
         except gremlin.error.GremlinError as e:
             # FIXME: This error here should only have been needed due to the
             #        vJoy selector attempting to acquire a vJoy device, this
@@ -126,11 +131,11 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
         """
         if axis_id == 1:
             data = self.vjoy_selector_1.get_selection()
-            self.action_data.device_low_guid = data["device_guid"]
+            self.action_data.device_low_vjoy_id = data["device_id"]
             self.action_data.device_low_axis = data["input_id"]
         elif axis_id == 2:
             data = self.vjoy_selector_2.get_selection()
-            self.action_data.device_high_guid = data["device_guid"]
+            self.action_data.device_high_vjoy_id = data["device_id"]
             self.action_data.device_high_axis = data["input_id"]
 
     def save_center_point(self):
@@ -164,22 +169,28 @@ class SplitAxisFunctor(AbstractFunctor):
 
     def __init__(self, action):
         super().__init__(action)
-        self.center_point = action.center_point
-        self.axis1 = action.axis1
-        self.axis2 = action.axis2
+        self.action = action
         self.vjoy = gremlin.joystick_handling.VJoyProxy()
 
     def process_event(self, event, value):
-        if value.current < self.center_point:
-            value_range = -1.0 - self.center_point
-            self.vjoy[self.axis1[0]].axis(self.axis1[1]).value = \
-                ((value.current - self.center_point) / value_range) * 2.0 - 1.0
-            self.vjoy[self.axis2[0]].axis(self.axis2[1]).value = -1.0
+        if value.current < self.action.center_point:
+            value_range = -1.0 - self.action.center_point
+            self.vjoy[self.action.device_low_vjoy_id].axis(
+                self.action.device_low_axis
+            ).value = ((value.current - self.action.center_point) /
+                       value_range) * 2.0 - 1.0
+            self.vjoy[self.action.device_high_vjoy_id].axis(
+                self.action.device_high_axis
+            ).value = -1.0
         else:
-            value_range = 1.0 - self.center_point
-            self.vjoy[self.axis2[0]].axis(self.axis2[1]).value = \
-                ((value.current - self.center_point) / value_range) * 2.0 - 1.0
-            self.vjoy[self.axis1[0]].axis(self.axis1[1]).value = -1.0
+            value_range = 1.0 - self.action.center_point
+            self.vjoy[self.action.device_high_vjoy_id].axis(
+                self.action.device_high_axis
+            ).value = ((value.current - self.action.center_point) /
+                       value_range) * 2.0 - 1.0
+            self.vjoy[self.action.device_low_vjoy_id].axis(
+                self.action.device_low_axis
+            ).value = -1.0
 
         return True
 
@@ -201,8 +212,10 @@ class SplitAxis(AbstractAction):
         super().__init__(parent)
 
         self.center_point = 0.0
-        self.axis1 = None
-        self.axis2 = None
+        self.device_low_axis = None
+        self.device_low_vjoy_id = None
+        self.device_high_axis = None
+        self.device_high_vjoy_id = None
 
     def icon(self):
         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
@@ -212,16 +225,16 @@ class SplitAxis(AbstractAction):
 
     def _parse_xml(self, node):
         self.center_point = float(node.get("center-point"))
-        self.device_low_guid = parse_guid(node.get("device-low-guid"))
-        self.device_high_guid = parse_guid(node.get("device-high-guid"))
+        self.device_low_vjoy_id = safe_read(node, "device-low-vjoy-id", int)
+        self.device_high_vjoy_id = safe_read(node, "device-high-vjoy_id", int)
         self.device_low_axis = safe_read(node, "device-low-axis", int)
         self.device_high_axis = safe_read(node, "device-high-axis", int)
 
     def _generate_xml(self):
         node = ElementTree.Element("split-axis")
         node.set("center-point", safe_format(self.center_point, float))
-        node.set("device-low-guid", write_guid(self.device_low_guid))
-        node.set("device-high-guid", write_guid(self.device_high_guid))
+        node.set("device-low-vjoy-id", safe_format(self.device_low_vjoy_id, int))
+        node.set("device-high-vjoy-id", safe_format(self.device_high_vjoy_id, int))
         node.set("device-low-axis", safe_format(self.device_low_axis, int))
         node.set("device-high-axis", safe_format(self.device_high_axis, int))
 
