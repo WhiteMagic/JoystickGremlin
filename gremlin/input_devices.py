@@ -26,7 +26,8 @@ from PyQt5 import QtCore
 
 from dill import DILL
 
-from . import common, error, event_handler, joystick_handling, macro, util
+from . import common, error, event_handler, joystick_handling, \
+    macro, profile, util
 
 
 class CallbackRegistry:
@@ -517,14 +518,17 @@ class JoystickDecorator:
         """
         self.name = name
         self.mode = mode
+        # Convert string based GUID to the actual GUID object
+        device_guid_obj = profile.parse_guid(device_guid)
+
         self.axis = functools.partial(
-            _axis, device_guid=device_guid, mode=mode
+            _axis, device_guid=device_guid_obj, mode=mode
         )
         self.button = functools.partial(
-            _button, device_guid=device_guid, mode=mode
+            _button, device_guid=device_guid_obj, mode=mode
         )
         self.hat = functools.partial(
-            _hat, device_guid=device_guid, mode=mode
+            _hat, device_guid=device_guid_obj, mode=mode
         )
 
 
