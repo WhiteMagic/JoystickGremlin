@@ -220,7 +220,7 @@ class ProfileConverter:
     """Handle converting and checking profiles."""
 
     # Current profile version number
-    current_version = 8
+    current_version = 9
 
     def __init__(self):
         pass
@@ -256,6 +256,7 @@ class ProfileConverter:
             5: self._convert_from_v5,
             6: self._convert_from_v6,
             7: self._convert_from_v7,
+            8: self._convert_from_v8,
         }
 
         # Create a backup of the outdated profile
@@ -611,6 +612,233 @@ class ProfileConverter:
             node.set("motion_input", "True")
 
         return root
+
+    def _convert_from_v8(self, root, fname=None):
+        """Convert from a V8 profile to V9.
+
+        Performs the following changes:
+        - Merge axis attribut'es reworked
+          - vjoy.device => vjoy.vjoy-id
+          - vjoy.axis => vjoy.axis-id
+          - lower/upper.id => lower/upper.device-guid
+          - lower/upper.axis => lower/upper.axis-id
+        - Macro attribute changes
+          - macro.actions.joystick
+            - device_id => device-guid
+            - input_type => input-type
+            - input_id => input-id
+          - macro.actions.key
+            - scan_code => scan-code
+          - macro.actions.vjoy
+            - vjoy_id => vjoy-id
+            - input_type => input-type
+            - input_id => input-id
+        - Map to keyboard
+          - map-to-keyboard.key
+            - scan_code => scan-code
+        - Map to mouse
+          - map-to-mouse
+              - motion_input => motion-input
+              - button_id => button-id
+        - Split axis
+          - split-axis
+            - device1 => device-low-vjoy-id
+            - axis1 => device-low-axis
+            - device2 => device-high-vjoy-id
+            - axis2 => device-high-axis
+        - Conditions
+          - condition
+            - scan_code => scan-code
+            - range_low => range-low
+            - range_high => range-high
+            - device_name => device-name
+            - device_id => removed
+            - windows_id => removed
+            - device-guid => added
+
+        Parameters
+        ----------
+        root : ElementTree
+            Root of the XML tree being modified
+
+        Returns
+        -------
+        ElementTree
+            Modified XML root element
+        """
+        root.attrib["version"] = "9"
+        syslog = logging.getLogger("system")
+
+        class UUIDConverter:
+
+            def __init__(self):
+                # Map for old hardware id to new guid value
+                self.hwid_to_guid = {}
+                for dev in joystick_handling.joystick_devices():
+                    hwid = (dev.vendor_id << 16) + dev.product_id
+                    self.hwid_to_guid[hwid] = str(dev.device_guid)
+                self.vjoy_to_guid = {}
+                for dev in joystick_handling.vjoy_devices():
+                    self.vjoy_to_guid[dev.vjoy_id] = str(dev.device_guid)
+
+            def lookup(self, hardware_id, name=None):
+                try:
+                    hardware_id = int(hardware_id)
+                except (ValueError, TypeError):
+                    syslog.warn(
+                        "Cannot convert {} into a valid hardware id".format(
+                            hardware_id
+                        )
+                    )
+                    return "{{{}}}".format(uuid.uuid4())
+
+                if hardware_id not in self.hwid_to_guid:
+                    syslog.warn(
+                        "GUID for device {} with hardware_id {} is "
+                        "unknown.".format(
+                            "" if name is None else name,
+                            hardware_id
+                        )
+                    )
+                    self.hwid_to_guid[hardware_id] = "{{{}}}".format(uuid.uuid4())
+
+                return self.hwid_to_guid[hardware_id]
+
+            def vjoy_lookup(self, vjoy_id):
+                try:
+                    vjoy_id = int(vjoy_id)
+                except (ValueError, TypeError):
+                    syslog.warn(
+                        "Cannot convert {} into a valid vjoy id".format(vjoy_id)
+                    )
+                    return "{{{}}}".format(uuid.uuid4())
+
+                if vjoy_id not in self.vjoy_to_guid:
+                    syslog.warn(
+                        "GUID for vjoy {} is unknown".format(vjoy_id)
+                    )
+                    self.vjoy_to_guid[vjoy_id] = "{{{}}}".format(uuid.uuid4())
+
+                return self.vjoy_to_guid[vjoy_id]
+
+
+        uuid_converter = UUIDConverter()
+
+        for entry in root.findall("devices/device"):
+            if entry.attrib.get("type", None) == "keyboard":
+                entry.set("device-guid", str(dill.GUID_Keyboard))
+            else:
+                entry.set(
+                    "device-guid",
+                    uuid_converter.lookup(
+                        entry.attrib.get("id", None),
+                        entry.attrib.get("name", "")
+                    )
+                )
+
+            # Remove the now obsolete id and windows id attributes
+            del entry.attrib["id"]
+            del entry.attrib["windows_id"]
+
+        for entry in root.findall("vjoy-devices/vjoy-device"):
+            entry.set("vjoy-id", entry.attrib["id"])
+            entry.set(
+                "device-guid",
+                uuid_converter.vjoy_lookup(int(entry.attrib["id"]))
+            )
+            del entry.attrib["id"]
+            del entry.attrib["windows_id"]
+
+        for entry in root.findall(".//condition"):
+            replacements = [
+                ("scan_code", "scan-code"),
+                ("range_low", "range-low"),
+                ("range_high", "range-high"),
+                ("device_name", "device-name")
+            ]
+            for rep in replacements:
+                if rep[0] in entry.keys():
+                    entry.set(rep[1], entry.attrib[rep[0]])
+                    del entry.attrib[rep[0]]
+            if "device_id" in entry.keys():
+                entry.set(
+                    "device-guid",
+                    uuid_converter.lookup(entry.attrib.get("device_id", None))
+                )
+                del entry.attrib["device_id"]
+                del entry.attrib["windows_id"]
+
+        for entry in root.findall(".//macro/actions/joystick"):
+            entry.set(
+                "device-guid",
+                uuid_converter.lookup(entry.attrib.get("id", None))
+            )
+            entry.set("input-type", entry.attrib["input_type"])
+            entry.set("input-id", entry.attrib["input_id"])
+            del entry["device_id"]
+            del entry["input_type"]
+            del entry["input_id"]
+
+        for entry in root.findall(".//macro/actions/key"):
+            entry.set("scan-code", entry.attrib["scan_code"])
+            del entry.attrib["scan_code"]
+
+        for entry in root.findall(".//macro/actions/vjoy"):
+            entry.set("vjoy-id", entry.attrib["vjoy_id"])
+            entry.set("input-type", entry.attrib["input_type"])
+            entry.set("input-id", entry.attrib["input_id"])
+            del entry.attrib["vjoy_id"]
+            del entry.attrib["input_type"]
+            del entry.attrib["input_id"]
+
+        for entry in root.findall(".//merge-axis/vjoy"):
+            entry.set("vjoy-id", entry.attrib["device"])
+            entry.set("axis-id", entry.attrib["axis"])
+            del entry.attrib["device"]
+            del entry.attrib["axis"]
+
+        for entry in root.findall(".//merge-axis/lower"):
+            entry.set(
+                "device-guid",
+                uuid_converter.lookup(entry.attrib.get("id", None))
+            )
+            entry.set("axis-id", entry.attrib["axis"])
+            del entry.attrib["id"]
+            del entry.attrib["axis"]
+            del entry.attrib["windows_id"]
+
+        for entry in root.findall(".//merge-axis/upper"):
+            entry.set(
+                "device-guid",
+                uuid_converter.lookup(entry.attrib.get("id", None))
+            )
+            entry.set("axis-id", entry.attrib["axis"])
+            del entry.attrib["id"]
+            del entry.attrib["axis"]
+            del entry.attrib["windows_id"]
+
+        for entry in root.findall(".//map-to-keyboard/key"):
+            entry.set("scan-code", entry.attrib["scan_code"])
+            del entry.attrib["scan_code"]
+
+        for entry in root.findall(".//map-to-mouse"):
+            entry.set("motion-input", entry.attrib["motion_input"])
+            entry.set("button-id", entry.attrib["button_id"])
+            del entry.attrib["motion_input"]
+            del entry.attrib["button_id"]
+
+        for entry in root.findall(".//split-axis"):
+            entry.set("device-low-vjoy-id", entry.attrib["device1"])
+            entry.set("device-low-axis", entry.attrib["axis1"])
+            entry.set("device-high-vjoy-id", entry.attrib["device2"])
+            entry.set("device-high-axis", entry.attrib["axis2"])
+            del entry.attrib["device1"]
+            del entry.attrib["axis1"]
+            del entry.attrib["device2"]
+            del entry.attrib["axis2"]
+
+        return root
+
 
     def _p3_extract_map_to_keyboard(self, input_item):
         """Converts an old macro setup to a map to keyboard action.
