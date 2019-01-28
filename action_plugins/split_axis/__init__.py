@@ -226,7 +226,7 @@ class SplitAxis(AbstractAction):
     def _parse_xml(self, node):
         self.center_point = float(node.get("center-point"))
         self.device_low_vjoy_id = safe_read(node, "device-low-vjoy-id", int)
-        self.device_high_vjoy_id = safe_read(node, "device-high-vjoy_id", int)
+        self.device_high_vjoy_id = safe_read(node, "device-high-vjoy-id", int)
         self.device_low_axis = safe_read(node, "device-low-axis", int)
         self.device_high_axis = safe_read(node, "device-high-axis", int)
 
