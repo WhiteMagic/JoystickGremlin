@@ -1601,8 +1601,8 @@ class Device:
         """
         self.name = node.get("name")
         self.label = safe_read(node, "label", default_value=self.name)
-        self.device_guid = parse_guid(node.get("device-guid"))
         self.type = DeviceType.to_enum(safe_read(node, "type", str))
+        self.device_guid = parse_guid(node.get("device-guid"))
 
         for child in node:
             mode = Mode(self)
@@ -1657,7 +1657,11 @@ class Mode:
             item.from_xml(child)
 
             store_item = True
-            if item.input_type == InputType.JoystickAxis:
+            # This can fail if the device in question is not connected, in
+            # which case we'll simply save the action item without
+            # verification.
+            if item.input_type == InputType.JoystickAxis \
+                    and dill.DILL.device_exists(self.parent.device_guid):
                 joy = input_devices.JoystickProxy()[self.parent.device_guid]
                 store_item = joy.is_axis_valid(item.input_id)
 
