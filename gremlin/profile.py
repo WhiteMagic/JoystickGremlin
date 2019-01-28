@@ -248,47 +248,28 @@ class ProfileConverter:
         if self.is_current(fname):
             return
 
+        conversion_map = {
+            1: self._convert_from_v1,
+            2: self._convert_from_v2,
+            3: self._convert_from_v3,
+            4: self._convert_from_v4,
+            5: self._convert_from_v5,
+            6: self._convert_from_v6,
+            7: self._convert_from_v7,
+        }
+
         # Create a backup of the outdated profile
         old_version = self._determine_version(root)
         shutil.copyfile(fname, "{}.v{:d}".format(fname, old_version))
 
         # Convert the profile
         new_root = None
-        if old_version == 1:
-            new_root = self._convert_from_v1(root)
-            new_root = self._convert_from_v2(new_root)
-            new_root = self._convert_from_v3(new_root)
-            new_root = self._convert_from_v4(new_root)
-            new_root = self._convert_from_v5(new_root)
-            new_root = self._convert_from_v6(new_root, fname)
-            new_root = self._convert_from_v7(new_root)
-        if old_version == 2:
-            new_root = self._convert_from_v2(root)
-            new_root = self._convert_from_v3(new_root)
-            new_root = self._convert_from_v4(new_root)
-            new_root = self._convert_from_v5(new_root)
-            new_root = self._convert_from_v6(new_root, fname)
-            new_root = self._convert_from_v7(new_root)
-        if old_version == 3:
-            new_root = self._convert_from_v3(root)
-            new_root = self._convert_from_v4(new_root)
-            new_root = self._convert_from_v5(new_root)
-            new_root = self._convert_from_v6(new_root, fname)
-            new_root = self._convert_from_v7(new_root)
-        if old_version == 4:
-            new_root = self._convert_from_v4(root)
-            new_root = self._convert_from_v5(new_root)
-            new_root = self._convert_from_v6(new_root, fname)
-            new_root = self._convert_from_v7(new_root)
-        if old_version == 5:
-            new_root = self._convert_from_v5(root)
-            new_root = self._convert_from_v6(new_root, fname)
-            new_root = self._convert_from_v7(new_root)
-        if old_version == 6:
-            new_root = self._convert_from_v6(root, fname)
-            new_root = self._convert_from_v7(new_root)
-        if old_version == 7:
-            new_root = self._convert_from_v7(root)
+        while old_version < ProfileConverter.current_version:
+            if new_root is None:
+                new_root = conversion_map[old_version](root, fname=fname)
+            else:
+                new_root = conversion_map[old_version](new_root, fname=fname)
+            old_version += 1
 
         if new_root is not None:
             # Save converted version
@@ -308,26 +289,14 @@ class ProfileConverter:
         """
         if root.tag == "devices" and int(root.get("version")) == 1:
             return 1
-        elif root.tag == "profile" and int(root.get("version")) == 2:
-            return 2
-        elif root.tag == "profile" and int(root.get("version")) == 3:
-            return 3
-        elif root.tag == "profile" and int(root.get("version")) == 4:
-            return 4
-        elif root.tag == "profile" and int(root.get("version")) == 5:
-            return 5
-        elif root.tag == "profile" and int(root.get("version")) == 6:
-            return 6
-        elif root.tag == "profile" and int(root.get("version")) == 7:
-            return 7
-        elif root.tag == "profile" and int(root.get("version")) == 8:
-            return 8
+        elif root.tag == "profile":
+            return int(root.get("version"))
         else:
             raise error.ProfileError(
                 "Invalid profile version encountered"
             )
 
-    def _convert_from_v1(self, root):
+    def _convert_from_v1(self, root, fname=None):
         """Converts v1 profiles to v2 profiles.
 
         :param root the v1 profile
@@ -355,7 +324,7 @@ class ProfileConverter:
 
         return new_root
 
-    def _convert_from_v2(self, root):
+    def _convert_from_v2(self, root, fname=None):
         """Converts v2 profiles to v3 profiles.
 
         :param root the v2 profile
@@ -380,7 +349,7 @@ class ProfileConverter:
                     )
         return new_root
 
-    def _convert_from_v3(self, root):
+    def _convert_from_v3(self, root, fname=None):
         """Converts v3 profiles to v4 profiles.
         
         The following operations are performed in this conversion:
@@ -509,7 +478,7 @@ class ProfileConverter:
 
         return new_root
 
-    def _convert_from_v4(self, root):
+    def _convert_from_v4(self, root, fname=None):
         """Converts v4 profiles to v5 profiles.
 
         The following operations are performed in this conversion:
@@ -543,7 +512,7 @@ class ProfileConverter:
 
         return new_root
 
-    def _convert_from_v5(self, root):
+    def _convert_from_v5(self, root, fname=None):
         """Converts v5 profiles to v6 profiles.
 
         The following operations are performed in this conversion:
@@ -611,7 +580,7 @@ class ProfileConverter:
 
         return root
 
-    def _convert_from_v7(self, root):
+    def _convert_from_v7(self, root, fname=None):
         """Convert from a V7 profile to V8.
 
         This updates map to mouse actions to the new format.
