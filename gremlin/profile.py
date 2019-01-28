@@ -669,9 +669,13 @@ class ProfileConverter:
         root.attrib["version"] = "9"
         syslog = logging.getLogger("system")
 
-        class UUIDConverter:
+        class GUIDConverter:
+
+            """Simplifies conversion from old device identifiers to the new
+            GUID ones."""
 
             def __init__(self):
+                """Initializes the converter by caching needed values."""
                 # Map for old hardware id to new guid value
                 self.hwid_to_guid = {}
                 self.dev_info = {}
@@ -683,17 +687,32 @@ class ProfileConverter:
                 for dev in joystick_handling.vjoy_devices():
                     self.vjoy_to_guid[dev.vjoy_id] = str(dev.device_guid)
 
-            def axis_lookup(self, device_guid, axis_id):
+            def axis_lookup(self, device_guid, linear_id):
+                """Returns the axis id for the given linear index.
+
+                :param device_guid GUID of the device of interest
+                :param linear_id linear axis index to convert into axis index
+                :return axis index corresponding to the linear index
+                """
                 if device_guid not in self.dev_info:
-                    return axis_id
+                    return linear_id
 
                 device = self.dev_info[device_guid]
-                if axis_id > device.axis_count:
-                    return axis_id
+                if linear_id > device.axis_count:
+                    return linear_id
 
-                return device.axis_map[axis_id].axis_index
+                return device.axis_map[linear_id].axis_index
 
             def lookup(self, hardware_id, name=None):
+                """Returns the GUID for the provided hardware id.
+
+                This will create a random GUID if the device is not currently
+                connected.
+
+                :param hardware_id old style hardware id
+                :param name name of the device if available
+                :return GUID corresponding to the provided hardware id
+                """
                 try:
                     hardware_id = int(hardware_id)
                 except (ValueError, TypeError):
@@ -717,6 +736,14 @@ class ProfileConverter:
                 return self.hwid_to_guid[hardware_id]
 
             def vjoy_lookup(self, vjoy_id):
+                """Returns the GUID corresponding to a specific vjoy device.
+
+                This will create a random GUID if the device is not currently
+                connected.
+
+                :param vjoy_id vjoy id of the device
+                :return GUID corresponding to the vjoy device
+                """
                 try:
                     vjoy_id = int(vjoy_id)
                 except (ValueError, TypeError):
@@ -733,8 +760,8 @@ class ProfileConverter:
 
                 return self.vjoy_to_guid[vjoy_id]
 
-
-        uuid_converter = UUIDConverter()
+        # Initialize the GUID converter
+        uuid_converter = GUIDConverter()
 
         for entry in root.findall("devices/device"):
             if entry.attrib.get("type", None) == "keyboard":
@@ -859,7 +886,6 @@ class ProfileConverter:
             del entry.attrib["axis2"]
 
         return root
-
 
     def _p3_extract_map_to_keyboard(self, input_item):
         """Converts an old macro setup to a map to keyboard action.
