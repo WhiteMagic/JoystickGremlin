@@ -21,8 +21,6 @@ import re
 import sys
 
 import gremlin.common
-from mako.lookup import TemplateLookup
-from mako.template import Template
 
 import gremlin
 
@@ -36,7 +34,7 @@ class CodeGenerator:
 
         :param config_profile profile for which to generate code
         """
-        self.code = ""
+        self.code = []
         self.generate_from_profile(config_profile)
 
     def generate_from_profile(self, config_profile):
@@ -46,17 +44,16 @@ class CodeGenerator:
         """
         assert (isinstance(config_profile, gremlin.profile.Profile))
 
-        # Create output by rendering it via the template system
-        tpl_lookup = TemplateLookup(directories=["."])
-        tpl = Template(
-            filename="templates/gremlin_code.tpl",
-            lookup=tpl_lookup
-        )
-        module_imports = self._process_module_imports(config_profile.imports)
-        self.code = tpl.render(
-            gremlin=gremlin,
-            module_imports=module_imports,
-        )
+        self.code.append("import importlib")
+        self.code.append("import gremlin")
+
+        for module_name in self._process_module_imports(config_profile.imports):
+            self.code.append(
+                "{} = gremlin.util.load_module(\"{}\")".format(
+                    module_name,
+                    module_name
+                )
+            )
 
     def _process_module_imports(self, imports):
         # Create fully normalized set of system path names
@@ -91,6 +88,5 @@ class CodeGenerator:
 
         :param fname path to the file into which to write the code
         """
-        code = re.sub("\r", "", self.code)
         with open(fname, "w") as out:
-            out.write(code)
+            out.write("\n".join(self.code))
