@@ -775,9 +775,9 @@ class ProfileConverter:
             )
             entry.set("input-type", entry.attrib["input_type"])
             entry.set("input-id", entry.attrib["input_id"])
-            del entry["device_id"]
-            del entry["input_type"]
-            del entry["input_id"]
+            del entry.attrib["device_id"]
+            del entry.attrib["input_type"]
+            del entry.attrib["input_id"]
 
         for entry in root.findall(".//macro/actions/key"):
             entry.set("scan-code", entry.attrib["scan_code"])
