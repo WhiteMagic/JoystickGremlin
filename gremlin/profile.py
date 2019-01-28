@@ -1472,7 +1472,7 @@ class Profile:
                 node.append(sub_node)
             for tag in ["lower", "upper"]:
                 sub_node = ElementTree.Element(tag)
-                sub_node.set("device-guid", safe_format(entry[tag]["device_guid"], str))
+                sub_node.set("device-guid", write_guid(entry[tag]["device_guid"]))
                 sub_node.set("axis-id", safe_format(entry[tag]["axis_id"], int))
                 node.append(sub_node)
             root.append(node)
