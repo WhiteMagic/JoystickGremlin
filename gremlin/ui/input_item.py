@@ -703,6 +703,9 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.virtual_button_layout.addStretch(10)
 
     def _select_tab(self, view_type):
+        if view_type is None:
+            return
+
         try:
             tab_title = common.ContainerViewTypes.to_string(view_type).title()
             for i in range(self.dock_tabs.count()):
