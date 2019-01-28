@@ -146,7 +146,7 @@ class CodeRunner:
             # Create merge axis callbacks
             for entry in profile.merge_axes:
                 merge_axis = MergeAxis(
-                    entry["vjoy"]["device_id"],
+                    entry["vjoy"]["vjoy_id"],
                     entry["vjoy"]["axis_id"]
                 )
                 self._merge_axes.append(merge_axis)
