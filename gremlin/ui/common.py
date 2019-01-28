@@ -36,14 +36,18 @@ class ContainerViewTypes(enum.Enum):
         try:
             return _ContainerView_to_string_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError("Invalid type in lookup")
+            raise gremlin.error.GremlinError(
+                "Invalid type in container lookup, {}".format(value)
+            )
 
     @staticmethod
     def to_enum(value):
         try:
             return _ContainerView_to_enum_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError("Invalid type in lookup")
+            raise gremlin.error.GremlinError(
+                "Invalid type in container lookup, {}".format(value)
+            )
 
 
 _ContainerView_to_enum_lookup = {
