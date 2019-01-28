@@ -771,7 +771,7 @@ class ProfileConverter:
         for entry in root.findall(".//macro/actions/joystick"):
             entry.set(
                 "device-guid",
-                uuid_converter.lookup(entry.attrib.get("id", None))
+                uuid_converter.lookup(entry.attrib.get("device_id", None))
             )
             entry.set("input-type", entry.attrib["input_type"])
             entry.set("input-id", entry.attrib["input_id"])
