@@ -584,13 +584,13 @@ class MacroListModel(QtCore.QAbstractListModel):
         entry = self._data[idx]
         if role == QtCore.Qt.DisplayRole:
             if isinstance(entry, gremlin.macro.JoystickAction):
-                cur_joystick = None
+                device_name = "Unknown"
                 for joy in gremlin.joystick_handling.joystick_devices():
                     if joy.device_guid == entry.device_guid:
-                        cur_joystick = joy
+                        device_name = joy.name
 
                 return "{} {} {} - {}".format(
-                    cur_joystick.name,
+                    device_name,
                     InputType.to_string(entry.input_type).capitalize(),
                     entry.input_id,
                     MacroListModel.value_format[entry.input_type](entry)
