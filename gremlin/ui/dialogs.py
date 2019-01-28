@@ -711,7 +711,6 @@ class AboutUi(common.BaseDialogUi):
 
         license_list = [
             "about/third_party_licenses.html",
-            "about/mako.html",
             "about/modernuiicons.html",
             "about/pyqt.html",
             "about/pywin32.html",
