@@ -674,12 +674,24 @@ class ProfileConverter:
             def __init__(self):
                 # Map for old hardware id to new guid value
                 self.hwid_to_guid = {}
+                self.dev_info = {}
                 for dev in joystick_handling.joystick_devices():
                     hwid = (dev.vendor_id << 16) + dev.product_id
                     self.hwid_to_guid[hwid] = str(dev.device_guid)
+                    self.dev_info[str(dev.device_guid)] = dev
                 self.vjoy_to_guid = {}
                 for dev in joystick_handling.vjoy_devices():
                     self.vjoy_to_guid[dev.vjoy_id] = str(dev.device_guid)
+
+            def axis_lookup(self, device_guid, axis_id):
+                if device_guid not in self.dev_info:
+                    return axis_id
+
+                device = self.dev_info[device_guid]
+                if axis_id > device.axis_count:
+                    return axis_id
+
+                return device.axis_map[axis_id].axis_index
 
             def lookup(self, hardware_id, name=None):
                 try:
@@ -739,6 +751,15 @@ class ProfileConverter:
             # Remove the now obsolete id and windows id attributes
             del entry.attrib["id"]
             del entry.attrib["windows_id"]
+
+            for child in entry.findall("mode/axis"):
+                child.set(
+                    "id",
+                    str(uuid_converter.axis_lookup(
+                        entry.attrib["device-guid"],
+                        int(child.attrib["id"])-1
+                    ))
+                )
 
         for entry in root.findall("vjoy-devices/vjoy-device"):
             entry.set("vjoy-id", entry.attrib["id"])
