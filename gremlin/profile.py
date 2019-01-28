@@ -71,17 +71,24 @@ def read_bool(node, key, default_value=False):
     :param default_value the default value to return in case of errors
     """
     try:
-        return parse_bool(node.get(key))
+        return parse_bool(node.get(key), default_value)
     except error.ProfileError:
         return default_value
 
 
-def parse_bool(value):
+def parse_bool(value, default_value=False):
     """Returns the boolean representation of the provided value.
 
     :param value the value as string to parse
+    :param default_value value to return in case no valid value was provided
     :return representation of value as either True or False
     """
+    # Terminate early if the value is None to start with, i.e. we know it will
+    # fail
+    if value is None:
+        return default_value
+
+    # Attempt to parse the value
     try:
         int_value = int(value)
         if int_value in [0, 1]:
