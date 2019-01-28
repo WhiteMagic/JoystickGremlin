@@ -1432,7 +1432,7 @@ class Profile:
         """
         # Generate XML document
         root = ElementTree.Element("profile")
-        root.set("version", "8")
+        root.set("version", str(ProfileConverter.current_version))
 
         # Device settings
         devices = ElementTree.Element("devices")
