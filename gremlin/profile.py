@@ -929,19 +929,24 @@ class ProfileModifier:
 
         :return list of devices used in the profile and information about them
         """
-        device_guids = list(self.profile.devices.keys())
+        device_guids = []
+        device_names = {}
+        for guid, dev in self.profile.devices.items():
+            device_guids.append(guid)
+            device_names[guid] = dev.name
         for cond in self.all_conditions():
             if isinstance(cond, base_classes.JoystickCondition):
                 device_guids.append(cond.device_guid)
+                device_names[cond.device_guid] = cond.device_name
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
-                device_guids.append(entry[key]["device-guid"])
+                device_guids.append(entry[key]["device_guid"])
 
         device_info = []
-        for device_guid, device in self.profile.devices.items():
+        for device_guid in set(device_guids):
             device_info.append(ProfileDeviceInformation(
                 device_guid,
-                device.name,
+                device_names.get(device_guid, "Unknown"),
                 self.container_count(device_guid),
                 self.condition_count(device_guid),
                 self.merge_axis_count(device_guid)
@@ -972,7 +977,7 @@ class ProfileModifier:
         """
         count = 0
         for cond in self.all_conditions():
-            if cond == base_classes.JoystickCondition:
+            if cond.device_guid == device_guid:
                 count += 1
         return count
 
@@ -985,7 +990,7 @@ class ProfileModifier:
         count = 0
         for entry in self.profile.merge_axes:
             for key in ["lower", "upper"]:
-                if entry[key]["device_guid"] == hid_wid_tuple:
+                if entry[key]["device_guid"] == device_guid:
                     count += 1
         return count
 
@@ -1001,7 +1006,7 @@ class ProfileModifier:
 
         if source_guid == target_guid:
             logging.getLogger("system").warning(
-                "Source and target device are identical"
+                "Swap devices: Source and target device are identical"
             )
             return
 
@@ -1012,8 +1017,8 @@ class ProfileModifier:
     def change_device_actions(self, source_guid, target_guid):
         """Moves actions from the source device to the target device.
 
-        :param source_id identifier of the source device
-        :param target_id identifier of the target device
+        :param source_guid identifier of the source device
+        :param target_guid identifier of the target device
         """
         source_dev = self._get_device(source_guid)
         target_dev = self._get_device(target_guid)
@@ -1021,7 +1026,7 @@ class ProfileModifier:
         # Can't move anything from a non-existent source device
         if source_dev is None:
             logging.getLogger("system").warning(
-                "Specified a source device that doesn't exist"
+                "Swap devices: Specified a source device that doesn't exist"
             )
             return
 
@@ -1032,12 +1037,13 @@ class ProfileModifier:
             if dev.device_guid == target_guid:
                 target_hardware_device = dev
 
-        # If there is no target device we can turn the source device into the
-        # target device
+        # If there is no target device configuration present we can rename
+        # the source device configuration into the target device and avoid
+        # copying and deleting things.
         if target_dev is None:
             if target_hardware_device is None:
                 logging.getLogger("system").warning(
-                    "Target device which is not present specified"
+                    "Swap devices: Empty target device configuration found"
                 )
                 return
             source_dev.device_guid = target_guid
@@ -1059,7 +1065,8 @@ class ProfileModifier:
 
                     if input_id not in target_mode.config[input_type]:
                         logging.getLogger("system").warning(
-                            "Source input id not present in target device"
+                            "Swap devices: Source input id not present in "
+                            "target device"
                         )
                         continue
 
@@ -1073,6 +1080,10 @@ class ProfileModifier:
 
                     # Remove all containers from the source device
                     input_item.containers = []
+
+        # Remove the device entry completely
+        del self.profile.devices[source_guid]
+
 
     def change_conditions(self, source_guid, target_guid):
         """Modifies conditions to use the target device instead of the
@@ -1093,7 +1104,7 @@ class ProfileModifier:
                     condition.device_guid = target_guid
                     condition.device_name = target_hardware_device.name
 
-    def change_merge_axis(self, source_id, target_id):
+    def change_merge_axis(self, source_guid, target_guid):
         """Modifies merge axis entries to use the target device instead of the
         source device.
 
