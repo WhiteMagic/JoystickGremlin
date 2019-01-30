@@ -173,7 +173,11 @@ class AcceleratedMouseMotion(MouseMotion):
         self.direction = direction - 90.0
         self.min_velocity = min_speed
         self.max_velocity = max_speed
-        self.acceleration = (max_speed - min_speed) / time_to_max_speed
+        # Make sure we don't get numerical issues with acceleration computation
+        if time_to_max_speed < 0.001:
+            self.acceleration = 1e6
+        else:
+            self.acceleration = (max_speed - min_speed) / time_to_max_speed
 
         self.current_velocity = self.min_velocity
         self.dx, self.dy = \
