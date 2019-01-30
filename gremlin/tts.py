@@ -23,7 +23,6 @@ to speech system.
 import logging
 import win32com.client
 
-from mako.template import Template
 from . import event_handler, util
 
 
@@ -74,7 +73,5 @@ def text_substitution(text):
     :return original text with parts substituted
     """
     eh = event_handler.EventHandler()
-    tpl = Template(text)
-    return tpl.render(
-        current_mode=eh.active_mode
-    )
+    text = text.replace("${current_mode}", eh.active_mode)
+    return text
