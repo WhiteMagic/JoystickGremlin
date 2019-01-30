@@ -22,14 +22,13 @@ for root, _, files in os.walk("container_plugins"):
 added_files = [
     ("about", "about"),
     ("doc", "doc"),
-    ("gfx", "gfx"),
-    ("templates", "templates")
+    ("gfx", "gfx")
 ]
 added_files.extend(action_plugins_files)
 added_files.extend(container_plugins_files)
 added_binaries = [
     ("vjoy/vJoyInterface.dll", "."),
-    ("dil/di_listener.dll", "."),
+    ("dill/di_listener.dll", "."),
 ]
 
 a = Analysis(
