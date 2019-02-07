@@ -271,7 +271,7 @@ class SmartToggleContainer(gremlin.base_classes.AbstractContainer):
         super().__init__(parent)
         self.action_sets = [[]]
         self.delay = 0.5
-        self.activate_on = "release"
+        self.activate_on = "press"
 
     def _parse_xml(self, node):
         """Populates the container with the XML node's contents.
@@ -280,7 +280,7 @@ class SmartToggleContainer(gremlin.base_classes.AbstractContainer):
         """
         super()._parse_xml(node)
         self.delay = float(node.get("delay", 0.5))
-        self.activate_on = node.get("activate-on", "release")
+        self.activate_on = node.get("activate-on", "press")
 
     def _generate_xml(self):
         """Returns an XML node representing this container's data.
