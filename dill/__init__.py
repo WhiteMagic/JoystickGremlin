@@ -47,17 +47,17 @@ _GUID_SysKeyboard.Data4[6] = 0x00
 _GUID_SysKeyboard.Data4[7] = 0x00
 
 _GUID_Virtual = _GUID()
-_GUID_SysKeyboard.Data1 = 0x89d5e905
-_GUID_SysKeyboard.Data2 = 0x1e26
-_GUID_SysKeyboard.Data3 = 0x4c52
-_GUID_SysKeyboard.Data4[0] = 0xad
-_GUID_SysKeyboard.Data4[1] = 0x46
-_GUID_SysKeyboard.Data4[2] = 0x7b
-_GUID_SysKeyboard.Data4[3] = 0xcc
-_GUID_SysKeyboard.Data4[4] = 0x06
-_GUID_SysKeyboard.Data4[5] = 0xdf
-_GUID_SysKeyboard.Data4[6] = 0x4c
-_GUID_SysKeyboard.Data4[7] = 0x20
+_GUID_Virtual.Data1 = 0x89d5e905
+_GUID_Virtual.Data2 = 0x1e26
+_GUID_Virtual.Data3 = 0x4c52
+_GUID_Virtual.Data4[0] = 0xad
+_GUID_Virtual.Data4[1] = 0x46
+_GUID_Virtual.Data4[2] = 0x7b
+_GUID_Virtual.Data4[3] = 0xcc
+_GUID_Virtual.Data4[4] = 0x06
+_GUID_Virtual.Data4[5] = 0xdf
+_GUID_Virtual.Data4[6] = 0x4c
+_GUID_Virtual.Data4[7] = 0x20
 
 
 class _JoystickInputData(ctypes.Structure):
