@@ -45,6 +45,7 @@ import gremlin.ui.device_tab
 import gremlin.ui.dialogs
 import gremlin.ui.input_viewer
 import gremlin.ui.merge_axis
+import gremlin.ui.user_plugin_management
 import gremlin.ui.profile_creator
 import gremlin.ui.profile_settings
 
@@ -701,6 +702,12 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         widget.changed.connect(lambda: self._create_tabs("Settings"))
         self.ui.devices.addTab(widget, "Settings")
+
+        # Add a custom modules tab
+        self.mm = gremlin.ui.user_plugin_management.ModuleManagementController(
+            self._profile
+        )
+        self.ui.devices.addTab(self.mm.view, "Modules")
 
         # Select specified tab if one is selected
         if activate_tab is not None:
