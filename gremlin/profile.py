@@ -29,7 +29,7 @@ from xml.etree import ElementTree
 import dill
 
 import action_plugins
-from gremlin.common import DeviceType, InputType, VariableType
+from gremlin.common import DeviceType, InputType, PluginVariableType
 from . import base_classes, common, error, input_devices, joystick_handling, \
     plugin_manager, util
 
@@ -1272,6 +1272,7 @@ class Profile:
         self.vjoy_devices = {}
         self.imports = []
         self.merge_axes = []
+        self.plugins = []
         self.settings = Settings(self)
         self.parent = None
 
@@ -1462,6 +1463,12 @@ class Profile:
         # Parse settings entries
         self.settings.from_xml(root.find("settings"))
 
+        # Parse plugin entries
+        for child in root.findall("plugins/plugin"):
+            plugin = Plugin(self)
+            plugin.from_xml(child)
+            self.plugins.append(plugin)
+
     def to_xml(self, fname):
         """Generates XML code corresponding to this profile.
 
@@ -1516,6 +1523,12 @@ class Profile:
 
         # Settings data
         root.append(self.settings.to_xml())
+
+        # User plugins
+        plugins = ElementTree.Element("plugins")
+        for plugin in self.plugins:
+            plugins.append(plugin.to_xml())
+        root.append(plugins)
 
         # Serialize XML document
         ugly_xml = ElementTree.tostring(root, encoding="utf-8")
@@ -2008,3 +2021,146 @@ class ProfileData(metaclass=ABCMeta):
     #@abstractmethod
     def _sanitize(self):
         pass
+
+
+class Plugin:
+
+    """Custom module."""
+
+    def __init__(self, parent):
+        self.parent = parent
+        self.file_name = None
+        self.instances = []
+
+    def from_xml(self, node):
+        self.file_name = safe_read(node, "file-name", str, None)
+        for child in node.iter("instance"):
+            instance = PluginInstance(self)
+            instance.from_xml(child)
+            self.instances.append(instance)
+
+    def to_xml(self):
+        node = ElementTree.Element("plugin")
+        node.set("file-name", safe_format(self.file_name, str))
+        for instance in self.instances:
+            if instance.is_configured():
+                node.append(instance.to_xml())
+        return node
+
+
+class PluginInstance:
+
+    """Instantiation of a custom module with its own set of parameters."""
+
+    def __init__(self, parent):
+        self.parent = parent
+        self.name = None
+        self.variables = {}
+
+    def is_configured(self):
+        is_configured = True
+        for var in self.variables.values():
+            is_configured &= var.is_valid
+        return is_configured
+
+    def has_variable(self, name):
+        return name in self.variables
+
+    def set_variable(self, name, variable):
+        self.variables[name] = variable
+
+    def get_variable(self, name):
+        if name not in self.variables:
+            var = PluginVariable(self)
+            var.name = name
+            self.variables[name] = var
+
+        return self.variables[name]
+
+    def from_xml(self, node):
+        self.name = safe_read(node, "name", str, "")
+        for child in node.iter("variable"):
+            variable = PluginVariable(self)
+            variable.from_xml(child)
+            self.variables[variable.name] = variable
+
+    def to_xml(self):
+        node = ElementTree.Element("instance")
+        node.set("name", safe_format(self.name, str))
+        for variable in self.variables.values():
+            if variable.is_valid:
+                node.append(variable.to_xml())
+        return node
+
+
+class PluginVariable:
+
+    """A single variable of a custom module instance."""
+
+    def __init__(self, parent):
+        self.parent = parent
+        self.name = None
+        self.type = None
+        self.value = None
+        self.is_valid = False
+
+    def from_xml(self, node):
+        self.name = safe_read(node, "name", str, "")
+        self.type = PluginVariableType.to_enum(
+            safe_read(node, "type", str, "String")
+        )
+        self.is_valid = True
+
+        # Read variable content based on type information
+        if self.type == PluginVariableType.Int:
+            self.value = safe_read(node, "value", int, 0)
+        elif self.type == PluginVariableType.Float:
+            self.value = safe_read(node, "value", float, 0.0)
+        elif self.type == PluginVariableType.String:
+            self.value = safe_read(node, "value", str, "")
+        elif self.type == PluginVariableType.Bool:
+            self.value = read_bool(node, "value", False)
+        elif self.type == PluginVariableType.Mode:
+            self.value = safe_read(node, "value", str, "")
+        elif self.type == PluginVariableType.PhysicalInput:
+            self.value = {
+                "device_id": parse_guid(node.attrib["device-guid"]),
+                "device_name": safe_read(node, "device-name", str, ""),
+                "input_id": safe_read(node, "input-id", int, None),
+                "input_type": InputType.to_enum(
+                    safe_read(node, "input-type", str, None)
+                )
+            }
+        elif self.type == PluginVariableType.VirtualInput:
+            self.value = {
+                "device_id": safe_read(node, "vjoy-id", int, None),
+                "input_id": safe_read(node, "input-id", int, None),
+                "input_type": InputType.to_enum(
+                    safe_read(node, "input-type", str, None)
+                )
+            }
+
+    def to_xml(self):
+        node = ElementTree.Element("variable")
+        node.set("name", safe_format(self.name, str))
+        node.set("type", PluginVariableType.to_string(self.type))
+
+        # Write out content based on the type
+        if self.type in [
+            PluginVariableType.Int, PluginVariableType.Float,
+            PluginVariableType.String, PluginVariableType.Mode
+        ]:
+            node.set("value", str(self.value))
+        elif self.type == PluginVariableType.Bool:
+            node.set("value", "1" if self.value else "0")
+        elif self.type == PluginVariableType.PhysicalInput:
+            node.set("device-guid", write_guid(self.value["device_id"]))
+            node.set("device-name", safe_format(self.value["device_name"], str))
+            node.set("input-id", safe_format(self.value["input_id"], int))
+            node.set("input-type", InputType.to_string(self.value["input_type"]))
+        elif self.type == PluginVariableType.VirtualInput:
+            node.set("vjoy-id", safe_format(self.value["device_id"], int))
+            node.set("input-id", safe_format(self.value["input_id"], int))
+            node.set("input-type", InputType.to_string(self.value["input_type"]))
+
+        return node
