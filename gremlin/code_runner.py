@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import importlib
 import logging
+import random
+import string
+import time
 
 import dill
 
 import gremlin
 from gremlin import event_handler, input_devices, \
-    joystick_handling, macro, sendinput, util
+    joystick_handling, macro, sendinput, user_plugin, util
 import vjoy as vjoy_module
 
 
@@ -61,7 +65,7 @@ class CodeRunner:
         self._inheritance_tree = inheritance_tree
         self._reset_state()
 
-        # Check if we want to override the star mode as determined by the
+        # Check if we want to override the start mode as determined by the
         # heuristic
         if settings.startup_mode is not None:
             if settings.startup_mode in gremlin.profile.mode_list(profile):
@@ -71,6 +75,36 @@ class CodeRunner:
         try:
             # Load generated python code
             gremlin_code = util.load_module("gremlin_code")
+
+            # Populate custom module variable registry
+            var_reg = user_plugin.variable_registry
+            for plugin in profile.plugins:
+                # Load module specification so we can later create multiple
+                # instances if desired
+                spec = importlib.util.spec_from_file_location(
+                    "".join(random.choices(string.ascii_lowercase, k=16)),
+                    plugin.file_name
+                )
+
+                # Process each instance in turn
+                for instance in plugin.instances:
+                    # Skip all instances that are not fully configured
+                    if not instance.is_configured():
+                        continue
+
+                    # Store variable values in the registry
+                    for var in instance.variables.values():
+                        var_reg.set(
+                            plugin.file_name,
+                            instance.name,
+                            var.name,
+                            var.value
+                        )
+
+                    # Load the modules
+                    tmp = importlib.util.module_from_spec(spec)
+                    tmp.__gremlin_identifier = (plugin.file_name, instance.name)
+                    spec.loader.exec_module(tmp)
 
             # Create callbacks fom the user code
             callback_count = 0
@@ -219,7 +253,7 @@ class CodeRunner:
             sendinput.MouseController().start()
         except ImportError as e:
             util.display_error(
-                "Unable to launch due to missing custom modules: {}"
+                "Unable to launch due to missing user plugin: {}"
                 .format(str(e))
             )
 
