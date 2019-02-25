@@ -187,16 +187,16 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         # Selectors for both physical and virtual joystick axis for the
         # mapping selection
         self.vjoy_selector = common.VJoySelector(
-            change_cb,
+            lambda x: change_cb(),
             [gremlin.common.InputType.JoystickAxis],
             profile_data.settings.vjoy_as_input
         )
         self.joy1_selector = common.JoystickSelector(
-            change_cb,
+            lambda x: change_cb(),
             [gremlin.common.InputType.JoystickAxis]
         )
         self.joy2_selector = common.JoystickSelector(
-            change_cb,
+            lambda x: change_cb(),
             [gremlin.common.InputType.JoystickAxis]
         )
 
@@ -268,3 +268,6 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
             self.mode_selector.selector.setCurrentIndex(
                 self.mode_selector.mode_list.index(data["mode"])
             )
+
+    def _execute_callback(self, data):
+        self.ca

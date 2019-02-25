@@ -507,9 +507,8 @@ class MacroActionEditor(QtWidgets.QWidget):
         self.ui_elements = {}
         self._mouse_button_ui()
 
-    def _modify_vjoy(self):
+    def _modify_vjoy(self, data):
         action = self.model.get_entry(self.index.row())
-        data = self.ui_elements["vjoy_selector"].get_selection()
         action.vjoy_id = data["device_id"]
         action.input_type = data["input_type"]
         action.input_id = data["input_id"]
