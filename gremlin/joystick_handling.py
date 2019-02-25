@@ -97,6 +97,41 @@ def physical_devices():
     return [dev for dev in _joystick_devices if not dev.is_virtual]
 
 
+def select_first_valid_vjoy_input(valid_types):
+    """Returns the first valid vjoy input.
+
+    Parameters
+    ==========
+    valid_types : list
+        List of common.InputType values that are valid type to be returned
+
+    Return
+    ======
+    dict
+        Dictionary containing the information about the selected vJoy input
+    """
+    for dev in vjoy_devices():
+        if common.InputType.JoystickAxis in valid_types and dev.axis_count > 0:
+            return {
+                "device_id": dev.vjoy_id,
+                "input_type": common.InputType.JoystickAxis,
+                "input_id": dev.axis_map[0].axis_index
+            }
+        elif common.InputType.JoystickButton in valid_types and dev.button_count > 0:
+            return {
+                "device_id": dev.vjoy_id,
+                "input_type": common.InputType.JoystickButton,
+                "input_id": 1
+            }
+        elif common.InputType.JoystickHat in valid_types and dev.hat_count > 0:
+            return {
+                "device_id": dev.vjoy_id,
+                "input_type": common.InputType.JoystickHat,
+                "input_id": 1
+            }
+    return None
+
+
 def joystick_devices_initialization():
     """Initializes joystick device information.
 
