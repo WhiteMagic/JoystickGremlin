@@ -59,6 +59,19 @@ _GUID_Virtual.Data4[5] = 0xdf
 _GUID_Virtual.Data4[6] = 0x4c
 _GUID_Virtual.Data4[7] = 0x20
 
+_GUID_Invalid = _GUID()
+_GUID_Invalid.Data1 = 0x00000000
+_GUID_Invalid.Data2 = 0x0000
+_GUID_Invalid.Data3 = 0x0000
+_GUID_Invalid.Data4[0] = 0x00
+_GUID_Invalid.Data4[1] = 0x00
+_GUID_Invalid.Data4[2] = 0x00
+_GUID_Invalid.Data4[3] = 0x00
+_GUID_Invalid.Data4[4] = 0x00
+_GUID_Invalid.Data4[5] = 0x00
+_GUID_Invalid.Data4[6] = 0x00
+_GUID_Invalid.Data4[7] = 0x00
+
 
 class _JoystickInputData(ctypes.Structure):
 
@@ -142,6 +155,7 @@ class GUID:
 
 GUID_Keyboard = GUID(_GUID_SysKeyboard)
 GUID_Virtual = GUID(_GUID_Virtual)
+GUID_Invalid = GUID(_GUID_Invalid)
 
 
 class InputType(Enum):
