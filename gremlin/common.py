@@ -237,54 +237,6 @@ _MouseButton_to_enum_lookup = {
 }
 
 
-class VariableType(enum.Enum):
-
-    """Enumeration of all supported variable types."""
-
-    Int = 1
-    Float = 2
-    String = 3
-    Bool = 4
-    PhysicalInput = 5
-    VirtualInput = 6
-    Mode = 7
-
-    @staticmethod
-    def to_string(value):
-        try:
-            return _VariableType_to_string_lookup[value]
-        except KeyError:
-            raise gremlin.error.GremlinError("Invalid type in lookup")
-
-    @staticmethod
-    def to_enum(value):
-        try:
-            return _VariableType_to_enum_lookup[value]
-        except KeyError:
-            raise gremlin.error.GremlinError("Invalid type in lookup")
-
-
-_VariableType_to_string_lookup = {
-    VariableType.Int: "Int",
-    VariableType.Float: "Float",
-    VariableType.String: "String",
-    VariableType.Bool: "Bool",
-    VariableType.PhysicalInput: "PhysicalInput",
-    VariableType.VirtualInput: "VirtualInput",
-    VariableType.Mode: "Mode"
-}
-
-_VariableType_to_enum_lookup = {
-    "Int": VariableType.Int,
-    "Float": VariableType.Float,
-    "String": VariableType.String,
-    "Bool": VariableType.Bool,
-    "PhysicalInput": VariableType.PhysicalInput,
-    "VirtualInput": VariableType.VirtualInput,
-    "Mode": VariableType.Mode
-}
-
-
 def index_to_direction(direction):
     """Returns a direction index to a direction name.
 
@@ -361,4 +313,57 @@ _DeviceType_to_enum_lookup = {
     "keyboard": DeviceType.Keyboard,
     "joystick": DeviceType.Joystick,
     "vjoy": DeviceType.VJoy
+}
+
+
+class PluginVariableType(enum.Enum):
+
+    """Enumeration of all supported variable types."""
+
+    Int = 1
+    Float = 2
+    String = 3
+    Bool = 4
+    PhysicalInput = 5
+    VirtualInput = 6
+    Mode = 7
+
+    @staticmethod
+    def to_string(value):
+        try:
+            return _PluginVariableType_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid PluginVariableType in lookup"
+            )
+
+    @staticmethod
+    def to_enum(value):
+        try:
+            return _PluginVariableType_to_enum_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid PluginVariableType in lookup"
+            )
+
+
+
+_PluginVariableType_to_string_lookup = {
+    PluginVariableType.Int: "Int",
+    PluginVariableType.Float: "Float",
+    PluginVariableType.String: "String",
+    PluginVariableType.Bool: "Bool",
+    PluginVariableType.PhysicalInput: "PhysicalInput",
+    PluginVariableType.VirtualInput: "VirtualInput",
+    PluginVariableType.Mode: "Mode"
+}
+
+_PluginVariableType_to_enum_lookup = {
+    "Int": PluginVariableType.Int,
+    "Float": PluginVariableType.Float,
+    "String": PluginVariableType.String,
+    "Bool": PluginVariableType.Bool,
+    "PhysicalInput": PluginVariableType.PhysicalInput,
+    "VirtualInput": PluginVariableType.VirtualInput,
+    "Mode": PluginVariableType.Mode
 }
