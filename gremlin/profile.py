@@ -1482,7 +1482,7 @@ class Profile:
         devices = ElementTree.Element("devices")
         device_list = sorted(
             self.devices.values(),
-            key=lambda x: (x.name, x.device_guid)
+            key=lambda x: str(x.device_guid)
         )
         for device in device_list:
             devices.append(device.to_xml())
