@@ -105,8 +105,8 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
                     self.action_data.device_high_axis
                 )
 
-            self.save_vjoy_selection(1)
-            self.save_vjoy_selection(2)
+            self.save_vjoy_selection(1, self.vjoy_selector_1.get_selection())
+            self.save_vjoy_selection(2, self.vjoy_selector_2.get_selection())
         except gremlin.error.GremlinError as e:
             # FIXME: This error here should only have been needed due to the
             #        vJoy selector attempting to acquire a vJoy device, this
@@ -118,7 +118,7 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             )
             logging.getLogger("system").error(str(e))
 
-    def save_vjoy_selection(self, axis_id):
+    def save_vjoy_selection(self, axis_id, data):
         """Stores the data of a vJoy selector.
 
         A separate method to handle saving the vJoy selection changes is needed
@@ -130,11 +130,9 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             Identifier of the axis to save the data of
         """
         if axis_id == 1:
-            data = self.vjoy_selector_1.get_selection()
             self.action_data.device_low_vjoy_id = data["device_id"]
             self.action_data.device_low_axis = data["input_id"]
         elif axis_id == 2:
-            data = self.vjoy_selector_2.get_selection()
             self.action_data.device_high_vjoy_id = data["device_id"]
             self.action_data.device_high_axis = data["input_id"]
 
@@ -162,7 +160,7 @@ class SplitAxisWidget(gremlin.ui.input_item.AbstractActionWidget):
             Callable lambda expression which will update the specified axis
             information
         """
-        return lambda: self.save_vjoy_selection(axis_id)
+        return lambda data: self.save_vjoy_selection(axis_id, data)
 
 
 class SplitAxisFunctor(AbstractFunctor):

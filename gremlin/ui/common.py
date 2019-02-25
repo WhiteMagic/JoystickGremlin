@@ -543,7 +543,7 @@ class AbstractInputSelector(QtWidgets.QWidget):
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
-        self.change_cb = change_cb
+        self.chage_cb = change_cb
         self.valid_types = valid_types
         self.device_list = []
 
@@ -605,7 +605,7 @@ class AbstractInputSelector(QtWidgets.QWidget):
         # Show correct dropdown
         self.input_item_dropdowns[index].setVisible(True)
         self.input_item_dropdowns[index].setCurrentIndex(0)
-        self.change_cb()
+        self._execute_callback()
 
     def _initialize(self):
         raise gremlin.error.MissingImplementationError(
@@ -662,13 +662,16 @@ class AbstractInputSelector(QtWidgets.QWidget):
 
             # Add the selection and hide it
             selection.setVisible(False)
-            selection.activated.connect(self.change_cb)
+            selection.activated.connect(self._execute_callback)
             self.main_layout.addWidget(selection)
             self.input_item_dropdowns.append(selection)
 
         # Show the first entry by default
         if len(self.input_item_dropdowns) > 0:
             self.input_item_dropdowns[0].setVisible(True)
+
+    def _execute_callback(self):
+        self.chage_cb(self.get_selection())
 
 
 class JoystickSelector(AbstractInputSelector):
