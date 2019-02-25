@@ -24,7 +24,7 @@ import threading
 
 from PyQt5 import QtCore
 
-from dill import DILL
+from dill import DILL, GUID_Invalid
 
 from . import common, error, event_handler, joystick_handling, \
     macro, profile, util
@@ -519,7 +519,13 @@ class JoystickDecorator:
         self.name = name
         self.mode = mode
         # Convert string based GUID to the actual GUID object
-        device_guid_obj = profile.parse_guid(device_guid)
+        try:
+            device_guid_obj = profile.parse_guid(device_guid)
+        except error.ProfileError:
+            logging.getLogger("system").error(
+                "Invalid guid value '' received".format(device_guid)
+            )
+            device_guid_obj = GUID_Invalid
 
         self.axis = functools.partial(
             _axis, device_guid=device_guid_obj, mode=mode
