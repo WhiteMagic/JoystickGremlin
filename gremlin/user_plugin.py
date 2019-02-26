@@ -442,7 +442,7 @@ class StringVariable(AbstractVariable):
 
         self.value = initial_value
         if not isinstance(self.value, str):
-            self.default_value = ""
+            self.value = ""
 
         self._load_from_registry(self._get_identifier())
 
