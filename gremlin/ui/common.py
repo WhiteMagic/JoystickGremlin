@@ -565,8 +565,14 @@ class AbstractInputSelector(QtWidgets.QWidget):
         if device_index != -1:
             device_id = self._device_id_registry[device_index]
             input_index = self.input_item_dropdowns[device_index].currentIndex()
+
+            if input_index == -1:
+                input_index = 0
+                input_value = self.input_item_dropdowns[device_index].itemText(
+                    input_index)
+            else:
+                input_value = self.input_item_dropdowns[device_index].currentText()
             input_type = self._input_type_registry[device_index][input_index]
-            input_value = self.input_item_dropdowns[device_index].currentText()
 
             if input_type == gremlin.common.InputType.JoystickAxis:
                 input_id = gremlin.common.AxisNames.to_enum(input_value).value
