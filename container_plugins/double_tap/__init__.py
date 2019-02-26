@@ -201,7 +201,7 @@ class DoubleTapContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :return title to use for the container
         """
         if self.profile_data.is_valid():
-            return "DoubleTap: ({}) / ({})".format(
+            return "Double Tap: ({}) / ({})".format(
                 ", ".join([a.name for a in self.profile_data.action_sets[0]]),
                 ", ".join([a.name for a in self.profile_data.action_sets[1]])
             )
@@ -292,7 +292,7 @@ class DoubleTapContainer(gremlin.base_classes.AbstractContainer):
     second action.
     """
 
-    name = "DoubleTap"
+    name = "Double Tap"
     tag = "double_tap"
     functor = DoubleTapContainerFunctor
     widget = DoubleTapContainerWidget
