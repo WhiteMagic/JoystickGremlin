@@ -99,6 +99,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             free_inputs = self._get_profile_root().list_unused_vjoy_inputs()
 
             input_name = self.type_to_name_map[input_type].lower()
+            input_type = self.name_to_type_map[input_name.capitalize()]
             if vjoy_dev_id == 0:
                 vjoy_dev_id = sorted(free_inputs.keys())[0]
             input_list = free_inputs[vjoy_dev_id][input_name]
