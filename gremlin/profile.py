@@ -1428,7 +1428,7 @@ class Profile:
         devices = joystick_handling.joystick_devices()
         for dev in devices:
             add_device = False
-            if dev.is_virtual and dev.vjoy_id not in self.vjoy_devices:
+            if dev.is_virtual and dev.device_guid not in self.vjoy_devices:
                 add_device = True
             elif not dev.is_virtual and dev.device_guid not in self.devices:
                 add_device = True
