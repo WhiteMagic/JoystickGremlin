@@ -1123,10 +1123,10 @@ class DeviceInformationUi(common.BaseDialogUi):
                 QtWidgets.QLabel(str(entry.hat_count)), i+1, 3
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel("{:X}".format(entry.vendor_id)), i+1, 4
+                QtWidgets.QLabel("{:04X}".format(entry.vendor_id)), i+1, 4
             )
             self.main_layout.addWidget(
-                QtWidgets.QLabel("{:X}".format(entry.product_id)), i+1, 5
+                QtWidgets.QLabel("{:04X}".format(entry.product_id)), i+1, 5
             )
             guid_field = QtWidgets.QLineEdit()
             guid_field.setText(str(entry.device_guid))
