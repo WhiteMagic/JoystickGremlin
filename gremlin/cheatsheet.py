@@ -71,7 +71,14 @@ class InputItemData:
             self.input_item.input_type,
             self.input_item.input_id
         )
-        description = global_desc
+        inherited = Paragraph(
+            "<span color='#c0c0c0'><i>{}</i></span>".format(
+                "" if self.inherited_from is None else self.inherited_from
+            ),
+            InputItemData.style
+        )
+
+        output = []
 
         # If it's not a hat we have one input name and each description element
         # on a line of its own
@@ -81,31 +88,64 @@ class InputItemData:
                 for a_desc in c_descs:
                     additional_desc += "\n{}".format(a_desc)
 
+            description = global_desc
             if len(additional_desc) > 0:
                 description += additional_desc
+
+            output.append((input_name, description, inherited))
+
+        # In the case of a hat we have multiple lines based on virtual button
+        # settings or container
         else:
-            # Single container with virtual button
-            if container_count == 1 and containers[0].virtual_button:
-                tmp = []
-                for direction in containers[0].virtual_button.directions:
-                    tmp.append("{} {}".format(
-                        input_name,
-                        hat_direction_abbrev[direction]
+            hat_outputs = []
+            standard_desc = [global_desc]
+
+            for container in containers:
+                # Hat to Buttons container
+                if container.tag == "hat_buttons":
+                    direction_lookup = []
+                    if container.button_count == 4:
+                        direction_lookup = ["N", "E", "S", "W"]
+                    elif container.button_count == 8:
+                        direction_lookup = [
+                            "N", "NE", "E", "SE", "S", "SW", "W", "NW"
+                        ]
+
+                    for i, action_set in enumerate(container.action_sets):
+                        if len(action_set) > 0:
+                            hat_outputs.append((
+                                "{} {}".format(input_name, direction_lookup[i]),
+                                self.extract_action_set_descriptions(action_set),
+                                inherited
+                            ))
+
+                # Virtual button
+                elif container.virtual_button is not None:
+                    c_dirs = []
+                    for direction in container.virtual_button.directions:
+                        c_dirs.append("{} {}".format(
+                            input_name,
+                            hat_direction_abbrev[direction]
+                        ))
+                    c_input_name = "\n".join(c_dirs)
+
+                    hat_outputs.append((
+                        c_input_name,
+                        "\n".join(self.extract_description_actions(container)),
+                        inherited
                     ))
-                input_name = "\n".join(tmp)
 
-        inherited = Paragraph(
-            "<span color='#c0c0c0'><i>{}</i></span>".format(
-                "" if self.inherited_from is None else self.inherited_from
-            ),
-            InputItemData.style
-        )
+                # Standard hat
+                else:
+                    standard_desc.append(
+                        "\n".join(self.extract_description_actions(container))
+                    )
 
-        return (
-            input_name,
-            description,
-            inherited
-        )
+            # Insert standard hat entry before the specialized ones
+            output.append((input_name, "\n".join(standard_desc), inherited))
+            output.extend(hat_outputs)
+
+        return output
 
     def extract_description_actions(self, container):
         """Returns all description contents from Description actions.
@@ -119,6 +159,17 @@ class InputItemData:
             for action in [a for a in action_set if a.tag == "description"]:
                 descriptions.append(action.description)
         return descriptions
+
+    def extract_action_set_descriptions(self, action_set):
+        """Returns a string representing the action set descriptions.
+
+        :param action_set action set to process for descriptions
+        :return string of descriptions contained in the action set
+        """
+        descriptions = []
+        for action in [a for a in action_set if a.tag == "description"]:
+            descriptions.append(action.description)
+        return "\n".join(descriptions)
 
 
 def recursive(device, tree, storage):
@@ -312,7 +363,9 @@ def generate_cheatsheet(fname, profile):
 
             # Add heading for device and mode combination
             story.append(ModeFloat(mode_name))
-            table_data = [entry.table_data() for entry in mode_data.values()]
+            table_data = []
+            for entry in mode_data.values():
+                table_data.extend(entry.table_data())
 
             table_style = style = [
                 ("LINEBELOW", (0, 0), (-1, -2), 0.25, HexColor("#c0c0c0")),
