@@ -132,6 +132,29 @@ def select_first_valid_vjoy_input(valid_types):
     return None
 
 
+def vjoy_id_from_guid(guid):
+    """Returns the vJoy id corresponding to the given device GUID.
+
+    Parameters
+    ==========
+    guid : GUID
+        guid of the vjoy device in windows
+
+    Return
+    ======
+    int
+        vJoy id corresponding to the provided device
+    """
+    for dev in vjoy_devices():
+        if dev.device_guid == guid:
+            return dev.vjoy_id
+
+    logging.getLogger("system").error(
+        "Could not find vJoy matching guid {}".format(str(guid))
+    )
+    return 1
+
+
 def joystick_devices_initialization():
     """Initializes joystick device information.
 
