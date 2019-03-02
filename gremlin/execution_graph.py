@@ -212,6 +212,10 @@ class AbstractExecutionGraph(metaclass=ABCMeta):
                 conditions.append(
                     actions.JoystickCondition(condition)
                 )
+            elif isinstance(condition, base_classes.VJoyCondition):
+                conditions.append(
+                    actions.VJoyCondition(condition)
+                )
             elif isinstance(condition, base_classes.InputActionCondition):
                 conditions.append(
                     actions.InputActionCondition(condition.comparison)

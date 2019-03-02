@@ -101,6 +101,7 @@ class KeyboardCondition(AbstractCondition):
         :return XML node containing the object's data
         """
         node = ElementTree.Element("condition")
+        node.set("condition-type", "keyboard")
         node.set("input", "keyboard")
         node.set("comparison", str(self.comparison))
         node.set("scan-code", str(self.scan_code))
@@ -157,6 +158,7 @@ class JoystickCondition(AbstractCondition):
         """
         node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
+        node.set("condition-type", "joystick")
         node.set("input", common.InputType.to_string(self.input_type))
         node.set("id", str(self.input_id))
         node.set("device-guid", write_guid(self.device_guid))
@@ -172,6 +174,68 @@ class JoystickCondition(AbstractCondition):
         :return True if the condition is properly specified, False otherwise
         """
         return super().is_valid() and self.input_type is not None
+
+
+class VJoyCondition(AbstractCondition):
+
+    """vJoy device state based condition.
+
+    This condition is based on the state of a vjoy axis, button, or hat.
+    """
+
+    def __init__(self):
+        """Creates a new instance."""
+        super().__init__()
+        self.vjoy_id = 0
+        self.input_type = None
+        self.input_id = 0
+        self.range = [0.0, 0.0]
+
+    def from_xml(self, node):
+        """Populates the object with data from an XML node.
+
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node to parse for data
+        """
+        self.comparison = safe_read(node, "comparison")
+
+        self.input_type = common.InputType.to_enum(safe_read(node, "input"))
+        self.input_id = safe_read(node, "id", int)
+        self.vjoy_id = safe_read(node, "vjoy-id", int)
+        if self.input_type == common.InputType.JoystickAxis:
+            self.range = [
+                safe_read(node, "range-low", float),
+                safe_read(node, "range-high", float)
+            ]
+
+    def to_xml(self):
+        """Returns an XML node containing the objects data.
+
+        Return
+        ======
+        ElementTree.Element
+            XML node containing the object's data
+        """
+        node = ElementTree.Element("condition")
+        node.set("comparison", str(self.comparison))
+        node.set("condition-type", "vjoy")
+        node.set("input", common.InputType.to_string(self.input_type))
+        node.set("id", str(self.input_id))
+        node.set("vjoy-id", write_guid(self.vjoy_id))
+        if self.input_type == common.InputType.JoystickAxis:
+            node.set("range-low", str(self.range[0]))
+            node.set("range-high", str(self.range[1]))
+        return node
+
+    def is_valid(self):
+        """Returns whether or not a condition is fully specified.
+
+        :return True if the condition is properly specified, False otherwise
+        """
+        return super().is_valid() and self.input_type is not None
+
 
 
 class InputActionCondition(AbstractCondition):
@@ -199,6 +263,7 @@ class InputActionCondition(AbstractCondition):
         :return XML node containing the object's data
         """
         node = ElementTree.Element("condition")
+        node.set("condition-type", "action")
         node.set("input", "action")
         node.set("comparison", str(self.comparison))
         return node
@@ -219,9 +284,8 @@ class ActivationCondition:
 
     condition_lookup = {
         "keyboard": KeyboardCondition,
-        "axis": JoystickCondition,
-        "button": JoystickCondition,
-        "hat": JoystickCondition,
+        "joystick": JoystickCondition,
+        "vjoy": VJoyCondition,
         "action": InputActionCondition,
     }
 
@@ -237,8 +301,8 @@ class ActivationCondition:
         """
         self.rule = ActivationCondition.rule_lookup[safe_read(node, "rule")]
         for cond_node in node.findall("condition"):
-            input_type = safe_read(cond_node, "input")
-            condition = ActivationCondition.condition_lookup[input_type]()
+            condition_type = safe_read(cond_node, "condition-type")
+            condition = ActivationCondition.condition_lookup[condition_type]()
             condition.from_xml(cond_node)
             self.conditions.append(condition)
 
