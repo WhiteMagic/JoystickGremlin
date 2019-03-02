@@ -505,6 +505,9 @@ class VJoy:
         Under certain circumstances the vJoy devices are reset (issue #129).
         By checking for ownership and reacquiring if needed this can be solved.
         """
+        if self.vjoy_id is None:
+            return
+
         if self.pid != VJoyInterface.GetOwnerPid(self.vjoy_id):
             if not VJoyInterface.AcquireVJD(self.vjoy_id):
                 logging.getLogger("system").error(
