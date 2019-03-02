@@ -346,7 +346,7 @@ class DoubleTapContainer(gremlin.base_classes.AbstractContainer):
 
         :return True if the container is configured properly, False otherwise
         """
-        return len(self.action_sets) == 2 and None not in self.action_sets
+        return any(len(action_set) for action_set in self.action_sets)
 
 
 # Plugin definitions
