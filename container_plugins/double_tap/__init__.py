@@ -60,17 +60,17 @@ class DoubleTapContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.options_layout.addStretch()
 
         # Activation moment
-        self.options_layout.addWidget(QtWidgets.QLabel("<b>Send single tap: </b>"))
-        self.activate_instantly = QtWidgets.QRadioButton("instantly")
-        self.activate_wait = QtWidgets.QRadioButton("wait for double-tap")
-        if self.profile_data.activate_on == "instantly":
-            self.activate_instantly.setChecked(True)
+        self.options_layout.addWidget(QtWidgets.QLabel("<b>Single/Double Tap: </b>"))
+        self.activate_exclusive = QtWidgets.QRadioButton("exclusive")
+        self.activate_combined = QtWidgets.QRadioButton("combined")
+        if self.profile_data.activate_on == "combined":
+            self.activate_combined.setChecked(True)
         else:
-            self.activate_wait.setChecked(True)
-        self.activate_instantly.toggled.connect(self._activation_changed_cb)
-        self.activate_wait.toggled.connect(self._activation_changed_cb)
-        self.options_layout.addWidget(self.activate_instantly)
-        self.options_layout.addWidget(self.activate_wait)
+            self.activate_exclusive.setChecked(True)
+        self.activate_combined.toggled.connect(self._activation_changed_cb)
+        self.activate_exclusive.toggled.connect(self._activation_changed_cb)
+        self.options_layout.addWidget(self.activate_exclusive)
+        self.options_layout.addWidget(self.activate_combined)
 
         self.action_layout.addLayout(self.options_layout)
 
@@ -177,10 +177,10 @@ class DoubleTapContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
         :param value whether or not the selection was toggled - ignored
         """
-        if self.activate_instantly.isChecked():
-            self.profile_data.activate_on = "instantly"
+        if self.activate_combined.isChecked():
+            self.profile_data.activate_on = "combined"
         else:
-            self.profile_data.activate_on = "wait"
+            self.profile_data.activate_on = "exclusive"
 
     def _handle_interaction(self, widget, action):
         """Handles interaction icons being pressed on the individual actions.
@@ -250,7 +250,7 @@ class DoubleTapContainerFunctor(gremlin.base_classes.AbstractFunctor):
             self.value_release = None
             self.event_release = None
         # also copy state on release for delayed single taps
-        elif self.activate_on == "wait":
+        elif self.activate_on == "exclusive":
             self.value_release = copy.deepcopy(value)
             self.event_release = event.clone()
 
@@ -261,18 +261,18 @@ class DoubleTapContainerFunctor(gremlin.base_classes.AbstractFunctor):
                 # avoid triple tapping doing several double taps
                 self.start_time = 0
                 self.tap_type = "double"
-                if self.activate_on == "wait":
+                if self.activate_on == "exclusive":
                     self.timer.cancel()
             else:
                 self.start_time = time.time()
                 self.tap_type = "single"
-                if self.activate_on == "wait":
+                if self.activate_on == "exclusive":
                     self.timer = threading.Timer(self.delay, self._single_tap)
                     self.timer.start()
 
         if self.tap_type == "double":
             self.double_tap.process_event(event, value)
-        elif self.activate_on != "wait":
+        elif self.activate_on != "exclusive":
             self.single_tap.process_event(event, value)
 
     def _single_tap(self):
@@ -314,7 +314,7 @@ class DoubleTapContainer(gremlin.base_classes.AbstractContainer):
         super().__init__(parent)
         self.action_sets = [[], []]
         self.delay = 0.5
-        self.activate_on = "instantly"
+        self.activate_on = "exclusive"
 
     def _parse_xml(self, node):
         """Populates the container with the XML node's contents.
@@ -323,7 +323,7 @@ class DoubleTapContainer(gremlin.base_classes.AbstractContainer):
         """
         super()._parse_xml(node)
         self.delay = float(node.get("delay", 0.5))
-        self.activate_on = node.get("activate-on", "instantly")
+        self.activate_on = node.get("activate-on", "combined")
 
     def _generate_xml(self):
         """Returns an XML node representing this container's data.
