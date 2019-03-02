@@ -253,7 +253,7 @@ class KeyboardConditionWidget(AbstractConditionWidget):
 
 class JoystickConditionWidget(AbstractConditionWidget):
 
-    """Widget allowing the configuration of a keyboard based condition."""
+    """Widget allowing the configuration of a joystick based condition."""
 
     def __init__(self, condition_data, parent=None):
         """Creates a new widget.
@@ -467,6 +467,206 @@ class JoystickConditionWidget(AbstractConditionWidget):
             )
 
 
+class VJoyConditionWidget(AbstractConditionWidget):
+
+    """Widget allowing the configuration of a vJoy based condition."""
+
+    def __init__(self, condition_data, parent=None):
+        """Creates a new widget.
+
+        Parameters
+        ==========
+        condition_data : VJoyCondition
+            data to be represented by the widget
+        parent : QObject
+            parent of this widget
+        """
+        self.input_event = None
+        super().__init__(condition_data, parent)
+        self.setTitle("vJoy Condition")
+
+        # Initialize UI fully
+        self._modify_vjoy(self.vjoy_selector.get_selection())
+
+    def _create_ui(self):
+        """Creates the configuration UI for this widget."""
+        common.clear_layout(self.main_layout)
+
+        self.vjoy_selector = common.VJoySelector(
+            self._modify_vjoy,
+            [
+                InputType.JoystickAxis,
+                InputType.JoystickButton,
+                InputType.JoystickHat
+            ]
+        )
+        self.vjoy_selector.set_selection(
+            self.condition_data.input_type,
+            self.condition_data.vjoy_id,
+            self.condition_data.input_id
+        )
+        self.delete_button = QtWidgets.QPushButton(
+            QtGui.QIcon("gfx/button_delete.png"), ""
+        )
+        self.delete_button.clicked.connect(
+            lambda: self.deleted.emit(self.condition_data)
+        )
+
+        self.main_layout.addWidget(QtWidgets.QLabel("Activate if"), 0, 0)
+        if self.condition_data.input_type == InputType.JoystickAxis:
+            self._axis_ui()
+        elif self.condition_data.input_type == InputType.JoystickButton:
+            self._button_ui()
+        elif self.condition_data.input_type == InputType.JoystickHat:
+            self._hat_ui()
+        self.main_layout.addWidget(self.vjoy_selector, 0, 4)
+        self.main_layout.addWidget(self.delete_button, 0, 5)
+
+    def _axis_ui(self):
+        """Creates the UI needed to configure an axis based condition."""
+        self.lower = common.DynamicDoubleSpinBox()
+        self.lower.setMinimum(-1.0)
+        self.lower.setMaximum(1.0)
+        self.lower.setSingleStep(0.05)
+        self.lower.setDecimals(3)
+        self.lower.setValue(self.condition_data.range[0])
+        self.lower.valueChanged.connect(self._range_lower_changed_cb)
+        self.upper = common.DynamicDoubleSpinBox()
+        self.upper.setMinimum(-1.0)
+        self.upper.setMaximum(1.0)
+        self.upper.setDecimals(3)
+        self.upper.setSingleStep(0.05)
+        self.upper.setValue(self.condition_data.range[1])
+        self.upper.valueChanged.connect(self._range_upper_changed_cb)
+
+        self.comparison_dropdown = QtWidgets.QComboBox()
+        self.comparison_dropdown.addItem("Inside")
+        self.comparison_dropdown.addItem("Outside")
+        self.comparison_dropdown.setCurrentText(
+            self.condition_data.comparison.capitalize()
+        )
+        self.comparison_dropdown.currentTextChanged.connect(
+            self._comparison_changed_cb
+        )
+
+        range_layout = QtWidgets.QHBoxLayout()
+        range_layout.addWidget(self.comparison_dropdown)
+        range_layout.addWidget(self.lower)
+        range_layout.addWidget(QtWidgets.QLabel("and"))
+        range_layout.addWidget(self.upper)
+
+        input_label = QtWidgets.QLabel("<b>vJoy {:d} Axis {:d}</b>".format(
+                self.condition_data.vjoy_id,
+                self.condition_data.input_id
+            ))
+        input_label.setWordWrap(True)
+        self.main_layout.addWidget(input_label, 0, 1)
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addLayout(
+            range_layout, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
+
+    def _button_ui(self):
+        """Creates the UI needed to configure a button based condition."""
+        self.comparison_dropdown = QtWidgets.QComboBox()
+        self.comparison_dropdown.addItem("Pressed")
+        self.comparison_dropdown.addItem("Released")
+        self.comparison_dropdown.setCurrentText(
+            self.condition_data.comparison.capitalize()
+        )
+        self.comparison_dropdown.currentTextChanged.connect(
+            self._comparison_changed_cb
+        )
+
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b>vJoy {:d} Button {:d}</b>".format(
+                self.condition_data.vjoy_id,
+                self.condition_data.input_id
+            )),
+            0,
+            1
+        )
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addWidget(
+            self.comparison_dropdown, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
+
+    def _hat_ui(self):
+        """Creates the UI needed to configure a hat based condition."""
+        directions = [
+            "Center", "North", "North East", "East", "South East",
+            "South", "South West", "West", "North West"
+        ]
+        self.comparison_dropdown = QtWidgets.QComboBox()
+        for entry in directions:
+            self.comparison_dropdown.addItem(entry)
+        self.comparison_dropdown.setCurrentText(
+            self.condition_data.comparison.replace("-", " ").title()
+        )
+        self.comparison_dropdown.currentTextChanged.connect(
+            self._comparison_changed_cb
+        )
+
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b>vJoy {:d} Hat {:d}</b>".format(
+                self.condition_data.vjoy_id,
+                self.condition_data.input_id
+            )),
+            0,
+            1
+        )
+        self.main_layout.addWidget(QtWidgets.QLabel("is"), 0, 2)
+        self.main_layout.addWidget(
+            self.comparison_dropdown, 0, 3, alignment=QtCore.Qt.AlignLeft
+        )
+
+    def _modify_vjoy(self, data):
+        self.condition_data.vjoy_id = data["device_id"]
+        self.condition_data.input_type = data["input_type"]
+        self.condition_data.input_id = data["input_id"]
+
+        if data["input_type"] == InputType.JoystickAxis:
+            self.condition_data.comparison = "inside"
+        elif data["input_type"] == InputType.JoystickButton:
+            self.condition_data.comparison = "pressed"
+        elif data["input_type"] == InputType.JoystickHat:
+            self.condition_data.comparison = \
+                util.hat_tuple_to_direction((0, 0))
+        self._create_ui()
+
+    def _range_lower_changed_cb(self, value):
+        """Updates the lower part of an axis range.
+
+        :param value the new value
+        """
+        self.condition_data.range[0] = value
+
+    def _range_upper_changed_cb(self, value):
+        """Updates the upper part of an axis range.
+
+        :param value the new value
+        """
+        self.condition_data.range[1] = value
+
+    def _comparison_changed_cb(self, text):
+        """Updates the comparison operation to use.
+
+        :param text the new comparison operation name
+        """
+        if self.condition_data.input_type == InputType.JoystickButton:
+            self.condition_data.comparison = text.lower()
+        elif self.condition_data.input_type == InputType.JoystickHat:
+            self.condition_data.comparison = text.replace(" ", "-").lower()
+        elif self.condition_data.input_type == InputType.JoystickAxis:
+            self.condition_data.comparison = text.lower()
+        else:
+            logging.getLogger("system").warning(
+                "Invalid input type encountered: {}".format(
+                    self.condition_data.input_type
+                )
+            )
+
+
 class InputActionConditionWidget(AbstractConditionWidget):
 
     """Creates the UI needed to configure an input action based condition."""
@@ -597,6 +797,8 @@ class ConditionView(common.AbstractView):
             [base_classes.KeyboardCondition, KeyboardConditionWidget],
         "Joystick":
             [base_classes.JoystickCondition, JoystickConditionWidget],
+        "vJoy":
+            [base_classes.VJoyCondition, VJoyConditionWidget],
         "Action":
             [base_classes.InputActionCondition, InputActionConditionWidget]
     }
@@ -640,6 +842,7 @@ class ConditionView(common.AbstractView):
         self.condition_selector = QtWidgets.QComboBox()
         self.condition_selector.addItem("Keyboard Condition")
         self.condition_selector.addItem("Joystick Condition")
+        self.condition_selector.addItem("vJoy Condition")
         self.condition_selector.addItem("Action Condition")
         self.condition_add_button = QtWidgets.QPushButton("Add")
         self.condition_add_button.clicked.connect(self._add_condition)

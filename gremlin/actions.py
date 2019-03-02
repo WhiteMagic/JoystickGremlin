@@ -22,7 +22,7 @@ import logging
 import dill
 
 from . import base_classes, common, event_handler, fsm, input_devices, \
-    macro, util
+    joystick_handling, macro, util
 
 
 def smart_all(conditions):
@@ -206,6 +206,70 @@ class JoystickCondition(AbstractCondition):
         :param value the possibly modified value
         :return True if the condition is satisfied, False otherwise
         """
+        joy = input_devices.JoystickProxy()[self.device_guid]
+
+        if self.input_type == common.InputType.JoystickAxis:
+            in_range = self.condition.range[0] <= \
+                       joy.axis(self.input_id).value <= \
+                       self.condition.range[1]
+
+            if self.comparison in ["inside", "outside"]:
+                return in_range if self.comparison == "inside" else not in_range
+            else:
+                return False
+        elif self.input_type == common.InputType.JoystickButton:
+            if self.comparison == "pressed":
+                return joy.button(self.input_id).is_pressed
+            else:
+                return not joy.button(self.input_id).is_pressed
+        elif self.input_type == common.InputType.JoystickHat:
+            return joy.hat(self.input_id).direction == \
+                   util.hat_direction_to_tuple(self.comparison)
+        else:
+            logging.getLogger("system").warning(
+                "Invalid input_type {} received".format(self.input_type)
+            )
+            return False
+
+
+class VJoyCondition(AbstractCondition):
+
+    """Condition verifying the state of a vJoy input.
+
+    vJoy devices have three possible input types: axis, button, or hat and each
+    have their corresponding possibly sates. An axis can be inside or outside
+    a specific range. Buttons can be pressed or released and hats can be in
+    one of eight possible directions.
+    """
+
+    def __init__(self, condition):
+        """Creates a new instance.
+
+        :param condition the condition to check against
+        """
+        super().__init__(condition.comparison)
+        self.vjoy_id = condition.vjoy_id
+        self.device_guid = None
+        for dev in joystick_handling.vjoy_devices():
+            if dev.vjoy_id == self.vjoy_id:
+                self.device_guid = dev.device_guid
+                break
+        self.input_type = condition.input_type
+        self.input_id = condition.input_id
+        self.condition = condition
+
+    def __call__(self, event, value):
+        """Evaluates the condition using the condition and provided data.
+
+        :param event raw event that caused the condition to be evaluated
+        :param value the possibly modified value
+        :return True if the condition is satisfied, False otherwise
+        """
+        if self.device_guid is None:
+            logging.getLogger("system").warning(
+                "GUID for vJoy {} not found".format(self.vjoy_id)
+            )
+            return False
         joy = input_devices.JoystickProxy()[self.device_guid]
 
         if self.input_type == common.InputType.JoystickAxis:

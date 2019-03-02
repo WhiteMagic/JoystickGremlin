@@ -815,6 +815,12 @@ class ProfileConverter:
                 )
                 del entry.attrib["device_id"]
                 del entry.attrib["windows_id"]
+            if entry.attrib["input"] == "action":
+                entry.set("condition-type", "action")
+            elif entry.attrib["input"] == "keyboard":
+                entry.set("condition-type", "keyboard")
+            elif entry.attrib["input"] in ["axis", "button", "hat"]:
+                entry.set("condition-type", "joystick")
 
         for entry in root.findall(".//macro/actions/joystick"):
             entry.set(
