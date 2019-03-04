@@ -1745,8 +1745,6 @@ class Mode:
             if store_item:
                 self.config[item.input_type][item.input_id] = item
 
-        joystick_handling.VJoyProxy().reset()
-
     def to_xml(self):
         """Generates XML code for this DeviceConfiguration.
 
