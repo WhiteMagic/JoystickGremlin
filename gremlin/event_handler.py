@@ -19,7 +19,7 @@ import functools
 import inspect
 import logging
 import time
-from threading import Thread
+from threading import Thread, Timer
 
 from PyQt5 import QtCore
 
@@ -163,6 +163,9 @@ class EventListener(QtCore.QObject):
         # Calibration function for each axis of all devices
         self._calibrations = {}
 
+        # Joystick device change update timeout timer
+        self._device_update_timer = None
+
         self._running = True
         self._keyboard_state = {}
         self.gremlin_active = False
@@ -235,10 +238,21 @@ class EventListener(QtCore.QObject):
     def _joystick_device_handler(self, data, action):
         """Callback for device change events.
 
-        This is called when a device is added or removed from the system.
+        This is called when a device is added or removed from the system. This
+        uses a timer to call the actual device update function to prevent
+        the addition or removal of a multiple devices at the same time to
+        cause repeat updates.
 
         :param data information about the device changing state
+        :param action whether the device was added or removed
         """
+        if self._device_update_timer is not None:
+            self._device_update_timer.cancel()
+        self._device_update_timer = Timer(0.2, self._run_device_list_update)
+        self._device_update_timer.start()
+
+    def _run_device_list_update(self):
+        """Performs the update of the devices connected."""
         joystick_handling.joystick_devices_initialization()
         self._init_joysticks()
         self.device_change_event.emit()
