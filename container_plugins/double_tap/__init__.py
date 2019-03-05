@@ -229,8 +229,6 @@ class DoubleTapContainerFunctor(gremlin.base_classes.AbstractFunctor):
         self.tap_type = None
         self.value_press = None
         self.event_press = None
-        self.value_release = None
-        self.event_release = None
 
     def process_event(self, event, value):
         # TODO: Currently this does not handle hat or axis events, however
@@ -247,12 +245,6 @@ class DoubleTapContainerFunctor(gremlin.base_classes.AbstractFunctor):
         if value.current:
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
-            self.value_release = None
-            self.event_release = None
-        # also copy state on release for delayed single taps
-        elif self.activate_on == "exclusive":
-            self.value_release = copy.deepcopy(value)
-            self.event_release = event.clone()
 
         # Execute double tap logic
         if value.current:
@@ -269,18 +261,27 @@ class DoubleTapContainerFunctor(gremlin.base_classes.AbstractFunctor):
                 if self.activate_on == "exclusive":
                     self.timer = threading.Timer(self.delay, self._single_tap)
                     self.timer.start()
+        elif self.timer and self.timer.is_alive():
+            # if releasing single tap before delay
+            # we will want to send a short press and release
+            self.timer.cancel()
+            self.timer = threading.Timer(
+                (self.start_time + self.delay) - time.time(),
+                lambda: self._single_tap(event, value)
+            )
+            self.timer.start()
 
         if self.tap_type == "double":
             self.double_tap.process_event(event, value)
         elif self.activate_on != "exclusive":
             self.single_tap.process_event(event, value)
 
-    def _single_tap(self):
+    def _single_tap(self, event_release=None, value_release=None):
         """Callback executed, when the delay expires."""
         self.single_tap.process_event(self.event_press, self.value_press)
-        if self.event_release:
+        if event_release:
             time.sleep(0.05)
-            self.single_tap.process_event(self.event_release, self.value_release)
+            self.single_tap.process_event(event_release, value_release)
 
 
 class DoubleTapContainer(gremlin.base_classes.AbstractContainer):
