@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import functools
 import heapq
 import inspect
@@ -175,6 +176,33 @@ callback_registry = CallbackRegistry()
 
 # Global registry of all periodic callbacks
 periodic_registry = PeriodicRegistry()
+
+
+def register_callback(callback, device, input_type, input_id):
+    """Adds a callback to the registry.
+
+    This function adds the provided callback to the global callback_registry
+    for the specified event and mode combination.
+
+    Parameters
+    ==========
+    callback : callable
+        The callable object to execute when the event with the specified
+        conditions occurs
+    device : JoystickDecorator
+        Joystick decorator specifying the device and mode in which to execute
+        the callback
+    input_type : common.InputType
+        Type of input on which to execute the callback
+    input_id : int
+        Index of the input on which to execute the callback
+    """
+    event = event_handler.Event(
+        event_type=input_type,
+        device_guid=device.device_guid,
+        identifier=input_id
+    )
+    callback_registry.add(callback, event, device.mode, False)
 
 
 class JoystickWrapper:
@@ -520,21 +548,21 @@ class JoystickDecorator:
         self.mode = mode
         # Convert string based GUID to the actual GUID object
         try:
-            device_guid_obj = profile.parse_guid(device_guid)
+            self.device_guid = profile.parse_guid(device_guid)
         except error.ProfileError:
             logging.getLogger("system").error(
                 "Invalid guid value '' received".format(device_guid)
             )
-            device_guid_obj = GUID_Invalid
+            self.device_guid = GUID_Invalid
 
         self.axis = functools.partial(
-            _axis, device_guid=device_guid_obj, mode=mode
+            _axis, device_guid=self.device_guid, mode=mode
         )
         self.button = functools.partial(
-            _button, device_guid=device_guid_obj, mode=mode
+            _button, device_guid=self.device_guid, mode=mode
         )
         self.hat = functools.partial(
-            _hat, device_guid=device_guid_obj, mode=mode
+            _hat, device_guid=self.device_guid, mode=mode
         )
 
 

@@ -520,15 +520,11 @@ class EventHandler(QtCore.QObject):
     def _install_plugins(self, callback):
         """Installs the current plugins into the given callback.
 
-        :param callback the callback function to install the plugins
-            into
+        :param callback the callback function to install the plugins into
         :return new callback with plugins installed
         """
         signature = inspect.signature(callback).parameters
-        partial_fn = functools.partial
-        if "self" in signature:
-            partial_fn = functools.partialmethod
         for keyword, plugin in self.plugins.items():
             if keyword in signature:
-                callback = plugin.install(callback, partial_fn)
+                callback = plugin.install(callback, functools.partial)
         return callback
