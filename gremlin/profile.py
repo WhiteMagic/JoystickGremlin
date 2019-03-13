@@ -1177,6 +1177,7 @@ class Settings:
         self.vjoy_as_input = {}
         self.vjoy_initial_values = {}
         self.startup_mode = None
+        self.default_delay = 0.05
 
     def to_xml(self):
         """Returns an XML node containing the settings.
@@ -1190,6 +1191,11 @@ class Settings:
             mode_node = ElementTree.Element("startup-mode")
             mode_node.text = safe_format(self.startup_mode, str)
             node.append(mode_node)
+
+        # Default delay
+        delay_node = ElementTree.Element("default-delay")
+        delay_node.text = safe_format(self.default_delay, float)
+        node.append(delay_node)
 
         # Process vJoy as input settings
         for vid, value in self.vjoy_as_input.items():
@@ -1223,6 +1229,11 @@ class Settings:
         self.startup_mode = None
         if node.find("startup-mode") is not None:
             self.startup_mode = node.find("startup-mode").text
+
+        # Default delay
+        self.default_delay = 0.05
+        if node.find("default-delay") is not None:
+            self.default_delay = float(node.find("default-delay").text)
 
         # vJoy as input settings
         self.vjoy_as_input = {}

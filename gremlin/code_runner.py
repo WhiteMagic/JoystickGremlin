@@ -71,6 +71,9 @@ class CodeRunner:
             if settings.startup_mode in gremlin.profile.mode_list(profile):
                 start_mode = settings.startup_mode
 
+        # Set default macro action delay
+        gremlin.macro.MacroManager().default_delay = settings.default_delay
+
         # Load the generated code
         try:
             # Load generated python code
