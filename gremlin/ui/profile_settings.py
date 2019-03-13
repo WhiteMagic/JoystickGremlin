@@ -76,6 +76,9 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
         # Default start mode selection
         self.scroll_layout.addWidget(DefaultModeSelector(self.profile_settings))
 
+        # Default macro delay
+        self.scroll_layout.addWidget(DefaultDelay(self.profile_settings))
+
         # vJoy devices as inputs
         vjoy_as_input_widget = VJoyAsInputWidget(self.profile_settings)
         self.scroll_layout.addWidget(vjoy_as_input_widget)
@@ -112,6 +115,51 @@ class ProfileSettingsWidget(QtWidgets.QWidget):
         label.setFrameShape(QtWidgets.QFrame.Box)
         label.setMargin(10)
         self.scroll_layout.addWidget(label)
+
+
+class DefaultDelay(QtWidgets.QGroupBox):
+
+    """Configures the default delay used with macro executions."""
+
+    def __init__(self, profile_data, parent=None):
+        """Creates a new instance.
+
+        Parameters
+        ==========
+        profile_data : profile.Settings
+            Profile settings data storing information
+        parent : QtObject
+            Parent of this widget
+        """
+        super().__init__(parent)
+
+        self.profile_data = profile_data
+
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self._create_ui()
+
+    def _create_ui(self):
+        """Creates the UI of this widget."""
+        self.setTitle("Default Macro Action Delay")
+
+        self.delay_value = gremlin.ui.common.DynamicDoubleSpinBox()
+        self.delay_value.setRange(0.0, 10.0)
+        self.delay_value.setSingleStep(0.05)
+        self.delay_value.setValue(self.profile_data.default_delay)
+        self.delay_value.valueChanged.connect(self._update_delay)
+
+        self.main_layout.addWidget(self.delay_value)
+        self.main_layout.addStretch()
+
+    def _update_delay(self, value):
+        """Updates the value of the delay with the user input.
+
+        Parameters
+        ==========
+        value : float
+            New delay value to use between macro actions
+        """
+        self.profile_data.default_delay = value
 
 
 class DefaultModeSelector(QtWidgets.QGroupBox):

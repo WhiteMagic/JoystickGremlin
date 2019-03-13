@@ -30,12 +30,6 @@ import win32api
 import gremlin
 
 
-# Default delay between subsequent message dispatch. This is to get
-# around some games not picking up messages if they are sent in too
-# quick a succession.
-default_delay = 0.05
-
-
 MacroEntry = collections.namedtuple(
     "MacroEntry",
     ["macro", "state"]
@@ -226,6 +220,11 @@ class MacroManager:
         self._flags_lock = Lock()
         self._queue_lock = Lock()
 
+        # Default delay between subsequent message dispatch. This is to get
+        # around some games not picking up messages if they are sent in too
+        # quick a succession.
+        self.default_delay = 0.05
+
         self._is_executing_exclusive = False
         self._is_running = False
         self._schedule_event = Event()
@@ -399,7 +398,7 @@ class MacroManager:
             if isinstance(a1, PauseAction) or isinstance(a2, PauseAction):
                 new_sequence.append(a2)
             else:
-                new_sequence.append(PauseAction(default_delay))
+                new_sequence.append(PauseAction(self.default_delay))
                 new_sequence.append(a2)
         macro._sequence = new_sequence
 
