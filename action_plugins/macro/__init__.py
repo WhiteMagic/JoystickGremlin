@@ -27,7 +27,7 @@ from xml.etree import ElementTree
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.common import InputType
 import gremlin.macro
-from gremlin.profile import safe_read, parse_guid, write_guid
+from gremlin.profile import safe_format, safe_read, parse_guid, write_guid
 from gremlin.ui.common import NoKeyboardPushButton
 import gremlin.ui.input_item
 
@@ -360,7 +360,25 @@ class MacroActionEditor(QtWidgets.QWidget):
             self.ui_elements["axis_value"].valueChanged.connect(
                 self._modify_axis_state
             )
+
+            self.ui_elements["axis_absolute"] = QtWidgets.QRadioButton("Absolute")
+            self.ui_elements["axis_relative"] = QtWidgets.QRadioButton("Relative")
+            if action.axis_type == "absolute":
+                self.ui_elements["axis_absolute"].setChecked(True)
+                self.ui_elements["axis_relative"].setChecked(False)
+            elif action.axis_type == "relative":
+                self.ui_elements["axis_absolute"].setChecked(False)
+                self.ui_elements["axis_relative"].setChecked(True)
+            self.ui_elements["axis_absolute"].clicked.connect(
+                self._modify_axis_state
+            )
+            self.ui_elements["axis_relative"].clicked.connect(
+                self._modify_axis_state
+            )
+
             self.action_layout.addWidget(self.ui_elements["axis_value"])
+            self.action_layout.addWidget(self.ui_elements["axis_absolute"])
+            self.action_layout.addWidget(self.ui_elements["axis_relative"])
 
         elif action.input_type == gremlin.common.InputType.JoystickButton:
             self.ui_elements["button_press"] = QtWidgets.QRadioButton("Press")
@@ -405,6 +423,9 @@ class MacroActionEditor(QtWidgets.QWidget):
     def _modify_axis_state(self, state):
         action = self.model.get_entry(self.index.row())
         action.value = self.ui_elements["axis_value"].value()
+        action.axis_type = "absolute"
+        if self.ui_elements["axis_relative"].isChecked():
+            action.axis_type = "relative"
         self._update_model()
 
     def _modify_hat_state(self, state):
@@ -1536,7 +1557,8 @@ class Macro(AbstractAction):
                         safe_read(child, "input-type")
                     ),
                     safe_read(child, "input-id", int),
-                    safe_read(child, "value")
+                    safe_read(child, "value"),
+                    safe_read(child, "axis-type", str, "absolute")
                 )
                 self._str_to_joy_value(joy_action)
                 self.sequence.append(joy_action)
@@ -1572,7 +1594,8 @@ class Macro(AbstractAction):
                         safe_read(child, "input-type")
                     ),
                     safe_read(child, "input-id", int),
-                    safe_read(child, "value")
+                    safe_read(child, "value"),
+                    safe_read(child, "axis-type", str, "absolute")
                 )
                 self._str_to_joy_value(vjoy_action)
                 self.sequence.append(vjoy_action)
@@ -1602,6 +1625,8 @@ class Macro(AbstractAction):
                 )
                 joy_node.set("input-id", str(entry.input_id))
                 joy_node.set("value", self._joy_value_to_str(entry))
+                if entry.input_type == InputType.JoystickAxis:
+                    joy_node.set("axis-type", safe_format(entry.axis_type, str))
                 action_list.append(joy_node)
             elif isinstance(entry, gremlin.macro.KeyAction):
                 action_node = ElementTree.Element("key")
@@ -1632,6 +1657,8 @@ class Macro(AbstractAction):
                 )
                 vjoy_node.set("input-id", str(entry.input_id))
                 vjoy_node.set("value", self._joy_value_to_str(entry))
+                if entry.input_type == InputType.JoystickAxis:
+                    vjoy_node.set("axis-type", safe_format(entry.axis_type, str))
                 action_list.append(vjoy_node)
 
         node.append(action_list)
