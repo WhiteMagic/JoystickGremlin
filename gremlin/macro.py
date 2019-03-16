@@ -501,36 +501,55 @@ class JoystickAction(AbstractAction):
 
     """Joystick input action for a macro."""
 
-    def __init__(self, device_guid, input_type, input_id, value):
+    def __init__(self, device_guid, input_type, input_id, value, axis_type="absolute"):
         """Creates a new JoystickAction instance for use in a macro.
 
         :param device_guid GUID of the device generating the input
         :param input_type type of input being generated
         :param input_id id of the input being generated
         :param value the value of the generated input
+        :param axis_type if an axis is used, how to interpret the value
         """
         self.device_guid = device_guid
         self.input_type = input_type
         self.input_id = input_id
         self.value = value
+        self.axis_type = axis_type
 
     def __call__(self):
         """Emits an Event instance through the EventListener system."""
         el = gremlin.event_handler.EventListener()
-        if self.input_type == gremlin.common.InputType.JoystickButton:
+        if self.input_type == gremlin.common.InputType.JoystickAxis:
+            value = self.value
+            if self.axis_type == "relative":
+                tmp = gremlin.input_devices.JoystickProxy()[self.device_guid] \
+                    .axis(self.input_id).value
+                value = max(
+                    -1.0,
+                    min(1.0, tmp + self.value)
+                )
+
+            event = gremlin.event_handler.Event(
+                event_type=self.input_type,
+                device_guid=self.device_guid,
+                identifier=self.input_id,
+                value=value
+            )
+        elif self.input_type == gremlin.common.InputType.JoystickButton:
             event = gremlin.event_handler.Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
                 is_pressed=self.value
             )
-        else:
+        elif self.input_type == gremlin.common.InputType.JoystickHat:
             event = gremlin.event_handler.Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
                 value=self.value
             )
+
         el.joystick_event.emit(event)
 
 
@@ -620,23 +639,31 @@ class VJoyAction(AbstractAction):
 
     """VJoy input action for a macro."""
 
-    def __init__(self, vjoy_id, input_type, input_id, value):
+    def __init__(self, vjoy_id, input_type, input_id, value, axis_type="absolute"):
         """Creates a new JoystickAction instance for use in a macro.
 
         :param vjoy_id id of the vjoy device which is to be modified
         :param input_type type of input being generated
         :param input_id id of the input being generated
         :param value the value of the generated input
+        :param axis_type if an axis is used, how to interpret the value
         """
         self.vjoy_id = vjoy_id
         self.input_type = input_type
         self.input_id = input_id
         self.value = value
+        self.axis_type = axis_type
 
     def __call__(self):
         vjoy = gremlin.joystick_handling.VJoyProxy()[self.vjoy_id]
         if self.input_type == gremlin.common.InputType.JoystickAxis:
-            vjoy.axis(self.input_id).value = self.value
+            if self.axis_type == "absolute":
+                vjoy.axis(self.input_id).value = self.value
+            elif self.axis_type == "relative":
+                vjoy.axis(self.input_id).value = max(
+                    -1.0,
+                    min(1.0, vjoy.axis(self.input_id).value + self.value)
+                )
         elif self.input_type == gremlin.common.InputType.JoystickButton:
             vjoy.button(self.input_id).is_pressed = self.value
         elif self.input_type == gremlin.common.InputType.JoystickHat:
