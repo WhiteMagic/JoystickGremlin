@@ -520,20 +520,11 @@ class JoystickAction(AbstractAction):
         """Emits an Event instance through the EventListener system."""
         el = gremlin.event_handler.EventListener()
         if self.input_type == gremlin.common.InputType.JoystickAxis:
-            value = self.value
-            if self.axis_type == "relative":
-                tmp = gremlin.input_devices.JoystickProxy()[self.device_guid] \
-                    .axis(self.input_id).value
-                value = max(
-                    -1.0,
-                    min(1.0, tmp + self.value)
-                )
-
             event = gremlin.event_handler.Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
-                value=value
+                value=self.value
             )
         elif self.input_type == gremlin.common.InputType.JoystickButton:
             event = gremlin.event_handler.Event(
