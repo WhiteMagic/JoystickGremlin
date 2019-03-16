@@ -1909,6 +1909,13 @@ class InputItem:
             item = item.parent
         return item.type
 
+    def get_input_type(self):
+        """Returns the type of this input.
+
+        :return Type of this input
+        """
+        return self.input_type
+
     def __eq__(self, other):
         """Checks whether or not two InputItem instances are identical.
 
