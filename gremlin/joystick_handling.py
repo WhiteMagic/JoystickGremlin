@@ -268,11 +268,6 @@ def joystick_devices_initialization():
         if hash_value in vjoy_lookup:
             try:
                 vjoy_dev = vjoy_proxy[i]
-
-                # axis_mapping = []
-                # for j in range(vjoy_dev.axis_count):
-                #     axis_mapping.append((j + 1, vjoy_dev.axis_id(j + 1)))
-                # vjoy_lookup[hash_value].set_axis_mapping(axis_mapping)
             except error.VJoyError as e:
                 syslog.debug("vJoy id {:} can't be acquired".format(i))
 
