@@ -21,7 +21,7 @@ import threading
 
 import dill
 
-from . import common, error
+from . import common, error, util
 from vjoy import vjoy
 
 
@@ -249,6 +249,12 @@ def joystick_devices_initialization():
             vjoy.button_count(i),
             vjoy.hat_count(i)
         )
+
+        if not vjoy.hat_configuration_valid(i):
+            error_string = "vJoy id {:d}: Hats are set to discrete but have " \
+                           "to be set as continuous.".format(i)
+            syslog.debug(error_string)
+            util.display_error(error_string)
 
         # As we are ensured that no duplicate vJoy devices exist from
         # the previous step we can directly link the SDL and vJoy device
