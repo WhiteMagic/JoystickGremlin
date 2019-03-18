@@ -119,6 +119,28 @@ def hat_count(vjoy_id):
     return VJoyInterface.GetVJDContPovNumber(vjoy_id)
 
 
+def hat_configuration_valid(vjoy_id):
+    """Returns if the hats are configured properly.
+
+    In order for hats to work properly they have to be set as continous and
+    not discrete.
+
+    Parameters
+    ==========
+    vjoy_id : int
+        Index of the vJoy device to query
+
+    Returns
+    =======
+    bool
+        True if the hats are configured properly, False otherwise
+    """
+    continuous_count = VJoyInterface.GetVJDContPovNumber(vjoy_id)
+    discrete_count = VJoyInterface.GetVJDDiscPovNumber(vjoy_id)
+
+    return continuous_count >= discrete_count
+
+
 class Axis:
 
     """Represents an analog axis in vJoy, allows setting the value
