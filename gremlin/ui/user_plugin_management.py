@@ -290,28 +290,31 @@ class ModuleListWidget(QtWidgets.QScrollArea):
         self.setWidgetResizable(True)
 
         self.content = QtWidgets.QWidget()
-        self.content.setLayout(QtWidgets.QVBoxLayout())
-        self.content.layout().addStretch()
+        self.content_layout = QtWidgets.QVBoxLayout()
+        self.content_layout.addStretch()
+        self.stretch_item = self.content_layout.itemAt(0).spacerItem()
+        self.content.setLayout(self.content_layout)
         self.setWidget(self.content)
 
     def add_module(self, module_widget):
         # Insert provided widget as the last one in the list above the
         # stretcher item
         self.widget_list.append(module_widget)
-        self.content.layout().insertWidget(
-            self.content.layout().count() - 1,
+        self.content_layout.insertWidget(
+            self.content_layout.count() - 1,
             module_widget
         )
 
     def remove_module(self, module_widget):
         module_widget.hide()
-        self.content.layout().removeWidget(module_widget)
+        self.content_layout.removeWidget(module_widget)
+
         del self.widget_list[self.widget_list.index(module_widget)]
         del module_widget
 
     def clear(self):
         self.widget_list = []
-        gremlin.ui.common.clear_layout(self.content.layout())
+        gremlin.ui.common.clear_layout(self.content_layout)
         self.content.layout().addStretch()
 
 
