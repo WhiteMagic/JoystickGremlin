@@ -891,6 +891,19 @@ class ProfileConverter:
             del entry.attrib["device2"]
             del entry.attrib["axis2"]
 
+        plugins_node = ElementTree.Element("plugins")
+        for entry in root.findall(".//import/module"):
+            p_node = ElementTree.Element("plugin")
+            p_node.set("file-name", entry.attrib["name"])
+
+            i_node = ElementTree.Element("instance")
+            i_node.set("name", "Default")
+
+            p_node.append(i_node)
+            plugins_node.append(p_node)
+
+        root.append(plugins_node)
+
         return root
 
     def _p3_extract_map_to_keyboard(self, input_item):
