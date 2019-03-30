@@ -190,9 +190,10 @@ class ModuleManagementController(QtCore.QObject):
         module_widget.btn_delete.clicked.connect(
             lambda x: self.remove_module(module_data.file_name)
         )
-        module_widget.btn_add_instance.clicked.connect(
-            lambda: self.create_new_module_instance(module_widget, module_data)
-        )
+        if module_widget.has_variables:
+            module_widget.btn_add_instance.clicked.connect(
+                lambda: self.create_new_module_instance(module_widget, module_data)
+            )
 
         return module_widget
 
@@ -319,6 +320,11 @@ class ModuleWidget(QtWidgets.QFrame):
     def __init__(self, module_name, parent=None):
         super().__init__(parent)
 
+        variables = gremlin.user_plugin.get_variable_definitions(
+            module_name
+        )
+        self.has_variables = len(variables) > 0
+
         layout = QtWidgets.QVBoxLayout(self)
 
         self.setStyleSheet("QFrame { background-color : '#ffffff'; }")
@@ -326,18 +332,19 @@ class ModuleWidget(QtWidgets.QFrame):
 
         header_layout = QtWidgets.QHBoxLayout()
         header_layout.addWidget(QtWidgets.QLabel(module_name))
+        header_layout.addStretch()
 
-        self.btn_add_instance = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/button_add"),
-            ""
-        )
+        if self.has_variables:
+            self.btn_add_instance = QtWidgets.QPushButton(
+                QtGui.QIcon("gfx/button_add"),
+                ""
+            )
+            header_layout.addWidget(self.btn_add_instance)
+
         self.btn_delete = QtWidgets.QPushButton(
             QtGui.QIcon("gfx/button_delete"),
             ""
         )
-
-        header_layout.addStretch()
-        header_layout.addWidget(self.btn_add_instance)
         header_layout.addWidget(self.btn_delete)
 
         self.instance_layout = QtWidgets.QVBoxLayout()
