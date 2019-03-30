@@ -353,10 +353,8 @@ class ModuleWidget(QtWidgets.QFrame):
         layout.addLayout(self.instance_layout)
 
     def get_module_name(self):
-        header_layout = self.layout().takeAt(0)
-        return header_layout.takeAt(0).widget().text()
-
-        return self.layout().takeAt(0).takeAt(0).widget().text()
+        header_layout = self.layout().itemAt(0)
+        return header_layout.itemAt(0).widget().text()
 
     def add_instance(self, widget):
         self.instance_layout.addWidget(widget)
