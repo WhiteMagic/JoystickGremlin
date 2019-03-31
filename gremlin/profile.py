@@ -901,8 +901,10 @@ class ProfileConverter:
 
             p_node.append(i_node)
             plugins_node.append(p_node)
-
         root.append(plugins_node)
+
+        for entry in root.findall("import"):
+            root.remove(entry)
 
         return root
 
@@ -1300,7 +1302,6 @@ class Profile:
         """Constructor creating a new instance."""
         self.devices = {}
         self.vjoy_devices = {}
-        self.imports = []
         self.merge_axes = []
         self.plugins = []
         self.settings = Settings(self)
@@ -1483,11 +1484,6 @@ class Profile:
                         new_device.modes[mode] = Mode(new_device)
                         new_device.modes[mode].name = mode
 
-        # Parse list of user modules to import
-        for child in root.iter("import"):
-            for entry in child:
-                self.imports.append(entry.get("name"))
-
         # Parse merge axis entries
         for child in root.iter("merge-axis"):
             self.merge_axes.append(self._parse_merge_axis(child))
@@ -1527,14 +1523,6 @@ class Profile:
         for device in self.vjoy_devices.values():
             vjoy_devices.append(device.to_xml())
         root.append(vjoy_devices)
-
-        # Module imports
-        import_node = ElementTree.Element("import")
-        for entry in sorted(self.imports):
-            node = ElementTree.Element("module")
-            node.set("name", entry)
-            import_node.append(node)
-        root.append(import_node)
 
         # Merge axis data
         for entry in self.merge_axes:
@@ -1608,7 +1596,6 @@ class Profile:
         :return True if the profile is empty, False otherwise
         """
         is_empty = True
-        is_empty &= len(self.imports) == 0
         is_empty &= len(self.merge_axes) == 0
 
         # Enumerate all input devices
