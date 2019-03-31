@@ -102,7 +102,7 @@ class MergeAxisUi(common.BaseDialogUi):
             self.profile_data.merge_axes.append({
                 "mode": entry.mode_selector.mode_list[mode_idx],
                 "vjoy": {
-                    "device_id": vjoy_sel["device_id"],
+                    "vjoy_id": vjoy_sel["device_id"],
                     "axis_id": vjoy_sel["input_id"]
                 },
                 "lower": {
@@ -122,13 +122,13 @@ class MergeAxisUi(common.BaseDialogUi):
             # Show an error if the desired vJoy device is no longer available
             # as an output
             if self.profile_data.settings.vjoy_as_input.get(
-                    entry["vjoy"]["device_id"],
+                    entry["vjoy"]["vjoy_id"],
                     False
             ):
                 entries_to_remove.append(entry)
                 gremlin.util.display_error(
                     "vJoy device {} used as physical input".format(
-                        entry["vjoy"]["device_id"]
+                        entry["vjoy"]["vjoy_id"]
                     )
                 )
             else:
@@ -239,7 +239,7 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
         try:
             self.vjoy_selector.set_selection(
                 gremlin.common.InputType.JoystickAxis,
-                data["vjoy"]["device_id"],
+                data["vjoy"]["vjoy_id"],
                 data["vjoy"]["axis_id"]
             )
         except gremlin.error.GremlinError as e:
