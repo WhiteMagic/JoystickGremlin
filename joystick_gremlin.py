@@ -962,7 +962,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         # Attempt to load the new profile
         try:
             new_profile = gremlin.profile.Profile()
-            new_profile.from_xml(fname)
+            profile_updated = new_profile.from_xml(fname)
 
             profile_folder = os.path.dirname(fname)
             if profile_folder not in sys.path:
@@ -982,6 +982,12 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.mode_selector.populate_selector(
                 self._profile, self._current_mode
             )
+
+            # Save the profile at this point if it was converted from a prior
+            # profile version, as otherwise the change detection logic will
+            # trip over insignificant input item additions.
+            if profile_updated:
+                self._profile.to_xml(fname)
         except (KeyError, TypeError) as error:
             # An error occurred while parsing an existing profile,
             # creating an empty profile instead

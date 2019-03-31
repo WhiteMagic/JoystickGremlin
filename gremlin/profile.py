@@ -1432,9 +1432,11 @@ class Profile:
         """
         # Check for outdated profile structure and warn user / convert
         profile_converter = ProfileConverter()
+        profile_was_updated = False
         if not profile_converter.is_current(fname):
             logging.getLogger("system").warning("Outdated profile, converting")
             profile_converter.convert_profile(fname)
+            profile_was_updated = True
 
         tree = ElementTree.parse(fname)
         root = tree.getroot()
@@ -1498,6 +1500,8 @@ class Profile:
             plugin = Plugin(self)
             plugin.from_xml(child)
             self.plugins.append(plugin)
+
+        return profile_was_updated
 
     def to_xml(self, fname):
         """Generates XML code corresponding to this profile.
