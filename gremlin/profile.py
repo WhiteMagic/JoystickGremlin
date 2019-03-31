@@ -998,7 +998,8 @@ class ProfileModifier:
         """
         count = 0
         for cond in self.all_conditions():
-            if cond.device_guid == device_guid:
+            if isinstance(cond, base_classes.JoystickCondition) and \
+                    cond.device_guid == device_guid:
                 count += 1
         return count
 
