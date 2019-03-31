@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import copy
 import logging
 import threading
@@ -79,7 +80,7 @@ class SmartToggleContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[0],
-                "SmartToggle",
+                "Smart Toggle",
                 gremlin.ui.common.ContainerViewTypes.Action
             )
             self.action_layout.addWidget(widget)
@@ -99,7 +100,7 @@ class SmartToggleContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
             widget = self._create_action_set_widget(
                 self.profile_data.action_sets[0],
-                "SmartToggle",
+                "Smart Toggle",
                 gremlin.ui.common.ContainerViewTypes.Condition
             )
             self.activation_condition_layout.addWidget(widget)
@@ -152,7 +153,7 @@ class SmartToggleContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         if len(self.profile_data.action_sets) > 0:
             return ", ".join(a.name for a in self.profile_data.action_sets[0])
         else:
-            return "SmartToggle"
+            return "Smart Toggle"
 
 
 class SmartToggleContainerFunctor(gremlin.base_classes.AbstractFunctor):
@@ -249,7 +250,7 @@ class SmartToggleContainer(gremlin.base_classes.AbstractContainer):
 
     """Represents a container which holds exactly one action."""
 
-    name = "SmartToggle"
+    name = "Smart Toggle"
     tag = "smart_toggle"
 
     input_types = [
