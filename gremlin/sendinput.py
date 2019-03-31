@@ -122,8 +122,6 @@ class MouseMotion:
             tick_time = 1.0 / (abs(delta) / tick_value)
             tick_value = int(math.copysign(tick_value, delta))
 
-        assert tick_time < 1
-
         return tick_value, tick_time
 
 
@@ -211,9 +209,10 @@ class AcceleratedMouseMotion(MouseMotion):
 
         :return dx, dy for this time point
         """
+        # Get values to return using current integration step values
         dx, dy = super().__call__()
 
-        # Apply acceleration
+        # Apply acceleration to obtain next integration step values
         self.current_velocity = min(
             self.max_velocity,
             self.current_velocity + self.acceleration * MouseMotion.delta_t
@@ -223,6 +222,7 @@ class AcceleratedMouseMotion(MouseMotion):
         self._tick_dx_value, self._tick_dx_time = self._compute_values(self.dx)
         self._tick_dy_value, self._tick_dy_time = self._compute_values(self.dy)
 
+        # Return cached values
         return dx, dy
 
 
