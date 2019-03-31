@@ -218,15 +218,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             lambda: self._remove_modal_window("log")
         )
 
-    def manage_custom_modules(self):
-        """Opens the custom module management window."""
-        self.modal_windows["module_manager"] = \
-            gremlin.ui.dialogs.ModuleManagerUi(self._profile)
-        self.modal_windows["module_manager"].show()
-        self.modal_windows["module_manager"].closed.connect(
-            lambda: self._remove_modal_window("module_manager")
-        )
-
     def manage_modes(self):
         """Opens the mode management window."""
         self.modal_windows["mode_manager"] = \
@@ -539,9 +530,6 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.device_information
         )
         self.ui.actionManageModes.triggered.connect(self.manage_modes)
-        self.ui.actionManageCustomModules.triggered.connect(
-            self.manage_custom_modules
-        )
         self.ui.actionInputRepeater.triggered.connect(self.input_repeater)
         self.ui.actionCalibration.triggered.connect(self.calibration)
         self.ui.actionInputViewer.triggered.connect(self.input_viewer)

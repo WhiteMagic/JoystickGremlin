@@ -69,7 +69,6 @@
      <string>&amp;Tools</string>
     </property>
     <addaction name="actionManageModes"/>
-    <addaction name="actionManageCustomModules"/>
     <addaction name="actionInputRepeater"/>
     <addaction name="actionDeviceInformation"/>
     <addaction name="actionCalibration"/>
