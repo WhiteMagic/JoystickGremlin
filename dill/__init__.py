@@ -370,7 +370,7 @@ class DeviceSummary:
 C_EVENT_CALLBACK = ctypes.CFUNCTYPE(None, _JoystickInputData)
 C_DEVICE_CHANGE_CALLBACK = ctypes.CFUNCTYPE(None, _DeviceSummary, ctypes.c_uint8)
 
-_dll_path = os.path.join(os.path.dirname(__file__), "di_listener.dll")
+_dll_path = os.path.join(os.path.dirname(__file__), "dill.dll")
 _di_listener_dll = ctypes.cdll.LoadLibrary(_dll_path)
 
 _di_listener_dll.get_device_information_by_index.argtypes = [ctypes.c_uint]
@@ -383,7 +383,7 @@ class DILL:
 
     # Attempt to find the correct location of the dll for development
     # and installed use cases.
-    _dev_path = os.path.join(os.path.dirname(__file__), "di_listener.dll")
+    _dev_path = os.path.join(os.path.dirname(__file__), "dill.dll")
     if os.path.isfile("di_listener.dll"):
         _dll_path = "di_listener.dll"
     elif os.path.isfile(_dev_path):
