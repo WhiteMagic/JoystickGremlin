@@ -129,7 +129,7 @@ def parse_guid(value):
             raw_guid.Data4[i] = tmp.bytes[8 + i]
 
         return dill.GUID(raw_guid)
-    except ValueError as e:
+    except (ValueError, AttributeError) as e:
         raise error.ProfileError(
             "Failed parsing GUID from value {}".format(value)
         )
