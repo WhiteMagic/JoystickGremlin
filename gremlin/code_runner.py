@@ -17,8 +17,10 @@
 
 import importlib
 import logging
+import os
 import random
 import string
+import sys
 import time
 
 import dill
@@ -74,11 +76,21 @@ class CodeRunner:
         # Set default macro action delay
         gremlin.macro.MacroManager().default_delay = settings.default_delay
 
+        # Retrieve list of current paths searched by Python
+        system_paths = [os.path.normcase(os.path.abspath(p)) for p in sys.path]
+
         # Load the generated code
         try:
             # Populate custom module variable registry
             var_reg = user_plugin.variable_registry
             for plugin in profile.plugins:
+                # Perform system path mangling for import statements
+                path, _ = os.path.split(
+                    os.path.normcase(os.path.abspath(plugin.file_name))
+                )
+                if path not in system_paths:
+                    system_paths.append(path)
+
                 # Load module specification so we can later create multiple
                 # instances if desired
                 spec = importlib.util.spec_from_file_location(
@@ -105,6 +117,9 @@ class CodeRunner:
                     tmp = importlib.util.module_from_spec(spec)
                     tmp.__gremlin_identifier = (plugin.file_name, instance.name)
                     spec.loader.exec_module(tmp)
+
+            # Update system path list searched by Python
+            sys.path = system_paths
 
             # Create callbacks fom the user code
             callback_count = 0
