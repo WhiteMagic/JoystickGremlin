@@ -76,9 +76,6 @@ class CodeRunner:
 
         # Load the generated code
         try:
-            # Load generated python code
-            gremlin_code = util.load_module("gremlin_code")
-
             # Populate custom module variable registry
             var_reg = user_plugin.variable_registry
             for plugin in profile.plugins:

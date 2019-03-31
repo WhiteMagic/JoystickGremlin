@@ -314,7 +314,6 @@ class GremlinUi(QtWidgets.QMainWindow):
         if checked:
             # Generate the code for the profile and run it
             self._profile_auto_activated = False
-            self.generate()
             self.runner.start(
                 self._profile.build_inheritance_tree(),
                 self._profile.settings,
@@ -380,19 +379,6 @@ class GremlinUi(QtWidgets.QMainWindow):
                 container.add_action(action)
                 entry.containers.append(container)
         self._create_tabs()
-
-    def generate(self):
-        """Generates python code for the code runner from the current
-        profile.
-        """
-        # generator = CodeGenerator(self._profile)
-        generator = gremlin.code_generator.CodeGenerator(self._profile)
-        generator.write_code(
-            os.path.join(
-                gremlin.util.userprofile_path(),
-                "gremlin_code.py"
-            )
-        )
 
     def input_repeater(self):
         """Enables or disables the forwarding of events to the repeater."""
