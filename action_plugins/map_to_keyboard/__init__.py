@@ -100,6 +100,7 @@ class MapToKeyboardFunctor(AbstractFunctor):
     def __init__(self, action):
         super().__init__(action)
         self.press = gremlin.macro.Macro()
+        self.needs_auto_release = True
         for key in action.keys:
             self.press.press(gremlin.macro.key_from_code(key[0], key[1]))
 
@@ -110,10 +111,12 @@ class MapToKeyboardFunctor(AbstractFunctor):
     def process_event(self, event, value):
         if value.current:
             gremlin.macro.MacroManager().queue_macro(self.press)
-            ButtonReleaseActions().register_callback(
-                lambda: gremlin.macro.MacroManager().queue_macro(self.release),
-                event
-            )
+
+            if self.needs_auto_release:
+                ButtonReleaseActions().register_callback(
+                    lambda: gremlin.macro.MacroManager().queue_macro(self.release),
+                    event
+                )
         else:
             gremlin.macro.MacroManager().queue_macro(self.release)
         return True
