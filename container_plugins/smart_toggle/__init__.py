@@ -24,6 +24,8 @@ from xml.etree import ElementTree
 
 from PyQt5 import QtWidgets
 
+from action_plugins.remap import RemapFunctor
+
 import gremlin
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -49,7 +51,7 @@ class SmartToggleContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
         # Activation delay
         self.options_layout.addWidget(
-            QtWidgets.QLabel("<b>Long press delay: </b>")
+            QtWidgets.QLabel("<b>Toggle time: </b>")
         )
         self.delay_input = gremlin.ui.common.DynamicDoubleSpinBox()
         self.delay_input.setRange(0.1, 2.0)
@@ -59,19 +61,6 @@ class SmartToggleContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         self.delay_input.valueChanged.connect(self._delay_changed_cb)
         self.options_layout.addWidget(self.delay_input)
         self.options_layout.addStretch()
-
-        # Activation moment
-        self.options_layout.addWidget(QtWidgets.QLabel("<b>Activate on: </b>"))
-        self.activate_press = QtWidgets.QRadioButton("on press")
-        self.activate_release = QtWidgets.QRadioButton("on release")
-        if self.profile_data.activate_on == "press":
-            self.activate_press.setChecked(True)
-        else:
-            self.activate_release.setChecked(True)
-        self.activate_press.toggled.connect(self._activation_changed_cb)
-        self.activate_release.toggled.connect(self._activation_changed_cb)
-        self.options_layout.addWidget(self.activate_press)
-        self.options_layout.addWidget(self.activate_release)
 
         self.action_layout.addLayout(self.options_layout)
 
@@ -161,89 +150,69 @@ class SmartToggleContainerFunctor(gremlin.base_classes.AbstractFunctor):
     """Executes the contents of the associated SmartToggle container."""
 
     def __init__(self, container):
+        """Creates a new functor instance.
+
+        Parameters
+        ==========
+        container : SmartToggleContainer
+            The instance containing the configuration of the container
+        """
         super().__init__(container)
         self.action_set = gremlin.execution_graph.ActionSetExecutionGraph(
             container.action_sets[0]
         )
         self.delay = container.delay
-        self.activate_on = container.activate_on
-        self.toggle_status = False
-        self.timer = None
-        self.value_press = None
-        self.event_press = None
-        # TODO find proper way to do this
-        self.action_set.functors[1].needs_auto_release = False
+        self.release_value = None
+        self.release_event = None
+        self.mode = None
+        self.activation_time = 0.0
+
+        # Disable the auto release feature which clashes with the toggle logic
+        for functor in self.action_set.functors:
+            if "needs_auto_release" in functor.__dict__:
+                functor.needs_auto_release = False
 
     def process_event(self, event, value):
         # TODO: Currently this does not handle hat or axis events, however
         #       virtual buttons created on those inputs is supported
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
-                "Invalid data type received in Tempo container: {}".format(
+                "Invalid data type received in Smart Toggle container: {}".format(
                     type(event.value)
                 )
             )
             return False
 
-        # Copy state when input is pressed
         if value.current:
-            self.value_press = copy.deepcopy(value)
-            self.event_press = event.clone()
+            # Currently not in either toggle or hold mode
+            if self.mode is None:
+                self.action_set.process_event(event, value)
+                self.activation_time = time.time()
 
-        # Execute smart trigger logic
-        if value.current:
-            self.start_time = time.time()
-            self.toggle_status = not self.toggle_status
-
-            if self.activate_on == "press":
-                self._process_hold_toggle(self.toggle_status, event, value)
-            elif self.delay > 0.0:
-                # on release, we still want to send a toggle after delay seconds
-                self.timer = threading.Timer(self.delay, self._long_press)
-                self.timer.start()
+            # Run release logic when the second press happens in toggle mode
+            elif self.mode == "toggle":
+                self.action_set.process_event(
+                    self.release_event,
+                    self.release_value
+                )
+                self.activation_time = 0.0
+                self.mode = None
         else:
-            if self.timer:
-                self.timer.cancel()
-            # Short press
-            if (self.start_time + self.delay) > time.time() or self.delay == 0.0:
-                if self.activate_on == "release":
-                    self._process_hold_toggle(self.toggle_status, self.event_press, self.value_press, event, value)
-            # Long press
+            # If the input is release before the hold timeout occurs switch
+            # to toggle mode and store the event for artificial release on
+            # next input press
+            if self.activation_time + self.delay > time.time():
+                self.mode = "toggle"
+                self.release_event = event.clone()
+                self.release_value = value
+
+            # Run release logic when the release event occurs in hold mode
             else:
-                    self.toggle_status = not self.toggle_status
-                    self._process_hold_toggle(self.toggle_status, self.event_press, self.value_press, event, value)
-
-            self.timer = None
+                self.action_set.process_event(event, value)
+                self.activation_time = 0.0
+                self.mode = None
 
         return True
-
-    def _generate_events(self, event_p, value_p, event_r=None, value_r=None):
-        """Callback executed for a short press action.
-
-        :param event_p event to press the action
-        :param value_p value to press the action
-        :param event_r event to release the action
-        :param value_r value to release the action
-        """
-        if event_r is None:
-            event_r = event_p.clone()
-        if value_r is None:
-            value_r = copy.deepcopy(value_p)
-            value_r.current = False
-        return event_p, value_p, event_r, value_r
-
-    def _process_hold_toggle(self, target_status, event_p, value_p, event_r=None, value_r=None):
-        event_p, value_p, event_r, value_r = self._generate_events(
-                event_p, value_p, event_r, value_r)
-        if target_status:
-            self.action_set.process_event(event_p, value_p)
-        else:
-            self.action_set.process_event(event_r, value_r)
-        return True
-
-    def _long_press(self):
-        """Callback executed, when the delay expires."""
-        self._process_hold_toggle(self.toggle_status, self.event_press, self.value_press)
 
 
 class SmartToggleContainer(gremlin.base_classes.AbstractContainer):
@@ -272,7 +241,6 @@ class SmartToggleContainer(gremlin.base_classes.AbstractContainer):
         super().__init__(parent)
         self.action_sets = [[]]
         self.delay = 0.5
-        self.activate_on = "press"
 
     def _parse_xml(self, node):
         """Populates the container with the XML node's contents.
@@ -281,8 +249,6 @@ class SmartToggleContainer(gremlin.base_classes.AbstractContainer):
         """
         super()._parse_xml(node)
         self.delay = gremlin.profile.safe_read(node, "delay", float, 0.5)
-        self.activate_on = \
-            gremlin.profile.safe_read(node, "activate-on", str, "press")
 
     def _generate_xml(self):
         """Returns an XML node representing this container's data.
@@ -292,10 +258,6 @@ class SmartToggleContainer(gremlin.base_classes.AbstractContainer):
         node = ElementTree.Element("container")
         node.set("type", SmartToggleContainer.tag)
         node.set("delay", gremlin.profile.safe_format(self.delay, float))
-        node.set(
-            "activate-on",
-            gremlin.profile.safe_format(self.activate_on, str)
-        )
         as_node = ElementTree.Element("action-set")
         for action in self.action_sets[0]:
             as_node.append(action.to_xml())
