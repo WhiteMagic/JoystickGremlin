@@ -463,6 +463,7 @@ class AxesCurrentState(QtWidgets.QGroupBox):
         """
         super().__init__(parent)
 
+        self.device = device
         if device.is_virtual:
             self.setTitle("{} #{:d} - Axes".format(device.name, device.vjoy_id))
         else:
@@ -484,7 +485,12 @@ class AxesCurrentState(QtWidgets.QGroupBox):
         :param event the event with which to update the state display
         """
         if event.event_type == gremlin.common.InputType.JoystickAxis:
-            self.axes[event.identifier].set_value(event.value)
+            axis_id = gremlin.joystick_handling.linear_axis_index(
+                self.device.axis_map,
+                event.identifier
+            )
+
+            self.axes[axis_id].set_value(event.value)
 
 
 class AxisStateWidget(QtWidgets.QWidget):
