@@ -24,8 +24,6 @@ from xml.etree import ElementTree
 
 from PyQt5 import QtWidgets
 
-from action_plugins.remap import RemapFunctor
-
 import gremlin
 import gremlin.ui.common
 import gremlin.ui.input_item
