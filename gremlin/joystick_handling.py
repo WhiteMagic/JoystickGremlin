@@ -155,6 +155,28 @@ def vjoy_id_from_guid(guid):
     return 1
 
 
+def linear_axis_index(axis_map, axis_index):
+    """Returns the linear index for an axis based on the axis index.
+
+    Parameters
+    ==========
+    axis_map : dill.AxisMap
+        AxisMap instance which contains the mapping between linear and
+        axis indices
+    axis_index : int
+        Index of the axis for which to return the linear index
+
+    Return
+    ======
+    int
+        Linear axis index
+    """
+    for entry in axis_map:
+        if entry.axis_index == axis_index:
+            return entry.linear_index
+    raise error.GremlinError("Linear axis lookup failed")
+
+
 def joystick_devices_initialization():
     """Initializes joystick device information.
 
