@@ -145,7 +145,11 @@ class CalibrationUi(common.BaseDialogUi):
         """
         if event.device_guid == self.devices[self.current_selection_id].device_guid \
                 and event.event_type == gremlin.common.InputType.JoystickAxis:
-            self.axes[event.identifier-1].set_current(event.raw_value)
+            axis_id = gremlin.joystick_handling.linear_axis_index(
+                self.devices[self.current_selection_id].axis_map,
+                event.identifier
+            )
+            self.axes[axis_id-1].set_current(event.raw_value)
 
     def closeEvent(self, event):
         """Closes the calibration window.
