@@ -489,7 +489,6 @@ class AxesCurrentState(QtWidgets.QGroupBox):
                 self.device.axis_map,
                 event.identifier
             )
-
             self.axes[axis_id].set_value(event.value)
 
 
