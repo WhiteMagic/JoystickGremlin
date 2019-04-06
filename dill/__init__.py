@@ -384,8 +384,8 @@ class DILL:
     # Attempt to find the correct location of the dll for development
     # and installed use cases.
     _dev_path = os.path.join(os.path.dirname(__file__), "dill.dll")
-    if os.path.isfile("di_listener.dll"):
-        _dll_path = "di_listener.dll"
+    if os.path.isfile("dill.dll"):
+        _dll_path = "dill.dll"
     elif os.path.isfile(_dev_path):
         _dll_path = _dev_path
     else:
