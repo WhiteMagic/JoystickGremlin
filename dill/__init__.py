@@ -24,6 +24,14 @@ import os
 import time
 
 
+class DILLError(Exception):
+
+    """Exception raised when an error occurs within the DILL module."""
+
+    def __init__(self, value):
+        super().__init__(value)
+
+
 class _GUID(ctypes.Structure):
 
     """Strcture mapping C information into a set of Python readable values."""
@@ -238,7 +246,7 @@ class InputType(Enum):
         elif value == 3:
             return InputType.Hat
         else:
-            raise "Invalid input type value {:d}".format(value)
+            raise DILLError("Invalid input type value {:d}".format(value))
 
 
 class DeviceActionType(Enum):
@@ -267,7 +275,7 @@ class DeviceActionType(Enum):
         elif value == 2:
             return DeviceActionType.Disconnected
         else:
-            raise "Invalid device action type {:d}".format
+            raise DILLError("Invalid device action type {:d}".format)
 
 
 class InputEvent:
@@ -389,7 +397,7 @@ class DILL:
     elif os.path.isfile(_dev_path):
         _dll_path = _dev_path
     else:
-        raise "Unable to locate di_listener dll"
+        raise DILLError("Unable to locate di_listener dll")
 
     _dll = ctypes.cdll.LoadLibrary(_dll_path)
 

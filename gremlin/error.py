@@ -85,14 +85,6 @@ class HidGuardianError(GremlinError):
         super().__init__(value)
 
 
-class DILLError(GremlinError):
-
-    """Exception raised when an error occurs within the DILL module."""
-
-    def __init__(self, value):
-        super().__init__(value)
-
-
 class PluginError(GremlinError):
 
     """Exception raised when an error occurs withing a user plugin."""
