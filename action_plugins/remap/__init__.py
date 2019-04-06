@@ -207,9 +207,11 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
 
         self.needs_auto_release = self._check_for_auto_release(action)
         self.thread_running = False
+        self.should_stop_thread = False
         self.thread_last_update = time.time()
         self.thread = None
         self.axis_delta_value = 0.0
+        self.axis_value = 0.0
 
     def process_event(self, event, value):
         if self.input_type == InputType.JoystickAxis:
@@ -217,6 +219,7 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
                 joystick_handling.VJoyProxy()[self.vjoy_device_id] \
                     .axis(self.vjoy_input_id).value = value.current
             else:
+                self.should_stop_thread = abs(event.value) < 0.05
                 self.axis_delta_value = \
                     value.current * (self.axis_scaling / 1000.0)
                 self.thread_last_update = time.time()
@@ -227,8 +230,6 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
                         target=self.relative_axis_thread
                     )
                     self.thread.start()
-
-
 
         elif self.input_type == InputType.JoystickButton:
             if event.event_type in [InputType.JoystickButton, InputType.Keyboard] \
@@ -241,6 +242,7 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
 
             joystick_handling.VJoyProxy()[self.vjoy_device_id] \
                 .button(self.vjoy_input_id).is_pressed = value.current
+
         elif self.input_type == InputType.JoystickHat:
             joystick_handling.VJoyProxy()[self.vjoy_device_id] \
                 .hat(self.vjoy_input_id).direction = value.current
@@ -249,18 +251,22 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
 
     def relative_axis_thread(self):
         self.thread_running = True
+        vjoy_dev = joystick_handling.VJoyProxy()[self.vjoy_device_id]
+        self.axis_value = vjoy_dev.axis(self.vjoy_input_id).value
         while self.thread_running:
-            cur_value = joystick_handling.VJoyProxy()[self.vjoy_device_id].axis(
-                self.vjoy_input_id).value
-            joystick_handling.VJoyProxy()[self.vjoy_device_id].axis(
-                self.vjoy_input_id).value = max(
-                -1.0,
-                min(1.0, cur_value+self.axis_delta_value)
-            )
+            try:
+                self.axis_value = max(
+                    -1.0,
+                    min(1.0, self.axis_value + self.axis_delta_value)
+                )
+                vjoy_dev.axis(self.vjoy_input_id).value = self.axis_value
 
-            if self.thread_last_update + 1.0 < time.time():
+                if self.should_stop_thread and \
+                        self.thread_last_update + 1.0 < time.time():
+                    self.thread_running = False
+                time.sleep(0.01)
+            except gremlin.error.VJoyError:
                 self.thread_running = False
-            time.sleep(0.01)
 
     def _check_for_auto_release(self, action):
         activation_condition = None
