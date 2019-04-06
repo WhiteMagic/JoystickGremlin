@@ -1287,7 +1287,7 @@ if __name__ == "__main__":
                 "vJoy is not present or incorrectly setup."
             )
 
-    except gremlin.error.GremlinError as e:
+    except (gremlin.error.GremlinError, dill.DILLError) as e:
         error_display = QtWidgets.QMessageBox(
             QtWidgets.QMessageBox.Critical,
             "Error",

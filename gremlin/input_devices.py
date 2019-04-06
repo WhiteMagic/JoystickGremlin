@@ -412,7 +412,7 @@ class JoystickProxy:
                 joy = JoystickWrapper(device_guid)
                 JoystickProxy.joystick_devices[device_guid] = joy
             else:
-                raise error.DILLError(
+                raise error.GremlinError(
                     "No device with guid {} exists".format(device_guid)
                 )
 
