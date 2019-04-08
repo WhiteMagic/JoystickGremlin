@@ -1,30 +1,37 @@
 ---
 area: manual
-chapter: custom_modules
+chapter: user_plugins
 layout: default
 ---
 
-<h1><a name="4">4. Custom Modules</a></h1>
+<h1><a name="4">4. User Plugins</a></h1>
 
 <p class="text-justify">
     While common configuration tasks can be performed directly via the
-    UI, more advanced and specialised configurations may either only be possible or much simpler by using a custom module. Each module is a simple Python script which defines
-    the functions (callbacks) triggered in reaction to inputs being
+    UI, more advanced and specialised configurations may either only be
+    possible or much simpler by using a user plugin. Each plugin is a
+    simple Python script which defines the variables a user can
+    configure via the UI and the functions (callbacks) triggered in
+    reaction to (configured) inputs being
     used. Since the functions are written in Python there is no limit as
     to what can be expressed. The following section assumes some basic
-    familiarity with Python. We start with a general overview of the
-    layout of a custom module in <a href="#4_1">Section 4.1</a> which is
+    familiarity with Python.
+</p>
+
+<p class="text-justify">
+    We start with a general overview of the
+    layout of a user plugin in <a href="#4_1">Section 4.1</a> which is
     followed by an quick overview of the API in <a href="#4_2">Section
     4.2</a> followed by the description of the decorator based callback
     system in <a href="#4_3">Section 4.3</a> with periodic function
     callbacks described in <a href="#4_4">Section 4.4</a>. Some words on how
-    to debug custom modules is provided in <a href="#4_5">Section 4.5</a>.
+    to debug user plugins is provided in <a href="#4_5">Section 4.5</a>.
     Finally, <a href="#4_6">Section 4.6</a> provides a few practical
     examples.
 </p>
 
 
-<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules</a></h2>
+<h2><a name="4_1">4.1 Principles &amp; Layout of User Plugin</a></h2>
 
 <p class="text-justify">
     Joystick Gremlin uses callbacks, i.e. functions that are executed in
@@ -34,6 +41,14 @@ layout: default
     setting the value of vJoy devices or retrieving keyboard and
     joystick states. Combining these readily available functions with
     custom code allows the implementation of varied functionality.
+</p>
+
+<p class="text-justify">
+    In order to make user plugins reusable and convenient to use a set
+    of classes exist which allow setting them via the UI, thus allowing
+    a user to customize the plugins directly from the UI. These variable
+    classes allow configuration of commonly used types such as modes,
+    inputs, as well as numerical values.
 </p>
 
 <p class="text-justify">
