@@ -1,0 +1,68 @@
+---
+area: manual
+chapter: changelog
+layout: default
+title:  "Release 13"
+date:   "2019-04-10 00:00:00"
+---
+
+<h1>Release 13</h1>
+
+{% include download.html release=13 %}
+
+<div class="bd-callout bd-callout-warning">
+<p class="text-justify">
+    Due to the change in input handling library existing custom modules
+    will no longer work, as they now require the GUID. 
+</p>
+{% highlight python3 %}
+t16000 = gremlin.input_devices.JoystickDecorator(
+    "T16000.M",
+    gremlin.common.DeviceIdentifier(72331539, 2),
+    "Default"
+)
+{% endhighlight %}
+<p class="text-justify">
+    needs to be replaced with
+</p>
+{% highlight python3 %}
+t16000 = gremlin.input_devices.JoystickDecorator(
+    "T16000.M",
+    "{a48e6486-ba2f-457d-945b-7c684b9ec7e7}",
+    "Default"
+)
+{% endhighlight %}
+<p class="text-justify">
+    The new library should solve certain issues with SDL2 and more
+    importantly no longer ever get confused about the identity of
+    devices. If identical devices are present Gremlin will require the
+    user to use the Device Swap tool to properly assign their inputs.
+</p>
+</div>
+
+<h2>New Features</h2>
+<ul>
+    <li>New input handling library which permits usage of device GUID
+        for device identification</li>
+    <li>User plugin system added, allows plugins to be written that can
+        be configured via the UI</li>
+    <li>Remap actions for axis now support a relative mode which
+        increments an axis' value based on the axis' deflection</li>
+    <li>Macros can issue relative axis motion to vJoy axis</li>
+    <li>Two new containers, double tap and smart toggle, thanks to jmriego</li>
+    <li>vJoy inputs can now be used in conditions</li>
+    <li>Improved map to mouse action, support for motion on button and
+        mapping to mouse buttons for all inputs types</li>
+    <li>Default macro action delay can be configured on a per profile
+        basis</li>
+</ul>
+
+<h2>Fixes</h2>
+<ul>
+    <li>Cheathseet generator now handles hats properly</li>
+    <li>Improved robustness of UI against missing inputs</li>
+    <li>Macros and conditions now user device GUID</li>
+    <li>Handle unexpected registry entries for HidGuardian</li>
+    <li>Fixed several issues with the save system</li>
+    <li>Fix for vJoy curves not being applied correctly</li>
+</ul>
