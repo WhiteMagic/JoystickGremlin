@@ -7,7 +7,7 @@
 
     <title>Joystick Gremlin</title>
 
-    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/custom_modules/">
+    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/user_plugins/">
 
     <!-- Code highlighting CSS -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
@@ -58,7 +58,7 @@
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/overview/">Overview</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/quickstart/">Quickstart</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/interface/">Interface</a>
-                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/custom_modules/">Custom Modules</a>
+                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/user_plugins/">User Plugins</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a>
@@ -77,27 +77,34 @@
             <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h1><a name="4">4. Custom Modules</a></h1>
+                    <h1><a name="4">4. User Plugins</a></h1>
 
 <p class="text-justify">
     While common configuration tasks can be performed directly via the
-    UI, more advanced and specialised configurations may either only be possible or much simpler by using a custom module. Each module is a simple Python script which defines
-    the functions (callbacks) triggered in reaction to inputs being
+    UI, more advanced and specialised configurations may either only be
+    possible or much simpler by using a user plugin. Each plugin is a
+    simple Python script which defines the variables a user can
+    configure via the UI and the functions (callbacks) triggered in
+    reaction to (configured) inputs being
     used. Since the functions are written in Python there is no limit as
     to what can be expressed. The following section assumes some basic
-    familiarity with Python. We start with a general overview of the
-    layout of a custom module in <a href="#4_1">Section 4.1</a> which is
+    familiarity with Python.
+</p>
+
+<p class="text-justify">
+    We start with a general overview of the
+    layout of a user plugin in <a href="#4_1">Section 4.1</a> which is
     followed by an quick overview of the API in <a href="#4_2">Section
     4.2</a> followed by the description of the decorator based callback
     system in <a href="#4_3">Section 4.3</a> with periodic function
     callbacks described in <a href="#4_4">Section 4.4</a>. Some words on how
-    to debug custom modules is provided in <a href="#4_5">Section 4.5</a>.
+    to debug user plugins is provided in <a href="#4_5">Section 4.5</a>.
     Finally, <a href="#4_6">Section 4.6</a> provides a few practical
     examples.
 </p>
 
 
-<h2><a name="4_1">4.1 Principle &amp; Layout of Custom Modules</a></h2>
+<h2><a name="4_1">4.1 Principles &amp; Layout of User Plugin</a></h2>
 
 <p class="text-justify">
     Joystick Gremlin uses callbacks, i.e. functions that are executed in
@@ -107,6 +114,14 @@
     setting the value of vJoy devices or retrieving keyboard and
     joystick states. Combining these readily available functions with
     custom code allows the implementation of varied functionality.
+</p>
+
+<p class="text-justify">
+    In order to make user plugins reusable and convenient to use a set
+    of classes exist which allow setting them via the UI, thus allowing
+    a user to customize the plugins directly from the UI. These variable
+    classes allow configuration of commonly used types such as modes,
+    inputs, as well as numerical values.
 </p>
 
 <p class="text-justify">
@@ -135,11 +150,9 @@
             <dt class="col-md-4"><code>identifier</code></dt>
             <dd class="col-md-8">The identifier of the event source.</dd>
 
-            <dt class="col-md-4"><code>hardware_id</code></dt>
-            <dd class="col-md-8">Hardware ID assigned to the deivce that created the event.</dd>
-
-            <dt class="col-md-4"><code>windows_id</code></dt>
-            <dd class="col-md-8">Index assigned by Windows to the device that created the event.</dd>
+            <dt class="col-md-4"><code>device_guid</code></dt>
+            <dd class="col-md-8">Unique device ID associated with the
+            device that created the event.</dd>
 
             <dt class="col-md-4"><code>is_pressed</code></dt>
             <dd class="col-md-8">If the event represents a button or key the value is True for pressed and False for released state.</dd>
@@ -188,8 +201,9 @@
     Accessing a specific <code>VJoy</code> instance is done by indexing
     the <code>vjoy</code> object. This object then allows setting the
     state of inputs by indexing the member variables <code>axis</code>,
-    <code>button</code>, and <code>hat</code>. All indices start with 1.
-    The following demonstrates typical usage:
+    <code>button</code>, and <code>hat</code>. Indices of buttons and
+    hats start at 1. For axes the indices correspond to the axis index
+    as defined by the device. The following demonstrates typical usage:
 </p>
 
 <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="c1"># Access the first vJoy device and press the third button</span>
@@ -219,10 +233,7 @@
     In order to access a specific joystick its system id needs to be
     known. Using the device's system id as index the joystick can be
     accessed by:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">joystick_device</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">system_id</span><span class="p">]</span></code></pre></figure>
-    If no duplicate devices are present another option to access a specific
-    joystick is to use its name as follows:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">joystick_device</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="s2">&quot;T.16000M&quot;</span><span class="p">]</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">joystick_device</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span></code></pre></figure>
 </p>
 
 
@@ -231,7 +242,7 @@
     To read the current value of a joystick axis both the index of the
     axis as well as the system id of the joystick, starting with 1, are
     needed, with these the axis value is obtained as:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">axis_value</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">system_id</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">axis_index</span><span class="p">)</span><span class="o">.</span><span class="n">value</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">axis_value</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">axis_index</span><span class="p">)</span><span class="o">.</span><span class="n">value</span></code></pre></figure>
 </p>
 
 <p class="text-justify">
@@ -239,7 +250,7 @@
     To read the current state of a button both the joystick's system id
     as well as index of the button, starting at 1, are needed. The
     following then reads the button state:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">system_id</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">button_id</span><span class="p">)</span><span class="o">.</span><span class="n">is_pressed</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">button_id</span><span class="p">)</span><span class="o">.</span><span class="n">is_pressed</span></code></pre></figure>
 </p>
 
 
@@ -251,7 +262,7 @@
     \in \left\{-1, 0, 1\right\}\). A \(x\) value of 1 is right
     and -1 left while a value of 1 for \(y\) means up and -1 down. A
     value of \(0\) represents a centred position. The value is read as follows:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">position</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">system_id</span><span class="p">]</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="n">hat_id</span><span class="p">)</span><span class="o">.</span><span class="n">direction</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">position</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="n">hat_id</span><span class="p">)</span><span class="o">.</span><span class="n">direction</span></code></pre></figure>
 </p>
 
 
@@ -285,20 +296,17 @@
     for specific devices using the
     <code>gremlin.input_devices.JoystickDecorator</code> class as follows:
 <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">joystick_decorator</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
-    <span class="o">&lt;</span><span class="n">device</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="o">&lt;</span><span class="n">device</span> <span class="nb">id</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="o">&lt;</span><span class="n">mode</span><span class="o">&gt;</span>
+    <span class="s2">&quot;&lt;device name&gt;&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;{&lt;device guid&gt;}&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&lt;mode&gt;&quot;</span>
 <span class="p">)</span></code></pre></figure>
 </p>
 
 <p class="text-justify">
-    The value of <code>&lt;device id&gt;</code> depends on whether or not
-    multiple devices of the same type are being used. In the case of
-    multiple identical devices <code>device_id</code> consists of the
-    tuple of the <code>hardware_id</code> and <code>windows_id</code>,
-    otherwise, only the <code>hardware_id</code> is used. An object
-    created in this way has three decorators customised for the given
-    joystick and mode, which can be used as follows:
+    The value of <code>device_guid</code> is the unique dentifier of the
+    device. An object created in this way has three decorators
+    customised for the given joystick and mode, which can be used as
+    follows:
 <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="nd">@joystick_decorator</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">axis_callback</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
     <span class="k">pass</span>
@@ -320,7 +328,7 @@
 </p>
 
 <p class="text-justify">
-    Where <code>&lt;key name&gt;</code> can be either a string representation
+    Where <code>key name</code> can be either a string representation
     of the key's name as or an instance of <code>gremlin.marco.Key</code> which
     are both defined in the <code>gremlin.macro</code> module.
 </p>
@@ -357,7 +365,370 @@
 </p>
 
 
-<h2><a name="4_5">4.5 Debugging</a></h2>
+
+<h2><a name="4_5">4.5 Configurable Variables</a></h2>
+
+<p class="text-justify">
+    In order to allow user plugins to be configured by users via the UI
+    several types of variable classes exist, that are automatically
+    extracted from the plugin and presented to the user for
+    customization.
+</p>
+
+<p class="text-justify">
+    The following variable types exist and will be explained in more
+    detail below.
+    <dl class="row">
+        <dt class="col-md-4"><code>IntegerVariable</code></dt>
+        <dd class="col-md-8">Holds a single integer value.</dd>
+        
+
+        <dt class="col-md-4"><code>FloatVariable</code></dt>
+        <dd class="col-md-8">Holds a single float value.</dd>
+
+        <dt class="col-md-4"><code>BoolVariable</code></dt>
+        <dd class="col-md-8">Holds a single boolean value.</dd>
+
+        <dt class="col-md-4"><code>StringVariable</code></dt>
+        <dd class="col-md-8">Holds an arbitrary length string.</dd>
+
+        <dt class="col-md-4"><code>ModeVariable</code></dt>
+        <dd class="col-md-8">Holds the value of one of the modes
+        existing in the profile.</dd>
+
+        <dt class="col-md-4"><code>VirtualInputVariable</code></dt>
+        <dd class="col-md-8">Holds one vJoy selection.</dd>
+
+        <dt class="col-md-4"><code>PhysicalInputVariable</code></dt>
+        <dd class="col-md-8">Holds one physical device input.</dd>
+    </dl>
+</p>
+
+
+<h3>IntegerVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any single integer value and presents the
+    user with a field which allows entering of values. The variable also
+    allows the specification of limits for valid values.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.IntegerVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+            
+            <dt class="col-md-3"><code>min_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Minimum value this variable can take
+            on.</dd>
+
+            <dt class="col-md-3"><code>max_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Maximum value this variable can take
+            on.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>FloatVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any single floating point value and presents
+    the user with a field which allows entering of values. The variable
+    also allows the specification of limits for valid values.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.FloatVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+            
+            <dt class="col-md-3"><code>min_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Minimum value this variable can take
+            on.</dd>
+
+            <dt class="col-md-3"><code>max_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Maximum value this variable can take
+            on.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>BoolVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any single boolean value and presents
+    the user with a checkbox. This can be used to turn features of a
+    plugin on and off.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.BoolVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>StringVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any string and presents the user with a text
+    input field.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.StringVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>ModeVariable</h3>
+
+<p class="text-justify">
+    This variable holds the name of one mode present in this profile.
+    The user is presented with a dropdown list containing all modes that
+    exist.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.ModeVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>VirtualInputariable</h3>
+
+<p class="text-justify">
+    This variable holds one specific vJoy input selection. The user is
+    presented with the typical vJoy dropdown boxes.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.VirtualInputVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>valid_types</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">List of valied
+            <code>gremlin.common.InputType</code> values</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>PhysicalInputariable</h3>
+
+<p class="text-justify">
+    This variable holds one specific physical input device selection.
+    The user can press a button at which point Gremlin will record the
+    physical input being activated next.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.PhysicalInputVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>valid_types</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">List of valied
+            <code>gremlin.common.InputType</code> values</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>Example</h3>
+
+<p class="text-justify">
+    This example plugin lets a user specify four physical joystick
+    buttons and map them to a single virtual hat output.
+</p>
+
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="kn">import</span> <span class="nn">gremlin</span>
+<span class="kn">from</span> <span class="nn">gremlin.user_plugin</span> <span class="k">import</span> <span class="o">*</span>
+
+
+<span class="n">mode</span> <span class="o">=</span> <span class="n">ModeVariable</span><span class="p">(</span>
+        <span class="s2">&quot;Mode&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;The mode to use for this mapping&quot;</span>
+<span class="p">)</span>
+<span class="n">vjoy_hat</span> <span class="o">=</span> <span class="n">VirtualInputVariable</span><span class="p">(</span>
+        <span class="s2">&quot;Output Hat&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;vJoy hat to use as the output&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickHat</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">btn_1</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
+        <span class="s2">&quot;Button Up&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Button which will be mapped to the up direction of the hat.&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">btn_2</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
+        <span class="s2">&quot;Button Right&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Button which will be mapped to the right direction of the hat.&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">btn_3</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
+        <span class="s2">&quot;Button Down&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Button which will be mapped to the down direction of the hat.&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">btn_4</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
+        <span class="s2">&quot;Button Left&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Button which will be mapped to the left direction of the hat.&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">state</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="n">decorator_1</span> <span class="o">=</span> <span class="n">btn_1</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="n">decorator_2</span> <span class="o">=</span> <span class="n">btn_2</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="n">decorator_3</span> <span class="o">=</span> <span class="n">btn_3</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="n">decorator_4</span> <span class="o">=</span> <span class="n">btn_4</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">):</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">vjoy</span><span class="p">[</span><span class="n">vjoy_hat</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;device_id&quot;</span><span class="p">]]</span>
+    <span class="n">device</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="n">vjoy_hat</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;input_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">direction</span>  <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+
+<span class="nd">@decorator_1</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_1</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">button_1</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span>
+
+
+<span class="nd">@decorator_2</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_2</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">button_2</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span>
+
+
+<span class="nd">@decorator_3</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_3</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">button_3</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span>
+
+
+<span class="nd">@decorator_4</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_4</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">button_4</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">state</span>
+    <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span></code></pre></figure>
+
+
+
+<h2><a name="4_6">4.6 Debugging</a></h2>
 
 <p class="text-justify">
     To facilitate the debugging of custom modules without setting up the
@@ -375,7 +746,7 @@
 </p>
 
 
-<h2><a name="4_6">4.6 Examples</a></h2>
+<h2><a name="4_7">4.7 Examples</a></h2>
 
 <p class="text-justify">
     In the following a few examples of custom modules are shown. They
@@ -571,7 +942,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: December 23, 2018</p>
+            <p class="text-muted">Last update: April 9, 2019</p>
         </div>
     </div>
 </footer>
