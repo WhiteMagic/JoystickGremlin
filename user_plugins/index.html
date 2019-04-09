@@ -77,11 +77,9 @@ def callback_function(event, <optional parameter list>):
             <dt class="col-md-4"><code>identifier</code></dt>
             <dd class="col-md-8">The identifier of the event source.</dd>
 
-            <dt class="col-md-4"><code>hardware_id</code></dt>
-            <dd class="col-md-8">Hardware ID assigned to the deivce that created the event.</dd>
-
-            <dt class="col-md-4"><code>windows_id</code></dt>
-            <dd class="col-md-8">Index assigned by Windows to the device that created the event.</dd>
+            <dt class="col-md-4"><code>device_guid</code></dt>
+            <dd class="col-md-8">Unique device ID associated with the
+            device that created the event.</dd>
 
             <dt class="col-md-4"><code>is_pressed</code></dt>
             <dd class="col-md-8">If the event represents a button or key the value is True for pressed and False for released state.</dd>
@@ -130,8 +128,9 @@ def callback_function(event, <optional parameter list>):
     Accessing a specific <code>VJoy</code> instance is done by indexing
     the <code>vjoy</code> object. This object then allows setting the
     state of inputs by indexing the member variables <code>axis</code>,
-    <code>button</code>, and <code>hat</code>. All indices start with 1.
-    The following demonstrates typical usage:
+    <code>button</code>, and <code>hat</code>. Indices of buttons and
+    hats start at 1. For axes the indices correspond to the axis index
+    as defined by the device. The following demonstrates typical usage:
 </p>
 
 {% highlight python3 %}# Access the first vJoy device and press the third button
@@ -161,10 +160,7 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
     In order to access a specific joystick its system id needs to be
     known. Using the device's system id as index the joystick can be
     accessed by:
-    {% highlight python3 %}joystick_device = joy[system_id]{% endhighlight %}
-    If no duplicate devices are present another option to access a specific
-    joystick is to use its name as follows:
-    {% highlight python3 %}joystick_device = joy["T.16000M"]{% endhighlight %}
+    {% highlight python3 %}joystick_device = joy[device_guid]{% endhighlight %}
 </p>
 
 
@@ -173,7 +169,7 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
     To read the current value of a joystick axis both the index of the
     axis as well as the system id of the joystick, starting with 1, are
     needed, with these the axis value is obtained as:
-    {% highlight python3 %}axis_value = joy[system_id].axis(axis_index).value{% endhighlight %}
+    {% highlight python3 %}axis_value = joy[device_guid].axis(axis_index).value{% endhighlight %}
 </p>
 
 <p class="text-justify">
@@ -181,7 +177,7 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
     To read the current state of a button both the joystick's system id
     as well as index of the button, starting at 1, are needed. The
     following then reads the button state:
-    {% highlight python3 %}state = joy[system_id].button(button_id).is_pressed{% endhighlight %}
+    {% highlight python3 %}state = joy[device_guid].button(button_id).is_pressed{% endhighlight %}
 </p>
 
 
@@ -193,7 +189,7 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
     \in \left\{-1, 0, 1\right\}\){% endraw %}. A \(x\) value of 1 is right
     and -1 left while a value of 1 for \(y\) means up and -1 down. A
     value of \(0\) represents a centred position. The value is read as follows:
-    {% highlight python3 %}position = joy[system_id].hat(hat_id).direction{% endhighlight %}
+    {% highlight python3 %}position = joy[device_guid].hat(hat_id).direction{% endhighlight %}
 </p>
 
 
@@ -227,20 +223,17 @@ vjoy[1].hat(1).direction = (1, 1){% endhighlight %}
     for specific devices using the
     <code>gremlin.input_devices.JoystickDecorator</code> class as follows:
 {% highlight python3 %}joystick_decorator = gremlin.input_devices.JoystickDecorator(
-    <device name>,
-    <device id>,
-    <mode>
+    "<device name>",
+    "{<device guid>}",
+    "<mode>"
 ){% endhighlight %}
 </p>
 
 <p class="text-justify">
-    The value of <code>&lt;device id&gt;</code> depends on whether or not
-    multiple devices of the same type are being used. In the case of
-    multiple identical devices <code>device_id</code> consists of the
-    tuple of the <code>hardware_id</code> and <code>windows_id</code>,
-    otherwise, only the <code>hardware_id</code> is used. An object
-    created in this way has three decorators customised for the given
-    joystick and mode, which can be used as follows:
+    The value of <code>device_guid</code> is the unique dentifier of the
+    device. An object created in this way has three decorators
+    customised for the given joystick and mode, which can be used as
+    follows:
 {% highlight python3 %}@joystick_decorator.axis(1)
 def axis_callback(event):
     pass
@@ -262,7 +255,7 @@ def keyboard_callback(event):
 </p>
 
 <p class="text-justify">
-    Where <code>&lt;key name&gt;</code> can be either a string representation
+    Where <code>key name</code> can be either a string representation
     of the key's name as or an instance of <code>gremlin.marco.Key</code> which
     are both defined in the <code>gremlin.macro</code> module.
 </p>
@@ -299,7 +292,300 @@ def periodic_function():
 </p>
 
 
-<h2><a name="4_5">4.5 Debugging</a></h2>
+
+<h2><a name="4_5">4.5 Configurable Variables</a></h2>
+
+<p class="text-justify">
+    In order to allow user plugins to be configured by users via the UI
+    several types of variable classes exist, that are automatically
+    extracted from the plugin and presented to the user for
+    customization.
+</p>
+
+<p class="text-justify">
+    The following variable types exist and will be explained in more
+    detail below.
+    <dl class="row">
+        <dt class="col-md-4"><code>IntegerVariable</code></dt>
+        <dd class="col-md-8">Holds a single integer value.</dd>
+        
+
+        <dt class="col-md-4"><code>FloatVariable</code></dt>
+        <dd class="col-md-8">Holds a single float value.</dd>
+
+        <dt class="col-md-4"><code>BoolVariable</code></dt>
+        <dd class="col-md-8">Holds a single boolean value.</dd>
+
+        <dt class="col-md-4"><code>StringVariable</code></dt>
+        <dd class="col-md-8">Holds an arbitrary length string.</dd>
+
+        <dt class="col-md-4"><code>ModeVariable</code></dt>
+        <dd class="col-md-8">Holds the value of one of the modes
+        existing in the profile.</dd>
+
+        <dt class="col-md-4"><code>VirtualInputVariable</code></dt>
+        <dd class="col-md-8">Holds one vJoy selection.</dd>
+
+        <dt class="col-md-4"><code>PhysicalInputVariable</code></dt>
+        <dd class="col-md-8">Holds one physical device input.</dd>
+    </dl>
+</p>
+
+
+<h3>IntegerVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any single integer value and presents the
+    user with a field which allows entering of values. The variable also
+    allows the specification of limits for valid values.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.IntegerVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+            
+            <dt class="col-md-3"><code>min_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Minimum value this variable can take
+            on.</dd>
+
+            <dt class="col-md-3"><code>max_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Maximum value this variable can take
+            on.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>FloatVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any single floating point value and presents
+    the user with a field which allows entering of values. The variable
+    also allows the specification of limits for valid values.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.FloatVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+            
+            <dt class="col-md-3"><code>min_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Minimum value this variable can take
+            on.</dd>
+
+            <dt class="col-md-3"><code>max_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Maximum value this variable can take
+            on.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>BoolVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any single boolean value and presents
+    the user with a checkbox. This can be used to turn features of a
+    plugin on and off.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.BoolVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>StringVariable</h3>
+
+<p class="text-justify">
+    This variable can hold any string and presents the user with a text
+    input field.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.StringVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>initial_value</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">Default value to use for this variable.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>ModeVariable</h3>
+
+<p class="text-justify">
+    This variable holds the name of one mode present in this profile.
+    The user is presented with a dropdown list containing all modes that
+    exist.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.ModeVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>VirtualInputariable</h3>
+
+<p class="text-justify">
+    This variable holds one specific vJoy input selection. The user is
+    presented with the typical vJoy dropdown boxes.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.VirtualInputVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>valid_types</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">List of valied
+            <code>gremlin.common.InputType</code> values</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>PhysicalInputariable</h3>
+
+<p class="text-justify">
+    This variable holds one specific physical input device selection.
+    The user can press a button at which point Gremlin will record the
+    physical input being activated next.
+</p>
+
+<div class="card border-dark mb-3">
+    <div class="card-header">
+        <h5
+            class="class-title">gremlin.user_plugin.PhysicalInputVariable.__init__</h5>
+    </div>
+    <div class="card-body pb-0">
+        <dl class="row">
+            <dt class="col-md-3"><code>label</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Label shown for the UI element.</dd>
+
+            <dt class="col-md-3"><code>description</code></dt>
+            <dd class="col-md-2">mandatory</dd>
+            <dd class="col-md-7">Text describing the purpose of the
+            variable.</dd>
+
+            <dt class="col-md-3"><code>valid_types</code></dt>
+            <dd class="col-md-2">optional</dd>
+            <dd class="col-md-7">List of valied
+            <code>gremlin.common.InputType</code> values</dd>
+        </dl>
+    </div>
+</div>
+
+
+<h3>Example</h3>
+
+<p class="text-justify">
+    This example plugin lets a user specify four physical joystick
+    buttons and map them to a single virtual hat output.
+</p>
+
+{% highlight python3 %}
+{% include_relative buttons_to_hat.py %}
+{% endhighlight %}
+
+
+
+<h2><a name="4_6">4.6 Debugging</a></h2>
 
 <p class="text-justify">
     To facilitate the debugging of custom modules without setting up the
@@ -317,7 +603,7 @@ def periodic_function():
 </p>
 
 
-<h2><a name="4_6">4.6 Examples</a></h2>
+<h2><a name="4_7">4.7 Examples</a></h2>
 
 <p class="text-justify">
     In the following a few examples of custom modules are shown. They
