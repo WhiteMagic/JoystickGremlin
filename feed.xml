@@ -5,7 +5,79 @@
 		<description>New release information for Joystick Gremlin</description>
 		<link>https://whitemagic.github.io/JoystickGremlin</link>
 		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
-		<lastBuildDate>Sat, 22 Dec 2018 00:00:00 +1100</lastBuildDate>
+		<lastBuildDate>Tue, 09 Apr 2019 00:00:00 +1000</lastBuildDate>
+		
+			<item>
+				<title>Release 13</title>
+				<description>&lt;h1&gt;Release 13&lt;/h1&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13/Joystick.Gremlin.R13.msi&quot;&gt;Download
+    Release 13 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13/Joystick.Gremlin.R13.zip&quot;&gt;Download
+    Release 13 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
+
+&lt;div class=&quot;bd-callout bd-callout-warning&quot;&gt;
+&lt;p class=&quot;text-justify&quot;&gt;
+    Due to the change in input handling library existing custom modules
+    will no longer work, as they now require the GUID. 
+&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t16000&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_devices&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JoystickDecorator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;T16000.M&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;common&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeviceIdentifier&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;72331539&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;Default&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;p class=&quot;text-justify&quot;&gt;
+    needs to be replaced with
+&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t16000&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_devices&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JoystickDecorator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;T16000.M&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;{a48e6486-ba2f-457d-945b-7c684b9ec7e7}&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;Default&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;p class=&quot;text-justify&quot;&gt;
+    The new library should solve certain issues with SDL2 and more
+    importantly no longer ever get confused about the identity of
+    devices. If identical devices are present Gremlin will require the
+    user to use the Device Swap tool to properly assign their inputs.
+&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;h2&gt;New Features&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;New input handling library which permits usage of device GUID
+        for device identification&lt;/li&gt;
+    &lt;li&gt;User plugin system added, allows plugins to be written that can
+        be configured via the UI&lt;/li&gt;
+    &lt;li&gt;Remap actions for axis now support a relative mode which
+        increments an axis' value based on the axis' deflection&lt;/li&gt;
+    &lt;li&gt;Macros can issue relative axis motion to vJoy axis&lt;/li&gt;
+    &lt;li&gt;Two new containers, double tap and smart toggle, thanks to jmriego&lt;/li&gt;
+    &lt;li&gt;vJoy inputs can now be used in conditions&lt;/li&gt;
+    &lt;li&gt;Improved map to mouse action, support for motion on button and
+        mapping to mouse buttons for all inputs types&lt;/li&gt;
+    &lt;li&gt;Default macro action delay can be configured on a per profile
+        basis&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;Fixes&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Cheathseet generator now handles hats properly&lt;/li&gt;
+    &lt;li&gt;Improved robustness of UI against missing inputs&lt;/li&gt;
+    &lt;li&gt;Macros and conditions now user device GUID&lt;/li&gt;
+    &lt;li&gt;Handle unexpected registry entries for HidGuardian&lt;/li&gt;
+    &lt;li&gt;Fixed several issues with the save system&lt;/li&gt;
+    &lt;li&gt;Fix for vJoy curves not being applied correctly&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Tue, 09 Apr 2019 00:00:00 +1000</pubDate>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/09/Release-13.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/09/Release-13.html</guid>
+			</item>
 		
 			<item>
 				<title>Release 12</title>
@@ -384,43 +456,6 @@
 				<pubDate>Sun, 26 Feb 2017 12:00:00 +1100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</guid>
-			</item>
-		
-			<item>
-				<title>Release 7</title>
-				<description>&lt;h1&gt;Release 7&lt;/h1&gt;
-
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7/Joystick.Gremlin.R7.msi&quot;&gt;Download
-    Release 7 MSI&lt;/a&gt;
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7/Joystick.Gremlin.R7.zip&quot;&gt;Download
-    Release 7 ZIP&lt;/a&gt;
-
-&lt;br/&gt;&lt;br/&gt;
-
-
-&lt;h2&gt;New Features&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;Template system, allows creation of a new profile based on an existing one&lt;/li&gt;
-    &lt;li&gt;Profile loading and enabling of Joystick Gremlin via command line arguments&lt;/li&gt;
-    &lt;li&gt;Proper unique device ids due to an Update of third party libraries&lt;/li&gt;
-    &lt;li&gt;Joystick devices can now be addressed by their name instead of only ID in code&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;Fixes&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;TTS system induced crash&lt;/li&gt;
-    &lt;li&gt;Handle multiple vJoy devices correctly&lt;/li&gt;
-    &lt;li&gt;Fix issues with the merge axis feature&lt;/li&gt;
-    &lt;li&gt;Handle switching modes while a hat is pressed properly&lt;/li&gt;
-    &lt;li&gt;Fixed a possible crash in the input repeater tool&lt;/li&gt;
-    &lt;li&gt;Various UI glitches and bugs&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Thu, 22 Dec 2016 12:00:00 +1100</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2016/12/22/Release-7.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2016/12/22/Release-7.html</guid>
 			</item>
 		
 	</channel>

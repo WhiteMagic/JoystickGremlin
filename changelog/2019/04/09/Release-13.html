@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Release 8</title>
+    <title>Release 13</title>
 
-    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html">
+    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/changelog/2019/04/09/Release-13.html">
 
     <!-- Code highlighting CSS -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
@@ -80,42 +80,69 @@
             <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h1>Release 8</h1>
+                    <h1>Release 13</h1>
 
 <a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.msi">Download
-    Release 8 MSI</a>
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13/Joystick.Gremlin.R13.msi">Download
+    Release 13 MSI</a>
 <a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.zip">Download
-    Release 8 ZIP</a>
+   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13/Joystick.Gremlin.R13.zip">Download
+    Release 13 ZIP</a>
 
 <br/><br/>
 
 
+<div class="bd-callout bd-callout-warning">
+<p class="text-justify">
+    Due to the change in input handling library existing custom modules
+    will no longer work, as they now require the GUID. 
+</p>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">t16000</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
+    <span class="s2">&quot;T16000.M&quot;</span><span class="p">,</span>
+    <span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">DeviceIdentifier</span><span class="p">(</span><span class="mi">72331539</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="s2">&quot;Default&quot;</span>
+<span class="p">)</span></code></pre></figure>
+<p class="text-justify">
+    needs to be replaced with
+</p>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">t16000</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
+    <span class="s2">&quot;T16000.M&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;{a48e6486-ba2f-457d-945b-7c684b9ec7e7}&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Default&quot;</span>
+<span class="p">)</span></code></pre></figure>
+<p class="text-justify">
+    The new library should solve certain issues with SDL2 and more
+    importantly no longer ever get confused about the identity of
+    devices. If identical devices are present Gremlin will require the
+    user to use the Device Swap tool to properly assign their inputs.
+</p>
+</div>
+
 <h2>New Features</h2>
 <ul>
-    <li>New container and action system</li>
-    <ul>
-        <li>Actions are now placed inside containers</li>
-        <li>Containers come in different varieties, such as basic, chain, and tempo</li>
-    </ul>
-    <li>New map to keyboard action</li>
-    <li>vJoy axis initialization value customization</li>
-    <li>Ability to map hat directions to vJoy buttons</li>
-    <li>Ability to select processes for automatic profile activation from a list</li>
-    <li>Listing of recently used profiles</li>
-    <li>Improved macro action functionalities</li>
-    <li>Restore last known position and size of the main window</li>
-    <li>Basic help / hint system started</li>
+    <li>New input handling library which permits usage of device GUID
+        for device identification</li>
+    <li>User plugin system added, allows plugins to be written that can
+        be configured via the UI</li>
+    <li>Remap actions for axis now support a relative mode which
+        increments an axis' value based on the axis' deflection</li>
+    <li>Macros can issue relative axis motion to vJoy axis</li>
+    <li>Two new containers, double tap and smart toggle, thanks to jmriego</li>
+    <li>vJoy inputs can now be used in conditions</li>
+    <li>Improved map to mouse action, support for motion on button and
+        mapping to mouse buttons for all inputs types</li>
+    <li>Default macro action delay can be configured on a per profile
+        basis</li>
 </ul>
 
 <h2>Fixes</h2>
 <ul>
-    <li>Rewritten UI</li>
-    <li>Code generation changes</li>
-    <li>Properly handle non-consecutive vJoy axis setups</li>
-    <li>Better handling of international keyboards and layouts</li>
-    <li>Improve vJoy error handling</li>
+    <li>Cheathseet generator now handles hats properly</li>
+    <li>Improved robustness of UI against missing inputs</li>
+    <li>Macros and conditions now user device GUID</li>
+    <li>Handle unexpected registry entries for HidGuardian</li>
+    <li>Fixed several issues with the save system</li>
+    <li>Fix for vJoy curves not being applied correctly</li>
 </ul>
 
                 </div>

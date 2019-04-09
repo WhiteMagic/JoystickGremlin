@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Release 8</title>
+    <title>Joystick Gremlin</title>
 
-    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html">
+    <link rel="canonical" href="https://whitemagic.github.io/JoystickGremlinhttps://whitemagic.github.io/JoystickGremlin/user_plugins_code/">
 
     <!-- Code highlighting CSS -->
     <link rel="stylesheet" href="https://whitemagic.github.io/JoystickGremlin/css/github.css">
@@ -54,7 +54,7 @@
                     <li class="nav-item"><a class="nav-link" href="https://whitemagic.github.io/JoystickGremlin/user_plugins_code/">User Plugins</a></li>
 
                     <!-- Manual entries -->
-                    <li class="nav-item dropdown active">
+                    <li class="nav-item dropdown">
                         <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
 
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -65,7 +65,7 @@
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/technical_design/">Technical Design</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/examples/">Examples</a>
                             <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/faq/">FAQ</a>
-                            <a class="dropdown-item active" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
+                            <a class="dropdown-item" href="https://whitemagic.github.io/JoystickGremlin/changelog/">Changelog</a>
                         </div>
                     </li>
                 </ul>
@@ -80,43 +80,23 @@
             <div class="row mt-4">
                 <div class="col-md-2"></div>
                 <div class="col-md-8">
-                    <h1>Release 8</h1>
+                    <h1 class="mb-5">User Plugins</h1>
 
-<a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.msi">Download
-    Release 8 MSI</a>
-<a class="btn btn-primary"
-   href="https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.zip">Download
-    Release 8 ZIP</a>
-
-<br/><br/>
+<p class="text-justify">
+    The following is a list of user plugins that can be either used as
+    is or alternatively serve as inspiration on how to write your own.
+</p>
 
 
-<h2>New Features</h2>
-<ul>
-    <li>New container and action system</li>
-    <ul>
-        <li>Actions are now placed inside containers</li>
-        <li>Containers come in different varieties, such as basic, chain, and tempo</li>
-    </ul>
-    <li>New map to keyboard action</li>
-    <li>vJoy axis initialization value customization</li>
-    <li>Ability to map hat directions to vJoy buttons</li>
-    <li>Ability to select processes for automatic profile activation from a list</li>
-    <li>Listing of recently used profiles</li>
-    <li>Improved macro action functionalities</li>
-    <li>Restore last known position and size of the main window</li>
-    <li>Basic help / hint system started</li>
-</ul>
+<h2>buttons_to_hat.py</h2>
 
-<h2>Fixes</h2>
-<ul>
-    <li>Rewritten UI</li>
-    <li>Code generation changes</li>
-    <li>Properly handle non-consecutive vJoy axis setups</li>
-    <li>Better handling of international keyboards and layouts</li>
-    <li>Improve vJoy error handling</li>
-</ul>
+<p class="text-justify">
+    This plugin allows four physical buttons to be mapped to a single
+    virtual hat. The mode, virtual hat, and four physical buttons can be
+    configured by the user via the UI.
+</p>
+
+<script src="https://gist.github.com/WhiteMagic/3790007670078cf2fadaf7eeb6f2a113.js"></script>
 
                 </div>
                 <div class="col-md-2"></div>
