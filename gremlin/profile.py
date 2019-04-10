@@ -1415,13 +1415,17 @@ class Profile:
                             )
 
         # Remove all remap actions from the list of available inputs
-        # FIXME: Is this still up to date with all the GUID based changes?
         for act in remap_actions:
+            # Skip remap actions that have invalid configuration
+            if act.input_type is None:
+                continue
+
             type_name = InputType.to_string(act.input_type)
             if act.vjoy_input_id in [0, None] \
                     or act.vjoy_device_id in [0, None] \
                     or act.vjoy_input_id not in vjoy[act.vjoy_device_id][type_name]:
                 continue
+
             idx = vjoy[act.vjoy_device_id][type_name].index(act.vjoy_input_id)
             del vjoy[act.vjoy_device_id][type_name][idx]
 
