@@ -255,6 +255,14 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
         self.axis_value = vjoy_dev.axis(self.vjoy_input_id).value
         while self.thread_running:
             try:
+                # If the vjoy value has was changed from what we set it to
+                # in the last iteration, terminate the thread
+                change = vjoy_dev.axis(self.vjoy_input_id).value - self.axis_value
+                if abs(change) > 0.0001:
+                    self.thread_running = False
+                    self.should_stop_thread = True
+                    return
+
                 self.axis_value = max(
                     -1.0,
                     min(1.0, self.axis_value + self.axis_delta_value)
