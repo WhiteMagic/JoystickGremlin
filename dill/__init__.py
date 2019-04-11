@@ -442,7 +442,7 @@ class DILL:
         },
         "get_button": {
             "arguments": [_GUID, ctwt.DWORD],
-            "returns": ctwt.LONG
+            "returns": ctypes.c_bool
         },
         "get_hat": {
             "arguments": [_GUID, ctwt.DWORD],
