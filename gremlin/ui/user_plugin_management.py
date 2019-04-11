@@ -248,7 +248,7 @@ class ModuleManagementView(QtWidgets.QSplitter):
 
         # Button to add a new module
         self.btn_add_module = QtWidgets.QPushButton(
-            QtGui.QIcon("gfx/list_add.svg"), "Add Module"
+            QtGui.QIcon("gfx/list_add.svg"), "Add Plugin"
         )
         self.btn_add_module.clicked.connect(self._prompt_user_for_module)
 
@@ -272,7 +272,7 @@ class ModuleManagementView(QtWidgets.QSplitter):
 
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(
             None,
-            "Path to Python module",
+            "Path to Python plugin",
             "C:\\",
             "Python (*.py)"
         )

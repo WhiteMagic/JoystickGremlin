@@ -681,7 +681,7 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.mm = gremlin.ui.user_plugin_management.ModuleManagementController(
             self._profile
         )
-        self.ui.devices.addTab(self.mm.view, "Modules")
+        self.ui.devices.addTab(self.mm.view, "Plugins")
 
         # Select specified tab if one is selected
         if activate_tab is not None:
