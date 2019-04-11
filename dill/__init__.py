@@ -166,7 +166,7 @@ class GUID:
         str
             GUID string representation in hexadecimal
         """
-        return "{{{:8X}-{:4X}-{:4X}-{:4X}-{:12X}}}".format(
+        return "{{{:08X}-{:04X}-{:04X}-{:04X}-{:012X}}}".format(
             self.guid[0],
             self.guid[1],
             self.guid[2],
