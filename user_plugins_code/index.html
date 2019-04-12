@@ -20,3 +20,25 @@ layout: default
 </p>
 
 <script src="https://gist.github.com/WhiteMagic/3790007670078cf2fadaf7eeb6f2a113.js"></script>
+
+
+<h2>circular_deadzone.py</h2>
+
+<p class="text-justify">
+    This plugin allows the configuration of a circular deadzone which
+    applies a radial deadzone around the center of two axes and a box
+    deadzone around the edge. This results in a deadzone which looks
+    something like the following:
+    <div class="text-center">
+        <img width="50%" class="img-fluid" src="{{ site.url }}/user_plugins_code/deadzone.png">
+    </div>
+    The inner white circle is the circular deadzone while the dark blue
+    outer box is the max deflection deadzone. The light blue are is
+    being mapped to [-1, 1].
+    </br>
+    In order to use response curves with this plugin the curve have to
+    be applied to the vJoy axes onto which the two physical axes are
+    mapped via the plygin.
+</p>
+
+<script src="https://gist.github.com/WhiteMagic/45e7947c8dc066826cf0f9461d40f800.js"></script>
