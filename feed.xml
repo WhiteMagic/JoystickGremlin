@@ -5,7 +5,34 @@
 		<description>New release information for Joystick Gremlin</description>
 		<link>https://whitemagic.github.io/JoystickGremlin</link>
 		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
-		<lastBuildDate>Tue, 09 Apr 2019 00:00:00 +1000</lastBuildDate>
+		<lastBuildDate>Fri, 12 Apr 2019 00:00:00 +1000</lastBuildDate>
+		
+			<item>
+				<title>Release 13.1</title>
+				<description>&lt;h1&gt;Release 13.1&lt;/h1&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13.1/Joystick.Gremlin.R13.1.msi&quot;&gt;Download
+    Release 13.1 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13.1/Joystick.Gremlin.R13.1.zip&quot;&gt;Download
+    Release 13.1 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
+
+&lt;h2&gt;Fixes&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Incorrect string creation from GUIDs&lt;/li&gt;
+    &lt;li&gt;Button conditions being broken for button 8 onwards&lt;/li&gt;
+    &lt;li&gt;Relative axis change can now be interrupted by external axis
+        value change&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Fri, 12 Apr 2019 00:00:00 +1000</pubDate>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/12/Release-13.1.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/12/Release-13.1.html</guid>
+			</item>
 		
 			<item>
 				<title>Release 13</title>
@@ -424,38 +451,6 @@
 				<pubDate>Sat, 08 Jul 2017 12:00:00 +1000</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</guid>
-			</item>
-		
-			<item>
-				<title>Release 7.1</title>
-				<description>&lt;h1&gt;Release 7.1&lt;/h1&gt;
-
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7.1/Joystick.Gremlin.R7.1.msi&quot;&gt;Download
-    Release 7.1 MSI&lt;/a&gt;
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_7.1/Joystick.Gremlin.R7.1.zip&quot;&gt;Download
-    Release 7.1 ZIP&lt;/a&gt;
-
-&lt;br/&gt;&lt;br/&gt;
-
-
-&lt;h2&gt;New Features&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;Display description of inputs in the overview list&lt;/li&gt;
-    &lt;li&gt;Default action can be configured via options&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;Fixes&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;Properly keep vJoy devices alive by using the last known input data&lt;/li&gt;
-    &lt;li&gt;Minimize to system tray works again&lt;/li&gt;
-    &lt;li&gt;Updated SDL2 library which which hopefully shows all devices&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Sun, 26 Feb 2017 12:00:00 +1100</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/02/26/Release-7.1.html</guid>
 			</item>
 		
 	</channel>
