@@ -1660,7 +1660,6 @@ class Profile:
                 safe_read(node, "operation", str, "average")
             )
         }
-        # TODO: apply safe reading to these
         for tag in ["vjoy"]:
             entry[tag] = {
                 "vjoy_id": safe_read(node.find(tag), "vjoy-id", int),
