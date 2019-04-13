@@ -1571,6 +1571,7 @@ class Profile:
         # Settings data
         root.append(self.settings.to_xml())
 
+
         # User plugins
         plugins = ElementTree.Element("plugins")
         for plugin in self.plugins:
@@ -2088,14 +2089,28 @@ class ProfileData(metaclass=ABCMeta):
 
 class Plugin:
 
-    """Custom module."""
+    """Represents an unconfigured plugin."""
 
     def __init__(self, parent):
+        """Creates a new instance.
+
+        Parameters
+        ==========
+        parent : object
+            The parent object of this plugin
+        """
         self.parent = parent
         self.file_name = None
         self.instances = []
 
     def from_xml(self, node):
+        """Initializes the values of this instance based on the node's contents.
+
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node containing this instance's configuration
+        """
         self.file_name = safe_read(node, "file-name", str, None)
         for child in node.iter("instance"):
             instance = PluginInstance(self)
@@ -2103,6 +2118,13 @@ class Plugin:
             self.instances.append(instance)
 
     def to_xml(self):
+        """Returns an XML node representing this instance.
+
+        Returns
+        =======
+        ElementTree.Element
+            XML node representing this instance
+        """
         node = ElementTree.Element("plugin")
         node.set("file-name", safe_format(self.file_name, str))
         for instance in self.instances:
@@ -2113,26 +2135,76 @@ class Plugin:
 
 class PluginInstance:
 
-    """Instantiation of a custom module with its own set of parameters."""
+    """Instantiation of a usrer plugin with its own set of parameters."""
 
     def __init__(self, parent):
+        """Creates a new instance.
+
+        Parameters
+        ==========
+        parent : object
+            The parent object of this plugin
+        """
         self.parent = parent
         self.name = None
         self.variables = {}
 
     def is_configured(self):
+        """Returns whether or not the instance is properly configured.
+
+        Returns
+        =======
+        bool
+            True if the instance is fully configured, False otherwise
+        """
         is_configured = True
         for var in [var for var in self.variables.values() if not var.is_optional]:
             is_configured &= var.value is not None
         return is_configured
 
     def has_variable(self, name):
+        """Returns whether or not this instance has a particular variable.
+
+        Parameters
+        ==========
+        name : str
+            Name of the variable to check the existence of
+
+        Returns
+        =======
+        bool
+            True if a variable with the given name exists, False otherwise
+        """
         return name in self.variables
 
     def set_variable(self, name, variable):
+        """Sets a named variable.
+
+        Parameters
+        ==========
+        name : str
+            Name of the variable object to be set
+        variable : PluginVariable
+            Variable to store
+        """
         self.variables[name] = variable
 
     def get_variable(self, name):
+        """Returns the variable stored under the specified name.
+
+        If no variable with the specified name exists, a new empty variable
+        will be created and returned.
+
+        Parameters
+        ==========
+        name : str
+            Name of the variable to return
+
+        Returns
+        =======
+        PluginVariable
+            Variable corresponding to the specified name
+        """
         if name not in self.variables:
             var = PluginVariable(self)
             var.name = name
@@ -2141,6 +2213,13 @@ class PluginInstance:
         return self.variables[name]
 
     def from_xml(self, node):
+        """Initializes the contents of this instance.
+
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node containing this instance's configuration
+        """
         self.name = safe_read(node, "name", str, "")
         for child in node.iter("variable"):
             variable = PluginVariable(self)
@@ -2148,6 +2227,13 @@ class PluginInstance:
             self.variables[variable.name] = variable
 
     def to_xml(self):
+        """Returns an XML node representing this instance.
+
+        Returns
+        =======
+        ElementTree.Element
+            XML node representing this instance
+        """
         node = ElementTree.Element("instance")
         node.set("name", safe_format(self.name, str))
         for variable in self.variables.values():
@@ -2159,9 +2245,16 @@ class PluginInstance:
 
 class PluginVariable:
 
-    """A single variable of a custom module instance."""
+    """A single variable of a user plugin instance."""
 
     def __init__(self, parent):
+        """Creates a new instance.
+
+        Parameters
+        ==========
+        parent : object
+            The parent object of this plugin
+        """
         self.parent = parent
         self.name = None
         self.type = None
@@ -2169,6 +2262,13 @@ class PluginVariable:
         self.is_optional = False
 
     def from_xml(self, node):
+        """Initializes the contents of this instance.
+
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node containing this instance's configuration
+        """
         self.name = safe_read(node, "name", str, "")
         self.type = PluginVariableType.to_enum(
             safe_read(node, "type", str, "String")
@@ -2207,6 +2307,13 @@ class PluginVariable:
             }
 
     def to_xml(self):
+        """Returns an XML node representing this instance.
+
+        Returns
+        =======
+        ElementTree.Element
+            XML node representing this instance
+        """
         if self.value is None:
             return None
 
