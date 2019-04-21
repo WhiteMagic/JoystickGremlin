@@ -55,7 +55,11 @@ class InputItemConfiguration(QtWidgets.QFrame):
         else:
             self._create_dropdowns()
 
-        self.action_model = ActionContainerModel(self.item_data.containers)
+        # FIXME: This is wrong needs to reference in the reference item in
+        #        there to do virtual button etc.
+        self.action_model = ActionContainerModel(
+            [ref.get_container() for ref in self.item_data.library_references]
+        )
         self.action_view = ActionContainerView()
         self.action_view.set_model(self.action_model)
         self.action_view.redraw()

@@ -1187,6 +1187,134 @@ class ProfileModifier:
         return None
 
 
+
+class AbstractVirtualButton(metaclass=ABCMeta):
+
+    """Base class of all virtual buttons."""
+
+    def __init__(self):
+        """Creates a new instance."""
+        pass
+
+    @abstractmethod
+    def from_xml(self, node):
+        """Populates the virtual button based on the node's data.
+
+        :param node the node containing data for this instance
+        """
+        pass
+
+    @abstractmethod
+    def to_xml(self):
+        """Returns an XML node representing the data of this instance.
+
+        :return XML node containing the instance's data
+        """
+        pass
+
+
+class VirtualAxisButton(AbstractVirtualButton):
+
+    """Virtual button which turns an axis range into a button."""
+
+    def __init__(self, lower_limit=0.0, upper_limit=0.0):
+        """Creates a new instance.
+
+        :param lower_limit the lower limit of the virtual button
+        :param upper_limit the upper limit of the virtual button
+        """
+        super().__init__()
+        self.lower_limit = lower_limit
+        self.upper_limit = upper_limit
+        self.direction = common.AxisButtonDirection.Anywhere
+
+    def from_xml(self, node):
+        """Populates the virtual button based on the node's data.
+
+        :param node the node containing data for this instance
+        """
+        self.lower_limit = safe_read(node, "lower-limit", float)
+        self.upper_limit = safe_read(node, "upper-limit", float)
+        self.direction = common.AxisButtonDirection.to_enum(
+            safe_read(node, "direction", default_value="anywhere")
+        )
+
+    def to_xml(self):
+        """Returns an XML node representing the data of this instance.
+
+        :return XML node containing the instance's data
+        """
+        node = ElementTree.Element("virtual-button")
+        node.set("lower-limit", str(self.lower_limit))
+        node.set("upper-limit", str(self.upper_limit))
+        node.set(
+            "direction",
+            common.AxisButtonDirection.to_string(self.direction)
+        )
+        return node
+
+
+class VirtualHatButton(AbstractVirtualButton):
+
+    """Virtual button which combines hat directions into a button."""
+
+    # Mapping from event directions to names
+    direction_to_name = {
+        ( 0,  0): "center",
+        ( 0,  1): "north",
+        ( 1,  1): "north-east",
+        ( 1,  0): "east",
+        ( 1, -1): "south-east",
+        ( 0, -1): "south",
+        (-1, -1): "south-west",
+        (-1,  0): "west",
+        (-1,  1): "north-west"
+    }
+
+    # Mapping from names to event directions
+    name_to_direction = {
+        "center": (0, 0),
+        "north": (0, 1),
+        "north-east": (1, 1),
+        "east": (1, 0),
+        "south-east": (1, -1),
+        "south": (0, -1),
+        "south-west": (-1, -1),
+        "west": (-1, 0),
+        "north-west": (-1, 1)
+    }
+
+    def __init__(self, directions=()):
+        """Creates a instance.
+
+        :param directions list of direction that form the virtual button
+        """
+        super().__init__()
+        self.directions = list(set(directions))
+
+    def from_xml(self, node):
+        """Populates the activation condition based on the node's data.
+
+        :param node the node containing data for this instance
+        """
+        for key, value in node.items():
+            if key in VirtualHatButton.name_to_direction and \
+                            profile.parse_bool(value):
+                self.directions.append(key)
+
+    def to_xml(self):
+        """Returns an XML node representing the data of this instance.
+
+        :return XML node containing the instance's data
+        """
+        node = ElementTree.Element("virtual-button")
+        for direction in self.directions:
+            if direction in VirtualHatButton.name_to_direction:
+                node.set(direction, "1")
+        return node
+
+
+
 class Settings:
 
     """Stores general profile specific settings."""
@@ -1299,6 +1427,91 @@ class Settings:
         self.vjoy_initial_values[vid][aid] = value
 
 
+class Library:
+
+    """Stores containers and their associated actions.
+
+    Each container is a self contained entry with a UUID assigned to it which
+    is used by the input items to reference the actual content.
+    """
+
+    def __init__(self, parent):
+        """Creates a new library instance.
+
+        Parameters
+        ==========
+        parent : profile.Profile
+            Profile instance this library belongs to
+        """
+        assert(isinstance(parent, Profile))
+        self.parent = parent
+        self.content = {}
+
+        self._container_name_map = plugin_manager.ContainerPlugins().tag_map
+
+    def lookup(self, uuid):
+        """Returns the container corresponding to the given UUID.
+
+        An exception will be thrown if a container for a non existant UUID
+        is requested.
+
+        Parameters
+        ==========
+        uuid : dill.GUID
+            Unique ID of the desired container
+
+        Returns
+        =======
+        base_classes.AbstractContainer
+            Container corresponding to the given UUID
+        """
+        if uuid not in self.content:
+            raise error.GremlinError(
+                "Invalid uuid for library entry, {}".format(uuid)
+            )
+        return self.content[uuid]
+
+    def from_xml(self, node):
+        """Parses an library node to populate this instance.
+
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node containing the library information
+        """
+        for container in node.findall("container"):
+            container_type = safe_read(container, "type", str)
+            container_uuid = parse_guid(container.attrib["uuid"])
+
+            if container_type not in self._container_name_map:
+                logging.getLogger("system").warning(
+                    "Unknown container type used: {}".format(container_type)
+                )
+                continue
+
+            entry = self._container_name_map[container_type](self)
+            entry.from_xml(container)
+            self.content[container_uuid] = entry
+
+    def to_xml(self):
+        """Returns an XML node encoding the content of this library.
+
+        Returns
+        =======
+        ElementTree.Element
+            XML node holding the instance's content
+        """
+        node = ElementTree.Element("library")
+
+        for uuid, container in self.content.items():
+            if container.is_valid():
+                c_node = container.to_xml()
+                c_node.set("uuid", str(uuid))
+                node.append(c_node)
+
+        return node
+
+
 class Profile:
 
     """Stores the contents of an entire configuration profile.
@@ -1313,6 +1526,7 @@ class Profile:
         self.merge_axes = []
         self.plugins = []
         self.settings = Settings(self)
+        self.library = Library(self)
         self.parent = None
 
     def initialize_joystick_device(self, device, modes):
@@ -1463,6 +1677,10 @@ class Profile:
         tree = ElementTree.parse(fname)
         root = tree.getroot()
 
+        # Parse library entries first so input items can link against them
+        # later on
+        self.library.from_xml(root.find("library"))
+
         # Parse each device into separate DeviceConfiguration objects
         for child in root.iter("device"):
             device = Device(self)
@@ -1571,6 +1789,8 @@ class Profile:
         # Settings data
         root.append(self.settings.to_xml())
 
+        # Library entries
+        root.append(self.library.to_xml())
 
         # User plugins
         plugins = ElementTree.Element("plugins")
@@ -1877,47 +2097,56 @@ class Mode:
 
 class InputItem:
 
-    """Represents a single input item such as a button or axis."""
+    """Represents a single input item such as a button or axis.
+
+    Each input item holds information about the type of input it is and
+    what mode and device it is connected to. The configuration about what
+    happens when the particular input is activated is stored as a list
+    of references to library entries.
+    """
 
     def __init__(self, parent):
         """Creates a new InputItem instance.
 
-        :param parent the parent mode of this input item
+        Parameters
+        ==========
+        parent : profile.Mode
+            Mode which contains this instance
         """
+        assert(isinstance(parent, Mode))
         self.parent = parent
         self.input_type = None
         self.input_id = None
         self.always_execute = False
         self.description = ""
-        self.containers = []
+        self.library_references = []
 
     def from_xml(self, node):
-        """Parses an InputItem node.
+        """Parses an InputItem node to populate this instance.
 
-        :param node XML node to parse
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node containing the information
         """
-        container_name_map = plugin_manager.ContainerPlugins().tag_map
         self.input_type = InputType.to_enum(node.tag)
         self.input_id = safe_read(node, "id", int)
         self.description = safe_read(node, "description", str)
         self.always_execute = read_bool(node, "always-execute", False)
         if self.input_type == InputType.Keyboard:
             self.input_id = (self.input_id, read_bool(node, "extended"))
-        for child in node:
-            container_type = child.attrib["type"]
-            if container_type not in container_name_map:
-                logging.getLogger("system").warning(
-                    "Unknown container type used: {}".format(container_type)
-                )
-                continue
-            entry = container_name_map[container_type](self)
-            entry.from_xml(child)
-            self.containers.append(entry)
+        for entry in node.findall("library-reference"):
+            reference = LibraryReference(self)
+            reference.from_xml(entry)
+            self.library_references.append(reference)
 
     def to_xml(self):
-        """Generates a XML node representing this object's data.
+        """Returns an XML node encoding the content of this InputItem.
 
-        :return XML node representing this object
+        Returns
+        =======
+        ElementTree.Element
+            XML node holding the instance's content
         """
         node = ElementTree.Element(InputType.to_string(self.input_type))
         if self.input_type == InputType.Keyboard:
@@ -1934,16 +2163,18 @@ class InputItem:
         else:
             node.set("description", "")
 
-        for entry in self.containers:
-            if entry.is_valid():
-                node.append(entry.to_xml())
+        for entry in self.library_references:
+            node.append(entry.to_xml())
 
         return node
 
     def get_device_type(self):
         """Returns the DeviceType of this input item.
 
-        :return DeviceType of this entry
+        Returns
+        =======
+        common.DeviceType
+            DeviceType of this instance
         """
         item = self.parent
         while not isinstance(item, Device):
@@ -1951,117 +2182,145 @@ class InputItem:
         return item.type
 
     def get_input_type(self):
-        """Returns the type of this input.
+        """Returns the InputType of this input.
 
-        :return Type of this input
+        Returns
+        =======
+        common.InputType
+            InputType of this instance
         """
         return self.input_type
 
     def __eq__(self, other):
         """Checks whether or not two InputItem instances are identical.
 
-        :return True if they are identical, False otherwise
+        Parameters
+        ==========
+        other : profile.InputItem
+            InputItem to compare with for identity
+
+        Returns
+        =======
+        bool
+            True if both instances are identical, False otherwise
         """
+        assert(isinstance(other, InputItem))
         return self.__hash__() == other.__hash__()
 
     def __hash__(self):
-        """Returns the hash of this input item.
+        """Returns the hash of this InputItem instance.
 
         The hash takes into account to which device and mode the input item is
-        bound.
+        associated with.
 
-        :return hash of this InputItem instance
+        Returns
+        =======
+        int
+            Hash value for this InputItem
         """
         return hash((
             self.parent.parent.device_guid,
-            self.parent.name,
             self.input_type,
-            self.input_id)
-        )
+            self.input_id
+        ))
 
 
-class ProfileData(metaclass=ABCMeta):
+class LibraryData(metaclass=ABCMeta):
 
-    """Base class for all items holding profile data.
+    """Base class for all items holding information about items in the library.
 
-    This is primarily used for containers and actions to represent their
-    configuration and to easily load and store them.
+    This contains the parts of actions and containers that are stored within
+    the library. As such no input specific data is contained in these items.
     """
 
     def __init__(self, parent):
         """Creates a new instance.
 
-        :param parent the parent item of this instance in the profile tree
+        Parameters
+        ==========
+        parent
+            parent item of this instance in the profile tree
         """
         self.parent = parent
-        self.code = None
 
     def from_xml(self, node):
-        """Initializes this node's values based on the provided XML node.
+        """Initializes this instance's content based on the provided XML node.
 
-        :param node the XML node to use to populate this instance
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node used to populate this instance
         """
         self._parse_xml(node)
 
     def to_xml(self):
         """Returns the XML representation of this instance.
 
-        :return XML representation of this instance
+        Returns
+        =======
+        ElementTree.Element
+            XML node representing this instance
         """
         return self._generate_xml()
 
     def is_valid(self):
         """Returns whether or not an instance is fully specified.
-        
-        :return True if all required variables are set, False otherwise
+
+        Returns
+        =======
+        bool
+            True if all required variables are set, False otherwise
         """
         return self._is_valid()
 
-    def get_input_type(self):
-        """Returns the InputType of this data entry.
-        
-        :return InputType of this entry
-        """
-        item = self.parent
-        while not isinstance(item, InputItem):
-            item = item.parent
-        return item.input_type
-
-    def get_mode(self):
-        """Returns the Mode this data entry belongs to.
-
-        :return Mode instance this object belongs to
-        """
-        item = self.parent
-        while not isinstance(item, Mode):
-            item = item.parent
-        return item
-
-    def get_device_type(self):
-        """Returns the DeviceType of this data entry.
-        
-        :return DeviceType of this entry
-        """
-        item = self.parent
-        while not isinstance(item, Device):
-            item = item.parent
-        return item.type
-
-    def get_settings(self):
-        """Returns the Settings data of the profile.
-
-        :return Settings object of this profile
-        """
-        item = self.parent
-        while not isinstance(item, Profile):
-            item = item.parent
-        return item.settings
+    # def get_input_type(self):
+    #     """Returns the InputType of this data entry.
+    #
+    #     :return InputType of this entry
+    #     """
+    #     item = self.parent
+    #     while not isinstance(item, InputItem):
+    #         item = item.parent
+    #     return item.input_type
+    #
+    # def get_mode(self):
+    #     """Returns the Mode this data entry belongs to.
+    #
+    #     :return Mode instance this object belongs to
+    #     """
+    #     item = self.parent
+    #     while not isinstance(item, Mode):
+    #         item = item.parent
+    #     return item
+    #
+    # def get_device_type(self):
+    #     """Returns the DeviceType of this data entry.
+    #
+    #     :return DeviceType of this entry
+    #     """
+    #     item = self.parent
+    #     while not isinstance(item, Device):
+    #         item = item.parent
+    #     return item.type
+    #
+    # def get_settings(self):
+    #     """Returns the Settings data of the profile.
+    #
+    #     :return Settings object of this profile
+    #     """
+    #     item = self.parent
+    #     while not isinstance(item, Profile):
+    #         item = item.parent
+    #     return item.settings
 
     @abstractmethod
     def _parse_xml(self, node):
         """Implementation of the XML parsing.
 
-        :param node the XML node to use to populate this instance
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node used to populate this instance
         """
         pass
 
@@ -2069,7 +2328,10 @@ class ProfileData(metaclass=ABCMeta):
     def _generate_xml(self):
         """Implementation of the XML generation.
 
-        :return XML representation of this instance
+        Returns
+        =======
+        ElementTree.Element
+            XML node representing this instance
         """
         pass
 
@@ -2077,13 +2339,89 @@ class ProfileData(metaclass=ABCMeta):
     def _is_valid(self):
         """Returns whether or not an instance is fully specified.
         
-        :return True if all required variables are set, False otherwise
+        Returns
+        =======
+        bool
+            True if all required variables are set, False otherwise
         """
         pass
 
     #@abstractmethod
     def _sanitize(self):
         pass
+
+
+class LibraryReference:
+
+    """Holds the reference to a library entry inside an input item."""
+
+    virtual_button_lut = {
+        common.InputType.JoystickAxis: VirtualAxisButton,
+        common.InputType.JoystickHat: VirtualHatButton
+    }
+
+    def __init__(self, parent):
+        """Creates a new instance.
+
+        Parameters
+        ==========
+        parent
+            parent item of this instance in the profile tree
+        """
+        self.parent = parent
+        self.library_uuid = None
+        self.virtual_button = None
+
+    def from_xml(self, node):
+        """Initializes this instance's content based on the provided XML node.
+
+        Parameters
+        ==========
+        node : ElementTree.Element
+            XML node used to populate this instance
+        """
+        self.library_uuid = parse_guid(node.attrib["uuid"])
+
+        # Parse virtual button data
+        vb_node = node.find("virtual-button")
+        if vb_node is not None and \
+                self.parent.input_type in LibraryReference.virtual_button_lut:
+            self.virtual_button = LibraryReference.virtual_button_lut[
+                self.parent.input_type
+            ]()
+            self.virtual_button.from_xml(vb_node)
+        else:
+            self.virtual_button = None
+
+    def to_xml(self):
+        """Returns the XML representation of this instance.
+
+        Returns
+        =======
+        ElementTree.Element
+            XML node representing this instance
+        """
+        node = ElementTree.Element("library-reference")
+        node.set("uuid", str(self.library_uuid))
+        if self.virtual_button:
+            node.append(self.virtual_button.to_xml())
+        return node
+
+    def get_container(self):
+        """Returns the container associated with this reference.
+
+        Returns
+        =======
+        base_classes.AbstractContainer
+            The container being referenced
+        """
+        # Retrieve the root Profile node before getting the library instance
+        # from there
+        parent = self.parent
+        while parent.parent is not None:
+            parent = parent.parent
+
+        return parent.library.lookup(self.library_uuid)
 
 
 class Plugin:

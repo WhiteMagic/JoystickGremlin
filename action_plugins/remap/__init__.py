@@ -332,7 +332,8 @@ class Remap(gremlin.base_classes.AbstractAction):
         # automatically
         self.vjoy_device_id = None
         self.vjoy_input_id = None
-        self.input_type = self.parent.parent.input_type
+        #self.input_type = self.parent.parent.input_type
+        self.input_type = InputType.JoystickButton
         self.axis_mode = "absolute"
         self.axis_scaling = 1.0
 
@@ -400,10 +401,10 @@ class Remap(gremlin.base_classes.AbstractAction):
 
             self.vjoy_device_id = safe_read(node, "vjoy", int)
 
-            if self.get_input_type() == InputType.JoystickAxis and \
-                    self.input_type == InputType.JoystickAxis:
-                self.axis_mode = safe_read(node, "axis-type", str, "absolute")
-                self.axis_scaling = safe_read(node, "axis-scaling", float, 1.0)
+            # if self.get_input_type() == InputType.JoystickAxis and \
+            #         self.input_type == InputType.JoystickAxis:
+            self.axis_mode = safe_read(node, "axis-type", str, "absolute")
+            self.axis_scaling = safe_read(node, "axis-scaling", float, 1.0)
         except ProfileError:
             self.vjoy_input_id = None
             self.vjoy_device_id = None
