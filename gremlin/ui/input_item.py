@@ -512,7 +512,9 @@ class InputItemButton(QtWidgets.QFrame):
         # Create the actual icons
         # FIXME: this currently ignores the containers themselves
         self._icon_layout.addStretch(1)
-        for container in profile_data.containers:
+        for reference in profile_data.library_references:
+            container = reference.get_container()
+            # for container in profile_data.containers:
             for actions in [a for a in container.action_sets if a is not None]:
                 for action in actions:
                     if action is not None:
@@ -603,9 +605,9 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
     # Maps virtual button data to virtual button widgets
     virtual_axis_to_widget = {
-        gremlin.base_classes.VirtualAxisButton:
+        gremlin.profile.VirtualAxisButton:
             gremlin.ui.virtual_button.VirtualAxisButtonWidget,
-        gremlin.base_classes.VirtualHatButton:
+        gremlin.profile.VirtualHatButton:
             gremlin.ui.virtual_button.VirtualHatButtonWidget
     }
 

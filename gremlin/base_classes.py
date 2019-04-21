@@ -320,132 +320,6 @@ class ActivationCondition:
         return node
 
 
-class AbstractVirtualButton(metaclass=ABCMeta):
-
-    """Base class of all virtual buttons."""
-
-    def __init__(self):
-        """Creates a new instance."""
-        pass
-
-    @abstractmethod
-    def from_xml(self, node):
-        """Populates the virtual button based on the node's data.
-
-        :param node the node containing data for this instance
-        """
-        pass
-
-    @abstractmethod
-    def to_xml(self):
-        """Returns an XML node representing the data of this instance.
-
-        :return XML node containing the instance's data
-        """
-        pass
-
-
-class VirtualAxisButton(AbstractVirtualButton):
-
-    """Virtual button which turns an axis range into a button."""
-
-    def __init__(self, lower_limit=0.0, upper_limit=0.0):
-        """Creates a new instance.
-
-        :param lower_limit the lower limit of the virtual button
-        :param upper_limit the upper limit of the virtual button
-        """
-        super().__init__()
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
-        self.direction = common.AxisButtonDirection.Anywhere
-
-    def from_xml(self, node):
-        """Populates the virtual button based on the node's data.
-
-        :param node the node containing data for this instance
-        """
-        self.lower_limit = safe_read(node, "lower-limit", float)
-        self.upper_limit = safe_read(node, "upper-limit", float)
-        self.direction = common.AxisButtonDirection.to_enum(
-            safe_read(node, "direction", default_value="anywhere")
-        )
-
-    def to_xml(self):
-        """Returns an XML node representing the data of this instance.
-
-        :return XML node containing the instance's data
-        """
-        node = ElementTree.Element("virtual-button")
-        node.set("lower-limit", str(self.lower_limit))
-        node.set("upper-limit", str(self.upper_limit))
-        node.set(
-            "direction",
-            common.AxisButtonDirection.to_string(self.direction)
-        )
-        return node
-
-
-class VirtualHatButton(AbstractVirtualButton):
-
-    """Virtual button which combines hat directions into a button."""
-
-    # Mapping from event directions to names
-    direction_to_name = {
-        ( 0,  0): "center",
-        ( 0,  1): "north",
-        ( 1,  1): "north-east",
-        ( 1,  0): "east",
-        ( 1, -1): "south-east",
-        ( 0, -1): "south",
-        (-1, -1): "south-west",
-        (-1,  0): "west",
-        (-1,  1): "north-west"
-    }
-
-    # Mapping from names to event directions
-    name_to_direction = {
-        "center": (0, 0),
-        "north": (0, 1),
-        "north-east": (1, 1),
-        "east": (1, 0),
-        "south-east": (1, -1),
-        "south": (0, -1),
-        "south-west": (-1, -1),
-        "west": (-1, 0),
-        "north-west": (-1, 1)
-    }
-
-    def __init__(self, directions=()):
-        """Creates a instance.
-
-        :param directions list of direction that form the virtual button
-        """
-        super().__init__()
-        self.directions = list(set(directions))
-
-    def from_xml(self, node):
-        """Populates the activation condition based on the node's data.
-
-        :param node the node containing data for this instance
-        """
-        for key, value in node.items():
-            if key in VirtualHatButton.name_to_direction and \
-                            profile.parse_bool(value):
-                self.directions.append(key)
-
-    def to_xml(self):
-        """Returns an XML node representing the data of this instance.
-
-        :return XML node containing the instance's data
-        """
-        node = ElementTree.Element("virtual-button")
-        for direction in self.directions:
-            if direction in VirtualHatButton.name_to_direction:
-                node.set(direction, "1")
-        return node
-
-
 class AbstractFunctor(metaclass=ABCMeta):
 
     """Abstract base class defining the interface for functor like classes.
@@ -471,7 +345,7 @@ class AbstractFunctor(metaclass=ABCMeta):
         pass
 
 
-class AbstractAction(profile.ProfileData):
+class AbstractAction(profile.LibraryData):
 
     """Base class for all actions that can be encoded via the XML and
     UI system."""
@@ -534,15 +408,15 @@ class AbstractAction(profile.ProfileData):
         )
 
 
-class AbstractContainer(profile.ProfileData):
+class AbstractContainer(profile.LibraryData):
 
     """Base class for action container related information storage."""
 
-    virtual_button_lut = {
-        common.InputType.JoystickAxis: VirtualAxisButton,
-        common.InputType.JoystickButton: None,
-        common.InputType.JoystickHat: VirtualHatButton
-    }
+    # virtual_button_lut = {
+    #     common.InputType.JoystickAxis: VirtualAxisButton,
+    #     common.InputType.JoystickButton: None,
+    #     common.InputType.JoystickHat: VirtualHatButton
+    # }
 
     def __init__(self, parent):
         """Creates a new instance.
@@ -553,11 +427,11 @@ class AbstractContainer(profile.ProfileData):
         self.action_sets = []
         self.activation_condition_type = None
         self.activation_condition = None
-        self.virtual_button = None
+        # self.virtual_button = None
         # Storage for the currently active view in the UI
         # FIXME: This is ugly and shouldn't be done but for now the least
         #   terrible option
-        self.current_view_type = None
+        # self.current_view_type = None
 
     def add_action(self, action, index=-1):
         """Adds an action to this container.
@@ -574,60 +448,62 @@ class AbstractContainer(profile.ProfileData):
         self.action_sets[index].append(action)
 
         # Create activation condition data if needed
-        self.create_or_delete_virtual_button()
+        # self.create_or_delete_virtual_button()
 
-    def create_or_delete_virtual_button(self):
-        """Creates activation condition data as required."""
-        need_virtual_button = False
-        for actions in [a for a in self.action_sets if a is not None]:
-            need_virtual_button = need_virtual_button or \
-                any([a.requires_virtual_button() for a in actions if a is not None])
+    # TODO: This needs to become part of the library reference stuff
+    # def create_or_delete_virtual_button(self):
+    #     """Creates activation condition data as required."""
+    #     need_virtual_button = False
+    #     for actions in [a for a in self.action_sets if a is not None]:
+    #         need_virtual_button = need_virtual_button or \
+    #             any([a.requires_virtual_button() for a in actions if a is not None])
+    #
+    #     if need_virtual_button:
+    #         if self.virtual_button is None:
+    #             self.virtual_button = \
+    #                 AbstractContainer.virtual_button_lut[self.parent.input_type]()
+    #         elif not isinstance(
+    #                 self.virtual_button,
+    #                 AbstractContainer.virtual_button_lut[self.parent.input_type]
+    #         ):
+    #             self.virtual_button = \
+    #                 AbstractContainer.virtual_button_lut[self.parent.input_type]()
+    #     else:
+    #         self.virtual_button = None
 
-        if need_virtual_button:
-            if self.virtual_button is None:
-                self.virtual_button = \
-                    AbstractContainer.virtual_button_lut[self.parent.input_type]()
-            elif not isinstance(
-                    self.virtual_button,
-                    AbstractContainer.virtual_button_lut[self.parent.input_type]
-            ):
-                self.virtual_button = \
-                    AbstractContainer.virtual_button_lut[self.parent.input_type]()
-        else:
-            self.virtual_button = None
-
-    def generate_callbacks(self):
-        """Returns a list of callback data entries.
-
-        :return list of container callback entries
-        """
-        callbacks = []
-
-        # For a virtual button create a callback that sends VirtualButton
-        # events and another callback that triggers of these events
-        # like a button would.
-        if self.virtual_button is not None:
-            callbacks.append(execution_graph.CallbackData(
-                execution_graph.VirtualButtonProcess(self.virtual_button),
-                None
-            ))
-            callbacks.append(execution_graph.CallbackData(
-                execution_graph.VirtualButtonCallback(self),
-                gremlin.event_handler.Event(
-                    gremlin.common.InputType.VirtualButton,
-                    callbacks[-1].callback.virtual_button.identifier,
-                    device_guid=dill.GUID_Virtual,
-                    is_pressed=True,
-                    raw_value=True
-                )
-            ))
-        else:
-            callbacks.append(execution_graph.CallbackData(
-                execution_graph.ContainerCallback(self),
-                None
-            ))
-
-        return callbacks
+    # TODO: This should go somewhere in the code runner parts
+    # def generate_callbacks(self):
+    #     """Returns a list of callback data entries.
+    #
+    #     :return list of container callback entries
+    #     """
+    #     callbacks = []
+    #
+    #     # For a virtual button create a callback that sends VirtualButton
+    #     # events and another callback that triggers of these events
+    #     # like a button would.
+    #     if self.virtual_button is not None:
+    #         callbacks.append(execution_graph.CallbackData(
+    #             execution_graph.VirtualButtonProcess(self.virtual_button),
+    #             None
+    #         ))
+    #         callbacks.append(execution_graph.CallbackData(
+    #             execution_graph.VirtualButtonCallback(self),
+    #             gremlin.event_handler.Event(
+    #                 gremlin.common.InputType.VirtualButton,
+    #                 callbacks[-1].callback.virtual_button.identifier,
+    #                 device_guid=dill.GUID_Virtual,
+    #                 is_pressed=True,
+    #                 raw_value=True
+    #             )
+    #         ))
+    #     else:
+    #         callbacks.append(execution_graph.CallbackData(
+    #             execution_graph.ContainerCallback(self),
+    #             None
+    #         ))
+    #
+    #     return callbacks
 
     def from_xml(self, node):
         """Populates the instance with data from the given XML node.
@@ -636,7 +512,7 @@ class AbstractContainer(profile.ProfileData):
         """
         super().from_xml(node)
         self._parse_action_set_xml(node)
-        self._parse_virtual_button_xml(node)
+        # self._parse_virtual_button_xml(node)
         self._parse_activation_condition_xml(node)
 
     def to_xml(self):
@@ -646,8 +522,8 @@ class AbstractContainer(profile.ProfileData):
         """
         node = super().to_xml()
         # Add activation condition if needed
-        if self.virtual_button:
-            node.append(self.virtual_button.to_xml())
+        # if self.virtual_button:
+        #     node.append(self.virtual_button.to_xml())
         if self.activation_condition:
             condition_node = self.activation_condition.to_xml()
             if condition_node:
@@ -661,9 +537,9 @@ class AbstractContainer(profile.ProfileData):
         """
         self.action_sets = []
         for child in node:
-            if child.tag == "virtual-button":
-                continue
-            elif child.tag == "action-set":
+            # if child.tag == "virtual-button":
+            #     continue
+            if child.tag == "action-set":
                 action_set = []
                 self._parse_action_xml(child, action_set)
                 self.action_sets.append(action_set)
@@ -690,19 +566,19 @@ class AbstractContainer(profile.ProfileData):
             entry.from_xml(child)
             action_set.append(entry)
 
-    def _parse_virtual_button_xml(self, node):
-        """Parses the virtual button part of the XML data.
-
-        :param node the XML node to process
-        """
-        vb_node = node.find("virtual-button")
-
-        self.virtual_button = None
-        if vb_node is not None:
-            self.virtual_button = AbstractContainer.virtual_button_lut[
-                self.get_input_type()
-            ]()
-            self.virtual_button.from_xml(vb_node)
+    # def _parse_virtual_button_xml(self, node):
+    #     """Parses the virtual button part of the XML data.
+    #
+    #     :param node the XML node to process
+    #     """
+    #     vb_node = node.find("virtual-button")
+    #
+    #     self.virtual_button = None
+    #     if vb_node is not None:
+    #         self.virtual_button = AbstractContainer.virtual_button_lut[
+    #             self.get_input_type()
+    #         ]()
+    #         self.virtual_button.from_xml(vb_node)
 
     def _parse_activation_condition_xml(self, node):
         for child in node.findall("activation-condition"):
