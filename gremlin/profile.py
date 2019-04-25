@@ -2143,8 +2143,9 @@ class PluginInstance:
         node = ElementTree.Element("instance")
         node.set("name", safe_format(self.name, str))
         for variable in self.variables.values():
-            if variable.is_valid:
-                node.append(variable.to_xml())
+            variable_node = variable.to_xml()
+            if variable.is_valid and variable_node is not None:
+                node.append(variable_node)
         return node
 
 
@@ -2196,6 +2197,9 @@ class PluginVariable:
             }
 
     def to_xml(self):
+        if self.value is None:
+            return None
+
         node = ElementTree.Element("variable")
         node.set("name", safe_format(self.name, str))
         node.set("type", PluginVariableType.to_string(self.type))
