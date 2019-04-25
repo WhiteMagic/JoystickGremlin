@@ -203,7 +203,7 @@ class AbstractVariable(QtCore.QObject):
     # Signal emitted when the value of the variable changes
     value_changed = QtCore.pyqtSignal(dict)
 
-    def __init__(self, label, description, variable_type):
+    def __init__(self, label, description, variable_type, is_optional=False):
         """Creates a new instance.
 
         Parameters
@@ -214,12 +214,15 @@ class AbstractVariable(QtCore.QObject):
             description of the variable's function and intent
         variable_type : gremlin.common.PluginVariableType
             data type represented by the variable
+        is_optional : bool
+            if True the variable is optional and will not impact saving
         """
         super().__init__(None)
         self.label = label
         self.description = description
         self.variable_type = variable_type
         self.variable_set = False
+        self.is_optional = is_optional
 
     def create_ui_element(self):
         """Returns a UI element to configure this variable.
@@ -230,6 +233,19 @@ class AbstractVariable(QtCore.QObject):
              UI element allowing the configuration of this variable
         """
         raise error.PluginError("create_ui_element method not implemented")
+
+    def get_label(self):
+        """Returns the text label to use for UI display purposes.
+
+        Returns
+        -------
+        str
+            text label representing the variable
+        """
+        label = self.label
+        if self.is_optional:
+            label += " (optional)"
+        return label
 
     def _load_from_registry(self, identifier):
         """Loads the variable's state from the variable registry.
@@ -295,9 +311,10 @@ class NumericalVariable(AbstractVariable):
             variable_type,
             initial_value=None,
             min_value=None,
-            max_value=None
+            max_value=None,
+            is_optional=False
     ):
-        super().__init__(label, description, variable_type)
+        super().__init__(label, description, variable_type, is_optional)
 
         # Store properties before further constructor business happens which
         # relies on these properties existing
@@ -307,7 +324,7 @@ class NumericalVariable(AbstractVariable):
 
     def create_ui_element(self, value):
         layout = QtWidgets.QGridLayout()
-        label = QtWidgets.QLabel(self.label)
+        label = QtWidgets.QLabel(self.get_label())
         label.setToolTip(self.description)
         layout.addWidget(label, 0, 0)
 
@@ -356,7 +373,8 @@ class IntegerVariable(NumericalVariable):
             description,
             initial_value=None,
             min_value=None,
-            max_value=None
+            max_value=None,
+            is_optional=False
     ):
         super().__init__(
             label,
@@ -364,7 +382,8 @@ class IntegerVariable(NumericalVariable):
             common.PluginVariableType.Int,
             initial_value,
             min_value,
-            max_value
+            max_value,
+            is_optional
         )
 
         _init_numerical(self, 0, 0, 10)
@@ -381,7 +400,8 @@ class FloatVariable(NumericalVariable):
             description,
             initial_value=None,
             min_value=None,
-            max_value=None
+            max_value=None,
+            is_optional=False
     ):
         super().__init__(
             label,
@@ -389,7 +409,8 @@ class FloatVariable(NumericalVariable):
             common.PluginVariableType.Float,
             initial_value,
             min_value,
-            max_value
+            max_value,
+            is_optional
         )
 
         _init_numerical(self, 0, -1.0, 1.0)
@@ -400,8 +421,19 @@ class BoolVariable(AbstractVariable):
 
     """Variable representing a boolean value."""
 
-    def __init__(self, label, description, initial_value=False):
-        super().__init__(label, description, common.PluginVariableType.Bool)
+    def __init__(
+            self,
+            label,
+            description,
+            initial_value=False,
+            is_optional=False
+    ):
+        super().__init__(
+            label,
+            description,
+            common.PluginVariableType.Bool,
+            is_optional
+        )
 
         self.value = initial_value
         if not isinstance(self.value, bool):
@@ -411,7 +443,7 @@ class BoolVariable(AbstractVariable):
 
     def create_ui_element(self, value):
         layout = QtWidgets.QGridLayout()
-        label = QtWidgets.QLabel(self.label)
+        label = QtWidgets.QLabel(self.get_label())
         label.setToolTip(self.description)
         layout.addWidget(label, 0, 0)
 
@@ -444,9 +476,15 @@ class StringVariable(AbstractVariable):
             self,
             label,
             description,
-            initial_value=None
+            initial_value=None,
+            is_optional=False
     ):
-        super().__init__(label, description, common.PluginVariableType.String)
+        super().__init__(
+            label,
+            description,
+            common.PluginVariableType.String,
+            is_optional
+        )
 
         self.value = initial_value
         if not isinstance(self.value, str):
@@ -456,7 +494,7 @@ class StringVariable(AbstractVariable):
 
     def create_ui_element(self, value):
         layout = QtWidgets.QGridLayout()
-        label = QtWidgets.QLabel(self.label)
+        label = QtWidgets.QLabel(self.get_label())
         label.setToolTip(self.description)
         layout.addWidget(label, 0, 0)
 
@@ -485,9 +523,15 @@ class ModeVariable(AbstractVariable):
     def __init__(
             self,
             label,
-            description
+            description,
+            is_optional=False
     ):
-        super().__init__(label, description, common.PluginVariableType.Mode)
+        super().__init__(
+            label,
+            description,
+            common.PluginVariableType.Mode,
+            is_optional
+        )
 
         self.value = profile.mode_list(shared_state.current_profile)[0]
 
@@ -495,7 +539,7 @@ class ModeVariable(AbstractVariable):
 
     def create_ui_element(self, value):
         layout = QtWidgets.QGridLayout()
-        label = QtWidgets.QLabel(self.label)
+        label = QtWidgets.QLabel(self.get_label())
         label.setToolTip(self.description)
         layout.addWidget(label, 0, 0)
 
@@ -520,8 +564,13 @@ class VirtualInputVariable(AbstractVariable):
 
     """Variable representing a vJoy input."""
 
-    def __init__(self, label, description, valid_types=None):
-        super().__init__(label, description, common.PluginVariableType.VirtualInput)
+    def __init__(self, label, description, valid_types=None, is_optional=False):
+        super().__init__(
+            label,
+            description,
+            common.PluginVariableType.VirtualInput,
+            is_optional
+        )
 
         joystick_handling.vjoy_devices()
 
@@ -573,7 +622,7 @@ class VirtualInputVariable(AbstractVariable):
 
     def create_ui_element(self, value):
         layout = QtWidgets.QGridLayout()
-        label = QtWidgets.QLabel(self.label)
+        label = QtWidgets.QLabel(self.get_label())
         label.setToolTip(self.description)
         layout.addWidget(label, 0, 0)
 
@@ -603,8 +652,13 @@ class PhysicalInputVariable(AbstractVariable):
 
     """Variable representing a physical device input."""
 
-    def __init__(self, label, description, valid_types=None):
-        super().__init__(label, description, common.PluginVariableType.PhysicalInput)
+    def __init__(self, label, description, valid_types=None, is_optional=False):
+        super().__init__(
+            label,
+            description,
+            common.PluginVariableType.PhysicalInput,
+            is_optional
+        )
 
         self.value = None
         self.valid_types = valid_types
@@ -645,7 +699,7 @@ class PhysicalInputVariable(AbstractVariable):
 
     def create_ui_element(self, value):
         layout = QtWidgets.QGridLayout()
-        label = QtWidgets.QLabel(self.label)
+        label = QtWidgets.QLabel(self.get_label())
         label.setToolTip(self.description)
         layout.addWidget(label, 0, 0)
 
