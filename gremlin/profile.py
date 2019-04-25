@@ -698,7 +698,13 @@ class ProfileConverter:
                     return linear_id
 
                 device = self.dev_info[device_guid]
-                if linear_id > device.axis_count:
+                if linear_id > device.axis_count or linear_id >= len(device.axis_map):
+                    logging.getLogger("system").error(
+                        "Invalid linear axis id received, {} id = {}".format(
+                            device.name,
+                            linear_id
+                        )
+                    )
                     return linear_id
 
                 return device.axis_map[linear_id].axis_index
@@ -1325,10 +1331,19 @@ class Profile:
             new_mode = new_device.modes[mode]
             # Touch every input to ensure it gets default initialized
             for i in range(device.axis_count):
-                new_mode.get_data(
-                    InputType.JoystickAxis,
-                    device.axis_map[i].axis_index
-                )
+                if i >= len(device.axis_map):
+                    logging.getLogger("system").error(
+                        "{} invalid axis request {} < {}".format(
+                            device.name,
+                            device.axis_count,
+                            i
+                        )
+                    )
+                else:
+                    new_mode.get_data(
+                        InputType.JoystickAxis,
+                        device.axis_map[i].axis_index
+                    )
             for i in range(1, device.button_count+1):
                 new_mode.get_data(InputType.JoystickButton, i)
             for i in range(1, device.hat_count+1):
@@ -1682,10 +1697,19 @@ class Device:
 
         if device is not None:
             for i in range(device.axis_count):
-                mode.get_data(
-                    InputType.JoystickAxis,
-                    device.axis_map[i].axis_index
-                )
+                if i >= len(device.axis_map):
+                    logging.getLogger("system").error(
+                        "{} invalid axis request {} < {}".format(
+                            device.name,
+                            device.axis_count,
+                            i
+                        )
+                    )
+                else:
+                    mode.get_data(
+                        InputType.JoystickAxis,
+                        device.axis_map[i].axis_index
+                    )
             for idx in range(1, device.button_count + 1):
                 mode.get_data(InputType.JoystickButton, idx)
             for idx in range(1, device.hat_count + 1):
