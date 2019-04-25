@@ -751,3 +751,59 @@ class PhysicalInputVariable(AbstractVariable):
 
     def _process_registry_value(self, value):
         return value
+
+
+class SelectionVariable(AbstractVariable):
+
+    """Permits selecting a value out of a list of possibilities."""
+
+    def __init__(
+            self,
+            label,
+            description,
+            option_list,
+            default_index=0,
+            is_optional=False
+    ):
+        super().__init__(
+            label,
+            description,
+            common.PluginVariableType.Selection,
+            is_optional
+        )
+
+        assert(isinstance(option_list, list))
+        assert(len(option_list) > 0)
+
+        self.options = list(sorted(set(option_list)))
+        self.value = option_list[default_index]
+
+        self._load_from_registry(self._get_identifier())
+
+    def create_ui_element(self, value):
+        layout = QtWidgets.QGridLayout()
+        label = QtWidgets.QLabel(self.get_label())
+        label.setToolTip(self.description)
+        layout.addWidget(label, 0, 0)
+
+        # Populate drop down list
+        value_widget = QtWidgets.QComboBox()
+        for entry in self.options:
+            value_widget.addItem(str(entry))
+
+        # Select correct value if present
+        if value in self.options:
+            value_widget.setCurrentIndex(self.options.index(value))
+
+        # Hookup selection change callback
+        value_widget.currentTextChanged.connect(
+            lambda x: self.value_changed.emit({"value": x})
+        )
+
+        if value_widget is not None:
+            layout.addWidget(value_widget, 0, 1)
+            layout.setColumnStretch(1, 1)
+
+        layout.setColumnMinimumWidth(0, 150)
+
+        return layout

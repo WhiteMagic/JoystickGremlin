@@ -112,6 +112,7 @@ class ModuleManagementController(QtCore.QObject):
                 gremlin.user_plugin.BoolVariable,
                 gremlin.user_plugin.FloatVariable,
                 gremlin.user_plugin.IntegerVariable,
+                gremlin.user_plugin.SelectionVariable,
                 gremlin.user_plugin.StringVariable,
                 gremlin.user_plugin.ModeVariable,
                 gremlin.user_plugin.PhysicalInputVariable,
@@ -159,8 +160,9 @@ class ModuleManagementController(QtCore.QObject):
             PluginVariableType.Bool,
             PluginVariableType.Float,
             PluginVariableType.Int,
+            PluginVariableType.Mode,
+            PluginVariableType.Selection,
             PluginVariableType.String,
-            PluginVariableType.Mode
         ]:
             variable.value = data["value"]
         elif variable.type == PluginVariableType.VirtualInput:

@@ -2172,6 +2172,8 @@ class PluginVariable:
             self.value = safe_read(node, "value", int, 0)
         elif self.type == PluginVariableType.Float:
             self.value = safe_read(node, "value", float, 0.0)
+        elif self.type == PluginVariableType.Selection:
+            self.value = safe_read(node, "value", str, "")
         elif self.type == PluginVariableType.String:
             self.value = safe_read(node, "value", str, "")
         elif self.type == PluginVariableType.Bool:
@@ -2208,7 +2210,8 @@ class PluginVariable:
         # Write out content based on the type
         if self.type in [
             PluginVariableType.Int, PluginVariableType.Float,
-            PluginVariableType.String, PluginVariableType.Mode
+            PluginVariableType.Mode, PluginVariableType.Selection,
+            PluginVariableType.String,
         ]:
             node.set("value", str(self.value))
         elif self.type == PluginVariableType.Bool:

@@ -330,6 +330,7 @@ class PluginVariableType(enum.Enum):
     PhysicalInput = 5
     VirtualInput = 6
     Mode = 7
+    Selection = 8
 
     @staticmethod
     def to_string(value):
@@ -358,7 +359,8 @@ _PluginVariableType_to_string_lookup = {
     PluginVariableType.Bool: "Bool",
     PluginVariableType.PhysicalInput: "PhysicalInput",
     PluginVariableType.VirtualInput: "VirtualInput",
-    PluginVariableType.Mode: "Mode"
+    PluginVariableType.Mode: "Mode",
+    PluginVariableType.Selection: "Selection"
 }
 
 _PluginVariableType_to_enum_lookup = {
@@ -368,5 +370,6 @@ _PluginVariableType_to_enum_lookup = {
     "Bool": PluginVariableType.Bool,
     "PhysicalInput": PluginVariableType.PhysicalInput,
     "VirtualInput": PluginVariableType.VirtualInput,
-    "Mode": PluginVariableType.Mode
+    "Mode": PluginVariableType.Mode,
+    "Selection": PluginVariableType.Selection
 }
