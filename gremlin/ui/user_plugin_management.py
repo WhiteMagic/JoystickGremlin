@@ -117,16 +117,23 @@ class ModuleManagementController(QtCore.QObject):
                 gremlin.user_plugin.PhysicalInputVariable,
                 gremlin.user_plugin.VirtualInputVariable
             ]:
-                # Create profile variable instance if it does not exist
+                # Create basic profile variable instance if it does not exist
                 if not instance.has_variable(var.label):
                     profile_var = gremlin.profile.PluginVariable(instance)
                     profile_var.name = var.label
                     profile_var.type = var.variable_type
                     profile_var.value = var.value
-                    profile_var.is_valid = True
-                    instance.set_variable(var.label, profile_var)
 
-                profile_var = instance.variables[var.label]
+                # Update profile variable properties if needed
+                profile_var = instance.get_variable(var.label)
+                profile_var.is_optional = var.is_optional
+                if profile_var.type != var.variable_type:
+                    profile_var.type = var.variable_type
+                    profile_var.value = var.value
+
+                instance.set_variable(var.label, profile_var)
+
+
                 ui_element = var.create_ui_element(profile_var.value)
                 var.value_changed.connect(
                     self._create_value_changed_cb(
