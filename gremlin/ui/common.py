@@ -1061,6 +1061,7 @@ class InputListenerWidget(QtWidgets.QFrame):
             process_event &= not event.is_pressed
 
         if process_event:
+            gremlin.input_devices.JoystickInputSignificant().reset()
             self.callback(event)
             self.close()
 

@@ -697,6 +697,12 @@ class JoystickInputSignificant:
         """
         return self._mre_registry[event]
 
+    def reset(self):
+        """Resets the detector to a clean state for subsequent uses."""
+        self._event_registry = {}
+        self._mre_registry = {}
+        self._time_registry = {}
+
     def _process_axis(self, event):
         """Process an axis event.
 
