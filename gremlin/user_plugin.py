@@ -219,6 +219,7 @@ class AbstractVariable(QtCore.QObject):
         self.label = label
         self.description = description
         self.variable_type = variable_type
+        self.variable_set = False
 
     def create_ui_element(self):
         """Returns a UI element to configure this variable.
@@ -239,7 +240,30 @@ class AbstractVariable(QtCore.QObject):
             Contains the module name and instance name to use when loading
             content from the variable registry
         """
-        raise error.PluginError("_load_from_registry method not implemented")
+        if identifier is not None:
+            val = variable_registry.get(
+                identifier[0],
+                identifier[1],
+                self.label
+            )
+            if val is not None:
+                self.value = self._process_registry_value(val)
+                self.variable_set = True
+
+    def _process_registry_value(self, value):
+        """Processes the value obtained from the registry.
+
+        Parameters
+        ----------
+        value : object
+            The registry value associated with this variable
+
+        Returns
+        -------
+        object
+            Processed value suitable for this variable
+        """
+        raise error.PluginError("_process_registry_value method not implemented")
 
     def _get_identifier(self):
         """Returns the identifier associated with the module of this variable.
@@ -314,18 +338,9 @@ class NumericalVariable(AbstractVariable):
 
         return layout
 
-    def _load_from_registry(self, identifier):
-        if identifier is not None:
-            val = variable_registry.get(
-                identifier[0],
-                identifier[1],
-                self.label
-            )
-            if val is not None:
-                self.value = _cast_variable[self.variable_type](val)
-
-        self.value = clamp_value(
-            self.value,
+    def _process_registry_value(self, value):
+        return clamp_value(
+            _cast_variable[self.variable_type](value),
             self.min_value,
             self.max_value
         )
@@ -417,15 +432,8 @@ class BoolVariable(AbstractVariable):
 
         return layout
 
-    def _load_from_registry(self, identifier):
-        if identifier is not None:
-            val = variable_registry.get(
-                identifier[0],
-                identifier[1],
-                self.label
-            )
-            if val is not None:
-                self.value = val
+    def _process_registry_value(self, value):
+        return value
 
 
 class StringVariable(AbstractVariable):
@@ -466,16 +474,8 @@ class StringVariable(AbstractVariable):
 
         return layout
 
-    def _load_from_registry(self, identifier):
-        identifier = self._get_identifier()
-        if identifier is not None:
-            val = variable_registry.get(
-                identifier[0],
-                identifier[1],
-                self.label
-            )
-            if val is not None:
-                self.value = str(val)
+    def _process_registry_value(self, value):
+        return str(value)
 
 
 class ModeVariable(AbstractVariable):
@@ -512,15 +512,8 @@ class ModeVariable(AbstractVariable):
 
         return layout
 
-    def _load_from_registry(self, identifier):
-        if identifier is not None:
-            val = variable_registry.get(
-                identifier[0],
-                identifier[1],
-                self.label
-            )
-            if val is not None:
-                self.value = val
+    def _process_registry_value(self, value):
+        return value
 
 
 class VirtualInputVariable(AbstractVariable):
@@ -602,15 +595,8 @@ class VirtualInputVariable(AbstractVariable):
 
         return layout
 
-    def _load_from_registry(self, identifier):
-        if identifier is not None:
-            val = variable_registry.get(
-                identifier[0],
-                identifier[1],
-                self.label
-            )
-            if val is not None:
-                self.value = val
+    def _process_registry_value(self, value):
+        return value
 
 
 class PhysicalInputVariable(AbstractVariable):
@@ -709,12 +695,5 @@ class PhysicalInputVariable(AbstractVariable):
             "input_type": event.event_type,
         })
 
-    def _load_from_registry(self, identifier):
-        if identifier is not None:
-            val = variable_registry.get(
-                identifier[0],
-                identifier[1],
-                self.label
-            )
-            if val is not None:
-                self.value = val
+    def _process_registry_value(self, value):
+        return value
