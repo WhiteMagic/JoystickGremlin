@@ -2114,8 +2114,8 @@ class PluginInstance:
 
     def is_configured(self):
         is_configured = True
-        for var in self.variables.values():
-            is_configured &= var.is_valid
+        for var in [var for var in self.variables.values() if not var.is_optional]:
+            is_configured &= var.value is not None
         return is_configured
 
     def has_variable(self, name):
@@ -2144,7 +2144,7 @@ class PluginInstance:
         node.set("name", safe_format(self.name, str))
         for variable in self.variables.values():
             variable_node = variable.to_xml()
-            if variable.is_valid and variable_node is not None:
+            if variable_node is not None:
                 node.append(variable_node)
         return node
 
@@ -2158,14 +2158,14 @@ class PluginVariable:
         self.name = None
         self.type = None
         self.value = None
-        self.is_valid = False
+        self.is_optional = False
 
     def from_xml(self, node):
         self.name = safe_read(node, "name", str, "")
         self.type = PluginVariableType.to_enum(
             safe_read(node, "type", str, "String")
         )
-        self.is_valid = True
+        self.is_optional = read_bool(node, "is-optional")
 
         # Read variable content based on type information
         if self.type == PluginVariableType.Int:
@@ -2203,6 +2203,7 @@ class PluginVariable:
         node = ElementTree.Element("variable")
         node.set("name", safe_format(self.name, str))
         node.set("type", PluginVariableType.to_string(self.type))
+        node.set("is-optional", safe_format(self.is_optional, bool, str))
 
         # Write out content based on the type
         if self.type in [
