@@ -178,7 +178,10 @@ def input_to_ui_string(input_type, input_id):
     :return string for UI usage of the given data
     """
     if input_type == InputType.JoystickAxis:
-        return AxisNames.to_string(AxisNames(input_id))
+        try:
+            return AxisNames.to_string(AxisNames(input_id))
+        except gremlin.error.GremlinError:
+            return "Axis {:d}".format(input_id)
     elif input_type == InputType.Keyboard:
         return gremlin.macro.key_from_code(*input_id).name
     else:
