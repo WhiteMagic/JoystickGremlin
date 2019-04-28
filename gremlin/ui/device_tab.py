@@ -257,10 +257,10 @@ class ActionContainerView(common.AbstractView):
             QtWidgets.QSizePolicy.Expanding
         )
         self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
         # Configure the scroll area
-        self.scroll_area.setMinimumWidth(750)
+        self.scroll_area.setMinimumWidth(800)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
 
