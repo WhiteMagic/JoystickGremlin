@@ -23,6 +23,10 @@ from gremlin.common import DeviceType, InputType
 from . import activation_condition, common, virtual_button
 
 
+# Cache storage for container tab selections
+g_container_tab_state = common.ViewStateCache()
+
+
 class InputIdentifier:
 
     """Represents the identifier of a single input item."""
@@ -642,7 +646,9 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         self.dock_tabs.currentChanged.connect(self._tab_changed)
 
         # Select appropriate tab
-        self._select_tab(self.profile_data.current_view_type)
+        self._select_tab(
+            g_container_tab_state.get(self.library_reference.uuid)
+        )
 
     def _create_action_tab(self):
         # Create root widget of the dock element
@@ -719,8 +725,10 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
     def _tab_changed(self, index):
         try:
             tab_text = self.dock_tabs.tabText(index)
-            self.profile_data.current_view_type = \
+            g_container_tab_state.set(
+                self.library_reference.uuid,
                 common.ContainerViewTypes.to_enum(tab_text.lower())
+            )
         except gremlin.error.GremlinError:
             return
 

@@ -2371,6 +2371,7 @@ class LibraryReference:
         self.parent = parent
         self.library_uuid = None
         self.virtual_button = None
+        self.uuid = uuid.uuid4()
 
     def from_xml(self, node):
         """Initializes this instance's content based on the provided XML node.
