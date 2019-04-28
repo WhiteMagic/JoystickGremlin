@@ -225,7 +225,7 @@ class DoubleTapContainerFunctor(gremlin.base_classes.AbstractFunctor):
         self.activate_on = container.activate_on
 
         self.start_time = 0
-        self.timer = None
+        self.double_action_timer = None
         self.tap_type = None
         self.value_press = None
         self.event_press = None
@@ -248,31 +248,37 @@ class DoubleTapContainerFunctor(gremlin.base_classes.AbstractFunctor):
 
         # Execute double tap logic
         if value.current:
-            # double tap
+            # Second activation within the delay, i.e. second tap
             if (self.start_time + self.delay) > time.time():
-                # avoid triple tapping doing several double taps
+                # Prevent repeated double taps from repeated button presses
                 self.start_time = 0
                 self.tap_type = "double"
                 if self.activate_on == "exclusive":
-                    self.timer.cancel()
+                    self.double_action_timer.cancel()
+            # First acitvation within the delay, i.e. first tap
             else:
                 self.start_time = time.time()
                 self.tap_type = "single"
                 if self.activate_on == "exclusive":
-                    self.timer = threading.Timer(self.delay, self._single_tap)
-                    self.timer.start()
-        elif self.timer and self.timer.is_alive():
+                    self.double_action_timer = \
+                        threading.Timer(self.delay, self._single_tap)
+                    self.double_action_timer.start()
+
+        # Input is being released at this point
+        elif self.double_action_timer and self.double_action_timer.is_alive():
             # if releasing single tap before delay
             # we will want to send a short press and release
-            self.timer.cancel()
-            self.timer = threading.Timer(
+            self.double_action_timer.cancel()
+            self.double_action_timer = threading.Timer(
                 (self.start_time + self.delay) - time.time(),
                 lambda: self._single_tap(event, value)
             )
-            self.timer.start()
+            self.double_action_timer.start()
 
         if self.tap_type == "double":
             self.double_tap.process_event(event, value)
+            if self.activate_on == "combined":
+                self.single_tap.process_event(event, value)
         elif self.activate_on != "exclusive":
             self.single_tap.process_event(event, value)
 
@@ -323,8 +329,9 @@ class DoubleTapContainer(gremlin.base_classes.AbstractContainer):
         :param node the XML node with which to populate the container
         """
         super()._parse_xml(node)
-        self.delay = float(node.get("delay", 0.5))
-        self.activate_on = node.get("activate-on", "combined")
+        self.delay = gremlin.profile.safe_read(node, "delay", float, 0.5)
+        self.activate_on = \
+            gremlin.profile.safe_read(node, "activate-on", str, "combined")
 
     def _generate_xml(self):
         """Returns an XML node representing this container's data.
