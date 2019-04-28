@@ -1154,6 +1154,51 @@ class InputListenerWidget(QtWidgets.QFrame):
         return ", ".join(valid_str)
 
 
+class ViewStateCache:
+
+    """Allows storing view state information for transient UI widgets."""
+
+    def __init__(self):
+        """Initializes a new cache instance."""
+        self._cache = {}
+
+    def clear(self):
+        """Clears all cached values."""
+        self._cache = {}
+
+    def get(self, key):
+        """Retrieves the cached value for a specified key.
+
+        If no value is stored for the specified key, None will be returned.
+
+        Parameters
+        ==========
+        key : hashable object
+            key to use in the value lookup
+
+        Returns
+        =======
+        object
+            Value stored under the given key or None if no entry exists with
+            the provided key
+        """
+        #print("Get: ", key, self._cache.get(key, None))
+        return self._cache.get(key, None)
+
+    def set(self, key, value):
+        """Sets the value of the specified key.
+
+        Parameters
+        ==========
+        key : hashable object
+            key under which to store the provided value
+        value : object
+            the value to store at the given key
+        """
+        #print("Set: ", key, value)
+        self._cache[key] = value
+
+
 def clear_layout(layout):
     """Removes all items from the given layout.
 
