@@ -717,7 +717,7 @@ class VJoy:
         # Restore input states based on what we recorded
         if success:
             for i in self._axis:
-                self._axis[i].value = axis_states[i]
+                self._axis[i].set_absolute_value(axis_states[i])
             for i in self._button:
                 self._button[i].is_pressed = button_states[i]
             for i in self._hat:
