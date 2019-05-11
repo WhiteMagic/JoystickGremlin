@@ -173,6 +173,7 @@ class SplitAxisFunctor(AbstractFunctor):
     def process_event(self, event, value):
         if value.current < self.action.center_point:
             value_range = -1.0 - self.action.center_point
+
             self.vjoy[self.action.device_low_vjoy_id].axis(
                 self.action.device_low_axis
             ).value = ((value.current - self.action.center_point) /
@@ -181,7 +182,9 @@ class SplitAxisFunctor(AbstractFunctor):
                 self.action.device_high_axis
             ).value = -1.0
         else:
-            value_range = 1.0 - self.action.center_point
+            # Compute value range guarding against division by zero
+            value_range = max(1.0 - self.action.center_point, 0.001)
+
             self.vjoy[self.action.device_high_vjoy_id].axis(
                 self.action.device_high_axis
             ).value = ((value.current - self.action.center_point) /
