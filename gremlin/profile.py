@@ -29,7 +29,8 @@ from xml.etree import ElementTree
 import dill
 
 import action_plugins
-from gremlin.common import DeviceType, InputType, PluginVariableType
+from gremlin.common import DeviceType, InputType, MergeAxisOperation, \
+    PluginVariableType
 from . import base_classes, common, error, input_devices, joystick_handling, \
     plugin_manager, util
 
@@ -1548,6 +1549,10 @@ class Profile:
         for entry in self.merge_axes:
             node = ElementTree.Element("merge-axis")
             node.set("mode", safe_format(entry["mode"], str))
+            node.set("operation", safe_format(
+                MergeAxisOperation.to_string(entry["operation"]),
+                str
+            ))
             for tag in ["vjoy"]:
                 sub_node = ElementTree.Element(tag)
                 sub_node.set(
@@ -1649,18 +1654,21 @@ class Profile:
         :return merge axis data structure parsed from the XML node
         """
         entry = {
-            "mode": node.get("mode", None)
+            "mode": node.get("mode", None),
+            "operation": MergeAxisOperation.to_enum(
+                safe_read(node, "operation", str, "average")
+            )
         }
         # TODO: apply safe reading to these
         for tag in ["vjoy"]:
             entry[tag] = {
-                "vjoy_id": int(node.find(tag).get("vjoy-id")),
-                "axis_id": int(node.find(tag).get("axis-id"))
+                "vjoy_id": safe_read(node.find(tag), "vjoy-id", int),
+                "axis_id": safe_read(node.find(tag), "axis-id", int),
             }
         for tag in ["lower", "upper"]:
             entry[tag] = {
                 "device_guid": parse_guid(node.find(tag).get("device-guid")),
-                "axis_id": int(node.find(tag).get("axis-id"))
+                "axis_id": safe_read(node.find(tag), "axis-id", int)
             }
 
         return entry

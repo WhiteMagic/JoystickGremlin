@@ -99,8 +99,12 @@ class MergeAxisUi(common.BaseDialogUi):
             joy1_sel = entry.joy1_selector.get_selection()
             joy2_sel = entry.joy2_selector.get_selection()
             mode_idx = entry.mode_selector.selector.currentIndex()
+            operation_str = entry.operation_selector.currentText()
             self.profile_data.merge_axes.append({
                 "mode": entry.mode_selector.mode_list[mode_idx],
+                "operation": gremlin.common.MergeAxisOperation.to_enum(
+                    operation_str
+                ),
                 "vjoy": {
                     "vjoy_id": vjoy_sel["device_id"],
                     "axis_id": vjoy_sel["input_id"]
@@ -200,6 +204,16 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
             [gremlin.common.InputType.JoystickAxis]
         )
 
+        # Operation selection
+        self.operation_selector = QtWidgets.QComboBox()
+        self.operation_selector.addItem("Average")
+        self.operation_selector.addItem("Minimum")
+        self.operation_selector.addItem("Maximum")
+        self.operation_selector.addItem("Sum")
+        self.operation_selector.currentIndexChanged.connect(
+            lambda x: change_cb()
+        )
+
         # Mode selection
         self.mode_selector = gremlin.ui.common.ModeWidget()
         self.mode_selector.populate_selector(profile_data)
@@ -216,12 +230,16 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
             QtWidgets.QLabel("<b><center>Merge Axis</center></b>"), 0, 2
         )
         self.main_layout.addWidget(
-            QtWidgets.QLabel("<b><center>Mode</center></b>"), 0, 3
+            QtWidgets.QLabel("<b><center>Operation</center></b>"), 0, 3
+        )
+        self.main_layout.addWidget(
+            QtWidgets.QLabel("<b><center>Mode</center></b>"), 0, 4
         )
         self.main_layout.addWidget(self.joy1_selector, 1, 0)
         self.main_layout.addWidget(self.joy2_selector, 1, 1)
         self.main_layout.addWidget(self.vjoy_selector, 1, 2)
-        self.main_layout.addWidget(self.mode_selector, 1, 3)
+        self.main_layout.addWidget(self.operation_selector, 1, 3)
+        self.main_layout.addWidget(self.mode_selector, 1, 4)
 
     def closeEvent(self, event):
         """Emits the closed event when this widget is being closed.
@@ -269,5 +287,8 @@ class MergeAxisEntry(QtWidgets.QDockWidget):
                 self.mode_selector.mode_list.index(data["mode"])
             )
 
-    def _execute_callback(self, data):
-        self.ca
+        self.operation_selector.setCurrentText(
+            gremlin.common.MergeAxisOperation.to_string(
+                data["operation"]
+            ).capitalize()
+        )

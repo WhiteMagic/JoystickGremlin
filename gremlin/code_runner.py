@@ -196,7 +196,8 @@ class CodeRunner:
             for entry in profile.merge_axes:
                 merge_axis = MergeAxis(
                     entry["vjoy"]["vjoy_id"],
-                    entry["vjoy"]["axis_id"]
+                    entry["vjoy"]["axis_id"],
+                    entry["operation"]
                 )
                 self._merge_axes.append(merge_axis)
 
@@ -351,18 +352,43 @@ class MergeAxis:
 
     """Merges inputs from two distinct axes into a single one."""
 
-    def __init__(self, vjoy_id, input_id):
+    def __init__(
+            self,
+            vjoy_id: int,
+            input_id: int,
+            operation: gremlin.common.MergeAxisOperation
+    ):
         self.axis_values = [0.0, 0.0]
         self.vjoy_id = vjoy_id
         self.input_id = input_id
+        self.operation = operation
 
     def _update(self):
         """Updates the merged axis value."""
-        value = (self.axis_values[0] - self.axis_values[1]) / 2.0
+        value = 0.0
+        if self.operation == gremlin.common.MergeAxisOperation.Average:
+            value = (self.axis_values[0] - self.axis_values[1]) / 2.0
+        elif self.operation == gremlin.common.MergeAxisOperation.Minimum:
+            value = min(self.axis_values[0], self.axis_values[1])
+        elif self.operation == gremlin.common.MergeAxisOperation.Maximum:
+            value = max(self.axis_values[0], self.axis_values[1])
+        elif self.operation == gremlin.common.MergeAxisOperation.Sum:
+            value = gremlin.util.clamp(
+                self.axis_values[0] + self.axis_values[1],
+                -1.0,
+                1.0
+            )
+        else:
+            raise gremlin.error.GremlinError(
+                "Invalid merge axis operation detected, \"{}\"".format(
+                    str(self.operation)
+                )
+            )
+
         gremlin.joystick_handling.VJoyProxy()[self.vjoy_id]\
             .axis(self.input_id).value = value
 
-    def update_axis1(self, event):
+    def update_axis1(self, event: gremlin.event_handler.Event):
         """Updates information for the first axis.
 
         :param event data event for the first axis
@@ -370,7 +396,7 @@ class MergeAxis:
         self.axis_values[0] = event.value
         self._update()
 
-    def update_axis2(self, event):
+    def update_axis2(self, event: gremlin.event_handler.Event):
         """Updates information for the second axis.
 
         :param event data event for the second axis
