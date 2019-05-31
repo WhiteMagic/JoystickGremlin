@@ -1257,9 +1257,6 @@ if __name__ == "__main__":
     hg = gremlin.hid_guardian.HidGuardian()
     hg.add_process(os.getpid())
 
-    # Initialize DirectInputListener
-    # DILL.init()
-
     # Create user interface
     app_id = u"joystick.gremlin"
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
@@ -1268,6 +1265,7 @@ if __name__ == "__main__":
     app.setApplicationDisplayName("Joystick Gremlin")
 
     # Ensure joystick devices are correctly setup
+    time.sleep(1)
     gremlin.joystick_handling.joystick_devices_initialization()
 
     # Check if vJoy is properly setup and if not display an error
