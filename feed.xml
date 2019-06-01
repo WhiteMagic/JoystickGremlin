@@ -5,7 +5,40 @@
 		<description>New release information for Joystick Gremlin</description>
 		<link>https://whitemagic.github.io/JoystickGremlin</link>
 		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
-		<lastBuildDate>Fri, 12 Apr 2019 00:00:00 +1000</lastBuildDate>
+		<lastBuildDate>Sat, 01 Jun 2019 00:00:00 +1000</lastBuildDate>
+		
+			<item>
+				<title>Release 13.2</title>
+				<description>&lt;h1&gt;Release 13.2&lt;/h1&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13.2/Joystick.Gremlin.R13.2.msi&quot;&gt;Download
+    Release 13.2 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13.2/Joystick.Gremlin.R13.2.zip&quot;&gt;Download
+    Release 13.2 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
+
+&lt;h2&gt;New Features&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Choice of operation to perform when merging two axes&lt;/li&gt;
+    &lt;li&gt;User plugin variable exposing fixed choices via a dropdown menu&lt;/li&gt;
+    &lt;li&gt;User plugin variables can be marked as optional&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;Fixes&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Updated DILL version to handle device based edge cases better&lt;/li&gt;
+    &lt;li&gt;vJoy keep alive code fixed again&lt;/li&gt;
+    &lt;li&gt;Invalid axis index handling fixes&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sat, 01 Jun 2019 00:00:00 +1000</pubDate>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2019/06/01/Release-13.2.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2019/06/01/Release-13.2.html</guid>
+			</item>
 		
 			<item>
 				<title>Release 13.1</title>
@@ -406,51 +439,6 @@
 				<pubDate>Sat, 19 Aug 2017 12:00:00 +1000</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</guid>
-			</item>
-		
-			<item>
-				<title>Release 8</title>
-				<description>&lt;h1&gt;Release 8&lt;/h1&gt;
-
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.msi&quot;&gt;Download
-    Release 8 MSI&lt;/a&gt;
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8/Joystick.Gremlin.R8.zip&quot;&gt;Download
-    Release 8 ZIP&lt;/a&gt;
-
-&lt;br/&gt;&lt;br/&gt;
-
-
-&lt;h2&gt;New Features&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;New container and action system&lt;/li&gt;
-    &lt;ul&gt;
-        &lt;li&gt;Actions are now placed inside containers&lt;/li&gt;
-        &lt;li&gt;Containers come in different varieties, such as basic, chain, and tempo&lt;/li&gt;
-    &lt;/ul&gt;
-    &lt;li&gt;New map to keyboard action&lt;/li&gt;
-    &lt;li&gt;vJoy axis initialization value customization&lt;/li&gt;
-    &lt;li&gt;Ability to map hat directions to vJoy buttons&lt;/li&gt;
-    &lt;li&gt;Ability to select processes for automatic profile activation from a list&lt;/li&gt;
-    &lt;li&gt;Listing of recently used profiles&lt;/li&gt;
-    &lt;li&gt;Improved macro action functionalities&lt;/li&gt;
-    &lt;li&gt;Restore last known position and size of the main window&lt;/li&gt;
-    &lt;li&gt;Basic help / hint system started&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;Fixes&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;Rewritten UI&lt;/li&gt;
-    &lt;li&gt;Code generation changes&lt;/li&gt;
-    &lt;li&gt;Properly handle non-consecutive vJoy axis setups&lt;/li&gt;
-    &lt;li&gt;Better handling of international keyboards and layouts&lt;/li&gt;
-    &lt;li&gt;Improve vJoy error handling&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Sat, 08 Jul 2017 12:00:00 +1000</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/07/08/Release-8.html</guid>
 			</item>
 		
 	</channel>
