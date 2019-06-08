@@ -189,6 +189,21 @@ class GUID:
         """
         return hash(self) == hash(other)
 
+    def __lt__(self, other):
+        """Returns the result of the < operator.
+
+        Parameters
+        ==========
+        other : GUID
+            Instance with which to perform the equality comparison
+
+        Returns
+        =======
+        bool
+            True if this instance is < other, False otherwise
+        """
+        return str(self) < str(other)
+
     def __hash__(self):
         """Returns the hash of this GUID.
 
