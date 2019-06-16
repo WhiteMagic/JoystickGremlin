@@ -528,7 +528,7 @@ class AxisStateWidget(QtWidgets.QWidget):
         :param value new value to show
         """
         self.progress.setValue(AxisStateWidget.scale_factor * value)
-        self.readout.setText("{:d} %".format(int(100 * value)))
+        self.readout.setText("{:d} %".format(int(round(100 * value))))
 
 
 class HatWidget(QtWidgets.QWidget):
