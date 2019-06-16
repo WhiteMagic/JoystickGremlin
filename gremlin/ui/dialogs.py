@@ -907,6 +907,7 @@ class ModeManagerUi(common.BaseDialogUi):
             for name, device in self._profile.devices.items():
                 if inherit == "None":
                     inherit = None
+                device.ensure_mode_exists(mode)
                 device.modes[mode].inherit = inherit
             self.modes_changed.emit()
 
