@@ -476,11 +476,11 @@ class VJoy:
         if not VJoyInterface.vJoyEnabled():
             logging.getLogger("system").error("vJoy is not currently running")
             raise VJoyError("vJoy is not currently running")
-        if VJoyInterface.GetvJoyVersion() != 0x218:
+        if VJoyInterface.GetvJoyVersion() < 0x218:
             logging.getLogger("system").error(
-                "Running incompatible vJoy version, 2.1.8 required"
+                "Running incompatible vJoy version, 2.1.8 or higher required"
             )
-            raise VJoyError("Running incompatible vJoy version, 2.1.8 required")
+            raise VJoyError("Running incompatible vJoy version, 2.1.8 or higher required")
         elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
             logging.getLogger("system").error(
                 "Requested vJoy device is not available - vid: {}".format(vjoy_id)
