@@ -5,7 +5,39 @@
 		<description>New release information for Joystick Gremlin</description>
 		<link>https://whitemagic.github.io/JoystickGremlin</link>
 		<atom:link href="https://whitemagic.github.io/JoystickGremlin/feed.xml" rel="self" type="application/rss+xml" />
-		<lastBuildDate>Sat, 01 Jun 2019 00:00:00 +1000</lastBuildDate>
+		<lastBuildDate>Tue, 16 Jul 2019 00:00:00 +0200</lastBuildDate>
+		
+			<item>
+				<title>Release 13.3</title>
+				<description>&lt;h1&gt;Release 13.3&lt;/h1&gt;
+
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13.3/Joystick.Gremlin.R13.3.msi&quot;&gt;Download
+    Release 13.3 MSI&lt;/a&gt;
+&lt;a class=&quot;btn btn-primary&quot;
+   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_13.3/Joystick.Gremlin.R13.3.zip&quot;&gt;Download
+    Release 13.3 ZIP&lt;/a&gt;
+
+&lt;br/&gt;&lt;br/&gt;
+
+
+&lt;p class=&quot;text-justify&quot;&gt;
+    This release is mainly there to allow newer recompiled and resigned
+    versions of vJoy to work with Gremlin.
+&lt;/p&gt;
+
+&lt;h2&gt;Fixes&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;li&gt;Added missing comparison operator for GUID objects&lt;/li&gt;
+    &lt;li&gt;Better handling of missing modes in profiles&lt;/li&gt;
+    &lt;li&gt;Input Viewer value rounding issues addressed&lt;/li&gt;
+    &lt;li&gt;Change vJoy version check to accept any version greater or equal to 2.1.8&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Tue, 16 Jul 2019 00:00:00 +0200</pubDate>
+				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2019/07/16/Release-13.3.html</link>
+				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2019/07/16/Release-13.3.html</guid>
+			</item>
 		
 			<item>
 				<title>Release 13.2</title>
@@ -35,7 +67,7 @@
     &lt;li&gt;Invalid axis index handling fixes&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sat, 01 Jun 2019 00:00:00 +1000</pubDate>
+				<pubDate>Sat, 01 Jun 2019 00:00:00 +0200</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2019/06/01/Release-13.2.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2019/06/01/Release-13.2.html</guid>
 			</item>
@@ -62,7 +94,7 @@
         value change&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Fri, 12 Apr 2019 00:00:00 +1000</pubDate>
+				<pubDate>Fri, 12 Apr 2019 00:00:00 +0200</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/12/Release-13.1.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/12/Release-13.1.html</guid>
 			</item>
@@ -134,7 +166,7 @@
     &lt;li&gt;Fix for vJoy curves not being applied correctly&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Tue, 09 Apr 2019 00:00:00 +1000</pubDate>
+				<pubDate>Tue, 09 Apr 2019 00:00:00 +0200</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/09/Release-13.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2019/04/09/Release-13.html</guid>
 			</item>
@@ -208,7 +240,7 @@
     &lt;li&gt;Detect and handle a bunch of scenarios that would cause Gremlin to crash previously&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sat, 22 Dec 2018 00:00:00 +1100</pubDate>
+				<pubDate>Sat, 22 Dec 2018 00:00:00 +0100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2018/12/22/Release-12.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2018/12/22/Release-12.html</guid>
 			</item>
@@ -248,7 +280,7 @@
     &lt;li&gt;Tempo container fixes&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sun, 20 May 2018 00:00:00 +1000</pubDate>
+				<pubDate>Sun, 20 May 2018 00:00:00 +0200</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2018/05/20/Release-11.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2018/05/20/Release-11.html</guid>
 			</item>
@@ -295,7 +327,7 @@
     &lt;li&gt;Ensure empty modes are not silently dropped when executing a profile&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sat, 03 Feb 2018 00:00:00 +1100</pubDate>
+				<pubDate>Sat, 03 Feb 2018 00:00:00 +0100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2018/02/03/Release-10.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2018/02/03/Release-10.html</guid>
 			</item>
@@ -319,7 +351,7 @@
     &lt;li&gt;Properly fix virtual axis buttons without breaking response curves&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Mon, 25 Dec 2017 00:00:00 +1100</pubDate>
+				<pubDate>Mon, 25 Dec 2017 00:00:00 +0100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/25/Release-9.2.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/25/Release-9.2.html</guid>
 			</item>
@@ -354,7 +386,7 @@
     &lt;li&gt;Properly remember and use information about currently active container tabs&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Thu, 21 Dec 2017 12:00:00 +1100</pubDate>
+				<pubDate>Thu, 21 Dec 2017 12:00:00 +0100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/21/Release-9.1.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/21/Release-9.1.html</guid>
 			</item>
@@ -401,44 +433,9 @@
     &lt;li&gt;Fixed macro manager to prevent excessive polling when identical macros are queued up&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sat, 09 Dec 2017 12:00:00 +1100</pubDate>
+				<pubDate>Sat, 09 Dec 2017 12:00:00 +0100</pubDate>
 				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/09/Release-9.html</link>
 				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/12/09/Release-9.html</guid>
-			</item>
-		
-			<item>
-				<title>Release 8.1</title>
-				<description>&lt;h1&gt;Release 8.1&lt;/h1&gt;
-
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.msi&quot;&gt;Download
-    Release 8.1 MSI&lt;/a&gt;
-&lt;a class=&quot;btn btn-primary&quot;
-   href=&quot;https://github.com/WhiteMagic/JoystickGremlin/releases/download/Release_8.1/Joystick.Gremlin.R8.1.zip&quot;&gt;Download
-    Release 8.1 ZIP&lt;/a&gt;
-
-&lt;br/&gt;&lt;br/&gt;
-
-
-&lt;h2&gt;New Features&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;Ask to save changes when appropriate&lt;/li&gt;
-    &lt;li&gt;Temporary mode switch action&lt;/li&gt;
-    &lt;li&gt;Sound playback action&lt;/li&gt;
-    &lt;li&gt;Symmetry mode for Bezier curve handles&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;Fixes&lt;/h2&gt;
-&lt;ul&gt;
-    &lt;li&gt;AltGr and Pause should now work properly&lt;/li&gt;
-    &lt;li&gt;Reworked cubic Bezier curves&lt;/li&gt;
-    &lt;li&gt;Properly store curve type changes&lt;/li&gt;
-    &lt;li&gt;Consistent initial activation mode selection&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Sat, 19 Aug 2017 12:00:00 +1000</pubDate>
-				<link>https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</link>
-				<guid isPermaLink="true">https://whitemagic.github.io/JoystickGremlin/changelog/2017/08/19/Release-8.1.html</guid>
 			</item>
 		
 	</channel>
