@@ -25,7 +25,10 @@ from gremlin.util import resource_path
 hint = {}
 
 
-with open(resource_path("doc/hints.csv")) as csv_stream:
-    reader = csv.reader(csv_stream, delimiter=",", quotechar="\"")
-    for row in reader:
-        hint[row[0]] = row[1]
+try:
+    with open(resource_path("doc/hints.csv")) as csv_stream:
+        reader = csv.reader(csv_stream, delimiter=",", quotechar="\"")
+        for row in reader:
+            hint[row[0]] = row[1]
+except FileNotFoundError:
+    pass
