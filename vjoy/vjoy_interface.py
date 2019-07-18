@@ -48,7 +48,12 @@ class VJoyInterface:
     else:
         raise GremlinError("Unable to locate vjoy dll")
 
-    vjoy_dll = ctypes.cdll.LoadLibrary(dll_path)
+    vjoy_dll_loaded = False
+    try:
+        vjoy_dll = ctypes.cdll.LoadLibrary(dll_path)
+        vjoy_dll_loaded = True
+    except OSError as e:
+        print("Failed loading vJoy dll, {}".format(e))
 
     # Declare argument and return types for all the functions
     # exposed by the dll
@@ -166,6 +171,9 @@ class VJoyInterface:
     @classmethod
     def initialize(cls):
         """Initializes the functions as class methods."""
+        if not cls.vjoy_dll_loaded:
+            return
+
         for fn_name, params in cls.api_functions.items():
             dll_fn = getattr(cls.vjoy_dll, fn_name)
             if "arguments" in params:
