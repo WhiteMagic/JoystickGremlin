@@ -6,7 +6,7 @@
 __pycache__
 
 /build
-/doc
+/doc/build
 /dist
 /releases
 /venv
