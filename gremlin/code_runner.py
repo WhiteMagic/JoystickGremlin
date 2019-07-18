@@ -391,7 +391,8 @@ class MergeAxis:
     def update_axis1(self, event: gremlin.event_handler.Event):
         """Updates information for the first axis.
 
-        :param event data event for the first axis
+        Args:
+            event: data event for the first axis
         """
         self.axis_values[0] = event.value
         self._update()
@@ -399,7 +400,8 @@ class MergeAxis:
     def update_axis2(self, event: gremlin.event_handler.Event):
         """Updates information for the second axis.
 
-        :param event data event for the second axis
+        Args:
+            event: data event for the second axis
         """
         self.axis_values[1] = event.value
         self._update()
