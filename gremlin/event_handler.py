@@ -194,8 +194,6 @@ class EventListener(QtCore.QObject):
 
     def _run(self):
         """Starts the event loop."""
-        dill.DILL.init()
-        #time.sleep(1)
         dill.DILL.set_device_change_callback(self._joystick_device_handler)
         dill.DILL.set_input_event_callback(self._joystick_event_handler)
         while self._running:

@@ -646,7 +646,7 @@ class DILL:
         return DILL._dll.device_exists(guid.ctypes)
 
     @staticmethod
-    def initialize():
+    def initialize_capi():
         """Initializes the functions as class methods."""
         for fn_name, params in DILL.api_functions.items():
             dll_fn = getattr(DILL._dll, fn_name)
@@ -657,4 +657,4 @@ class DILL:
 
 
 # Initialize the class
-DILL.initialize()
+DILL.initialize_capi()

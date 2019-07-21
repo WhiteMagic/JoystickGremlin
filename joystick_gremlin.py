@@ -1265,7 +1265,8 @@ if __name__ == "__main__":
     app.setApplicationDisplayName("Joystick Gremlin")
 
     # Ensure joystick devices are correctly setup
-    time.sleep(1)
+    dill.DILL.init()
+    time.sleep(0.25)
     gremlin.joystick_handling.joystick_devices_initialization()
 
     # Check if vJoy is properly setup and if not display an error
