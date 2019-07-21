@@ -123,6 +123,12 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         if self.action_data.parent.tag == "hat_buttons":
             input_type = InputType.JoystickButton
 
+        # Handle obscure bug which causes the action_data to contain no
+        # input_type information
+        if input_type is None:
+            input_type = InputType.JoystickButton
+            logging.getLogger("system").warning("None as input type encountered")
+
         # If no valid input item is selected get the next unused one
         if self.action_data.vjoy_input_id in [0, None]:
             free_inputs = self._get_profile_root().list_unused_vjoy_inputs()
