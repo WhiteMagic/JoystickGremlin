@@ -51,14 +51,13 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         "Hat": InputType.JoystickHat
     }
 
-    def __init__(self, action_data, parent=None):
+    def __init__(self, action_data, library_reference, parent=None):
         """Creates a new RemapWidget.
 
         :param action_data profile data managed by this widget
         :param parent the parent of this widget
         """
-        super().__init__(action_data, parent=parent)
-        assert(isinstance(action_data, Remap))
+        super().__init__(action_data, library_reference, parent=parent)
 
     def _create_ui(self):
         """Creates the UI components."""
@@ -81,13 +80,13 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.vjoy_selector = gremlin.ui.common.VJoySelector(
             lambda x: self.save_changes(),
             input_types[self._get_input_type()],
-            self.action_data.get_settings().vjoy_as_input
+            self.library_reference.get_settings().vjoy_as_input
         )
         self.main_layout.addWidget(self.vjoy_selector)
 
         # Create UI widgets for absolute / relative axis modes if the remap
         # action is being added to an axis input type
-        if self.action_data.get_input_type() == InputType.JoystickAxis:
+        if self.library_reference.get_input_type() == InputType.JoystickAxis:
             self.remap_type_widget = QtWidgets.QWidget()
             self.remap_type_layout = QtWidgets.QHBoxLayout(self.remap_type_widget)
 
@@ -356,12 +355,21 @@ class Remap(gremlin.base_classes.AbstractAction):
                 self.vjoy_input_id
             )
 
-    def requires_virtual_button(self):
-        """Returns whether or not the action requires an activation condition.
+    def requires_virtual_button(self, input_type):
+        """Returns whether or not the action requires an activation condition
+        for the specified input type.
 
-        :return True if an activation condition is required, False otherwise
+        Parameters
+        ==========
+        input_type : gremlin.common.InputType
+            Input type for which to run the check
+
+        Returns
+        =======
+        bool
+            True if an activation condition is required, False otherwise
         """
-        input_type = self.get_input_type()
+        #input_type = self.get_input_type()
 
         if input_type in [InputType.JoystickButton, InputType.Keyboard]:
             return False

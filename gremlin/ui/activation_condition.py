@@ -58,7 +58,7 @@ class ActivationConditionWidget(QtWidgets.QWidget):
         self.granularity_selector.addItem("Container")
         self.granularity_selector.setCurrentIndex(
             ActivationConditionWidget.activation_type_to_index[
-                self.profile_data.activation_condition_type
+                self.profile_data.get_container().activation_condition_type
             ]
         )
         self.granularity_selector.currentIndexChanged.connect(
@@ -76,9 +76,9 @@ class ActivationConditionWidget(QtWidgets.QWidget):
         self.controls_layout.addStretch()
 
         self.main_layout.addLayout(self.controls_layout)
-        if self.profile_data.activation_condition_type == "container":
+        if self.profile_data.get_container().activation_condition_type == "container":
             self.condition_model = ConditionModel(
-                self.profile_data.activation_condition
+                self.profile_data.get_container().activation_condition
             )
             self.condition_view = ConditionView()
             self.condition_view.set_model(self.condition_model)

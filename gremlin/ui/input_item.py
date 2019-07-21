@@ -344,7 +344,7 @@ class ActionSetView(common.AbstractView):
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         self.profile_data = profile_data
-        self.allowed_interactions = profile_data.interaction_types
+        self.allowed_interactions = profile_data.get_container().interaction_types
         self.label = label
 
         # Create a group box widget in which everything else will be placed
@@ -368,7 +368,7 @@ class ActionSetView(common.AbstractView):
         # Only permit adding actions from the basic tab and if the tab is
         # not associated with a vJoy device
         if self.view_type == common.ContainerViewTypes.Action and \
-                self.profile_data.get_device_type() != DeviceType.VJoy:
+                self.profile_data.parent.get_device_type() != DeviceType.VJoy:
             self.action_selector = gremlin.ui.common.ActionSelector(
                 profile_data.parent.input_type
             )
@@ -384,7 +384,7 @@ class ActionSetView(common.AbstractView):
         if self.view_type == common.ContainerViewTypes.Action:
             for index in range(self.model.rows()):
                 data = self.model.data(index)
-                widget = data.widget(data)
+                widget = data.widget(data, self.profile_data)
                 widget.action_modified.connect(self.model.data_changed.emit)
                 wrapped_widget = BasicActionWrapper(widget)
                 wrapped_widget.closed.connect(self._create_closed_cb(widget))
@@ -615,20 +615,27 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
             gremlin.ui.virtual_button.VirtualHatButtonWidget
     }
 
-    def __init__(self, profile_data, parent=None):
+    def __init__(self, library_reference, parent=None):
         """Creates a new container widget object.
 
-        :param profile_data the data the container handles
-        :param parent the parent of the widget
+        Parameters
+        ==========
+        library_reference : gremlin.profile.LibraryReference
+            reference to the gremlin.profile.LibraryData object being
+            configured by this widget
+        parent : QtCore.QObject
+            object which is the parent of this one
         """
-        assert isinstance(profile_data, gremlin.base_classes.AbstractContainer)
         super().__init__(parent)
-        self.profile_data = profile_data
+
+        assert isinstance(library_reference, gremlin.profile.LibraryReference)
+
+        self.library_reference = library_reference
         self.action_widgets = []
 
         self.setTitleBarWidget(TitleBar(
             self._get_window_title(),
-            gremlin.hints.hint.get(self.profile_data.tag, ""),
+            gremlin.hints.hint.get(self.library_reference.get_container().tag, ""),
             self.remove
         ))
 
@@ -639,7 +646,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
         # Create the individual tabs
         self._create_action_tab()
-        if self.profile_data.get_device_type() != DeviceType.VJoy:
+        if self.library_reference.get_device_type() != DeviceType.VJoy:
             self._create_activation_condition_tab()
             self._create_virtual_button_tab()
 
@@ -671,7 +678,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
         # Create activation condition UI widget
         self.activation_condition_widget = \
-            activation_condition.ActivationConditionWidget(self.profile_data)
+            activation_condition.ActivationConditionWidget(self.library_reference)
         self.activation_condition_widget.activation_condition_modified.connect(
             self.container_modified.emit
         )
@@ -690,7 +697,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
     def _create_virtual_button_tab(self):
         # Return if nothing is to be done
-        if not self.profile_data.virtual_button:
+        if not self.library_reference.virtual_button:
             return
 
         # Create widget to place inside the tab
@@ -702,8 +709,8 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         # Create actual virtual button UI
         self.virtual_button_widget = \
             AbstractContainerWidget.virtual_axis_to_widget[
-                type(self.profile_data.virtual_button)
-            ](self.profile_data.virtual_button)
+                type(self.library_reference.virtual_button)
+            ](self.library_reference.virtual_button)
 
         # Put everything together
         self.virtual_button_layout.addWidget(self.virtual_button_widget)
@@ -716,10 +723,12 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
         try:
             tab_title = common.ContainerViewTypes.to_string(view_type).title()
+
             for i in range(self.dock_tabs.count()):
                 if self.dock_tabs.tabText(i) == tab_title:
                     self.dock_tabs.setCurrentIndex(i)
-        except gremlin.error.GremlinError:
+        except gremlin.error.GremlinError as err:
+            print(err)
             return
 
     def _tab_changed(self, index):
@@ -754,7 +763,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
         """
         action_set_model = ActionSetModel(action_set_data)
         action_set_view = ActionSetView(
-            self.profile_data,
+            self.library_reference,
             label,
             view_type
         )
@@ -799,7 +808,7 @@ class AbstractContainerWidget(QtWidgets.QDockWidget):
 
     def _get_window_title(self):
         """Returns the title to show on the widget."""
-        return self.profile_data.name
+        return self.library_reference.get_container().name
 
 
 class AbstractActionWidget(QtWidgets.QFrame):
@@ -813,19 +822,30 @@ class AbstractActionWidget(QtWidgets.QFrame):
     def __init__(
             self,
             action_data,
+            library_reference,
             layout_type=QtWidgets.QVBoxLayout,
             parent=None
     ):
-        """Creates a new instance.
+        """Creates a new widget to configure a particular action type..
 
-        :param action_data the sub-classed AbstractAction instance
-            associated with this specific action.
-        :param layout_type type of layout to use for the widget
-        :param parent parent widget
+        Parameters
+        ==========
+        action_data : gremlin.base_classes.AbstractAction
+            instance holding input type agnostic information about the action
+        library_reference : gremlin.profile.LibraryReference
+            the library reference this action is being configured on
+        layout_type : QtWidgets.QLayout
+            type of layout to use for the widget
+        parent : QtCore.QObject
+            parent widget
         """
         QtWidgets.QFrame.__init__(self, parent)
 
+        assert(isinstance(action_data, gremlin.base_classes.AbstractAction))
+        assert(isinstance(library_reference, gremlin.profile.LibraryReference))
+
         self.action_data = action_data
+        self.library_reference = library_reference
 
         self.main_layout = layout_type(self)
         self._create_ui()
@@ -850,14 +870,14 @@ class AbstractActionWidget(QtWidgets.QFrame):
         
         :return InputType corresponding to this action
         """
-        return self.action_data.parent.parent.input_type
+        return self.library_reference.parent.input_type
 
     def _get_profile_root(self):
         """Returns the root of the entire profile.
         
         :return root Profile instance
         """
-        root = self.action_data
+        root = self.library_reference.parent
         while not isinstance(root, gremlin.profile.Profile):
             root = root.parent
         return root

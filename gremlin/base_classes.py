@@ -412,26 +412,18 @@ class AbstractContainer(profile.LibraryData):
 
     """Base class for action container related information storage."""
 
-    # virtual_button_lut = {
-    #     common.InputType.JoystickAxis: VirtualAxisButton,
-    #     common.InputType.JoystickButton: None,
-    #     common.InputType.JoystickHat: VirtualHatButton
-    # }
-
     def __init__(self, parent):
         """Creates a new instance.
 
-        :parent the InputItem which is the parent to this action
+        Parameters
+        ==========
+        parent : gremlin.profile.Library
+            Library instance this container belongs to
         """
         super().__init__(parent)
         self.action_sets = []
         self.activation_condition_type = None
         self.activation_condition = None
-        # self.virtual_button = None
-        # Storage for the currently active view in the UI
-        # FIXME: This is ugly and shouldn't be done but for now the least
-        #   terrible option
-        # self.current_view_type = None
 
     def add_action(self, action, index=-1):
         """Adds an action to this container.
@@ -449,27 +441,6 @@ class AbstractContainer(profile.LibraryData):
 
         # Create activation condition data if needed
         # self.create_or_delete_virtual_button()
-
-    # TODO: This needs to become part of the library reference stuff
-    # def create_or_delete_virtual_button(self):
-    #     """Creates activation condition data as required."""
-    #     need_virtual_button = False
-    #     for actions in [a for a in self.action_sets if a is not None]:
-    #         need_virtual_button = need_virtual_button or \
-    #             any([a.requires_virtual_button() for a in actions if a is not None])
-    #
-    #     if need_virtual_button:
-    #         if self.virtual_button is None:
-    #             self.virtual_button = \
-    #                 AbstractContainer.virtual_button_lut[self.parent.input_type]()
-    #         elif not isinstance(
-    #                 self.virtual_button,
-    #                 AbstractContainer.virtual_button_lut[self.parent.input_type]
-    #         ):
-    #             self.virtual_button = \
-    #                 AbstractContainer.virtual_button_lut[self.parent.input_type]()
-    #     else:
-    #         self.virtual_button = None
 
     # TODO: This should go somewhere in the code runner parts
     # def generate_callbacks(self):
@@ -521,9 +492,6 @@ class AbstractContainer(profile.LibraryData):
         :return XML node representing the state of this instance
         """
         node = super().to_xml()
-        # Add activation condition if needed
-        # if self.virtual_button:
-        #     node.append(self.virtual_button.to_xml())
         if self.activation_condition:
             condition_node = self.activation_condition.to_xml()
             if condition_node:
@@ -537,8 +505,6 @@ class AbstractContainer(profile.LibraryData):
         """
         self.action_sets = []
         for child in node:
-            # if child.tag == "virtual-button":
-            #     continue
             if child.tag == "action-set":
                 action_set = []
                 self._parse_action_xml(child, action_set)
@@ -565,20 +531,6 @@ class AbstractContainer(profile.LibraryData):
             entry = action_name_map[child.tag](self)
             entry.from_xml(child)
             action_set.append(entry)
-
-    # def _parse_virtual_button_xml(self, node):
-    #     """Parses the virtual button part of the XML data.
-    #
-    #     :param node the XML node to process
-    #     """
-    #     vb_node = node.find("virtual-button")
-    #
-    #     self.virtual_button = None
-    #     if vb_node is not None:
-    #         self.virtual_button = AbstractContainer.virtual_button_lut[
-    #             self.get_input_type()
-    #         ]()
-    #         self.virtual_button.from_xml(vb_node)
 
     def _parse_activation_condition_xml(self, node):
         for child in node.findall("activation-condition"):

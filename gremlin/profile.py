@@ -1857,14 +1857,14 @@ class Profile:
             for mode in dev.modes.values():
                 for input_type in all_input_types:
                     for item in mode.config[input_type].values():
-                        is_empty &= len(item.containers) == 0
+                        is_empty &= len(item.library_references) == 0
 
         # Process all vJoy devices
         for dev in self.vjoy_devices.values():
             for mode in dev.modes.values():
                 for input_type in all_input_types:
                     for item in mode.config[input_type].values():
-                        is_empty &= len(item.containers) == 0
+                        is_empty &= len(item.library_references) == 0
 
         return is_empty
 
@@ -2230,7 +2230,9 @@ class LibraryData(metaclass=ABCMeta):
     """Base class for all items holding information about items in the library.
 
     This contains the parts of actions and containers that are stored within
-    the library. As such no input specific data is contained in these items.
+    the library. As such no input specific data is contained in these items as
+    a single entry can be associated with multiple inputs or be used in varying
+    types of inputs.
     """
 
     def __init__(self, parent):
@@ -2272,46 +2274,6 @@ class LibraryData(metaclass=ABCMeta):
             True if all required variables are set, False otherwise
         """
         return self._is_valid()
-
-    # def get_input_type(self):
-    #     """Returns the InputType of this data entry.
-    #
-    #     :return InputType of this entry
-    #     """
-    #     item = self.parent
-    #     while not isinstance(item, InputItem):
-    #         item = item.parent
-    #     return item.input_type
-    #
-    # def get_mode(self):
-    #     """Returns the Mode this data entry belongs to.
-    #
-    #     :return Mode instance this object belongs to
-    #     """
-    #     item = self.parent
-    #     while not isinstance(item, Mode):
-    #         item = item.parent
-    #     return item
-    #
-    # def get_device_type(self):
-    #     """Returns the DeviceType of this data entry.
-    #
-    #     :return DeviceType of this entry
-    #     """
-    #     item = self.parent
-    #     while not isinstance(item, Device):
-    #         item = item.parent
-    #     return item.type
-    #
-    # def get_settings(self):
-    #     """Returns the Settings data of the profile.
-    #
-    #     :return Settings object of this profile
-    #     """
-    #     item = self.parent
-    #     while not isinstance(item, Profile):
-    #         item = item.parent
-    #     return item.settings
 
     @abstractmethod
     def _parse_xml(self, node):
@@ -2373,6 +2335,35 @@ class LibraryReference:
         self.virtual_button = None
         self.uuid = uuid.uuid4()
 
+    def configure_virtual_button_data(self):
+        """Creates or deletes virtual button data structures as needed.
+
+        This will create or remove the virtual button data structures
+        depending on whether or not the particular input this reference is
+        assigned to requires it.
+        """
+        need_virtual_button = False
+        action_sets = self.get_container().action_sets
+        for actions in [a for a in action_sets if a is not None]:
+            need_virtual_button = need_virtual_button or \
+                any([
+                    a.requires_virtual_button(self.parent.input_type)
+                    for a in actions if a is not None
+                ])
+
+        if need_virtual_button:
+            if self.virtual_button is None:
+                self.virtual_button = \
+                    LibraryReference.virtual_button_lut[self.parent.input_type]()
+            elif not isinstance(
+                    self.virtual_button,
+                    LibraryReference.virtual_button_lut[self.parent.input_type]()
+            ):
+                self.virtual_button = \
+                    LibraryReference.virtual_button_lut[self.parent.input_type]()
+        else:
+            self.virtual_button = None
+
     def from_xml(self, node):
         """Initializes this instance's content based on the provided XML node.
 
@@ -2423,6 +2414,43 @@ class LibraryReference:
             parent = parent.parent
 
         return parent.library.lookup(self.library_uuid)
+
+    def get_action_sets(self):
+        return self.get_container().action_sets
+
+    def get_settings(self):
+        """Returns the Settings data of the profile.
+
+        :return Settings object of this profile
+        """
+        item = self.parent
+        while not isinstance(item, Profile):
+            item = item.parent
+        return item.settings
+
+    def get_input_type(self):
+        return self.parent.input_type
+
+    def get_mode(self):
+        """Returns the Mode this data entry belongs to.
+
+        :return Mode instance this object belongs to
+        """
+        item = self.parent
+        while not isinstance(item, Mode):
+            item = item.parent
+        return item
+
+    def get_device_type(self):
+        """Returns the DeviceType of this data entry.
+
+        :return DeviceType of this entry
+        """
+        item = self.parent
+        while not isinstance(item, Device):
+            item = item.parent
+        return item.type
+
 
 
 class Plugin:

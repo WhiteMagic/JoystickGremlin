@@ -28,8 +28,8 @@ from . import common, input_item
 
 class InputItemConfiguration(QtWidgets.QFrame):
 
-    """UI dialog responsible for the configuration of a single
-    input item such as an axis, button, hat, or key.
+    """UI dialog responsible for the configuration of a single input item
+    such as an axis, button, hat, or key.
     """
 
     # Signal emitted when the description changes
@@ -50,12 +50,13 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.widget_layout = QtWidgets.QVBoxLayout()
 
         self._create_description()
-        if self.item_data.parent.parent.type == gremlin.common.DeviceType.VJoy:
+        if self.item_data.get_device_type() == gremlin.common.DeviceType.VJoy:
             self._create_vjoy_dropdowns()
         else:
             self._create_dropdowns()
 
         self.action_model = ActionContainerModel(
+            self.item_data.library_references
         )
         self.action_view = ActionContainerView()
         self.action_view.set_model(self.action_model)
@@ -71,8 +72,9 @@ class InputItemConfiguration(QtWidgets.QFrame):
         # If this is a vJoy item then do not permit adding an action if
         # there is already one present, as only response curves can be added
         # and only one of them makes sense to exist
+        # FIXME: how does this interact with vjoy as input?
         if self.item_data.get_device_type() == DeviceType.VJoy:
-            if len(self.item_data.containers) > 0:
+            if len(self.item_data.library_references) > 0:
                 return
 
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
@@ -191,21 +193,21 @@ class ActionContainerModel(common.AbstractModel):
 
     """Stores action containers for display using the corresponding view."""
 
-    def __init__(self, containers, parent=None):
+    def __init__(self, library_references, parent=None):
         """Creates a new instance.
 
-        :param containers the container instances of this model
+        :param library_references the library container references of this model
         :param parent the parent of this widget
         """
         super().__init__(parent)
-        self._containers = containers
+        self._library_references = library_references
 
     def rows(self):
         """Returns the number of rows in the model.
 
         :return number of rows in the model
         """
-        return len(self._containers)
+        return len(self._library_references)
 
     def data(self, index):
         """Returns the data stored at the given location.
@@ -213,14 +215,15 @@ class ActionContainerModel(common.AbstractModel):
         :param index the location for which to return data
         :return the data stored at the requested location
         """
-        assert len(self._containers) > index
-        return self._containers[index]
+        assert len(self._library_references) > index
+        return self._library_references[index]
 
     def add_container(self, container):
         """Adds a container to the model.
 
         :param container the container instance to be added
         """
+        # TODO: this requires smarts to implement properly
         self._containers.append(container)
         self.data_changed.emit()
 
@@ -229,6 +232,7 @@ class ActionContainerModel(common.AbstractModel):
 
         :param container the container instance to remove
         """
+        # TODO: this requires smarts to implement properly
         if container in self._containers:
             del self._containers[self._containers.index(container)]
         self.data_changed.emit()
@@ -272,7 +276,8 @@ class ActionContainerView(common.AbstractView):
         """Redraws the entire view."""
         common.clear_layout(self.scroll_layout)
         for index in range(self.model.rows()):
-            widget = self.model.data(index).widget(self.model.data(index))
+            data = self.model.data(index)
+            widget = data.get_container().widget(data)
             widget.closed.connect(self._create_closed_cb(widget))
             widget.container_modified.connect(self.model.data_changed.emit)
             self.scroll_layout.addWidget(widget)

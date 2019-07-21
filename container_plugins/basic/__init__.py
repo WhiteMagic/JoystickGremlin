@@ -26,22 +26,22 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
     """Basic container which holds a single action."""
 
-    def __init__(self, profile_data, parent=None):
+    def __init__(self, library_reference, parent=None):
         """Creates a new instance.
 
-        :param profile_data the profile data represented by this widget
+        :param library_reference the profile data represented by this widget
         :param parent the parent of this widget
         """
-        super().__init__(profile_data, parent)
+        super().__init__(library_reference, parent)
 
     def _create_action_ui(self):
         """Creates the UI components."""
-        if len(self.profile_data.action_sets) > 0:
-            assert len(self.profile_data.action_sets) == 1
+        if len(self.library_reference.get_action_sets()) > 0:
+            assert len(self.library_reference.get_action_sets()) == 1
 
-            self.profile_data.create_or_delete_virtual_button()
+            self.library_reference.configure_virtual_button_data()
             widget = self._create_action_set_widget(
-                self.profile_data.action_sets[0],
+                self.library_reference.get_action_sets()[0],
                 "Basic",
                 gremlin.ui.common.ContainerViewTypes.Action
             )
@@ -49,24 +49,25 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
             widget.redraw()
             widget.model.data_changed.connect(self.container_modified.emit)
         else:
-            if self.profile_data.get_device_type() == gremlin.common.DeviceType.VJoy:
+            if self.library_reference.get_device_type() == gremlin.common.DeviceType.VJoy:
                 action_selector = gremlin.ui.common.ActionSelector(
                     gremlin.common.DeviceType.VJoy
                 )
             else:
                 action_selector = gremlin.ui.common.ActionSelector(
-                    self.profile_data.parent.input_type
+                    self.library_reference.get_input_type()
                 )
             action_selector.action_added.connect(self._add_action)
             self.action_layout.addWidget(action_selector)
 
     def _create_condition_ui(self):
-        if len(self.profile_data.action_sets) > 0 and \
-                self.profile_data.activation_condition_type == "action":
-            assert len(self.profile_data.action_sets) == 1
+        container = self.library_reference.get_container()
+        if len(container.action_sets) > 0 and \
+                container.activation_condition_type == "action":
+            assert len(container.action_sets) == 1
 
             widget = self._create_action_set_widget(
-                self.profile_data.action_sets[0],
+                container.action_sets[0],
                 "Basic",
                 gremlin.ui.common.ContainerViewTypes.Condition
             )
@@ -80,8 +81,8 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
         :param action_name the name of the action to add
         """
         plugin_manager = gremlin.plugin_manager.ActionPlugins()
-        action_item = plugin_manager.get_class(action_name)(self.profile_data)
-        self.profile_data.add_action(action_item)
+        action_item = plugin_manager.get_class(action_name)(self.library_reference)
+        self.library_reference.add_action(action_item)
         self.container_modified.emit()
 
     def _handle_interaction(self, widget, action):
@@ -97,8 +98,8 @@ class BasicContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
 
         :return title to use for the container
         """
-        if len(self.profile_data.action_sets) > 0:
-            return ", ".join(a.name for a in self.profile_data.action_sets[0])
+        if len(self.library_reference.get_action_sets()) > 0:
+            return ", ".join(a.name for a in self.library_reference.get_action_sets()[0])
         else:
             return "Basic"
 
