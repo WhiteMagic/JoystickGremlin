@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Release 14 Changes</title>
+
+    <link rel="canonical" href="http://localhost:4000http://localhost:4000/r14/">
+
+    <!-- Code highlighting CSS -->
+    <link rel="stylesheet" href="http://localhost:4000/css/github.css">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+    <!-- Javascript -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+    <!-- MathJax -->
+    <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+    <!-- Raleway font -->
+    <!--<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>-->
+
+    <!-- Custom CSS overrides -->
+    <link rel="stylesheet" href="http://localhost:4000/css/override.css">
+
+    <!-- Atom feed -->
+    <link href="http://localhost:4000/feed.xml" type="application/rss+xml" rel="alternate" title="Joystick Gremlin - Changelog" />
+</head>
+
+
+    <body>
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+            <a class="navbar-brand" href="http://localhost:4000">
+                <img src="http://localhost:4000/images/icon.png">
+            </a>
+
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+                <ul class="navbar-nav mr-auto">
+                    <!-- Home -->
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:4000/">Home</a></li>
+
+                    <!-- Download -->
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:4000/download/">Download</a></li>
+
+                    <!-- User Plugins -->
+                    <li class="nav-item"><a class="nav-link" href="http://localhost:4000/user_plugins_code/">User Plugins</a></li>
+
+                    <!-- Manual entries -->
+                    <li class="nav-item dropdown">
+                        <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Manual<span class="caret"></span></a>
+
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="http://localhost:4000/overview/">Overview</a>
+                            <a class="dropdown-item" href="http://localhost:4000/quickstart/">Quickstart</a>
+                            <a class="dropdown-item" href="http://localhost:4000/interface/">Interface</a>
+                            <a class="dropdown-item" href="http://localhost:4000/user_plugins/">User Plugins</a>
+                            <a class="dropdown-item" href="http://localhost:4000/technical_design/">Technical Design</a>
+                            <a class="dropdown-item" href="http://localhost:4000/examples/">Examples</a>
+                            <a class="dropdown-item" href="http://localhost:4000/faq/">FAQ</a>
+                            <a class="dropdown-item" href="http://localhost:4000/changelog/">Changelog</a>
+                        </div>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav navbar-right">
+                    <li class="nav-item"><a class="nav-link" href="https://github.com/WhiteMagic/JoystickGremlin">Github</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="row mt-4">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <h1 id="gremlin-r14-changes">Gremlin R14 Changes</h1>
+
+<p style="text-align: justify">Initially the main feature for R14 was intended to be a library system, which would allow reassigning and reusing of actions with easy instead of having to recreate the same or similar configurations over and over again. However, as it turns out implementing this properly has a large number of knock on effects which result in a rather massive amount of rework of a large portion of Gremlin, both behind the scenes and user facing UI.</p>
+
+<p style="text-align: justify">From a high level perspective the following items will be added or changed drastically with R14, as a consequence of adding the library functionality.</p>
+
+<ol>
+  <li>Implementation of an action library system.</li>
+  <li>Redesign of the profile structure to support the library system.</li>
+  <li>Removal of fixed container and action structure to allow composition of library items.</li>
+  <li>Move to an execution tree logic to support more flexible configurations.</li>
+  <li>Complete UI redesign using QML to accommodate the above changes and additions.</li>
+</ol>
+
+<p style="text-align: justify">Due to the extensive nature of these changes this is a good time for feedback and ideas, as it might be easier to add now or plan for them then to retrofit them later.</p>
+
+<h2 id="1-action-library">1. Action Library</h2>
+
+<p style="text-align: justify">The catalyst for all these changes (<a href="https://github.com/WhiteMagic/JoystickGremlin/issues/176">Issue 176</a>). The idea behind the action library is allow an action to easily be assigned to another input or duplicated to another input. This means that actions, containers, and conditions instead of being stored in the input they are assigned to are stored independent of inputs in a library and each input simply refers to the set of library entries that are used with it.</p>
+
+<p>This creates several challenges.</p>
+
+<ul style="text-align: justify">
+  <li>Virtual button conditions don’t make sense to be part of the library entry.</li>
+  <li>Certain conditions make sense on the library item while others don’t.</li>
+  <li>Certain combination of containers and / or actions should not be assignable to all inputs, e.g. <em>Hats to Button</em> container or <em>Response Curve</em> action.</li>
+</ul>
+
+<p style="text-align: justify">This shows that it makes sense for conditions to be used in both the library portion as well as the input portion of a profile and thus have to be able to be used in both places. This type of flexibility was never intended in the existing condition system and thus can’t be supported by it. This results in the profile structure having to be reworked.</p>
+
+<h2 id="2-profile-structure">2. Profile Structure</h2>
+
+<p style="text-align: justify">The XML profile structure will have to change to support the library system, increased complexity of conditions, and more flexible action and container usage. An example XML snippet of what currently a tempo container with two remap actions, one of which has a condition associated with it looks like is shown in the following.</p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><span></span><span class="nt">&lt;button</span> <span class="na">description=</span><span class="s">&quot;&quot;</span> <span class="na">id=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+	<span class="nt">&lt;container</span> <span class="na">activate-on=</span><span class="s">&quot;release&quot;</span> <span class="na">delay=</span><span class="s">&quot;0.5&quot;</span> <span class="na">type=</span><span class="s">&quot;tempo&quot;</span><span class="nt">&gt;</span>
+    	<span class="nt">&lt;action-set&gt;</span>
+        	<span class="nt">&lt;remap</span> <span class="na">button=</span><span class="s">&quot;1&quot;</span> <span class="na">vjoy=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+            	<span class="nt">&lt;activation-condition</span> <span class="na">rule=</span><span class="s">&quot;all&quot;</span><span class="nt">&gt;</span>
+                	<span class="nt">&lt;condition</span> <span class="na">comparison=</span><span class="s">&quot;pressed&quot;</span> <span class="na">condition-type=</span><span class="s">&quot;keyboard&quot;</span> <span class="na">extended=</span><span class="s">&quot;False&quot;</span> <span class="na">input=</span><span class="s">&quot;keyboard&quot;</span> <span class="na">scan-code=</span><span class="s">&quot;42&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;/activation-condition&gt;</span>
+            <span class="nt">&lt;/remap&gt;</span>
+        <span class="nt">&lt;/action-set&gt;</span>
+        <span class="nt">&lt;action-set&gt;</span>
+        	<span class="nt">&lt;remap</span> <span class="na">button=</span><span class="s">&quot;2&quot;</span> <span class="na">vjoy=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+            	<span class="nt">&lt;activation-condition</span> <span class="na">rule=</span><span class="s">&quot;all&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/remap&gt;</span>
+        <span class="nt">&lt;/action-set&gt;</span>
+    <span class="nt">&lt;/container&gt;</span>
+<span class="nt">&lt;/button&gt;</span></code></pre></figure>
+
+<p style="text-align: justify">Reworking the XML profile to store the configuration in a library whose entries are associated with the physical inputs while also permitting the use of conditions in more flexible ways could look something like the following.</p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><span></span><span class="nt">&lt;button</span> <span class="na">description=</span><span class="s">&quot;&quot;</span> <span class="na">id=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;library-reference&quot;</span><span class="nt">&gt;</span>
+    	<span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;id&quot;</span> <span class="na">value=</span><span class="s">&quot;{ABCD}&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/node&gt;</span>
+<span class="nt">&lt;/button&gt;</span>
+<span class="nt">&lt;button</span> <span class="na">description=</span><span class="s">&quot;&quot;</span> <span class="na">id=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>
+	<span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;condition&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;operator&quot;</span> <span class="na">value=</span><span class="s">&quot;and&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;condition&gt;</span>
+            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span> <span class="na">value=</span><span class="s">&quot;keyboard&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;comparison&quot;</span> <span class="na">value=</span><span class="s">&quot;pressed&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;scan-code&quot;</span> <span class="na">value=</span><span class="s">&quot;42&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;extended&quot;</span> <span class="na">value=</span><span class="s">&quot;False&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/condition&gt;</span>
+        
+        <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;library-reference&quot;</span><span class="nt">&gt;</span>
+    		<span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;id&quot;</span> <span class="na">value=</span><span class="s">&quot;{ABCD}&quot;</span><span class="nt">/&gt;</span>
+    	<span class="nt">&lt;/node&gt;</span>
+    <span class="nt">&lt;/node&gt;</span>
+<span class="nt">&lt;/button&gt;</span>
+
+<span class="nt">&lt;library&gt;</span>
+    <span class="nt">&lt;item&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;id&quot;</span> <span class="na">value=</span><span class="s">&quot;{ABCD}&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;label&quot;</span> <span class="na">value=</span><span class="s">&quot;Test&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="na">value=</span><span class="s">&quot;Long description of the test&quot;</span><span class="nt">/&gt;</span>
+        
+        <span class="nt">&lt;root&gt;</span>
+            <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;tempo&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;delay&quot;</span> <span class="na">value=</span><span class="s">&quot;0.5&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;group</span> <span class="na">type=</span><span class="s">&quot;short&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;condition&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;operator&quot;</span> <span class="na">value=</span><span class="s">&quot;and&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;condition&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span> <span class="na">value=</span><span class="s">&quot;keyboard&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;comparison&quot;</span> <span class="na">value=</span><span class="s">&quot;pressed&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;scan-code&quot;</span> <span class="na">value=</span><span class="s">&quot;36&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;extended&quot;</span> <span class="na">value=</span><span class="s">&quot;False&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;/condition&gt;</span>
+                    <span class="nt">&lt;/node&gt;</span>
+                    <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;remap&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;vjoy-id&quot;</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-id&quot;</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-type&quot;</span> <span class="na">value=</span><span class="s">&quot;button&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/node&gt;</span>
+                <span class="nt">&lt;/group&gt;</span>	
+                <span class="nt">&lt;group</span> <span class="na">type=</span><span class="s">&quot;long&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;remap&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;vjoy-id&quot;</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-id&quot;</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-type&quot;</span> <span class="na">value=</span><span class="s">&quot;button&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/node&gt;</span>
+                <span class="nt">&lt;/group&gt;</span>
+            <span class="nt">&lt;/node&gt;</span>
+        <span class="nt">&lt;/root&gt;</span>
+    <span class="nt">&lt;/item&gt;</span>
+<span class="nt">&lt;/library&gt;</span></code></pre></figure>
+
+<p>This changed XML structure does a few things.</p>
+
+<ul style="text-align: justify">
+  <li>The plethora of custom XML node types and attributes of these nodes are removed and replaced with a smaller number of more general nodes with clearly defined attributes.
+    <ul>
+      <li><code>node</code> general node which represents a single “execution unit” in the new execution tree structure, replaces the existing <code>container</code> and action plugin nodes (<code>remap</code>, <code>macro</code>, etc.).</li>
+      <li><code>group</code> aggregates several <code>node</code> entries into a cohesive unit to provide structure, effectively replaces the <code>action-set</code> nodes.</li>
+      <li><code>param</code> generic node which holds <code>(key, value)</code> pairs that store the settings of the <code>node</code> they are children of.</li>
+      <li><code>condition</code> nodes represent a single condition statement used by a <code>node</code> representing a condition.</li>
+      <li><code>action</code> holds a single macro action which is used within a <code>node</code> with the type macro.</li>
+      <li><code>item</code> simply contains a single library entry.</li>
+    </ul>
+  </li>
+  <li>The overall structure is no longer restricted to a top level container with a collection of action plugin entries in <code>action-set</code> nodes.</li>
+  <li>Directly encodes the execution tree structure via the XML’s hierarchy.</li>
+  <li>Stores action configuration in a library while physical inputs simply hold references to these.</li>
+</ul>
+
+<p style="text-align: justify">Some of the above node types might change during implementation. Good candidates for further consolidation are the special <code>condition</code> and <code>action</code> nodes which effectively group <code>param</code> nodes, when a list of configuration entries exist. There is also still some work to be done with figuring out when and where <code>group</code> nodes are used and needed.</p>
+
+<h2 id="3-action-and-container-removal">3. Action and Container Removal</h2>
+
+<p>Currently Gremlin has a fixed two layer architecture when it comes to configuring actions, i.e.</p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><span></span><span class="nt">&lt;container</span> <span class="na">type=</span><span class="s">&quot;tempo&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;action-set&gt;</span>
+        <span class="nt">&lt;remap</span> <span class="na">button=</span><span class="s">&quot;1&quot;</span> <span class="na">vjoy=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/action-set&gt;</span>
+    <span class="nt">&lt;action-set&gt;</span>
+    	<span class="nt">&lt;remap</span> <span class="na">button=</span><span class="s">&quot;2&quot;</span> <span class="na">vjoy=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/action-set&gt;</span>
+<span class="nt">&lt;/container&gt;</span></code></pre></figure>
+
+<p style="text-align: justify">This was done to prevent an overly complicated UI design, i.e. how to allow nesting of containers and actions to an arbitrary depth, while also making it harder to construct illogical setups.</p>
+
+<p style="text-align: justify">While these two goals were achieved the two layer architecture also creates unwanted limitations. A prime example of this is the inability to use the <em>Hat to Buttons</em> container with a <em>Tempo</em> or <em>Double Tap</em> container. The addition of the library also means that it is reasonable to assume that users will want to put a predefined library item into a container. However, the library item would always be a container of sorts at the highest level and thus, under the current system, could not be added to a new container, say a <em>Tempo</em> one.</p>
+
+<p style="text-align: justify">For all these reasons the existing two layer architecture, consisting of containers which represent some execution logic and actions which perform an active task needs to be removed. This obviously brings back the two problems mentioned above:</p>
+
+<ol style="text-align: justify">
+  <li>Creating a UI capable of properly handling variable depth nesting of containers and actions.</li>
+  <li>Handling action and container configurations which are illogical.</li>
+</ol>
+
+<p style="text-align: justify">The first point hopefully can be achieved with a design similar to the concept below. A tree representation is used to allow collapsing and expanding entries of interest. The tree structure indicates the nesting while the actual configuration parts of the UI all use the same fixed width instead of being indented with the header they belong to. This hopefully conveys execution logic order while maintaining the ability to configure entries easily.</p>
+
+<p><img src="drawing.svg" width="100%" /></p>
+
+<p style="text-align: justify">The second portion I’m less clear on how to handle, as devising strict rules about which combinations will work together and under what circumstances might be impossible. As such I am leaning towards giving the user the power but also the responsibility at the same time. It might be possible to do some simple checks to highlight obviously bad configurations but that remains to be seen.</p>
+
+<h2 id="4-execution-tree">4. Execution Tree</h2>
+
+<p style="text-align: justify">Joystick Gremlin currently transforms the configuration associated with a physical input into what is internally called an execution graph. The graph effectively decides what parts of the configuration are executed based on device and system state information.</p>
+
+<p style="text-align: justify">For a simple setup, say a button that performs an action on both button press and release and then does something different in addition each time the button is pressed or released the execution graph looks as follows:</p>
+
+<p><img src="execution_graph.svg" width="100%" /></p>
+
+<p style="text-align: justify">One of the <code>condition</code> nodes ensures that the following <code>action</code> is only performed when the button is pressed, while the other <code>condition</code> node ensures the <code>action</code> node next to it runs only when the button is released. The last <code>action</code> node will always run, no matter the button’s state. While this graph structure works it is an overly complicated way to encode what effectively is a tree like structure, as shown below.</p>
+
+<p><img src="execution_tree.svg" width="100%" /></p>
+
+<p style="text-align: justify">This tree represents the same logic flow as the graph, however, it is easier to see that the three actions are independent of each other and can’t influence each other’s execution. As the profile structure is being redesigned into a tree like structure, having the internal execution logic mimic this will make the mapping between what the user sees, what the XML contains, and what happens much clearer and hopefully easier to understand.</p>
+
+<h2 id="5-ui-redesign">5. UI Redesign</h2>
+
+<p style="text-align: justify">The current UI is implemented using plain Qt via the PyQt bindings. The majority of the UI elements are constructed, initialized, updated, and processed directly via Python code. While this works it also leaves open a lot of room to implement things in an improper way (which has been done in many places). The drawback of this is that changes are time consuming and the UI code isn’t exactly easy to follow.</p>
+
+<p style="text-align: justify">An alternative is QML, which uses the same underlying technology, i.e. Qt, however, forces a much stronger separation between backend logic (Python code) and presentation and user interaction (QML which is effectively XML and JavaScript). Switching to this conceptually has a few benefits.</p>
+
+<ul>
+  <li>Harder to take shortcuts which are bad long term</li>
+  <li>Cleaner separation between logic and presentation / interaction</li>
+  <li>“Modern” interface look (i.e. Windows 10 like)</li>
+  <li>Dark mode or any other color combination directly supported</li>
+  <li>Creating action plugins and their UI might be much simpler</li>
+</ul>
+
+<p>There are also some obvious drawbacks of doing this</p>
+
+<ul>
+  <li>Entire UI has to be redone</li>
+  <li>“Modern” interface look (i.e. Windows 10)</li>
+  <li>Figuring out best way to do things and the limitations</li>
+</ul>
+
+<p style="text-align: justify">While the drawbacks might cost quite a lot of time to overcome / resolve the fact that a central part of the UI has to be redone in any case to support the removal of container and action limitations as well as support for the library system makes this a rather good point in time to do this.</p>
+
+<p style="text-align: justify">Examples of the change in look can be seen below on the example of the Device Information dialog. First up are the current visuals from R13.</p>
+
+<p><img src="https://whitemagic.github.io/JoystickGremlin/images/dialog_device_information.png" width="100%" /></p>
+
+<p style="text-align: justify">Next up is the same dialog but redone using QML both in the light and dark theme. QML provides a range of styles that can be used which changes the look of various UI interfaces, for this the <a href="https://doc.qt.io/qt-5/qtquickcontrols2-universal.html">Universal Style</a> which attempts to mimic the Windows 10 look and feel.</p>
+
+<p><img src="dev_info_light.png" width="100%" />
+<img src="dev_info_dark.png" width="100%" /></p>
+
+<h2 id="6-complex-example">6. Complex Example</h2>
+
+<p style="text-align: justify">An example of a more complex setup that is possible with the new profile is shown below, first in tree form and then as the corresponding XML.</p>
+
+<p><img src="example_tree.svg" width="100%" /></p>
+
+<p>The XML encoding the above execution tree looks as follows.</p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><span></span><span class="nt">&lt;library&gt;</span>
+    <span class="nt">&lt;item&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;id&quot;</span> <span class="na">value=</span><span class="s">&quot;{1234}&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;label&quot;</span> <span class="na">value=</span><span class="s">&quot;Complex example&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span> <span class="na">value=</span><span class="s">&quot;Showing off the more complex configurations that the new system should allow for.&quot;</span><span class="nt">/&gt;</span>
+        
+        <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;tempo&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;group</span> <span class="na">type=</span><span class="s">&quot;short&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;Remap&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;vjoy-id&quot;</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-id&quot;</span> <span class="na">value=</span><span class="s">&quot;4&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-type&quot;</span> <span class="na">value=</span><span class="s">&quot;button&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;/node&gt;</span>
+                <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;Macro&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;repeat&quot;</span> <span class="na">value=</span><span class="s">&quot;toggle&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;delay&quot;</span> <span class="na">value=</span><span class="s">&quot;0.25&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;exclusive&quot;</span> <span class="na">value=</span><span class="s">&quot;False&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;action&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;action-type&quot;</span> <span class="na">value=</span><span class="s">&quot;vjoy&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;vjoy-id&quot;</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-type&quot;</span> <span class="na">value=</span><span class="s">&quot;hat&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-id&quot;</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span> <span class="na">value=</span><span class="s">&quot;NE&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/action&gt;</span>
+                    <span class="nt">&lt;action&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;action-type&quot;</span> <span class="na">value=</span><span class="s">&quot;mouse-motion&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;dx&quot;</span> <span class="na">value=</span><span class="s">&quot;12&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;dy&quot;</span> <span class="na">value=</span><span class="s">&quot;32&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;/action&gt;</span>
+                <span class="nt">&lt;/node&gt;</span>
+            <span class="nt">&lt;/group&gt;</span>
+            <span class="nt">&lt;group</span> <span class="na">type=</span><span class="s">&quot;long&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;Chain&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;timeout&quot;</span> <span class="na">value=</span><span class="s">&quot;1.0&quot;</span><span class="nt">/&gt;</span>
+                    <span class="nt">&lt;group</span> <span class="na">type=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;Remap&quot;</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;vjoy-id&quot;</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-id&quot;</span> <span class="na">value=</span><span class="s">&quot;12&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-type&quot;</span> <span class="na">value=</span><span class="s">&quot;button&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;/node&gt;</span>
+                    <span class="nt">&lt;/group&gt;</span>
+                    <span class="nt">&lt;group</span> <span class="na">type=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;TTS&quot;</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;text&quot;</span> <span class="na">value=</span><span class="s">&quot;This is a test&quot;</span><span class="nt">/&gt;</span>
+                        <span class="nt">&lt;/node&gt;</span>
+                    <span class="nt">&lt;/group&gt;</span>
+                    <span class="nt">&lt;group</span> <span class="na">type=</span><span class="s">&quot;3&quot;</span><span class="nt">&gt;</span>
+                        <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;condition&quot;</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;operator&quot;</span> <span class="na">value=</span><span class="s">&quot;and&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;condition&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;type&quot;</span> <span class="na">value=</span><span class="s">&quot;keyboard&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;comparison&quot;</span> <span class="na">value=</span><span class="s">&quot;pressed&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;scan-code&quot;</span> <span class="na">value=</span><span class="s">&quot;36&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;extended&quot;</span> <span class="na">value=</span><span class="s">&quot;False&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;/condition&gt;</span>
+                        <span class="nt">&lt;/node&gt;</span>
+                        <span class="nt">&lt;node</span> <span class="na">type=</span><span class="s">&quot;Macro&quot;</span><span class="nt">&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;repeat&quot;</span> <span class="na">value=</span><span class="s">&quot;None&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;exclusive&quot;</span> <span class="na">value=</span><span class="s">&quot;False&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;action&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;action-type&quot;</span> <span class="na">value=</span><span class="s">&quot;joystick&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;device-guid&quot;</span> <span class="na">value=</span><span class="s">&quot;{...}&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-type&quot;</span> <span class="na">value=</span><span class="s">&quot;axis&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;input-id&quot;</span> <span class="na">value=</span><span class="s">&quot;4&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;param</span> <span class="na">name=</span><span class="s">&quot;value&quot;</span> <span class="na">value=</span><span class="s">&quot;-0.52&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;/action&gt;</span>
+                        <span class="nt">&lt;/node&gt;</span>
+                    <span class="nt">&lt;/group&gt;</span>
+                <span class="nt">&lt;/node&gt;</span>
+            <span class="nt">&lt;/group&gt;</span>
+        <span class="nt">&lt;/node&gt;</span>
+    <span class="nt">&lt;/item&gt;</span>
+<span class="nt">&lt;/library&gt;</span></code></pre></figure>
+
+
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        </div>
+
+
+        <footer class="footer">
+    <div class="container">
+        <div class="col-md-offset-2 col-md8">
+            <p class="text-muted">Last update: September 9, 2019</p>
+        </div>
+    </div>
+</footer>
+
+
+    </body>
+
+</html>
