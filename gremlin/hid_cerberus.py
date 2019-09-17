@@ -49,7 +49,9 @@ class HIDCerberus:
         )
         # TODO: Do some processing on the response? gremlin.util.log() maybe?
 
-    def clear_process_list(self): pass
+    def clear_process_list(self):
+        '''Request HID Cerberus purge its PID whitelist'''
+        _get_web(self.cerberus_URL + self.api_base + self.api_purge_whitelist)
 
     def _create_device_string(self, vendor_id, product_id): pass
 
