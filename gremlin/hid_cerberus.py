@@ -33,7 +33,14 @@ class HIDCerberus:
 
     def add_process(self, process_id): pass
 
-    def remove_process(self, process_id): pass
+    def remove_process(self, process_id):
+        '''Requests that HID Cerberus remove the PID from its whitelist
+        :param process_id id of the process to be removed'''
+        resp = _get_web(
+            self.cerberus_URL + self.api_base +
+            self.api_whitelist_rem.format(process_id)
+        )
+        # TODO: Do some processing on the response? gremlin.util.log() maybe?
 
     def clear_process_list(self): pass
 
