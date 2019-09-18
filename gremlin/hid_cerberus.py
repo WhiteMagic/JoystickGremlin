@@ -12,7 +12,7 @@ def _get_web(url):
         with urllib.request.urlopen(url) as resp:
             return resp.read()
     except URLError:
-        return '["Failed to connect"]'
+        return '["ERROR", "Failed to connect"]'
 
 
 class HIDCerberus:
