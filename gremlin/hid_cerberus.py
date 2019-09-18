@@ -75,7 +75,7 @@ class HIDCerberus:
     # TODO: Check if HID Cerberus is running when initialized
     # TODO: Check if HID Cerberus is installed?
     def __init__(self):
-        resp = _get_web(cerberus_API_URL.format(port=cerberus_API_PORT))
+        resp = _get_web(self.cerberus_API_URL.format(port=self.cerberus_API_PORT))
         if "404" in resp:       # The base API URL should return a json object that includes the string "404"
             self.cerberus_listening = True
         elif "ERROR" in resp:   # If ERROR is in the response then we weren't able to connect at all
@@ -85,8 +85,8 @@ class HIDCerberus:
         '''Requests that HID Cerberus add device with vendor_id and product_id'''
         hwidstr = _create_device_string(vendor_id, product_id)
         data = dict(hwids=hwidstr)
-        API_CALL = (cerberus_API_URL + api_devices_add).format(
-            port=cerberus_API_PORT
+        API_CALL = (self.cerberus_API_URL + self.api_devices_add).format(
+            port=self.cerberus_API_PORT
         )
         resp = _post_web(API_CALL, data)
 
@@ -94,8 +94,8 @@ class HIDCerberus:
         '''Requests that HID Cerberus remove device with vendor_id and product_id'''
         hwidstr = _create_device_string(vendor_id, product_id)
         data = dict(hwids=hwidstr)
-        API_CALL = (cerberus_API_URL + api_devices_rem).format(
-            port=cerberus_API_PORT
+        API_CALL = (self.cerberus_API_URL + self.api_devices_rem).format(
+            port=self.cerberus_API_PORT
         )
         resp = _post_web(API_CALL, data)
 
