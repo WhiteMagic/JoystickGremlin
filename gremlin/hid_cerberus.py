@@ -102,7 +102,7 @@ class HIDCerberus:
         :param product_id: the USB product id
         :return: string corresponding to this vendor and product id combination
         """
-        return r"HID\\VID_{vid:0>4x}&PID_{pid:0>4x}".format(
+        return r"HID\VID_{vid:0>4X}&PID_{pid:0>4X}".format(
             vid=vendor_id, pid=product_id
         )
 
