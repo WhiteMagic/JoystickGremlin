@@ -3,7 +3,13 @@ from urllib.error import URLError
 import os
 import json
 import re
-import gremlin
+# import gremlin
+
+def _display_error(*args, **kwargs):
+    '''Debug wrapper for gremlin.util.display_error that allows direct import of
+    this module (with minimal code rewrite)'''
+    # gremlin.util.debug_log(*args, **kwargs)
+    print(*args, **kwargs)
 
 
 def _create_device_string(vendor_id, product_id):
@@ -73,7 +79,7 @@ class HIDCerberus:
         if "404" in resp:       # The base API URL should return a json object that includes the string "404"
             self.cerberus_listening = True
         elif "ERROR" in resp:   # If ERROR is in the response then we weren't able to connect at all
-            gremlin.util.display_error("Unable to connect to HID Cerberus. Please check if it is running/installed.")
+            _display_error("Unable to connect to HID Cerberus. Please check if it is running/installed.")
 
     def add_device(self, vendor_id, product_id):
         '''Requests that HID Cerberus add device with vendor_id and product_id'''
@@ -114,7 +120,7 @@ class HIDCerberus:
                         int(match.group(2), 16)
                     ))
                 except ValueError:
-                    gremlin.util.display_error(
+                    _display_error(
                         "Failed to extract vendor and product id for HID Cerberus entry:\n\n{}"
                         .format(device)
                     )
