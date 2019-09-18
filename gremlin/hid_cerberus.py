@@ -88,7 +88,16 @@ class HIDCerberus:
         )
         resp = _get_web(API_CALL)
 
-    def _create_device_string(self, vendor_id, product_id): pass
+    def _create_device_string(self, vendor_id, product_id):
+        """Returns an appropriately formatted device string.
+        
+        :param vendor_id: the USB vendor id
+        :param product_id: the USB product id
+        :return: string corresponding to this vendor and product id combination
+        """
+        return r"HID\\VID_{vid:0>4x}&PID_{pid:0>4x}".format(
+            vid=vendor_id, pid=product_id
+        )
 
     def _get_gremlin_process_ids(self):
         # TODO: use psutil to reach out to OS and get other gremlins?
