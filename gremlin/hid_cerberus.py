@@ -18,7 +18,7 @@ class HIDCerberus:
     '''Class for interacting with HID Cerberus if installed.
     Designed to mimic the API of gremlin.hid_guardian.HIDGuardian
     '''
-    cerberus_API_URL = "http://localhost:/{port}/api/v1/hidguardian/"
+    cerberus_API_URL = "http://localhost:{port}/api/v1/hidguardian/"
     cerberus_API_PORT = 26762
     api_purge_whitelist = "whitelist/purge"
     api_purge_devices = "affected/purge"
