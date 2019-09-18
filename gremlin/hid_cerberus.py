@@ -12,6 +12,7 @@ class HIDCerberus:
     '''
     cerberus_API_URL = "http://localhost:{port}/api/v1/hidguardian/"
     cerberus_API_PORT = 26762
+    cerberus_listening = False
     api_purge_whitelist = "whitelist/purge"
     api_purge_devices = "affected/purge"
     api_whitelist_get = "whitelist/get"
@@ -23,7 +24,12 @@ class HIDCerberus:
 
     # TODO: Check if HID Cerberus is running when initialized
     # TODO: Check if HID Cerberus is installed?
-    def __init__(self): pass
+    def __init__(self):
+        resp = _get_web(cerberus_API_URL.format(port=cerberus_API_PORT))
+        if "404" in resp:       # The base API URL should return a json object that includes the string "404"
+            self.cerberus_listening = True
+        elif "ERROR" in resp:   # If ERROR is in the response then we weren't able to connect at all
+            gremlin.util.display_error("Unable to connect to HID Cerberus. Please check if it is running/installed.")
 
     def add_device(self, vendor_id, product_id):
         '''Requests that HID Cerberus add device with vendor_id and product_id'''
