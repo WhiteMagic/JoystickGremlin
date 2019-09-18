@@ -25,11 +25,23 @@ class HIDCerberus:
     # TODO: Check if HID Cerberus is installed?
     def __init__(self): pass
 
-    # TODO: This needs to be a POST command which I'm not yet sure how to handle in urllib
-    def add_device(self, vendor_id, product_id): pass
+    def add_device(self, vendor_id, product_id):
+        '''Requests that HID Cerberus add device with vendor_id and product_id'''
+        hwidstr = _create_device_string(vendor_id, product_id)
+        data = dict(hwids=hwidstr)
+        API_CALL = (cerberus_API_URL + api_devices_add).format(
+            port=cerberus_API_PORT
+        )
+        resp = _post_web(API_CALL, data)
 
-    # TODO: This needs to be a POST command which I'm not yet sure how to handle in urllib
-    def remove_device(self, vendor_id, product_id): pass
+    def remove_device(self, vendor_id, product_id):
+        '''Requests that HID Cerberus remove device with vendor_id and product_id'''
+        hwidstr = _create_device_string(vendor_id, product_id)
+        data = dict(hwids=hwidstr)
+        API_CALL = (cerberus_API_URL + api_devices_rem).format(
+            port=cerberus_API_PORT
+        )
+        resp = _post_web(API_CALL, data)
 
     def get_device_list(self):
         '''Requests the device list from HID Cerberus'''
