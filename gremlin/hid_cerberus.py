@@ -6,6 +6,7 @@ import gremlin
 
 
 def _get_web(url):
+    '''GET request sent to url. Returns the content.'''
     try:
         with urllib.request.urlopen(url) as resp:
             return resp.read()
@@ -14,6 +15,9 @@ def _get_web(url):
 
 
 class HIDCerberus:
+    '''Class for interacting with HID Cerberus if installed.
+    Designed to mimic the API of gremlin.hid_guardian.HIDGuardian
+    '''
     cerberus_API_URL = "http://localhost:/{port}/api/v1/hidguardian/"
     cerberus_API_PORT = 26762
     api_purge_whitelist = "whitelist/purge"
@@ -25,6 +29,8 @@ class HIDCerberus:
     api_devices_add = "affected/add"
     api_devices_rem = "affected/remove"
 
+    # TODO: Check if HID Cerberus is running when initialized
+    # TODO: Check if HID Cerberus is installed?
     def __init__(self): pass
 
     # TODO: This needs to be a POST command which I'm not yet sure how to handle in urllib
@@ -34,8 +40,7 @@ class HIDCerberus:
     def remove_device(self, vendor_id, product_id): pass
 
     def get_device_list(self):
-        '''Requests the device list from HID Cerberus
-        '''
+        '''Requests the device list from HID Cerberus'''
         # Example: ["HID\\VID_0738&PID_2215&MI_00","HID\\VID_044F&PID_0404","HID\\VID_0738&PID_2215&MI_02"]
         API_CALL = (self.cerberus_API_URL + self.api_devices_get).format(
             port=self.cerberus_API_PORT,
@@ -62,8 +67,9 @@ class HIDCerberus:
         return device_data
 
     def add_process(self, process_id):
-        '''Requests that HID Cerberus add the PID to its whitelist
-        :param process_id PID of the process to be added'''
+        '''Requests that HID Cerberus add the PID to its whitelist.
+
+        :param process_id: PID of the process to be added'''
         API_CALL = (self.cerberus_API_URL + self.api_whitelist_add).format(
             port=self.cerberus_API_PORT,
             pid=process_id
@@ -73,7 +79,8 @@ class HIDCerberus:
 
     def remove_process(self, process_id):
         '''Requests that HID Cerberus remove the PID from its whitelist
-        :param process_id id of the process to be removed'''
+
+        :param process_id: id of the process to be removed'''
         API_CALL = (self.cerberus_API_URL + self.api_whitelist_rem).format(
             port=self.cerberus_API_PORT,
             pid=process_id
@@ -90,7 +97,7 @@ class HIDCerberus:
 
     def _create_device_string(self, vendor_id, product_id):
         """Returns an appropriately formatted device string.
-        
+
         :param vendor_id: the USB vendor id
         :param product_id: the USB product id
         :return: string corresponding to this vendor and product id combination
@@ -100,8 +107,11 @@ class HIDCerberus:
         )
 
     def _get_gremlin_process_ids(self):
+        '''Dummy method for compatibility. Currently only returns own ID.'''
         # TODO: use psutil to reach out to OS and get other gremlins?
         # TODO: write our PID to our own location in the registry hive, or a file?
         return [os.getpid()]
 
-    def _synchronize_process(self, process_id): pass
+    def _synchronize_process(self, process_id):
+        '''Dummy method for compatibility. Does nothing.'''
+        pass
