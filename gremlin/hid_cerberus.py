@@ -6,26 +6,6 @@ import re
 import gremlin
 
 
-def _get_web(url):
-    '''GET request sent to url. Returns the content.'''
-    try:
-        with urllib.request.urlopen(url) as resp:
-            return resp.read()
-    except URLError:
-        return '["ERROR", "Failed to connect"]'
-
-
-def _post_web(url, data):
-    '''POST request sent to the url. Returns the content.'''
-    # Crunch the data down into something that the internet will be happy with
-    data = urllib.parse.urlencode(data).encode('ascii')
-    try:
-        with urllib.request.urlopen(url, data) as resp:
-            return resp.read()
-    except URLError:
-        return '["ERROR", "Failed to connect"]'
-
-
 class HIDCerberus:
     '''Class for interacting with HID Cerberus if installed.
     Designed to mimic the API of gremlin.hid_guardian.HIDGuardian
@@ -127,3 +107,21 @@ class HIDCerberus:
     def _synchronize_process(self, process_id):
         '''Dummy method for compatibility. Does nothing.'''
         pass
+
+    def _get_web(url):
+        '''GET request sent to url. Returns the content.'''
+        try:
+            with urllib.request.urlopen(url) as resp:
+                return resp.read()
+        except URLError:
+            return '["ERROR", "Failed to connect"]'
+
+    def _post_web(url, data):
+        '''POST request sent to the url. Returns the content.'''
+        # Crunch the data down into something that the internet will be happy with
+        data = urllib.parse.urlencode(data).encode('ascii')
+        try:
+            with urllib.request.urlopen(url, data) as resp:
+                return resp.read()
+        except URLError:
+            return '["ERROR", "Failed to connect"]'
