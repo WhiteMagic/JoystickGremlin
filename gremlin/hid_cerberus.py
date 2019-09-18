@@ -1,4 +1,5 @@
 import urllib
+from urllib.error import URLError
 import os
 import json
 import re
@@ -10,7 +11,7 @@ def _get_web(url):
     try:
         with urllib.request.urlopen(url) as resp:
             return resp.read()
-    except urllib.error.URLError:
+    except URLError:
         return '["Failed to connect"]'
 
 
