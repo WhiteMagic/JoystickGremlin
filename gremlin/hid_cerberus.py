@@ -1,5 +1,5 @@
 import urllib.request
-from urllib.error import URLError
+from urllib.error import URLError,HTTPError
 import os
 import json
 import re
@@ -41,6 +41,11 @@ def _get_web(url):
     try:
         with urllib.request.urlopen(url) as resp:
             return resp.read()
+    except HTTPError as error:
+        return '["ERROR", {}, {}]'.format(
+            error.code,
+            error.reason
+        )
     except URLError:
         return '["ERROR", "Failed to connect"]'
 
@@ -78,7 +83,7 @@ class HIDCerberus:
         resp = _get_web(self.cerberus_API_URL.format(port=self.cerberus_API_PORT))
         if "404" in resp:       # The base API URL should return a json object that includes the string "404"
             self.cerberus_listening = True
-        elif "ERROR" in resp:   # If ERROR is in the response then we weren't able to connect at all
+        elif "Failed to connect" in resp:   # If ERROR is in the response then we weren't able to connect at all
             _display_error("Unable to connect to HID Cerberus. Please check if it is running/installed.")
 
     def add_device(self, vendor_id, product_id):
