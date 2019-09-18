@@ -6,6 +6,50 @@ import re
 import gremlin
 
 
+def _create_device_string(vendor_id, product_id):
+    """Returns an appropriately formatted device string.
+
+    :param vendor_id: the USB vendor id
+    :param product_id: the USB product id
+    :return: string corresponding to this vendor and product id combination
+    """
+    return r"HID\VID_{vid:0>4X}&PID_{pid:0>4X}".format(
+        vid=vendor_id, pid=product_id
+    )
+
+
+def _get_gremlin_process_ids():
+    '''Dummy method for compatibility. Currently only returns own ID.'''
+    # TODO: use psutil to reach out to OS and get other gremlins?
+    # TODO: write our PID to our own location in the registry hive, or a file?
+    return [os.getpid()]
+
+
+def _synchronize_process(process_id):
+    '''Dummy method for compatibility. Does nothing.'''
+    pass
+
+
+def _get_web(url):
+    '''GET request sent to url. Returns the content.'''
+    try:
+        with urllib.request.urlopen(url) as resp:
+            return resp.read()
+    except URLError:
+        return '["ERROR", "Failed to connect"]'
+
+
+def _post_web(url, data):
+    '''POST request sent to the url. Returns the content.'''
+    # Crunch the data down into something that the internet will be happy with
+    data = urllib.parse.urlencode(data).encode('ascii')
+    try:
+        with urllib.request.urlopen(url, data) as resp:
+            return resp.read()
+    except URLError:
+        return '["ERROR", "Failed to connect"]'
+
+
 class HIDCerberus:
     '''Class for interacting with HID Cerberus if installed.
     Designed to mimic the API of gremlin.hid_guardian.HIDGuardian
@@ -105,41 +149,3 @@ class HIDCerberus:
         )
         resp = _get_web(API_CALL)
 
-    def _create_device_string(self, vendor_id, product_id):
-        """Returns an appropriately formatted device string.
-
-        :param vendor_id: the USB vendor id
-        :param product_id: the USB product id
-        :return: string corresponding to this vendor and product id combination
-        """
-        return r"HID\VID_{vid:0>4X}&PID_{pid:0>4X}".format(
-            vid=vendor_id, pid=product_id
-        )
-
-    def _get_gremlin_process_ids(self):
-        '''Dummy method for compatibility. Currently only returns own ID.'''
-        # TODO: use psutil to reach out to OS and get other gremlins?
-        # TODO: write our PID to our own location in the registry hive, or a file?
-        return [os.getpid()]
-
-    def _synchronize_process(self, process_id):
-        '''Dummy method for compatibility. Does nothing.'''
-        pass
-
-    def _get_web(url):
-        '''GET request sent to url. Returns the content.'''
-        try:
-            with urllib.request.urlopen(url) as resp:
-                return resp.read()
-        except URLError:
-            return '["ERROR", "Failed to connect"]'
-
-    def _post_web(url, data):
-        '''POST request sent to the url. Returns the content.'''
-        # Crunch the data down into something that the internet will be happy with
-        data = urllib.parse.urlencode(data).encode('ascii')
-        try:
-            with urllib.request.urlopen(url, data) as resp:
-                return resp.read()
-        except URLError:
-            return '["ERROR", "Failed to connect"]'
