@@ -1,4 +1,5 @@
 import urllib
+import os
 
 
 def _get_web(url):
@@ -60,6 +61,9 @@ class HIDCerberus:
 
     def _create_device_string(self, vendor_id, product_id): pass
 
-    def _get_gremlin_process_ids(self): pass
+    def _get_gremlin_process_ids(self):
+        # TODO: use psutil to reach out to OS and get other gremlins?
+        # TODO: write our PID to our own location in the registry hive, or a file?
+        return [os.getpid()]
 
     def _synchronize_process(self, process_id): pass
