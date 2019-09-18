@@ -33,12 +33,12 @@ class HIDCerberus:
     # TODO: This needs to be a POST command which I'm not yet sure how to handle in urllib
     def remove_device(self, vendor_id, product_id): pass
 
-    def get_device_list(self): 
-        '''Requests the device list from HID Cerberus 
+    def get_device_list(self):
+        '''Requests the device list from HID Cerberus
         '''
         # Example: ["HID\\VID_0738&PID_2215&MI_00","HID\\VID_044F&PID_0404","HID\\VID_0738&PID_2215&MI_02"]
         API_CALL = (self.cerberus_API_URL + self.api_devices_get).format(
-            port = self.cerberus_API_PORT,
+            port=self.cerberus_API_PORT,
         )
         resp = _get_web(API_CALL)
 
@@ -57,17 +57,16 @@ class HIDCerberus:
                 except ValueError:
                     gremlin.util.display_error(
                         "Failed to extract vendor and product id for HID Cerberus entry:\n\n{}"
-                            .format(device)
+                        .format(device)
                     )
         return device_data
-
 
     def add_process(self, process_id):
         '''Requests that HID Cerberus add the PID to its whitelist
         :param process_id PID of the process to be added'''
         API_CALL = (self.cerberus_API_URL + self.api_whitelist_add).format(
-            port = self.cerberus_API_PORT,
-            pid = process_id
+            port=self.cerberus_API_PORT,
+            pid=process_id
         )
         resp = _get_web(API_CALL)
         # TODO: Do some processing on the response? gremlin.util.log() maybe?
@@ -76,8 +75,8 @@ class HIDCerberus:
         '''Requests that HID Cerberus remove the PID from its whitelist
         :param process_id id of the process to be removed'''
         API_CALL = (self.cerberus_API_URL + self.api_whitelist_rem).format(
-            port = self.cerberus_API_PORT,
-            pid = process_id
+            port=self.cerberus_API_PORT,
+            pid=process_id
         )
         resp = _get_web(API_CALL)
         # TODO: Do some processing on the response? gremlin.util.log() maybe?
@@ -85,7 +84,7 @@ class HIDCerberus:
     def clear_process_list(self):
         '''Request HID Cerberus purge its PID whitelist'''
         API_CALL = (self.cerberus_API_URL + self.api_purge_whitelist).format(
-            port = self.cerberus_API_PORT
+            port=self.cerberus_API_PORT
         )
         resp = _get_web(API_CALL)
 
