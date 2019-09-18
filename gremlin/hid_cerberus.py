@@ -1,5 +1,8 @@
 import urllib
 import os
+import json
+import re
+import gremlin
 
 
 def _get_web(url):
@@ -30,7 +33,34 @@ class HIDCerberus:
     # TODO: This needs to be a POST command which I'm not yet sure how to handle in urllib
     def remove_device(self, vendor_id, product_id): pass
 
-    def get_device_list(self): pass
+    def get_device_list(self): 
+        '''Requests the device list from HID Cerberus 
+        '''
+        # Example: ["HID\\VID_0738&PID_2215&MI_00","HID\\VID_044F&PID_0404","HID\\VID_0738&PID_2215&MI_02"]
+        API_CALL = (self.cerberus_API_URL + self.api_devices_get).format(
+            port = self.cerberus_API_PORT,
+        )
+        resp = _get_web(API_CALL)
+
+        device_data = []
+        split_regex = re.compile(r"HID\\VID_(.{4})&PID_(.{4})")
+        # For each device in the list, attempt to regex-match it, then add a tuple of the
+        # Vendor ID and Product ID converted to base ten.
+        for device in json.loads(resp):
+            match = split_regex.match(device)
+            if match:
+                try:
+                    device_data.append((
+                        int(match.group(1), 16),
+                        int(match.group(2), 16)
+                    ))
+                except ValueError:
+                    gremlin.util.display_error(
+                        "Failed to extract vendor and product id for HID Cerberus entry:\n\n{}"
+                            .format(device)
+                    )
+        return device_data
+
 
     def add_process(self, process_id):
         '''Requests that HID Cerberus add the PID to its whitelist
