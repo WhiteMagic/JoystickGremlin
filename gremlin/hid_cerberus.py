@@ -148,5 +148,5 @@ class HIDCerberus:
 
     def generate_API_call(self, api_action_str, **kwargs):
         return (self.cerberus_API_URL + api_action_str).format(
-            self.cerberus_API_PORT,  **kwargs
+            port=self.cerberus_API_PORT,  **kwargs
         )
