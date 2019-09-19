@@ -1256,6 +1256,9 @@ if __name__ == "__main__":
     # Initialize HidGuardian before we let SDL grab joystick data
     hg = gremlin.hid_guardian.HidGuardian()
     hg.add_process(os.getpid())
+    import gremlin.hid_cerberus
+    hc = gremlin.hid_cerberus.HIDCerberus()
+    hc.add_process(os.getpid())
 
     # Create user interface
     app_id = u"joystick.gremlin"
