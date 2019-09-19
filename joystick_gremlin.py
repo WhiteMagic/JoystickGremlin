@@ -1339,6 +1339,7 @@ if __name__ == "__main__":
     gremlin.joystick_handling.VJoyProxy.reset()
 
     hg.remove_process(os.getpid())
+    hc.remove_process(os.getpid())
 
     syslog.info("Terminating Gremlin")
     sys.exit(0)
