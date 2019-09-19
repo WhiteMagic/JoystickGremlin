@@ -80,7 +80,7 @@ class HIDCerberus:
     # TODO: Check if HID Cerberus is running when initialized
     # TODO: Check if HID Cerberus is installed?
     def __init__(self):
-        resp = _get_web(self.cerberus_API_URL.format(port=self.cerberus_API_PORT))
+        resp = _get_web(self.generate_API_call(""))     # Blank API call
         if "404" in resp:       # The base API URL should return a json object that includes the string "404"
             self.cerberus_listening = True
         elif "Failed to connect" in resp:   # If ERROR is in the response then we weren't able to connect at all
@@ -90,26 +90,20 @@ class HIDCerberus:
         '''Requests that HID Cerberus add device with vendor_id and product_id'''
         hwidstr = _create_device_string(vendor_id, product_id)
         data = dict(hwids=hwidstr)
-        API_CALL = (self.cerberus_API_URL + self.api_devices_add).format(
-            port=self.cerberus_API_PORT
-        )
+        API_CALL = self.generate_API_call(self.api_devices_add)
         resp = _post_web(API_CALL, data)
 
     def remove_device(self, vendor_id, product_id):
         '''Requests that HID Cerberus remove device with vendor_id and product_id'''
         hwidstr = _create_device_string(vendor_id, product_id)
         data = dict(hwids=hwidstr)
-        API_CALL = (self.cerberus_API_URL + self.api_devices_rem).format(
-            port=self.cerberus_API_PORT
-        )
+        API_CALL = self.generate_API_call(self.api_devices_rem)
         resp = _post_web(API_CALL, data)
 
     def get_device_list(self):
         '''Requests the device list from HID Cerberus'''
         # Example: ["HID\\VID_0738&PID_2215&MI_00","HID\\VID_044F&PID_0404","HID\\VID_0738&PID_2215&MI_02"]
-        API_CALL = (self.cerberus_API_URL + self.api_devices_get).format(
-            port=self.cerberus_API_PORT,
-        )
+        API_CALL = self.generate_API_call(self.api_devices_get)
         resp = _get_web(API_CALL)
 
         device_data = []
@@ -135,10 +129,7 @@ class HIDCerberus:
         '''Requests that HID Cerberus add the PID to its whitelist.
 
         :param process_id: PID of the process to be added'''
-        API_CALL = (self.cerberus_API_URL + self.api_whitelist_add).format(
-            port=self.cerberus_API_PORT,
-            pid=process_id
-        )
+        API_CALL = self.generate_API_call(self.api_whitelist_add, pid=process_id)
         resp = _get_web(API_CALL)
         # TODO: Do some processing on the response? gremlin.util.log() maybe?
 
@@ -146,17 +137,16 @@ class HIDCerberus:
         '''Requests that HID Cerberus remove the PID from its whitelist
 
         :param process_id: id of the process to be removed'''
-        API_CALL = (self.cerberus_API_URL + self.api_whitelist_rem).format(
-            port=self.cerberus_API_PORT,
-            pid=process_id
-        )
+        API_CALL = self.generate_API_call(self.api_whitelist_rem, pid=process_id)
         resp = _get_web(API_CALL)
         # TODO: Do some processing on the response? gremlin.util.log() maybe?
 
     def clear_process_list(self):
         '''Request HID Cerberus purge its PID whitelist'''
-        API_CALL = (self.cerberus_API_URL + self.api_purge_whitelist).format(
-            port=self.cerberus_API_PORT
-        )
+        API_CALL = self.generate_API_call(self.api_purge_whitelist)
         resp = _get_web(API_CALL)
 
+    def generate_API_call(self, api_action_str, **kwargs):
+        return (self.cerberus_API_URL + api_action_str).format(
+            self.cerberus_API_PORT,  **kwargs
+        )
