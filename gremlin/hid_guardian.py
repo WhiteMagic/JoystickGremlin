@@ -79,7 +79,7 @@ class HIDG_Provider_Cerberus:
         resp = _web_request(cls.generate_API_call(""))
         # if Cerberus is running, the server will respond but with a 404 error
         # because we used a bad URL
-        return "ERROR" in resp and "404" in resp
+        return "ERROR" in resp and 404 in resp
 
     #region Device hiding control
     @classmethod
