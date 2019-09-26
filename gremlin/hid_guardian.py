@@ -82,6 +82,21 @@ class HIDG_Provider_Cerberus:
         return "ERROR" in resp and "404" in resp
 
     #region Device hiding control
+    @classmethod
+    def clear_device_list(cls):
+        pass
+
+    @classmethod
+    def add_device(cls, vendor_id, product_id):
+        pass
+
+    @classmethod
+    def remove_device(cls, vendor_id, product_id):
+        pass
+
+    @classmethod
+    def get_device_list(cls):
+        pass
     #endregion
 
     #region Program whitelist control
