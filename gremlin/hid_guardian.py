@@ -18,6 +18,7 @@ import gremlin.util
 import urllib.request
 import urllib.error
 import re
+import json
 
 #####
 # Module Globals
@@ -103,7 +104,23 @@ class HIDG_Provider_Cerberus:
 
     @classmethod
     def get_device_list(cls):
-        pass
+        device_data = []
+        split_regex = re.compile(r"HID\\VID_(.{4})&PID_(.{4})")
+        API_CALL = cls.generate_API_call(cls.api_devices_purge)
+        devices_raw = json.loads(_web_request(API_CALL))
+        for device in devices_raw:
+            match = split_regex.match(device)
+            try:
+                device_data.append(int(match.group(1), 16), int(match.group(2), 16))
+            except AttributeError:
+                # TODO: Match failed, report this (but non-intrusively)
+                pass
+            except ValueError:
+                gremlin.util.display_error(
+                    "Failed to extract vendor and product id for HID Cerberus entry:\n\n{}".format(device)
+                )
+
+
     #endregion
 
     #region Program whitelist control
