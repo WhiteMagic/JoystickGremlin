@@ -82,7 +82,7 @@ class HIDG_Provider_Cerberus:
         # because we used a bad URL
         return "ERROR" in resp and 404 in resp
 
-    #region Device hiding control
+    # region Device hiding control
     @classmethod
     def clear_device_list(cls):
         API_CALL = cls.generate_API_call(cls.api_devices_purge)
@@ -121,9 +121,9 @@ class HIDG_Provider_Cerberus:
                 )
 
 
-    #endregion
+    # endregion
 
-    #region Program whitelist control
+    # region Program whitelist control
     @classmethod
     def clear_process_list(cls):
         '''Request HID Cerberus purge its PID whitelist'''
@@ -145,7 +145,7 @@ class HIDG_Provider_Cerberus:
         :param process_id: id of the process to be removed'''
         API_CALL = cls.generate_API_call(cls.api_whitelist_rem, pid=process_id)
         _web_request(API_CALL)
-    #endregion
+    # endregion
 
 
 class HIDG_Provider_Registry:
