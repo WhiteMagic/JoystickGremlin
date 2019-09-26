@@ -75,7 +75,7 @@ class HIDG_Provider_Cerberus:
         )
 
     @classmethod
-    def is_cerberus_running(cls):
+    def is_available(cls):
         resp = _web_request(cls.generate_API_call(""))
         # if Cerberus is running, the server will respond but with a 404 error
         # because we used a bad URL
