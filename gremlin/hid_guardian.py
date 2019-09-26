@@ -84,7 +84,8 @@ class HIDG_Provider_Cerberus:
     #region Device hiding control
     @classmethod
     def clear_device_list(cls):
-        pass
+        API_CALL = cls.generate_API_call(cls.api_devices_purge)
+        _web_request(API_CALL)
 
     @classmethod
     def add_device(cls, vendor_id, product_id):
