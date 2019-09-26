@@ -14,9 +14,50 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
+import gremlin.util
+import urllib
+import urllib.error
 import re
+
+#####
+# Module Globals
+
+
+#####
+# Module functions
+def create_device_string(vendor_id, product_id):
+    """Returns an appropriately formatted device string.
+
+    :param vendor_id:  the USB vendor id
+    :param product_id: the USB product id
+    :return: string corresponding to this vendor and product id combination
+    """
+    return r"HID\VID_{vid:0>4X}&PID_{pid:0>4X}".format(vid=vendor_id, pid=product_id)
+
+
+def _web_request(url, data=None):
+    '''Wrapper for urllib.request.urlopen that handles basic setup and error handling.'''
+    resp = None
+
+    try:
+        if data is not None:
+            data = urllib.parse.urlencode(data).encode('ascii')
+        with urllib.request.urlopen(url, data=data) as rawresp:
+            resp = rawresp.read()
+    except urllib.error.HTTPError as error:
+        resp = ["ERROR", error.code, error.reason]
+    except urllib.error.URLError:
+        resp = ["ERROR", "Failed to connect"]
+    except TypeError:
+        resp = ["ERROR", "Data type not valid"]
+
+    return resp
+
+
+#####
+# EVERYTHING BELOW THIS LINE IS OLD CODE
+
+# import re
 import winreg
 
 from gremlin.error import HidGuardianError
