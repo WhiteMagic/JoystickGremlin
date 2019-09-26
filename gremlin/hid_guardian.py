@@ -54,6 +54,19 @@ def _web_request(url, data=None):
     return resp
 
 
+class HIDG_Provider_Cerberus:
+    pass
+
+
+class HIDG_Provider_Registry:
+    pass
+
+
+#####
+# Standalone import code/Module setup
+if __name__ == "__main__":
+    pass
+
 #####
 # EVERYTHING BELOW THIS LINE IS OLD CODE
 
