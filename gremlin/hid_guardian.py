@@ -145,7 +145,35 @@ class HIDG_Provider_Cerberus:
 
 
 class HIDG_Provider_Registry:
-    pass
+    @classmethod
+    def is_available(cls):
+        # TODO: Actual availabilty code
+        return False
+
+    # region Device hiding control
+    @classmethod
+    def clear_device_list(cls): pass
+
+    @classmethod
+    def add_device(cls, vendor_id, product_id): pass
+
+    @classmethod
+    def remove_device(cls, vendor_id, product_id): pass
+
+    @classmethod
+    def get_device_list(cls): pass
+    # endregion
+
+    # region Program whitelist control
+    @classmethod
+    def clear_process_list(cls): pass
+
+    @classmethod
+    def add_process(cls, process_id): pass
+
+    @classmethod
+    def remove_process(cls, process_id): pass
+    # endregion
 
 
 #####
