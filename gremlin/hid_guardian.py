@@ -62,11 +62,11 @@ class HIDG_Provider_Cerberus:
     api_whitelist_get = "whitelist/get"
     api_whitelist_add = "whitelist/add/{pid}"
     api_whitelist_rem = "whitelist/remove/{pid}"
-    api_purge_whitelist = "whitelist/purge"
+    api_whitelist_purge = "whitelist/purge"
     api_devices_get = "affected/get"
     api_devices_add = "affected/add"
     api_devices_rem = "affected/remove"
-    api_purge_devices = "affected/purge"
+    api_devices_purge = "affected/purge"
 
     @classmethod
     def generate_API_call(cls, api_action_str, **kwargs):
@@ -109,7 +109,7 @@ class HIDG_Provider_Cerberus:
     @classmethod
     def clear_process_list(cls):
         '''Request HID Cerberus purge its PID whitelist'''
-        API_CALL = cls.generate_API_call(cls.api_purge_whitelist)
+        API_CALL = cls.generate_API_call(cls.api_whitelist_purge)
         _web_request(API_CALL)
 
     @classmethod
