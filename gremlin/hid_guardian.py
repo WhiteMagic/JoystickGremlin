@@ -119,8 +119,6 @@ class HIDG_Provider_Cerberus:
                 gremlin.util.display_error(
                     "Failed to extract vendor and product id for HID Cerberus entry:\n\n{}".format(device)
                 )
-
-
     # endregion
 
     # region Program whitelist control
