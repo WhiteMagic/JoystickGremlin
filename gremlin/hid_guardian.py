@@ -132,17 +132,13 @@ class HIDG_Provider_Cerberus:
 
     @classmethod
     def add_process(cls, process_id):
-        '''Requests that HID Cerberus add the PID to its whitelist.
-
-        :param process_id: PID of the process to be added'''
+        '''Requests that HID Cerberus add the PID to its whitelist.'''
         API_CALL = cls.generate_API_call(cls.api_whitelist_add, pid=process_id)
         _web_request(API_CALL)
 
     @classmethod
     def remove_process(cls, process_id):
-        '''Requests that HID Cerberus remove the PID from its whitelist
-
-        :param process_id: id of the process to be removed'''
+        '''Requests that HID Cerberus remove the PID from its whitelist'''
         API_CALL = cls.generate_API_call(cls.api_whitelist_rem, pid=process_id)
         _web_request(API_CALL)
     # endregion
