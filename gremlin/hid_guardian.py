@@ -88,11 +88,17 @@ class HIDG_Provider_Cerberus:
 
     @classmethod
     def add_device(cls, vendor_id, product_id):
-        pass
+        '''Requests that HID Cerberus add device with vendor_id and product_id'''
+        data = dict(hwids=create_device_string(vendor_id, product_id))
+        API_CALL = cls.generate_API_call(cls.api_devices_add)
+        _web_request(API_CALL, data)
 
     @classmethod
     def remove_device(cls, vendor_id, product_id):
-        pass
+        '''Requests that HID Cerberus remove device with vendor_id and product_id'''
+        data = dict(hwids=create_device_string(vendor_id, product_id))
+        API_CALL = cls.generate_API_call(cls.api_devices_rem)
+        _web_request(API_CALL, data)
 
     @classmethod
     def get_device_list(cls):
