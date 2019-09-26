@@ -55,7 +55,18 @@ def _web_request(url, data=None):
 
 
 class HIDG_Provider_Cerberus:
-    pass
+    # TODO: We're generating response codes from Cerberus. Pass them to the log files?
+    cerberus_API_URL = "http://localhost:{port}/api/v1/hidguardian/"
+    cerberus_API_PORT = 26762
+    cerberus_listening = False
+    api_whitelist_get = "whitelist/get"
+    api_whitelist_add = "whitelist/add/{pid}"
+    api_whitelist_rem = "whitelist/remove/{pid}"
+    api_purge_whitelist = "whitelist/purge"
+    api_devices_get = "affected/get"
+    api_devices_add = "affected/add"
+    api_devices_rem = "affected/remove"
+    api_purge_devices = "affected/purge"
 
 
 class HIDG_Provider_Registry:
