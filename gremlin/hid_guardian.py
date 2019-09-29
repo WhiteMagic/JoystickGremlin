@@ -72,6 +72,53 @@ def mapper_function(func):
     return wrapper
 
 
+class HID_Guardian:
+    '''Controler class for interacting with HID Guardian. Handles selecting a provider and interacting with it'''
+    _provider = None
+    _ready = False
+
+    def __init__(self):
+        self.set_provider()
+        # TODO: Select a provider
+        # TODO: Set ready state (in provider selection?)
+
+    def guardian_available(self):
+        return self._ready
+
+    def set_provider(self):
+        if HIDG_Provider_Cerberus.is_available:
+            self._provider = HIDG_Provider_Cerberus
+        elif HIDG_Provider_Registry.is_available:
+            self._provider = HIDG_Provider_Registry
+
+    # pylint: disable=no-method-argument
+    # region Device hiding control
+    @mapper_function
+    def clear_device_list(): pass
+
+    @mapper_function
+    def add_device(): pass
+
+    @mapper_function
+    def remove_device(): pass
+
+    @mapper_function
+    def get_device_list(): pass
+    # endregion
+
+    # region Program whitelist control
+    @mapper_function
+    def clear_process_list(): pass
+
+    @mapper_function
+    def add_process(): pass
+
+    @mapper_function
+    def remove_process(): pass
+    # endregion
+    # pylint: enable=no-method-argument
+
+
 class HIDG_Provider_Cerberus:
     # TODO: We're generating response codes from Cerberus. Pass them to the log files?
     cerberus_API_URL = "http://localhost:{port}/api/v1/hidguardian/"
