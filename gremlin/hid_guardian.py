@@ -54,6 +54,23 @@ def _web_request(url, data=None):
 
     return resp
 
+def mapper_function(func):
+    '''
+    Helper decorator to make setting up the controller class easier.
+    Runs the provider's copy of the function. Call as follows:
+
+    @mapper_function
+    def <function name>(): pass
+    '''
+    def wrapper(self, *args, **kwargs):
+        if self._provider is not None:
+            getattr(self._provider, func.__name__)(*args, **kwargs)
+            return True
+        else: return False
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    return wrapper
+
 
 class HIDG_Provider_Cerberus:
     # TODO: We're generating response codes from Cerberus. Pass them to the log files?
