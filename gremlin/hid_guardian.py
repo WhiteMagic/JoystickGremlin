@@ -79,8 +79,6 @@ class HID_Guardian:
 
     def __init__(self):
         self.set_provider()
-        # TODO: Select a provider
-        # TODO: Set ready state (in provider selection?)
 
     def guardian_available(self):
         return self._ready
@@ -88,8 +86,10 @@ class HID_Guardian:
     def set_provider(self):
         if HIDG_Provider_Cerberus.is_available:
             self._provider = HIDG_Provider_Cerberus
+            self._ready = True
         elif HIDG_Provider_Registry.is_available:
             self._provider = HIDG_Provider_Registry
+            self._ready = True
 
     # pylint: disable=no-method-argument
     # region Device hiding control
