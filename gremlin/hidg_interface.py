@@ -48,7 +48,7 @@ def mapper_function(func):
     def <function name>(): pass
     '''
     def wrapper(self, *args, **kwargs):
-        if self._provider is not None:
+        if self._provider is not None and self._ready:
             getattr(self._provider, func.__name__)(*args, **kwargs)
             return True
         else: return False
@@ -77,6 +77,8 @@ class HID_Guardian:
         elif HIDG_Provider_Registry.is_available:
             self._provider = HIDG_Provider_Registry
             self._ready = True
+        else:
+            self._ready = False
 
     # pylint: disable=no-method-argument
     # region Device hiding control
