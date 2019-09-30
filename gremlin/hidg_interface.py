@@ -61,6 +61,8 @@ class HID_Guardian:
     '''Controler class for interacting with HID Guardian. Handles selecting a provider and interacting with it'''
     _provider = None
     _ready = False
+    _blocked_devices = []
+    _whitelisted_pids = []
 
     def __init__(self):
         self.set_provider()
