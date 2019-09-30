@@ -65,7 +65,7 @@ class HID_Guardian:
     def __init__(self):
         self.set_provider()
 
-    def guardian_available(self):
+    def ready(self):
         return self._ready
 
     def set_provider(self):
