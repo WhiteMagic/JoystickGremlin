@@ -1256,9 +1256,6 @@ if __name__ == "__main__":
     # Initialize HidGuardian before we let SDL grab joystick data
     hg = gremlin.hid_guardian.HidGuardian()
     hg.add_process(os.getpid())
-    import gremlin.hid_cerberus
-    hc = gremlin.hid_cerberus.HIDCerberus()
-    hc.add_process(os.getpid())
 
     # Create user interface
     app_id = u"joystick.gremlin"
@@ -1339,7 +1336,6 @@ if __name__ == "__main__":
     gremlin.joystick_handling.VJoyProxy.reset()
 
     hg.remove_process(os.getpid())
-    hc.remove_process(os.getpid())
 
     syslog.info("Terminating Gremlin")
     sys.exit(0)
