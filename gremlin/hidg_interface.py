@@ -69,6 +69,8 @@ class HID_Guardian:
         return self._ready
 
     def set_provider(self):
+        '''Configure the backing provider, then set the ready state. If no provider is
+        available, set state to not ready'''
         if HIDG_Provider_Cerberus.is_available:
             self._provider = HIDG_Provider_Cerberus
             self._ready = True
