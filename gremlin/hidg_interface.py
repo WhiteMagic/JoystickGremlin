@@ -324,6 +324,10 @@ class HIDG_Provider_Registry:
 
     @classmethod
     def provider_setup(cls):
+        '''Sets up the provider for use. Checks for admin rights, if we have admin
+        rights, follow that up by trying to create the keys we need. If all of that
+        passes the needed checks then we remain in the ready state and set the
+        internal _setup_done state.'''
         if not cls._setup_done:
             cls._ready = gremlin.util.is_user_admin()
         else: return
