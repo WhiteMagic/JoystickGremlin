@@ -312,6 +312,9 @@ class HIDG_Provider_Cerberus:
 
 class HIDG_Provider_Registry:
     """Interfaces with HidGuardians registry configuration."""
+    root_path = r"SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters"
+    process_path = r"SYSTEM\CurrentControlSet\Services\HidGuardian\Parameters\Whitelist"
+    storage_value = "AffectedDevices"
     _setup_done = False
     _ready = False
 
@@ -327,7 +330,25 @@ class HIDG_Provider_Registry:
         # This code will only run if we haven't run setup before. This is not
         # in the above if-else in order to reduce indentation level
         if cls._ready:
-            pass
+            try:
+                # Ensure we have the needed parameter entries
+                with winreg.CreateKey(winreg.HKEY_LOCAL_MACHINE, cls.root_path) as handle:
+                    data = _read_value(
+                        handle, cls.storage_value,
+                        winreg.REG_MULTI_SZ
+                    )
+                    if data[0] is None:
+                        _write_value(
+                            handle, cls.storage_value,
+                            [[], winreg.REG_MULTI_SZ]
+                        )
+                # Ensure we can create per process keys
+                with winreg.CreateKey(winreg.HKEY_LOCAL_MACHINE, cls.process_path):
+                    pass
+            except OSError:
+                cls._ready = False
+                raise HidGuardianError("Failed to initialize HidGuardian interface")
+        cls._setup_done = True
 
     # region Device hiding control
     @classmethod
