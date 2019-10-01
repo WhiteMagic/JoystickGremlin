@@ -187,7 +187,7 @@ class HIDG_Provider_Cerberus:
     def get_device_list(cls):
         device_data = []
         split_regex = re.compile(r"HID\\VID_(.{4})&PID_(.{4})")
-        API_CALL = cls.generate_API_call(cls.api_devices_purge)
+        API_CALL = cls.generate_API_call(cls.api_devices_get)
         devices_raw = json.loads(_web_request(API_CALL))
         for device in devices_raw:
             match = split_regex.match(device)
