@@ -82,6 +82,8 @@ class HID_Guardian:
     _whitelisted_pids = []
 
     def __init__(self):
+        HIDG_Provider_Cerberus.provider_setup()
+        HIDG_Provider_Registry.provider_setup()
         self.set_provider()
 
     def ready(self):
@@ -146,6 +148,13 @@ class HIDG_Provider_Cerberus:
         return (cls.cerberus_API_URL + api_action_str).format(
             port=cls.cerberus_API_PORT, **kwargs
         )
+
+    @classmethod
+    def provider_setup(cls):
+        '''Available as part of the standard interface, but this provider needs
+        no setup to be used. Should be called anyway in case this changes in
+        the future.'''
+        pass
 
     @classmethod
     def is_available(cls):
@@ -215,10 +224,23 @@ class HIDG_Provider_Cerberus:
 
 
 class HIDG_Provider_Registry:
+    """Interfaces with HidGuardians registry configuration."""
+    _setup_done = False
+    _ready = False
     @classmethod
     def is_available(cls):
         # TODO: Actual availabilty code
         return False
+
+    @classmethod
+    def provider_setup(cls):
+        if not cls._setup_done:
+            cls._ready = gremlin.util.is_user_admin()
+        else: return
+        # This code will only run if we haven't run setup before. This is not
+        # in the above if-else in order to reduce indentation level
+        if cls._ready:
+            pass
 
     # region Device hiding control
     @classmethod
