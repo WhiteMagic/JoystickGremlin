@@ -11,14 +11,20 @@ from functools import wraps
 
 #####
 # Module functions
-def create_device_string(vendor_id, product_id):
+def create_device_string(vendor_id, product_id, interface_id=None):
     """Returns an appropriately formatted device string.
 
     :param vendor_id:  the USB vendor id
     :param product_id: the USB product id
     :return: string corresponding to this vendor and product id combination
     """
-    return r"HID\VID_{vid:0>4X}&PID_{pid:0>4X}".format(vid=vendor_id, pid=product_id)
+    if interface_id is None:
+        dev_string = r"HID\VID_{vid:0>4X}&PID_{pid:0>4X}".format(vid=vendor_id, pid=product_id)
+    else:
+        dev_string = r"HID\VID_{vid:0>4X}&PID_{pid:0>4X}&MI_{iid:0>2X}".format(
+            vid=vendor_id, pid=product_id, iid=interface_id
+        )
+    return dev_string
 
 
 def _web_request(url, data=None):
