@@ -53,7 +53,7 @@ def mapper_function(func):
     @mapper_function
     def <function name>(self, return_value): pass
     '''
-    @wraps
+    @wraps(func)
     def wrapper(self, *args, **kwargs):
         error_no_provider = r"Tried to access HIDG provider despite not having one set.\n\n" +\
                             r"The provider interface should not currently be ready, please file a bug report."
@@ -200,6 +200,7 @@ class HIDG_Provider_Cerberus:
                 gremlin.util.display_error(
                     "Failed to extract vendor and product id for HID Cerberus entry:\n\n{}".format(device)
                 )
+        return device_data
     # endregion
 
     # region Program whitelist control
