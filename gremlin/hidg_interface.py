@@ -359,7 +359,30 @@ class HIDG_Provider_Registry:
     def clear_device_list(cls): pass
 
     @classmethod
-    def add_device(cls, vendor_id, product_id): pass
+    def add_device(cls, vendor_id, product_id):
+        """Adds a new device to the list of devices managed by HidGuardian.
+
+        :param vendor_id the USB vendor id
+        :param product_id the USB product id
+        """
+        # Add device to the list of devices that HidGuardian is intercepting
+        handle = _open_key(cls.root_path, winreg.KEY_ALL_ACCESS)
+        data = _read_value(
+            handle,
+            cls.storage_value,
+            winreg.REG_MULTI_SZ
+        )
+
+        device_string = create_device_string(vendor_id, product_id)
+        if data[0] is None:
+            data[0] = []
+        if device_string not in data[0]:
+            data[0].append(device_string)
+            _write_value(handle, cls.storage_value, data)
+
+        # Update device list for any existing Gremlin process keys
+        # for pid in self._get_gremlin_process_ids():
+        #     self._synchronize_process(pid)
 
     @classmethod
     def remove_device(cls, vendor_id, product_id): pass
