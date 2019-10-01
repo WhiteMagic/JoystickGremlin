@@ -315,8 +315,7 @@ class HIDG_Provider_Registry:
 
     @classmethod
     def is_available(cls):
-        # TODO: Actual availabilty code
-        return False
+        return cls._ready
 
     @classmethod
     def provider_setup(cls):
