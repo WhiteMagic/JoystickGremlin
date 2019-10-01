@@ -227,6 +227,7 @@ class HIDG_Provider_Registry:
     """Interfaces with HidGuardians registry configuration."""
     _setup_done = False
     _ready = False
+
     @classmethod
     def is_available(cls):
         # TODO: Actual availabilty code
