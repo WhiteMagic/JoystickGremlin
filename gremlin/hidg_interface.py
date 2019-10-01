@@ -158,6 +158,8 @@ def mapper_function(func):
     return wrapper
 
 
+#####
+# Module Classes
 class HID_Guardian:
     '''Controler class for interacting with HID Guardian. Handles selecting a provider and interacting with it'''
     _provider = None
