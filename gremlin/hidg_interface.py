@@ -198,7 +198,7 @@ class HIDG_Provider_Cerberus:
         for device in devices_raw:
             match = split_regex.match(device)
             try:
-                device_data.append(int(match.group(1), 16), int(match.group(2), 16))
+                device_data.append((int(match.group(1), 16), int(match.group(2), 16)))
             except AttributeError:
                 # TODO: Match failed, report this (but non-intrusively)
                 pass
