@@ -3,6 +3,7 @@ import urllib.request
 import urllib.error
 import re
 import json
+from functools import wraps
 
 #####
 # Module Globals
@@ -38,22 +39,36 @@ def _web_request(url, data=None):
 
     return resp
 
+def _log_error(*args):
+    # TODO: Change theis print statement to a gremlin util call before deployment
+    print(*args)
 
 def mapper_function(func):
     '''
     Helper decorator to make setting up the controller class easier.
-    Runs the provider's copy of the function. Call as follows:
+    Runs the provider's copy of the function. Most basic call:
 
     @mapper_function
-    def <function name>(): pass
+    def <function name>(self, return_value): pass
     '''
+    @wraps
     def wrapper(self, *args, **kwargs):
-        if self._provider is not None and self._ready:
-            getattr(self._provider, func.__name__)(*args, **kwargs)
-            return True
-        else: return False
-    wrapper.__name__ = func.__name__
-    wrapper.__doc__ = func.__doc__
+        error_no_provider = r"Tried to access HIDG provider despite not having one set.\n\n" +\
+                            r"The provider interface should not currently be ready, please file a bug report."
+        error_provider_incomplete = "Provider [{}] was unable to supply backing method '{}'"
+        if self._ready:
+            try:
+                return_val = getattr(self._provider, func.__name__)(*args, **kwargs)
+                return func(self, return_val)
+            except AttributeError:
+                if self._provider:
+                    _log_error(error_provider_incomplete.format(
+                        self._provider.__class__.__name__, func.__name__
+                    ))
+                else:
+                    _log_error(error_no_provider)
+        else:
+            return func(self, None)
     return wrapper
 
 
@@ -85,27 +100,27 @@ class HID_Guardian:
     # pylint: disable=no-method-argument
     # region Device hiding control
     @mapper_function
-    def clear_device_list(): pass
+    def clear_device_list(self, return_val): pass
 
     @mapper_function
-    def add_device(): pass
+    def add_device(self, return_val): pass
 
     @mapper_function
-    def remove_device(): pass
+    def remove_device(self, return_val): pass
 
     @mapper_function
-    def get_device_list(): pass
+    def get_device_list(self, return_val): pass
     # endregion
 
     # region Program whitelist control
     @mapper_function
-    def clear_process_list(): pass
+    def clear_process_list(self, return_val): pass
 
     @mapper_function
-    def add_process(): pass
+    def add_process(self, return_val): pass
 
     @mapper_function
-    def remove_process(): pass
+    def remove_process(self, return_val): pass
     # endregion
     # pylint: enable=no-method-argument
 
