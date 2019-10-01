@@ -3,7 +3,9 @@ import urllib.request
 import urllib.error
 import re
 import json
+import winreg
 from functools import wraps
+from gremlin.error import HidGuardianError
 
 #####
 # Module Globals
@@ -49,6 +51,82 @@ def _web_request(url, data=None):
 def _log_error(*args):
     # TODO: Change theis print statement to a gremlin util call before deployment
     print(*args)
+
+
+def _open_key(sub_key, access=winreg.KEY_READ):
+    """Opens a key and returns the handle to it.
+
+    :param sub_key the key to open
+    :param access the access rights to use when opening the key
+    :return the handle to the opened key
+    """
+    try:
+        return winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+            str(sub_key),
+            access=access
+        )
+    except OSError:
+        raise HidGuardianError("Unable to open sub key \"{}\"".format(sub_key))
+
+
+def _clear_key(handle):
+    """Clears a given key of any sub keys. Does NOT check for permission
+    to do so before attempting to edit the registry.
+
+    :param handle the handle to the key which should be cleared
+    """
+    info = winreg.QueryInfoKey(handle)
+    # No sub keys which means the parent can delete this now
+    if info[0] == 0: return
+    # Recursively clear sub keys
+    for _ in range(info[0]):
+        key = winreg.EnumKey(handle, 0)
+        new_hdl = winreg.OpenKey(handle, key)
+        _clear_key(new_hdl)
+        winreg.DeleteKey(handle, key)
+
+
+def _read_value(handle, value_name, value_type):
+    """Reads a value from a key and returns it.
+
+    :param handle the handle from which to read the value
+    :param value_name the name of the value to read
+    :param value_type the expected type of the value being read
+    :return the read value and its type, returns a value of None if the value
+        did not exist
+    """
+    try:
+        data = winreg.QueryValueEx(handle, value_name)
+        if data[1] != value_type:
+            raise HidGuardianError(
+                "Read invalid data type, {} expected {}".format(
+                    data[1], value_type
+            ))
+        return data
+    except FileNotFoundError:
+        # The particular value doesn't exist, return None instead
+        return [None, value_type]
+    except PermissionError:
+        raise HidGuardianError(
+            "Unable to read value \"{}\", insufficient permissions".format(
+                value_name
+        ))
+
+
+def _write_value(handle, value_name, data):
+    """Writes data to provided handle's value.
+
+    :param handle the key handle to write the value of
+    :param value_name name of the value to be written
+    :param data data to be written, content and type
+    """
+    try:
+        winreg.SetValueEx(handle, value_name, 0, data[1], data[0])
+    except PermissionError:
+        raise HidGuardianError(
+            "Unable to write value \"{}\", insufficient permissions".format(
+                value_name
+        ))
 
 
 def mapper_function(func):
