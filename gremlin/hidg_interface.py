@@ -39,9 +39,11 @@ def _web_request(url, data=None):
 
     return resp
 
+
 def _log_error(*args):
     # TODO: Change theis print statement to a gremlin util call before deployment
     print(*args)
+
 
 def mapper_function(func):
     '''
