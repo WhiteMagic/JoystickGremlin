@@ -94,10 +94,12 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             self.absolute_checkbox = QtWidgets.QRadioButton("Absolute")
             self.absolute_checkbox.setChecked(True)
             self.relative_checkbox = QtWidgets.QRadioButton("Relative")
+            self.dejitter_checkbox = QtWidgets.QRadioButton("Dejitter")
             self.relative_scaling = gremlin.ui.common.DynamicDoubleSpinBox()
 
             self.remap_type_layout.addStretch()
             self.remap_type_layout.addWidget(self.absolute_checkbox)
+            self.remap_type_layout.addWidget(self.dejitter_checkbox)
             self.remap_type_layout.addWidget(self.relative_checkbox)
             self.remap_type_layout.addWidget(self.relative_scaling)
             self.remap_type_layout.addWidget(QtWidgets.QLabel("Scale"))
@@ -122,11 +124,11 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         input_type = self.action_data.input_type
         if self.action_data.parent.tag == "hat_buttons":
             input_type = InputType.JoystickButton
-
-        # Handle obscure bug which causes the action_data to contain no
-        # input_type information
-        if input_type is None:
-            input_type = InputType.JoystickButton
+            
+        # Handle obscure bug which causes the action_data to contain no        
+        # input_type information        
+        if input_type is None:        
+            input_type = InputType.JoystickButton        
             logging.getLogger("system").warning("None as input type encountered")
 
         # If no valid input item is selected get the next unused one
@@ -157,11 +159,14 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             if self.action_data.input_type == InputType.JoystickAxis:
                 if self.action_data.axis_mode == "absolute":
                     self.absolute_checkbox.setChecked(True)
+                elif self.action_data.axis_mode == "dejitter":
+                    self.absolute_checkbox.setChecked(True)                    
                 else:
                     self.relative_checkbox.setChecked(True)
                 self.relative_scaling.setValue(self.action_data.axis_scaling)
 
                 self.absolute_checkbox.clicked.connect(self.save_changes)
+                self.dejitter_checkbox.clicked.connect(self.save_changes)
                 self.relative_checkbox.clicked.connect(self.save_changes)
                 self.relative_scaling.valueChanged.connect(self.save_changes)
 
@@ -190,6 +195,8 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
                 self.action_data.axis_mode = "absolute"
                 if self.relative_checkbox.isChecked():
                     self.action_data.axis_mode = "relative"
+                elif self.dejitter_checkbox.isChecked():
+                    self.action_data.axis_mode = "dejitter"
                 self.action_data.axis_scaling = self.relative_scaling.value()
 
             # Signal changes
@@ -218,12 +225,33 @@ class RemapFunctor(gremlin.base_classes.AbstractFunctor):
         self.thread = None
         self.axis_delta_value = 0.0
         self.axis_value = 0.0
+        self.sample_5 = 0
+        self.sample_4 = 0
+        self.sample_3 = 0
+        self.sample_2 = 0
+        self.sample_1 = 0
+        self.last_avg = 0
+                
 
-    def process_event(self, event, value):
+    def process_event(self, event, value):        
         if self.input_type == InputType.JoystickAxis:
             if self.axis_mode == "absolute":
                 joystick_handling.VJoyProxy()[self.vjoy_device_id] \
                     .axis(self.vjoy_input_id).value = value.current
+            elif self.axis_mode == "dejitter":
+                # do a dejittering by using the last 5 samples averages
+                self.sample_1 = self.sample_2
+                self.sample_2 = self.sample_3
+                self.sample_3 = self.sample_4
+                self.sample_4 = self.sample_5
+                self.sample_5 = event.value
+                avg = (self.sample_1 + self.sample_2 + self.sample_3 + self.sample_4 + self.sample_5) / 5
+                # if difference between last known average and new one is over a threshold we assume it as the new average
+                if abs(self.last_avg - avg) > 0.005:                
+                    self.last_avg = avg
+                # set the last average value as axis value always.
+                joystick_handling.VJoyProxy()[self.vjoy_device_id] \
+                    .axis(self.vjoy_input_id).value = self.last_avg
             else:
                 self.should_stop_thread = abs(event.value) < 0.05
                 self.axis_delta_value = \
