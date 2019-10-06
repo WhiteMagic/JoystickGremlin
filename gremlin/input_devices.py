@@ -28,7 +28,7 @@ from PySide2 import QtCore
 from dill import DILL, GUID_Invalid
 
 from . import common, error, event_handler, joystick_handling, \
-    macro, profile, util
+    macro, util
 
 
 class CallbackRegistry:
@@ -231,6 +231,8 @@ class JoystickWrapper:
 
         @property
         def value(self):
+            # FIXME: This bypasses calibration and any other possible
+            #        mappings we might do in the future
             return DILL.get_axis(self._joystick_guid, self._index) / float(32768)
 
     class Button(Input):
@@ -353,9 +355,26 @@ class JoystickWrapper:
     def axis_count(self) -> int:
         """Returns the number of axis of the joystick.
 
-        :return number of axes
+        Returns:
+            Number of axes
         """
         return self._info.axis_count
+
+    def button_count(self) -> int:
+        """Returns the number of buttons on the joystick.
+
+        Returns:
+            Number of buttons
+        """
+        return self._info.button_count
+
+    def hat_count(self) -> int:
+        """Returns the number of hats on the joystick.
+
+        Returns:
+            Number of hats
+        """
+        return self._info.hat_count
 
     def _init_axes(self):
         """Initializes the axes of the joystick.
@@ -548,7 +567,7 @@ class JoystickDecorator:
         self.mode = mode
         # Convert string based GUID to the actual GUID object
         try:
-            self.device_guid = profile.parse_guid(device_guid)
+            self.device_guid = util.parse_guid(device_guid)
         except error.ProfileError:
             logging.getLogger("system").error(
                 "Invalid guid value '' received".format(device_guid)
