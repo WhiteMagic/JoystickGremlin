@@ -24,11 +24,11 @@ import re
 import sys
 import threading
 import time
+import uuid
 
-
-from . import common, error, joystick_handling
 from PySide2 import QtCore, QtWidgets
 
+import dill
 
 # Table storing which modules have been imported already
 g_loaded_modules = {}
@@ -73,6 +73,29 @@ class FileWatcher(QtCore.QObject):
                     self.file_changed.emit(fname)
             time.sleep(1)
 
+def parse_guid(value):
+    """Reads a string GUID representation into the internal data format.
+
+    This transforms a GUID of the form {B4CA5720-11D0-11E9-8002-444553540000}
+    into the underlying raw and exposed objects used within Gremlin.
+
+    :param value the string representation of the GUID
+    :param dill.GUID object representing the provided value
+    """
+    try:
+        tmp = uuid.UUID(value)
+        raw_guid = dill._GUID()
+        raw_guid.Data1 = int.from_bytes(tmp.bytes[0:4], "big")
+        raw_guid.Data2 = int.from_bytes(tmp.bytes[4:6], "big")
+        raw_guid.Data3 = int.from_bytes(tmp.bytes[6:8], "big")
+        for i in range(8):
+            raw_guid.Data4[i] = tmp.bytes[8 + i]
+
+        return dill.GUID(raw_guid)
+    except (ValueError, AttributeError) as e:
+        raise error.ProfileError(
+            "Failed parsing GUID from value {}".format(value)
+        )
 
 def is_user_admin():
     """Returns whether or not the user has admin privileges.
