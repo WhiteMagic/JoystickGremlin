@@ -23,7 +23,7 @@ import logging
 import time
 import threading
 
-from PyQt5 import QtCore
+from PySide2 import QtCore
 
 from dill import DILL, GUID_Invalid
 
@@ -483,7 +483,7 @@ class Keyboard(QtCore.QObject):
         QtCore.QObject.__init__(self)
         self._keyboard_state = {}
 
-    @QtCore.pyqtSlot(event_handler.Event)
+    @QtCore.Slot(event_handler.Event)
     def keyboard_event(self, event):
         """Handles keyboard events and updates state.
 

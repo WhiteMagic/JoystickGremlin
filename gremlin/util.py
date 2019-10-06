@@ -25,9 +25,9 @@ import sys
 import threading
 import time
 
-from PyQt5 import QtCore, QtWidgets
 
 from . import common, error, joystick_handling
+from PySide2 import QtCore, QtWidgets
 
 
 # Table storing which modules have been imported already
@@ -39,7 +39,7 @@ class FileWatcher(QtCore.QObject):
     """Watches files in the filesystem for changes."""
 
     # Signal emitted when the watched file is modified
-    file_changed = QtCore.pyqtSignal(str)
+    file_changed = QtCore.Signal(str)
 
     def __init__(self, file_names, parent=None):
         """Creates a new instance.

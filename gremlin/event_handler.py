@@ -21,7 +21,7 @@ import logging
 import time
 from threading import Thread, Timer
 
-from PyQt5 import QtCore
+from PySide2 import QtCore
 
 import dill
 from . import common, config, error, joystick_handling, windows_event_hook, \
@@ -142,15 +142,15 @@ class EventListener(QtCore.QObject):
     """
 
     # Signal emitted when joystick events are received
-    joystick_event = QtCore.pyqtSignal(Event)
+    joystick_event = QtCore.Signal(Event)
     # Signal emitted when keyboard events are received
-    keyboard_event = QtCore.pyqtSignal(Event)
+    keyboard_event = QtCore.Signal(Event)
     # Signal emitted when mouse events are received
-    mouse_event = QtCore.pyqtSignal(Event)
+    mouse_event = QtCore.Signal(Event)
     # Signal emitted when virtual button events are received
-    virtual_event = QtCore.pyqtSignal(Event)
+    virtual_event = QtCore.Signal(Event)
     # Signal emitted when a joystick is attached or removed
-    device_change_event = QtCore.pyqtSignal()
+    device_change_event = QtCore.Signal()
 
     def __init__(self):
         """Creates a new instance."""
@@ -339,9 +339,9 @@ class EventHandler(QtCore.QObject):
     """Listens to the inputs from multiple different input devices."""
 
     # Signal emitted when the mode is changed
-    mode_changed = QtCore.pyqtSignal(str)
+    mode_changed = QtCore.Signal(str)
     # Signal emitted when the application is pause / resumed
-    is_active = QtCore.pyqtSignal(bool)
+    is_active = QtCore.Signal(bool)
 
     def __init__(self):
         """Initializes the EventHandler instance."""
@@ -475,7 +475,7 @@ class EventHandler(QtCore.QObject):
         """Removes all attached callbacks."""
         self.callbacks = {}
 
-    @QtCore.pyqtSlot(Event)
+    @QtCore.Slot(Event)
     def process_event(self, event):
         """Processes a single event by passing it to all callbacks
         registered for this event.

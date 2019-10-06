@@ -25,7 +25,7 @@ import random
 import string
 import uuid
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 import dill
 from gremlin import common, error, input_devices, joystick_handling, profile, shared_state
