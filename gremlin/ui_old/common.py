@@ -18,7 +18,7 @@
 import enum
 import threading
 
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore, QtGui
 
 import gremlin
 
@@ -68,7 +68,7 @@ class AbstractModel(QtCore.QObject):
 
     """Base class for MVC models."""
 
-    data_changed = QtCore.pyqtSignal()
+    data_changed = QtCore.Signal()
 
     def __init__(self, parent=None):
         """Creates a new model.
@@ -98,7 +98,7 @@ class AbstractView(QtWidgets.QWidget):
     """Base class for MVC views."""
 
     # Signal emitted when a entry is selected
-    item_selected = QtCore.pyqtSignal(int)
+    item_selected = QtCore.Signal(int)
 
     def __init__(self, parent=None):
         """Creates a new view instance.
@@ -141,7 +141,7 @@ class LeftRightPushButton(QtWidgets.QPushButton):
     mouse clicks."""
 
     # Signal emitted when the button is pressed using the right mouse button
-    clicked_right = QtCore.pyqtSignal()
+    clicked_right = QtCore.Signal()
 
     def __init__(self, label, parent=None):
         """Creates a new button instance.
@@ -239,13 +239,13 @@ class DualSlider(QtWidgets.QWidget):
     lower and upper slider cannot pass through each other."""
 
     # Signal emitted when a value changes. (Handle, Value)
-    valueChanged = QtCore.pyqtSignal(int, int)
+    valueChanged = QtCore.Signal(int, int)
     # Signal emitted when a handle is pressed (Handle)
-    sliderPressed = QtCore.pyqtSignal(int)
+    sliderPressed = QtCore.Signal(int)
     # Signal emitted when a handle is moved (Handle, Value)
-    sliderMoved = QtCore.pyqtSignal(int, int)
+    sliderMoved = QtCore.Signal(int, int)
     # Signal emitted when a handle is released (Handle)
-    sliderReleased = QtCore.pyqtSignal(int)
+    sliderReleased = QtCore.Signal(int)
 
     # Enumeration of handle codes used by the widget
     LowerHandle = 1
@@ -767,7 +767,7 @@ class ActionSelector(QtWidgets.QWidget):
     """Widget permitting the selection of actions."""
 
     # Signal emitted when an action is going to be added
-    action_added = QtCore.pyqtSignal(str)
+    action_added = QtCore.Signal(str)
 
     def __init__(self, input_type, parent=None):
         """Creates a new selector instance.
@@ -826,7 +826,7 @@ class BaseDialogUi(QtWidgets.QWidget):
     """
 
     # Signal emitted when the dialog is being closed
-    closed = QtCore.pyqtSignal()
+    closed = QtCore.Signal()
 
     def __init__(self, parent=None):
         """Creates a new options UI instance.
