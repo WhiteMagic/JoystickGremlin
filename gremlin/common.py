@@ -47,14 +47,14 @@ class InputType(enum.Enum):
     VirtualButton = 6
 
     @staticmethod
-    def to_string(value):
+    def to_string(value) -> str:
         try:
             return _InputType_to_string_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
     @staticmethod
-    def to_enum(value):
+    def to_enum(value: str):
         try:
             return _InputType_to_enum_lookup[value]
         except KeyError:

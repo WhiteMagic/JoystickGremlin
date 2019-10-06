@@ -350,7 +350,7 @@ class JoystickWrapper:
             )
         return self._hats[index]
 
-    def axis_count(self):
+    def axis_count(self) -> int:
         """Returns the number of axis of the joystick.
 
         :return number of axes
