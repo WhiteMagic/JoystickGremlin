@@ -25,7 +25,7 @@ from xml.etree import ElementTree
 
 import gremlin
 from gremlin.base_classes import AbstractAction, AbstractFunctor
-from gremlin.common import InputType
+from gremlin.types import InputType
 from gremlin.ui.common import DualSlider, DynamicDoubleSpinBox
 import gremlin.ui.input_item
 

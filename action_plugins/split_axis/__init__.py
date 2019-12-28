@@ -22,7 +22,7 @@ from PyQt5 import QtCore, QtWidgets
 from xml.etree import ElementTree
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
-from gremlin.common import InputType
+from gremlin.types import InputType
 from gremlin.profile import safe_read, safe_format
 from gremlin import util
 import gremlin.ui.common

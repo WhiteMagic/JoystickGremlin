@@ -21,7 +21,7 @@ from ctypes import wintypes
 import threading
 
 import gremlin.common
-
+import gremlin.types
 
 user32 = ctypes.WinDLL("user32")
 
@@ -183,25 +183,25 @@ def process_mouse_event(n_code, w_param, l_param):
         button_id = None
         is_pressed = True
         if w_param in [WM_LBUTTONDOWN, WM_LBUTTONUP]:
-            button_id = gremlin.common.MouseButton.Left
+            button_id = gremlin.types.MouseButton.Left
             is_pressed = w_param == WM_LBUTTONDOWN
         elif w_param in [WM_RBUTTONDOWN, WM_RBUTTONUP]:
-            button_id = gremlin.common.MouseButton.Right
+            button_id = gremlin.types.MouseButton.Right
             is_pressed = w_param == WM_RBUTTONDOWN
         elif w_param in [WM_MBUTTONDOWN, WM_MBUTTONUP]:
-            button_id = gremlin.common.MouseButton.Middle
+            button_id = gremlin.types.MouseButton.Middle
             is_pressed = w_param == WM_MBUTTONDOWN
         elif w_param in [WM_XBUTTONDOWN, WM_XBUTTONUP]:
             if msg.mouseData & (0x0001 << 16):
-                button_id = gremlin.common.MouseButton.Back
+                button_id = gremlin.types.MouseButton.Back
             elif msg.mouseData & (0x0002 << 16):
-                button_id = gremlin.common.MouseButton.Forward
+                button_id = gremlin.types.MouseButton.Forward
             is_pressed = w_param == WM_XBUTTONDOWN
         elif w_param == WM_MOUSEWHEEL:
             if (msg.mouseData >> 16) == 120:
-                button_id = gremlin.common.MouseButton.WheelUp
+                button_id = gremlin.types.MouseButton.WheelUp
             elif (msg.mouseData >> 16) == 65416:
-                button_id = gremlin.common.MouseButton.WheelDown
+                button_id = gremlin.types.MouseButton.WheelDown
 
         # Create the event and pass it to all all registered callbacks
         evt = MouseEvent(button_id, is_pressed, False)

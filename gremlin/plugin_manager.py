@@ -20,6 +20,7 @@ import importlib
 import logging
 import os
 
+import gremlin.types
 from . import common, error
 
 
@@ -170,10 +171,10 @@ class ActionPlugins:
     def _create_type_action_map(self):
         """Creates a lookup table from input types to available actions."""
         self._type_to_action_map = {
-            common.InputType.JoystickAxis: [],
-            common.InputType.JoystickButton: [],
-            common.InputType.JoystickHat: [],
-            common.InputType.Keyboard: []
+            gremlin.types.InputType.JoystickAxis: [],
+            gremlin.types.InputType.JoystickButton: [],
+            gremlin.types.InputType.JoystickHat: [],
+            gremlin.types.InputType.Keyboard: []
         }
 
         for entry in self._plugins.values():
@@ -205,6 +206,8 @@ class ActionPlugins:
                         logging.getLogger("system").debug(
                             "Loaded: {}".format(plugin.name)
                         )
+                        # TODO: Remove
+                        return
                     else:
                         del plugin
                 except Exception as e:
@@ -216,3 +219,4 @@ class ActionPlugins:
                             e
                         )
                     )
+                    raise(e)

@@ -21,7 +21,7 @@ from PyQt5 import QtWidgets
 from xml.etree import ElementTree
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
-from gremlin.common import InputType
+from gremlin.types import InputType
 import gremlin.ui.input_item
 
 

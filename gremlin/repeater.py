@@ -21,6 +21,7 @@ import time
 
 from PyQt5 import QtCore
 
+import gremlin.types
 from . import common, event_handler, input_devices, joystick_handling
 
 
@@ -100,13 +101,13 @@ class Repeater(QtCore.QObject):
 
         event_list = []
         if event.event_type in [
-            common.InputType.Keyboard,
-            common.InputType.JoystickButton
+            gremlin.types.InputType.Keyboard,
+            gremlin.types.InputType.JoystickButton
         ]:
             event_list = [event.clone(), event.clone()]
             event_list[0].is_pressed = False
             event_list[1].is_pressed = True
-        elif event.event_type == common.InputType.JoystickAxis:
+        elif event.event_type == gremlin.types.InputType.JoystickAxis:
             event_list = [
                 event.clone(),
                 event.clone(),
@@ -117,7 +118,7 @@ class Repeater(QtCore.QObject):
             event_list[1].value = 0.0
             event_list[2].value = 0.75
             event_list[3].value = 0.0
-        elif event.event_type == common.InputType.JoystickHat:
+        elif event.event_type == gremlin.types.InputType.JoystickHat:
             event_list = [event.clone(), event.clone()]
             event_list[0].value = (0, 0)
 
@@ -147,13 +148,13 @@ class Repeater(QtCore.QObject):
 
         # Repeatedly send events until the thread is interrupted
         while self.is_running:
-            if self._events[0].event_type == common.InputType.Keyboard:
+            if self._events[0].event_type == gremlin.types.InputType.Keyboard:
                 el.keyboard_event.emit(self._events[index])
             else:
                 el.joystick_event.emit(self._events[index])
 
             self._update_func("{} {}".format(
-                common.InputType.to_string(
+                gremlin.types.InputType.to_string(
                     self._events[index].event_type
                 ).capitalize(),
                 str(self._events[index].identifier)
@@ -169,12 +170,12 @@ class Repeater(QtCore.QObject):
 
         # Ensure we leave the input in a neutral state when done
         event = self._events[0].clone()
-        if event.event_type == common.InputType.JoystickButton:
+        if event.event_type == gremlin.types.InputType.JoystickButton:
             event.is_pressed = False
-        elif event.event_type == common.InputType.JoystickAxis:
+        elif event.event_type == gremlin.types.InputType.JoystickAxis:
             event.value = \
                 input_devices.JoystickInputSignificant().last_event(event).value
-        elif event.event_type == common.InputType.JoystickHat:
+        elif event.event_type == gremlin.types.InputType.JoystickHat:
             event.value = (0, 0)
         el.joystick_event.emit(event)
         self._event_registry = {}

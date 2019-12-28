@@ -21,6 +21,7 @@ import copy
 import logging
 import time
 
+import gremlin.types
 from gremlin import actions, base_classes, common, error
 
 
@@ -50,14 +51,14 @@ class ContainerCallback:
         execution graph until every entry has run or it is aborted.
         """
         if event.event_type in [
-            common.InputType.JoystickAxis,
-            common.InputType.JoystickHat
+            gremlin.types.InputType.JoystickAxis,
+            gremlin.types.InputType.JoystickHat
         ]:
             value = actions.Value(event.value)
         elif event.event_type in [
-            common.InputType.JoystickButton,
-            common.InputType.Keyboard,
-            common.InputType.VirtualButton
+            gremlin.types.InputType.JoystickButton,
+            gremlin.types.InputType.Keyboard,
+            gremlin.types.InputType.VirtualButton
         ]:
             value = actions.Value(event.is_pressed)
         else:
@@ -67,7 +68,7 @@ class ContainerCallback:
         # value instance, all others share one to propagate changes across
         shared_value = copy.deepcopy(value)
 
-        if event == common.InputType.VirtualButton:
+        if event == gremlin.types.InputType.VirtualButton:
             # TODO: remove this at a future stage
             logging.getLogger("system").error(
                 "Virtual button code path being used"

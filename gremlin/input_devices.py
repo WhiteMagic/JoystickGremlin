@@ -25,6 +25,8 @@ import threading
 
 from PySide2 import QtCore
 
+import gremlin.keyboard
+import gremlin.types
 from dill import DILL, GUID_Invalid
 
 from . import common, error, event_handler, joystick_handling, \
@@ -192,7 +194,7 @@ def register_callback(callback, device, input_type, input_id):
     device : JoystickDecorator
         Joystick decorator specifying the device and mode in which to execute
         the callback
-    input_type : common.InputType
+    input_type : gremlin.types.InputType
         Type of input on which to execute the callback
     input_id : int
         Index of the input on which to execute the callback
@@ -508,7 +510,7 @@ class Keyboard(QtCore.QObject):
 
         :param event the keyboard event to use to update state
         """
-        key = macro.key_from_code(
+        key = gremlin.keyboard.key_from_code(
             event.identifier[0],
             event.identifier[1]
         )
@@ -521,8 +523,8 @@ class Keyboard(QtCore.QObject):
         :return True if the key is pressed, False otherwise
         """
         if isinstance(key, str):
-            key = macro.key_from_name(key)
-        elif isinstance(key, macro.Key):
+            key = gremlin.keyboard.key_from_name(key)
+        elif isinstance(key, gremlin.keyboard.Key):
             pass
         return self._keyboard_state.get(key, False)
 
@@ -697,11 +699,11 @@ class JoystickInputSignificant:
         """
         self._mre_registry[event] = event
 
-        if event.event_type == common.InputType.JoystickAxis:
+        if event.event_type == gremlin.types.InputType.JoystickAxis:
             return self._process_axis(event)
-        elif event.event_type == common.InputType.JoystickButton:
+        elif event.event_type == gremlin.types.InputType.JoystickButton:
             return self._process_button(event)
-        elif event.event_type == common.InputType.JoystickHat:
+        elif event.event_type == gremlin.types.InputType.JoystickHat:
             return self._process_hat(event)
         else:
             logging.getLogger("system").warning(
@@ -782,7 +784,7 @@ def _button(button_id, device_guid, mode, always_execute=False):
             callback(*args, **kwargs)
 
         event = event_handler.Event(
-            event_type=common.InputType.JoystickButton,
+            event_type=gremlin.types.InputType.JoystickButton,
             device_guid=device_guid,
             identifier=button_id
         )
@@ -810,7 +812,7 @@ def _hat(hat_id, device_guid, mode, always_execute=False):
             callback(*args, **kwargs)
 
         event = event_handler.Event(
-            event_type=common.InputType.JoystickHat,
+            event_type=gremlin.types.InputType.JoystickHat,
             device_guid=device_guid,
             identifier=hat_id
         )
@@ -838,7 +840,7 @@ def _axis(axis_id, device_guid, mode, always_execute=False):
             callback(*args, **kwargs)
 
         event = event_handler.Event(
-            event_type=common.InputType.JoystickAxis,
+            event_type=gremlin.types.InputType.JoystickAxis,
             device_guid=device_guid,
             identifier=axis_id
         )
@@ -864,7 +866,7 @@ def keyboard(key_name, mode, always_execute=False):
         def wrapper_fn(*args, **kwargs):
             callback(*args, **kwargs)
 
-        key = macro.key_from_name(key_name)
+        key = gremlin.keyboard.key_from_name(key_name)
         event = event_handler.Event.from_key(key)
         callback_registry.add(wrapper_fn, event, mode, always_execute)
 

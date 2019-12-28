@@ -23,6 +23,7 @@ import threading
 import time
 import os
 
+import gremlin.types
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 from gremlin.error import VJoyError
 import gremlin.common
@@ -767,8 +768,8 @@ class VJoy:
         for i, axis in enumerate(AxisName):
             if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value) > 0:
                 axes[i+1] = Axis(self, axis.value)
-                self._axis_names[i+1] = gremlin.common.AxisNames.to_string(
-                    gremlin.common.AxisNames(i+1)
+                self._axis_names[i+1] = gremlin.types.AxisNames.to_string(
+                    gremlin.types.AxisNames(i + 1)
                 )
                 self._axis_lookup[len(self._axis_names)] = i+1
                 self._axis_lookup[axis] = i+1

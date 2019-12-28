@@ -29,8 +29,8 @@ from xml.etree import ElementTree
 import dill
 
 import action_plugins
-from gremlin.common import DeviceType, InputType, MergeAxisOperation, \
-    PluginVariableType
+import gremlin.types
+from .types import InputType, DeviceType, PluginVariableType, MergeAxisOperation
 from . import base_classes, common, error, input_devices, joystick_handling, \
     plugin_manager, util
 from gremlin.profile_library import  *
@@ -1227,7 +1227,7 @@ class VirtualAxisButton(AbstractVirtualButton):
         super().__init__()
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
-        self.direction = common.AxisButtonDirection.Anywhere
+        self.direction = gremlin.types.AxisButtonDirection.Anywhere
 
     def from_xml(self, node):
         """Populates the virtual button based on the node's data.
@@ -1236,7 +1236,7 @@ class VirtualAxisButton(AbstractVirtualButton):
         """
         self.lower_limit = safe_read(node, "lower-limit", float)
         self.upper_limit = safe_read(node, "upper-limit", float)
-        self.direction = common.AxisButtonDirection.to_enum(
+        self.direction = gremlin.types.AxisButtonDirection.to_enum(
             safe_read(node, "direction", default_value="anywhere")
         )
 
@@ -1250,7 +1250,7 @@ class VirtualAxisButton(AbstractVirtualButton):
         node.set("upper-limit", str(self.upper_limit))
         node.set(
             "direction",
-            common.AxisButtonDirection.to_string(self.direction)
+            gremlin.types.AxisButtonDirection.to_string(self.direction)
         )
         return node
 
@@ -1507,8 +1507,8 @@ class LibraryReference:
     """Holds the reference to a library entry inside an input item."""
 
     virtual_button_lut = {
-        common.InputType.JoystickAxis: VirtualAxisButton,
-        common.InputType.JoystickHat: VirtualHatButton
+        gremlin.types.InputType.JoystickAxis: VirtualAxisButton,
+        gremlin.types.InputType.JoystickHat: VirtualHatButton
     }
 
     def __init__(self, parent):
@@ -2377,7 +2377,7 @@ class InputItem:
 
         Returns
         =======
-        common.DeviceType
+        gremlin.types.DeviceType
             DeviceType of this instance
         """
         item = self.parent
@@ -2390,7 +2390,7 @@ class InputItem:
 
         Returns
         =======
-        common.InputType
+        gremlin.types.InputType
             InputType of this instance
         """
         return self.input_type

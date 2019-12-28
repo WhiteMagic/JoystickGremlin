@@ -23,8 +23,9 @@ from xml.etree import ElementTree
 
 from PyQt5 import QtCore, QtWidgets
 
+import gremlin.types
 from gremlin.base_classes import AbstractAction, AbstractFunctor
-from gremlin.common import InputType, MouseButton
+from gremlin.types import InputType, MouseButton
 from gremlin.profile import read_bool, safe_read, safe_format
 from gremlin.util import rad2deg
 import gremlin.ui.common
@@ -145,7 +146,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     def _create_mouse_button_ui(self):
         self.mouse_button = gremlin.ui.common.NoKeyboardPushButton(
-            gremlin.common.MouseButton.to_string(self.action_data.button_id)
+            gremlin.types.MouseButton.to_string(self.action_data.button_id)
         )
         self.mouse_button.clicked.connect(self._request_user_input)
 
@@ -187,7 +188,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     def _populate_mouse_button_ui(self):
         self.mouse_button.setText(
-            gremlin.common.MouseButton.to_string(self.action_data.button_id)
+            gremlin.types.MouseButton.to_string(self.action_data.button_id)
         )
 
     def _update_axis(self):
@@ -240,7 +241,7 @@ class MapToMouseWidget(gremlin.ui.input_item.AbstractActionWidget):
     def _update_mouse_button(self, event):
         self.action_data.button_id = event.identifier
         self.mouse_button.setText(
-            gremlin.common.MouseButton.to_string(self.action_data.button_id)
+            gremlin.types.MouseButton.to_string(self.action_data.button_id)
         )
 
     def _connect_axis(self):
@@ -427,7 +428,7 @@ class MapToMouse(AbstractAction):
         # Flag whether or not this is mouse motion or button press
         self.motion_input = False
         # Mouse button enum
-        self.button_id = gremlin.common.MouseButton.Left
+        self.button_id = gremlin.types.MouseButton.Left
         # Angle of motion, 0 is up and 90 is right, etc.
         self.direction = 0
         # Minimum motion speed in pixels / sec
@@ -463,14 +464,14 @@ class MapToMouse(AbstractAction):
         """
         self.motion_input = read_bool(node, "motion-input", False)
         try:
-            self.button_id = gremlin.common.MouseButton(
+            self.button_id = gremlin.types.MouseButton(
                 safe_read(node, "button-id", int, 1)
             )
         except ValueError as e:
             logging.getLogger("system").warning(
                 "Invalid mouse identifier in profile: {:}".format(e)
             )
-            self.button_id = gremlin.common.MouseButton.Left
+            self.button_id = gremlin.types.MouseButton.Left
         self.direction = safe_read(node, "direction", int, 0)
         self.min_speed = safe_read(node, "min-speed", int, 5)
         self.max_speed = safe_read(node, "max-speed", int, 5)

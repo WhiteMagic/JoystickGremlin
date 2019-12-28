@@ -21,8 +21,9 @@ from xml.etree import ElementTree
 
 from PyQt5 import QtWidgets
 
+import gremlin.keyboard
 from gremlin.base_classes import AbstractAction, AbstractFunctor
-from gremlin.common import InputType
+from gremlin.types import InputType
 from gremlin.input_devices import ButtonReleaseActions
 import gremlin.ui.common
 import gremlin.ui.input_item
@@ -56,7 +57,7 @@ class MapToKeyboardWidget(gremlin.ui.input_item.AbstractActionWidget):
         text = "<b>Current key combination:</b> "
         names = []
         for key in self.action_data.keys:
-            names.append(gremlin.macro.key_from_code(*key).name)
+            names.append(gremlin.keyboard.key_from_code(*key).name)
         text += " + ".join(names)
 
         self.key_combination.setText(text)
@@ -102,11 +103,11 @@ class MapToKeyboardFunctor(AbstractFunctor):
         self.press = gremlin.macro.Macro()
         self.needs_auto_release = True
         for key in action.keys:
-            self.press.press(gremlin.macro.key_from_code(key[0], key[1]))
+            self.press.press(gremlin.keyboard.key_from_code(key[0], key[1]))
 
         self.release = gremlin.macro.Macro()
         for key in action.keys:
-            self.release.release(gremlin.macro.key_from_code(key[0], key[1]))
+            self.release.release(gremlin.keyboard.key_from_code(key[0], key[1]))
 
     def process_event(self, event, value):
         if value.current:

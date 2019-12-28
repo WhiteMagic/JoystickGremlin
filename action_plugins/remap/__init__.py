@@ -24,7 +24,7 @@ from xml.etree import ElementTree
 from PyQt5 import QtWidgets
 
 from gremlin.base_classes import InputActionCondition
-from gremlin.common import InputType
+from gremlin.types import InputType
 from gremlin import input_devices, joystick_handling, util
 from gremlin.error import ProfileError
 from gremlin.profile import safe_format, safe_read

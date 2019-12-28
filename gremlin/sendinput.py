@@ -23,7 +23,8 @@ import math
 import threading
 import time
 
-from gremlin.common import MouseButton, SingletonDecorator
+from gremlin.common import SingletonDecorator
+from gremlin.types import MouseButton
 from gremlin.util import deg2rad
 
 

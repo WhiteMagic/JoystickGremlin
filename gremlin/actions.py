@@ -20,6 +20,8 @@ from functools import partial
 import logging
 
 import dill
+import gremlin.keyboard
+import gremlin.types
 
 from . import base_classes, common, event_handler, fsm, input_devices, \
     joystick_handling, macro, util
@@ -162,7 +164,7 @@ class KeyboardCondition(AbstractCondition):
         :param comparison the comparison operation to perform when evaluated
         """
         super().__init__(comparison)
-        self.key = macro.key_from_code(scan_code, is_extended)
+        self.key = gremlin.keyboard.key_from_code(scan_code, is_extended)
 
     def __call__(self, event, value):
         """Evaluates the condition using the condition and provided data.
@@ -208,7 +210,7 @@ class JoystickCondition(AbstractCondition):
         """
         joy = input_devices.JoystickProxy()[self.device_guid]
 
-        if self.input_type == common.InputType.JoystickAxis:
+        if self.input_type == gremlin.types.InputType.JoystickAxis:
             in_range = self.condition.range[0] <= \
                        joy.axis(self.input_id).value <= \
                        self.condition.range[1]
@@ -217,12 +219,12 @@ class JoystickCondition(AbstractCondition):
                 return in_range if self.comparison == "inside" else not in_range
             else:
                 return False
-        elif self.input_type == common.InputType.JoystickButton:
+        elif self.input_type == gremlin.types.InputType.JoystickButton:
             if self.comparison == "pressed":
                 return joy.button(self.input_id).is_pressed
             else:
                 return not joy.button(self.input_id).is_pressed
-        elif self.input_type == common.InputType.JoystickHat:
+        elif self.input_type == gremlin.types.InputType.JoystickHat:
             return joy.hat(self.input_id).direction == \
                    util.hat_direction_to_tuple(self.comparison)
         else:
@@ -272,7 +274,7 @@ class VJoyCondition(AbstractCondition):
             return False
         joy = input_devices.JoystickProxy()[self.device_guid]
 
-        if self.input_type == common.InputType.JoystickAxis:
+        if self.input_type == gremlin.types.InputType.JoystickAxis:
             in_range = self.condition.range[0] <= \
                        joy.axis(self.input_id).value <= \
                        self.condition.range[1]
@@ -281,12 +283,12 @@ class VJoyCondition(AbstractCondition):
                 return in_range if self.comparison == "inside" else not in_range
             else:
                 return False
-        elif self.input_type == common.InputType.JoystickButton:
+        elif self.input_type == gremlin.types.InputType.JoystickButton:
             if self.comparison == "pressed":
                 return joy.button(self.input_id).is_pressed
             else:
                 return not joy.button(self.input_id).is_pressed
-        elif self.input_type == common.InputType.JoystickHat:
+        elif self.input_type == gremlin.types.InputType.JoystickHat:
             return joy.hat(self.input_id).direction == \
                    util.hat_direction_to_tuple(self.comparison)
         else:
@@ -387,7 +389,7 @@ class VirtualButton(metaclass=ABCMeta):
         """Executes the "press" action."""
         self._is_pressed = True
         event = event_handler.Event(
-            common.InputType.VirtualButton,
+            gremlin.types.InputType.VirtualButton,
             self._identifier,
             device_guid=dill.GUID_Virtual,
             is_pressed=self._is_pressed,
@@ -400,7 +402,7 @@ class VirtualButton(metaclass=ABCMeta):
         """Executes the "release" action."""
         self._is_pressed = False
         event = event_handler.Event(
-            common.InputType.VirtualButton,
+            gremlin.types.InputType.VirtualButton,
             self._identifier,
             device_guid=dill.GUID_Virtual,
             is_pressed=self._is_pressed,
@@ -446,7 +448,7 @@ class AxisButton(VirtualButton):
         :return True if a state transition occurred, False otherwise
         """
         self.forced_activation = False
-        direction = common.AxisButtonDirection.Anywhere
+        direction = gremlin.types.AxisButtonDirection.Anywhere
         if self._last_value is None:
             self._last_value = event.value
         else:
@@ -461,9 +463,9 @@ class AxisButton(VirtualButton):
 
             # Determine direction in which the axis is moving
             if self._last_value < event.value:
-                direction = common.AxisButtonDirection.Below
+                direction = gremlin.types.AxisButtonDirection.Below
             elif self._last_value > event.value:
-                direction = common.AxisButtonDirection.Above
+                direction = gremlin.types.AxisButtonDirection.Above
 
         inside_range = self._lower_limit <= event.value <= self._upper_limit
         self._last_value = event.value
@@ -476,8 +478,8 @@ class AxisButton(VirtualButton):
 
         # Terminate early if the travel direction is incompatible with the
         # one required by this instance
-        if direction != common.AxisButtonDirection.Anywhere and \
-                self._direction != common.AxisButtonDirection.Anywhere:
+        if direction != gremlin.types.AxisButtonDirection.Anywhere and \
+                self._direction != gremlin.types.AxisButtonDirection.Anywhere:
             # Ensure we can only press a button by moving in the desired
             # direction, however, allow releasing in any direction
             if inside_range and direction != self._direction:

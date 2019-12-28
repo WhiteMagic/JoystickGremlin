@@ -24,6 +24,8 @@ from threading import Thread, Timer
 from PySide2 import QtCore
 
 import dill
+import gremlin.keyboard
+import gremlin.types
 from . import common, config, error, joystick_handling, windows_event_hook, \
     macro, util
 
@@ -104,7 +106,7 @@ class Event:
 
         :return integer hash value of this event
         """
-        if self.event_type == common.InputType.Keyboard:
+        if self.event_type == gremlin.types.InputType.Keyboard:
             return hash((
                 self.device_guid,
                 self.event_type.value,
@@ -126,9 +128,9 @@ class Event:
         :param key the Key object from which to create the Event
         :return Event object corresponding to the provided key
         """
-        assert isinstance(key, macro.Key)
+        assert isinstance(key, gremlin.keyboard.Key)
         return Event(
-            event_type=common.InputType.Keyboard,
+            event_type=gremlin.types.InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
             device_guid=dill.GUID_Keyboard
         )
@@ -211,7 +213,7 @@ class EventListener(QtCore.QObject):
         event = dill.InputEvent(data)
         if event.input_type == dill.InputType.Axis:
             self.joystick_event.emit(Event(
-                event_type=common.InputType.JoystickAxis,
+                event_type=gremlin.types.InputType.JoystickAxis,
                 device_guid=event.device_guid,
                 identifier=event.input_index,
                 value=self._apply_calibration(event),
@@ -219,14 +221,14 @@ class EventListener(QtCore.QObject):
             ))
         elif event.input_type == dill.InputType.Button:
             self.joystick_event.emit(Event(
-                event_type=common.InputType.JoystickButton,
+                event_type=gremlin.types.InputType.JoystickButton,
                 device_guid=event.device_guid,
                 identifier=event.input_index,
                 is_pressed=event.value == 1
             ))
         elif event.input_type == dill.InputType.Hat:
             self.joystick_event.emit(Event(
-                event_type=common.InputType.JoystickHat,
+                event_type=gremlin.types.InputType.JoystickHat,
                 device_guid=event.device_guid,
                 identifier=event.input_index,
                 value=util.dill_hat_lookup[event.value]
@@ -274,7 +276,7 @@ class EventListener(QtCore.QObject):
         if not is_repeat:
             self._keyboard_state[key_id] = is_pressed
             self.keyboard_event.emit(Event(
-                event_type=common.InputType.Keyboard,
+                event_type=gremlin.types.InputType.Keyboard,
                 device_guid=dill.GUID_Keyboard,
                 identifier=key_id,
                 is_pressed=is_pressed,
@@ -294,7 +296,7 @@ class EventListener(QtCore.QObject):
         # Ignore events we created via the macro system
         if not event.is_injected:
             self.mouse_event.emit(Event(
-                event_type=common.InputType.Mouse,
+                event_type=gremlin.types.InputType.Mouse,
                 device_guid=dill.GUID_Keyboard,
                 identifier=event.button_id,
                 is_pressed=event.is_pressed,

@@ -21,6 +21,7 @@ from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
 import dill
+import gremlin.types
 
 from gremlin.util import parse_guid
 import gremlin.common
@@ -140,30 +141,30 @@ class Device(QtCore.QAbstractListModel):
     def roleNames(self) -> typing.Dict:
         return DeviceListModel.roles
 
-    def _name(self, identifier: typing.Tuple[gremlin.common.InputType, int]) -> str:
+    def _name(self, identifier: typing.Tuple[gremlin.types.InputType, int]) -> str:
         return "{} {:d}".format(
-            gremlin.common.InputType.to_string(identifier[0]).capitalize(),
+            gremlin.types.InputType.to_string(identifier[0]).capitalize(),
             identifier[1]
         )
 
     def _convert_index(self, index:QtCore.QModelIndex) \
-            -> typing.Tuple[gremlin.common.InputType, int]:
+            -> typing.Tuple[gremlin.types.InputType, int]:
         axis_count = self._device.axis_count
         button_count = self._device.button_count
         hat_count = self._device.hat_count
 
         if index.row() < axis_count:
             return (
-                gremlin.common.InputType.JoystickAxis,
+                gremlin.types.InputType.JoystickAxis,
                 self._device.axis_map[index.row()].axis_index
             )
         elif index.row() < axis_count + button_count:
             return (
-                gremlin.common.InputType.JoystickButton,
+                gremlin.types.InputType.JoystickButton,
                 index.row() + 1 - axis_count
             )
         else:
             return (
-                gremlin.common.InputType.JoystickHat,
+                gremlin.types.InputType.JoystickHat,
                 index.row() + 1 - axis_count - button_count
             )
