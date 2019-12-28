@@ -17,36 +17,38 @@
 
 
 import os
-from PyQt5 import QtWidgets
+#from PySide2 import QtWidgets
 from xml.etree import ElementTree
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
-from gremlin.common import InputType
-import gremlin.ui.input_item
+from gremlin.types import InputType
 
 
-class DescriptionActionWidget(gremlin.ui.input_item.AbstractActionWidget):
+# import gremlin.ui.input_item
 
-    """Widget for the description action."""
 
-    def __init__(self, action_data, parent=None):
-        super().__init__(action_data, parent=parent)
-        assert(isinstance(action_data, DescriptionAction))
-
-    def _create_ui(self):
-        self.inner_layout = QtWidgets.QHBoxLayout()
-        self.label = QtWidgets.QLabel("<b>Action description</b>")
-        self.description = QtWidgets.QLineEdit()
-        self.description.textChanged.connect(self._update_description)
-        self.inner_layout.addWidget(self.label)
-        self.inner_layout.addWidget(self.description)
-        self.main_layout.addLayout(self.inner_layout)
-
-    def _populate_ui(self):
-        self.description.setText(self.action_data.description)
-
-    def _update_description(self, value):
-        self.action_data.description = value
+# class DescriptionActionWidget(gremlin.ui.input_item.AbstractActionWidget):
+#
+#     """Widget for the description action."""
+#
+#     def __init__(self, action_data, parent=None):
+#         super().__init__(action_data, parent=parent)
+#         assert(isinstance(action_data, DescriptionAction))
+#
+#     def _create_ui(self):
+#         self.inner_layout = QtWidgets.QHBoxLayout()
+#         self.label = QtWidgets.QLabel("<b>Action description</b>")
+#         self.description = QtWidgets.QLineEdit()
+#         self.description.textChanged.connect(self._update_description)
+#         self.inner_layout.addWidget(self.label)
+#         self.inner_layout.addWidget(self.description)
+#         self.main_layout.addLayout(self.inner_layout)
+#
+#     def _populate_ui(self):
+#         self.description.setText(self.action_data.description)
+#
+#     def _update_description(self, value):
+#         self.action_data.description = value
 
 
 class DescriptionActionFunctor(AbstractFunctor):
@@ -74,7 +76,7 @@ class DescriptionAction(AbstractAction):
     ]
 
     functor = DescriptionActionFunctor
-    widget = DescriptionActionWidget
+    #widget = DescriptionActionWidget
 
     def __init__(self, parent):
         super().__init__(parent)
