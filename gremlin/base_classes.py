@@ -17,27 +17,16 @@
 
 
 from abc import abstractmethod, ABCMeta
-import enum
+
 import logging
 from xml.etree import ElementTree
 
 import dill
 
 import gremlin
+from gremlin.types import ActivationRule, InputType
 from . import common, error, execution_graph, plugin_manager, profile
 from gremlin.profile import parse_guid, safe_read, write_guid
-
-
-class ActivationRule(enum.Enum):
-
-    """Activation rules for collections of conditions.
-
-    All requires all the conditions in a collection to evaluate to True while
-    Any only requires a single condition to be True.
-    """
-
-    All = 1
-    Any = 2
 
 
 class AbstractCondition(metaclass=ABCMeta):
@@ -141,11 +130,11 @@ class JoystickCondition(AbstractCondition):
         """
         self.comparison = safe_read(node, "comparison")
 
-        self.input_type = common.InputType.to_enum(safe_read(node, "input"))
+        self.input_type = InputType.to_enum(safe_read(node, "input"))
         self.input_id = safe_read(node, "id", int)
         self.device_guid = parse_guid(node.get("device-guid"))
         self.device_name = safe_read(node, "device-name")
-        if self.input_type == common.InputType.JoystickAxis:
+        if self.input_type == InputType.JoystickAxis:
             self.range = [
                 safe_read(node, "range-low", float),
                 safe_read(node, "range-high", float)
@@ -159,11 +148,11 @@ class JoystickCondition(AbstractCondition):
         node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
         node.set("condition-type", "joystick")
-        node.set("input", common.InputType.to_string(self.input_type))
+        node.set("input", InputType.to_string(self.input_type))
         node.set("id", str(self.input_id))
         node.set("device-guid", write_guid(self.device_guid))
         node.set("device-name", str(self.device_name))
-        if self.input_type == common.InputType.JoystickAxis:
+        if self.input_type == InputType.JoystickAxis:
             node.set("range-low", str(self.range[0]))
             node.set("range-high", str(self.range[1]))
         return node
@@ -201,10 +190,10 @@ class VJoyCondition(AbstractCondition):
         """
         self.comparison = safe_read(node, "comparison")
 
-        self.input_type = common.InputType.to_enum(safe_read(node, "input"))
+        self.input_type = InputType.to_enum(safe_read(node, "input"))
         self.input_id = safe_read(node, "id", int)
         self.vjoy_id = safe_read(node, "vjoy-id", int)
-        if self.input_type == common.InputType.JoystickAxis:
+        if self.input_type == InputType.JoystickAxis:
             self.range = [
                 safe_read(node, "range-low", float),
                 safe_read(node, "range-high", float)
@@ -221,10 +210,10 @@ class VJoyCondition(AbstractCondition):
         node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
         node.set("condition-type", "vjoy")
-        node.set("input", common.InputType.to_string(self.input_type))
+        node.set("input", InputType.to_string(self.input_type))
         node.set("id", str(self.input_id))
         node.set("vjoy-id", write_guid(self.vjoy_id))
-        if self.input_type == common.InputType.JoystickAxis:
+        if self.input_type == InputType.JoystickAxis:
             node.set("range-low", str(self.range[0]))
             node.set("range-high", str(self.range[1]))
         return node
