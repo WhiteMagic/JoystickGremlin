@@ -153,23 +153,32 @@ ApplicationWindow {
                 DeviceInputList {
                     deviceGuid: model.guid
 
-                    onInputIndexChanged: actionPanel.currentIndex = inputIndex
+                    //onInputIndexChanged: actionPanel.currentIndex = inputIndex
                 }
             }
         }
 
-        StackLayout {
+        ActionList {
             id: actionPanel
 
             Layout.fillHeight: true
-            //Layout.fillWidth: true
+            Layout.fillWidth: true
 
-            Repeater {
-                model: 100
-                Text {
-                    text: "I'm item " + index
-                }
-            }
+            width: 300
         }
+
+//        StackLayout {
+//            id: actionPanel
+//
+//            Layout.fillHeight: true
+//            //Layout.fillWidth: true
+//
+//            Repeater {
+//                model: 100
+//                Text {
+//                    text: "I'm item " + index
+//                }
+//            }
+//        }
     }
 }

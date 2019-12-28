@@ -56,9 +56,12 @@ os.environ["QT_QUICK_CONTROLS_UNIVERSAL_THEME"] = "Light"
 # import gremlin.ui.profile_creator
 # import gremlin.ui.profile_settings
 import gremlin.error
+import gremlin.plugin_manager
 import gremlin.util
 
+import gremlin.ui.backend
 import gremlin.ui.device
+import gremlin.ui.profile
 
 
 def configure_logger(config):
@@ -179,7 +182,17 @@ if __name__ == "__main__":
         0,
         "Device"
     )
+    QtQml.qmlRegisterType(
+        gremlin.ui.profile.ProfileModel,
+        "gremlin.ui.profile",
+        1,
+        0,
+        "ProfileModel"
+    )
 
+    backend = gremlin.ui.backend.Backend()
+
+    engine.rootContext().setContextProperty("backend", backend)
     engine.load(QtCore.QUrl.fromLocalFile("qml/Main.qml"))
     if not engine.rootObjects():
         sys.exit(-1)
@@ -218,7 +231,7 @@ if __name__ == "__main__":
 
     # Initialize action plugins
     syslog.info("Initializing plugins")
-    # gremlin.plugin_manager.ActionPlugins()
+    gremlin.plugin_manager.ActionPlugins()
     # gremlin.plugin_manager.ContainerPlugins()
 
     # Create Gremlin UI
