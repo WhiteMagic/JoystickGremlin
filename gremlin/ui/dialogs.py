@@ -185,6 +185,12 @@ class OptionsUi(common.BaseDialogUi):
         self.autoload_checkbox.clicked.connect(self._autoload_profiles)
         self.autoload_checkbox.setChecked(self.config.autoload_profiles)
 
+        self.keep_last_autoload_checkbox = QtWidgets.QCheckBox(
+            "Keep last automatically loaded profile active when its application loses focus"
+        )
+        self.keep_last_autoload_checkbox.clicked.connect(self._keep_last_autoload)
+        self.keep_last_autoload_checkbox.setChecked(self.config.keep_last_autoload)
+
         # Executable dropdown list
         self.executable_layout = QtWidgets.QHBoxLayout()
         self.executable_label = QtWidgets.QLabel("Executable")
@@ -226,6 +232,7 @@ class OptionsUi(common.BaseDialogUi):
         self.profile_layout.addWidget(self.profile_select)
 
         self.profile_page_layout.addWidget(self.autoload_checkbox)
+        self.profile_page_layout.addWidget(self.keep_last_autoload_checkbox)
         self.profile_page_layout.addLayout(self.executable_layout)
         self.profile_page_layout.addLayout(self.profile_layout)
         self.profile_page_layout.addStretch()
@@ -338,6 +345,14 @@ class OptionsUi(common.BaseDialogUi):
         :param clicked whether or not the checkbox is ticked
         """
         self.config.autoload_profiles = clicked
+        self.config.save()
+
+    def _keep_last_autoload(self, clicked):
+        """Stores keep last autoload preference.
+
+        :param clicked whether or not the checkbox is ticked
+        """
+        self.config.keep_last_autoload = clicked
         self.config.save()
 
     def _activate_on_launch(self, clicked):
