@@ -20,6 +20,8 @@ import importlib
 import logging
 import os
 
+from PySide2 import QtQml
+
 import gremlin.types
 from . import common, error
 
@@ -198,16 +200,23 @@ class ActionPlugins:
 
                     # Attempt to load the file and if it looks like a proper
                     # action_plugins store it in the registry
-                    plugin = importlib.import_module(
-                        "action_plugins.{}".format(module)
-                    )
+                    try:
+                        plugin_module_name = "action_plugins.{}".format(module)
+                        plugin = importlib.import_module(plugin_module_name)
+                    except (ModuleNotFoundError, ImportError) as e:
+                        logging.getLogger("system").error(
+                            f"Failed to load plugin '{plugin_module_name}' "
+                            f"with error: '{e}"
+                        )
+                        continue
+
                     if "version" in plugin.__dict__:
+                        # Store plugin class information
                         self._plugins[plugin.name] = plugin.create
                         logging.getLogger("system").debug(
                             "Loaded: {}".format(plugin.name)
                         )
-                        # TODO: Remove
-                        return
+
                         # Register QML type
                         QtQml.qmlRegisterType(
                             plugin.create,
