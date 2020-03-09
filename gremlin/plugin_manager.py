@@ -208,6 +208,14 @@ class ActionPlugins:
                         )
                         # TODO: Remove
                         return
+                        # Register QML type
+                        QtQml.qmlRegisterType(
+                            plugin.create,
+                            plugin_module_name,
+                            1,
+                            0,
+                            plugin.create.__name__
+                        )
                     else:
                         del plugin
                 except Exception as e:
