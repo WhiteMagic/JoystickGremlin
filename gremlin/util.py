@@ -30,6 +30,9 @@ from PySide2 import QtCore, QtWidgets
 
 import dill
 
+import gremlin.error
+
+
 # Table storing which modules have been imported already
 g_loaded_modules = {}
 
@@ -73,6 +76,57 @@ class FileWatcher(QtCore.QObject):
                     self.file_changed.emit(fname)
             time.sleep(1)
 
+
+def read_bool(node, key, default_value=False):
+    """Attempts to read a boolean value.
+
+    If there is an error when reading the given field from the node
+    the default value is returned instead.
+
+    :param node the node from which to read the value
+    :param key the key to read from the node
+    :param default_value the default value to return in case of errors
+    """
+    try:
+        return parse_bool(node.get(key), default_value)
+    except error.ProfileError:
+        return default_value
+
+
+def parse_bool(value, default_value=False):
+    """Returns the boolean representation of the provided value.
+
+    :param value the value as string to parse
+    :param default_value value to return in case no valid value was provided
+    :return representation of value as either True or False
+    """
+    # Terminate early if the value is None to start with, i.e. we know it will
+    # fail
+    if value is None:
+        return default_value
+
+    # Attempt to parse the value
+    try:
+        int_value = int(value)
+        if int_value in [0, 1]:
+            return int_value == 1
+        else:
+            raise error.ProfileError(
+                "Invalid bool value used: {}".format(value)
+            )
+    except ValueError:
+        if value.lower() in ["true", "false"]:
+            return True if value.lower() == "true" else False
+        else:
+            raise error.ProfileError(
+                "Invalid bool value used: {}".format(value)
+            )
+    except TypeError:
+        raise error.ProfileError(
+            "Invalid type provided: {}".format(type(value))
+        )
+
+
 def parse_guid(value):
     """Reads a string GUID representation into the internal data format.
 
@@ -93,9 +147,71 @@ def parse_guid(value):
 
         return dill.GUID(raw_guid)
     except (ValueError, AttributeError) as e:
-        raise error.ProfileError(
-            "Failed parsing GUID from value {}".format(value)
+        raise gremlin.error.GremlinError(
+            f"Failed parsing GUID from value {value}"
         )
+
+
+def write_guid(guid):
+    """Returns the string representation of a GUID object.
+
+    :param guid the GUID object to turn into a string
+    :return string representation of the guid object
+    """
+    return str(guid)
+
+
+def safe_read(node, key, type_cast=None, default_value=None):
+    """Safely reads an attribute from an XML node.
+
+    If the attempt at reading the attribute fails, due to the attribute not
+    being present, an exception will be thrown.
+
+    :param node the XML node from which to read an attribute
+    :param key the attribute to read
+    :param type_cast the type to which to cast the read value, if specified
+    :param default_value value to return in case the key is not present
+    :return the value stored in the node with the given key
+    """
+    # Attempt to read the value and if present use the provided default value
+    # in case reading fails
+    value = default_value
+    if key not in node.keys():
+        if default_value is None:
+            msg = f"Attempted to read attribute '{key}' which does not exist."
+            logging.getLogger("system").error(msg)
+            raise error.ProfileError(msg)
+    else:
+        value = node.get(key)
+
+    if type_cast is not None:
+        try:
+            value = type_cast(value)
+        except ValueError:
+            msg = f"Failed casting '{value}' to type '{str(type_cast)}'"
+            logging.getLogger("system").error(msg)
+            raise error.ProfileError(msg)
+    return value
+
+
+def safe_format(value, data_type, formatter=str):
+    """Returns a formatted value ensuring type correctness.
+
+    This function ensures that the value being formatted is of correct type
+    before attempting formatting. Raises an exception on non-matching data
+    types.
+
+    :param value the value to format
+    :param data_type expected data type of the value
+    :param formatter function to format value with
+    :return value formatted according to formatter
+    """
+    if isinstance(value, data_type):
+        return formatter(value)
+    else:
+        raise error.ProfileError(
+            f"Value '{value}' has type {type(value)} when {data_type} is expected")
+
 
 def is_user_admin():
     """Returns whether or not the user has admin privileges.
