@@ -186,10 +186,15 @@ class OptionsUi(common.BaseDialogUi):
         self.autoload_checkbox.setChecked(self.config.autoload_profiles)
 
         self.keep_last_autoload_checkbox = QtWidgets.QCheckBox(
-            "Keep last automatically loaded profile active when its application loses focus"
+            "Keep profile active on focus loss"
         )
+        self.keep_last_autoload_checkbox.setToolTip("""If this option is off, profiles that have been configured to load automatically when an application gains focus
+will deactivate when that application loses focus.
+
+If this option is on, the last active profile will remain active until a different profile is loaded.""")
         self.keep_last_autoload_checkbox.clicked.connect(self._keep_last_autoload)
         self.keep_last_autoload_checkbox.setChecked(self.config.keep_last_autoload)
+        self.keep_last_autoload_checkbox.setEnabled(self.config.autoload_profiles)
 
         # Executable dropdown list
         self.executable_layout = QtWidgets.QHBoxLayout()
@@ -344,6 +349,7 @@ class OptionsUi(common.BaseDialogUi):
 
         :param clicked whether or not the checkbox is ticked
         """
+        self.keep_last_autoload_checkbox.setEnabled(clicked)
         self.config.autoload_profiles = clicked
         self.config.save()
 
