@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import annotations
+
 import enum
 
 import gremlin.error
@@ -45,14 +47,14 @@ class InputType(enum.Enum):
     VirtualButton = 6
 
     @staticmethod
-    def to_string(value) -> str:
+    def to_string(value: InputType) -> str:
         try:
             return _InputType_to_string_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
     @staticmethod
-    def to_enum(value: str):
+    def to_enum(value: str) -> InputType:
         try:
             return _InputType_to_enum_lookup[value]
         except KeyError:
@@ -88,7 +90,7 @@ class AxisNames(enum.Enum):
     DIAL = 8
 
     @staticmethod
-    def to_string(value):
+    def to_string(value: AxisNames) -> str:
         try:
             return _AxisNames_to_string_lookup[value]
         except KeyError:
@@ -97,7 +99,7 @@ class AxisNames(enum.Enum):
             )
 
     @staticmethod
-    def to_enum(value):
+    def to_enum(value: str) -> AxisNames:
         try:
             return _AxisNames_to_enum_lookup[value]
         except KeyError:
@@ -137,7 +139,7 @@ class AxisButtonDirection(enum.Enum):
     Above = 3
 
     @staticmethod
-    def to_string(value):
+    def to_string(value: AxisButtonDirection) -> str:
         try:
             return _AxisButtonDirection_to_string_lookup[value]
         except KeyError:
@@ -146,7 +148,7 @@ class AxisButtonDirection(enum.Enum):
             )
 
     @staticmethod
-    def to_enum(value):
+    def to_enum(value: str) -> AxisButtonDirection:
         try:
             return _AxisButtonDirection_to_enum_lookup[value]
         except KeyError:
@@ -180,14 +182,14 @@ class MouseButton(enum.Enum):
     WheelDown = 11
 
     @staticmethod
-    def to_string(value):
+    def to_string(value: MouseButton) -> str:
         try:
             return _MouseButton_to_string_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
     @staticmethod
-    def to_enum(value):
+    def to_enum(value: str) -> MouseButton:
         try:
             return _MouseButton_to_enum_lookup[value]
         except KeyError:
@@ -223,14 +225,14 @@ class DeviceType(enum.Enum):
     VJoy = 3
 
     @staticmethod
-    def to_string(value):
+    def to_string(value: DeviceType) -> str:
         try:
             return _DeviceType_to_string_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
     @staticmethod
-    def to_enum(value):
+    def to_enum(value: str) -> DeviceType:
         try:
             return _DeviceType_to_enum_lookup[value]
         except KeyError:
@@ -263,7 +265,7 @@ class PluginVariableType(enum.Enum):
     Selection = 8
 
     @staticmethod
-    def to_string(value):
+    def to_string(value: PluginVariableType) -> str:
         try:
             return _PluginVariableType_to_string_lookup[value]
         except KeyError:
@@ -272,7 +274,7 @@ class PluginVariableType(enum.Enum):
             )
 
     @staticmethod
-    def to_enum(value):
+    def to_enum(value: str) -> PluginVariableType:
         try:
             return _PluginVariableType_to_enum_lookup[value]
         except KeyError:
@@ -313,7 +315,7 @@ class MergeAxisOperation(enum.Enum):
     Sum = 4
 
     @staticmethod
-    def to_string(value):
+    def to_string(value: MergeAxisOperation) -> str:
         try:
             return _MergeAxisOperation_to_string_lookup[value]
         except KeyError:
@@ -322,7 +324,7 @@ class MergeAxisOperation(enum.Enum):
             )
 
     @staticmethod
-    def to_enum(value):
+    def to_enum(value: str) -> MergeAxisOperation:
         try:
             return _MergeAxisOperation_to_enum_lookup[value.lower()]
         except KeyError:
