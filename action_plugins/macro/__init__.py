@@ -29,7 +29,7 @@ import gremlin.types
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.types import InputType
 import gremlin.macro
-from gremlin.profile import safe_format, safe_read, parse_guid, write_guid
+from gremlin.util import safe_format, safe_read, parse_guid, write_guid
 from gremlin.ui.common import NoKeyboardPushButton
 import gremlin.ui.input_item
 

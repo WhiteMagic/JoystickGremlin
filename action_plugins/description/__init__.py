@@ -18,13 +18,13 @@
 
 import os
 #from PySide2 import QtWidgets
+from PySide2.QtCore import Property, Signal, Slot
 from xml.etree import ElementTree
 
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.types import InputType
-
-
-# import gremlin.ui.input_item
+from gremlin.profile import safe_format, safe_read
+from gremlin.ui.common import AbstractActionModel
 
 
 # class DescriptionActionWidget(gremlin.ui.input_item.AbstractActionWidget):
@@ -51,7 +51,7 @@ from gremlin.types import InputType
 #         self.action_data.description = value
 
 
-class DescriptionActionFunctor(AbstractFunctor):
+class DescriptionFunctor(AbstractFunctor):
 
     def __init__(self, action):
         super().__init__(action)
@@ -60,7 +60,40 @@ class DescriptionActionFunctor(AbstractFunctor):
         return True
 
 
-class DescriptionAction(AbstractAction):
+
+class DescriptionModel(AbstractActionModel):
+
+    """Model of a description action."""
+
+    functor = DescriptionFunctor
+
+    def __init__(self):
+        super().__init__()
+
+        # Model variables
+        self._description = ""
+
+    @Property(type=str)
+    def description(self) -> str:
+        return self._description
+
+    @description.setter
+    def set_description(self, value: str) -> None:
+        self._description = str(value)
+
+    def _parse_xml(self, node):
+        self._description = safe_read(node, "description", str, "")
+
+    def _generate_xml(self):
+        node = ElementTree.Element("description")
+        node.set(safe_format(self._description, str))
+        return node
+
+    def _is_valid(self):
+        return True
+
+
+class DescriptionAction(AbstractActionModel):
 
     """Action for adding a description to a set of actions."""
 
@@ -75,7 +108,7 @@ class DescriptionAction(AbstractAction):
         InputType.Keyboard
     ]
 
-    functor = DescriptionActionFunctor
+    functor = DescriptionFunctor
     #widget = DescriptionActionWidget
 
     def __init__(self, parent):
@@ -102,6 +135,6 @@ class DescriptionAction(AbstractAction):
         return True
 
 
-version = 1
+version = 2
 name = "description"
 create = DescriptionAction
