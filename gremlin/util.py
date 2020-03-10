@@ -24,7 +24,9 @@ import re
 import sys
 import threading
 import time
+from typing import Any, Callable, Optional
 import uuid
+from xml.etree import ElementTree
 
 from PySide2 import QtCore, QtWidgets
 
@@ -77,15 +79,19 @@ class FileWatcher(QtCore.QObject):
             time.sleep(1)
 
 
-def read_bool(node, key, default_value=False):
+def read_bool(node: ElementTree, key: str, default_value: bool = False) -> bool:
     """Attempts to read a boolean value.
 
     If there is an error when reading the given field from the node
     the default value is returned instead.
 
-    :param node the node from which to read the value
-    :param key the key to read from the node
-    :param default_value the default value to return in case of errors
+    Args:
+        node: the node from which to read the value
+        key: the attribute key to read from the node
+        default_value: the default value to return in case of errors
+
+    Returns:
+         Boolean representation of the attribute value
     """
     try:
         return parse_bool(node.get(key), default_value)
@@ -93,12 +99,15 @@ def read_bool(node, key, default_value=False):
         return default_value
 
 
-def parse_bool(value, default_value=False):
+def parse_bool(value: str, default_value: bool = False) -> bool:
     """Returns the boolean representation of the provided value.
 
-    :param value the value as string to parse
-    :param default_value value to return in case no valid value was provided
-    :return representation of value as either True or False
+    Args:
+        value: the value as string to parse
+        default_value: value to return in case no valid value was provided
+
+    Returns:
+        Representation of value as either True or False
     """
     # Terminate early if the value is None to start with, i.e. we know it will
     # fail
@@ -127,14 +136,17 @@ def parse_bool(value, default_value=False):
         )
 
 
-def parse_guid(value):
+def parse_guid(value: str) -> dill.GUID:
     """Reads a string GUID representation into the internal data format.
 
     This transforms a GUID of the form {B4CA5720-11D0-11E9-8002-444553540000}
     into the underlying raw and exposed objects used within Gremlin.
 
-    :param value the string representation of the GUID
-    :param dill.GUID object representing the provided value
+    Args:
+        value: the string representation of the GUID
+
+    Returns:
+        dill.GUID object representing the provided value
     """
     try:
         tmp = uuid.UUID(value)
@@ -152,26 +164,37 @@ def parse_guid(value):
         )
 
 
-def write_guid(guid):
+def write_guid(guid: dill.GUID) -> str:
     """Returns the string representation of a GUID object.
 
-    :param guid the GUID object to turn into a string
-    :return string representation of the guid object
+    Args:
+        guid: the GUID object to turn into a string
+
+    Returns:
+        string representation of the guid object
     """
     return str(guid)
 
 
-def safe_read(node, key, type_cast=None, default_value=None):
+def safe_read(
+        node: ElementTree,
+        key: str,
+        type_cast: Callable[[str], Any],
+        default_value: Optional[Any] = None
+) -> Any:
     """Safely reads an attribute from an XML node.
 
     If the attempt at reading the attribute fails, due to the attribute not
     being present, an exception will be thrown.
 
-    :param node the XML node from which to read an attribute
-    :param key the attribute to read
-    :param type_cast the type to which to cast the read value, if specified
-    :param default_value value to return in case the key is not present
-    :return the value stored in the node with the given key
+    Args:
+        node: the XML node from which to read an attribute
+        key: the attribute to read
+        type_cast: the type to which to cast the read value, if specified
+        default_value: value to return in case the key is not present
+
+    Returns:
+        the value stored in the node with the given key
     """
     # Attempt to read the value and if present use the provided default value
     # in case reading fails
@@ -194,17 +217,24 @@ def safe_read(node, key, type_cast=None, default_value=None):
     return value
 
 
-def safe_format(value, data_type, formatter=str):
+def safe_format(
+        value: str,
+        data_type: Any,
+        formatter: Callable[[Any], str] = str
+) -> str:
     """Returns a formatted value ensuring type correctness.
 
     This function ensures that the value being formatted is of correct type
     before attempting formatting. Raises an exception on non-matching data
     types.
 
-    :param value the value to format
-    :param data_type expected data type of the value
-    :param formatter function to format value with
-    :return value formatted according to formatter
+    Args:
+        value: the value to format
+        data_type: expected data type of the value
+        formatter: function to format value with
+
+    Returns:
+        value formatted according to formatter
     """
     if isinstance(value, data_type):
         return formatter(value)
@@ -216,20 +246,28 @@ def safe_format(value, data_type, formatter=str):
 def is_user_admin():
     """Returns whether or not the user has admin privileges.
 
-    :return True if user has admin rights, False otherwise
+    Returns:
+        True if user has admin rights, False otherwise
     """
     return ctypes.windll.shell32.IsUserAnAdmin() == 1
 
 
-def axis_calibration(value, minimum, center, maximum):
+def axis_calibration(
+        value: float,
+        minimum: float,
+        center: float,
+        maximum: float
+) -> float:
     """Returns the calibrated value for a normal style axis.
 
-    :param value the raw value to process
-    :param minimum the minimum value of the axis
-    :param center the center value of the axis
-    :param maximum the maximum value of the axis
-    :return the calibrated value in [-1, 1] corresponding to the
-        provided raw value
+    Args:
+        value: the raw value to process
+        minimum: the minimum value of the axis
+        center: the center value of the axis
+        maximum: the maximum value of the axis
+
+    Returns:
+        the calibrated value in [-1, 1] corresponding to the provided raw value
     """
     value = clamp(value, minimum, maximum)
     if value < center:
@@ -238,26 +276,35 @@ def axis_calibration(value, minimum, center, maximum):
         return (value - center) / float(maximum - center)
 
 
-def slider_calibration(value, minimum, maximum):
+def slider_calibration(value: float, minimum: float, maximum: float) -> float:
     """Returns the calibrated value for a slider type axis.
 
-    :param value the raw value to process
-    :param minimum the minimum value of the axis
-    :param maximum the maximum value of the axis
-    :return the calibrated value in [-1, 1] corresponding to the
-        provided raw value
+    Args:
+        value: the raw value to process
+        minimum: the minimum value of the axis
+        maximum: the maximum value of the axis
+
+    Returns:
+        the calibrated value in [-1, 1] corresponding to the provided raw value
     """
     value = clamp(value, minimum, maximum)
     return (value - minimum) / float(maximum - minimum) * 2.0 - 1.0
 
 
-def create_calibration_function(minimum, center, maximum):
+def create_calibration_function(
+        minimum: float,
+        center: float,
+        maximum:float
+) -> Callable[[float], float]:
     """Returns a calibration function appropriate for the provided data.
 
-    :param minimum the minimal value ever reported
-    :param center the value in the neutral position
-    :param maximum the maximal value ever reported
-    :return function which returns a value in [-1, 1] corresponding
+    Args:
+        minimum: the minimal value ever reported
+        center: the value in the neutral position
+        maximum: the maximal value ever reported
+
+    Returns:
+        function which returns a value in [-1, 1] corresponding
         to the provided raw input value
     """
     if minimum == center or maximum == center:
@@ -266,13 +313,16 @@ def create_calibration_function(minimum, center, maximum):
         return lambda x: axis_calibration(x, minimum, center, maximum)
 
 
-def truncate(text, left_size, right_size):
+def truncate(text: str, left_size: int, right_size: int) -> str:
     """Returns a truncated string matching the specified character counts.
 
-    :param text the text to truncate
-    :param left_size number of characters on the left side
-    :param right_size number of characters on the right side
-    :return string truncated to the specified character counts if required
+    Args:
+        text: the text to truncate
+        left_size: number of characters on the left side
+        right_size: number of characters on the right side
+
+    Returns:
+        string truncated to the specified character counts if required
     """
     if len(text) < left_size + right_size:
         return text
@@ -280,30 +330,38 @@ def truncate(text, left_size, right_size):
     return "{}...{}".format(text[:left_size], text[-right_size:])
 
 
-def script_path():
+def script_path() -> str:
     """Returns the path to the scripts location.
 
-    :return path to the scripts location
+    Returns:
+        path to the scripts location
     """
     return os.path.normcase(
         os.path.dirname(os.path.abspath(os.path.realpath(sys.argv[0])))
     )
 
 
-def userprofile_path():
-    """Returns the path to the user's profile folder, %userprofile%."""
+def userprofile_path() -> str:
+    """Returns the path to the user's profile folder, %userprofile%.
+
+    Returns:
+        Path to the user's profile folder
+    """
     return os.path.normcase(os.path.abspath(os.path.join(
         os.getenv("userprofile"),
         "Joystick Gremlin")
     ))
 
 
-def resource_path(relative_path):
+def resource_path(relative_path: str) -> str:
     """ Get absolute path to resource, handling development and pyinstaller
     based usage.
 
-    :param relative_path the relative path to the file of interest
-    :return properly normalized resource path
+    Args:
+        relative_path: the relative path to the file of interest
+
+    Returns:
+        properly normalized resource path
     """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -314,10 +372,11 @@ def resource_path(relative_path):
     return os.path.normcase(os.path.join(base_path, relative_path))
 
 
-def display_error(msg):
+def display_error(msg: str) -> None:
     """Displays the provided error message to the user.
 
-    :param msg the error message to display
+    Args:
+        msg: the error message to display
     """
     box = QtWidgets.QMessageBox(
         QtWidgets.QMessageBox.Critical,
@@ -328,40 +387,50 @@ def display_error(msg):
     box.exec()
 
 
-def log(msg):
+def log(msg: str) -> None:
     """Logs the provided message to the user log file.
 
-    :param msg the message to log
+    Args:
+        msg: the message to log
     """
     logging.getLogger("user").debug(str(msg))
 
 
-def format_name(name):
+def format_name(name: str) -> str:
     """Returns the name formatted as valid python variable name.
 
-    :param name the name to format
-    :return name formatted to be suitable as a python variable name
+    Args:
+        name: the name to format
+
+    Returns:
+        name formatted to be suitable as a python variable name
     """
     return re.sub("[^A-Za-z]", "", name.lower()[0]) + \
         re.sub("[^A-Za-z0-9]", "", name.lower()[1:])
 
 
-def valid_python_identifier(name):
+def valid_python_identifier(name: str) -> bool:
     """Returns whether a given name is a valid python identifier.
 
-    :param name the name to check for validity
-    :return True if the name is a valid identifier, False otherwise
+    Args:
+        name: the name to check for validity
+
+    Returns:
+        True if the name is a valid identifier, False otherwise
     """
     return re.match(r"^[^\d\W]\w*\Z", name) is not None
 
 
-def clamp(value, min_val, max_val):
+def clamp(value: float, min_val: float, max_val: float) -> float:
     """Returns the value clamped to the provided range.
 
-    :param value the input value
-    :param min_val minimum value
-    :param max_val maximum value
-    :return the input value clamped to the provided range
+    Args:
+        value: the input value
+        min_val: minimum value
+        max_val: maximum value
+
+    Returns:
+        the input value clamped to the provided range
     """
     if min_val > max_val:
         min_val, max_val = max_val, min_val
@@ -408,7 +477,7 @@ def hat_direction_to_tuple(value):
     return lookup[value]
 
 
-def setup_userprofile():
+def setup_userprofile() -> None:
     """Initializes the data folder in the user's profile folder."""
     folder = userprofile_path()
     if not os.path.exists(folder):
@@ -466,19 +535,25 @@ def load_module(name):
     return g_loaded_modules[name]
 
 
-def deg2rad(angle):
+def deg2rad(angle: float) -> float:
     """Returns radian value of the provided angle in degree.
 
-    :param angle angle in degrees
-    :return angle in radian
+    Args:
+        angle: angle in degrees
+
+    Returns:
+        angle in radian
     """
     return angle * (math.pi / 180.0)
 
 
-def rad2deg(angle):
+def rad2deg(angle: float) -> float:
     """Returns degree value of the provided angle in radian.
 
-    :param angle angle in radian
-    :return angle in degree
+    Args:
+        angle: angle in radian
+
+    Returns:
+        angle in degree
     """
     return angle * (180.0 / math.pi)
