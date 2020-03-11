@@ -19,44 +19,86 @@
 from abc import abstractmethod, ABCMeta
 
 import logging
+from typing import Optional
 from xml.etree import ElementTree
+
+from PySide2 import QtCore
 
 import dill
 
-import gremlin
-from gremlin.types import ActivationRule, InputType
-from . import common, error, execution_graph, plugin_manager, profile
-from gremlin.profile import parse_guid, safe_read, write_guid
+from . import common, error, plugin_manager, profile_library
+from .types import ActivationRule, InputType
+from .util import parse_bool, parse_guid, safe_read, write_guid
 
 
-class AbstractCondition(metaclass=ABCMeta):
+
+class AbstractActionModel(QtCore.QObject):
+
+    """Base class for all action related data calsses."""
+
+    def __init__(self, parent: Optional[QtCore.QObject] = None):
+        super().__init__(parent)
+
+    def from_xml(self, node: ElementTree) -> None:
+        """Populates the instance's values with the content of the XML node.
+
+        Args:
+            node: the XML node to parse for content
+        """
+        raise error.MissingImplementationError(
+            "AbstractActionModel.from_xml not implemented in subclass"
+        )
+
+    def to_xml(self) -> ElementTree:
+        """Returns an XML node representing the instance's contents.
+
+        Returns:
+            XML node containing the instance's contents
+        """
+        raise error.MissingImplementationError(
+            "AbstractActionModel.to_xml not implemented in subclass"
+        )
+
+    def is_valid(self) -> bool:
+        """Returns whether or not the instance is in a valid state.
+
+        Returns:
+            True if the instance is in a valid state, False otherwise
+        """
+        raise error.MissingImplementationError(
+            "AbstractActionModel.bool not implemented in subclass"
+        )
+
+
+class AbstractCondition(AbstractActionModel):
 
     """Base class of all individual condition representations."""
 
     def __init__(self):
-        """Creates a new condition."""
+        """Creates a new instance."""
         self.comparison = ""
 
-    @abstractmethod
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
 
-        :param node the XML node to parse for data
+        Args:
+            node: the XML node to parse for data
         """
         pass
 
-    @abstractmethod
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
 
-        :return XML node containing the object's data
+        Returns:
+            XML node containing the object's data
         """
         pass
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """Returns whether or not a condition is fully specified.
 
-        :return True if the condition is properly specified, False otherwise
+        Returns:
+            True if the condition is properly specified, False otherwise
         """
         return self.comparison != ""
 
@@ -75,19 +117,21 @@ class KeyboardCondition(AbstractCondition):
         self.scan_code = None
         self.is_extended = None
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
 
-        :param node the XML node to parse for data
+        Args:
+            node: the XML node to parse for data
         """
         self.comparison = safe_read(node, "comparison")
         self.scan_code = safe_read(node, "scan-code", int)
-        self.is_extended = profile.parse_bool(safe_read(node, "extended"))
+        self.is_extended = parse_bool(safe_read(node, "extended"))
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
 
-        :return XML node containing the object's data
+        Returns:
+            XML node containing the object's data
         """
         node = ElementTree.Element("condition")
         node.set("condition-type", "keyboard")
@@ -97,10 +141,11 @@ class KeyboardCondition(AbstractCondition):
         node.set("extended", str(self.is_extended))
         return node
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """Returns whether or not a condition is fully specified.
 
-        :return True if the condition is properly specified, False otherwise
+        Returns:
+            True if the condition is properly specified, False otherwise
         """
         return super().is_valid() and \
             self.scan_code is not None and \
@@ -123,10 +168,11 @@ class JoystickCondition(AbstractCondition):
         self.range = [0.0, 0.0]
         self.device_name = ""
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
 
-        :param node the XML node to parse for data
+        Args:
+            node: the XML node to parse for data
         """
         self.comparison = safe_read(node, "comparison")
 
@@ -140,10 +186,11 @@ class JoystickCondition(AbstractCondition):
                 safe_read(node, "range-high", float)
             ]
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
 
-        :return XML node containing the object's data
+        Returns:
+            XML node containing the object's data
         """
         node = ElementTree.Element("condition")
         node.set("comparison", str(self.comparison))
@@ -157,10 +204,11 @@ class JoystickCondition(AbstractCondition):
             node.set("range-high", str(self.range[1]))
         return node
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """Returns whether or not a condition is fully specified.
 
-        :return True if the condition is properly specified, False otherwise
+        Returns:
+            True if the condition is properly specified, False otherwise
         """
         return super().is_valid() and self.input_type is not None
 
@@ -180,13 +228,11 @@ class VJoyCondition(AbstractCondition):
         self.input_id = 0
         self.range = [0.0, 0.0]
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
 
-        Parameters
-        ==========
-        node : ElementTree.Element
-            XML node to parse for data
+        Args
+            node: XML node to parse for data
         """
         self.comparison = safe_read(node, "comparison")
 
@@ -199,12 +245,10 @@ class VJoyCondition(AbstractCondition):
                 safe_read(node, "range-high", float)
             ]
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
 
-        Return
-        ======
-        ElementTree.Element
+        Returns:
             XML node containing the object's data
         """
         node = ElementTree.Element("condition")
@@ -218,10 +262,11 @@ class VJoyCondition(AbstractCondition):
             node.set("range-high", str(self.range[1]))
         return node
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """Returns whether or not a condition is fully specified.
 
-        :return True if the condition is properly specified, False otherwise
+        Returns:
+            True if the condition is properly specified, False otherwise
         """
         return super().is_valid() and self.input_type is not None
 
@@ -239,17 +284,19 @@ class InputActionCondition(AbstractCondition):
         """Creates a new instance."""
         super().__init__()
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
 
-        :param node the XML node to parse for data
+        Args:
+            node: the XML node to parse for data
         """
         self.comparison = safe_read(node, "comparison")
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
 
-        :return XML node containing the object's data
+        Returns:
+            XML node containing the object's data
         """
         node = ElementTree.Element("condition")
         node.set("condition-type", "action")
@@ -313,6 +360,8 @@ class AbstractFunctor(metaclass=ABCMeta):
 
     """Abstract base class defining the interface for functor like classes.
 
+    TODO: Rework this thing
+
     These classes are used in the internal code execution system.
     """
 
@@ -334,234 +383,231 @@ class AbstractFunctor(metaclass=ABCMeta):
         pass
 
 
-class AbstractAction(profile.LibraryData):
-
-    """Base class for all actions that can be encoded via the XML and
-    UI system."""
-
-    def __init__(self, parent):
-        """Creates a new instance.
-
-        :parent the container which is the parent to this action
-        """
-        assert isinstance(parent, AbstractContainer)
-        super().__init__(parent)
-
-        self.activation_condition = None
-
-    def from_xml(self, node):
-        """Populates the instance with data from the given XML node.
-
-        :param node the XML node to populate fields with
-        """
-        super().from_xml(node)
-
-        for child in node.findall("activation-condition"):
-            self.parent.activation_condition_type = "action"
-            self.activation_condition = \
-                gremlin.base_classes.ActivationCondition(
-                    [],
-                    ActivationRule.All
-                )
-            cond_node = node.find("activation-condition")
-            if cond_node is not None:
-                self.activation_condition.from_xml(cond_node)
-
-    def to_xml(self):
-        """Returns a XML node representing the instance's contents.
-
-        :return XML node representing the state of this instance
-        """
-        node = super().to_xml()
-        if self.activation_condition:
-            node.append(self.activation_condition.to_xml())
-        return node
-
-    def icon(self):
-        """Returns the icon to use when representing the action.
-
-        :return icon to use
-        """
-        raise error.MissingImplementationError(
-            "AbstractAction.icon not implemented in subclass"
-        )
-
-    def requires_virtual_button(self):
-        """Returns whether or not the action requires the use of a
-        virtual button.
-
-        :return True if a virtual button has to be used, False otherwise
-        """
-        raise error.MissingImplementationError(
-            "AbstractAction.requires_virtual_button not implemented"
-        )
-
-
-class AbstractContainer(profile.LibraryData):
-
-    """Base class for action container related information storage."""
-
-    def __init__(self, parent):
-        """Creates a new instance.
-
-        Parameters
-        ==========
-        parent : gremlin.profile.Library
-            Library instance this container belongs to
-        """
-        super().__init__(parent)
-        self.action_sets = []
-        self.activation_condition_type = None
-        self.activation_condition = None
-
-    def add_action(self, action, index=-1):
-        """Adds an action to this container.
-
-        :param action the action to add
-        :param index the index of the action_set into which to insert the
-            action. A value of -1 indicates that a new set should be
-            created.
-        """
-        assert isinstance(action, AbstractAction)
-        if index == -1:
-            self.action_sets.append([])
-            index = len(self.action_sets) - 1
-        self.action_sets[index].append(action)
-
-        # Create activation condition data if needed
-        # self.create_or_delete_virtual_button()
-
-    # TODO: This should go somewhere in the code runner parts
-    # def generate_callbacks(self):
-    #     """Returns a list of callback data entries.
-    #
-    #     :return list of container callback entries
-    #     """
-    #     callbacks = []
-    #
-    #     # For a virtual button create a callback that sends VirtualButton
-    #     # events and another callback that triggers of these events
-    #     # like a button would.
-    #     if self.virtual_button is not None:
-    #         callbacks.append(execution_graph.CallbackData(
-    #             execution_graph.VirtualButtonProcess(self.virtual_button),
-    #             None
-    #         ))
-    #         callbacks.append(execution_graph.CallbackData(
-    #             execution_graph.VirtualButtonCallback(self),
-    #             gremlin.event_handler.Event(
-    #                 gremlin.common.InputType.VirtualButton,
-    #                 callbacks[-1].callback.virtual_button.identifier,
-    #                 device_guid=dill.GUID_Virtual,
-    #                 is_pressed=True,
-    #                 raw_value=True
-    #             )
-    #         ))
-    #     else:
-    #         callbacks.append(execution_graph.CallbackData(
-    #             execution_graph.ContainerCallback(self),
-    #             None
-    #         ))
-    #
-    #     return callbacks
-
-    def from_xml(self, node):
-        """Populates the instance with data from the given XML node.
-
-        :param node the XML node to populate fields with
-        """
-        super().from_xml(node)
-        self._parse_action_set_xml(node)
-        # self._parse_virtual_button_xml(node)
-        self._parse_activation_condition_xml(node)
-
-    def to_xml(self):
-        """Returns a XML node representing the instance's contents.
-
-        :return XML node representing the state of this instance
-        """
-        node = super().to_xml()
-        if self.activation_condition:
-            condition_node = self.activation_condition.to_xml()
-            if condition_node:
-                node.append(condition_node)
-        return node
-
-    def _parse_action_set_xml(self, node):
-        """Parses the XML content related to actions.
-
-        :param node the XML node to process
-        """
-        self.action_sets = []
-        for child in node:
-            if child.tag == "action-set":
-                action_set = []
-                self._parse_action_xml(child, action_set)
-                self.action_sets.append(action_set)
-            else:
-                logging.getLogger("system").warning(
-                    "Unknown node present: {}".format(child.tag)
-                )
-
-    def _parse_action_xml(self, node, action_set):
-        """Parses the XML content related to actions in an action-set.
-
-        :param node the XML node to process
-        :param action_set storage for the processed action nodes
-        """
-        action_name_map = plugin_manager.ActionPlugins().tag_map
-        for child in node:
-            if child.tag not in action_name_map:
-                logging.getLogger("system").warning(
-                    "Unknown node present: {}".format(child.tag)
-                )
-                continue
-
-            entry = action_name_map[child.tag](self)
-            entry.from_xml(child)
-            action_set.append(entry)
-
-    def _parse_activation_condition_xml(self, node):
-        for child in node.findall("activation-condition"):
-            self.activation_condition_type = "container"
-            self.activation_condition = \
-                gremlin.base_classes.ActivationCondition([], ActivationRule.All)
-            cond_node = node.find("activation-condition")
-            if cond_node is not None:
-                self.activation_condition.from_xml(cond_node)
-
-    def _is_valid(self):
-        """Returns whether or not this container is configured properly.
-
-        :return True if configured properly, False otherwise
-        """
-        # Check state of the container
-        state = self._is_container_valid()
-
-        # Check state of all linked actions
-        for actions in [a for a in self.action_sets if a is not None]:
-            for action in actions:
-                state = state & action.is_valid()
-        return state
-
-        # # Check that no action set is empty
-        # for actions in [a for a in self.action_sets if a is not None]:
-        #     if len(actions) == 0:
-        #         state = False
-
-        # # Check state of all linked actions
-        # for actions in [a for a in self.action_sets if a is not None]:
-        #     for action in actions:
-        #         if action is None:
-        #             state = False
-        #         else:
-        #             state = state & action.is_valid()
-        # return state
-
-    @abstractmethod
-    def _is_container_valid(self):
-        """Returns whether or not the container itself is valid.
-
-        :return True container data is valid, False otherwise
-        """
-        pass
+# class AbstractAction(profile_library.ActionData):
+#
+#     """Base class for all actions that can be encoded via the XML and
+#     UI system."""
+#
+#     def __init__(self, parent):
+#         """Creates a new instance.
+#
+#         :parent the container which is the parent to this action
+#         """
+#         assert isinstance(parent, AbstractContainer)
+#         super().__init__(parent)
+#
+#         self.activation_condition = None
+#
+#     def from_xml(self, node):
+#         """Populates the instance with data from the given XML node.
+#
+#         :param node the XML node to populate fields with
+#         """
+#         super().from_xml(node)
+#
+#         for child in node.findall("activation-condition"):
+#             self.parent.activation_condition_type = "action"
+#             self.activation_condition = \
+#                 ActivationCondition([], ActivationRule.All)
+#             cond_node = node.find("activation-condition")
+#             if cond_node is not None:
+#                 self.activation_condition.from_xml(cond_node)
+#
+#     def to_xml(self):
+#         """Returns a XML node representing the instance's contents.
+#
+#         :return XML node representing the state of this instance
+#         """
+#         node = super().to_xml()
+#         if self.activation_condition:
+#             node.append(self.activation_condition.to_xml())
+#         return node
+#
+#     def icon(self):
+#         """Returns the icon to use when representing the action.
+#
+#         :return icon to use
+#         """
+#         raise error.MissingImplementationError(
+#             "AbstractAction.icon not implemented in subclass"
+#         )
+#
+#     def requires_virtual_button(self):
+#         """Returns whether or not the action requires the use of a
+#         virtual button.
+#
+#         :return True if a virtual button has to be used, False otherwise
+#         """
+#         raise error.MissingImplementationError(
+#             "AbstractAction.requires_virtual_button not implemented"
+#         )
+#
+#
+# class AbstractContainer(profile_library.ActionData):
+#
+#     """Base class for action container related information storage."""
+#
+#     def __init__(self, parent):
+#         """Creates a new instance.
+#
+#         Parameters
+#         ==========
+#         parent : gremlin.profile.Library
+#             Library instance this container belongs to
+#         """
+#         super().__init__(parent)
+#         self.action_sets = []
+#         self.activation_condition_type = None
+#         self.activation_condition = None
+#
+#     def add_action(self, action, index=-1):
+#         """Adds an action to this container.
+#
+#         :param action the action to add
+#         :param index the index of the action_set into which to insert the
+#             action. A value of -1 indicates that a new set should be
+#             created.
+#         """
+#         assert isinstance(action, AbstractAction)
+#         if index == -1:
+#             self.action_sets.append([])
+#             index = len(self.action_sets) - 1
+#         self.action_sets[index].append(action)
+#
+#         # Create activation condition data if needed
+#         # self.create_or_delete_virtual_button()
+#
+#     # TODO: This should go somewhere in the code runner parts
+#     # def generate_callbacks(self):
+#     #     """Returns a list of callback data entries.
+#     #
+#     #     :return list of container callback entries
+#     #     """
+#     #     callbacks = []
+#     #
+#     #     # For a virtual button create a callback that sends VirtualButton
+#     #     # events and another callback that triggers of these events
+#     #     # like a button would.
+#     #     if self.virtual_button is not None:
+#     #         callbacks.append(execution_graph.CallbackData(
+#     #             execution_graph.VirtualButtonProcess(self.virtual_button),
+#     #             None
+#     #         ))
+#     #         callbacks.append(execution_graph.CallbackData(
+#     #             execution_graph.VirtualButtonCallback(self),
+#     #             gremlin.event_handler.Event(
+#     #                 gremlin.common.InputType.VirtualButton,
+#     #                 callbacks[-1].callback.virtual_button.identifier,
+#     #                 device_guid=dill.GUID_Virtual,
+#     #                 is_pressed=True,
+#     #                 raw_value=True
+#     #             )
+#     #         ))
+#     #     else:
+#     #         callbacks.append(execution_graph.CallbackData(
+#     #             execution_graph.ContainerCallback(self),
+#     #             None
+#     #         ))
+#     #
+#     #     return callbacks
+#
+#     def from_xml(self, node):
+#         """Populates the instance with data from the given XML node.
+#
+#         :param node the XML node to populate fields with
+#         """
+#         super().from_xml(node)
+#         self._parse_action_set_xml(node)
+#         # self._parse_virtual_button_xml(node)
+#         self._parse_activation_condition_xml(node)
+#
+#     def to_xml(self):
+#         """Returns a XML node representing the instance's contents.
+#
+#         :return XML node representing the state of this instance
+#         """
+#         node = super().to_xml()
+#         if self.activation_condition:
+#             condition_node = self.activation_condition.to_xml()
+#             if condition_node:
+#                 node.append(condition_node)
+#         return node
+#
+#     def _parse_action_set_xml(self, node):
+#         """Parses the XML content related to actions.
+#
+#         :param node the XML node to process
+#         """
+#         self.action_sets = []
+#         for child in node:
+#             if child.tag == "action-set":
+#                 action_set = []
+#                 self._parse_action_xml(child, action_set)
+#                 self.action_sets.append(action_set)
+#             else:
+#                 logging.getLogger("system").warning(
+#                     "Unknown node present: {}".format(child.tag)
+#                 )
+#
+#     def _parse_action_xml(self, node, action_set):
+#         """Parses the XML content related to actions in an action-set.
+#
+#         :param node the XML node to process
+#         :param action_set storage for the processed action nodes
+#         """
+#         action_name_map = plugin_manager.ActionPlugins().tag_map
+#         for child in node:
+#             if child.tag not in action_name_map:
+#                 logging.getLogger("system").warning(
+#                     "Unknown node present: {}".format(child.tag)
+#                 )
+#                 continue
+#
+#             entry = action_name_map[child.tag](self)
+#             entry.from_xml(child)
+#             action_set.append(entry)
+#
+#     def _parse_activation_condition_xml(self, node):
+#         for child in node.findall("activation-condition"):
+#             self.activation_condition_type = "container"
+#             self.activation_condition = \
+#                 ActivationCondition([], ActivationRule.All)
+#             cond_node = node.find("activation-condition")
+#             if cond_node is not None:
+#                 self.activation_condition.from_xml(cond_node)
+#
+#     def _is_valid(self):
+#         """Returns whether or not this container is configured properly.
+#
+#         :return True if configured properly, False otherwise
+#         """
+#         # Check state of the container
+#         state = self._is_container_valid()
+#
+#         # Check state of all linked actions
+#         for actions in [a for a in self.action_sets if a is not None]:
+#             for action in actions:
+#                 state = state & action.is_valid()
+#         return state
+#
+#         # # Check that no action set is empty
+#         # for actions in [a for a in self.action_sets if a is not None]:
+#         #     if len(actions) == 0:
+#         #         state = False
+#
+#         # # Check state of all linked actions
+#         # for actions in [a for a in self.action_sets if a is not None]:
+#         #     for action in actions:
+#         #         if action is None:
+#         #             state = False
+#         #         else:
+#         #             state = state & action.is_valid()
+#         # return state
+#
+#     @abstractmethod
+#     def _is_container_valid(self):
+#         """Returns whether or not the container itself is valid.
+#
+#         :return True container data is valid, False otherwise
+#         """
+#         pass
