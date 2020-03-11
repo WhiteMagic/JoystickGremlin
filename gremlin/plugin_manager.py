@@ -210,11 +210,11 @@ class ActionPlugins:
                         )
                         continue
 
-                    if "version" in plugin.__dict__:
+                    if "create" in plugin.__dict__:
                         # Store plugin class information
-                        self._plugins[plugin.name] = plugin.create
+                        self._plugins[plugin.create.tag] = plugin.create
                         logging.getLogger("system").debug(
-                            "Loaded: {}".format(plugin.name)
+                            "Loaded: {}".format(plugin.create.tag)
                         )
 
                         # Register QML type
