@@ -327,7 +327,7 @@ def truncate(text: str, left_size: int, right_size: int) -> str:
     if len(text) < left_size + right_size:
         return text
 
-    return "{}...{}".format(text[:left_size], text[-right_size:])
+    return f"{text[:left_size]}...{text[-right_size:]}"
 
 
 def script_path() -> str:
