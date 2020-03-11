@@ -24,7 +24,7 @@ import re
 import sys
 import threading
 import time
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -241,6 +241,56 @@ def safe_format(
     else:
         raise gremlin.error.ProfileError(
             f"Value '{value}' has type {type(value)} when {data_type} is expected")
+
+
+# Mapping between property types and the function converting the string
+# representation into the correct data type
+_property_conversion = {
+    "string": str,
+    "int": int,
+    "float": float,
+    "bool": lambda x: parse_bool(x, False)
+}
+
+
+def parse_properties(node: ElementTree) -> Dict[str, Any]:
+    """Extracts all property entries below the given node.
+
+    This function will extract all property elements that are child elements
+    of the given node and perform data validity checks based on the property
+    information.
+
+    Args:
+        node: XML node whose child property element contents are to be extracted
+
+    Returns:
+        dictionary containing key valud pairs representing the properties
+    """
+    properties = {}
+    for pnode in node.findall("./property"):
+        # Ensure the property element contains the required information
+        if "type" not in pnode.keys():
+            raise gremlin.error.ProfileError("Invalid property element.")
+        value_type = pnode.get("type")
+        if value_type not in _property_conversion:
+            raise gremlin.error.ProfileError(
+                f"Invalid property type {value_type} present"
+            )
+        name_node = pnode.find("./name")
+        value_node = pnode.find("./value")
+        if name_node is None:
+            raise gremlin.error.ProfileError(
+                "<name> element missing property element"
+            )
+        if value_node is None:
+            raise gremlin.error.ProfileError(
+                "<value> element missing property element"
+            )
+
+        # Extract data and store it in the dictionary
+        properties[name_node.text] = \
+            _property_conversion[value_type](value_node.text)
+    return properties
 
 
 def is_user_admin():
