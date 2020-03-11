@@ -21,10 +21,9 @@ import os
 from PySide2.QtCore import Property, Signal, Slot
 from xml.etree import ElementTree
 
-from gremlin.base_classes import AbstractAction, AbstractFunctor
+from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.types import InputType
 from gremlin.profile import safe_format, safe_read
-from gremlin.ui.common import AbstractActionModel
 
 
 # class DescriptionActionWidget(gremlin.ui.input_item.AbstractActionWidget):
@@ -60,12 +59,22 @@ class DescriptionFunctor(AbstractFunctor):
         return True
 
 
-
 class DescriptionModel(AbstractActionModel):
 
     """Model of a description action."""
 
+    version = 1
+    name = "Description"
+    tag = "description"
+
     functor = DescriptionFunctor
+
+    input_types = [
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
+    ]
 
     def __init__(self):
         super().__init__()
@@ -81,60 +90,59 @@ class DescriptionModel(AbstractActionModel):
     def set_description(self, value: str) -> None:
         self._description = str(value)
 
-    def _parse_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         self._description = safe_read(node, "description", str, "")
 
-    def _generate_xml(self):
+    def to_xml(self) -> ElementTree:
         node = ElementTree.Element("description")
         node.set(safe_format(self._description, str))
         return node
 
-    def _is_valid(self):
+    def is_valid(self) -> True:
         return True
 
 
-class DescriptionAction(AbstractActionModel):
+# class DescriptionAction(AbstractActionModel):
+#
+#     """Action for adding a description to a set of actions."""
+#
+#     name = "Description"
+#     tag = "description"
+#
+#     default_button_activation = (True, False)
+#     input_types = [
+#         InputType.JoystickAxis,
+#         InputType.JoystickButton,
+#         InputType.JoystickHat,
+#         InputType.Keyboard
+#     ]
+#
+#     functor = DescriptionFunctor
+#     #widget = DescriptionActionWidget
+#
+#     def __init__(self, parent):
+#         super().__init__(parent)
+#         self.description = ""
+#
+#     def icon(self):
+#         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
+#
+#     def requires_virtual_button(self):
+#         return False
+#
+#     def _parse_xml(self, node):
+#         self.description = gremlin.profile.safe_read(
+#             node, "description", str, ""
+#         )
+#
+#     def _generate_xml(self):
+#         node = ElementTree.Element("description")
+#         node.set("description", str(self.description))
+#         return node
+#
+#     def _is_valid(self):
+#         return True
 
-    """Action for adding a description to a set of actions."""
-
-    name = "Description"
-    tag = "description"
-
-    default_button_activation = (True, False)
-    input_types = [
-        InputType.JoystickAxis,
-        InputType.JoystickButton,
-        InputType.JoystickHat,
-        InputType.Keyboard
-    ]
-
-    functor = DescriptionFunctor
-    #widget = DescriptionActionWidget
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.description = ""
-
-    def icon(self):
-        return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
-
-    def requires_virtual_button(self):
-        return False
-
-    def _parse_xml(self, node):
-        self.description = gremlin.profile.safe_read(
-            node, "description", str, ""
-        )
-
-    def _generate_xml(self):
-        node = ElementTree.Element("description")
-        node.set("description", str(self.description))
-        return node
-
-    def _is_valid(self):
-        return True
 
 
-version = 2
-name = "description"
-create = DescriptionAction
+create = DescriptionModel
