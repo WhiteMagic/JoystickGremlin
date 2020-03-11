@@ -95,7 +95,7 @@ def read_bool(node: ElementTree, key: str, default_value: bool = False) -> bool:
     """
     try:
         return parse_bool(node.get(key), default_value)
-    except error.ProfileError:
+    except gremlin.error.ProfileError:
         return default_value
 
 
@@ -120,19 +120,19 @@ def parse_bool(value: str, default_value: bool = False) -> bool:
         if int_value in [0, 1]:
             return int_value == 1
         else:
-            raise error.ProfileError(
-                "Invalid bool value used: {}".format(value)
+            raise gremlin.error.ProfileError(
+                f"Invalid bool value used: {value}"
             )
     except ValueError:
         if value.lower() in ["true", "false"]:
             return True if value.lower() == "true" else False
         else:
-            raise error.ProfileError(
-                "Invalid bool value used: {}".format(value)
+            raise gremlin.error.ProfileError(
+                f"Invalid bool value used: {value}"
             )
     except TypeError:
-        raise error.ProfileError(
-            "Invalid type provided: {}".format(type(value))
+        raise gremlin.error.ProfileError(
+            f"Invalid type provided: {type(value)}"
         )
 
 
@@ -203,7 +203,7 @@ def safe_read(
         if default_value is None:
             msg = f"Attempted to read attribute '{key}' which does not exist."
             logging.getLogger("system").error(msg)
-            raise error.ProfileError(msg)
+            raise gremlin.error.ProfileError(msg)
     else:
         value = node.get(key)
 
@@ -213,7 +213,7 @@ def safe_read(
         except ValueError:
             msg = f"Failed casting '{value}' to type '{str(type_cast)}'"
             logging.getLogger("system").error(msg)
-            raise error.ProfileError(msg)
+            raise gremlin.error.ProfileError(msg)
     return value
 
 
@@ -239,7 +239,7 @@ def safe_format(
     if isinstance(value, data_type):
         return formatter(value)
     else:
-        raise error.ProfileError(
+        raise gremlin.error.ProfileError(
             f"Value '{value}' has type {type(value)} when {data_type} is expected")
 
 
@@ -484,11 +484,11 @@ def setup_userprofile() -> None:
         try:
             os.mkdir(folder)
         except Exception as e:
-            raise error.GremlinError(
-                "Unable to create data folder: {}".format(str(e))
+            raise gremlin.error.GremlinError(
+                f"Unable to create data folder: {str(e)}"
             )
     elif not os.path.isdir(folder):
-        raise error.GremlinError(
+        raise gremlin.error.GremlinError(
             "Data folder exists but is not a folder"
         )
 
