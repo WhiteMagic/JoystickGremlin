@@ -24,7 +24,7 @@ import re
 import sys
 import threading
 import time
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -288,9 +288,32 @@ def parse_properties(node: ElementTree) -> Dict[str, Any]:
             )
 
         # Extract data and store it in the dictionary
-        properties[name_node.text] = \
-            _property_conversion[value_type](value_node.text)
+        try:
+            properties[name_node.text] = \
+                _property_conversion[value_type](value_node.text)
+        except Exception as e:
+            raise gremlin.error.ProfileError(
+                f"Type conversion of value '{value_node.text}' to type "
+                f"'{value_type}' failed"
+            )
     return properties
+
+
+def all_properties_present(keys: List[str], properties: Dict[str, Any]) -> bool:
+    """Checks if all listed keys are present in the properties dictionary.
+
+    Args:
+        keys: list of dictionary keys that have to exist
+        properties: dictionary with properties
+
+    Returns:
+        True if all provided keys exist in the properties dictionary, False
+        otherwise
+    """
+    for key in keys:
+        if key not in properties:
+            return False
+    return True
 
 
 def is_user_admin():
