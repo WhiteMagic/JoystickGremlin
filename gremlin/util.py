@@ -245,6 +245,13 @@ _property_conversion = {
     PropertyType.Int: int,
     PropertyType.Float: float,
     PropertyType.Bool: lambda x: parse_bool(x, False)
+_property_to_string = {
+    PropertyType.String: str,
+    PropertyType.Int: str,
+    PropertyType.Float: str,
+    PropertyType.Bool: str,
+    PropertyType.InputType: lambda x: InputType.to_string(x),
+    PropertyType.AxisMode: lambda x: AxisMode.to_string(x),
 }
 
 _type_lookup = {
@@ -289,7 +296,7 @@ def create_property_node(
     n_node = ElementTree.Element("name")
     n_node.text = name
     v_node = ElementTree.Element("value")
-    v_node.text = value
+    v_node.text = _property_to_string[property_type](value)
     p_node.append(n_node)
     p_node.append(v_node)
     return p_node
