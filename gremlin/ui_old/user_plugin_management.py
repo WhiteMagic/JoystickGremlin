@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2019 Lionel Ott
+# Copyright (C) 2015 - 2020 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,8 @@ import logging
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from gremlin.common import PluginVariableType
+import gremlin.types
+from gremlin.types import PluginVariableType
 import gremlin.profile
 import gremlin.user_plugin
 import gremlin.ui.common
@@ -171,13 +172,13 @@ class ModuleManagementController(QtCore.QObject):
             variable.value = data
             button = widget.itemAtPosition(0, 1).widget()
             input_id = "{:d}".format(data["input_id"])
-            if data["input_type"] == gremlin.common.InputType.JoystickAxis:
-                input_id = gremlin.common.AxisNames.to_string(
-                    gremlin.common.AxisNames(data["input_id"])
+            if data["input_type"] == gremlin.types.InputType.JoystickAxis:
+                input_id = gremlin.types.AxisNames.to_string(
+                    gremlin.types.AxisNames(data["input_id"])
                 )
             button.setText("{} {} {}".format(
                 data["device_name"],
-                gremlin.common.InputType.to_string(
+                gremlin.types.InputType.to_string(
                     data["input_type"]
                 ).capitalize(),
                 input_id

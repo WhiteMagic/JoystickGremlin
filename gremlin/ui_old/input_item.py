@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2019 Lionel Ott
+# Copyright (C) 2015 - 2020 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@ import enum
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
-from gremlin.common import DeviceType, InputType
+import gremlin.common
+import gremlin.types
+from ..types import InputType, DeviceType
 from . import activation_condition, common, virtual_button
 
 

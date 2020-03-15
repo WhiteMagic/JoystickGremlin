@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2019 Lionel Ott
+# Copyright (C) 2015 - 2020 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@ from PyQt5 import QtWidgets, QtCore
 
 import container_plugins.basic
 import gremlin
-from gremlin.common import DeviceType, InputType
+import gremlin.types
+from ..types import InputType, DeviceType
 from . import common, input_item
 
 
@@ -50,7 +51,7 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.widget_layout = QtWidgets.QVBoxLayout()
 
         self._create_description()
-        if self.item_data.get_device_type() == gremlin.common.DeviceType.VJoy:
+        if self.item_data.get_device_type() == gremlin.types.DeviceType.VJoy:
             self._create_vjoy_dropdowns()
         else:
             self._create_dropdowns()
@@ -144,7 +145,7 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.action_layout = QtWidgets.QHBoxLayout()
 
         self.action_selector = gremlin.ui.common.ActionSelector(
-            gremlin.common.DeviceType.VJoy
+            gremlin.types.DeviceType.VJoy
         )
         self.action_selector.action_added.connect(self._add_action)
         self.action_layout.addWidget(self.action_selector)
@@ -171,7 +172,7 @@ class InputItemConfiguration(QtWidgets.QFrame):
         :return list of valid action names
         """
         action_names = []
-        if self.item_data.input_type == gremlin.common.DeviceType.VJoy:
+        if self.item_data.input_type == gremlin.types.DeviceType.VJoy:
             entry = gremlin.plugin_manager.ActionPlugins().repository.get(
                 "response-curve",
                 None
@@ -560,7 +561,7 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         """
         self.button_press_dialog = common.InputListenerWidget(
             self._add_keyboard_key_cb,
-            [gremlin.common.InputType.Keyboard],
+            [gremlin.types.InputType.Keyboard],
             return_kb_event=False,
             multi_keys=False
         )
@@ -585,7 +586,7 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         :param key the new key to add
         """
         self.device_profile.modes[self.current_mode].get_data(
-                gremlin.common.InputType.Keyboard,
+                gremlin.types.InputType.Keyboard,
                 (key.scan_code, key.is_extended)
         )
         self.input_item_list_view.redraw()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2019 Lionel Ott
+# Copyright (C) 2015 - 2020 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ import copy
 from PyQt5 import QtWidgets
 
 import dill
+import gremlin.keyboard
+import gremlin.types
 
 from gremlin import common, joystick_handling, macro, util
 import gremlin.ui.common
@@ -217,10 +219,10 @@ class ModeBindings(QtWidgets.QWidget):
     def _create_ui(self):
         """Creates the UI elements for each bindable action."""
         all_input_types = [
-            common.InputType.Keyboard,
-            common.InputType.JoystickAxis,
-            common.InputType.JoystickButton,
-            common.InputType.JoystickHat
+            gremlin.types.InputType.Keyboard,
+            gremlin.types.InputType.JoystickAxis,
+            gremlin.types.InputType.JoystickButton,
+            gremlin.types.InputType.JoystickHat
         ]
 
         # Find all input items associated with this mode and show them as
@@ -258,7 +260,7 @@ class ModeBindings(QtWidgets.QWidget):
 
         # Special handling of keyboards
         if bound_input.parent.parent.device_guid == dill.GUID_Keyboard:
-            key_name = macro.key_from_code(
+            key_name = gremlin.keyboard.key_from_code(
                 bound_input.input_id[0],
                 bound_input.input_id[1]
             ).name
@@ -269,7 +271,7 @@ class ModeBindings(QtWidgets.QWidget):
         else:
             return "{} - {} {}".format(
                 self.device_names[bound_input.parent.parent.device_guid],
-                gremlin.common.InputType.to_string(
+                gremlin.types.InputType.to_string(
                     bound_input.input_type
                 ).capitalize(),
                 bound_input.input_id
@@ -302,19 +304,19 @@ class BindableAction(QtWidgets.QWidget):
 
     # Stores which input types are valid together
     valid_bind_types = {
-        common.InputType.JoystickAxis: [
-            common.InputType.JoystickAxis
+        gremlin.types.InputType.JoystickAxis: [
+            gremlin.types.InputType.JoystickAxis
         ],
-        common.InputType.JoystickButton: [
-            common.InputType.JoystickButton,
-            common.InputType.Keyboard
+        gremlin.types.InputType.JoystickButton: [
+            gremlin.types.InputType.JoystickButton,
+            gremlin.types.InputType.Keyboard
         ],
-        common.InputType.JoystickHat: [
-            common.InputType.JoystickHat
+        gremlin.types.InputType.JoystickHat: [
+            gremlin.types.InputType.JoystickHat
         ],
-        common.InputType.Keyboard: [
-            common.InputType.JoystickButton,
-            common.InputType.Keyboard
+        gremlin.types.InputType.Keyboard: [
+            gremlin.types.InputType.JoystickButton,
+            gremlin.types.InputType.Keyboard
         ]
     }
 

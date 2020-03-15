@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2019 Lionel Ott
+# Copyright (C) 2015 - 2020 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,8 +20,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import logging
 
+import gremlin.keyboard
 from gremlin import base_classes, hints, input_devices, macro, util
-from gremlin.common import InputType
+from ..types import InputType
 from . import common
 
 
@@ -168,7 +169,7 @@ class KeyboardConditionWidget(AbstractConditionWidget):
         self.key_label = QtWidgets.QLabel("")
         if self.condition_data.scan_code is not None:
             self.key_label.setText("<b>{}</b>".format(
-                macro.key_from_code(
+                gremlin.keyboard.key_from_code(
                     self.condition_data.scan_code,
                     self.condition_data.is_extended
                 ).name
@@ -214,7 +215,7 @@ class KeyboardConditionWidget(AbstractConditionWidget):
         self.condition_data.comparison = \
             self.comparison_dropdown.currentText().lower()
         self.key_label.setText("<b>{}</b>".format(
-            macro.key_from_code(
+            gremlin.keyboard.key_from_code(
                 self.condition_data.scan_code,
                 self.condition_data.is_extended
             ).name
