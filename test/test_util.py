@@ -20,6 +20,7 @@ sys.path.append(".")
 
 import os
 import pytest
+import uuid
 from xml.etree import ElementTree
 
 import gremlin.error
@@ -48,14 +49,117 @@ xml_doc = """
 </action>
 """
 
+xml_bad = """
+<action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
+    <property type="int">
+        <name>value</name>
+        <value>3.14</value>
+    </property>
+</action>
+"""
+
 
 def test_parse_property():
+    # Test correct usage and functioning
     doc = ElementTree.fromstring(xml_doc)
-
     properties = gremlin.util.parse_properties(doc)
-
     assert len(properties) == 4
     assert properties.get("description", None) == "This is a test"
     assert properties.get("answer-to-life-and-everything", None) == 42
     assert properties.get("pi", None) == 3.14
     assert properties.get("lies", None) == True
+
+    # Test failure cases
+    doc = ElementTree.fromstring(xml_bad)
+    with pytest.raises(gremlin.error.ProfileError):
+        properties = gremlin.util.parse_properties(doc)
+
+
+def test_read_action_id():
+    doc = ElementTree.fromstring(xml_doc)
+    assert gremlin.util.read_action_id(doc) == \
+           uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
+
+    xml_bad = """
+        <action id="ac905a47-9ad3-4b65-b702" type="description"></action>
+    """
+    doc = ElementTree.fromstring(xml_bad)
+    with pytest.raises(gremlin.error.ProfileError,
+                       match=r"Failed parsing id from"):
+        gremlin.util.read_action_id(doc)
+
+    xml_bad = """
+            <action type="description"></action>
+        """
+    doc = ElementTree.fromstring(xml_bad)
+    with pytest.raises(gremlin.error.ProfileError,
+                       match=r"Reading id entry failed due"):
+        gremlin.util.read_action_id(doc)
+
+
+def test_read_property():
+    doc = ElementTree.fromstring(xml_doc)
+
+    assert gremlin.util.read_property(
+        doc, "description", gremlin.types.PropertyType.String
+    ) == "This is a test"
+    assert gremlin.util.read_property(
+        doc, "answer-to-life-and-everything", gremlin.types.PropertyType.Int
+    ) == 42
+    assert gremlin.util.read_property(
+        doc, "pi", gremlin.types.PropertyType.Float
+    ) == 3.14
+    assert gremlin.util.read_property(
+        doc, "lies", gremlin.types.PropertyType.Bool
+    ) == True
+
+
+    with pytest.raises(gremlin.error.ProfileError, match=r"No property name"):
+        gremlin.util.read_property(
+            doc, "does not exist", gremlin.types.PropertyType.Bool
+        )
+    with pytest.raises(gremlin.error.ProfileError, match=r"Property type mismatch"):
+        gremlin.util.read_property(
+            doc, "lies", gremlin.types.PropertyType.Float
+        )
+
+    xml_bad = """
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
+            <property type="int">
+                <name>value</name>
+                <value>3.14</value>
+            </property>
+        </action>
+    """
+    doc = ElementTree.fromstring(xml_bad)
+    with pytest.raises(gremlin.error.ProfileError, match=r"Failed parsing property"):
+        gremlin.util.read_property(
+            doc, "value", gremlin.types.PropertyType.Int
+        )
+
+    xml_bad = """
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
+            <property type="int">
+                <name>value</name>
+            </property>
+        </action>
+    """
+    doc = ElementTree.fromstring(xml_bad)
+    with pytest.raises(gremlin.error.ProfileError, match=r"Value element of property"):
+        gremlin.util.read_property(
+            doc, "value", gremlin.types.PropertyType.Int
+        )
+
+    xml_bad = """
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
+            <property>
+                <name>value</name>
+                <value>3.14</value>
+            </property>
+        </action>
+    """
+    doc = ElementTree.fromstring(xml_bad)
+    with pytest.raises(gremlin.error.ProfileError, match=r"Property element is missing"):
+        gremlin.util.read_property(
+            doc, "value", gremlin.types.PropertyType.Int
+        )
