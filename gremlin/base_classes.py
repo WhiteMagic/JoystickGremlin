@@ -20,6 +20,7 @@ from abc import abstractmethod, ABCMeta
 
 import logging
 from typing import Optional
+import uuid
 from xml.etree import ElementTree
 
 from PySide2 import QtCore
@@ -38,6 +39,17 @@ class AbstractActionModel(QtCore.QObject):
 
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent)
+
+        self._id = uuid.uuid4()
+
+    @property
+    def id(self) -> uuid.UUID:
+        """Returns the identifier of this action.
+
+        Returns:
+            Unique identifier of this action
+        """
+        return self._id
 
     def from_xml(self, node: ElementTree) -> None:
         """Populates the instance's values with the content of the XML node.
