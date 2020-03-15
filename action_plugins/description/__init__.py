@@ -17,13 +17,14 @@
 
 
 import os
-#from PySide2 import QtWidgets
-from PySide2.QtCore import Property, Signal, Slot
+import uuid
 from xml.etree import ElementTree
 
+from PySide2.QtCore import Property, Signal, Slot
+
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
-from gremlin.types import InputType
-from gremlin.profile import safe_format, safe_read
+from gremlin.types import InputType, PropertyType
+import gremlin.util as util
 
 
 # class DescriptionActionWidget(gremlin.ui.input_item.AbstractActionWidget):
@@ -91,11 +92,16 @@ class DescriptionModel(AbstractActionModel):
         self._description = str(value)
 
     def from_xml(self, node: ElementTree) -> None:
-        self._description = safe_read(node, "description", str, "")
+        self._id = util.read_action_id(node)
+        self._description = util.read_property(
+            node, "description", PropertyType.String
+        )
 
     def to_xml(self) -> ElementTree:
-        node = ElementTree.Element("description")
-        node.set(safe_format(self._description, str))
+        node = util.create_action_node("description", self._id)
+        node.append(util.create_property_node(
+            "description", self._description, PropertyType.String
+        ))
         return node
 
     def is_valid(self) -> True:
