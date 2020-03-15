@@ -247,6 +247,21 @@ _property_conversion = {
     PropertyType.Bool: lambda x: parse_bool(x, False)
 }
 
+_type_lookup = {
+    PropertyType.String: str,
+    PropertyType.Int: int,
+    PropertyType.Float: float,
+    PropertyType.Bool: bool,
+    PropertyType.AxisValue: None,
+    PropertyType.IntRange: None,
+    PropertyType.FloatRange: None,
+    PropertyType.AxisRange: None,
+    PropertyType.InputType: InputType,
+    PropertyType.KeyboardKey: None,
+    PropertyType.MouseInput: None,
+    PropertyType.GUID: dill.GUID,
+    PropertyType.UUID: uuid.UUID
+}
 
 def parse_properties(node: ElementTree) -> Dict[str, Any]:
     """Extracts all property entries below the given node.
@@ -288,6 +303,141 @@ def parse_properties(node: ElementTree) -> Dict[str, Any]:
                 f"'{value_type}' failed"
             )
     return properties
+
+
+def create_property_node(
+        name: str,
+        value: Any,
+        property_type: PropertyType
+) -> ElementTree.Element:
+    """Creates a <property> profile element.
+
+    Args:
+        name: content of the name element
+        value: content of the value element
+
+    Returns:
+        A property element containing the provided name and value data.
+    """
+    if not has_correct_type(value, property_type):
+        raise error.ProfileError(
+            f"Property '{name}' has wrong type, got '{type(value)}' "
+            f"for '{property_type}'."
+        )
+
+    p_node = ElementTree.Element("property")
+    p_node.set("type", PropertyType.to_string(property_type))
+    n_node = ElementTree.Element("name")
+    n_node.text = name
+    v_node = ElementTree.Element("value")
+    v_node.text = value
+    p_node.append(n_node)
+    p_node.append(v_node)
+    return p_node
+
+
+def create_action_node(
+        action_type: str,
+        action_id: uuid.UUID
+) -> ElementTree.Element:
+    """Returns an action element populated with the provided data.
+
+    Args:
+        action_type: name of the action
+        action_id: id associated with the action
+
+    Returns:
+        XML element containing the provided data
+    """
+    node = ElementTree.Element("action")
+    node.set("id", safe_format(action_id, uuid.UUID))
+    node.set("type", action_type)
+    return node
+
+def read_action_id(node: ElementTree.Element) -> uuid.UUID:
+    """Returns the id associated with the given action element.
+
+    Args:
+        node: XML element which contains the id attribute
+
+    Returns:
+        UUID associated with this element
+    """
+    if node.tag not in ["action"]:
+        raise error.ProfileError(
+            f"Attempted to read id from unexpected element '{node.tag}'."
+        )
+
+    id_value = node.get("id")
+    if id_value is None:
+        raise error.ProfileError(
+            f"Reading id entry failed due to it not being present."
+        )
+
+    try:
+        return uuid.UUID(id_value)
+    except Exception:
+        raise error.ProfileError(
+            f"Failed parsing id from value: '{id_value}'."
+        )
+
+
+def read_property(
+        action_node: ElementTree.Element,
+        name: str,
+        property_type: PropertyType
+) -> Any:
+    """Returns the value of the property with the given name.
+
+    Args:
+        action_node: element from which to extract the property value
+        name: name of the property element to return the value of
+        property_type: PropertyType the value should have
+
+    Returns:
+        The value of the property element of the given name
+    """
+    # Retrieve the individual elements
+    p_node = action_node.find(f"./property/name[.='{name}']/..")
+    if p_node is None:
+        raise error.ProfileError(f"No property named '{name}' exists.")
+
+    n_node = p_node.find(f"./name")
+    v_node = p_node.find(f"./value")
+    if v_node is None:
+        raise error.ProfileError(
+            f"Value element of property '{name}' is missing"
+        )
+    if "type" not in p_node.keys():
+        raise error.ProfileError(
+            f"Property element is missing the 'type' attribute."
+        )
+
+    p_type = PropertyType.to_enum(p_node.get("type"))
+    if p_type != property_type:
+        raise error.ProfileError(
+            f"Property type mismatch, got '{p_type}' expected '{property_type}'"
+        )
+    try:
+        return _property_conversion[p_type](v_node.text)
+    except Exception:
+        raise error.ProfileError(
+            f"Failed parsing property value '{v_node.text}' which "
+            f"should be of type '{p_type}"
+        )
+
+
+def has_correct_type(value: Any, property_type: PropertyType) -> bool:
+    """Returns whether or not a value is of the correct type.
+
+    Args:
+        value: the value to check for type correctness
+        property_type: the type the value should have
+
+    Returns:
+        True if the value type is correct, False otherwise
+    """
+    return type(value) == _type_lookup[property_type]
 
 
 def all_properties_present(keys: List[str], properties: Dict[str, Any]) -> bool:
