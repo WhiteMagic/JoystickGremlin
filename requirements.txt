@@ -1,6 +1,4 @@
-PyQt5
-pypiwin32
-pywin32
-pywin32-ctypes
+PySide2
 reportlab
 PyInstaller
+pywin32
