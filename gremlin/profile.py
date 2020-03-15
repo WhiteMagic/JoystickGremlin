@@ -22,6 +22,7 @@ import copy
 import logging
 import os
 import shutil
+from typing import Any, List
 import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -32,8 +33,9 @@ import action_plugins
 import gremlin.types
 from .types import InputType, DeviceType, PluginVariableType, MergeAxisOperation
 from . import base_classes, common, error, input_devices, joystick_handling, \
-    plugin_manager, util
-from gremlin.profile_library import  *
+    plugin_manager, profile_library
+from .util import parse_guid, safe_read, safe_format, read_bool
+#from gremlin.profile_library import  *
 
 
 # Data struct representing profile information of a device
@@ -62,145 +64,45 @@ def mode_list(node):
     return sorted(list(set(mode_names)), key=lambda x: x.lower())
 
 
-def read_bool(node, key, default_value=False):
-    """Attempts to read a boolean value.
+_element_parsers = {
+    "device-id": lambda x: parse_guid(x.text),
+    "input-type": lambda x: InputType.to_enum(x.text),
+    "input-id": lambda x: int(x.text),
+    "mode": lambda x: str(x.text)
+}
 
-    If there is an error when reading the given field from the node
-    the default value is returned instead.
 
-    :param node the node from which to read the value
-    :param key the key to read from the node
-    :param default_value the default value to return in case of errors
+def read_subelement(node: ElementTree.Element, name: str) -> Any:
+    """Returns the value of a subelement of the given element node.
+
+    This function knows how to parse the values of a variety of standardized
+    subelement names. If it is called with an unknown name an exception is
+    raised. Similar if the subelement is present but of the wrong type an
+    exception is raised.
+
+    Args:
+        node: the node whose subelement should be read and parsed
+        name: the name of the subelement to parse
+
+    Returns:
+        Parsed value of the subelement of the given name present in the
+        provided element node.
     """
-    try:
-        return parse_bool(node.get(key), default_value)
-    except error.ProfileError:
-        return default_value
-
-
-def parse_bool(value, default_value=False):
-    """Returns the boolean representation of the provided value.
-
-    :param value the value as string to parse
-    :param default_value value to return in case no valid value was provided
-    :return representation of value as either True or False
-    """
-    # Terminate early if the value is None to start with, i.e. we know it will
-    # fail
-    if value is None:
-        return default_value
-
-    # Attempt to parse the value
-    try:
-        int_value = int(value)
-        if int_value in [0, 1]:
-            return int_value == 1
-        else:
-            raise error.ProfileError(
-                "Invalid bool value used: {}".format(value)
-            )
-    except ValueError:
-        if value.lower() in ["true", "false"]:
-            return True if value.lower() == "true" else False
-        else:
-            raise error.ProfileError(
-                "Invalid bool value used: {}".format(value)
-            )
-    except TypeError:
+    # Ensure there is a parser for the provided subelement
+    if name not in _element_parsers:
         raise error.ProfileError(
-            "Invalid type provided: {}".format(type(value))
+            f"No parser available for subelement with name {name}"
         )
 
-
-def parse_guid(value):
-    """Reads a string GUID representation into the internal data format.
-
-    This transforms a GUID of the form {B4CA5720-11D0-11E9-8002-444553540000}
-    into the underlying raw and exposed objects used within Gremlin.
-
-    :param value the string representation of the GUID
-    :param dill.GUID object representing the provided value
-    """
-    try:
-        tmp = uuid.UUID(value)
-        raw_guid = dill._GUID()
-        raw_guid.Data1 = int.from_bytes(tmp.bytes[0:4], "big")
-        raw_guid.Data2 = int.from_bytes(tmp.bytes[4:6], "big")
-        raw_guid.Data3 = int.from_bytes(tmp.bytes[6:8], "big")
-        for i in range(8):
-            raw_guid.Data4[i] = tmp.bytes[8 + i]
-
-        return dill.GUID(raw_guid)
-    except (ValueError, AttributeError) as e:
+    # Ensure the subelement exists in the provided node
+    element = node.find(name)
+    if element is None:
         raise error.ProfileError(
-            "Failed parsing GUID from value {}".format(value)
+            f"Element {node.tag} has no subelement with name {name}"
         )
 
-
-def write_guid(guid):
-    """Returns the string representation of a GUID object.
-
-    :param guid the GUID object to turn into a string
-    :return string representation of the guid object
-    """
-    return str(guid)
-
-
-def safe_read(node, key, type_cast=None, default_value=None):
-    """Safely reads an attribute from an XML node.
-
-    If the attempt at reading the attribute fails, due to the attribute not
-    being present, an exception will be thrown.
-
-    :param node the XML node from which to read an attribute
-    :param key the attribute to read
-    :param type_cast the type to which to cast the read value, if specified
-    :param default_value value to return in case the key is not present
-    :return the value stored in the node with the given key
-    """
-    # Attempt to read the value and if present use the provided default value
-    # in case reading fails
-    value = default_value
-    if key not in node.keys():
-        if default_value is None:
-            msg = "Attempted to read attribute '{}' which does not exist.".format(key)
-            logging.getLogger("system").error(msg)
-            raise error.ProfileError(msg)
-    else:
-        value = node.get(key)
-
-    if type_cast is not None:
-        try:
-            value = type_cast(value)
-        except ValueError:
-            msg = "Failed casting '{}' to type '{}'".format(
-                value, str(type_cast)
-            )
-            logging.getLogger("system").error(msg)
-            raise error.ProfileError(msg)
-    return value
-
-
-def safe_format(value, data_type, formatter=str):
-    """Returns a formatted value ensuring type correctness.
-
-    This function ensures that the value being formatted is of correct type
-    before attempting formatting. Raises an exception on non-matching data
-    types.
-
-    :param value the value to format
-    :param data_type expected data type of the value
-    :param formatter function to format value with
-    :return value formatted according to formatter
-    """
-    if isinstance(value, data_type):
-        return formatter(value)
-    else:
-        raise error.ProfileError("Value \"{}\" has type {} when {} is expected".format(
-            value,
-            type(value),
-            data_type
-        ))
+    # Parse subelement
+    return _element_parsers[name](element)
 
 
 def extract_remap_actions(action_sets):
@@ -576,10 +478,9 @@ class ProfileConverter:
 
         root.attrib["version"] = "7"
         for module in root.findall("import/module"):
-            module.attrib["name"] = os.path.normpath("{}\{}.py".format(
-                base_path,
-                module.attrib["name"]
-            ))
+            module.attrib["name"] = os.path.normpath(
+                f"{base_path}\\{module.attrib['name']}.py"
+            )
 
         return root
 
@@ -1188,7 +1089,6 @@ class ProfileModifier:
         return None
 
 
-
 class AbstractVirtualButton(metaclass=ABCMeta):
 
     """Base class of all virtual buttons."""
@@ -1427,296 +1327,74 @@ class Settings:
         self.vjoy_initial_values[vid][aid] = value
 
 
-class LibraryData(metaclass=ABCMeta):
+class Profile:
 
-    """Base class for all items holding information about items in the library.
-
-    This contains the parts of actions and containers that are stored within
-    the library. As such no input specific data is contained in these items as
-    a single entry can be associated with multiple inputs or be used in varying
-    types of inputs.
-    """
-
-    def __init__(self, parent):
-        """Creates a new instance with a pointer to its parent.
-
-        Args:
-            parent: parent item of this instance in the profile tree
-        """
-        self.parent = parent
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Initializes this instance's content based on the provided XML node.
-
-        Args:
-            node : XML node used to populate this instance
-        """
-        self._parse_xml(node)
-
-    def to_xml(self) -> ElementTree.Element:
-        """Returns the XML representation of this instance.
-
-        Returns:
-            XML node representing this instance
-        """
-        return self._generate_xml()
-
-    def is_valid(self) -> bool:
-        """Returns whether or not an instance is fully specified.
-
-        Returns:
-            True if all required variables are set, False otherwise
-        """
-        return self._is_valid()
-
-    @abstractmethod
-    def _parse_xml(self, node: ElementTree.Element) -> None:
-        """Implementation of the XML parsing.
-
-        Args
-        ==========:
-            node: XML node used to populate this instance
-        """
-        pass
-
-    @abstractmethod
-    def _generate_xml(self) -> ElementTree.Element:
-        """Implementation of the XML generation.
-
-        Returns:
-            XML node representing this instance
-        """
-        pass
-
-    @abstractmethod
-    def _is_valid(self) -> bool:
-        """Returns whether or not an instance is fully specified.
-
-        Returns:
-            True if all required variables are set, False otherwise
-        """
-        pass
-
-    # @abstractmethod
-    def _sanitize(self):
-        pass
-
-
-class LibraryReference:
-
-    """Holds the reference to a library entry inside an input item."""
-
-    virtual_button_lut = {
-        gremlin.types.InputType.JoystickAxis: VirtualAxisButton,
-        gremlin.types.InputType.JoystickHat: VirtualHatButton
-    }
-
-    def __init__(self, parent):
-        """Creates a new instance.
-
-        Parameters
-        ==========
-        parent
-            parent item of this instance in the profile tree
-        """
-        self.parent = parent
-        self.library_uuid = None
-        self.virtual_button = None
-        self.uuid = uuid.uuid4()
-
-    def configure_virtual_button_data(self):
-        """Creates or deletes virtual button data structures as needed.
-
-        This will create or remove the virtual button data structures
-        depending on whether or not the particular input this reference is
-        assigned to requires it.
-        """
-        need_virtual_button = False
-        action_sets = self.get_container().action_sets
-        for actions in [a for a in action_sets if a is not None]:
-            need_virtual_button = need_virtual_button or \
-                                  any([
-                                      a.requires_virtual_button(
-                                          self.parent.input_type)
-                                      for a in actions if a is not None
-                                  ])
-
-        if need_virtual_button:
-            if self.virtual_button is None:
-                self.virtual_button = \
-                    LibraryReference.virtual_button_lut[
-                        self.parent.input_type]()
-            elif not isinstance(
-                    self.virtual_button,
-                    LibraryReference.virtual_button_lut[self.parent.input_type]()
-            ):
-                self.virtual_button = \
-                    LibraryReference.virtual_button_lut[
-                        self.parent.input_type]()
-        else:
-            self.virtual_button = None
-
-    def from_xml(self, node):
-        """Initializes this instance's content based on the provided XML node.
-
-        Parameters
-        ==========
-        node : ElementTree.Element
-            XML node used to populate this instance
-        """
-        self.library_uuid = parse_guid(node.attrib["uuid"])
-
-        # Parse virtual button data
-        vb_node = node.find("virtual-button")
-        if vb_node is not None and \
-                self.parent.input_type in LibraryReference.virtual_button_lut:
-            self.virtual_button = LibraryReference.virtual_button_lut[
-                self.parent.input_type
-            ]()
-            self.virtual_button.from_xml(vb_node)
-        else:
-            self.virtual_button = None
-
-    def to_xml(self):
-        """Returns the XML representation of this instance.
-
-        Returns
-        =======
-        ElementTree.Element
-            XML node representing this instance
-        """
-        node = ElementTree.Element("library-reference")
-        node.set("uuid", str(self.library_uuid))
-        if self.virtual_button:
-            node.append(self.virtual_button.to_xml())
-        return node
-
-    def get_container(self):
-        """Returns the container associated with this reference.
-
-        Returns
-        =======
-        base_classes.AbstractContainer
-            The container being referenced
-        """
-        # Retrieve the root Profile node before getting the library instance
-        # from there
-        parent = self.parent
-        while parent.parent is not None:
-            parent = parent.parent
-
-        return parent.library.lookup(self.library_uuid)
-
-    def get_action_sets(self):
-        return self.get_container().action_sets
-
-    def get_settings(self):
-        """Returns the Settings data of the profile.
-
-        :return Settings object of this profile
-        """
-        item = self.parent
-        while not isinstance(item, Profile):
-            item = item.parent
-        return item.settings
-
-    def get_input_type(self):
-        return self.parent.input_type
-
-    def get_mode(self):
-        """Returns the Mode this data entry belongs to.
-
-        :return Mode instance this object belongs to
-        """
-        item = self.parent
-        while not isinstance(item, Mode):
-            item = item.parent
-        return item
-
-    def get_device_type(self):
-        """Returns the DeviceType of this data entry.
-
-        :return DeviceType of this entry
-        """
-        item = self.parent
-        while not isinstance(item, Device):
-            item = item.parent
-        return item.type
-
-
-class Library:
-
-    """Stores containers and their associated actions.
-
-    Each container is a self contained entry with a UUID assigned to it which
-    is used by the input items to reference the actual content.
-    """
+    """Stores the contents and an entire configuration profile."""
 
     def __init__(self):
-        """Creates a new library instance."""
+        self.inputs = {}
+        self.library = profile_library.Library()
+        self.settings = Settings(self)
+        self.modes = {}
+        self.plugins = []
 
-        # Each entry is a container with it's action sets but without
-        # conditions or virtual button configuration
-        self.content = {}
+    def from_xml(self, fpath: str) -> None:
+        # Parse file into an XML document
+        tree = ElementTree.parse(fpath)
+        root = tree.getroot()
 
-        self._container_name_map = plugin_manager.ContainerPlugins().tag_map
+        for node in root.findall("./inputs/input"):
+            item = InputItem()
+            item.from_xml(node)
 
-    def lookup(self, uuid: uuid.UUID):
-        """Returns the container corresponding to the given UUID.
+            if item.device_id not in self.inputs:
+                self.inputs[item.device_id] = []
+            self.inputs[item.device_id].append(item)
 
-        An exception will be thrown if a container for a non existant UUID
-        is requested.
+    def to_xml(self, fpath: str) -> None:
+        pass
 
-        Args:
-            uuid: Unique ID of the desired container
+    def _parse_actions(self, node: ElementTree.Element) -> List[Any]:
+        pass
 
-        Returns:
-            Container corresponding to the given UUID
-        """
-        if uuid not in self.content:
-            raise error.GremlinError(
-                "Invalid uuid for library entry, {}".format(uuid)
-            )
-        return self.content[uuid]
+
+class InputItem:
+
+    """Represents the configuration of a single input in a particular mode."""
+
+    def __init__(self):
+        """Creates a new instance."""
+        self.device_id = None
+        self.input_type = None
+        self.input_id = None
+        self.mode = None
+        self.actions = []
+        self.description = ""
+        self.always_execute = False
 
     def from_xml(self, node: ElementTree.Element):
-        """Parses an library node to populate this instance.
+        self.device_id = read_subelement(node, "device-id")
+        self.input_type = read_subelement(node, "input-type")
+        self.input_id = read_subelement(node, "input-id")
+        self.mode = read_subelement(node, "mode")
 
-        Args:
-            node: XML node containing the library information
-        """
-        for container in node.findall("container"):
-            container_type = safe_read(container, "type", str)
-            container_uuid = parse_guid(container.attrib["uuid"])
+        # If the input is from a keyboard convert the input id into
+        # the scan code and extended input flag
+        if self.input_type == InputType.Keyboard:
+            self.input_id = (self.input_id & 0xFF, self.input_id >> 8)
 
-            if container_type not in self._container_name_map:
-                logging.getLogger("system").warning(
-                    "Unknown container type used: {}".format(container_type)
-                )
-                continue
-
-            entry = self._container_name_map[container_type](self)
-            entry.from_xml(container)
-            self.content[container_uuid] = entry
+        for at_node in node.findall("actions/action-tree"):
+            tree = profile_library.ActionTree()
+            tree.from_xml(at_node)
+            self.actions.append(tree)
 
     def to_xml(self) -> ElementTree.Element:
-        """Returns an XML node encoding the content of this library.
-
-        Returns:
-            XML node holding the instance's content
-        """
-        node = ElementTree.Element("library")
-
-        for uuid, container in self.content.items():
-            if container.is_valid():
-                c_node = container.to_xml()
-                c_node.set("uuid", str(uuid))
-                node.append(c_node)
-
-        return node
+        # To convert input typle for keyboards
+        # value = extended_bit << 8 | scan_code
+        pass
 
 
-class Profile:
+class ProfileOld:
 
     """Stores the contents of an entire configuration profile.
 
@@ -2091,7 +1769,7 @@ class Profile:
             }
         for tag in ["lower", "upper"]:
             entry[tag] = {
-                "device_guid": parse_guid(node.find(tag).get("device-guid")),
+                "device_guid": util.parse_guid(node.find(tag).get("device-guid")),
                 "axis_id": safe_read(node.find(tag), "axis-id", int)
             }
 
@@ -2155,7 +1833,7 @@ class Device:
         self.name = node.get("name")
         self.label = safe_read(node, "label", default_value=self.name)
         self.type = DeviceType.to_enum(safe_read(node, "type", str))
-        self.device_guid = parse_guid(node.get("device-guid"))
+        self.device_guid = util.parse_guid(node.get("device-guid"))
 
         for child in node:
             mode = Mode(self)
@@ -2299,7 +1977,7 @@ class Mode:
                 yield input_item
 
 
-class InputItem:
+class InputItemOld:
 
     """Represents a single input item such as a button or axis.
 
@@ -2632,7 +2310,7 @@ class PluginVariable:
             self.value = safe_read(node, "value", str, "")
         elif self.type == PluginVariableType.PhysicalInput:
             self.value = {
-                "device_id": parse_guid(node.attrib["device-guid"]),
+                "device_id": util.parse_guid(node.attrib["device-guid"]),
                 "device_name": safe_read(node, "device-name", str, ""),
                 "input_id": safe_read(node, "input-id", int, None),
                 "input_type": InputType.to_enum(
