@@ -364,6 +364,7 @@ class PropertyType(enum.Enum):
     MouseInput = 11
     GUID = 12
     UUID = 13
+    AxisMode = 14
 
     @staticmethod
     def to_string(value: PropertyType) -> str:
@@ -396,7 +397,8 @@ _PropertyType_to_string_lookup = {
     PropertyType.KeyboardKey: "keyboard_key",
     PropertyType.MouseInput: "mouse_input",
     PropertyType.GUID: "guid",
-    PropertyType.UUID: "uuid"
+    PropertyType.UUID: "uuid",
+    PropertyType.AxisMode: "axis_mode",
 }
 _PropertyType_to_enum_lookup = {
     "string": PropertyType.String,
@@ -411,5 +413,39 @@ _PropertyType_to_enum_lookup = {
     "keyboard_key": PropertyType.KeyboardKey,
     "mouse_input": PropertyType.MouseInput,
     "guid": PropertyType.GUID,
-    "uuid": PropertyType.UUID
+    "uuid": PropertyType.UUID,
+    "axis_mode": PropertyType.AxisMode,
+}
+
+
+class AxisMode(enum.Enum):
+
+    Absolute = 1
+    Relative = 2
+
+    @staticmethod
+    def to_string(value: AxisMode) -> str:
+        try:
+            return _AxisMode_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid AxisMode in lookup"
+            )
+
+    @staticmethod
+    def to_enum(value: str) -> AxisMode:
+        try:
+            return _AxisMode_to_enum_lookup[value.lower()]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid AxisMode in lookup"
+            )
+
+_AxisMode_to_string_lookup = {
+    AxisMode.Absolute: "absolute",
+    AxisMode.Relative: "relative"
+}
+_AxisMode_to_enum_lookup = {
+    "absolute": AxisMode.Absolute,
+    "relative": AxisMode.Relative
 }
