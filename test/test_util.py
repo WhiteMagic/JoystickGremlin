@@ -58,23 +58,6 @@ xml_bad = """
 </action>
 """
 
-
-def test_parse_property():
-    # Test correct usage and functioning
-    doc = ElementTree.fromstring(xml_doc)
-    properties = gremlin.util.parse_properties(doc)
-    assert len(properties) == 4
-    assert properties.get("description", None) == "This is a test"
-    assert properties.get("answer-to-life-and-everything", None) == 42
-    assert properties.get("pi", None) == 3.14
-    assert properties.get("lies", None) == True
-
-    # Test failure cases
-    doc = ElementTree.fromstring(xml_bad)
-    with pytest.raises(gremlin.error.ProfileError):
-        properties = gremlin.util.parse_properties(doc)
-
-
 def test_read_action_id():
     doc = ElementTree.fromstring(xml_doc)
     assert gremlin.util.read_action_id(doc) == \

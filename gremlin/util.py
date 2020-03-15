@@ -263,47 +263,6 @@ _type_lookup = {
     PropertyType.UUID: uuid.UUID
 }
 
-def parse_properties(node: ElementTree) -> Dict[str, Any]:
-    """Extracts all property entries below the given node.
-
-    This function will extract all property elements that are child elements
-    of the given node and perform data validity checks based on the property
-    information.
-
-    Args:
-        node: XML node whose child property element contents are to be extracted
-
-    Returns:
-        dictionary containing key valud pairs representing the properties
-    """
-    properties = {}
-    for pnode in node.findall("./property"):
-        # Ensure the property element contains the required information
-        if "type" not in pnode.keys():
-            raise error.ProfileError("Invalid property element.")
-        value_type = PropertyType.to_enum(pnode.get("type"))
-        if value_type not in _property_conversion:
-            raise error.ProfileError(
-                f"Invalid property type {value_type} present"
-            )
-        name_node = pnode.find("./name")
-        value_node = pnode.find("./value")
-        if name_node is None:
-            raise error.ProfileError("<name> element missing property element")
-        if value_node is None:
-            raise error.ProfileError("<value> element missing property element")
-
-        # Extract data and store it in the dictionary
-        try:
-            properties[name_node.text] = \
-                _property_conversion[value_type](value_node.text)
-        except Exception as e:
-            raise error.ProfileError(
-                f"Type conversion of value '{value_node.text}' to type "
-                f"'{value_type}' failed"
-            )
-    return properties
-
 
 def create_property_node(
         name: str,
