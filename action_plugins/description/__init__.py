@@ -91,14 +91,14 @@ class DescriptionModel(AbstractActionModel):
     def set_description(self, value: str) -> None:
         self._description = str(value)
 
-    def from_xml(self, node: ElementTree) -> None:
+    def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
         self._description = util.read_property(
             node, "description", PropertyType.String
         )
 
-    def to_xml(self) -> ElementTree:
-        node = util.create_action_node("description", self._id)
+    def to_xml(self) -> ElementTree.Element:
+        node = util.create_action_node(DescriptionModel.tag, self._id)
         node.append(util.create_property_node(
             "description", self._description, PropertyType.String
         ))
