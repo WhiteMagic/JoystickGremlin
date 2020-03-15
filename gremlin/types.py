@@ -345,3 +345,71 @@ _MergeAxisOperation_to_enum_lookup = {
     "maximum": MergeAxisOperation.Maximum,
     "sum": MergeAxisOperation.Sum
 }
+
+
+class PropertyType(enum.Enum):
+
+    """Enumeration of all known property types."""
+
+    String = 1
+    Int = 2
+    Float = 3
+    Bool = 4
+    AxisValue = 5
+    IntRange = 6
+    FloatRange = 7
+    AxisRange = 8
+    InputType = 9
+    KeyboardKey = 10
+    MouseInput = 11
+    GUID = 12
+    UUID = 13
+
+    @staticmethod
+    def to_string(value: PropertyType) -> str:
+        try:
+            return _PropertyType_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid PropertyType in lookup"
+            )
+
+    @staticmethod
+    def to_enum(value: str) -> PropertyType:
+        try:
+            return _PropertyType_to_enum_lookup[value.lower()]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid PropertyType in lookup"
+            )
+
+_PropertyType_to_string_lookup = {
+    PropertyType.String: "string",
+    PropertyType.Int: "int",
+    PropertyType.Float: "float",
+    PropertyType.Bool: "bool",
+    PropertyType.AxisValue: "axis_value",
+    PropertyType.IntRange: "int_range",
+    PropertyType.FloatRange: "float_range",
+    PropertyType.AxisRange: "axis_range",
+    PropertyType.InputType: "input_type",
+    PropertyType.KeyboardKey: "keyboard_key",
+    PropertyType.MouseInput: "mouse_input",
+    PropertyType.GUID: "guid",
+    PropertyType.UUID: "uuid"
+}
+_PropertyType_to_enum_lookup = {
+    "string": PropertyType.String,
+    "int": PropertyType.Int,
+    "float": PropertyType.Float,
+    "bool": PropertyType.Bool,
+    "axis_value": PropertyType.AxisValue,
+    "int_range": PropertyType.IntRange,
+    "float_range": PropertyType.FloatRange,
+    "axis_range": PropertyType.AxisRange,
+    "input_type": PropertyType.InputType,
+    "keyboard_key": PropertyType.KeyboardKey,
+    "mouse_input": PropertyType.MouseInput,
+    "guid": PropertyType.GUID,
+    "uuid": PropertyType.UUID
+}
