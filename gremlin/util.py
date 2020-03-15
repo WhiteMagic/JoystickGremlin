@@ -33,7 +33,7 @@ from PySide2 import QtCore, QtWidgets
 import dill
 
 from . import error
-from .types import InputType, PropertyType
+from .types import AxisMode, InputType, PropertyType
 
 
 # Table storing which modules have been imported already
@@ -244,7 +244,11 @@ _property_conversion = {
     PropertyType.String: str,
     PropertyType.Int: int,
     PropertyType.Float: float,
-    PropertyType.Bool: lambda x: parse_bool(x, False)
+    PropertyType.Bool: lambda x: parse_bool(x, False),
+    PropertyType.InputType: lambda x: InputType.to_enum(x),
+    PropertyType.AxisMode: lambda x: AxisMode.to_enum(x),
+}
+
 _property_to_string = {
     PropertyType.String: str,
     PropertyType.Int: str,
@@ -267,7 +271,8 @@ _type_lookup = {
     PropertyType.KeyboardKey: None,
     PropertyType.MouseInput: None,
     PropertyType.GUID: dill.GUID,
-    PropertyType.UUID: uuid.UUID
+    PropertyType.UUID: uuid.UUID,
+    PropertyType.AxisMode: AxisMode
 }
 
 
@@ -319,6 +324,7 @@ def create_action_node(
     node.set("id", safe_format(action_id, uuid.UUID))
     node.set("type", action_type)
     return node
+
 
 def read_action_id(node: ElementTree.Element) -> uuid.UUID:
     """Returns the id associated with the given action element.

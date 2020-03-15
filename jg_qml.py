@@ -190,9 +190,15 @@ if __name__ == "__main__":
         "ProfileModel"
     )
 
+    # Create backend instance
     backend = gremlin.ui.backend.Backend()
-
     engine.rootContext().setContextProperty("backend", backend)
+
+    # Load plugin code and UI elements
+    syslog.info("Initializing plugins")
+    gremlin.plugin_manager.ActionPlugins()
+
+    # Initialize main UI
     engine.load(QtCore.QUrl.fromLocalFile("qml/Main.qml"))
     if not engine.rootObjects():
         sys.exit(-1)
