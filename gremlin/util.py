@@ -33,6 +33,7 @@ from PySide2 import QtCore, QtWidgets
 import dill
 
 from . import error
+from .types import InputType, PropertyType
 
 
 # Table storing which modules have been imported already
@@ -240,10 +241,10 @@ def safe_format(
 # Mapping between property types and the function converting the string
 # representation into the correct data type
 _property_conversion = {
-    "string": str,
-    "int": int,
-    "float": float,
-    "bool": lambda x: parse_bool(x, False)
+    PropertyType.String: str,
+    PropertyType.Int: int,
+    PropertyType.Float: float,
+    PropertyType.Bool: lambda x: parse_bool(x, False)
 }
 
 
@@ -264,8 +265,8 @@ def parse_properties(node: ElementTree) -> Dict[str, Any]:
     for pnode in node.findall("./property"):
         # Ensure the property element contains the required information
         if "type" not in pnode.keys():
-        value_type = pnode.get("type")
             raise error.ProfileError("Invalid property element.")
+        value_type = PropertyType.to_enum(pnode.get("type"))
         if value_type not in _property_conversion:
             raise error.ProfileError(
                 f"Invalid property type {value_type} present"
