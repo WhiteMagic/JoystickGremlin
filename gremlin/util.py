@@ -32,7 +32,7 @@ from PySide2 import QtCore, QtWidgets
 
 import dill
 
-import gremlin.error
+from . import error
 
 
 # Table storing which modules have been imported already
@@ -95,7 +95,7 @@ def read_bool(node: ElementTree, key: str, default_value: bool = False) -> bool:
     """
     try:
         return parse_bool(node.get(key), default_value)
-    except gremlin.error.ProfileError:
+    except error.ProfileError:
         return default_value
 
 
@@ -120,20 +120,14 @@ def parse_bool(value: str, default_value: bool = False) -> bool:
         if int_value in [0, 1]:
             return int_value == 1
         else:
-            raise gremlin.error.ProfileError(
-                f"Invalid bool value used: {value}"
-            )
+            raise error.ProfileError(f"Invalid bool value used: {value}")
     except ValueError:
         if value.lower() in ["true", "false"]:
             return True if value.lower() == "true" else False
         else:
-            raise gremlin.error.ProfileError(
-                f"Invalid bool value used: {value}"
-            )
+            raise error.ProfileError(f"Invalid bool value used: {value}")
     except TypeError:
-        raise gremlin.error.ProfileError(
-            f"Invalid type provided: {type(value)}"
-        )
+        raise error.ProfileError(f"Invalid type provided: {type(value)}")
 
 
 def parse_guid(value: str) -> dill.GUID:
@@ -159,9 +153,7 @@ def parse_guid(value: str) -> dill.GUID:
 
         return dill.GUID(raw_guid)
     except (ValueError, AttributeError) as e:
-        raise gremlin.error.GremlinError(
-            f"Failed parsing GUID from value {value}"
-        )
+        raise error.GremlinError(f"Failed parsing GUID from value {value}")
 
 
 def write_guid(guid: dill.GUID) -> str:
@@ -203,7 +195,7 @@ def safe_read(
         if default_value is None:
             msg = f"Attempted to read attribute '{key}' which does not exist."
             logging.getLogger("system").error(msg)
-            raise gremlin.error.ProfileError(msg)
+            raise error.ProfileError(msg)
     else:
         value = node.get(key)
 
@@ -213,7 +205,7 @@ def safe_read(
         except ValueError:
             msg = f"Failed casting '{value}' to type '{str(type_cast)}'"
             logging.getLogger("system").error(msg)
-            raise gremlin.error.ProfileError(msg)
+            raise error.ProfileError(msg)
     return value
 
 
@@ -239,8 +231,10 @@ def safe_format(
     if isinstance(value, data_type):
         return formatter(value)
     else:
-        raise gremlin.error.ProfileError(
-            f"Value '{value}' has type {type(value)} when {data_type} is expected")
+        raise error.ProfileError(
+            f"Value '{value}' has type {type(value)} "
+            f"when {data_type} is expected"
+        )
 
 
 # Mapping between property types and the function converting the string
@@ -270,29 +264,25 @@ def parse_properties(node: ElementTree) -> Dict[str, Any]:
     for pnode in node.findall("./property"):
         # Ensure the property element contains the required information
         if "type" not in pnode.keys():
-            raise gremlin.error.ProfileError("Invalid property element.")
         value_type = pnode.get("type")
+            raise error.ProfileError("Invalid property element.")
         if value_type not in _property_conversion:
-            raise gremlin.error.ProfileError(
+            raise error.ProfileError(
                 f"Invalid property type {value_type} present"
             )
         name_node = pnode.find("./name")
         value_node = pnode.find("./value")
         if name_node is None:
-            raise gremlin.error.ProfileError(
-                "<name> element missing property element"
-            )
+            raise error.ProfileError("<name> element missing property element")
         if value_node is None:
-            raise gremlin.error.ProfileError(
-                "<value> element missing property element"
-            )
+            raise error.ProfileError("<value> element missing property element")
 
         # Extract data and store it in the dictionary
         try:
             properties[name_node.text] = \
                 _property_conversion[value_type](value_node.text)
         except Exception as e:
-            raise gremlin.error.ProfileError(
+            raise error.ProfileError(
                 f"Type conversion of value '{value_node.text}' to type "
                 f"'{value_type}' failed"
             )
@@ -557,13 +547,9 @@ def setup_userprofile() -> None:
         try:
             os.mkdir(folder)
         except Exception as e:
-            raise gremlin.error.GremlinError(
-                f"Unable to create data folder: {str(e)}"
-            )
+            raise error.GremlinError(f"Unable to create data folder: {str(e)}")
     elif not os.path.isdir(folder):
-        raise gremlin.error.GremlinError(
-            "Data folder exists but is not a folder"
-        )
+        raise error.GremlinError("Data folder exists but is not a folder")
 
 
 def clear_layout(layout):
