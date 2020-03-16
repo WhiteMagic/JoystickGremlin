@@ -161,6 +161,11 @@ if __name__ == "__main__":
     QtQuick.QQuickWindow.setTextRenderType(
         QtQuick.QQuickWindow.NativeTextRendering
     )
+    # User software rendering to prevent flickering on variable refresh rate
+    # displays
+    QtQuick.QQuickWindow.setSceneGraphBackend(
+        "software"
+    )
 
     # Ensure joystick devices are correctly setup
     dill.DILL.init()
