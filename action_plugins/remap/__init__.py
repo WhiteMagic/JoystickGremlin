@@ -333,6 +333,26 @@ class RemapModel(AbstractActionModel):
         self._axis_mode = AxisMode.Absolute
         self._axis_scaling = 1.0
 
+    @Property(type=int)
+    def vjoy_device_id(self) -> int:
+        return self._vjoy_device_id
+
+    @Property(type=int)
+    def vjoy_input_id(self) -> int:
+        return self._vjoy_input_id
+
+    @Property(type=InputType)
+    def vjoy_device_id(self) -> InputType:
+        return self._input_type
+
+    @Property(type=AxisMode)
+    def vjoy_device_id(self) -> AxisMode:
+        return self._axis_mode
+
+    @Property(type=float)
+    def vjoy_device_id(self) -> float:
+        return self._axis_scaling
+
     def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
         self._vjoy_device_id = util.read_property(
