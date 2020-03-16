@@ -28,23 +28,30 @@ import gremlin.ui.device 1.0
 
 Item {
     id: root
-    width: parent.width
+//    width: parent.width
 //    anchors.top: parent.top
 //    anchors.bottom: parent.bottom
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     property int deviceIndex: 0
     property DeviceListModel deviceListModel
 
     ScrollView {
         id: scrollView
-        anchors.fill: parent
+
+//        anchors.fill: parent
+        Layout.fillWidth: true
+        Layout.fillHeight: true
 
         ListView
         {
             id: deviceList
-            anchors.fill: parent
+//            anchors.fill: parent
+//            width: parent.width
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
-            width: parent.width
             model: deviceListModel
             delegate: deviceDelegate
 
@@ -59,8 +66,9 @@ Item {
             Rectangle {
                 id: rect
 
-                width: parent.width
-                height: 50
+//                width: parent.width
+                implicitHeight: 50
+                Layout.fillWidth: true
 
                 color: model.index == deviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
 

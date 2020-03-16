@@ -16,10 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import QtQuick 2.13
-import QtQuick.Controls 2.13
-import QtQuick.Window 2.13
-import QtQuick.Layouts 1.13
+import QtQuick 2.14
+import QtQuick.Controls 2.14
+import QtQuick.Window 2.14
+import QtQuick.Layouts 1.14
 
 import gremlin.ui.device 1.0
 
@@ -29,9 +29,9 @@ import "helpers.js" as Helpers
 ApplicationWindow {
 
     // Basic application setup
-    title: qsTr("Joystick Gremlin")
-    width: 640
-    height: 480
+    title: qsTr("Joystick Gremlin");
+    width: 1000
+    height: 680
     visible: true
     id: root
 
@@ -122,15 +122,14 @@ ApplicationWindow {
 
     // Main content area
     RowLayout {
+        id: contentLayout
         anchors.fill: parent
 
         DeviceList {
             id: devicePanel
 
             Layout.fillHeight: true
-
-            width: 150
-            height: 300
+            Layout.minimumWidth: 150
 
             deviceListModel: deviceListModel
 
@@ -140,11 +139,11 @@ ApplicationWindow {
         StackLayout {
             id: inputPanel
 
-            Layout.fillHeight: true
             Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 100
 
             currentIndex: devicePanel.deviceIndex
-            width: 75
 
             Repeater {
                 id: deviceInputListRepeater
@@ -158,14 +157,14 @@ ApplicationWindow {
             }
         }
 
-        ActionList {
-            id: actionPanel
+        InputConfiguration {
+            id: inputConfigurationPanel
 
             Layout.fillHeight: true
             Layout.fillWidth: true
-
-            width: 300
+            Layout.minimumWidth: 300
         }
+
 
 //        StackLayout {
 //            id: actionPanel

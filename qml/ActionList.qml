@@ -30,6 +30,7 @@ Item {
     id: root
 
     property ProfileModel profileModel
+//    property InputConfiguration inputConfiguration
 
     ColumnLayout {
 
@@ -39,24 +40,16 @@ Item {
             }
             ComboBox {
                 width: 200
-                model: backend.action_list
+//                id: action_list
+//                model: backend.action_list
             }
             Button {
                 text: "Add"
-                onClicked: console.log(backend.action_list)
+                //onClicked: backend.add_action(
+                //    inputConfiguration
+                //    action_list.currentText
+                //)
             }
-        }
-
-
-
-        Label {
-            text: "TEST"
-        }
-        Label {
-            text: "TEST"
-        }
-        Label {
-            text: "TEST"
         }
 
     }
