@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2019 Lionel Ott
+// Copyright (C) 2015 - 2020 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,160 +27,132 @@ import gremlin.ui.device 1.0
 
 
 Window {
-    minimumWidth: 1000
-    minimumHeight: 200
+    minimumWidth: 900
+    minimumHeight: 100
     color: Universal.background
     title: "Device Information"
+
+    DeviceListModel {
+        id: deviceData
+    }
 
     ScrollView {
         id: scrollView
         anchors.fill: parent
 
-        DeviceListModel {
-            id: deviceData
-        }
-
-        ListView {
-            id: listView
+        GridLayout {
             anchors.fill: parent
+            columns: 8
 
-            model: deviceData
-            delegate: deviceDelegate
-            header: headerComponent
+            DisplayText { text: "<b>Name</b>" }
+            DisplayText { text: "<b>Axes</b>" }
+            DisplayText { text: "<b>Buttons</b>" }
+            DisplayText { text: "<b>Hats</b>" }
+            DisplayText { text: "<b>VID</b>" }
+            DisplayText { text: "<b>PID</b>" }
+            DisplayText { text: "<b>Joystick ID</b>" }
+            DisplayText { text: "<b>GUID</b>" }
 
-            boundsBehavior: Flickable.StopAtBounds
-        }
+            Repeater {
+                model: deviceData
+                DisplayText {
+                    Layout.row: index + 1
+                    Layout.column: 0
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
 
-        Component {
-            id: deviceDelegate
-
-            Item {
-                width: parent.width
-                height: idGuid.height + 10
-
-                Label {
-                    id: idName
                     text: name
-                    anchors.left: parent.left
-                    anchors.right: idAxes.left
-                    anchors.leftMargin: 10
                 }
+            }
 
-                Label {
-                    id: idAxes
+            Repeater {
+                model: deviceData
+                DisplayText {
+                    Layout.row: index + 1
+                    Layout.column: 1
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
                     text: axes
-                    width: 75
-                    anchors.right: idButtons.left
                 }
-                Label {
-                    id: idButtons
+            }
+
+            Repeater {
+                model: deviceData
+                DisplayText {
+                    Layout.row: index + 1
+                    Layout.column: 2
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
                     text: buttons
-                    width: 75
-                    anchors.right: idHats.left
                 }
-                Label {
-                    id: idHats
+            }
+
+            Repeater {
+                model: deviceData
+                DisplayText {
+                    Layout.row: index + 1
+                    Layout.column: 3
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
                     text: hats
-                    width: 75
-                    anchors.right: idVid.left
                 }
-                Label {
-                    id: idVid
+            }
+
+            Repeater {
+                model: deviceData
+                DisplayText {
+                    Layout.row: index + 1
+                    Layout.column: 4
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
                     text: vid
-                    width: 75
-                    anchors.right: idPid.left
                 }
-                Label {
-                    id: idPid
+            }
+
+            Repeater {
+                model: deviceData
+                DisplayText {
+                    Layout.row: index + 1
+                    Layout.column: 5
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
                     text: pid
-                    width: 75
-                    anchors.right: idGuid.left
                 }
+            }
+
+            Repeater {
+                model: deviceData
+                DisplayText {
+                    Layout.row: index + 1
+                    Layout.column: 6
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    text: joy_id
+                }
+            }
+
+            Repeater {
+                model: deviceData
                 TextField {
-                    id: idGuid
+                    Layout.row: index + 1
+                    Layout.column: 7
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 315
+
                     text: guid
-                    width: 315
-                    anchors.right: parent.right
-                    anchors.rightMargin: 10
                     readOnly: true
                     selectByMouse: true
-                }
-
-            }
-        }
-
-        Component {
-            id: headerComponent
-
-            Rectangle {
-                width: parent.width
-                //height: idName.height + 10
-                height: 50
-                color: Universal.chromeMediumColor
-//                anchors.left: parent.left
-//                anchors.top: parent.top
-
-                id: headings
-
-                Label {
-                    id: idName
-                    text: "<b>Name</b>"
-
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.margins: 10
-                }
-
-                Label {
-                    text: "<b>Axes</b>"
-                    width: 75
-                    anchors.right: idButtons.left
-                    anchors.top: parent.top
-                    anchors.margins: 10
-                }
-                Label {
-                    id: idButtons
-                    text: "<b>Buttons</b>"
-                    width: 75
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.right: idHats.left
-                    anchors.top: parent.top
-                    anchors.margins: 10
-                }
-                Label {
-                    id: idHats
-                    text: "<b>Hats</b>"
-                    width: 75
-                    anchors.right: idVid.left
-                    anchors.top: parent.top
-                    anchors.margins: 10
-                }
-                Label {
-                    id: idVid
-                    text: "<b>VID</b>"
-                    width: 75
-                    anchors.right: idPid.left
-                    anchors.top: parent.top
-                    anchors.margins: 10
-                }
-                Label {
-                    id: idPid
-                    text: "<b>PID</b>"
-                    width: 75
-                    anchors.right: idGuid.left
-                    anchors.top: parent.top
-                    anchors.margins: 10
-                }
-                Label {
-                    id: idGuid
-                    text: "<b>GUID</b>"
-                    width: 315
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: 10
+                    font.pointSize: 10
                 }
             }
         }
+
     }
 }
