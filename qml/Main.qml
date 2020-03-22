@@ -141,6 +141,8 @@ ApplicationWindow {
 
             currentIndex: idDevicePanel.deviceIndex
 
+            SplitView.minimumWidth: 200
+
             Repeater {
                 id: idDeviceInputListRepeater
                 model: idDeviceListModel
@@ -152,29 +154,12 @@ ApplicationWindow {
                 }
             }
         }
-    }
 
-//        InputConfiguration {
-//            id: inputConfigurationPanel
-//
-//            Layout.fillHeight: true
-//            Layout.fillWidth: true
-//            Layout.minimumWidth: 300
-//        }
+        // Configuration of the selected input
+        InputConfiguration {
+            id: idInputConfigurationPanel
+        }
 
+    } // SplitView
 
-//        StackLayout {
-//            id: actionPanel
-//
-//            Layout.fillHeight: true
-//            //Layout.fillWidth: true
-//
-//            Repeater {
-//                model: 100
-//                Text {
-//                    text: "I'm item " + index
-//                }
-//            }
-//        }
-//    }
-}
+} // ApplicationWindow
