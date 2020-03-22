@@ -16,12 +16,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import QtQuick 2.13
-import QtQuick.Controls 2.13
-import QtQuick.Layouts 1.13
-import QtQuick.Window 2.13
+import QtQuick 2.14
+import QtQuick.Controls 2.14
+import QtQuick.Layouts 1.14
+import QtQuick.Window 2.14
 
-import QtQuick.Controls.Universal 2.12
+import QtQuick.Controls.Universal 2.14
 
 import gremlin.ui.device 1.0
 
