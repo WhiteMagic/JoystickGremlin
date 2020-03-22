@@ -121,15 +121,15 @@ ApplicationWindow {
     }
 
     // Main content area
-    RowLayout {
         id: contentLayout
+    SplitView {
         anchors.fill: parent
+        orientation: Qt.Horizontal
 
         DeviceList {
             id: devicePanel
 
-            Layout.fillHeight: true
-            Layout.minimumWidth: 150
+            SplitView.minimumWidth: 150
 
             deviceListModel: deviceListModel
 
@@ -139,9 +139,6 @@ ApplicationWindow {
         StackLayout {
             id: inputPanel
 
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.minimumWidth: 100
 
             currentIndex: devicePanel.deviceIndex
 
