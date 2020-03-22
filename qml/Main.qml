@@ -29,7 +29,7 @@ import "helpers.js" as Helpers
 ApplicationWindow {
 
     // Basic application setup
-    title: qsTr("Joystick Gremlin");
+    title: "Joystick Gremlin"
     width: 1000
     height: 680
     visible: true
@@ -117,34 +117,33 @@ ApplicationWindow {
     }
 
     DeviceListModel {
-        id: deviceListModel
+        id: idDeviceListModel
     }
 
     // Main content area
-        id: contentLayout
     SplitView {
+        id: idContentLayout
         anchors.fill: parent
         orientation: Qt.Horizontal
 
+        // List of all detected devices
         DeviceList {
-            id: devicePanel
+            id: idDevicePanel
 
             SplitView.minimumWidth: 150
 
-            deviceListModel: deviceListModel
-
-            onDeviceIndexChanged: console.log("Test")
+            deviceListModel: idDeviceListModel
         }
 
+        // One layout per device containint all inputs of the device
         StackLayout {
-            id: inputPanel
+            id: idInputPanel
 
-
-            currentIndex: devicePanel.deviceIndex
+            currentIndex: idDevicePanel.deviceIndex
 
             Repeater {
-                id: deviceInputListRepeater
-                model: deviceListModel
+                id: idDeviceInputListRepeater
+                model: idDeviceListModel
 
                 DeviceInputList {
                     deviceGuid: model.guid
@@ -153,14 +152,15 @@ ApplicationWindow {
                 }
             }
         }
+    }
 
-        InputConfiguration {
-            id: inputConfigurationPanel
-
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            Layout.minimumWidth: 300
-        }
+//        InputConfiguration {
+//            id: inputConfigurationPanel
+//
+//            Layout.fillHeight: true
+//            Layout.fillWidth: true
+//            Layout.minimumWidth: 300
+//        }
 
 
 //        StackLayout {
@@ -176,5 +176,5 @@ ApplicationWindow {
 //                }
 //            }
 //        }
-    }
+//    }
 }

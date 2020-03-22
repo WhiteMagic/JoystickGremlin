@@ -28,32 +28,21 @@ import gremlin.ui.device 1.0
 
 Item {
     id: root
-//    width: parent.width
-//    anchors.top: parent.top
-//    anchors.bottom: parent.bottom
-    Layout.fillWidth: true
-    Layout.fillHeight: true
 
     property int deviceIndex: 0
     property DeviceListModel deviceListModel
 
     ScrollView {
-        id: scrollView
-
-//        anchors.fill: parent
-        Layout.fillWidth: true
-        Layout.fillHeight: true
+        id: idScrollView
+        anchors.fill: parent
 
         ListView
         {
-            id: deviceList
-//            anchors.fill: parent
-//            width: parent.width
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            id: idDeviceList
+            anchors.fill: parent
 
             model: deviceListModel
-            delegate: deviceDelegate
+            delegate: idDeviceDelegate
 
             onCurrentIndexChanged: root.deviceIndex = currentIndex
 
@@ -61,26 +50,28 @@ Item {
         }
 
         Component {
-            id: deviceDelegate
+            id: idDeviceDelegate
 
             Rectangle {
                 id: rect
 
-//                width: parent.width
-                implicitHeight: 50
-                Layout.fillWidth: true
+                implicitHeight: idDeviceName.height
+                implicitWidth: idDeviceList.width
 
-                color: model.index == deviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
+                color: model.index == idDeviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
+
+                DisplayText {
+                    id: idDeviceName
+                    text: name
+                    wrapMode: Text.Wrap
+                    width: 200
+                }
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: deviceList.currentIndex = model.index
+                    onClicked: idDeviceList.currentIndex = model.index
                 }
 
-                Label {
-                    text: name
-                    anchors.verticalCenter: parent.verticalCenter
-                }
             }
         }
     }
