@@ -26,6 +26,7 @@ import uuid
 import gremlin.error
 import gremlin.plugin_manager
 from gremlin.profile import Profile
+import gremlin.profile_library
 import gremlin.types
 import gremlin.util
 
@@ -72,46 +73,50 @@ xml_description = """
             <input-type>button</input-type>
             <input-id>6</input-id>
             <mode>Default</mode>
-            <actions>
-                <action-tree id="ec663ba4-264a-4c76-98c0-6054058cae9f">
-                    <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-                        <property type="string">
-                            <name>description</name>
-                            <value>This is a test</value>
-                        </property>
-                    </action>
-                    <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-                        <property type="string">
-                            <name>description</name>
-                            <value>Feuer frei!</value>
-                        </property>
-                    </action>
-                    <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="remap">
-                        <property type="int">
-                            <name>vjoy-device-id</name>
-                            <value>2</value>
-                        </property>
-                        <property type="int">
-                            <name>vjoy-input-id</name>
-                            <value>6</value>
-                        </property>
-                        <property type="input_type">
-                            <name>input-type</name>
-                            <value>axis</value>
-                        </property>
-                        <property type="axis_mode">
-                            <name>axis-mode</name>
-                            <value>relative</value>
-                        </property>
-                        <property type="float">
-                            <name>axis-scaling</name>
-                            <value>1.5</value>
-                        </property>
-                    </action>
-                </action-tree>
-            </actions>
+            <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
         </input>
     </inputs>
+    
+    <library>
+        <library-item id="ac905a47-9ad3-4b65-b702-fbae1d133609">
+            <action-tree root="ec663ba4-264a-4c76-98c0-6054058cae9f">
+                <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>This is a test</value>
+                    </property>
+                </action>
+                <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Feuer frei!</value>
+                    </property>
+                </action>
+                <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="remap">
+                    <property type="int">
+                        <name>vjoy-device-id</name>
+                        <value>2</value>
+                    </property>
+                    <property type="int">
+                        <name>vjoy-input-id</name>
+                        <value>6</value>
+                    </property>
+                    <property type="input_type">
+                        <name>input-type</name>
+                        <value>axis</value>
+                    </property>
+                    <property type="axis_mode">
+                        <name>axis-mode</name>
+                        <value>relative</value>
+                    </property>
+                    <property type="float">
+                        <name>axis-scaling</name>
+                        <value>1.5</value>
+                    </property>
+                </action>
+            </action-tree>
+        </library-item>
+    </library>
 </profile>
 """
 
@@ -180,7 +185,12 @@ def test_simple_action():
     p.from_xml(fpath)
 
     guid = gremlin.util.parse_guid("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
-    actions = p.inputs[guid][0].actions[0].root.children
+
+    library_items = p.inputs[guid][0].actions
+    assert len(library_items) == 1
+    assert isinstance(library_items[0], gremlin.profile_library.LibraryItem)
+
+    actions = library_items[0].action_tree.root.children
     assert len(actions) == 3
     assert actions[0].value.tag == "description"
     assert actions[0].value.description == "This is a test"
