@@ -22,80 +22,80 @@ from xml.etree import ElementTree
 
 from . import base_classes, common, error, plugin_manager
 from .tree import TreeNode
-
-
-class ActionData(metaclass=ABCMeta):
-
-    """Base class for all objects storing action information.
-
-    This contains only input independent action infmration.
-    """
-
-    def __init__(self, parent):
-        """Creates a new instance with a pointer to its parent.
-
-        Args:
-            parent: parent item of this instance in the profile tree
-        """
-        self.parent = parent
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Initializes this instance's content based on the provided XML node.
-
-        Args:
-            node : XML node used to populate this instance
-        """
-        self._parse_xml(node)
-
-    def to_xml(self) -> ElementTree.Element:
-        """Returns the XML representation of this instance.
-
-        Returns:
-            XML node representing this instance
-        """
-        return self._generate_xml()
-
-    def is_valid(self) -> bool:
-        """Returns whether or not an instance is fully specified.
-
-        Returns:
-            True if all required variables are set, False otherwise
-        """
-        return self._is_valid()
-
-    @abstractmethod
-    def _parse_xml(self, node: ElementTree.Element) -> None:
-        """Implementation of the XML parsing.
-
-        Args
-        ==========:
-            node: XML node used to populate this instance
-        """
-        pass
-
-    @abstractmethod
-    def _generate_xml(self) -> ElementTree.Element:
-        """Implementation of the XML generation.
-
-        Returns:
-            XML node representing this instance
-        """
-        pass
-
-    @abstractmethod
-    def _is_valid(self) -> bool:
-        """Returns whether or not an instance is fully specified.
-
-        Returns:
-            True if all required variables are set, False otherwise
-        """
-        pass
-
-    @abstractmethod
-    def _sanitize(self) -> None:
-        """Processes the entries values to ensure they are consistent."""
-        pass
 from .util import safe_format, safe_read
+
+
+# class ActionData(metaclass=ABCMeta):
+#
+#     """Base class for all objects storing action information.
+#
+#     This contains only input independent action infmration.
+#     """
+#
+#     def __init__(self, parent):
+#         """Creates a new instance with a pointer to its parent.
+#
+#         Args:
+#             parent: parent item of this instance in the profile tree
+#         """
+#         self.parent = parent
+#
+#     def from_xml(self, node: ElementTree.Element) -> None:
+#         """Initializes this instance's content based on the provided XML node.
+#
+#         Args:
+#             node : XML node used to populate this instance
+#         """
+#         self._parse_xml(node)
+#
+#     def to_xml(self) -> ElementTree.Element:
+#         """Returns the XML representation of this instance.
+#
+#         Returns:
+#             XML node representing this instance
+#         """
+#         return self._generate_xml()
+#
+#     def is_valid(self) -> bool:
+#         """Returns whether or not an instance is fully specified.
+#
+#         Returns:
+#             True if all required variables are set, False otherwise
+#         """
+#         return self._is_valid()
+#
+#     @abstractmethod
+#     def _parse_xml(self, node: ElementTree.Element) -> None:
+#         """Implementation of the XML parsing.
+#
+#         Args
+#         ==========:
+#             node: XML node used to populate this instance
+#         """
+#         pass
+#
+#     @abstractmethod
+#     def _generate_xml(self) -> ElementTree.Element:
+#         """Implementation of the XML generation.
+#
+#         Returns:
+#             XML node representing this instance
+#         """
+#         pass
+#
+#     @abstractmethod
+#     def _is_valid(self) -> bool:
+#         """Returns whether or not an instance is fully specified.
+#
+#         Returns:
+#             True if all required variables are set, False otherwise
+#         """
+#         pass
+#
+#     @abstractmethod
+#     def _sanitize(self) -> None:
+#         """Processes the entries values to ensure they are consistent."""
+#         pass
 
 
 # class LibraryReference:
