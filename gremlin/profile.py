@@ -1343,8 +1343,10 @@ class Profile:
         tree = ElementTree.parse(fpath)
         root = tree.getroot()
 
+        self.library.from_xml(root)
+
         for node in root.findall("./inputs/input"):
-            item = InputItem()
+            item = InputItem(self.library)
             item.from_xml(node)
 
             if item.device_id not in self.inputs:
@@ -1362,12 +1364,13 @@ class InputItem:
 
     """Represents the configuration of a single input in a particular mode."""
 
-    def __init__(self):
+    def __init__(self, library: profile_library.Library):
         """Creates a new instance."""
         self.device_id = None
         self.input_type = None
         self.input_id = None
         self.mode = None
+        self.library = library
         self.actions = []
         self.description = ""
         self.always_execute = False
@@ -1383,10 +1386,16 @@ class InputItem:
         if self.input_type == InputType.Keyboard:
             self.input_id = (self.input_id & 0xFF, self.input_id >> 8)
 
-        for at_node in node.findall("actions/action-tree"):
-            tree = profile_library.ActionTree()
-            tree.from_xml(at_node)
-            self.actions.append(tree)
+        # Retrieve and link library item references and store them.
+        for reference in node.findall("library-reference"):
+            ref_id = uuid.UUID(reference.text)
+            if ref_id not in self.library:
+                raise error.ProfileError(
+                    f"Input: {self.device_id} {self.input_type} {self.input_id} "
+                    f"links to invalid library item {ref_id}"
+                )
+
+            self.actions.append(self.library[ref_id])
 
     def to_xml(self) -> ElementTree.Element:
         # To convert input typle for keyboards

@@ -22,7 +22,6 @@ from xml.etree import ElementTree
 
 from . import base_classes, common, error, plugin_manager
 from .tree import TreeNode
-from .util import safe_read
 
 
 class ActionData(metaclass=ABCMeta):
@@ -96,6 +95,7 @@ class ActionData(metaclass=ABCMeta):
     def _sanitize(self) -> None:
         """Processes the entries values to ensure they are consistent."""
         pass
+from .util import safe_format, safe_read
 
 
 # class LibraryReference:
@@ -242,16 +242,23 @@ class ActionData(metaclass=ABCMeta):
 
 class ActionTree:
 
-    def __init__(self):
-        self.root = TreeNode()
-        self._id = uuid.uuid4()
+    """Represents a tree of actions.
 
-    @property
-    def id(self):
-        return self._id
+    The tree contains both actions to execute as well as conditions controlling
+    when and which actions will be executed.
+    """
+
+    def __init__(self):
+        """Creates a new instance."""
+        self.root = TreeNode()
 
     def from_xml(self, action_tree_node: ElementTree) -> None:
-        self._id = safe_read(action_tree_node, "id", uuid.UUID)
+        """Populates the instance with the XML instance data.
+
+        Args:
+            action_tree_node: XML subtree which contains the information
+        """
+        root_id = safe_read(action_tree_node, "root", uuid.UUID)
 
         # Create the action tree nodes corresponding to each <action> XML
         # element
@@ -262,13 +269,14 @@ class ActionTree:
             # Ensure all required attributes are present
             if not set(["id", "type", "parent"]).issubset(node.keys()):
                 raise error.ProfileError(
-                    f"Missing attribute in an action of tree '{self._id}'"
+                    f"Missing attribute in an action of tree with "
+                    f"root: '{root_id}'"
                 )
 
             # Ensure the action type is known
             type_key = node.get("type")
             if type_key not in plugin_manager.ActionPlugins().tag_map:
-                action_id = node.attrib["id"]
+                action_id = safe_read(node, "id", uuid.UUID)
                 raise error.ProfileError(
                     f"Unknown type '{type_key}' in action '{action_id}"
                 )
@@ -290,7 +298,7 @@ class ActionTree:
             parent_node = None
             if parent_id in action_ids:
                 parent_node = action_nodes[action_ids[parent_id]]
-            elif parent_id == self._id:
+            elif parent_id == root_id:
                 parent_node = self.root
             else:
                 raise error.ProfileError(
@@ -300,6 +308,11 @@ class ActionTree:
             node.set_parent(parent_node)
 
     def to_xml(self) -> ElementTree:
+        """Returns an XML subtree representing the tree's information.
+
+        Returns:
+            XML element containing the object's information
+        """
         pass
 
 
@@ -324,6 +337,27 @@ class LibraryItem:
         """
         return self._id
 
+    def from_xml(self, node: ElementTree.Element) -> None:
+        """Parses an library item to populate this instance.
+
+        Args:
+            node: XML node containing the library item information
+        """
+        self._id = safe_read(node, "id", uuid.UUID)
+        at_node = node.find("action-tree")
+        self.action_tree = ActionTree()
+        self.action_tree.from_xml(at_node)
+
+    def to_xml(self) -> ElementTree.Element:
+        """Returns an XML node encoding the content of this library.
+
+        Returns:
+            XML node holding the instance's content
+        """
+        node = ElementTree.Element("library-item")
+        node.set("id", safe_format(self._id, uuid.UUID))
+        node.append(self.action_tree.to_xml())
+        return node
 
 
 class Library:
@@ -343,6 +377,32 @@ class Library:
 
         self._container_name_map = plugin_manager.ContainerPlugins().tag_map
 
+    def __contains__(self, key: uuid.UUID) -> bool:
+        """Checks if an item exists for the given key.
+
+        Args:
+            key: the key to check for
+
+        Returns:
+            True if an item exists for the specific key, False otherwise
+        """
+        return key in self._items
+
+    def __getitem__(self, key: uuid.UUID) -> LibraryItem:
+        """Returns the item stored at the specified key.
+
+        If there is no item with the specified key an exception is throw.
+
+        Args:
+            key: the key to return an item for
+
+        Returns:
+            The LibraryItem instance stored at the given key
+        """
+        if key not in self._items:
+            raise error.GremlinError(f"Invalid uuid for library entry: {key}")
+        return self._items[key]
+
     def add_item(self, item: LibraryItem) -> None:
         """Adds the provided item to the library.
 
@@ -360,41 +420,22 @@ class Library:
         if item.id in self._items:
             del self._items[item.id]
 
-    def lookup(self, uuid: uuid.UUID) -> LibraryItem:
-        """Returns the container corresponding to the given UUID.
-
-        An exception will be thrown if a container for a non existant UUID
-        is requested.
-
-        Args:
-            uuid: Unique ID of the desired container
-
-        Returns:
-            Container corresponding to the given UUID
-        """
-        if uuid not in self.content:
-            raise error.GremlinError(f"Invalid uuid for library entry: {uuid}")
-        return self.content[uuid]
-
     def from_xml(self, node: ElementTree.Element) -> None:
         """Parses an library node to populate this instance.
 
         Args:
             node: XML node containing the library information
         """
-        for container in node.findall("container"):
-            container_type = safe_read(container, "type", str)
-            container_uuid = util.parse_guid(container.attrib["uuid"])
+        for item in node.findall("./library/library-item"):
+            library_item = LibraryItem()
+            library_item.from_xml(item)
 
-            if container_type not in self._container_name_map:
-                logging.getLogger("system").warning(
-                    "Unknown container type used: {}".format(container_type)
+            if library_item.id in self._items:
+                raise error.ProfileError(
+                    f"Duplicate library item guid: {library_item.id}"
                 )
-                continue
 
-            entry = self._container_name_map[container_type](self)
-            entry.from_xml(container)
-            self.content[container_uuid] = entry
+            self._items[library_item.id] = library_item
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the content of this library.
@@ -404,10 +445,6 @@ class Library:
         """
         node = ElementTree.Element("library")
 
-        for uuid, container in self.content.items():
-            if container.is_valid():
-                c_node = container.to_xml()
-                c_node.set("uuid", str(uuid))
-                node.append(c_node)
+
 
         return node
