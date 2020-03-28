@@ -19,21 +19,34 @@
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
-import gremlin.plugin_manager
+from gremlin import plugin_manager
+from gremlin import profile
 
 
 class Backend(QtCore.QObject):
 
+    """Allows interfacing between the QML frontend and the Python backend."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        #self._action_list = QtCore.QVariantList()#QtCore.QStringListModel(["Remap", "Macro", "Response Curve"])
-        #self._action_list.append("Remap")
-        #self._action_list = ["Remap", "Macro"]
+        self.profile = None
+
+    @Property(str)
+    def help(self):
+        return "Help?"
 
     @Property(type="QVariantList", constant=True)
     def action_list(self):
-        print(gremlin.plugin_manager.ActionPlugins().repository.keys())
-        #print(self._action_list.rowCount())
-        #return self._action_list
-        return list(gremlin.plugin_manager.ActionPlugins().repository.keys())
+        return list(plugin_manager.ActionPlugins().repository.keys())
+
+    @Slot(str)
+    def add_action(self, action_name: str):
+        print(action_name)
+
+    @Slot(str)
+    def load_profile(self, fpath: str) -> None:
+        # TODO: copy code and logic from the old joystick_gremlin.py file
+        #       for handling of profile loading
+        self.profile = profile.Profile()
+        self.profile.from_xml(fpath)

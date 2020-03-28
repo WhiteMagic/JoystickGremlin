@@ -199,12 +199,16 @@ if __name__ == "__main__":
     backend = gremlin.ui.backend.Backend()
     engine.rootContext().setContextProperty("backend", backend)
 
+    # Load a profile
+    backend.load_profile("layout.xml")
+
     # Load plugin code and UI elements
     syslog.info("Initializing plugins")
     gremlin.plugin_manager.ActionPlugins()
 
     # Initialize main UI
     engine.load(QtCore.QUrl.fromLocalFile("qml/Main.qml"))
+    # engine.load(QtCore.QUrl.fromLocalFile("qml/DialogDeviceInformation.qml"))
     if not engine.rootObjects():
         sys.exit(-1)
 
@@ -241,8 +245,8 @@ if __name__ == "__main__":
     #     sys.exit(0)
 
     # Initialize action plugins
-    syslog.info("Initializing plugins")
-    gremlin.plugin_manager.ActionPlugins()
+    # syslog.info("Initializing plugins")
+    # gremlin.plugin_manager.ActionPlugins()
     # gremlin.plugin_manager.ContainerPlugins()
 
     # Create Gremlin UI

@@ -27,37 +27,37 @@ import gremlin.ui.profile 1.0
 
 
 Item {
-    id: idRoot
+    id: root
 
     property ProfileModel profileModel
-//    property InputConfiguration inputConfiguration
 
-//    ColumnLayout {
+//        ActionList {
+//            id: actionPanel
+//
+//            Layout.fillWidth: true
+//        }
 
-    RowLayout {
+    ScrollView {
         anchors.fill: parent
 
-        DisplayText {
-            text: "Action"
-            width: 300
-        }
-        ComboBox {
-//                width: 200
-            id: idActionLlist
-            model: backend.action_list
-//            font.pointSize: 10
+        // Logic along the lines of:
+        // Foreach library_item in input_item.actions do
+        //     Render library_item
 
-//            menu.style.font.pointSize: 36
-        }
-        Button {
-            text: "Add"
-            font.pointSize: 10
-            //onClicked: backend.add_action(
-            //    inputConfiguration
-            //    action_list.currentText
-            //)
+        ColumnLayout {
+
+            anchors.fill: parent
+
+            Repeater {
+                // Model has to be the library item list thing
+                model: 10
+
+                // For now this will have to render each action, later on
+                // this will need to be a special tree representation type
+                DisplayText {
+                    text: backend.help
+                }
+            }
         }
     }
-
-//    }
 }
