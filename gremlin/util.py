@@ -170,7 +170,7 @@ def write_guid(guid: dill.GUID) -> str:
 
 
 def safe_read(
-        node: ElementTree,
+        node: ElementTree.Element,
         key: str,
         type_cast: Callable[[str], Any],
         default_value: Optional[Any] = None
@@ -211,7 +211,7 @@ def safe_read(
 
 
 def safe_format(
-        value: str,
+        value: Any,
         data_type: Any,
         formatter: Callable[[Any], str] = str
 ) -> str:
