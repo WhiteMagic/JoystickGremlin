@@ -29,7 +29,7 @@ import gremlin.types
 from gremlin.base_classes import AbstractAction, AbstractFunctor
 from gremlin.types import InputType
 import gremlin.macro
-from gremlin.util import safe_format, safe_read, parse_guid, write_guid
+from gremlin.util import safe_format, safe_read, parse_guid
 from gremlin.ui.common import NoKeyboardPushButton
 import gremlin.ui.input_item
 
@@ -1634,7 +1634,7 @@ class Macro(AbstractAction):
         for entry in self.sequence:
             if isinstance(entry, gremlin.macro.JoystickAction):
                 joy_node = ElementTree.Element("joystick")
-                joy_node.set("device-guid", write_guid(entry.device_guid))
+                joy_node.set("device-guid", str(entry.device_guid))
                 joy_node.set(
                     "input-type",
                     gremlin.types.InputType.to_string(entry.input_type)

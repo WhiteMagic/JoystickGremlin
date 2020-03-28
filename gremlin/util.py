@@ -157,18 +157,6 @@ def parse_guid(value: str) -> dill.GUID:
         raise error.GremlinError(f"Failed parsing GUID from value {value}")
 
 
-def write_guid(guid: dill.GUID) -> str:
-    """Returns the string representation of a GUID object.
-
-    Args:
-        guid: the GUID object to turn into a string
-
-    Returns:
-        string representation of the guid object
-    """
-    return str(guid)
-
-
 def safe_read(
         node: ElementTree.Element,
         key: str,

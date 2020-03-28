@@ -29,7 +29,7 @@ import dill
 
 from . import common, error, plugin_manager, profile_library
 from .types import ActivationRule, InputType
-from .util import parse_bool, parse_guid, safe_read, write_guid
+from .util import parse_bool, parse_guid, safe_read
 
 
 
@@ -209,7 +209,7 @@ class JoystickCondition(AbstractCondition):
         node.set("condition-type", "joystick")
         node.set("input", InputType.to_string(self.input_type))
         node.set("id", str(self.input_id))
-        node.set("device-guid", write_guid(self.device_guid))
+        node.set("device-guid", str(self.device_guid))
         node.set("device-name", str(self.device_name))
         if self.input_type == InputType.JoystickAxis:
             node.set("range-low", str(self.range[0]))
@@ -268,7 +268,7 @@ class VJoyCondition(AbstractCondition):
         node.set("condition-type", "vjoy")
         node.set("input", InputType.to_string(self.input_type))
         node.set("id", str(self.input_id))
-        node.set("vjoy-id", write_guid(self.vjoy_id))
+        node.set("vjoy-id", str(self.vjoy_id))
         if self.input_type == InputType.JoystickAxis:
             node.set("range-low", str(self.range[0]))
             node.set("range-high", str(self.range[1]))
