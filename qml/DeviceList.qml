@@ -40,6 +40,7 @@ Item {
         {
             id: idDeviceList
             anchors.fill: parent
+            orientation: ListView.Horizontal
 
             model: deviceListModel
             delegate: idDeviceDelegate
@@ -52,66 +53,24 @@ Item {
         Component {
             id: idDeviceDelegate
 
-            Rectangle {
-                id: rect
+            Label {
+                id: idDeviceName
 
-                implicitHeight: idDeviceName.height
-                implicitWidth: idDeviceList.width
+                text: name
+                leftPadding: 20
+                rightPadding: 20
+                topPadding: 10
+                bottomPadding: 10
 
-                color: model.index == idDeviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
-
-                DisplayText {
-                    id: idDeviceName
-                    text: name
-                    wrapMode: Text.Wrap
-                    width: 200
+                background: Rectangle {
+                    color: model.index == idDeviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
                 }
 
                 MouseArea {
                     anchors.fill: parent
                     onClicked: idDeviceList.currentIndex = model.index
                 }
-
             }
-        }
-    }
-
-
-//            Repeater {
-//                id: deviceTabBarRepeater
-//                model: deviceData
-//
-//                TabButton {
-//                    text: model.name
-//                    onClicked: deviceInput.currentIndex = model.index
-//
-//                    background: Rectangle {
-//                        color: model.index == 0 ? Universal.chromeMediumColor : Universal.background
-//                    }
-//                }
-//            }
-
-//    StackLayout {
-//        id: deviceInput
-//        currentIndex: 0
-//
-//        width: parent.width
-//        anchors.top: deviceTabBar.bottom
-//        anchors.bottom: parent.bottom
-//
-//        Repeater {
-//            id: deviceInputRepeater
-//            model: deviceData
-//
-//            Rectangle {
-//                color: "teal"
-//                width: 200
-//                height: 200
-//
-//                Text {
-//                    text: model.name
-//                }
-//            }
-//        }
-//    }
-}
+        } // Component
+    } // ScrollView
+} // Item

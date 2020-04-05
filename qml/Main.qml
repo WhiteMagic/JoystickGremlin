@@ -120,46 +120,57 @@ ApplicationWindow {
         id: idDeviceListModel
     }
 
+
     // Main content area
-    SplitView {
-        id: idContentLayout
+    ColumnLayout
+    {
         anchors.fill: parent
-        orientation: Qt.Horizontal
 
         // List of all detected devices
         DeviceList {
             id: idDevicePanel
+            Layout.preferredHeight: 50
+            Layout.fillWidth: true
 
-            SplitView.minimumWidth: 150
 
             deviceListModel: idDeviceListModel
         }
 
-        // One layout per device containint all inputs of the device
-        StackLayout {
-            id: idInputPanel
+        SplitView {
+            id: idContentLayout
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            orientation: Qt.Horizontal
 
-            currentIndex: idDevicePanel.deviceIndex
+            // One layout per device containint all inputs of the device
+            StackLayout {
+                id: idInputPanel
 
-            SplitView.minimumWidth: 200
+                currentIndex: idDevicePanel.deviceIndex
 
-            Repeater {
-                id: idDeviceInputListRepeater
-                model: idDeviceListModel
+                SplitView.minimumWidth: 200
 
-                DeviceInputList {
-                    deviceGuid: model.guid
+                Repeater {
+                    id: idDeviceInputListRepeater
+                    model: idDeviceListModel
 
-                    //onInputIndexChanged: actionPanel.currentIndex = inputIndex
+                    DeviceInputList {
+                        deviceGuid: model.guid
+
+                        //onInputIndexChanged: actionPanel.currentIndex = inputIndex
+                        onInputIndexChanged: {
+                            idInputConfigurationPanel.inputItemModel = backend.getInputItem(inputIdentifier)
+                            idInputConfigurationPanel.libraryItemListModel = idInputConfigurationPanel.inputItemModel.libraryItems
+                        }
+                    }
                 }
             }
-        }
 
-        // Configuration of the selected input
-        InputConfiguration {
-            id: idInputConfigurationPanel
-        }
+            // Configuration of the selected input
+            InputConfiguration {
+                id: idInputConfigurationPanel
+            }
 
-    } // SplitView
-
+        } // SplitView
+    } // RowLayout
 } // ApplicationWindow
