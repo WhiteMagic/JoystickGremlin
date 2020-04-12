@@ -1349,13 +1349,12 @@ class MacroWidget(gremlin.ui.input_item.AbstractActionWidget):
             cur_index = self.list_view.currentIndex().row()
             entry = self.model.get_entry(cur_index)
 
-            if event not in self._recording_times:
-                self._recording_times[event] = time.time()
-            elif time.time() - self._recording_times[event] < self._polling_rate:
-                add_new_entry = False
-            elif abs(event.value - self._recording_values[event]) < \
-                    self._minimum_change_amount:
-                add_new_entry = False
+            if event in self._recording_times:
+                if time.time() - self._recording_times[event] < self._polling_rate:
+                    add_new_entry = False
+                elif abs(event.value - self._recording_values[event]) < \
+                        self._minimum_change_amount:
+                    add_new_entry = False
 
         if add_new_entry:
             if self.record_time.isChecked():
