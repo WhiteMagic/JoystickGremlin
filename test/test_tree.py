@@ -30,17 +30,23 @@ def test_constructor():
     assert n1.value == 1
     assert n1.children == []
     assert n1.parent == None
+    assert n1.depth == 0
+    assert n1.depth_first_index == 0
 
     n2 = TreeNode(2, None)
     assert n2.value == 2
     assert n2.children == []
     assert n2.parent == None
+    assert n2.depth == 0
+    assert n2.depth_first_index == 0
 
     n3 = TreeNode(3, n1)
     assert n3.value == 3
     assert n3.children == []
     assert n3.parent == n1
     assert n1.children == [n3]
+    assert n3.depth == 1
+    assert n3.depth_first_index == 1
 
 
 def test_add_child():
@@ -52,14 +58,19 @@ def test_add_child():
     n1.add_child(n2)
     assert n1.children == [n2]
     assert n2.parent == n1
+    assert n1.depth == 0
+    assert n2.depth == 1
 
     n1.add_child(n3)
     assert n1.children == [n2, n3]
     assert n3.parent == n1
+    assert n3.depth == 1
 
     n1.add_child(n4)
     assert n1.children == [n2, n3, n4]
     assert n4.parent == n1
+    assert n4.depth == 1
+
 
 def test_add_sibling():
     n1 = TreeNode(1)
@@ -74,11 +85,14 @@ def test_add_sibling():
     n1.add_child(n2)
     assert n1.children == [n2]
     assert n2.parent == n1
+    assert n1.depth == 0
+    assert n2.depth == 1
 
     n2.add_sibling(n3)
     assert n1.children == [n2, n3]
     assert n2.children == []
     assert n3.parent == n1
+    assert n3.depth == 1
 
     n2.add_sibling(n4)
     assert n1.children == [n2, n3, n4]
@@ -205,6 +219,12 @@ def test_is_descendant():
     assert n5.parent == n2
     assert n5.children == []
 
+    assert n1.depth == 0
+    assert n2.depth == 1
+    assert n3.depth == 1
+    assert n4.depth == 2
+    assert n5.depth == 2
+
     assert n1.is_descendant(n5) == True
     assert n5.is_descendant(n1) == False
     assert n1.is_descendant(n6) == False
@@ -213,3 +233,9 @@ def test_is_descendant():
     assert n3.is_descendant(n3) == False
     assert n2.is_descendant(n4) == True
     assert n4.is_descendant(n2) == False
+
+    assert n1.depth_first_index == 0
+    assert n2.depth_first_index == 1
+    assert n3.depth_first_index == 4
+    assert n4.depth_first_index == 2
+    assert n5.depth_first_index == 3

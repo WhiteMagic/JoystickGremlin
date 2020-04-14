@@ -121,3 +121,49 @@ class TreeNode:
                 return True
             node_list.extend(node.children[:])
         return False
+
+    def get_root(self) -> TreeNode:
+        """Returns the root node of the tree.
+
+        Returns:
+            Root node of the tree
+        """
+        root_node = self
+        while root_node.parent is not None:
+            root_node = root_node.parent
+        return root_node
+
+    @property
+    def depth(self) -> int:
+        """Returns the depth of this node within the tree.
+
+        Returns:
+            Depth of the node within the tree, 0 depth being the root
+        """
+        node_depth = 0
+        current_parent = self.parent
+        while current_parent is not None:
+            current_parent = current_parent.parent
+            node_depth += 1
+        return node_depth
+
+    @property
+    def depth_first_index(self) -> int:
+        """Returns the index of this node as found via depth first traversal.
+
+        The depth first traversal enumerates nodes in pre-order manner.
+
+        Return:
+            Index of this node in depth first traversal, with 0 being the root.
+        """
+        stack = [self.get_root()]
+        index = 0
+
+        while len(stack) > 0:
+            node = stack.pop()
+            if node == self:
+                return index
+
+            index += 1
+
+            stack.extend(node.children[::-1])
