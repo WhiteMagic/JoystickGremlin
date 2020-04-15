@@ -165,5 +165,6 @@ class TreeNode:
                 return index
 
             index += 1
-
             stack.extend(node.children[::-1])
+
+        raise gremlin.error.GremlinError("Unable to determine depth index.")
