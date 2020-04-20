@@ -1,11 +1,18 @@
 name: Full build for CI/CD
 
-on: 'push'
+#on: 'push'
+
+#on:
 #  push:
 #    branches: [ master ]
-
 #  pull_request:
 #    branches: [ master ]
+
+on:
+  - push
+
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -52,7 +59,19 @@ jobs:
       run: '&"$($env:WIX)\bin\light.exe" -ext WixUiExtension joystick_gremlin.wixobj'
 
     - name: Upload artifact
+      if: github.event_name == 'push'
       uses: actions/upload-artifact@v1
       with:
         name: joystick_gremlin.msi
         path: dist/joystick_gremlin.msi
+    
+    - name: Upload release files
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ env.GITHUB_REF }}
+        asset_path: dist/joystick_gremlin.msi
+        asset_name: joystick_gremlin.msi
+        asset_content_type: application/octet-stream
