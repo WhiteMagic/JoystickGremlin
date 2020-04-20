@@ -34,18 +34,12 @@ jobs:
         python generate_wix.py
         Copy-Item -force joystick_gremlin.wxs dist\joystick_gremlin.wxs
 
-    - name: Pre-build cleanup for WiX
-      run: |
-        cd dist
-        Get-ChildItem -Include PFiles | Remove-Item -Recurse
-        Get-ChildItem -Include joystick_gremlin.wixobj | Remove-Item
-        Get-ChildItem -Include joystick_gremlin.wixpdb | Remove-Item
-        Get-ChildItem -Include joystick_gremlin.msi | Remove-Item
-
     - name: Candle
+      working-directory: dist
       run: '&"$($env:WIX)\bin\candle.exe" joystick_gremlin.wxs'
     
     - name: Light
+      working-directory: dist
       run: '&"$($env:WIX)\bin\light.exe" -ext WixUiExtension joystick_gremlin.wixobj'
 
     - name: Upload artifact
