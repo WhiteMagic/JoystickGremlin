@@ -42,8 +42,8 @@ jobs:
         Get-ChildItem -Include joystick_gremlin.wixpdb | Remove-Item
         Get-ChildItem -Include joystick_gremlin.msi | Remove-Item
 
-    - name: Candle
-      run: '&"$($env:WIX)\bin\candle.exe" joystick_gremlin.wxs'
+    #- name: Candle
+    #  run: '&"$($env:WIX)\bin\candle.exe" joystick_gremlin.wxs'
     
     #- name: Light
     #  run: '&"$($env:WIX)\bin\light.exe" -ext WixUiExtension joystick_gremlin.wixobj'
