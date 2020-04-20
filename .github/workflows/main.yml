@@ -12,23 +12,44 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # Checkout the repo
-    - uses: actions/checkout@master
+    - name: Checkout source
+      uses: actions/checkout@master
 
-    # Setup Python
-    - name: Set up Python 3.8
+    - name: Set up Python 3.5
       uses: actions/setup-python@v1
       with:
-        python-version: 3.8
+        python-version: 3.5
         architecture: 'x86'
 
-    # Install deps
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Build executable
     - name: Build executable
       run: pyinstaller -y --clean joystick_gremlin.spec
-      
+
+    - name: Generate WiX file
+      run: |
+        python generate_wix.py
+        Copy-Item -force joystick_gremlin.wxs dist\joystick_gremlin.wxs
+
+    - name: Pre-build cleanup for WiX
+      run: |
+        cd dist
+        Get-ChildItem -Include PFiles | Remove-Item -Recurse
+        Get-ChildItem -Include joystick_gremlin.wixobj | Remove-Item
+        Get-ChildItem -Include joystick_gremlin.wixpdb | Remove-Item
+        Get-ChildItem -Include joystick_gremlin.msi | Remove-Item
+
+    - name: Candle
+      run: ${{ WIX }}\bin\candle.exe joystick_gremlin.wxs
+    
+    - name: Light
+      run: ${{ WIX }}\bin\light.exe -etx WixUiExtension joystick_gremlin.wixobj
+
+    # Upload artifacts
+    #- name: Upload artifacts
+    #  uses: actions/upload-artifact@v1
+    #    with: my-artifact
+    #    path: path/to/artifact
