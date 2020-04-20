@@ -9,8 +9,7 @@ name: Full build for CI/CD
 #    branches: [ master ]
 
 on:
-  - push
-
+  push: *
   release:
     types: [created]
 
