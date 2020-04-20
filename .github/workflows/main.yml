@@ -10,7 +10,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: windows-latest
-    
+
     steps:
     # Checkout the repo
     - uses: actions/checkout@master
@@ -20,7 +20,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
-	
+
     # Install deps
     - name: Install dependencies
       run: |
