@@ -20,6 +20,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
+        architecture: 'x86'
 
     # Install deps
     - name: Install dependencies
