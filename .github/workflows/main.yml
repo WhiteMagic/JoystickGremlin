@@ -1,4 +1,4 @@
-name: Deploy
+name: Full build for CI/CD
 
 on: 'push'
 #  push:
@@ -8,7 +8,7 @@ on: 'push'
 #    branches: [ master ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: windows-2019
 
     steps:
@@ -20,6 +20,15 @@ jobs:
       with:
         python-version: 3.5
         architecture: 'x86'
+
+    - name: Use PIP cache if possible
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'Windows')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
