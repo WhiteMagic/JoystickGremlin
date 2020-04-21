@@ -1,0 +1,38 @@
+name: Publish release
+
+#on: 'push'
+
+#on:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+on:
+#  push:
+#    branches-ignore:
+#      - 'releases/**'
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@master
+
+    - name: Diagnostic
+      run: Write-Host $env:GITHUB_REF
+
+    - name: Upload release files
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ env.GITHUB_REF }}
+        asset_path: dist/joystick_gremlin.msi
+        asset_name: joystick_gremlin.msi
+        asset_content_type: application/octet-stream
