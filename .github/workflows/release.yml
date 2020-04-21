@@ -13,11 +13,21 @@ jobs:
       uses: actions/checkout@master
 
     - name: Diagnostic
-      env:
-        OBJREF: ${{ github.ref }}
       run: |
         Write-Host "GITHUB_REF: $($env:GITHUB_REF)"
-        Write-Host "github.ref: $($env:OBJREF)"
+
+    - name: Get upload URL
+      env:
+        REPO: ${{ github.repository }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$($env:REPO)/releases/tags/$($env:GITHUB_REF.Split('/') |? {![string]::IsNullOrWhitespace($_)} | Select -Last 1)" -Headers @{'Authorization' = 'Bearer $($env:GITHUB_TOKEN)'}
+        Write-Host "upload_url = $($release.upload_url)"
+        $env:UPLOAD_URL = $release.upload_url
+
+    - name: Diagnostic
+      run: |
+        Write-Host $env:UPLOAD_URL
 
     - name: Upload release files
       if: github.event_name == 'release'
