@@ -10,6 +10,8 @@ name: Full build for CI/CD
 
 on:
   push:
+    branches:
+      - 'master'
     branches-ignore:
       - 'releases/**'
 #  release:
