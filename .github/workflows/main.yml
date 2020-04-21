@@ -1,22 +1,14 @@
 name: Full build for CI/CD
 
-#on: 'push'
-
-#on:
-#  push:
-#    branches: [ master ]
-#  pull_request:
-#    branches: [ master ]
-
 on:
   push:
-    branches:
-      - 'master'
-#  release:
-#    types: [published]
+    branches-ignore:
+      - 'releases/**'
+  release:
+    types: [published]
 
 jobs:
-  build-for-CI:
+  build-or-release:
     runs-on: windows-2019
 
     steps:
@@ -66,13 +58,26 @@ jobs:
         name: joystick_gremlin.msi
         path: dist/joystick_gremlin.msi
     
+
+
+    - name: Get upload URL
+      if: github.event_name == 'release'
+      id: get_upload_url
+      env:
+        REPO: ${{ github.repository }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$($env:REPO)/releases/tags/$($env:GITHUB_REF.Split('/') |? {![string]::IsNullOrWhitespace($_)} | Select -Last 1)" -Headers @{"Authorization" = "Bearer $($env:GITHUB_TOKEN)"}
+        Write-Host "upload_url = $($release.upload_url)"
+        Write-Output "::set-output name=url::$($release.upload_url)"
+
     - name: Upload release files
       if: github.event_name == 'release'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ env.GITHUB_REF }}
+        upload_url: ${{ steps.get_upload_url.outputs.url }}
         asset_path: dist/joystick_gremlin.msi
         asset_name: joystick_gremlin.msi
         asset_content_type: application/octet-stream
