@@ -13,7 +13,11 @@ jobs:
       uses: actions/checkout@master
 
     - name: Diagnostic
-      run: Write-Host $env:GITHUB_REF
+      env:
+        OBJREF: ${{ github.ref }}
+      run: |
+        Write-Host "GITHUB_REF: $($env:GITHUB_REF)"
+        Write-Host "github.ref: $($env:OBJREF)"
 
     - name: Upload release files
       if: github.event_name == 'release'
