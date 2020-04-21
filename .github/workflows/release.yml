@@ -28,7 +28,7 @@ jobs:
 
     - name: Diagnostic
       run: |
-        Write-Host ${{ steps.get_upload_url.outputs.url }}
+        Write-Host "${{ steps.get_upload_url.outputs.url }}"
 
     - name: Upload release files
       if: github.event_name == 'release'
