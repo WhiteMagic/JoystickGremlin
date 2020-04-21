@@ -12,8 +12,6 @@ on:
   push:
     branches:
       - 'master'
-    branches-ignore:
-      - 'releases/**'
 #  release:
 #    types: [published]
 
