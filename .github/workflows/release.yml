@@ -21,9 +21,7 @@ jobs:
         REPO: ${{ github.repository }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        Write-Host "https://api.github.com/repos/$($env:REPO)/releases/tags/$($env:GITHUB_REF.Split('/') |? {![string]::IsNullOrWhitespace($_)} | Select -Last 1)"
-        Write-Host 'Bearer $($env:GITHUB_TOKEN)'
-        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$($env:REPO)/releases/tags/$($env:GITHUB_REF.Split('/') |? {![string]::IsNullOrWhitespace($_)} | Select -Last 1)" -Headers @{'Authorization' = 'Bearer $($env:GITHUB_TOKEN)'}
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$($env:REPO)/releases/tags/$($env:GITHUB_REF.Split('/') |? {![string]::IsNullOrWhitespace($_)} | Select -Last 1)" -Headers @{"Authorization" = "Bearer $($env:GITHUB_TOKEN)"}
         Write-Host "upload_url = $($release.upload_url)"
         $env:UPLOAD_URL = $release.upload_url
 
