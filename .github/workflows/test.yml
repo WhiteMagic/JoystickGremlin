@@ -1,17 +1,6 @@
 name: Publish release
 
-#on: 'push'
-
-#on:
-#  push:
-#    branches: [ master ]
-#  pull_request:
-#    branches: [ master ]
-
 on:
-#  push:
-#    branches-ignore:
-#      - 'releases/**'
   release:
     types: [published]
 

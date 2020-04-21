@@ -8,10 +8,10 @@ name: Full build for CI/CD
 #  pull_request:
 #    branches: [ master ]
 
-#on:
-#  push:
-#    branches-ignore:
-#      - 'releases/**'
+on:
+  push:
+    branches-ignore:
+      - 'releases/**'
 #  release:
 #    types: [published]
 
