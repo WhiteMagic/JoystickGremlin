@@ -120,6 +120,51 @@ xml_description = """
 </profile>
 """
 
+xml_hierarchy = """
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <input-type>button</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
+        </input>
+    </inputs>
+
+    <library>
+        <library-item id="ac905a47-9ad3-4b65-b702-fbae1d133609">
+            <action-tree root="ec663ba4-264a-4c76-98c0-6054058cae9f">
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133600" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Node 1</value>
+                    </property>
+                </action>
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133601" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Node 2</value>
+                    </property>
+                </action>
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133602" parent="0c905a47-9ad3-4b65-b702-fbae1d133603" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Node 4</value>
+                    </property>
+                </action>
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133603" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Node 3</value>
+                    </property>
+                </action>
+            </action-tree>
+        </library-item>
+    </library>
+</profile>
+"""
+
 xml_invalid = """
 <profile version="14">
     <inputs>
@@ -205,5 +250,34 @@ def test_simple_action():
     assert actions[2].value._axis_mode == gremlin.types.AxisMode.Relative
     assert actions[2].value._axis_scaling == 1.5
     assert actions[2].value.id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")
+
+    os.remove(fpath)
+
+
+def test_hierarchy():
+    gremlin.plugin_manager.ActionPlugins()
+    fpath = _store_in_tmpfile(xml_hierarchy)
+
+    p = Profile()
+    p.from_xml(fpath)
+
+    item_uuid = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
+    root = p.library[item_uuid].action_tree.root
+    assert root.node_count == 5
+
+    n1 = root.node_at_index(1)
+    n2 = root.node_at_index(2)
+    n3 = root.node_at_index(3)
+    n4 = root.node_at_index(4)
+
+    assert n1.parent == root
+    assert n2.parent == root
+    assert n3.parent == root
+    assert n4.parent == n3
+
+    assert n1.value.description == "Node 1"
+    assert n2.value.description == "Node 2"
+    assert n3.value.description == "Node 3"
+    assert n4.value.description == "Node 4"
 
     os.remove(fpath)

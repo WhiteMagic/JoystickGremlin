@@ -288,7 +288,7 @@ class ActionTree:
             # Store node information
             action_node = TreeNode(action_data)
             action_nodes.append(action_node)
-            action_ids[action_data.id] = len(action_nodes)
+            action_ids[action_data.id] = len(action_nodes) - 1
             parent_ids[action_data.id] = safe_read(node, "parent", uuid.UUID)
 
         # Reconstruct the action tree structure
