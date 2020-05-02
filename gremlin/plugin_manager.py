@@ -220,7 +220,7 @@ class ActionPlugins:
                         # Register QML type
                         QtQml.qmlRegisterType(
                             plugin.create,
-                            plugin_module_name,
+                            "gremlin.plugins",
                             1,
                             0,
                             plugin.create.__name__
