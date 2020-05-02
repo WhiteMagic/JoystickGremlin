@@ -51,6 +51,16 @@ class AbstractActionModel(QtCore.QObject):
         """
         return self._id
 
+    def qml_path(self) -> str:
+        """Returns the path to the QML file visualizing the action.
+
+        Returns:
+            String representation of the QML file path
+        """
+        raise error.MissingImplementationError(
+            "AbstractActionModel.qml_path not implemented in subclass"
+        )
+
     def from_xml(self, node: ElementTree) -> None:
         """Populates the instance's values with the content of the XML node.
 
