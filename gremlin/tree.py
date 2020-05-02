@@ -134,6 +134,46 @@ class TreeNode:
         return root_node
 
     @property
+    def node_count(self) -> int:
+        """Returns the number of nodes in the tree.
+
+        Returns:
+            Number of nodes in the tree
+        """
+        stack = [self.get_root()]
+        count = 0
+
+        while len(stack) > 0:
+            node = stack.pop()
+            stack.extend(node.children)
+            count += 1
+
+        return count
+
+
+    def node_at_index(self, index: int) -> TreeNode:
+        """Returns the node with the specified index.
+
+        Args:
+            index: the index of the node to return
+
+        Returns:
+            Node corresponding to the provided index
+        """
+        stack = [self.get_root()]
+        node_index = 0
+
+        while len(stack) > 0:
+            node = stack.pop()
+            if node_index == index:
+                return node
+
+            node_index += 1
+            stack.extend(node.children[::-1])
+
+        raise gremlin.error.GremlinError("Unable to determine depth index.")
+
+    @property
     def depth(self) -> int:
         """Returns the depth of this node within the tree.
 

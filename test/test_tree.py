@@ -32,6 +32,7 @@ def test_constructor():
     assert n1.parent == None
     assert n1.depth == 0
     assert n1.depth_first_index == 0
+    assert n1.node_count == 1
 
     n2 = TreeNode(2, None)
     assert n2.value == 2
@@ -39,6 +40,7 @@ def test_constructor():
     assert n2.parent == None
     assert n2.depth == 0
     assert n2.depth_first_index == 0
+    assert n2.node_count == 1
 
     n3 = TreeNode(3, n1)
     assert n3.value == 3
@@ -47,6 +49,7 @@ def test_constructor():
     assert n1.children == [n3]
     assert n3.depth == 1
     assert n3.depth_first_index == 1
+    assert n3.node_count == 2
 
 
 def test_add_child():
@@ -60,16 +63,19 @@ def test_add_child():
     assert n2.parent == n1
     assert n1.depth == 0
     assert n2.depth == 1
+    assert n1.node_count == 2
 
     n1.add_child(n3)
     assert n1.children == [n2, n3]
     assert n3.parent == n1
     assert n3.depth == 1
+    assert n3.node_count == 3
 
     n1.add_child(n4)
     assert n1.children == [n2, n3, n4]
     assert n4.parent == n1
     assert n4.depth == 1
+    assert n2.node_count ==4
 
 
 def test_add_sibling():
@@ -87,17 +93,20 @@ def test_add_sibling():
     assert n2.parent == n1
     assert n1.depth == 0
     assert n2.depth == 1
+    assert n1.node_count == 2
 
     n2.add_sibling(n3)
     assert n1.children == [n2, n3]
     assert n2.children == []
     assert n3.parent == n1
     assert n3.depth == 1
+    assert n1.node_count == 3
 
     n2.add_sibling(n4)
     assert n1.children == [n2, n3, n4]
     assert n2.children == []
     assert n4.parent == n1
+    assert n1.node_count == 4
 
 
 def test_set_parent():
@@ -105,12 +114,15 @@ def test_set_parent():
     n2 = TreeNode(2)
     assert n1.parent == None
     assert n2.parent == None
+    assert n1.node_count == 1
+    assert n2.node_count == 1
 
     n2.set_parent(n1)
     assert n1.parent == None
     assert n2.parent == n1
     assert n1.children == [n2]
     assert n2.children == []
+    assert n1.node_count == 2
 
     with pytest.raises(gremlin.error.GremlinError):
         n1.set_parent(n2)
@@ -124,12 +136,15 @@ def test_set_parent():
     assert n2.parent == None
     assert n1.children == []
     assert n2.children == []
+    assert n1.node_count == 1
+    assert n2.node_count == 1
 
     n1.set_parent(n2)
     assert n1.parent == n2
     assert n2.parent == None
     assert n1.children == []
     assert n2.children == [n1]
+    assert n1.node_count == 2
 
 
 def test_remove_child():
@@ -182,12 +197,15 @@ def test_detach():
     assert n4.children == []
     assert n5.parent == n2
     assert n5.children == []
+    assert n1.node_count == 5
 
     n2.detach()
     assert n1.parent == None
     assert n1.children == [n3]
     assert n2.parent == None
     assert n2.children == [n4, n5]
+    assert n1.node_count == 2
+    assert n2.node_count == 3
 
     n1.detach()
     assert n1.parent == None
@@ -239,3 +257,6 @@ def test_is_descendant():
     assert n3.depth_first_index == 4
     assert n4.depth_first_index == 2
     assert n5.depth_first_index == 3
+
+    assert n1.node_count == 5
+    assert n6.node_count == 1
