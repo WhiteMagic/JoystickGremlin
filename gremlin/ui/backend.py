@@ -19,8 +19,13 @@
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
+from gremlin import error
 from gremlin import plugin_manager
 from gremlin import profile
+
+from gremlin.types import InputType
+from gremlin.ui.device import InputIdentifier
+from gremlin.ui.profile import InputItemModel
 
 
 class Backend(QtCore.QObject):
@@ -32,9 +37,18 @@ class Backend(QtCore.QObject):
 
         self.profile = None
 
-    @Property(str)
-    def help(self):
-        return "Help?"
+    @Slot(InputIdentifier, result=InputItemModel)
+    def getInputItem(self, identifier: InputIdentifier) -> InputItemModel:
+        try:
+            item = self.profile.get_input_item(
+                identifier.device_guid,
+                identifier.input_type,
+                identifier.input_id,
+                True
+            )
+            return InputItemModel(item, self)
+        except error.ProfileError as e:
+            print(e)
 
     @Property(type="QVariantList", constant=True)
     def action_list(self):

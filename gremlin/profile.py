@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 from abc import abstractmethod, ABCMeta
 import codecs
 import collections
@@ -1352,6 +1354,50 @@ class Profile:
             if item.device_id not in self.inputs:
                 self.inputs[item.device_id] = []
             self.inputs[item.device_id].append(item)
+
+    def get_input_item(
+            self,
+            device_guid: dill.GUID,
+            input_type: InputType,
+            input_id: int,
+            create_if_missing: bool=False
+    ) -> InputItem:
+        """Returns the InputItem corresponding to the provided information.
+
+        Args:
+            device_guid: GUID of the device
+            input_type: type of the input
+            input_id: id of the input
+            create_if_missing: If True will create an empty InputItem if none
+                exists
+
+        Returns:
+            InputItem corresponding to the given information
+        """
+        if device_guid not in self.inputs:
+            if create_if_missing:
+                self.inputs[device_guid] = []
+            else:
+                raise error.ProfileError(
+                    f"Device with GUID {device_guid} does not exist"
+                )
+
+        for item in self.inputs[device_guid]:
+            if item.input_type == input_type and item.input_id == input_id:
+                return item
+
+        if create_if_missing:
+            item = InputItem(self.library)
+            item.device_id = device_guid
+            item.input_type = input_type
+            item.input_id = input_id
+            self.inputs[device_guid].append(item)
+            return item
+        else:
+            raise error.ProfileError(
+                f"No data for input {InputType.to_string(input_type)} "
+                f"{input_id} of device {device_guid}"
+            )
 
     def to_xml(self, fpath: str) -> None:
         pass
