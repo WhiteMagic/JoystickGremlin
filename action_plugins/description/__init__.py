@@ -16,47 +16,35 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import os
-import uuid
 from xml.etree import ElementTree
 
+from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
+from gremlin.actions import Value
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
+from gremlin.event_handler import Event
 from gremlin.types import InputType, PropertyType
 import gremlin.util as util
 
 
-# class DescriptionActionWidget(gremlin.ui.input_item.AbstractActionWidget):
-#
-#     """Widget for the description action."""
-#
-#     def __init__(self, action_data, parent=None):
-#         super().__init__(action_data, parent=parent)
-#         assert(isinstance(action_data, DescriptionAction))
-#
-#     def _create_ui(self):
-#         self.inner_layout = QtWidgets.QHBoxLayout()
-#         self.label = QtWidgets.QLabel("<b>Action description</b>")
-#         self.description = QtWidgets.QLineEdit()
-#         self.description.textChanged.connect(self._update_description)
-#         self.inner_layout.addWidget(self.label)
-#         self.inner_layout.addWidget(self.description)
-#         self.main_layout.addLayout(self.inner_layout)
-#
-#     def _populate_ui(self):
-#         self.description.setText(self.action_data.description)
-#
-#     def _update_description(self, value):
-#         self.action_data.description = value
-
-
 class DescriptionFunctor(AbstractFunctor):
+
+    """Implements the function executed of the Description action at runtime."""
 
     def __init__(self, action):
         super().__init__(action)
 
-    def process_event(self, event, value):
+    def process_event(self, event: Event, value: Value) -> bool:
+        """Processes the provided event.
+
+        Args:
+            event: the input event to process
+            value: the potentially modified input value
+
+        Returns:
+            True if the execution should continue, False otherwise
+        """
         return True
 
 
@@ -77,19 +65,23 @@ class DescriptionModel(AbstractActionModel):
         InputType.Keyboard
     ]
 
-    def __init__(self):
-        super().__init__()
+    # Signal emitted when the description variable's content changes
+    descriptionChanged = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         # Model variables
         self._description = ""
 
-    @Property(type=str)
-    def description(self) -> str:
+    def _get_description(self) -> str:
         return self._description
 
-    @description.setter
-    def set_description(self, value: str) -> None:
+    def _set_description(self, value: str) -> None:
+        if str(value) == self._description:
+            return
         self._description = str(value)
+        self.descriptionChanged.emit()
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
@@ -107,48 +99,17 @@ class DescriptionModel(AbstractActionModel):
     def is_valid(self) -> True:
         return True
 
+    def qml_path(self) -> str:
+        return "file:///" + QtCore.QFile(
+            "core_plugins:description/DescriptionAction.qml"
+        ).fileName()
 
-# class DescriptionAction(AbstractActionModel):
-#
-#     """Action for adding a description to a set of actions."""
-#
-#     name = "Description"
-#     tag = "description"
-#
-#     default_button_activation = (True, False)
-#     input_types = [
-#         InputType.JoystickAxis,
-#         InputType.JoystickButton,
-#         InputType.JoystickHat,
-#         InputType.Keyboard
-#     ]
-#
-#     functor = DescriptionFunctor
-#     #widget = DescriptionActionWidget
-#
-#     def __init__(self, parent):
-#         super().__init__(parent)
-#         self.description = ""
-#
-#     def icon(self):
-#         return "{}/icon.png".format(os.path.dirname(os.path.realpath(__file__)))
-#
-#     def requires_virtual_button(self):
-#         return False
-#
-#     def _parse_xml(self, node):
-#         self.description = gremlin.profile.safe_read(
-#             node, "description", str, ""
-#         )
-#
-#     def _generate_xml(self):
-#         node = ElementTree.Element("description")
-#         node.set("description", str(self.description))
-#         return node
-#
-#     def _is_valid(self):
-#         return True
-
+    description = Property(
+        str,
+        fget=_get_description,
+        fset=_set_description,
+        notify=descriptionChanged
+    )
 
 
 create = DescriptionModel

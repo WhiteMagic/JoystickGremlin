@@ -22,16 +22,36 @@ import QtQuick.Window 2.13
 
 import QtQuick.Controls.Universal 2.12
 
+import gremlin.plugins 1.0
+
 
 Item {
-    id: root
+    property DescriptionModel model
 
-    RowLayout {
-        Label {
-            text: qsTr("Description")
-        }
-        TextField {
-            placeholderText: qsTr("Enter description")
+    height: Math.max(idLabel.height, idDescription.height)
+
+    Label {
+        id: idLabel
+        text: "Description"
+
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.margins: 10
+    }
+    TextField {
+        id: idDescription
+
+        anchors.left: idLabel.right
+        anchors.right: parent.right
+        anchors.margins: 10
+        anchors.verticalCenter: parent.verticalCenter
+
+        placeholderText: null != model ? null : "Enter description"
+        text: model.description//null != model ? model.description : null
+        selectByMouse: true
+
+        onTextChanged: {
+            model.description = text
         }
     }
 }
