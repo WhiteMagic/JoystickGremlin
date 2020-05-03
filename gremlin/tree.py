@@ -171,7 +171,7 @@ class TreeNode:
             node_index += 1
             stack.extend(node.children[::-1])
 
-        raise gremlin.error.GremlinError("Unable to determine depth index.")
+        raise gremlin.error.GremlinError(f"No node with index {index} exists.")
 
     @property
     def depth(self) -> int:
