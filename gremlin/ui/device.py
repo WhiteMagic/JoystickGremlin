@@ -15,22 +15,40 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
+import random
 import typing
 
-from PySide2 import QtCore
+from PySide2 import QtCore, QtQml
 from PySide2.QtCore import Property, Signal, Slot
 
 import dill
-import gremlin.types
 
+from gremlin import joystick_handling
+from gremlin import event_handler
+from gremlin import input_devices
+from gremlin import profile
+from gremlin.types import InputType
 from gremlin.util import parse_guid
-import gremlin.common
-import gremlin.joystick_handling
-import gremlin.event_handler
-import gremlin.input_devices
+
+
+
+class InputIdentifier(QtCore.QObject):
+
+    """Stores the identifier of a single input item."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.device_guid = None
+        self.input_type = None
+        self.input_id = None
 
 
 class DeviceListModel(QtCore.QAbstractListModel):
+
+    """Model containing absic information about all connected devices."""
 
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
@@ -56,15 +74,16 @@ class DeviceListModel(QtCore.QAbstractListModel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._devices = gremlin.joystick_handling.joystick_devices()
+        self._devices = joystick_handling.joystick_devices()
 
-        gremlin.event_handler.EventListener().device_change_event.connect(
+        event_handler.EventListener().device_change_event.connect(
             self.update_model
         )
 
-    def update_model(self):
+    def update_model(self) -> None:
+        """Updates the model if the connected devices change."""
         old_count = len(self._devices)
-        self._devices = gremlin.joystick_handling.joystick_devices()
+        self._devices = joystick_handling.joystick_devices()
         new_count = len(self._devices)
 
         # Remove everything and then add it back
@@ -95,6 +114,8 @@ class DeviceListModel(QtCore.QAbstractListModel):
 
 class Device(QtCore.QAbstractListModel):
 
+    """Model providing access to information about a single device."""
+
     deviceChanged = Signal()
 
     roles = {
@@ -107,15 +128,13 @@ class Device(QtCore.QAbstractListModel):
 
         self._device = None
 
-    @Property(type=str)
-    def guid(self) -> str:
+    def _get_guid(self) -> str:
         if self._device is None:
             return "Unknown"
         else:
             return str(self._device.device_guid)
 
-    @guid.setter
-    def set_guid(self, guid: str) -> None:
+    def _set_guid(self, guid: str) -> None:
         if self._device is not None and guid == str(self._device.device_guid):
             return
 
@@ -138,35 +157,60 @@ class Device(QtCore.QAbstractListModel):
 
         role_name = DeviceListModel.roles[role].data().decode()
         if role_name == "name":
-            return self._name(self._convert_index(index))
+            return self._name(self._convert_index(index.row()))
 
-    def roleNames(self) -> typing.Dict:
-        return DeviceListModel.roles
+    @Slot(int, result=InputIdentifier)
+    def inputIdentifier(self, index: int) -> InputIdentifier:
+        """Returns the InputIdentifier for input with the specified index.
 
-    def _name(self, identifier: typing.Tuple[gremlin.types.InputType, int]) -> str:
+        Args:
+            index: the index of the input for which to generate the
+                InpuIdentifier instance
+
+        Returns:
+            An InputIdentifier instance referring to the input item with
+            the given index.
+        """
+        identifier = InputIdentifier(self)
+        identifier.device_guid = self._device.device_guid
+        input_info = self._convert_index(index)
+        identifier.input_type = input_info[0]
+        identifier.input_id = input_info[1]
+
+        return identifier
+
+    def _name(self, identifier: typing.Tuple[InputType, int]) -> str:
         return "{} {:d}".format(
-            gremlin.types.InputType.to_string(identifier[0]).capitalize(),
+            InputType.to_string(identifier[0]).capitalize(),
             identifier[1]
         )
 
-    def _convert_index(self, index:QtCore.QModelIndex) \
-            -> typing.Tuple[gremlin.types.InputType, int]:
+    def _convert_index(self, index: int) -> typing.Tuple[InputType, int]:
         axis_count = self._device.axis_count
         button_count = self._device.button_count
         hat_count = self._device.hat_count
 
-        if index.row() < axis_count:
+        if index < axis_count:
             return (
-                gremlin.types.InputType.JoystickAxis,
-                self._device.axis_map[index.row()].axis_index
+                InputType.JoystickAxis,
+                self._device.axis_map[index].axis_index
             )
-        elif index.row() < axis_count + button_count:
+        elif index < axis_count + button_count:
             return (
-                gremlin.types.InputType.JoystickButton,
-                index.row() + 1 - axis_count
+                InputType.JoystickButton,
+                index + 1 - axis_count
             )
         else:
             return (
-                gremlin.types.InputType.JoystickHat,
-                index.row() + 1 - axis_count - button_count
+                InputType.JoystickHat,
+                index + 1 - axis_count - button_count
             )
+
+    def roleNames(self) -> typing.Dict:
+        return DeviceListModel.roles
+
+    guid = Property(
+        str,
+        fget=_get_guid,
+        fset=_set_guid
+    )
