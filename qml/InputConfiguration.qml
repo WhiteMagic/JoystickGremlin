@@ -24,40 +24,45 @@ import QtQuick.Window 2.14
 import QtQuick.Controls.Universal 2.14
 
 import gremlin.ui.profile 1.0
+import gremlin.ui.device 1.0
 
 
 Item {
-    id: root
+    id: idRoot
 
-    property ProfileModel profileModel
+    property LibraryItemListModel libraryItemListModel
 
-//        ActionList {
-//            id: actionPanel
-//
-//            Layout.fillWidth: true
-//        }
 
-    ScrollView {
+//    onInputItemModelChanged: {
+//        // Update stuff and things
+//        //idListView.model = inputItemModel.libraryItems
+//    }
+//    onLibraryItemListModelChanged: {
+//        console.log(libraryItemListModel)
+//    }
+
+
+    ListView {
+        id: idListView
         anchors.fill: parent
+        spacing: 10
 
-        // Logic along the lines of:
-        // Foreach library_item in input_item.actions do
-        //     Render library_item
+        // Make it behave like a sensible scrolling container
+        ScrollBar.vertical: ScrollBar {}
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
 
-        ColumnLayout {
+        // Content to visualize
+        model: libraryItemListModel
+        delegate: idEntryDelegate
+    }
 
-            anchors.fill: parent
+    Component {
+        id: idEntryDelegate
 
-            Repeater {
-                // Model has to be the library item list thing
-                model: 10
-
-                // For now this will have to render each action, later on
-                // this will need to be a special tree representation type
-                DisplayText {
-                    text: backend.help
-                }
-            }
+        LibraryItem {
+            actionTree: modelData
         }
     }
+
 }

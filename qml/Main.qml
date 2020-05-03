@@ -120,10 +120,8 @@ ApplicationWindow {
         id: idDeviceListModel
     }
 
-
     // Main content area
-    ColumnLayout
-    {
+    ColumnLayout {
         anchors.fill: parent
 
         // List of all detected devices
@@ -159,8 +157,8 @@ ApplicationWindow {
 
                         //onInputIndexChanged: actionPanel.currentIndex = inputIndex
                         onInputIndexChanged: {
-                            idInputConfigurationPanel.inputItemModel = backend.getInputItem(inputIdentifier)
-                            idInputConfigurationPanel.libraryItemListModel = idInputConfigurationPanel.inputItemModel.libraryItems
+//                            idInputConfigurationPanel.inputItemModel = backend.getInputItem(inputIdentifier)
+                            idInputConfigurationPanel.libraryItemListModel = backend.getInputItem(inputIdentifier).libraryItems
                         }
                     }
                 }
@@ -168,9 +166,11 @@ ApplicationWindow {
 
             // Configuration of the selected input
             InputConfiguration {
+                //SplitView.fillHeight: true
+
                 id: idInputConfigurationPanel
             }
 
         } // SplitView
-    } // RowLayout
+    } // ColumnLayout
 } // ApplicationWindow

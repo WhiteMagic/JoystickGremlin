@@ -24,6 +24,7 @@ import QtQuick.Window 2.14
 import QtQuick.Controls.Universal 2.14
 
 import gremlin.ui.device 1.0
+import gremlin.ui.profile 1.0
 
 
 Item {
@@ -36,8 +37,7 @@ Item {
         id: idScrollView
         anchors.fill: parent
 
-        ListView
-        {
+        ListView {
             id: idDeviceList
             anchors.fill: parent
             orientation: ListView.Horizontal

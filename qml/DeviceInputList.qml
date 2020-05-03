@@ -31,9 +31,10 @@ Item {
 
     property string deviceGuid
     property int inputIndex
+    property InputIdentifier inputIdentifier
 
     Device {
-        id: deviceModel
+        id: idDeviceModel
 
         guid: deviceGuid
     }
@@ -44,20 +45,23 @@ Item {
 
         ListView
         {
-            id: inputList
+            id: idInputList
             anchors.fill: parent
 
             width: parent.width
-            model: deviceModel
-            delegate: deviceDelegate
+            model: idDeviceModel
+            delegate: idDeviceDelegate
 
-            onCurrentIndexChanged: root.inputIndex = currentIndex;
+            onCurrentIndexChanged: {
+                root.inputIdentifier = idDeviceModel.inputIdentifier(currentIndex);
+                root.inputIndex = currentIndex;
+            }
 
             boundsBehavior: Flickable.StopAtBounds
         }
 
         Component {
-            id: deviceDelegate
+            id: idDeviceDelegate
 
             Rectangle {
                 id: rect
@@ -65,11 +69,16 @@ Item {
                 width: parent.width
                 height: 50
 
-                color: model.index == inputList.currentIndex ? Universal.chromeMediumColor : Universal.background
+                color: model.index == idInputList.currentIndex ? Universal.chromeMediumColor : Universal.background
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: inputList.currentIndex = model.index
+                    // Change selected index as well as set the input item model
+                    onClicked: {
+                        idInputList.currentIndex = model.index;
+//                        inputIdentifier = idDeviceModel.input_identifier(model.index);
+//                        console.log(idDeviceModel.input_identifier(model.index));
+                    }
                 }
 
                 Label {
