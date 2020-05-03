@@ -182,6 +182,17 @@ if __name__ == "__main__":
         "core_plugins",
         gremlin.util.resource_path("action_plugins/")
     )
+
+    # Register data types for use in QML
+
+    # Device related
+    QtQml.qmlRegisterType(
+        gremlin.ui.device.InputIdentifier,
+        "gremlin.ui.device",
+        1,
+        0,
+        "InputIdentifier"
+    )
     QtQml.qmlRegisterType(
         gremlin.ui.device.DeviceListModel,
         "gremlin.ui.device",
@@ -196,12 +207,29 @@ if __name__ == "__main__":
         0,
         "Device"
     )
+
+    # Profile related
     QtQml.qmlRegisterType(
-        gremlin.ui.profile.ProfileModel,
+        gremlin.ui.profile.InputItemModel,
         "gremlin.ui.profile",
         1,
         0,
-        "ProfileModel"
+        "InputItemModel"
+    )
+
+    QtQml.qmlRegisterType(
+        gremlin.ui.profile.LibraryItemListModel,
+        "gremlin.ui.profile",
+        1,
+        0,
+        "LibraryItemListModel"
+    )
+    QtQml.qmlRegisterType(
+        gremlin.ui.profile.ActionTree,
+        "gremlin.ui.profile",
+        1,
+        0,
+        "ActionTree"
     )
 
     # Create backend instance
@@ -217,7 +245,6 @@ if __name__ == "__main__":
 
     # Initialize main UI
     engine.load(QtCore.QUrl.fromLocalFile("qml/Main.qml"))
-    # engine.load(QtCore.QUrl.fromLocalFile("qml/DialogDeviceInformation.qml"))
     if not engine.rootObjects():
         sys.exit(-1)
 
