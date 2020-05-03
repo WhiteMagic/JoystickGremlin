@@ -146,16 +146,8 @@ if __name__ == "__main__":
     if executable_name == "joystick_gremlin.exe":
         sys.excepthook = exception_hook
 
-    # Initialize HidGuardian before we let SDL grab joystick data
-    # hg = gremlin.hid_guardian.HidGuardian()
-    # hg.add_process(os.getpid())
-
-    # Create user interface
-    app_id = u"joystick.gremlin"
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-    app = QtGui.QGuiApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
-    app.setApplicationDisplayName("Joystick Gremlin")
+    # Initialize QT components
+    QtWebEngine.QtWebEngine.initialize()
 
     # Prevent blurry fonts that Qt seems to like
     QtQuick.QQuickWindow.setTextRenderType(
@@ -166,6 +158,17 @@ if __name__ == "__main__":
     QtQuick.QQuickWindow.setSceneGraphBackend(
         "software"
     )
+
+    # Initialize HidGuardian before we let SDL grab joystick data
+    # hg = gremlin.hid_guardian.HidGuardian()
+    # hg.add_process(os.getpid())
+
+    # Create user interface
+    app_id = u"joystick.gremlin"
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+    app = QtGui.QGuiApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
+    app.setApplicationDisplayName("Joystick Gremlin")
 
     # Ensure joystick devices are correctly setup
     dill.DILL.init()
@@ -264,7 +267,6 @@ if __name__ == "__main__":
 
     # Run UI
     syslog.info("Gremlin UI launching")
-    QtWebEngine.QtWebEngine.initialize()
     app.exec_()
     syslog.info("Gremlin UI terminated")
 
