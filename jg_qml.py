@@ -178,6 +178,10 @@ if __name__ == "__main__":
     gremlin.joystick_handling.joystick_devices_initialization()
 
     engine = QtQml.QQmlApplicationEngine()
+    QtCore.QDir.addSearchPath(
+        "core_plugins",
+        gremlin.util.resource_path("action_plugins/")
+    )
     QtQml.qmlRegisterType(
         gremlin.ui.device.DeviceListModel,
         "gremlin.ui.device",
