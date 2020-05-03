@@ -45,6 +45,8 @@ os.environ["QT_QUICK_CONTROLS_STYLE"] = "Universal"
 # os.environ["QT_QUICK_CONTROLS_MATERIAL_VARIANT"] = "Normal"
 os.environ["QT_QUICK_CONTROLS_UNIVERSAL_THEME"] = "Light"
 #os.environ["QT_QUICK_CONTROLS_HOVER_ENABLED"] = "true"
+# os.environ["QML_IMPORT_TRACE"] = "1"
+# os.environ["QSG_RHI"] = "1"
 
 # import gremlin.ui.axis_calibration
 # import gremlin.ui.common
