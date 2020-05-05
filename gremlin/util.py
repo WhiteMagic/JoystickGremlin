@@ -154,7 +154,7 @@ def parse_guid(value: str) -> dill.GUID:
 
         return dill.GUID(raw_guid)
     except (ValueError, AttributeError) as e:
-        raise error.GremlinError(f"Failed parsing GUID from value {value}")
+        raise error.GremlinError(f"Failed parsing GUID from value '{value}'")
 
 
 def safe_read(
