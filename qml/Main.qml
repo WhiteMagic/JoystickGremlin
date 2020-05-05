@@ -119,54 +119,49 @@ ApplicationWindow {
         id: idDeviceListModel
     }
 
-    // Main content area
-    Row {
-        anchors.fill: parent
+    // List of all detected devices
+    DeviceList {
+        id: idDevicePanel
 
-        // List of all detected devices
-        DeviceList {
-            id: idDevicePanel
+        height: 50
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
 
-            height: 50
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
+        deviceListModel: idDeviceListModel
 
-            deviceListModel: idDeviceListModel
+        // Trigger a model update on the DeviceInputList
+        onDeviceGuidChanged: {
+            idDeviceInputList.deviceGuid = deviceGuid
+        }
+    }
 
-            // Trigger a model update on the DeviceInputList
-            onDeviceGuidChanged: {
-                idDeviceInputList.deviceGuid = deviceGuid
+    // Device inputs and configuration of a specific input
+    SplitView {
+        id: idContentLayout
+
+        anchors.top: idDevicePanel.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        orientation: Qt.Horizontal
+
+        // List all inputs of a single device
+        DeviceInputList {
+            id: idDeviceInputList
+            deviceGuid: idDevicePanel.deviceGuid
+            SplitView.minimumWidth: 200
+
+            // Trigger a model update on the InputConfiguration
+            onInputIndexChanged: {
+                idInputConfigurationPanel.libraryItemListModel =
+                    backend.getInputItem(inputIdentifier).libraryItems
             }
         }
 
-        // Device inputs and configuration of a specific input
-        SplitView {
-            id: idContentLayout
-
-            anchors.top: idDevicePanel.bottom
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            orientation: Qt.Horizontal
-
-            // List all inputs of a single device
-            DeviceInputList {
-                id: idDeviceInputList
-                deviceGuid: idDevicePanel.deviceGuid
-                SplitView.minimumWidth: 200
-
-                // Trigger a model update on the InputConfiguration
-                onInputIndexChanged: {
-                    idInputConfigurationPanel.libraryItemListModel =
-                        backend.getInputItem(inputIdentifier).libraryItems
-                }
-            }
-
-            // Configuration of the selected input
-            InputConfiguration {
-                id: idInputConfigurationPanel
-            }
+        // Configuration of the selected input
+        InputConfiguration {
+            id: idInputConfigurationPanel
         }
     }
 
