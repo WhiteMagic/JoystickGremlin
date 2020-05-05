@@ -35,58 +35,55 @@ Item {
 
     Device {
         id: idDeviceModel
-
         guid: deviceGuid
     }
 
-    ScrollView {
-        id: scrollView
+    ListView
+    {
+        id: idInputList
         anchors.fill: parent
 
-        ListView
-        {
-            id: idInputList
-            anchors.fill: parent
+        width: parent.width
+        model: idDeviceModel
+        delegate: idDeviceDelegate
 
-            width: parent.width
-            model: idDeviceModel
-            delegate: idDeviceDelegate
-
-            onCurrentIndexChanged: {
-                root.inputIdentifier = idDeviceModel.inputIdentifier(currentIndex);
-                root.inputIndex = currentIndex;
-            }
-
-            boundsBehavior: Flickable.StopAtBounds
+        onCurrentIndexChanged: {
+            root.inputIdentifier = idDeviceModel.inputIdentifier(currentIndex);
+            root.inputIndex = currentIndex;
         }
 
-        Component {
-            id: idDeviceDelegate
+        // Make it behave like a sensible scrolling container
+        ScrollBar.vertical: ScrollBar {}
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
 
-            Rectangle {
-                id: rect
+    }
 
-                width: parent.width
-                height: 50
+    Component {
+        id: idDeviceDelegate
 
-                color: model.index == idInputList.currentIndex ? Universal.chromeMediumColor : Universal.background
+        Rectangle {
+            id: rect
 
-                MouseArea {
-                    anchors.fill: parent
-                    // Change selected index as well as set the input item model
-                    onClicked: {
-                        idInputList.currentIndex = model.index;
+            width: parent.width
+            height: 50
+
+            color: model.index == idInputList.currentIndex ? Universal.chromeMediumColor : Universal.background
+
+            MouseArea {
+                anchors.fill: parent
+                // Change selected index as well as set the input item model
+                onClicked: {
+                    idInputList.currentIndex = model.index;
 //                        inputIdentifier = idDeviceModel.input_identifier(model.index);
 //                        console.log(idDeviceModel.input_identifier(model.index));
-                    }
                 }
+            }
 
-                Label {
-                    text: name
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+            Label {
+                text: name
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
-
 }

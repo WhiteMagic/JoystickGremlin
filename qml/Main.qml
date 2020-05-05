@@ -19,7 +19,6 @@
 import QtQuick 2.14
 import QtQuick.Controls 2.14
 import QtQuick.Window 2.14
-import QtQuick.Layouts 1.14
 
 import gremlin.ui.device 1.0
 
@@ -121,56 +120,54 @@ ApplicationWindow {
     }
 
     // Main content area
-    ColumnLayout {
+    Row {
         anchors.fill: parent
 
         // List of all detected devices
         DeviceList {
             id: idDevicePanel
-            Layout.preferredHeight: 50
-            Layout.fillWidth: true
 
+            height: 50
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
 
             deviceListModel: idDeviceListModel
+
+            // Trigger a model update on the DeviceInputList
+            onDeviceGuidChanged: {
+                idDeviceInputList.deviceGuid = deviceGuid
+            }
         }
 
+        // Device inputs and configuration of a specific input
         SplitView {
             id: idContentLayout
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+
+            anchors.top: idDevicePanel.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
             orientation: Qt.Horizontal
 
-            // One layout per device containint all inputs of the device
-            StackLayout {
-                id: idInputPanel
-
-                currentIndex: idDevicePanel.deviceIndex
-
+            // List all inputs of a single device
+            DeviceInputList {
+                id: idDeviceInputList
+                deviceGuid: idDevicePanel.deviceGuid
                 SplitView.minimumWidth: 200
 
-                Repeater {
-                    id: idDeviceInputListRepeater
-                    model: idDeviceListModel
-
-                    DeviceInputList {
-                        deviceGuid: model.guid
-
-                        //onInputIndexChanged: actionPanel.currentIndex = inputIndex
-                        onInputIndexChanged: {
-//                            idInputConfigurationPanel.inputItemModel = backend.getInputItem(inputIdentifier)
-                            idInputConfigurationPanel.libraryItemListModel = backend.getInputItem(inputIdentifier).libraryItems
-                        }
-                    }
+                // Trigger a model update on the InputConfiguration
+                onInputIndexChanged: {
+                    idInputConfigurationPanel.libraryItemListModel =
+                        backend.getInputItem(inputIdentifier).libraryItems
                 }
             }
 
             // Configuration of the selected input
             InputConfiguration {
-                //SplitView.fillHeight: true
-
                 id: idInputConfigurationPanel
             }
+        }
+    }
 
-        } // SplitView
-    } // ColumnLayout
 } // ApplicationWindow

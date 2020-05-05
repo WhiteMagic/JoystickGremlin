@@ -25,9 +25,10 @@ from PySide2.QtCore import Property, Signal, Slot
 
 import dill
 
-from gremlin import joystick_handling
+from gremlin import error
 from gremlin import event_handler
 from gremlin import input_devices
+from gremlin import joystick_handling
 from gremlin import profile
 from gremlin.types import InputType
 from gremlin.util import parse_guid
@@ -111,6 +112,13 @@ class DeviceListModel(QtCore.QAbstractListModel):
     def roleNames(self) -> typing.Dict:
         return DeviceListModel.roles
 
+    @Slot(int, result=str)
+    def guidAtIndex(self, index: int) -> str:
+        if not(0 <= index < len(self._devices)):
+            raise error.GremlinError("Provided index out of range")
+
+        return str(self._devices[index].device_guid)
+
 
 class Device(QtCore.QAbstractListModel):
 
@@ -142,6 +150,7 @@ class Device(QtCore.QAbstractListModel):
             parse_guid(guid)
         )
         self.deviceChanged.emit()
+        self.layoutChanged.emit()
 
     def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
         if self._device is None:

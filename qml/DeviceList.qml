@@ -30,47 +30,48 @@ import gremlin.ui.profile 1.0
 Item {
     id: root
 
-    property int deviceIndex: 0
+//    property int deviceIndex: 0
     property DeviceListModel deviceListModel
+    property string deviceGuid: deviceListModel.guidAtIndex(0)
 
-    ScrollView {
-        id: idScrollView
+
+    ListView {
+        id: idDeviceList
         anchors.fill: parent
+        orientation: ListView.Horizontal
 
-        ListView {
-            id: idDeviceList
-            anchors.fill: parent
-            orientation: ListView.Horizontal
+        model: deviceListModel
+        delegate: idDeviceDelegate
 
-            model: deviceListModel
-            delegate: idDeviceDelegate
+        // Make it behave like a sensible scrolling container
+        ScrollBar.vertical: ScrollBar {}
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
+    }
 
-            onCurrentIndexChanged: root.deviceIndex = currentIndex
+    Component {
+        id: idDeviceDelegate
 
-            boundsBehavior: Flickable.StopAtBounds
-        }
+        Label {
+            id: idDeviceName
 
-        Component {
-            id: idDeviceDelegate
+            text: name
+            leftPadding: 20
+            rightPadding: 20
+            topPadding: 10
+            bottomPadding: 10
 
-            Label {
-                id: idDeviceName
+            background: Rectangle {
+                color: model.index == idDeviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
+            }
 
-                text: name
-                leftPadding: 20
-                rightPadding: 20
-                topPadding: 10
-                bottomPadding: 10
-
-                background: Rectangle {
-                    color: model.index == idDeviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: idDeviceList.currentIndex = model.index
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    idDeviceList.currentIndex = model.index
+                    root.deviceGuid = model.guid
                 }
             }
-        } // Component
-    } // ScrollView
+        }
+    } // Component
 } // Item
