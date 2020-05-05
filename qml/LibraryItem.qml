@@ -51,6 +51,7 @@ Item {
                             idFactoryItem.height = obj.height;
                             obj.anchors.left = idFactoryItem.left;
                             obj.anchors.right = idFactoryItem.right;
+                            obj.anchors.leftMargin = 20 * (model.depth - 1);
 
                         } else if (component.status == Component.Error) {
                             console.log("Error loading component:", component.errorString());
