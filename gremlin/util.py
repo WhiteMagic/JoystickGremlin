@@ -263,6 +263,49 @@ _type_lookup = {
     PropertyType.AxisMode: AxisMode
 }
 
+_element_parsers = {
+    "device-id": lambda x: parse_guid(x.text),
+    "input-type": lambda x: InputType.to_enum(x.text),
+    "input-id": lambda x: int(x.text),
+    "mode": lambda x: str(x.text)
+}
+
+_element_types = {
+    "device-id": dill.GUID,
+    "input-type": InputType,
+    "input-id": int,
+    "mode": str
+}
+
+_element_to_string = {
+    "device-id": str,
+    "input-type": lambda x: InputType.to_string(x),
+    "input-id": str,
+    "mode": str
+}
+
+def create_subelement_node(
+        name: str,
+        value: Any
+) -> ElementTree.Element:
+    """Creates an <input> subelement.
+
+    Args:
+        name: name of the element being created
+        value: content of the element being created
+    """
+    if name not in _element_types:
+        raise error.ProfileError(
+            f"No input subelement with name '{name} exists"
+        )
+    if not isinstance(value, _element_types[name]):
+        raise error.ProfileError(
+            f"Incorrect value type for subelement with name '{name}"
+        )
+
+    node = ElementTree.Element(name)
+    node.text = _element_to_string[name](value)
+    return node
 
 def create_property_node(
         name: str,
@@ -274,6 +317,7 @@ def create_property_node(
     Args:
         name: content of the name element
         value: content of the value element
+        property_type: type of the property being created
 
     Returns:
         A property element containing the provided name and value data.
@@ -340,6 +384,39 @@ def read_action_id(node: ElementTree.Element) -> uuid.UUID:
         raise error.ProfileError(
             f"Failed parsing id from value: '{id_value}'."
         )
+
+
+def read_subelement(node: ElementTree.Element, name: str) -> Any:
+    """Returns the value of a subelement of the given element node.
+
+    This function knows how to parse the values of a variety of standardized
+    subelement names. If it is called with an unknown name an exception is
+    raised. Similar if the subelement is present but of the wrong type an
+    exception is raised.
+
+    Args:
+        node: the node whose subelement should be read and parsed
+        name: the name of the subelement to parse
+
+    Returns:
+        Parsed value of the subelement of the given name present in the
+        provided element node.
+    """
+    # Ensure there is a parser for the provided subelement
+    if name not in _element_parsers:
+        raise error.ProfileError(
+            f"No parser available for subelement with name {name}"
+        )
+
+    # Ensure the subelement exists in the provided node
+    element = node.find(name)
+    if element is None:
+        raise error.ProfileError(
+            f"Element {node.tag} has no subelement with name {name}"
+        )
+
+    # Parse subelement
+    return _element_parsers[name](element)
 
 
 def read_property(

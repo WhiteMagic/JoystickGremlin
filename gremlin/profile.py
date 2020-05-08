@@ -36,7 +36,8 @@ import gremlin.types
 from .types import InputType, DeviceType, PluginVariableType, MergeAxisOperation
 from . import base_classes, common, error, input_devices, joystick_handling, \
     plugin_manager, profile_library
-from .util import parse_guid, safe_read, safe_format, read_bool
+from .util import parse_guid, safe_read, safe_format, read_bool, \
+    read_subelement, create_subelement_node
 #from gremlin.profile_library import  *
 
 
@@ -64,47 +65,6 @@ def mode_list(node):
         mode_names.extend(device.modes.keys())
 
     return sorted(list(set(mode_names)), key=lambda x: x.lower())
-
-
-_element_parsers = {
-    "device-id": lambda x: parse_guid(x.text),
-    "input-type": lambda x: InputType.to_enum(x.text),
-    "input-id": lambda x: int(x.text),
-    "mode": lambda x: str(x.text)
-}
-
-
-def read_subelement(node: ElementTree.Element, name: str) -> Any:
-    """Returns the value of a subelement of the given element node.
-
-    This function knows how to parse the values of a variety of standardized
-    subelement names. If it is called with an unknown name an exception is
-    raised. Similar if the subelement is present but of the wrong type an
-    exception is raised.
-
-    Args:
-        node: the node whose subelement should be read and parsed
-        name: the name of the subelement to parse
-
-    Returns:
-        Parsed value of the subelement of the given name present in the
-        provided element node.
-    """
-    # Ensure there is a parser for the provided subelement
-    if name not in _element_parsers:
-        raise error.ProfileError(
-            f"No parser available for subelement with name {name}"
-        )
-
-    # Ensure the subelement exists in the provided node
-    element = node.find(name)
-    if element is None:
-        raise error.ProfileError(
-            f"Element {node.tag} has no subelement with name {name}"
-        )
-
-    # Parse subelement
-    return _element_parsers[name](element)
 
 
 def extract_remap_actions(action_sets):
