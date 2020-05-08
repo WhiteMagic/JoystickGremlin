@@ -172,6 +172,11 @@ if __name__ == "__main__":
     app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
     app.setApplicationDisplayName("Joystick Gremlin")
 
+    # Configure QSettings to keep QT happy
+    app.setOrganizationName("H2IK");
+    app.setOrganizationDomain("http://whitemagic.github.io/JoystickGremlin/");
+    app.setApplicationName("Joystick Gremlin");
+
     # Ensure joystick devices are correctly setup
     dill.DILL.init()
     gremlin.joystick_handling.joystick_devices_initialization()
