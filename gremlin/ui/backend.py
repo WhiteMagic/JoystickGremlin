@@ -50,6 +50,19 @@ class Backend(QtCore.QObject):
         except error.ProfileError as e:
             print(e)
 
+    @Slot(str)
+    def saveProfile(self, fpath):
+        self.profile.fpath = QtCore.QUrl(fpath).toLocalFile()
+        self.profile.to_xml(self.profile.fpath)
+
+    @Slot(result=str)
+    def profilePath(self) -> str:
+        return self.profile.fpath
+
+    @Slot(str)
+    def loadProfile(self, fpath) -> None:
+        pass
+
     @Property(type="QVariantList", constant=True)
     def action_list(self):
         return list(plugin_manager.ActionPlugins().repository.keys())

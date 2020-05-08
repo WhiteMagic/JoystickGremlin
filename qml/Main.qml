@@ -18,6 +18,7 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
+import QtQuick.Dialogs 1.3
 import QtQuick.Window 2.14
 
 import gremlin.ui.device 1.0
@@ -33,6 +34,20 @@ ApplicationWindow {
     height: 680
     visible: true
     id: root
+
+
+    FileDialog {
+        id: idSaveProfileFileDialog
+        title: "Please choose a file"
+        folder: shortcuts.home
+        defaultSuffix: "xml"
+        nameFilters: ["Profile files (*.xml)"]
+        selectExisting: false
+
+        onAccepted: {
+            backend.saveProfile(fileUrl)
+        }
+    }
 
 
     // Menu bar with all its entries
@@ -55,11 +70,23 @@ ApplicationWindow {
 
             MenuItem {
                 text: qsTr("Save Profile")
-                onTriggered: console.log("Test")
+                onTriggered: {
+                    var fpath = backend.profilePath()
+                    if(fpath == "")
+                    {
+                        idSaveProfileFileDialog.open();
+                    }
+                    else
+                    {
+                        backend.saveProfile(fpath)
+                    }
+                }
             }
             MenuItem {
                 text: qsTr("Save Profile As")
-                onTriggered: console.log("Test")
+                onTriggered: {
+                    idSaveProfileFileDialog.open()
+                }
             }
             MenuItem {
                 text: qsTr("Exit")
@@ -114,6 +141,7 @@ ApplicationWindow {
             }
         }
     }
+
 
     DeviceListModel {
         id: idDeviceListModel
