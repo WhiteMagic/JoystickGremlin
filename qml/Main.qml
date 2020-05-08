@@ -70,7 +70,9 @@ ApplicationWindow {
 
             MenuItem {
                 text: qsTr("New Profile")
-                onTriggered: console.log("Test")
+                onTriggered: {
+                    backend.newProfile()
+                }
             }
             MenuItem {
                 text: qsTr("Load Profile")

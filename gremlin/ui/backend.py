@@ -56,6 +56,12 @@ class Backend(QtCore.QObject):
         except error.ProfileError as e:
             print(e)
 
+    @Slot()
+    def newProfile(self) -> None:
+        self.profile = profile.Profile()
+        shared_state.current_profile = self.profile
+        self.windowTitleChanged.emit()
+
     @Slot(str)
     def saveProfile(self, fpath):
         self.profile.fpath = QtCore.QUrl(fpath).toLocalFile()
