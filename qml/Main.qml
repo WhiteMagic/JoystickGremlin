@@ -35,7 +35,6 @@ ApplicationWindow {
     visible: true
     id: root
 
-
     FileDialog {
         id: idSaveProfileFileDialog
         title: "Please choose a file"

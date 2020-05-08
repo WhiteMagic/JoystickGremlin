@@ -174,7 +174,6 @@ if __name__ == "__main__":
 
     # Ensure joystick devices are correctly setup
     dill.DILL.init()
-    # time.sleep(0.25)
     gremlin.joystick_handling.joystick_devices_initialization()
 
     engine = QtQml.QQmlApplicationEngine(parent=app)
@@ -237,7 +236,7 @@ if __name__ == "__main__":
     engine.rootContext().setContextProperty("backend", backend)
 
     # Load a profile
-    backend.load_profile("layout.xml")
+    backend._load_profile("layout.xml")
 
     # Load plugin code and UI elements
     syslog.info("Initializing plugins")

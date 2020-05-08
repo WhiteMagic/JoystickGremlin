@@ -63,9 +63,10 @@ class Backend(QtCore.QObject):
         self.windowTitleChanged.emit()
 
     @Slot(str)
-    def saveProfile(self, fpath):
+    def saveProfile(self, fpath) -> None:
         self.profile.fpath = QtCore.QUrl(fpath).toLocalFile()
         self.profile.to_xml(self.profile.fpath)
+        self.windowTitleChanged.emit()
 
     @Slot(result=str)
     def profilePath(self) -> str:
