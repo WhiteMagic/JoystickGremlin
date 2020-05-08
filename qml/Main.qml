@@ -29,7 +29,7 @@ import "helpers.js" as Helpers
 ApplicationWindow {
 
     // Basic application setup
-    title: "Joystick Gremlin"
+    title: backend.windowTitle
     width: 1000
     height: 680
     visible: true

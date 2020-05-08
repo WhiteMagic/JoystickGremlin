@@ -32,6 +32,8 @@ class Backend(QtCore.QObject):
 
     """Allows interfacing between the QML frontend and the Python backend."""
 
+    windowTitleChanged = Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -76,4 +78,9 @@ class Backend(QtCore.QObject):
         # TODO: copy code and logic from the old joystick_gremlin.py file
         #       for handling of profile loading
         self.profile = profile.Profile()
-        self.profile.from_xml(fpath)
+        self.profile.from_xml(fpath)    @Property(type=str, notify=windowTitleChanged)
+    def windowTitle(self) -> str:
+        if self.profile and self.profile.fpath:
+            return self.profile.fpath
+        else:
+            return ""
