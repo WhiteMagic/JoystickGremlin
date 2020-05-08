@@ -1299,9 +1299,11 @@ class Profile:
         self.settings = Settings(self)
         self.modes = {}
         self.plugins = []
+        self.fpath = None
 
     def from_xml(self, fpath: str) -> None:
         # Parse file into an XML document
+        self.fpath = fpath
         tree = ElementTree.parse(fpath)
         root = tree.getroot()
 
@@ -1314,6 +1316,33 @@ class Profile:
             if item.device_id not in self.inputs:
                 self.inputs[item.device_id] = []
             self.inputs[item.device_id].append(item)
+
+    def to_xml(self, fpath: str) -> None:
+        root = ElementTree.Element("profile")
+        root.set("version", str(ProfileConverter.current_version))
+
+        inputs = ElementTree.Element("inputs")
+        for device_data in self.inputs.values():
+            for input_data in device_data:
+                inputs.append(input_data.to_xml())
+        root.append(inputs)
+        root.append(self.settings.to_xml())
+        root.append(self.library.to_xml())
+
+        # User plugins
+        plugins = ElementTree.Element("plugins")
+        for plugin in self.plugins:
+            plugins.append(plugin.to_xml())
+        root.append(plugins)
+
+        # Modes
+        # TODO: implement modes and then serialize them
+
+        # Serialize XML document
+        ugly_xml = ElementTree.tostring(root, encoding="utf-8")
+        dom_xml = minidom.parseString(ugly_xml)
+        with codecs.open(fpath, "w", "utf-8-sig") as out:
+            out.write(dom_xml.toprettyxml(indent="    "))
 
     def get_input_item(
             self,
@@ -1359,9 +1388,6 @@ class Profile:
                 f"{input_id} of device {device_guid}"
             )
 
-    def to_xml(self, fpath: str) -> None:
-        pass
-
     def _parse_actions(self, node: ElementTree.Element) -> List[Any]:
         pass
 
@@ -1404,9 +1430,26 @@ class InputItem:
             self.actions.append(self.library[ref_id])
 
     def to_xml(self) -> ElementTree.Element:
-        # To convert input typle for keyboards
-        # value = extended_bit << 8 | scan_code
-        pass
+        node = ElementTree.Element("input")
+
+        # Input item specification
+        node.append(create_subelement_node("device-id", self.device_id))
+        node.append(create_subelement_node("input-type", self.input_type))
+        node.append(create_subelement_node("mode", self.mode))
+        input_id = self.input_id
+        # To convert keyboard input tuples (scan_code, extended_bit) to integer:
+        # input_id = extended_bit << 8 | scan_code
+        if self.input_type == InputType.Keyboard:
+            input_id = self.input_id[1] << 8 | self.input_id[0]
+        node.append(create_subelement_node("input-id", input_id))
+
+        # Library references
+        for reference in self.actions:
+            n_reference = ElementTree.Element("library-reference")
+            n_reference.text = safe_format(reference.id, uuid.UUID)
+            node.append(n_reference)
+
+        return node
 
 
 # class ProfileOld:

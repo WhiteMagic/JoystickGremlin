@@ -251,6 +251,7 @@ class ActionTree:
     def __init__(self):
         """Creates a new instance."""
         self.root = TreeNode()
+        self._root_id = uuid.uuid4()
 
     def from_xml(self, action_tree_node: ElementTree) -> None:
         """Populates the instance with the XML instance data.
@@ -258,7 +259,7 @@ class ActionTree:
         Args:
             action_tree_node: XML subtree which contains the information
         """
-        root_id = safe_read(action_tree_node, "root", uuid.UUID)
+        self._root_id = safe_read(action_tree_node, "root", uuid.UUID)
 
         # Create the action tree nodes corresponding to each <action> XML
         # element
@@ -270,7 +271,7 @@ class ActionTree:
             if not set(["id", "type", "parent"]).issubset(node.keys()):
                 raise error.ProfileError(
                     f"Missing attribute in an action of tree with "
-                    f"root: '{root_id}'"
+                    f"root: '{self._root_id}'"
                 )
 
             # Ensure the action type is known
@@ -298,7 +299,7 @@ class ActionTree:
             parent_node = None
             if parent_id in action_ids:
                 parent_node = action_nodes[action_ids[parent_id]]
-            elif parent_id == root_id:
+            elif parent_id == self._root_id:
                 parent_node = self.root
             else:
                 raise error.ProfileError(
@@ -313,7 +314,19 @@ class ActionTree:
         Returns:
             XML element containing the object's information
         """
-        pass
+        node = ElementTree.Element("action-tree")
+        node.set("root", safe_format(self._root_id, uuid.UUID))
+        # Serialize very node in the tree and capture the tree structure
+        for i in range(1, self.root.node_count):
+            child = self.root.node_at_index(i)
+            child_node = child.value.to_xml()
+            parent_id = self._root_id
+            if child.parent.depth > 0:
+                parent_id = child.parent.value.id
+            child_node.set("parent", safe_format(parent_id, uuid.UUID))
+
+            node.append(child_node)
+        return node
 
 
 class LibraryItem:
@@ -444,7 +457,6 @@ class Library:
             XML node holding the instance's content
         """
         node = ElementTree.Element("library")
-
-
-
+        for item in self._items.values():
+            node.append(item.to_xml())
         return node
