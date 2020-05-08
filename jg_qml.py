@@ -177,7 +177,7 @@ if __name__ == "__main__":
     # time.sleep(0.25)
     gremlin.joystick_handling.joystick_devices_initialization()
 
-    engine = QtQml.QQmlApplicationEngine()
+    engine = QtQml.QQmlApplicationEngine(parent=app)
     QtCore.QDir.addSearchPath(
         "core_plugins",
         gremlin.util.resource_path("action_plugins/")
