@@ -49,6 +49,19 @@ ApplicationWindow {
         }
     }
 
+    FileDialog {
+        id: idLoadProfileFileDialog
+        title: "Please choose a file"
+        folder: shortcuts.home
+        defaultSuffix: "xml"
+        nameFilters: ["Profile files (*.xml)"]
+        selectExisting: true
+
+        onAccepted: {
+            backend.loadProfile(fileUrl)
+            console.log("Dodged")
+        }
+    }
 
     // Menu bar with all its entries
     menuBar: MenuBar {
@@ -61,7 +74,9 @@ ApplicationWindow {
             }
             MenuItem {
                 text: qsTr("Load Profile")
-                onTriggered: console.log("Test")
+                onTriggered: {
+                    idLoadProfileFileDialog.open()
+                }
             }
 
             Menu {
