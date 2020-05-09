@@ -35,7 +35,7 @@ import action_plugins
 import gremlin.types
 from .types import InputType, DeviceType, PluginVariableType, MergeAxisOperation
 from . import base_classes, common, error, input_devices, joystick_handling, \
-    plugin_manager, profile_library
+    plugin_manager, profile_library, tree
 from .util import parse_guid, safe_read, safe_format, read_bool, \
     read_subelement, create_subelement_node
 #from gremlin.profile_library import  *
@@ -1297,7 +1297,7 @@ class Profile:
         self.inputs = {}
         self.library = profile_library.Library()
         self.settings = Settings(self)
-        self.modes = {}
+        self.modes = ModeHierarchy()
         self.plugins = []
         self.fpath = None
 
@@ -1308,7 +1308,9 @@ class Profile:
         root = tree.getroot()
 
         self.library.from_xml(root)
+        self.modes.from_xml(root)
 
+        # Parse individual inputs
         for node in root.findall("./inputs/input"):
             item = InputItem(self.library)
             item.from_xml(node)
@@ -1328,15 +1330,13 @@ class Profile:
         root.append(inputs)
         root.append(self.settings.to_xml())
         root.append(self.library.to_xml())
+        root.append(self.modes.to_xml())
 
         # User plugins
         plugins = ElementTree.Element("plugins")
         for plugin in self.plugins:
             plugins.append(plugin.to_xml())
         root.append(plugins)
-
-        # Modes
-        # TODO: implement modes and then serialize them
 
         # Serialize XML document
         ugly_xml = ElementTree.tostring(root, encoding="utf-8")
@@ -1448,6 +1448,51 @@ class InputItem:
             n_reference = ElementTree.Element("library-reference")
             n_reference.text = safe_format(reference.id, uuid.UUID)
             node.append(n_reference)
+
+        return node
+
+
+class ModeHierarchy:
+
+    def __init__(self):
+        self._modes = []
+
+    def mode_list(self):
+        pass
+
+    def from_xml(self, root: ElementTree.Element) -> None:
+        nodes = {}
+        node_parents = {}
+        # Parse individual nodes
+        for node in root.findall("./modes/mode"):
+            if "parent" in node.attrib:
+                node_parents[node.text] = node.get("parent")
+            nodes[node.text] = tree.TreeNode(node.text)
+
+        # Reconstruct tree structure
+        for child, parent in node_parents.items():
+            nodes[child].set_parent(nodes[parent])
+
+        self._modes = []
+        for node in nodes.values():
+            if node.parent is None:
+                self._modes.append(node)
+
+
+    def to_xml(self) -> ElementTree.Element:
+        node = ElementTree.Element("nodes")
+
+        for tree in self._modes:
+            for i in range(tree.node_count):
+                tree_node = tree.node_at_index(i)
+                n_mode = ElementTree.Element("mode")
+                n_mode.text = tree_node.value
+                if tree_node.depth > 0:
+                    n_mode.set(
+                        "parent",
+                        safe_format(tree_node.parent.value, str)
+                    )
+                node.append(n_mode)
 
         return node
 
