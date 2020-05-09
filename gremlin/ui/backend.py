@@ -88,7 +88,7 @@ class Backend(QtCore.QObject):
 
     @Slot(str)
     def loadProfile(self, fpath):
-        self._load_profile(QtCore.QUrl(fpath).toLocalFile())
+        self._load_profile(QtCore.QUrl.fromLocalFile(fpath).toLocalFile())
 
     @Property(type="QVariantList", constant=True)
     def action_list(self):
