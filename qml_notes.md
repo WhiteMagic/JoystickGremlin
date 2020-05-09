@@ -140,3 +140,16 @@ Component {
 }
 ```
 
+## Simple List Models
+
+At times it is useful to return a simple list of strings to be displayed by a QML view or repeater. Providing the model via property causes some issues as QML is not happy with the actual data types exposed by PySide2. As such to specify the correct type of `QVariantList` the type information has to be provided as a string.
+
+```{python}
+from PySide2 import QtCore
+
+@QtCore.Property(type="QVariantList")
+def listData():
+    return ["List", "of", "Strings"]
+```
+
+This model can now be used by any QML element that can handle a list model.
