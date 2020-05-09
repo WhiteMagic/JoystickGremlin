@@ -101,7 +101,7 @@ class ActionTree(QtCore.QAbstractListModel):
             if role_name == "depth":
                 return node.depth
             elif role_name == "name":
-                return f"{node.value.name}: {node.value.description}"
+                return f"{node.value.name}"
             elif role_name == "qml_path":
                 return node.value.qml_path()
             elif role_name == "profile_data":
