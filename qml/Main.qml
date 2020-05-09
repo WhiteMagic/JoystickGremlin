@@ -35,6 +35,18 @@ ApplicationWindow {
     visible: true
     id: root
 
+    MessageDialog {
+        id: idErrorDialog
+        title: "An error occurred"
+        standardButtons: StandardButton.Ok
+
+        text: backend.lastError
+
+        onTextChanged: {
+            visible = true
+        }
+    }
+
     FileDialog {
         id: idSaveProfileFileDialog
         title: "Please choose a file"
@@ -64,6 +76,8 @@ ApplicationWindow {
 
     // Menu bar with all its entries
     menuBar: MenuBar {
+
+
         Menu {
             title: qsTr("File")
 

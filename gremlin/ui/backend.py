@@ -15,13 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import os
 import sys
 import time
+from typing import List
 
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
+from gremlin import config
 from gremlin import error
 from gremlin import plugin_manager
 from gremlin import profile
@@ -37,11 +40,14 @@ class Backend(QtCore.QObject):
     """Allows interfacing between the QML frontend and the Python backend."""
 
     windowTitleChanged = Signal()
+    recentProfilesChanged = Signal()
+    lastErrorChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.profile = None
+        self._last_error = ""
 
     @Slot(InputIdentifier, result=InputItemModel)
     def getInputItem(self, identifier: InputIdentifier) -> InputItemModel:
@@ -56,8 +62,16 @@ class Backend(QtCore.QObject):
         except error.ProfileError as e:
             print(e)
 
+    @Property(type="QVariantList", notify=recentProfilesChanged)
+    def recentProfiles(self) -> "QVariantList":
+        return config.Configuration().recent_profiles
+
     @Slot()
     def newProfile(self) -> None:
+        # TODO: implement this for QML
+        # self.ui.actionActivate.setChecked(False)
+        # self.activate(False)
+
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
         self.windowTitleChanged.emit()
@@ -91,9 +105,23 @@ class Backend(QtCore.QObject):
         else:
             return ""
 
+    @Property(str, notify=lastErrorChanged)
+    def lastError(self) -> str:
+        return self._last_error
+
+    def display_error(self, msg):
+        self._last_error = msg
+        self.lastErrorChanged.emit()
 
     def _load_profile(self, fpath):
         """Attempts to load the profile at the provided path."""
+        # Check if there exists a file with this path
+        if not os.path.isfile(fpath):
+            self.display_error(
+                f"Unable to load profile '{fpath}', no such file."
+            )
+            return
+
         # Disable the program if it is running when we're loading a
         # new profile
         # TODO: implement this for QML
@@ -131,7 +159,7 @@ class Backend(QtCore.QObject):
             logging.getLogger("system").exception(
                 "Invalid profile content:\n{}".format(e)
             )
-            self.new_profile()
+            self.newProfile()
         except error.ProfileError as e:
             # Parsing the profile went wrong, stop loading and start with an
             # empty profile
