@@ -80,8 +80,18 @@ ApplicationWindow {
                 }
             }
 
-            Menu {
+            AutoSizingMenu {
                 title: qsTr("Recent")
+
+                Repeater {
+                    model: backend.recentProfiles
+                    delegate: MenuItem {
+                        text: modelData
+                        onTriggered: {
+                            backend.loadProfile(modelData)
+                        }
+                    }
+                }
             }
 
             MenuItem {
