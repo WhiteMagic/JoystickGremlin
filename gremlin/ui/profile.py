@@ -79,8 +79,8 @@ class ActionTree(QtCore.QAbstractListModel):
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
         QtCore.Qt.UserRole + 2: QtCore.QByteArray("depth".encode()),
-        QtCore.Qt.UserRole + 3: QtCore.QByteArray("profile_data".encode()),
-        QtCore.Qt.UserRole + 4: QtCore.QByteArray("qml_path".encode()),
+        QtCore.Qt.UserRole + 3: QtCore.QByteArray("profileData".encode()),
+        QtCore.Qt.UserRole + 4: QtCore.QByteArray("qmlPath".encode()),
     }
 
     def __init__(self, action_tree, parent=None):
@@ -102,9 +102,9 @@ class ActionTree(QtCore.QAbstractListModel):
                 return node.depth
             elif role_name == "name":
                 return f"{node.value.name}"
-            elif role_name == "qml_path":
+            elif role_name == "qmlPath":
                 return node.value.qml_path()
-            elif role_name == "profile_data":
+            elif role_name == "profileData":
                 return node.value
         except error.GremlinError as e:
             print(f"Invalid index: {e}")
