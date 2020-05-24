@@ -32,7 +32,6 @@ Item {
 
     property LibraryItemListModel libraryItemListModel
 
-
 //    onInputItemModelChanged: {
 //        // Update stuff and things
 //        //idListView.model = inputItemModel.libraryItems
@@ -40,7 +39,6 @@ Item {
 //    onLibraryItemListModelChanged: {
 //        console.log(libraryItemListModel)
 //    }
-
 
     ListView {
         id: idListView
