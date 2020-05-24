@@ -85,7 +85,7 @@ def test_add_sibling():
     n4 = TreeNode(4)
 
     with pytest.raises(gremlin.error.GremlinError):
-        n1.add_sibling(n2)
+        n1.append_sibling(n2)
         assert n1.children == []
 
     n1.add_child(n2)
@@ -95,14 +95,14 @@ def test_add_sibling():
     assert n2.depth == 1
     assert n1.node_count == 2
 
-    n2.add_sibling(n3)
+    n2.append_sibling(n3)
     assert n1.children == [n2, n3]
     assert n2.children == []
     assert n3.parent == n1
     assert n3.depth == 1
     assert n1.node_count == 3
 
-    n2.add_sibling(n4)
+    n2.append_sibling(n4)
     assert n1.children == [n2, n3, n4]
     assert n2.children == []
     assert n4.parent == n1
@@ -260,3 +260,14 @@ def test_is_descendant():
 
     assert n1.node_count == 5
     assert n6.node_count == 1
+
+
+def test_nodes_matching():
+    n1 = TreeNode(2)
+    n2 = TreeNode(4, n1)
+    n3 = TreeNode(6, n1)
+    n4 = TreeNode(8, n1)
+
+    assert n1.nodes_matching(lambda x: x.value % 2 == 0) == [n1, n2, n3, n4]
+    assert n1.nodes_matching(lambda x: x.value / 5 == 0) == []
+    assert n1.nodes_matching(lambda x: x.value % 3 == 0) == [n3]

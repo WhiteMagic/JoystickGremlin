@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any, Callable, List, Optional
 
 import gremlin.error
 
@@ -56,8 +56,8 @@ class TreeNode:
         other.parent = self
         self.children.append(other)
 
-    def add_sibling(self, other: TreeNode) -> None:
-        """Adds a new sibling node to the tree.
+    def append_sibling(self, other: TreeNode) -> None:
+        """Adds a sibling node to the tree at the end of the list of siblings.
 
         Args:
             other: the node to add as sibling
@@ -69,6 +69,21 @@ class TreeNode:
 
         other.parent = self.parent
         self.parent.children.append(other)
+
+    def insert_sibling_after(self, other: TreeNode) -> None:
+        """Inserts a new sibling after this node.
+
+        Args:
+            other: the node to add as sibling
+        """
+        if self.parent is None:
+            raise gremlin.error.GremlinError(
+                "Cannot add sibling node to root node."
+            )
+
+        other.parent = self.parent
+        index = self.parent.children.index(self)
+        self.parent.children.insert(index+1, other)
 
     def set_parent(self, other: TreeNode) -> None:
         """Sets the parent of this node.
@@ -150,7 +165,6 @@ class TreeNode:
 
         return count
 
-
     def node_at_index(self, index: int) -> TreeNode:
         """Returns the node with the specified index.
 
@@ -172,6 +186,25 @@ class TreeNode:
             stack.extend(node.children[::-1])
 
         raise gremlin.error.GremlinError(f"No node with index {index} exists.")
+
+    def nodes_matching(self, predicate: Callable[[TreeNode], bool]) -> List[TreeNode]:
+        """Returns the list of nodes for which the predicate is true.
+
+        Args:
+            predicate: function evaluating a TreeNode instance, returns True
+                if the node should be returned, False otherwise
+
+        Returns:
+            List of TreeNode instance for which the predicate returns True
+        """
+        node_list = []
+        stack = [self.get_root()]
+        while len(stack) > 0:
+            node = stack.pop()
+            if predicate(node):
+                node_list.append(node)
+            stack.extend(node.children[::-1])
+        return node_list
 
     @property
     def depth(self) -> int:
