@@ -18,11 +18,12 @@
 from __future__ import annotations
 
 import typing
+import uuid
 
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
-from gremlin import error
+from gremlin import error, tree
 
 
 # Hierarchy of the item related classed:
@@ -81,12 +82,15 @@ class ActionTree(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 2: QtCore.QByteArray("depth".encode()),
         QtCore.Qt.UserRole + 3: QtCore.QByteArray("profileData".encode()),
         QtCore.Qt.UserRole + 4: QtCore.QByteArray("qmlPath".encode()),
+        QtCore.Qt.UserRole + 5: QtCore.QByteArray("id".encode()),
+        QtCore.Qt.UserRole + 6: QtCore.QByteArray("isExpanded".encode())
     }
 
     def __init__(self, action_tree, parent=None):
         super().__init__(parent)
 
         self._action_tree = action_tree
+        self._is_expanded = {}
 
     def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
         return self._action_tree.root.node_count - 1
@@ -106,8 +110,74 @@ class ActionTree(QtCore.QAbstractListModel):
                 return node.value.qml_path()
             elif role_name == "profileData":
                 return node.value
+            elif role_name == "id":
+                return str(node.value.id)
+            elif role_name == "isExpanded":
+                return self._is_expanded.get(node.value.id, False)
         except error.GremlinError as e:
             print(f"Invalid index: {e}")
 
+    def setData(
+            self,
+            index: QtCore.QModelIndex,
+            value: typing.Any,
+            role: int=...
+    ) -> bool:
+        if role not in ActionTree.roles:
+            return False
+
+        role_name = ActionTree.roles[role].data().decode()
+        try:
+            node = self._action_tree.root.node_at_index(index.row() + 1)
+            if role_name == "isExpanded":
+                self._is_expanded[node.value.id] = bool(value)
+            else:
+                return False
+
+            self.dataChanged.emit(index, index)
+            return True
+        except error.GremlinError as e:
+            print(f"Invalid index: {e}")
+            return False
+
+    def flags(self, index: QtCore.QModelIndex) -> QtCore.Qt.ItemFlags:
+        return QtCore.Qt.ItemFlag.ItemIsEditable | \
+               QtCore.Qt.ItemFlag.ItemIsEnabled | \
+               QtCore.Qt.ItemFlag.ItemIsSelectable
+
     def roleNames(self) -> typing.Dict:
         return ActionTree.roles
+
+    @Slot(str, str)
+    def moveAfter(self, source: str, target: str) -> None:
+        """Positions the source node after the target node.
+
+        Args:
+            source: string uuid value of the source node
+            target: string uuid valiue of the target node
+        """
+        # Retrieve nodes
+        source_node = self._find_node_with_id(uuid.UUID(source))
+        target_node = self._find_node_with_id(uuid.UUID(target))
+
+        # Reorder nodes
+        source_node.detach()
+        target_node.insert_sibling_after(source_node)
+
+        self.layoutChanged.emit()
+
+    def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
+        """Returns the node with the desired id from the action tree.
+
+        Args:
+            uuid: uuid of the node to retrieve
+
+        Returns:
+            The TreeNode corresponding to the given uuid
+        """
+        predicate = lambda x: True if x.value and x.value.id == uuid else False
+        nodes = self._action_tree.root.nodes_matching(predicate)
+
+        if len(nodes) != 1:
+            raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
+        return nodes[0]
