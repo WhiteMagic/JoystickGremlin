@@ -58,6 +58,9 @@ Item {
         Item {
             id: idBaseItem
 
+            property int sourceY
+            property bool dragSuccess : false
+
             // Dimensions
             height: {
                 if(idActionButton.checked) {
@@ -72,9 +75,17 @@ Item {
 
             // Drag & drop support
             Drag.active: idDragArea.drag.active
-            Drag.hotSpot {
-                x: idActionHeader.width / 2
-                y: idActionHeader.height / 2
+            Drag.dragType: Drag.Automatic
+            Drag.supportedActions: Qt.MoveAction
+            Drag.proposedAction: Qt.MoveAction
+            Drag.mimeData: {
+                "text/plain": model.id
+            }
+            Drag.onDragFinished: {
+                idBaseItem.dragSuccess = dropAction == Qt.MoveAction;
+            }
+            Drag.onDragStarted: {
+                idBaseItem.sourceY = idBaseItem.y
             }
 
             // Header
@@ -124,20 +135,23 @@ Item {
 
                 drag.target: idBaseItem
                 drag.axis: Drag.YAxis
-                drag.smoothed: false
 
                 onReleased: {
-                    if (drag.active) {
-                        emitMoveItemRequested();
+                    if(!idBaseItem.dragSuccess)
+                    {
+                        idBaseItem.y = idBaseItem.sourceY;
                     }
                 }
+
+                // Create an image of the object to visualize the dragging
+                onPressed: idBaseItem.grabToImage(function(result) {
+                    idBaseItem.Drag.imageSource = result.url
+                })
             }
 
             // Drop area
             DropArea {
                 id: idDropArea
-
-                property string actionId : model.id
 
                 height: idBaseItem.height
                 anchors.left: idBaseItem.left
@@ -146,16 +160,22 @@ Item {
 
                 // Visualization of the drop indicator
                 Rectangle {
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        top: parent.verticalCenter
-                    }
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.verticalCenter
 
                     height: 5
 
                     opacity: idDropArea.containsDrag ? 1.0 : 0.0
                     color: Universal.accent
+                }
+
+                onDropped: {
+                    if(drop.text != model.id)
+                    {
+                        drop.accept();
+                        idListView.model.moveAfter(drop.text, model.id);
+                    }
                 }
             }
 
@@ -187,21 +207,6 @@ Item {
                         }
                     }
                 }
-            }
-
-            function emitMoveItemRequested()
-            {
-                var dropArea = idBaseItem.Drag.target;
-                if(!dropArea) {
-                    return;
-                }
-                var dropId = dropArea.actionId;
-
-                if(model.id == dropId) {
-                    return;
-                }
-
-                idListView.model.moveAfter(model.id, dropId);
             }
 
         } // Item
