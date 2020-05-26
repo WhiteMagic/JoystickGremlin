@@ -161,8 +161,9 @@ class ActionTree(QtCore.QAbstractListModel):
         target_node = self._find_node_with_id(uuid.UUID(target))
 
         # Reorder nodes
-        source_node.detach()
-        target_node.insert_sibling_after(source_node)
+        if source_node != target_node:
+            source_node.detach()
+            target_node.insert_sibling_after(source_node)
 
         self.layoutChanged.emit()
 
