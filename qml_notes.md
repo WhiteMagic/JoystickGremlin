@@ -153,3 +153,93 @@ def listData():
 ```
 
 This model can now be used by any QML element that can handle a list model.
+
+## Drag & Drop
+
+To implement drag & drop with QML three components are needed.
+
+- The item to be dragged has to specify the correct `Drag.*` properties
+- An area which acts as the drag handle has to be specified using, for example, a `MouseArea`
+- An area onto which the dragged object can be dropped has to be specified using the `DropArea`
+
+The behavior of the drag & drop system changes drastically based on the `Drag.dragType` value. Using the default value the `Drag.onDragStarted` event is not available (likely others not either). The setup that worked out for the desired behavior in Gremlin is the following:
+
+**Item Drag values**
+
+```
+Drag.dragType: Drag.automatic
+Drag.active: idDragArea.drag.active
+Drag.supportedActions: Qt.MoveAction
+Drag.proposedAction: Qt.MoveAction
+Drag.mimeData: {
+	"text/plain": model.id
+}
+
+Drag.onDragFinished: {
+	idBaseItem.dragSuccess = dropAction == Qt.MoveAction;
+}
+Drag.onDragStarted: {
+	idBaseItem.sourceY = idBaseItem.y
+}
+```
+
+**Drag handle**
+
+```
+MouseArea {
+	id: idDragArea
+
+    drag.target: idBaseItem
+    drag.axis: Drag.YAxis
+
+    onReleased: {
+        if(!idBaseItem.dragSuccess)
+        {
+	        // Reset item position
+        }
+    }
+
+    // Create an image of the object to visualize the dragging
+    onPressed: idBaseItem.grabToImage(function(result) {
+    	idBaseItem.Drag.imageSource = result.url
+    })
+}
+```
+
+**Drop Area**
+
+```
+DropArea {
+    id: idDropArea
+
+    height: idBaseItem.height
+    anchors.left: idBaseItem.left
+    anchors.right: idBaseItem.right
+    anchors.top: idBaseItem.verticalCenter
+
+    // Visualization of the drop indicator
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.verticalCenter
+
+	    height: 5
+
+        opacity: idDropArea.containsDrag ? 1.0 : 0.0
+        color: "red"
+    }
+
+    onDropped: {
+    	// Signal that the drop was successful
+        drop.accept();
+    
+    	// Handle model change
+    	if(drop.text != model.id)
+        {
+	        idListView.model.moveAfter(drop.text, model.id);
+        }
+    }
+}
+```
+
+The above is not a generic setup that can be directly used as it relies on and makes assumptions about the model and intended behavior. However, the general flow should be applicable to other UI elements. The base item's `Drag.onDragFinished` sets a flag which is used by the `MouseArea.onReleased` event to reset the position of the item if needed. The `DropArea.onDropped` event handler ensures the `Drag.onDragFinished` is notified of success and then goes on to handle model changes that are in line with the intended drag & drop behavior.
