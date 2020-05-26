@@ -20,6 +20,7 @@ import os
 import sys
 import time
 from typing import List
+import uuid
 
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
@@ -48,6 +49,7 @@ class Backend(QtCore.QObject):
 
         self.profile = None
         self._last_error = ""
+        self._action_state = {}
 
     @Slot(InputIdentifier, result=InputItemModel)
     def getInputItem(self, identifier: InputIdentifier) -> InputItemModel:
@@ -61,6 +63,14 @@ class Backend(QtCore.QObject):
             return InputItemModel(item, self)
         except error.ProfileError as e:
             print(e)
+
+    @Slot(str, result=bool)
+    def isActionExpanded(self, uuid_str: str) -> bool:
+        return self._action_state.get(uuid.UUID(uuid_str), True)
+
+    @Slot(str, bool)
+    def setIsActionExpanded(self, uuid_str, is_expanded) -> None:
+        self._action_state[uuid.UUID(uuid_str)] = bool(is_expanded)
 
     @Property(type="QVariantList", notify=recentProfilesChanged)
     def recentProfiles(self) -> "QVariantList":

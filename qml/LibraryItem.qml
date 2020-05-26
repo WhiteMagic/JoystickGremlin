@@ -97,11 +97,11 @@ Item {
                 FoldButton {
                     id: idActionButton
 
-                    checked: model.isExpanded
+                    checked: backend.isActionExpanded(model.id)
                     icon.source: checked ? "../gfx/button_delete.png" : "../gfx/button_add.png"
 
                     onClicked: {
-                        model.isExpanded = checked
+                        backend.setIsActionExpanded(model.id, checked)
                     }
                 }
 

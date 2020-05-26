@@ -83,14 +83,12 @@ class ActionTree(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 3: QtCore.QByteArray("profileData".encode()),
         QtCore.Qt.UserRole + 4: QtCore.QByteArray("qmlPath".encode()),
         QtCore.Qt.UserRole + 5: QtCore.QByteArray("id".encode()),
-        QtCore.Qt.UserRole + 6: QtCore.QByteArray("isExpanded".encode())
     }
 
     def __init__(self, action_tree, parent=None):
         super().__init__(parent)
 
         self._action_tree = action_tree
-        self._is_expanded = {}
 
     def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
         return self._action_tree.root.node_count - 1
@@ -112,38 +110,8 @@ class ActionTree(QtCore.QAbstractListModel):
                 return node.value
             elif role_name == "id":
                 return str(node.value.id)
-            elif role_name == "isExpanded":
-                return self._is_expanded.get(node.value.id, False)
         except error.GremlinError as e:
             print(f"Invalid index: {e}")
-
-    def setData(
-            self,
-            index: QtCore.QModelIndex,
-            value: typing.Any,
-            role: int=...
-    ) -> bool:
-        if role not in ActionTree.roles:
-            return False
-
-        role_name = ActionTree.roles[role].data().decode()
-        try:
-            node = self._action_tree.root.node_at_index(index.row() + 1)
-            if role_name == "isExpanded":
-                self._is_expanded[node.value.id] = bool(value)
-            else:
-                return False
-
-            self.dataChanged.emit(index, index)
-            return True
-        except error.GremlinError as e:
-            print(f"Invalid index: {e}")
-            return False
-
-    def flags(self, index: QtCore.QModelIndex) -> QtCore.Qt.ItemFlags:
-        return QtCore.Qt.ItemFlag.ItemIsEditable | \
-               QtCore.Qt.ItemFlag.ItemIsEnabled | \
-               QtCore.Qt.ItemFlag.ItemIsSelectable
 
     def roleNames(self) -> typing.Dict:
         return ActionTree.roles
