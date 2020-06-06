@@ -25,6 +25,7 @@ from PySide2.QtCore import Property, Signal, Slot
 
 import dill
 
+from gremlin import common
 from gremlin import error
 from gremlin import event_handler
 from gremlin import input_devices
@@ -222,4 +223,79 @@ class Device(QtCore.QAbstractListModel):
         str,
         fget=_get_guid,
         fset=_set_guid
+    )
+
+
+class VJoyDevices(QtCore.QObject):
+
+    """vJoy model used together with the VJoySelector QML."""
+
+    deviceModelChanged = Signal()
+    inputModelChanged = Signal()
+    validTypesChanged = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._devices = sorted(
+            joystick_handling.vjoy_devices(),
+            key=lambda x: x.vjoy_id
+        )
+        self._current_device = self._devices[0]
+        self._valid_types = []
+
+    def _get_valid_types(self) -> typing.List[str]:
+        return [InputType.to_string(entry) for entry in self._valid_types]
+
+    def _set_valid_types(self, valid_types: typing.List[str]) -> None:
+        type_list = sorted([InputType.to_enum(entry) for entry in valid_types])
+        if type_list != self._valid_types:
+            self._valid_types = type_list
+            self.validTypesChanged.emit()
+            self.inputModelChanged.emit()
+
+    @Property(type="QVariantList", notify=deviceModelChanged)
+    def deviceModel(self):
+        return [self._device_name(dev) for dev in self._devices]
+
+    @Property(type="QVariantList", notify=inputModelChanged)
+    def inputModel(self):
+        input_count = {
+            InputType.JoystickAxis: lambda x: x.axis_count,
+            InputType.JoystickButton: lambda x: x.button_count,
+            InputType.JoystickHat: lambda x: x.hat_count
+        }
+
+        input_items = []
+
+        # Add items based on the input type
+        for input_type in self._valid_types:
+            for i in range(input_count[input_type](self._current_device)):
+                input_id = i+1
+                if input_type == InputType.JoystickAxis:
+                    input_id = self._current_device.axis_map[i].axis_index
+
+                input_items.append(common.input_to_ui_string(
+                    input_type,
+                    input_id
+                ))
+
+        return input_items
+
+    @Slot(int)
+    def selectVjoyDevice(self, index):
+        self._current_device = self._devices[index]
+        self.inputModelChanged.emit()
+
+    def _format_input(self) -> str:
+        pass
+
+    def _device_name(self, device) -> str:
+        return "vJoy Device {:d}".format(device.vjoy_id)
+
+    validTypes = Property(
+        "QVariantList",
+        fget=_get_valid_types,
+        fset=_set_valid_types,
+        notify=validTypesChanged
     )

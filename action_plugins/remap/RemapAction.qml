@@ -15,23 +15,46 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import QtQuick 2.13
-import QtQuick.Controls 2.13
-import QtQuick.Layouts 1.13
-import QtQuick.Window 2.13
+import QtQuick 2.14
+import QtQuick.Controls 2.14
 
-import QtQuick.Controls.Universal 2.12
+import QtQuick.Controls.Universal 2.14
+
+import gremlin.ui.profile 1.0
+import gremlin.plugins 1.0
+import "../../qml"
 
 
 Item {
-    id: root
+    id: idRoot
 
-    RowLayout {
-        Label {
-            text: qsTr("Remap")
-        }
-        TextField {
-            placeholderText: qsTr("Enter description")
-        }
+    property ActionConfigurationModel actionConfiguration
+    property RemapModel model
+
+    height: idSpacer.height + idVjoy.height
+
+
+    Rectangle {
+        id: idSpacer
+
+        anchors.top: parent.top
+
+        height: 10
     }
+
+    VJoySelector {
+        id: idVjoy
+
+        anchors.top: idSpacer.bottom
+
+        inputType: model.inputType
+        vjoyInputId: model.vjoyInputId
+        vjoyDeviceId: model.vjoyDeviceId
+        validTypes: [actionConfiguration.behaviour]
+
+        onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
+        onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
+    }
+
+    DebugBox {}
 }

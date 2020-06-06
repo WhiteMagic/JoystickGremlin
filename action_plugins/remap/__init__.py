@@ -23,6 +23,7 @@ import time
 import uuid
 from xml.etree import ElementTree
 
+from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
@@ -323,6 +324,13 @@ class RemapModel(AbstractActionModel):
         InputType.Keyboard
     ]
 
+    # Signals emitted when properties change
+    vjoyDeviceIdChanged = Signal()
+    vjoyInputIdChanged = Signal()
+    inputTypeChanged = Signal()
+    axisModeChanged = Signal()
+    axisScalingChanged = Signal()
+
     def __init__(self):
         super().__init__()
 
@@ -333,25 +341,52 @@ class RemapModel(AbstractActionModel):
         self._axis_mode = AxisMode.Absolute
         self._axis_scaling = 1.0
 
-    @Property(type=int)
-    def vjoy_device_id(self) -> int:
+    def _get_vjoy_device_id(self) -> int:
         return self._vjoy_device_id
 
-    @Property(type=int)
-    def vjoy_input_id(self) -> int:
+    def _set_vjoy_device_id(self, vjoy_device_id: int) -> None:
+        if vjoy_device_id == self._vjoy_device_id:
+            return
+        self._vjoy_device_id = vjoy_device_id
+        self.vjoyDeviceIdChanged.emit()
+
+    def _get_vjoy_input_id(self) -> int:
         return self._vjoy_input_id
 
-    @Property(type=InputType)
-    def vjoy_device_id(self) -> InputType:
-        return self._input_type
+    def _set_vjoy_input_id(self, vjoy_input_id: int) -> None:
+        if vjoy_input_id == self._vjoy_input_id:
+            return
+        self._vjoy_input_id = vjoy_input_id
+        self.vjoyInputIdChanged.emit()
 
-    @Property(type=AxisMode)
-    def vjoy_device_id(self) -> AxisMode:
-        return self._axis_mode
+    def _get_input_type(self) -> str:
+        return InputType.to_string(self._input_type)
 
-    @Property(type=float)
-    def vjoy_device_id(self) -> float:
+    def _set_input_type(self, input_type: str) -> None:
+        input_type_tmp = InputType.to_enum(input_type)
+        if input_type_tmp == self._input_type:
+            return
+        self._input_type = input_type_tmp
+        self.inputTypeChanged.emit()
+
+    def _get_axis_mode(self) -> str:
+        return AxisMode.to_string(self._axis_mode)
+
+    def _set_axis_mode(self, axis_mode: str) -> None:
+        axis_mode_tmp = AxisMode.to_enum(axis_mode)
+        if axis_mode_tmp == self._axis_mode:
+            return
+        self._axis_mode = axis_mode_tmp
+        self.axisModeChanged.emit()
+
+    def _get_axis_scaling(self) -> float:
         return self._axis_scaling
+
+    def _set_axis_scaling(self, axis_scaling: float) -> None:
+        if axis_scaling == self._axis_scaling:
+            return
+        self._axis_scaling = axis_scaling
+        self.axisScalingChanged.emit()
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
@@ -391,6 +426,46 @@ class RemapModel(AbstractActionModel):
                 "axis-scaling", self._axis_scaling, PropertyType.Float
             ))
         return node
+
+    def is_valid(self) -> bool:
+        return True
+
+    def qml_path(self) -> str:
+        return "file:///" + QtCore.QFile(
+            "core_plugins:remap/RemapAction.qml"
+        ).fileName()
+
+    # Define properties
+    vjoyDeviceId = Property(
+        int,
+        fget=_get_vjoy_device_id,
+        fset=_set_vjoy_device_id,
+        notify=vjoyDeviceIdChanged
+    )
+    vjoyInputId = Property(
+        int,
+        fget=_get_vjoy_input_id,
+        fset=_set_vjoy_input_id,
+        notify=vjoyInputIdChanged
+    )
+    inputType = Property(
+        str,
+        fget=_get_input_type,
+        fset=_set_input_type,
+        notify=inputTypeChanged
+    )
+    axisMode = Property(
+        str,
+        fget=_get_axis_mode,
+        fset=_set_axis_mode,
+        notify=axisModeChanged
+    )
+    axisScaling = Property(
+        float,
+        fget=_get_axis_scaling,
+        fset=_set_axis_scaling,
+        notify=axisScalingChanged
+    )
 
 
 # class Remap(gremlin.base_classes.AbstractAction):
