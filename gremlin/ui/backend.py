@@ -186,11 +186,9 @@ class Backend(QtCore.QObject):
         except error.ProfileError as e:
             # Parsing the profile went wrong, stop loading and start with an
             # empty profile
-            cfg = gremlin.config.Configuration()
+            cfg = config.Configuration()
             cfg.last_profile = None
-            self.new_profile()
-            gremlin.util.display_error(
-                "Failed to load the profile {} due to:\n\n{}".format(
-                    fname, e
-                )
+            self.newProfile()
+            self.display_error(
+                f"Failed to load the profile {fpath} due to:\n\n{e}"
             )
