@@ -30,18 +30,62 @@ Item {
     property ActionConfigurationModel actionConfiguration
     id: idRoot
 
-    height: idListView.childrenRect.height
-    width: parent.width
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.rightMargin: 10
+    height: idListView.childrenRect.height + idHeader.height
 
+    // Header
+    Rectangle {
+        id: idHeader
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 10
+        height: 40
+
+        color: Universal.background
+
+        TextField {
+            id: idDescription
+            placeholderText: "Description"
+
+            anchors.left: idHeader.left
+            anchors.right: idBehaviour.left
+            anchors.verticalCenter: idBehaviour.verticalCenter
+        }
+
+        InputBehaviour {
+            id: idBehaviour
+
+            actionConfiguration: idRoot.actionConfiguration
+
+            anchors.right: idHeaderRemove.left
+        }
+
+        Button {
+            id: idHeaderRemove
+
+            text: "X"
+            anchors.right: idHeader.right
+        }
+    }
+
+    BottomBorder {
+        id: idHeaderBorder
+        item: idHeader
+    }
 
     ListView {
         id: idListView
 
-
-        anchors.fill: parent
+        anchors.top: idHeaderBorder.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: childrenRect.height
         spacing: 10
 
-        model: actionTree
+        model: actionConfiguration
 
         // Make it behave like a sensible scrolling container
         ScrollBar.vertical: ScrollBar {}
@@ -195,7 +239,10 @@ Item {
                         if (component.status == Component.Ready) {
                             var obj = component.createObject(
                                 idAction,
-                                {model: profileData}
+                                {
+                                    model: profileData,
+                                    actionConfiguration: actionConfiguration
+                                }
                             );
 
                             idAction.height = obj.height;
