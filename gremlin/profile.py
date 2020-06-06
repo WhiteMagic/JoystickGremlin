@@ -1403,9 +1403,10 @@ class InputItem:
         self.input_id = None
         self.mode = None
         self.library = library
-        self.actions = []
+        self.action_configurations = []
         self.description = ""
         self.always_execute = False
+        self.is_active = True
 
     def from_xml(self, node: ElementTree.Element):
         self.device_id = read_subelement(node, "device-id")
@@ -1418,16 +1419,11 @@ class InputItem:
         if self.input_type == InputType.Keyboard:
             self.input_id = (self.input_id & 0xFF, self.input_id >> 8)
 
-        # Retrieve and link library item references and store them.
-        for reference in node.findall("library-reference"):
-            ref_id = uuid.UUID(reference.text)
-            if ref_id not in self.library:
-                raise error.ProfileError(
-                    f"Input: {self.device_id} {self.input_type} {self.input_id} "
-                    f"links to invalid library item {ref_id}"
-                )
-
-            self.actions.append(self.library[ref_id])
+        # Parse every action configuration entry
+        for entry in node.findall("action-configuration"):
+            action = ActionConfiguration(self)
+            action.from_xml(entry)
+            self.action_configurations.append(action)
 
     def to_xml(self) -> ElementTree.Element:
         node = ElementTree.Element("input")
@@ -1443,12 +1439,40 @@ class InputItem:
             input_id = self.input_id[1] << 8 | self.input_id[0]
         node.append(create_subelement_node("input-id", input_id))
 
-        # Library references
-        for reference in self.actions:
-            n_reference = ElementTree.Element("library-reference")
-            n_reference.text = safe_format(reference.id, uuid.UUID)
-            node.append(n_reference)
+        # Action configurations
+        for entry in self.action_configurations:
+            node.append(entry.to_xml())
 
+        return node
+
+
+class ActionConfiguration:
+
+    """Links together a LibraryItem and it's activation behaviour."""
+
+    def __init__(self, input_item: InputItem):
+        self.input_item = input_item
+        self.library_reference = None
+        self.behaviour = None
+        self.virtual_button = None
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        reference_id = read_subelement(node, "library-reference")
+        if reference_id not in self.input_item.library:
+            raise error.ProfileError(
+                f"Input: {self.input_item.device_id} "
+                f"{self.input_item.input_type}  {self.input_item.input_id} "
+                f"links to invalid library item {reference_id}"
+            )
+        self.library_reference = self.input_item.library[reference_id]
+        self.behaviour = read_subelement(node, "behaviour")
+
+    def to_xml(self) -> ElementTree.Element:
+        node = ElementTree.Element("action-configuration")
+        node.append(
+            create_subelement_node("library-reference", self.library_reference.id)
+        )
+        node.append(create_subelement_node("behaviour", self.behaviour))
         return node
 
 

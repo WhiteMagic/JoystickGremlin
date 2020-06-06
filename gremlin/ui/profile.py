@@ -23,7 +23,8 @@ import uuid
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
-from gremlin import error, tree
+from gremlin import error, profile, tree
+from gremlin.types import InputType
 
 
 # Hierarchy of the item related classed:
@@ -40,13 +41,16 @@ class InputItemModel(QtCore.QObject):
         self._input_item = input_item
 
     @Property(QtCore.QObject, constant=True)
-    def libraryItems(self) -> LibraryItemListModel:
-        return LibraryItemListModel(self._input_item.actions, self)
+    def actionConfigurations(self) -> ActionConfigurationListModel:
+        return ActionConfigurationListModel(
+            self._input_item.action_configurations,
+            self
+        )
 
 
-class LibraryItemListModel(QtCore.QAbstractListModel):
+class ActionConfigurationListModel(QtCore.QAbstractListModel):
 
-    """List model of all LibraryItem instances of a single input item."""
+    """List model of all ActionConfiguration instances of a single input item."""
 
     # This fake single role and the roleName function are needed to have the
     # modelData property available in the QML delegate
@@ -57,24 +61,25 @@ class LibraryItemListModel(QtCore.QAbstractListModel):
     def __init__(self, items, parent=None):
         super().__init__(parent)
 
-        self._items = items
+        self._action_configurations = items
 
-    def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
-        return len(self._items)
+    def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
+        return len(self._action_configurations)
 
-    def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
-        return ActionTree(self._items[index.row()].action_tree)
+    def data(self, index: QtCore.QModelIndex, role: int=...) -> typing.Any:
+        return ActionConfigurationModel(self._action_configurations[index.row()])
 
     def roleNames(self) -> typing.Dict:
-        return LibraryItemListModel.roles
+        return ActionConfigurationListModel.roles
 
 
-class ActionTree(QtCore.QAbstractListModel):
+class ActionConfigurationModel(QtCore.QAbstractListModel):
 
-    """Model representing the ActionTree structure for display via QML.
+    """Model representing the ActionConfiguration structure for display via QML.
 
-    The index uses the depth first enumeration of the tree structure. Index
-    0 refers to the root node which by construction contains no data.
+    The index uses the depth first enumeration of the ActionTree instance
+    contained in this action configuration. Index 0 refers to the root node
+    which by construction contains no data.
     """
 
     roles = {
@@ -85,19 +90,26 @@ class ActionTree(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 5: QtCore.QByteArray("id".encode()),
     }
 
-    def __init__(self, action_tree, parent=None):
+    behaviourChanged = Signal()
+
+    def __init__(
+            self,
+            action_configuration: profile.ActionConfiguration,
+            parent=None
+    ):
         super().__init__(parent)
 
-        self._action_tree = action_tree
+        self._action_configuration = action_configuration
+        self._action_tree = action_configuration.library_reference.action_tree
 
     def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
         return self._action_tree.root.node_count - 1
 
     def data(self, index: QtCore.QModelIndex, role: int=...) -> typing.Any:
-        if role not in ActionTree.roles:
+        if role not in ActionConfigurationModel.roles:
             return "Unknown"
 
-        role_name = ActionTree.roles[role].data().decode()
+        role_name = ActionConfigurationModel.roles[role].data().decode()
         try:
             node = self._action_tree.root.node_at_index(index.row() + 1)
             if role_name == "depth":
@@ -114,7 +126,13 @@ class ActionTree(QtCore.QAbstractListModel):
             print(f"Invalid index: {e}")
 
     def roleNames(self) -> typing.Dict:
-        return ActionTree.roles
+        return ActionConfigurationModel.roles
+
+    @Property(type=str, constant=True)
+    def inputType(self) -> str:
+        return InputType.to_string(
+            self._action_configuration.input_item.input_type
+        )
 
     @Slot(str, str)
     def moveAfter(self, source: str, target: str) -> None:
@@ -135,6 +153,15 @@ class ActionTree(QtCore.QAbstractListModel):
 
         self.layoutChanged.emit()
 
+    def _get_behaviour(self) -> str:
+        return InputType.to_string(self._action_configuration.behaviour)
+
+    def _set_behaviour(self, text: str) -> None:
+        behaviour = InputType.to_enum(text)
+        if behaviour != self._action_configuration.behaviour:
+            self._action_configuration.behaviour = behaviour
+            self.behaviourChanged.emit()
+
     def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
         """Returns the node with the desired id from the action tree.
 
@@ -150,3 +177,10 @@ class ActionTree(QtCore.QAbstractListModel):
         if len(nodes) != 1:
             raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
         return nodes[0]
+
+    behaviour = Property(
+        str,
+        fget=_get_behaviour,
+        fset=_set_behaviour,
+        notify=behaviourChanged
+    )

@@ -222,8 +222,8 @@ ApplicationWindow {
 
             // Trigger a model update on the InputConfiguration
             onInputIndexChanged: {
-                idInputConfigurationPanel.libraryItemListModel =
-                    backend.getInputItem(inputIdentifier).libraryItems
+                idInputConfigurationPanel.actionConfigurationListModel =
+                    backend.getInputItem(inputIdentifier).actionConfigurations
             }
         }
 

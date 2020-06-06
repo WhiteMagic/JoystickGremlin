@@ -211,6 +211,13 @@ if __name__ == "__main__":
         0,
         "Device"
     )
+    QtQml.qmlRegisterType(
+        gremlin.ui.device.VJoyDevices,
+        "gremlin.ui.device",
+        1,
+        0,
+        "VJoyDevices"
+    )
 
     # Profile related
     QtQml.qmlRegisterType(
@@ -222,18 +229,18 @@ if __name__ == "__main__":
     )
 
     QtQml.qmlRegisterType(
-        gremlin.ui.profile.LibraryItemListModel,
+        gremlin.ui.profile.ActionConfigurationListModel,
         "gremlin.ui.profile",
         1,
         0,
-        "LibraryItemListModel"
+        "ActionConfigurationListModel"
     )
     QtQml.qmlRegisterType(
-        gremlin.ui.profile.ActionTree,
+        gremlin.ui.profile.ActionConfigurationModel,
         "gremlin.ui.profile",
         1,
         0,
-        "ActionTree"
+        "ActionConfigurationModel"
     )
 
     # Create backend instance
@@ -249,6 +256,7 @@ if __name__ == "__main__":
 
     # Initialize main UI
     engine.load(QtCore.QUrl.fromLocalFile("qml/Main.qml"))
+    # engine.load(QtCore.QUrl.fromLocalFile("qml/Test.qml"))
     if not engine.rootObjects():
         sys.exit(-1)
 

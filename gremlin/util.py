@@ -24,13 +24,15 @@ import re
 import sys
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 import uuid
+from uuid import UUID
 from xml.etree import ElementTree
 
 from PySide2 import QtCore, QtWidgets
 
 import dill
+from dill import GUID
 
 from . import error
 from .types import AxisMode, InputType, PropertyType
@@ -267,21 +269,27 @@ _element_parsers = {
     "device-id": lambda x: parse_guid(x.text),
     "input-type": lambda x: InputType.to_enum(x.text),
     "input-id": lambda x: int(x.text),
-    "mode": lambda x: str(x.text)
+    "mode": lambda x: str(x.text),
+    "behaviour": lambda x: InputType.to_enum(x.text),
+    "library-reference": lambda x: uuid.UUID(x.text),
 }
 
 _element_types = {
     "device-id": dill.GUID,
     "input-type": InputType,
     "input-id": int,
-    "mode": str
+    "mode": str,
+    "behaviour": InputType,
+    "library-reference": uuid.UUID,
 }
 
 _element_to_string = {
     "device-id": str,
     "input-type": lambda x: InputType.to_string(x),
     "input-id": str,
-    "mode": str
+    "mode": str,
+    "behaviour": lambda x: InputType.to_string(x),
+    "library-reference": str,
 }
 
 def create_subelement_node(

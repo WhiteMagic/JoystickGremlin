@@ -31,40 +31,6 @@ import gremlin.types
 import gremlin.util
 
 
-xml_simple = """
-<profile version="14">
-    <inputs>
-        <input>
-            <device-id>{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}</device-id>
-            <input-type>button</input-type>
-            <input-id>6</input-id>
-            <mode>Default</mode>
-            <actions>
-                <action-tree id="ec663ba4-264a-4c76-98c0-6054058cae9f">
-                    <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="condition">
-                        <property type="string">
-                            <name>type</name>
-                            <value>activation-range</value>
-                        </property>
-                        <property type="axis-range">
-                            <name>activation-range</name>
-                            <low>0.4</low>
-                            <high>0.8</high>
-                        </property>
-                    </action>
-                    <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="library">
-                        <property type="guid">
-                            <name>reference</name>
-                            <value>1234</value>
-                        </property>
-                    </action>
-                </action-tree>
-            </actions>
-        </input>
-    </inputs>
-</profile>
-"""
-
 xml_description = """
 <profile version="14">
     <inputs>
@@ -73,7 +39,10 @@ xml_description = """
             <input-type>button</input-type>
             <input-id>6</input-id>
             <mode>Default</mode>
-            <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
+            <action-configuration>
+                <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
+                <behaviour>button</behaviour>
+            </action-configuration>
         </input>
     </inputs>
     
@@ -128,7 +97,10 @@ xml_hierarchy = """
             <input-type>button</input-type>
             <input-id>1</input-id>
             <mode>Default</mode>
-            <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
+            <action-configuration>
+                <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
+                <behaviour>button</behaviour>
+            </action-configuration>
         </input>
     </inputs>
 
@@ -180,6 +152,14 @@ xml_invalid = """
 """
 
 
+@pytest.fixture(scope="session", autouse=True)
+def terminate_event_listener(request):
+    import gremlin.event_handler
+    request.addfinalizer(
+        lambda: gremlin.event_handler.EventListener().terminate()
+    )
+
+
 def _store_in_tmpfile(text: str) -> str:
     """Stores the provided text in a temporary file and returns the path.
 
@@ -195,21 +175,6 @@ def _store_in_tmpfile(text: str) -> str:
     tmp.close()
     return fpath
 
-
-# def test_constructor_simple():
-#     fpath = _store_in_tmpfile(xml_simple)
-#
-#     p = Profile()
-#     p.from_xml(fpath)
-#
-#     os.remove(fpath)
-#
-#     guid = gremlin.util.parse_guid("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
-#     assert len(p.inputs) == 1
-#     assert p.inputs[guid][0].device_id == guid
-#     assert p.inputs[guid][0].input_type == gremlin.types.InputType.JoystickButton
-#     assert p.inputs[guid][0].input_id == 6
-#     assert p.inputs[guid][0].mode == "Default"
 
 
 def test_constructor_invalid():
@@ -231,11 +196,11 @@ def test_simple_action():
 
     guid = gremlin.util.parse_guid("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
 
-    library_items = p.inputs[guid][0].actions
-    assert len(library_items) == 1
-    assert isinstance(library_items[0], gremlin.profile_library.LibraryItem)
+    action_configurations = p.inputs[guid][0].action_configurations
+    assert len(action_configurations) == 1
+    assert isinstance(action_configurations[0], gremlin.profile.ActionConfiguration)
 
-    actions = library_items[0].action_tree.root.children
+    actions = action_configurations[0].library_reference.action_tree.root.children
     assert len(actions) == 3
     assert actions[0].value.tag == "description"
     assert actions[0].value.description == "This is a test"

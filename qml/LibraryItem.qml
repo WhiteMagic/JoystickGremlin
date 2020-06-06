@@ -27,7 +27,7 @@ import gremlin.ui.profile 1.0
 
 
 Item {
-    property ActionTree actionTree
+    property ActionConfigurationModel actionConfiguration
     id: idRoot
 
     height: idListView.childrenRect.height

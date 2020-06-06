@@ -30,28 +30,23 @@ import gremlin.ui.device 1.0
 Item {
     id: idRoot
 
-    property LibraryItemListModel libraryItemListModel
-
-//    onInputItemModelChanged: {
-//        // Update stuff and things
-//        //idListView.model = inputItemModel.libraryItems
-//    }
-//    onLibraryItemListModelChanged: {
-//        console.log(libraryItemListModel)
-//    }
+    property ActionConfigurationListModel actionConfigurationListModel
 
     ListView {
         id: idListView
+
         anchors.fill: parent
         spacing: 10
 
         // Make it behave like a sensible scrolling container
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: ScrollBar {
+            policy: ScrollBar.AlwaysOn
+        }
         flickableDirection: Flickable.VerticalFlick
         boundsBehavior: Flickable.StopAtBounds
 
         // Content to visualize
-        model: libraryItemListModel
+        model: actionConfigurationListModel
         delegate: idEntryDelegate
     }
 
@@ -59,7 +54,7 @@ Item {
         id: idEntryDelegate
 
         LibraryItem {
-            actionTree: modelData
+            actionConfiguration: modelData
         }
     }
 
