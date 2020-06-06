@@ -51,6 +51,19 @@ class Backend(QtCore.QObject):
         self._last_error = ""
         self._action_state = {}
 
+    @Slot(InputIdentifier, result=int)
+    def getActionCount(self, identifier: InputIdentifier) -> int:
+        try:
+            item = self.profile.get_input_item(
+                identifier.device_guid,
+                identifier.input_type,
+                identifier.input_id,
+                True
+            )
+            return len(item.action_configurations)
+        except error.ProfileError as e:
+            print(e)
+
     @Slot(InputIdentifier, result=InputItemModel)
     def getInputItem(self, identifier: InputIdentifier) -> InputItemModel:
         try:

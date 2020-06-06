@@ -63,7 +63,7 @@ Item {
         id: idDeviceDelegate
 
         Rectangle {
-            id: rect
+            id: idInputDisplay
 
             width: parent.width
             height: 50
@@ -72,17 +72,24 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
-                // Change selected index as well as set the input item model
                 onClicked: {
                     idInputList.currentIndex = model.index;
-//                        inputIdentifier = idDeviceModel.input_identifier(model.index);
-//                        console.log(idDeviceModel.input_identifier(model.index));
                 }
             }
 
             Label {
                 text: name
+
                 anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Label {
+                property int actionCount: backend.getActionCount(idDeviceModel.inputIdentifier(model.index))
+                text: actionCount ? actionCount : ""
+
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: idInputDisplay.right
+                anchors.rightMargin: 15
             }
         }
     }
