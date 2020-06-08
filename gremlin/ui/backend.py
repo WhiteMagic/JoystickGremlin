@@ -58,11 +58,11 @@ class Backend(QtCore.QObject):
                 identifier.device_guid,
                 identifier.input_type,
                 identifier.input_id,
-                True
+                False
             )
             return len(item.action_configurations)
         except error.ProfileError as e:
-            print(e)
+            return 0
 
     @Slot(InputIdentifier, result=InputItemModel)
     def getInputItem(self, identifier: InputIdentifier) -> InputItemModel:
