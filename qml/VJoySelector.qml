@@ -38,7 +38,15 @@ Item {
 
     VJoyDevices {
         id: idVjoy
-        validTypes: validTypes
+
+        Component.onCompleted: {
+            validTypes = idRoot.validTypes
+            setSelection(
+                idRoot.vjoyDeviceId,
+                idRoot.vjoyInputId,
+                idRoot.inputType
+            )
+        }
     }
 
     Rectangle {
@@ -49,22 +57,35 @@ Item {
             ComboBox {
                 id: idDevice
 
-                model: idVjoy.deviceModel
-                currentIndex: vjoyDeviceId
+                width: 150
 
-                onCurrentIndexChanged: {
-                    idVjoy.selectVjoyDevice(currentIndex)
-                    vjoyDeviceId = currentIndex
+                model: idVjoy.deviceModel
+                currentIndex: idVjoy.vjoyIndex
+
+                onActivated: {
+                    idVjoy.vjoyIndex = index
+                    vjoyDeviceId = idVjoy.vjoyId
+                    console.log(index)
                 }
             }
+
+            Rectangle {
+                width: 10
+                height: 1
+            }
+
             ComboBox {
                 id: idInput
 
-                model: idVjoy.inputModel
-                currentIndex: vjoyInputId
+                width: 150
 
-                onCurrentIndexChanged: {
-                    vjoyInputId = currentIndex
+                model: idVjoy.inputModel
+                currentIndex: idVjoy.inputIndex
+
+                onActivated: {
+                    idVjoy.inputIndex = index
+                    vjoyInputId = idVjoy.inputId
+                    inputType = idVjoy.inputType
                 }
 
             }
