@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from gremlin import error
 from gremlin.keyboard import key_from_code
 from gremlin.types import InputType, AxisNames
 
@@ -67,7 +68,7 @@ def input_to_ui_string(input_type: InputType, input_id: int) -> str:
     if input_type == InputType.JoystickAxis:
         try:
             return AxisNames.to_string(AxisNames(input_id))
-        except gremlin.error.GremlinError:
+        except error.GremlinError:
             return "Axis {:d}".format(input_id)
     elif input_type == InputType.Keyboard:
         return key_from_code(*input_id).name
