@@ -30,11 +30,14 @@ Item {
     property int vjoyInputId
     property var validTypes
 
-    height: idDevice.height
+    height: Math.max(idDevice.height, idSpacer.height, idInput.height)
+    width: idDevice.width + idSpacer.width + idInput.width
 
+    // React to the validTypes value being changed from an external source
     onValidTypesChanged: {
         idVjoy.validTypes = validTypes
     }
+
 
     VJoyDevices {
         id: idVjoy
@@ -47,48 +50,49 @@ Item {
                 idRoot.inputType
             )
         }
+
+        onVjoyIndexChanged: {
+            idRoot.vjoyDeviceId = idVjoy.vjoyId
+        }
+        onInputIndexChanged: {
+            console.log("TEST")
+            idRoot.vjoyInputId = idVjoy.inputId
+            idRoot.inputType = idVjoy.inputType
+        }
+    }
+
+    ComboBox {
+        id: idDevice
+
+        anchors.left: parent.left
+        width: 150
+
+        model: idVjoy.deviceModel
+        currentIndex: idVjoy.vjoyIndex
+
+        onActivated: {
+            idVjoy.vjoyIndex = index
+        }
     }
 
     Rectangle {
-        Row {
-            anchors.left: parent.left
-            anchors.right: parent.right
+        id: idSpacer
+        anchors.left: idDevice.right
+        width: 10
+        height: 1
+    }
 
-            ComboBox {
-                id: idDevice
+    ComboBox {
+        id: idInput
 
-                width: 150
+        anchors.left: idSpacer.right
+        width: 150
 
-                model: idVjoy.deviceModel
-                currentIndex: idVjoy.vjoyIndex
+        model: idVjoy.inputModel
+        currentIndex: idVjoy.inputIndex
 
-                onActivated: {
-                    idVjoy.vjoyIndex = index
-                    vjoyDeviceId = idVjoy.vjoyId
-                    console.log(index)
-                }
-            }
-
-            Rectangle {
-                width: 10
-                height: 1
-            }
-
-            ComboBox {
-                id: idInput
-
-                width: 150
-
-                model: idVjoy.inputModel
-                currentIndex: idVjoy.inputIndex
-
-                onActivated: {
-                    idVjoy.inputIndex = index
-                    vjoyInputId = idVjoy.inputId
-                    inputType = idVjoy.inputType
-                }
-
-            }
+        onActivated: {
+            idVjoy.inputIndex = index
         }
     }
 }

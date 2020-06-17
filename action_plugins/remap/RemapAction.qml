@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2019 Lionel Ott
+// Copyright (C) 2015 - 2020 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,19 +42,73 @@ Item {
         height: 10
     }
 
-    VJoySelector {
-        id: idVjoy
-
+    Item {
         anchors.top: idSpacer.bottom
 
-        inputType: model.inputType
-        vjoyInputId: model.vjoyInputId
-        vjoyDeviceId: model.vjoyDeviceId
-        validTypes: [actionConfiguration.behaviour]
+        VJoySelector {
+            id: idVjoy
 
-        onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
-        onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
+            anchors.left: parent.left
+
+            inputType: model.inputType
+            vjoyInputId: model.vjoyInputId
+            vjoyDeviceId: model.vjoyDeviceId
+            validTypes: [actionConfiguration.behaviour]
+
+            onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
+            onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
+            onInputTypeChanged: { model.inputType = inputType }
+        }
+
+        Row {
+            anchors.left: idVjoy.right
+            spacing: 10
+
+            visible: actionConfiguration.behaviour == "axis"
+
+            Rectangle {
+                width: 10
+                height: 1
+            }
+
+            RadioButton {
+                text: "Absolute"
+                checked: true
+
+                onCheckedChanged: {
+                    model.axisMode = "absolute"
+                }
+            }
+            RadioButton {
+                id: idRelativeMode
+                text: "Relative"
+
+                onCheckedChanged: {
+                    model.axisMode = "relative"
+                }
+            }
+
+            Label {
+                text: "Scaling"
+                anchors.verticalCenter: parent.verticalCenter
+                visible: idRelativeMode.checked
+            }
+
+            FloatSpinBox {
+                id: idScaling
+
+                visible: idRelativeMode.checked
+                minValue: 0
+                maxValue: 100
+                value: 1
+                stepSize: 0.1
+
+                onValueChanged: {
+                    model.axisScaling = value
+                }
+            }
+        }
     }
 
-    DebugBox {}
+//    DebugBox {}
 }

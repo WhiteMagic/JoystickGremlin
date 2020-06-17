@@ -354,6 +354,15 @@ class VJoyDevices(QtCore.QObject):
         type_list = sorted([InputType.to_enum(entry) for entry in valid_types])
         if type_list != self._valid_types:
             self._valid_types = type_list
+
+            # Changing the types will cause the inputs to be reset to default
+            # initial values
+            # Force refresh the input model storage then select first entry
+            self.inputModel
+            self._current_input_index = 0
+            self._current_input_type = self._input_data[0][0]
+            self.inputIndexChanged.emit()
+
             self.validTypesChanged.emit()
             self.inputModelChanged.emit()
 
@@ -363,7 +372,6 @@ class VJoyDevices(QtCore.QObject):
                 "Attempted to read from invalid VJoyDevices instance."
             )
         return self._devices[self._current_vjoy_index].vjoy_id
-
 
     def _get_vjoy_index(self) -> int:
         if not self._is_state_valid():
