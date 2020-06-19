@@ -23,8 +23,8 @@ import uuid
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
-from gremlin import error, profile, tree
-from gremlin.types import InputType
+from gremlin import error, profile, tree, util
+from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
 
 # Hierarchy of the item related classed:
@@ -73,6 +73,65 @@ class ActionConfigurationListModel(QtCore.QAbstractListModel):
         return ActionConfigurationListModel.roles
 
 
+class VirtualButtonModel(QtCore.QObject):
+
+    """Represents both axis and hat virtual buttons."""
+
+    lowerLimitChanged = Signal()
+    upperLimitChanged = Signal()
+    directionChanged = Signal()
+    hatDirectionChanged = Signal()
+
+    def __init__(self, virtual_button, parent=None):
+        super().__init__(parent)
+
+        self.virtual_button = virtual_button
+
+    def _get_lower_limit(self) -> float:
+        return self.virtual_button.lower_limit
+
+    def _set_lower_limit(self, value: float) -> None:
+        if value != self.virtual_button.lower_limit:
+            self.virtual_button.lower_limit = util.clamp(value, -1.0, 1.0)
+            self.lowerLimitChanged.emit()
+
+    def _get_upper_limit(self) -> float:
+        return self.virtual_button.upper_limit
+
+    def _set_upper_limit(self, value: float) -> None:
+        if value != self.virtual_button.upper_limit:
+            self.virtual_button.upper_limit = util.clamp(value, -1.0, 1.0)
+            self.upperLimitChanged.emit()
+
+    def _get_direction(self) -> str:
+        return AxisButtonDirection.to_string(self.virtual_button.direction)
+
+    def _set_direction(self, value: str) -> None:
+        direction = AxisButtonDirection.to_enum(value.lower())
+        if direction != self.virtual_button.direction:
+            self.virtual_button.direction = direction
+            self.directionChanged.emit()
+
+    lowerLimit = Property(
+        float,
+        fget=_get_lower_limit,
+        fset=_set_lower_limit,
+        notify=lowerLimitChanged
+    )
+    upperLimit = Property(
+        float,
+        fget=_get_upper_limit,
+        fset=_set_upper_limit,
+        notify=upperLimitChanged
+    )
+    direction = Property(
+        str,
+        fget=_get_direction,
+        fset=_set_direction,
+        notify=directionChanged
+    )
+
+
 class ActionConfigurationModel(QtCore.QAbstractListModel):
 
     """Model representing the ActionConfiguration structure for display via QML.
@@ -92,6 +151,7 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
 
     behaviourChanged = Signal()
     descriptionChanged = Signal()
+    virtualButtonChanged = Signal()
 
     def __init__(
             self,
@@ -102,6 +162,9 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
 
         self._action_configuration = action_configuration
         self._action_tree = action_configuration.library_reference.action_tree
+        self._virtual_button_model = VirtualButtonModel(
+            self._action_configuration.virtual_button
+        )
 
     def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
         return self._action_tree.root.node_count - 1
@@ -135,6 +198,10 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
             self._action_configuration.input_item.input_type
         )
 
+    @Property(type=VirtualButtonModel, notify=virtualButtonChanged)
+    def virtualButton(self) -> VirtualButtonModel:
+        return self._virtual_button_model
+
     @Slot(str, str)
     def moveAfter(self, source: str, target: str) -> None:
         """Positions the source node after the target node.
@@ -161,6 +228,27 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         behaviour = InputType.to_enum(text)
         if behaviour != self._action_configuration.behaviour:
             self._action_configuration.behaviour = behaviour
+
+            # Ensure a virtual button instance exists of the correct type
+            # if one is needed
+            input_type = self._action_configuration.input_item.input_type
+            if input_type == InputType.JoystickAxis and \
+                    behaviour == InputType.JoystickButton:
+                if not isinstance(
+                        self._action_configuration.virtual_button,
+                        profile.VirtualAxisButton
+                ):
+                    self._action_configuration.virtual_button = \
+                        profile.VirtualAxisButton()
+            elif input_type == InputType.JoystickHat and \
+                    behaviour == InputType.JoystickButton:
+                if not isinstance(
+                        self._action_configuration.virtual_button,
+                        profile.VirtualHatButton
+                ):
+                    self._action_configuration.virtual_button = \
+                        profile.VirtualHatButton()
+
             self.behaviourChanged.emit()
 
     def _get_description(self) -> str:

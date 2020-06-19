@@ -270,6 +270,8 @@ class VJoyDevices(QtCore.QObject):
         self._current_input_index = 0
         self._current_input_type = self._input_data[0][0]
 
+        self._is_initialized = False
+
     def _format_input(self) -> str:
         pass
 
@@ -355,14 +357,29 @@ class VJoyDevices(QtCore.QObject):
         if type_list != self._valid_types:
             self._valid_types = type_list
 
-            # Changing the types will cause the inputs to be reset to default
-            # initial values
-            # Force refresh the input model storage then select first entry
+            # When changing the input type attempt to preserve the existing
+            # selection if the input type is part of the new set of valid
+            # types. If this is not possible set the selection to the first
+            # entry of the available values.
+            old_vjoy_input_id = self._get_vjoy_id()
+            old_input_type = self._get_input_type()
             self.inputModel
-            self._current_input_index = 0
-            self._current_input_type = self._input_data[0][0]
-            self.inputIndexChanged.emit()
+            if self._current_input_type in self._valid_types:
+                self.setSelection(
+                    self._current_vjoy_index,
+                    old_vjoy_input_id,
+                    old_input_type
+                )
+            else:
+                self._current_input_index = 0
+                self._current_input_type = self._input_data[0][0]
 
+            # Prevent sending change of input indices and thus changing the
+            # model if the model hadn't been initialized yet.
+            if self._is_initialized:
+                self.inputIndexChanged.emit()
+            else:
+                self._is_initialized = True
             self.validTypesChanged.emit()
             self.inputModelChanged.emit()
 

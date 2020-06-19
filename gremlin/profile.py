@@ -1483,10 +1483,7 @@ class ActionConfiguration:
         return virtual_button
 
     def _write_virtual_button(self) -> Optional[ElementTree.Element]:
-        # 1. Check if we need a virtual button node
-        # 2. If not ensure the entry is set to None
-        # 3. Generate the node
-        # 4. Return the node
+        # Ascertain whether or not a virtual button node needs to be created
         needs_virtual_button = False
         if self.input_item.input_type == InputType.JoystickAxis and \
                 self.behaviour == InputType.JoystickButton:
@@ -1495,10 +1492,13 @@ class ActionConfiguration:
                 self.behaviour == InputType.JoystickButton:
             needs_virtual_button = True
 
+        # Ensure there is no virtual button information present
+        # if it is not needed
         if not needs_virtual_button:
             self.virtual_button = None
             return None
 
+        # Check we have virtual button data
         if self.virtual_button is None:
             raise error.ProfileError(
                 f"Virtual button specification not present for action "

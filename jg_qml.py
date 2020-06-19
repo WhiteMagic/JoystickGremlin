@@ -242,6 +242,14 @@ if __name__ == "__main__":
         0,
         "ActionConfigurationModel"
     )
+    QtQml.qmlRegisterType(
+        gremlin.ui.profile.VirtualButtonModel,
+        "gremlin.ui.profile",
+        1,
+        0,
+        "VirtualButtonModel"
+    )
+
 
     # Create backend instance
     backend = gremlin.ui.backend.Backend()
