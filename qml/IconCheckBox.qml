@@ -19,52 +19,24 @@
 import QtQuick 2.14
 import QtQuick.Controls 2.14
 
-import gremlin.ui.profile 1.0
-
 
 Item {
-    id: root
+    property string image
 
-    property VirtualButtonModel virtualButton
+    width: idCheckbox.width + idImage.width
+    height: idCheckbox.height
 
-    Row {
-        id: idCheckboxes
+    CheckBox {
+        id: idCheckbox
 
-        spacing: 10
+        contentItem: Image {
+            id: idImage
 
-        IconCheckBox {
-            image: "../gfx/hat_n.png"
-
-            onChecked
-        }
-
-        IconCheckBox {
-            image: "../gfx/hat_ne.png"
-        }
-
-        IconCheckBox {
-            image: "../gfx/hat_e.png"
-        }
-
-        IconCheckBox {
-            image: "../gfx/hat_se.png"
-        }
-
-        IconCheckBox {
-            image: "../gfx/hat_s.png"
-        }
-
-        IconCheckBox {
-            image: "../gfx/hat_sw.png"
-        }
-
-        IconCheckBox {
-            image: "../gfx/hat_w.png"
-        }
-
-        IconCheckBox {
-            image: "../gfx/hat_nw.png"
+            source: image
+            fillMode: Image.PreserveAspectFit
+            transform: Translate{
+                x: idCheckbox.indicator.width
+            }
         }
     }
-
 }

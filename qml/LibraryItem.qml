@@ -168,7 +168,9 @@ Item {
                     spacing: 10
                     height: 40
 
-                    HatDirectionSelector {}
+                    HatDirectionSelector {
+                        virtualButton: actionConfiguration.virtualButton
+                    }
                 }
             }
         }
