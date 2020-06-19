@@ -457,13 +457,13 @@ class HatDirection(enum.Enum):
 
     Center = (0, 0)
     North = (0, 1)
-    NortEast = (1, 1)
+    NorthEast = (1, 1)
     East = (1, 0)
     SouthEast = (1, -1)
     South = (0, -1)
     SouthWest = (-1, -1)
     West = (-1, 0)
-    NortWest = (-1, 1)
+    NorthWest = (-1, 1)
 
     @staticmethod
     def to_string(value: HatDirection) -> str:
@@ -486,23 +486,23 @@ class HatDirection(enum.Enum):
 _HatDirection_to_string_lookup = {
     HatDirection.Center: "center",
     HatDirection.North: "north",
-    HatDirection.NortEast: "north-east",
+    HatDirection.NorthEast: "north-east",
     HatDirection.East: "east",
     HatDirection.SouthEast: "south-east",
     HatDirection.South: "south",
     HatDirection.SouthWest: "south-west",
     HatDirection.West: "west",
-    HatDirection.NortWest: "north-west",
+    HatDirection.NorthWest: "north-west",
 }
 
 _HatDirection_to_enum_lookup = {
     "center": HatDirection.Center,
     "north": HatDirection.North,
-    "north-east": HatDirection.NortEast,
+    "north-east": HatDirection.NorthEast,
     "east": HatDirection.East,
     "south-east": HatDirection.SouthEast,
     "south": HatDirection.South,
     "south-west": HatDirection.SouthWest,
     "west": HatDirection.West,
-    "north-west": HatDirection.NortWest,
+    "north-west": HatDirection.NorthWest,
 }
