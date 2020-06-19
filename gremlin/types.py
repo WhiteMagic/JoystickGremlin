@@ -449,3 +449,60 @@ _AxisMode_to_enum_lookup = {
     "absolute": AxisMode.Absolute,
     "relative": AxisMode.Relative
 }
+
+
+class HatDirection(enum.Enum):
+
+    """Represents the possible directions a hat can take on."""
+
+    Center = (0, 0)
+    North = (0, 1)
+    NortEast = (1, 1)
+    East = (1, 0)
+    SouthEast = (1, -1)
+    South = (0, -1)
+    SouthWest = (-1, -1)
+    West = (-1, 0)
+    NortWest = (-1, 1)
+
+    @staticmethod
+    def to_string(value: HatDirection) -> str:
+        try:
+            return _HatDirection_to_string_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid HatDirection in lookup"
+            )
+
+    @staticmethod
+    def to_enum(value: str) -> HatDirection:
+        try:
+            return _HatDirection_to_enum_lookup[value.lower()]
+        except KeyError:
+            raise gremlin.error.GremlinError(
+                "Invalid HatDirection in lookup"
+            )
+
+_HatDirection_to_string_lookup = {
+    HatDirection.Center: "center",
+    HatDirection.North: "north",
+    HatDirection.NortEast: "north-east",
+    HatDirection.East: "east",
+    HatDirection.SouthEast: "south-east",
+    HatDirection.South: "south",
+    HatDirection.SouthWest: "south-west",
+    HatDirection.West: "west",
+    HatDirection.NortWest: "north-west",
+}
+
+_HatDirection_to_enum_lookup = {
+    "center": HatDirection.Center,
+    "north": HatDirection.North,
+    "north-east": HatDirection.NortEast,
+    "east": HatDirection.East,
+    "south-east": HatDirection.SouthEast,
+    "south": HatDirection.South,
+    "south-west": HatDirection.SouthWest,
+    "west": HatDirection.West,
+    "north-west": HatDirection.NortWest,
+}

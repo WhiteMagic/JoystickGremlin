@@ -35,7 +35,7 @@ import dill
 from dill import GUID
 
 from . import error
-from .types import AxisMode, InputType, PropertyType
+from .types import AxisButtonDirection, AxisMode, InputType, PropertyType
 
 
 # Table storing which modules have been imported already
@@ -272,6 +272,9 @@ _element_parsers = {
     "mode": lambda x: str(x.text),
     "behaviour": lambda x: InputType.to_enum(x.text),
     "library-reference": lambda x: uuid.UUID(x.text),
+    "lower-limit": lambda x: float(x.text),
+    "upper-limit": lambda x: float(x.text),
+    "direction": lambda x: AxisButtonDirection.to_enum(x.text),
 }
 
 _element_types = {
@@ -281,6 +284,9 @@ _element_types = {
     "mode": str,
     "behaviour": InputType,
     "library-reference": uuid.UUID,
+    "lower-limit": float,
+    "upper-limit": float,
+    "direction": AxisButtonDirection,
 }
 
 _element_to_string = {
@@ -290,6 +296,9 @@ _element_to_string = {
     "mode": str,
     "behaviour": lambda x: InputType.to_string(x),
     "library-reference": str,
+    "lower-limit": str,
+    "upper-limit": str,
+    "direction": lambda x: AxisButtonDirection.to_string(x),
 }
 
 def create_subelement_node(

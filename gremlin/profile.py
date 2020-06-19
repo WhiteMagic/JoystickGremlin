@@ -24,7 +24,7 @@ import copy
 import logging
 import os
 import shutil
-from typing import Any, List
+from typing import Any, List, Optional
 import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -33,7 +33,8 @@ import dill
 
 import action_plugins
 import gremlin.types
-from .types import InputType, DeviceType, PluginVariableType, MergeAxisOperation
+from .types import InputType, DeviceType, HatDirection, PluginVariableType, \
+    MergeAxisOperation
 from . import base_classes, common, error, input_devices, joystick_handling, \
     plugin_manager, profile_library, tree
 from .util import parse_guid, safe_read, safe_format, read_bool, \
@@ -1096,11 +1097,9 @@ class VirtualAxisButton(AbstractVirtualButton):
 
         :param node the node containing data for this instance
         """
-        self.lower_limit = safe_read(node, "lower-limit", float)
-        self.upper_limit = safe_read(node, "upper-limit", float)
-        self.direction = gremlin.types.AxisButtonDirection.to_enum(
-            safe_read(node, "direction", default_value="anywhere")
-        )
+        self.lower_limit = read_subelement(node, "lower-limit")
+        self.upper_limit = read_subelement(node, "upper-limit")
+        self.direction = read_subelement(node, "direction")
 
     def to_xml(self):
         """Returns an XML node representing the data of this instance.
@@ -1108,44 +1107,15 @@ class VirtualAxisButton(AbstractVirtualButton):
         :return XML node containing the instance's data
         """
         node = ElementTree.Element("virtual-button")
-        node.set("lower-limit", str(self.lower_limit))
-        node.set("upper-limit", str(self.upper_limit))
-        node.set(
-            "direction",
-            gremlin.types.AxisButtonDirection.to_string(self.direction)
-        )
+        node.append(create_subelement_node("lower-limit", self.lower_limit))
+        node.append(create_subelement_node("upper-limit", self.upper_limit))
+        node.append(create_subelement_node("direction", self.direction))
         return node
 
 
 class VirtualHatButton(AbstractVirtualButton):
 
     """Virtual button which combines hat directions into a button."""
-
-    # Mapping from event directions to names
-    direction_to_name = {
-        ( 0,  0): "center",
-        ( 0,  1): "north",
-        ( 1,  1): "north-east",
-        ( 1,  0): "east",
-        ( 1, -1): "south-east",
-        ( 0, -1): "south",
-        (-1, -1): "south-west",
-        (-1,  0): "west",
-        (-1,  1): "north-west"
-    }
-
-    # Mapping from names to event directions
-    name_to_direction = {
-        "center": (0, 0),
-        "north": (0, 1),
-        "north-east": (1, 1),
-        "east": (1, 0),
-        "south-east": (1, -1),
-        "south": (0, -1),
-        "south-west": (-1, -1),
-        "west": (-1, 0),
-        "north-west": (-1, 1)
-    }
 
     def __init__(self, directions=()):
         """Creates a instance.
@@ -1160,10 +1130,9 @@ class VirtualHatButton(AbstractVirtualButton):
 
         :param node the node containing data for this instance
         """
-        for key, value in node.items():
-            if key in VirtualHatButton.name_to_direction and \
-                            profile.parse_bool(value):
-                self.directions.append(key)
+        self.directions = []
+        for hd_node in node.findall("hat-direction"):
+            self.directions.append(HatDirection.to_enum(hd_node.text))
 
     def to_xml(self):
         """Returns an XML node representing the data of this instance.
@@ -1172,8 +1141,9 @@ class VirtualHatButton(AbstractVirtualButton):
         """
         node = ElementTree.Element("virtual-button")
         for direction in self.directions:
-            if direction in VirtualHatButton.name_to_direction:
-                node.set(direction, "1")
+            hd_node = ElementTree.Element("hat-direction")
+            hd_node.text = HatDirection.to_string(direction)
+            node.append(hd_node)
         return node
 
 
@@ -1445,6 +1415,15 @@ class InputItem:
 
         return node
 
+    def descriptor(self) -> str:
+        """Returns a string representation describing the input item.
+
+        Returns:
+            String identifying this input item in a textual manner
+        """
+        return f"{self.device_id}: {InputType.to_string(self.input_type)} " \
+               f"{self.input_id}"
+
 
 class ActionConfiguration:
 
@@ -1460,12 +1439,12 @@ class ActionConfiguration:
         reference_id = read_subelement(node, "library-reference")
         if reference_id not in self.input_item.library:
             raise error.ProfileError(
-                f"Input: {self.input_item.device_id} "
-                f"{self.input_item.input_type}  {self.input_item.input_id} "
-                f"links to invalid library item {reference_id}"
+                f"{self.input_item.descriptor()} links to an invalid library "
+                f"item {reference_id}"
             )
         self.library_reference = self.input_item.library[reference_id]
         self.behaviour = read_subelement(node, "behaviour")
+        self.virtual_button = self._parse_virtual_button(node)
 
     def to_xml(self) -> ElementTree.Element:
         node = ElementTree.Element("action-configuration")
@@ -1473,7 +1452,57 @@ class ActionConfiguration:
             create_subelement_node("library-reference", self.library_reference.id)
         )
         node.append(create_subelement_node("behaviour", self.behaviour))
+        vb_node = self._write_virtual_button()
+        if vb_node is not None:
+            node.append(vb_node)
+
         return node
+
+    def _parse_virtual_button(self, node: ElementTree.Element) -> AbstractVirtualButton:
+        # Ensure the configuration requires a virtual button
+        virtual_button = None
+        if self.input_item.input_type == InputType.JoystickAxis and \
+                self.behaviour == InputType.JoystickButton:
+            virtual_button = VirtualAxisButton()
+        elif self.input_item.input_type == InputType.JoystickHat and \
+                self.behaviour == InputType.JoystickButton:
+            virtual_button = VirtualHatButton()
+
+        # Ensure we have a virtual button entry to parse
+        if virtual_button is not None:
+            vb_node = node.find("virtual-button")
+            if vb_node is None:
+                raise error.ProfileError(
+                    f"Missing virtual-button entry library item "
+                    f"{self.library_reference.id}"
+                )
+            virtual_button.from_xml(vb_node)
+
+        return virtual_button
+
+    def _write_virtual_button(self) -> Optional[ElementTree.Element]:
+        # 1. Check if we need a virtual button node
+        # 2. If not ensure the entry is set to None
+        # 3. Generate the node
+        # 4. Return the node
+        needs_virtual_button = False
+        if self.input_item.input_type == InputType.JoystickAxis and \
+                self.behaviour == InputType.JoystickButton:
+            needs_virtual_button = True
+        elif self.input_item.input_type == InputType.JoystickHat and \
+                self.behaviour == InputType.JoystickButton:
+            needs_virtual_button = True
+
+        if not needs_virtual_button:
+            self.virtual_button = None
+            return None
+
+        if self.virtual_button is None:
+            raise error.ProfileError(
+                f"Virtual button specification not present for action "
+                f"configuration part of input {self.input_item.descriptor()}."
+            )
+        return self.virtual_button.to_xml()
 
 
 class ModeHierarchy:
