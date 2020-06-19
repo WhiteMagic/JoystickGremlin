@@ -98,61 +98,6 @@ Item {
                 }
             }
         }
-
-        // UI for a physical axis behaving as a button
-        Row {
-            anchors.left: parent.left
-            anchors.top: idVjoy.bottom
-            spacing: 10
-
-            visible: actionConfiguration.behaviour == "button" &&
-                actionConfiguration.inputType == "axis"
-
-            //Activate between A and B from Direction
-            Label {
-                anchors.verticalCenter: idAxisRange.verticalCenter
-                text: "Activate between"
-            }
-            NumericalRangeSlider {
-                id: idAxisRange
-
-                from: -1.0
-                to: 1.0
-                firstValue: -0.5
-                secondValue: 0.5
-                stepSize: 0.1
-                decimals: 3
-
-                onFirstValueChanged: {
-
-                }
-                onSecondValueChanged: {
-
-                }
-            }
-            Label {
-                anchors.verticalCenter: idAxisRange.verticalCenter
-                text: "when entered from"
-            }
-            ComboBox {
-                model: ["Anywhere", "Above", "Below"]
-
-                onCurrentTextChanged: {
-
-                }
-            }
-        }
-
-        // UI for a physical hat behaving as a button
-        Row {
-            anchors.left: idVjoy.right
-            spacing: 10
-
-            visible: actionConfiguration.behaviour == "button" &&
-                actionConfiguration.inputType == "hat"
-
-            HatDirectionSelector {}
-        }
     }
 
 //    DebugBox {}

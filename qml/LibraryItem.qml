@@ -36,38 +36,132 @@ Item {
     height: idListView.childrenRect.height + idHeader.height
 
     // Header
-    Rectangle {
+    Item {
         id: idHeader
 
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: 10
-        height: 40
 
-        color: Universal.background
+        height: idGeneralHeader.height + idBehaviourControls.height
 
-        TextField {
-            id: idDescription
-            placeholderText: "Description"
+        // General header
+        Rectangle {
+            id: idGeneralHeader
 
-            anchors.left: idHeader.left
-            anchors.right: idBehaviour.left
-            anchors.verticalCenter: idBehaviour.verticalCenter
+            anchors.left: parent.left
+            anchors.right: parent.right
+
+            height: 40
+
+            color: Universal.background
+
+            TextField {
+                id: idDescription
+                placeholderText: "Description"
+
+                anchors.left: idGeneralHeader.left
+                anchors.right: idBehaviour.left
+                anchors.verticalCenter: idBehaviour.verticalCenter
+            }
+
+            InputBehaviour {
+                id: idBehaviour
+
+                actionConfiguration: idRoot.actionConfiguration
+
+                anchors.right: idHeaderRemove.left
+            }
+
+            Button {
+                id: idHeaderRemove
+
+                text: "X"
+                anchors.right: idGeneralHeader.right
+            }
         }
 
-        InputBehaviour {
-            id: idBehaviour
+        // Behaviour controls header portion
+        Item {
+            id: idBehaviourControls
 
-            actionConfiguration: idRoot.actionConfiguration
+            anchors.top: idGeneralHeader.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-            anchors.right: idHeaderRemove.left
-        }
+            height: idBehaviourAxisButton.active ? idBehaviourAxisButton.height : 0 +
+                    idBehaviourHatButton.active ? idBehaviourHatButton.height : 0
 
-        Button {
-            id: idHeaderRemove
+            // UI for a physical axis behaving as a button
+            Loader {
+                id: idBehaviourAxisButton
 
-            text: "X"
-            anchors.right: idHeader.right
+                active: actionConfiguration.behaviour == "button" &&
+                    actionConfiguration.inputType == "axis"
+
+                sourceComponent: Row {
+                    spacing: 10
+
+                    Label {
+                        anchors.verticalCenter: idAxisRange.verticalCenter
+                        text: "Activate between"
+                    }
+                    NumericalRangeSlider {
+                        id: idAxisRange
+
+                        from: -1.0
+                        to: 1.0
+                        firstValue: actionConfiguration.virtualButton.lowerLimit
+                        secondValue: actionConfiguration.virtualButton.upperLimit
+                        stepSize: 0.1
+                        decimals: 3
+
+                        onFirstValueChanged: {
+                            actionConfiguration.virtualButton.lowerLimit = firstValue
+                        }
+                        onSecondValueChanged: {
+                            actionConfiguration.virtualButton.upperLimit = secondValue
+                        }
+                    }
+                    Label {
+                        anchors.verticalCenter: idAxisRange.verticalCenter
+                        text: "when entered from"
+                    }
+                    ComboBox {
+                        model: ["Anywhere", "Above", "Below"]
+
+                        // Select the correct entry
+                        Component.onCompleted: {
+                            currentIndex = find(
+                                actionConfiguration.virtualButton.direction,
+                                Qt.MatchFixedString
+                            )
+                        }
+
+                        // TODO: Figure out the best way to handle initialization
+                        //       without overwriting model values
+                        //onCurrentTextChanged: {
+                        onActivated: {
+                            actionConfiguration.virtualButton.direction = currentText
+                        }
+                    }
+                }
+            }
+
+            // UI for a physical hat behaving as a button
+            Loader {
+                id: idBehaviourHatButton
+
+                active: actionConfiguration.behaviour == "button" &&
+                    actionConfiguration.inputType == "hat"
+
+                sourceComponent: Row {
+                    spacing: 10
+                    height: 40
+
+                    HatDirectionSelector {}
+                }
+            }
         }
     }
 
@@ -135,6 +229,7 @@ Item {
             // Header
             Row {
                 id: idActionHeader
+
                 anchors.top: idBaseItem.top
                 spacing: 10
 
