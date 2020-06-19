@@ -55,7 +55,6 @@ Item {
             idRoot.vjoyDeviceId = idVjoy.vjoyId
         }
         onInputIndexChanged: {
-            console.log("TEST")
             idRoot.vjoyInputId = idVjoy.inputId
             idRoot.inputType = idVjoy.inputType
         }
