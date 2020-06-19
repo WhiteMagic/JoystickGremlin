@@ -230,6 +230,7 @@ Item {
                 anchors.left: idBaseItem.left
                 anchors.right: idBaseItem.right
                 anchors.top: idActionHeader.bottom
+                anchors.topMargin: 10
                 visible: idActionButton.checked
 
                 // Dynamically load the QML item

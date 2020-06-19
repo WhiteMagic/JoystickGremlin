@@ -31,20 +31,9 @@ Item {
     property ActionConfigurationModel actionConfiguration
     property RemapModel model
 
-    height: idSpacer.height + idVjoy.height
-
-
-    Rectangle {
-        id: idSpacer
-
-        anchors.top: parent.top
-
-        height: 10
-    }
+    height: idVjoy.height
 
     Item {
-        anchors.top: idSpacer.bottom
-
         VJoySelector {
             id: idVjoy
 
