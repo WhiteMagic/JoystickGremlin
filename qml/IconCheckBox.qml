@@ -21,7 +21,10 @@ import QtQuick.Controls 2.14
 
 
 Item {
+    id: root
+
     property string image
+    property bool checked
 
     width: idCheckbox.width + idImage.width
     height: idCheckbox.height
@@ -29,13 +32,18 @@ Item {
     CheckBox {
         id: idCheckbox
 
+        checked: root.checked
+        onCheckedChanged: {
+            root.checked = checked
+        }
+
         contentItem: Image {
             id: idImage
 
             source: image
             fillMode: Image.PreserveAspectFit
             transform: Translate{
-                x: idCheckbox.indicator.width
+                x: idCheckbox.indicator.implicitWidth
             }
         }
     }

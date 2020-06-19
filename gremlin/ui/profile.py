@@ -112,6 +112,21 @@ class VirtualButtonModel(QtCore.QObject):
             self.virtual_button.direction = direction
             self.directionChanged.emit()
 
+    def _get_hat_state(self, hat_direction):
+        return hat_direction in self.virtual_button.directions
+
+    def _set_hat_state(self, hat_direction, is_active):
+        print(hat_direction, is_active)
+        if is_active:
+            if hat_direction not in self.virtual_button.directions:
+                self.virtual_button.directions.append(hat_direction)
+                self.hatDirectionChanged.emit()
+        else:
+            if hat_direction in self.virtual_button.directions:
+                index = self.virtual_button.directions.index(hat_direction)
+                del self.virtual_button.directions[index]
+                self.hatDirectionChanged.emit()
+
     lowerLimit = Property(
         float,
         fget=_get_lower_limit,
@@ -129,6 +144,55 @@ class VirtualButtonModel(QtCore.QObject):
         fget=_get_direction,
         fset=_set_direction,
         notify=directionChanged
+    )
+
+    hatNorth = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.North),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.North, x),
+        notify=hatDirectionChanged
+    )
+    hatNorthEast = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.NorthEast),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.NorthEast, x),
+        notify=hatDirectionChanged
+    )
+    hatEast = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.East),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.East, x),
+        notify=hatDirectionChanged
+    )
+    hatSouthEast = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.SouthEast),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.SouthEast, x),
+        notify=hatDirectionChanged
+    )
+    hatSouth = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.South),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.South, x),
+        notify=hatDirectionChanged
+    )
+    hatSouthWest = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.SouthWest),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.SouthWest, x),
+        notify=hatDirectionChanged
+    )
+    hatWest = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.West),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.West, x),
+        notify=hatDirectionChanged
+    )
+    hatNorthWest = Property(
+        bool,
+        fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.NorthWest),
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.NorthWest, x),
+        notify=hatDirectionChanged
     )
 
 
