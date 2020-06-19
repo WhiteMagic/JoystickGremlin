@@ -192,6 +192,7 @@ ApplicationWindow {
         id: idDevicePanel
 
         height: 50
+        z: 1
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
