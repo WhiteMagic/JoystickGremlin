@@ -91,6 +91,7 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
     }
 
     behaviourChanged = Signal()
+    descriptionChanged = Signal()
 
     def __init__(
             self,
@@ -162,6 +163,14 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
             self._action_configuration.behaviour = behaviour
             self.behaviourChanged.emit()
 
+    def _get_description(self) -> str:
+        return self._action_configuration.input_item.description
+
+    def _set_description(self, description: str) -> None:
+        if description != self._action_configuration.input_item.description:
+            self._action_configuration.input_item.description = description
+            self.descriptionChanged.emit()
+
     def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
         """Returns the node with the desired id from the action tree.
 
@@ -183,4 +192,11 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         fget=_get_behaviour,
         fset=_set_behaviour,
         notify=behaviourChanged
+    )
+
+    description = Property(
+        str,
+        fget=_get_description,
+        fset=_set_description,
+        notify=descriptionChanged
     )

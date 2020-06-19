@@ -1383,6 +1383,7 @@ class InputItem:
         self.input_type = read_subelement(node, "input-type")
         self.input_id = read_subelement(node, "input-id")
         self.mode = read_subelement(node, "mode")
+        self.description = read_subelement(node, "description")
 
         # If the input is from a keyboard convert the input id into
         # the scan code and extended input flag
@@ -1402,6 +1403,7 @@ class InputItem:
         node.append(create_subelement_node("device-id", self.device_id))
         node.append(create_subelement_node("input-type", self.input_type))
         node.append(create_subelement_node("mode", self.mode))
+        node.append(create_subelement_node("description", self.description))
         input_id = self.input_id
         # To convert keyboard input tuples (scan_code, extended_bit) to integer:
         # input_id = extended_bit << 8 | scan_code

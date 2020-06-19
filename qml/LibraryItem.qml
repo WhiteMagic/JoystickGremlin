@@ -58,11 +58,17 @@ Item {
 
             TextField {
                 id: idDescription
+
                 placeholderText: "Description"
+                text: "" != actionConfiguration.description ? actionConfiguration.description : null
 
                 anchors.left: idGeneralHeader.left
                 anchors.right: idBehaviour.left
                 anchors.verticalCenter: idBehaviour.verticalCenter
+
+                onTextChanged: {
+                    actionConfiguration.description = text
+                }
             }
 
             InputBehaviour {
