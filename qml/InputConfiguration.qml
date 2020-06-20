@@ -35,7 +35,10 @@ Item {
     ListView {
         id: idListView
 
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.bottom: idNewActionButton.top
+        anchors.left: parent.left
+        anchors.right: parent.right
         spacing: 10
 
         // Make it behave like a sensible scrolling container
@@ -56,6 +59,25 @@ Item {
         ActionConfiguration {
             actionConfiguration: modelData
         }
+    }
+
+    Rectangle {
+        id: idNewActionButton
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 40
+
+        color: Universal.background
+
+        Button {
+            text: "Add new action"
+
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
     }
 
 }
