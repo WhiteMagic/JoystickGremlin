@@ -321,11 +321,11 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
             self.behaviourChanged.emit()
 
     def _get_description(self) -> str:
-        return self._action_configuration.input_item.description
+        return self._action_configuration.description
 
     def _set_description(self, description: str) -> None:
-        if description != self._action_configuration.input_item.description:
-            self._action_configuration.input_item.description = description
+        if description != self._action_configuration.description:
+            self._action_configuration.description = description
             self.descriptionChanged.emit()
 
     def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
