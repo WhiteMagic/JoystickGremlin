@@ -49,5 +49,7 @@ Item {
         anchors.right: parent.right
 
         height: 10
+
+        color: Universal.background
     }
 }

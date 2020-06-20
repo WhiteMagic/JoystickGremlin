@@ -79,6 +79,8 @@ Item {
         anchors.left: idDevice.right
         width: 10
         height: 1
+
+        color: "transparent"
     }
 
     ComboBox {
