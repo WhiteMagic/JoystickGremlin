@@ -303,6 +303,9 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
                 ):
                     self._action_configuration.virtual_button = \
                         profile.VirtualAxisButton()
+                    self._virtual_button_model = VirtualButtonModel(
+                        self._action_configuration.virtual_button
+                    )
             elif input_type == InputType.JoystickHat and \
                     behaviour == InputType.JoystickButton:
                 if not isinstance(
@@ -311,6 +314,9 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
                 ):
                     self._action_configuration.virtual_button = \
                         profile.VirtualHatButton()
+                    self._virtual_button_model = VirtualButtonModel(
+                        self._action_configuration.virtual_button
+                    )
 
             self.behaviourChanged.emit()
 
