@@ -53,7 +53,7 @@ Item {
     Component {
         id: idEntryDelegate
 
-        LibraryItem {
+        ActionConfiguration {
             actionConfiguration: modelData
         }
     }
