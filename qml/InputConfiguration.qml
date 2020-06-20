@@ -31,6 +31,12 @@ Item {
     id: idRoot
 
     property ActionConfigurationListModel actionConfigurationListModel
+    property InputIdentifier inputIdentifier
+
+    onInputIdentifierChanged: {
+        idRoot.actionConfigurationListModel =
+            backend.getInputItem(idRoot.inputIdentifier).actionConfigurations
+    }
 
     ListView {
         id: idListView
@@ -72,10 +78,15 @@ Item {
         color: Universal.background
 
         Button {
-            text: "Add new action"
+            text: "Create new action"
 
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
+
+            onClicked: {
+                backend.newAction(idRoot.inputIdentifier)
+                actionConfigurationListModel.modelReset()
+            }
         }
 
     }

@@ -29,6 +29,7 @@ from gremlin import config
 from gremlin import error
 from gremlin import plugin_manager
 from gremlin import profile
+from gremlin import profile_library
 from gremlin import shared_state
 
 from gremlin.types import InputType
@@ -43,6 +44,7 @@ class Backend(QtCore.QObject):
     windowTitleChanged = Signal()
     recentProfilesChanged = Signal()
     lastErrorChanged = Signal()
+    inputConfigurationChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -117,9 +119,33 @@ class Backend(QtCore.QObject):
     def action_list(self):
         return list(plugin_manager.ActionPlugins().repository.keys())
 
-    @Slot(str)
-    def add_action(self, action_name: str):
-        print(action_name)
+    @Slot(InputIdentifier)
+    def newAction(self, identifier: InputIdentifier):
+        print(identifier.device_guid, identifier.input_type, identifier.input_id)
+        # 1. Create a new empty LibraryItem
+        # 2. Add LibraryItem to the Library
+        # 3. Check if an InputItem exists for the provided identifier
+        # 3a. YES: retrieve that InputItem
+        # 3b. NO : create a new InputItem and insert it into the Profile
+        # 4. Create a new ActionConfiguration using the InputItem
+        # 5. Associate the LibraryItem with the ActionConfiguration
+
+        library_item = profile_library.LibraryItem()
+        library_item.action_tree = profile_library.ActionTree()
+        self.profile.library.add_item(library_item)
+        input_item = self.profile.get_input_item(
+            identifier.device_guid,
+            identifier.input_type,
+            identifier.input_id,
+            True
+        )
+        # TODO: automatically determine the mode
+        input_item.mode = "Default"
+        action_config = profile.ActionConfiguration(input_item)
+        action_config.library_reference = library_item
+        action_config.behaviour = identifier.input_type
+        input_item.action_configurations.append(action_config)
+        self.inputConfigurationChanged.emit()
 
     @Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:
