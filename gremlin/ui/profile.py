@@ -116,7 +116,6 @@ class VirtualButtonModel(QtCore.QObject):
         return hat_direction in self.virtual_button.directions
 
     def _set_hat_state(self, hat_direction, is_active):
-        print(hat_direction, is_active)
         if is_active:
             if hat_direction not in self.virtual_button.directions:
                 self.virtual_button.directions.append(hat_direction)
