@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2019 Lionel Ott
+// Copyright (C) 2015 - 2020 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,14 +70,11 @@ ApplicationWindow {
 
         onAccepted: {
             backend.loadProfile(fileUrl)
-            console.log("Dodged")
         }
     }
 
     // Menu bar with all its entries
     menuBar: MenuBar {
-
-
         Menu {
             title: qsTr("File")
 
@@ -223,8 +220,11 @@ ApplicationWindow {
 
             // Trigger a model update on the InputConfiguration
             onInputIndexChanged: {
+//                idInputConfigurationPanel.inputIdentifier =
+//                    backend.getInputItem(inputIdentifier)
                 idInputConfigurationPanel.actionConfigurationListModel =
                     backend.getInputItem(inputIdentifier).actionConfigurations
+                idInputConfigurationPanel.inputIdentifier = inputIdentifier
             }
         }
 

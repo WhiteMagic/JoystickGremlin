@@ -32,9 +32,10 @@ from gremlin import profile
 from gremlin import profile_library
 from gremlin import shared_state
 
+from gremlin.tree import TreeNode
 from gremlin.types import InputType
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import InputItemModel
+from gremlin.ui.profile import ActionConfigurationModel, InputItemModel
 
 
 class Backend(QtCore.QObject):
@@ -55,6 +56,9 @@ class Backend(QtCore.QObject):
 
     @Slot(InputIdentifier, result=int)
     def getActionCount(self, identifier: InputIdentifier) -> int:
+        if identifier is None:
+            return 0
+
         try:
             item = self.profile.get_input_item(
                 identifier.device_guid,
@@ -115,21 +119,22 @@ class Backend(QtCore.QObject):
     def loadProfile(self, fpath):
         self._load_profile(QtCore.QUrl.fromLocalFile(fpath).toLocalFile())
 
-    @Property(type="QVariantList", constant=True)
-    def action_list(self):
-        return list(plugin_manager.ActionPlugins().repository.keys())
+    # FIXME: This is a terrible hack to fool the type system
+    @Slot(QtCore.QObject, result="QVariantList")
+    def actionList(self, configuration: ActionConfigurationModel) -> List[str]:
+        action_list = plugin_manager.ActionPlugins().type_action_map[
+            configuration.behaviour_type
+        ]
+        return [a.name for a in sorted(action_list, key=lambda x: x.name)]
+
+    @Slot(str, QtCore.QObject)
+    def addAction(self, action_name: str, configuration: ActionConfigurationModel):
+        action = plugin_manager.ActionPlugins().get_class(action_name)()
+        action_node = TreeNode(action, configuration.action_tree().root)
+        configuration.modelReset.emit()
 
     @Slot(InputIdentifier)
-    def newAction(self, identifier: InputIdentifier):
-        print(identifier.device_guid, identifier.input_type, identifier.input_id)
-        # 1. Create a new empty LibraryItem
-        # 2. Add LibraryItem to the Library
-        # 3. Check if an InputItem exists for the provided identifier
-        # 3a. YES: retrieve that InputItem
-        # 3b. NO : create a new InputItem and insert it into the Profile
-        # 4. Create a new ActionConfiguration using the InputItem
-        # 5. Associate the LibraryItem with the ActionConfiguration
-
+    def newActionConfiguration(self, identifier: InputIdentifier):
         library_item = profile_library.LibraryItem()
         library_item.action_tree = profile_library.ActionTree()
         self.profile.library.add_item(library_item)

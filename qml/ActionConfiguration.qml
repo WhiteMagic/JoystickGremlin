@@ -33,29 +33,28 @@ Item {
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.rightMargin: 10
-    height: idListView.childrenRect.height + idHeader.height +
-        idHeaderBorder.height
+    height: _listView.childrenRect.height + _header.height + _headerBorder.height
 
 
     // +------------------------------------------------------------------------
     // | Header
     // +------------------------------------------------------------------------
     ActionConfigurationHeader {
-        id: idHeader
+        id: _header
         action: idRoot.actionConfiguration
     }
     BottomBorder {
-        id: idHeaderBorder
-        item: idHeader
+        id: _headerBorder
+        item: _header
     }
 
     // +------------------------------------------------------------------------
     // | Show every single library item associated with the input
     // +------------------------------------------------------------------------
     ListView {
-        id: idListView
+        id: _listView
 
-        anchors.top: idHeaderBorder.bottom
+        anchors.top: _headerBorder.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         height: childrenRect.height
@@ -70,6 +69,18 @@ Item {
 
         delegate: LibraryItem {
             action: idRoot.actionConfiguration
+        }
+    }
+
+    Loader {
+        anchors.top: _listView.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: 10
+
+        active: _listView.count == 0
+
+        sourceComponent: ActionSelector {
+            configuration: actionConfiguration
         }
     }
 

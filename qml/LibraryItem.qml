@@ -39,7 +39,7 @@ Item {
         // Dimensions
         height: {
             if(idActionButton.checked) {
-                idActionButton.height + idAction.height
+                idActionButton.height + idAction.height + _actionSelector.height
             } else {
                 idActionButton.height
             }
@@ -188,6 +188,21 @@ Item {
                 }
             }
         }
+
+        // On each valid level/item need to have a dropdown with actions
+        Loader {
+            id: _actionSelector
+            anchors.top: idAction.visible ? idAction.bottom : idActionHeader.bottom
+            anchors.topMargin: 10
+
+            active: model.isLastSibling
+
+            sourceComponent: ActionSelector {
+                configuration: action
+            }
+        }
+
+
 
     } // Item
 

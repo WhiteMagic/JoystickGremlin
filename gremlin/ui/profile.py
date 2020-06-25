@@ -210,6 +210,7 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 3: QtCore.QByteArray("profileData".encode()),
         QtCore.Qt.UserRole + 4: QtCore.QByteArray("qmlPath".encode()),
         QtCore.Qt.UserRole + 5: QtCore.QByteArray("id".encode()),
+        QtCore.Qt.UserRole + 6: QtCore.QByteArray("isLastSibling".encode()),
     }
 
     behaviourChanged = Signal()
@@ -249,6 +250,8 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
                 return node.value
             elif role_name == "id":
                 return str(node.value.id)
+            elif role_name == "isLastSibling":
+                return node.parent.children[-1] == node
         except error.GremlinError as e:
             print(f"Invalid index: {e}")
 
@@ -343,6 +346,13 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         if len(nodes) != 1:
             raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
         return nodes[0]
+
+    @property
+    def behaviour_type(self):
+        return self._action_configuration.behaviour
+
+    def action_tree(self):
+        return self._action_tree
 
     behaviour = Property(
         str,

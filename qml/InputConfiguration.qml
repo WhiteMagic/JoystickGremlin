@@ -78,13 +78,13 @@ Item {
         color: Universal.background
 
         Button {
-            text: "Create new action"
+            text: "Create new action sequence"
 
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
 
             onClicked: {
-                backend.newAction(idRoot.inputIdentifier)
+                backend.newActionConfiguration(idRoot.inputIdentifier)
                 actionConfigurationListModel.modelReset()
             }
         }
