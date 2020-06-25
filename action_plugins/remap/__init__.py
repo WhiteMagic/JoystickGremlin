@@ -28,6 +28,7 @@ from PySide2.QtCore import Property, Signal, Slot
 
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.types import AxisMode, InputType, PropertyType
+from gremlin import joystick_handling
 import gremlin.util as util
 
 #from gremlin.base_classes import InputActionCondition
@@ -334,10 +335,24 @@ class RemapModel(AbstractActionModel):
     def __init__(self):
         super().__init__()
 
+        # Determine a valid vjoy input
+        all_devs = joystick_handling.vjoy_devices()
+        device = joystick_handling.vjoy_devices()[0]
+        vjoy_id = device.vjoy_id
+        if device.button_count > 0:
+            input_type = InputType.JoystickButton
+            input_id = 1
+        elif device.axis_count > 0:
+            input_type = InputType.JoystickAxis
+            input_id = device.axis_map[0].axis_index
+        else:
+            input_type = InputType.JoystickHat
+            input_id = 1
+
         # Model variables
-        self._vjoy_device_id = None
-        self._vjoy_input_id = None
-        self._input_type = None
+        self._vjoy_device_id = vjoy_id
+        self._vjoy_input_id = input_id
+        self._input_type = input_type
         self._axis_mode = AxisMode.Absolute
         self._axis_scaling = 1.0
 
