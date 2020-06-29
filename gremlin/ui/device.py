@@ -33,6 +33,7 @@ from gremlin import joystick_handling
 from gremlin import profile
 from gremlin.types import InputType
 from gremlin.util import parse_guid
+from gremlin.ui import backend
 
 
 
@@ -168,6 +169,19 @@ class Device(QtCore.QAbstractListModel):
         role_name = Device.roles[role].data().decode()
         if role_name == "name":
             return self._name(self._convert_index(index.row()))
+        elif role_name == "actionCount":
+            try:
+                profile = backend.Backend().profile
+                input_info = self._convert_index(index.row())
+                item = profile.get_input_item(
+                    self._device.device_guid,
+                    input_info[0],
+                    input_info[1],
+                    False
+                )
+                return len(item.action_configurations)
+            except error.ProfileError as e:
+                return 0
 
     @Slot(int, result=InputIdentifier)
     def inputIdentifier(self, index: int) -> InputIdentifier:
