@@ -29,14 +29,20 @@ import gremlin.ui.device 1.0
 Item {
     id: root
 
-    property string deviceGuid
+    property Device device
     property int inputIndex
     property InputIdentifier inputIdentifier
 
-    Device {
-        id: idDeviceModel
-        guid: deviceGuid
+
+    // Sychronize input selection when underlying device changes
+    Connections {
+        target: device
+        onDeviceChanged: {
+            inputIndex = idInputList.currentIndex
+            inputIdentifier = device.inputIdentifier(inputIndex);
+        }
     }
+
 
     ListView
     {
@@ -44,19 +50,18 @@ Item {
         anchors.fill: parent
 
         width: parent.width
-        model: idDeviceModel
+        model: device
         delegate: idDeviceDelegate
 
         onCurrentIndexChanged: {
-            root.inputIdentifier = idDeviceModel.inputIdentifier(currentIndex);
-            root.inputIndex = currentIndex;
+            inputIndex = currentIndex;
+            inputIdentifier = device.inputIdentifier(currentIndex);
         }
 
         // Make it behave like a sensible scrolling container
         ScrollBar.vertical: ScrollBar {}
         flickableDirection: Flickable.VerticalFlick
         boundsBehavior: Flickable.StopAtBounds
-
     }
 
     Component {
@@ -84,7 +89,6 @@ Item {
             }
 
             Label {
-                property int actionCount: backend.getActionCount(idDeviceModel.inputIdentifier(model.index))
                 text: actionCount ? actionCount : ""
 
                 anchors.verticalCenter: parent.verticalCenter

@@ -184,6 +184,19 @@ ApplicationWindow {
         id: idDeviceListModel
     }
 
+    Device {
+        id: idDeviceModel
+    }
+
+
+    // Trigger an update of the input list when the model's content changes
+    Connections {
+        target: backend
+        onInputConfigurationChanged: {
+            idDeviceModel.modelReset()
+        }
+    }
+
     // List of all detected devices
     DeviceList {
         id: idDevicePanel
@@ -198,7 +211,7 @@ ApplicationWindow {
 
         // Trigger a model update on the DeviceInputList
         onDeviceGuidChanged: {
-            idDeviceInputList.deviceGuid = deviceGuid
+            idDeviceModel.guid = deviceGuid
         }
     }
 
@@ -215,16 +228,20 @@ ApplicationWindow {
         // List all inputs of a single device
         DeviceInputList {
             id: idDeviceInputList
-            deviceGuid: idDevicePanel.deviceGuid
+            device: idDeviceModel
             SplitView.minimumWidth: 200
 
             // Trigger a model update on the InputConfiguration
-            onInputIndexChanged: {
-//                idInputConfigurationPanel.inputIdentifier =
-//                    backend.getInputItem(inputIdentifier)
+            onInputIdentifierChanged: {
                 idInputConfigurationPanel.actionConfigurationListModel =
                     backend.getInputItem(inputIdentifier).actionConfigurations
                 idInputConfigurationPanel.inputIdentifier = inputIdentifier
+            }
+
+            // Ensure initial state of input list and input configuration is
+            // synchronized
+            Component.onCompleted: {
+                inputIdentifier = device.inputIdentifier(inputIndex)
             }
         }
 
