@@ -25,6 +25,7 @@ import uuid
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
+from gremlin import common
 from gremlin import config
 from gremlin import error
 from gremlin import plugin_manager
@@ -38,6 +39,7 @@ from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import ActionConfigurationModel, InputItemModel
 
 
+@common.SingletonDecorator
 class Backend(QtCore.QObject):
 
     """Allows interfacing between the QML frontend and the Python backend."""
