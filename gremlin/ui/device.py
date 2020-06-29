@@ -125,12 +125,12 @@ class Device(QtCore.QAbstractListModel):
 
     """Model providing access to information about a single device."""
 
-    deviceChanged = Signal()
-
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
-        QtCore.Qt.UserRole + 2: QtCore.QByteArray("index".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("actionCount".encode()),
     }
+
+    deviceChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -162,10 +162,10 @@ class Device(QtCore.QAbstractListModel):
                self._device.hat_count
 
     def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
-        if role not in DeviceListModel.roles:
+        if role not in Device.roles:
             return "Unknown"
 
-        role_name = DeviceListModel.roles[role].data().decode()
+        role_name = Device.roles[role].data().decode()
         if role_name == "name":
             return self._name(self._convert_index(index.row()))
 
@@ -217,7 +217,7 @@ class Device(QtCore.QAbstractListModel):
             )
 
     def roleNames(self) -> typing.Dict:
-        return DeviceListModel.roles
+        return Device.roles
 
     guid = Property(
         str,
