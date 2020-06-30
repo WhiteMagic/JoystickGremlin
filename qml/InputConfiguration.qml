@@ -33,6 +33,11 @@ Item {
     property ActionConfigurationListModel actionConfigurationListModel
     property InputIdentifier inputIdentifier
 
+    function reload() {
+        idRoot.actionConfigurationListModel =
+            backend.getInputItem(idRoot.inputIdentifier).actionConfigurations
+    }
+
     onInputIdentifierChanged: {
         idRoot.actionConfigurationListModel =
             backend.getInputItem(idRoot.inputIdentifier).actionConfigurations

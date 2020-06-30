@@ -48,6 +48,7 @@ class Backend(QtCore.QObject):
     recentProfilesChanged = Signal()
     lastErrorChanged = Signal()
     inputConfigurationChanged = Signal()
+    reloadUi = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -119,7 +120,8 @@ class Backend(QtCore.QObject):
 
     @Slot(str)
     def loadProfile(self, fpath):
-        self._load_profile(QtCore.QUrl.fromLocalFile(fpath).toLocalFile())
+        self._load_profile(fpath)
+        self.reloadUi.emit()
 
     # FIXME: This is a terrible hack to fool the type system
     @Slot(QtCore.QObject, result="QVariantList")

@@ -56,7 +56,7 @@ ApplicationWindow {
         selectExisting: false
 
         onAccepted: {
-            backend.saveProfile(fileUrl)
+            backend.saveProfile(Helpers.pythonizePath(fileUrl))
         }
     }
 
@@ -69,7 +69,7 @@ ApplicationWindow {
         selectExisting: true
 
         onAccepted: {
-            backend.loadProfile(fileUrl)
+            backend.loadProfile(Helpers.pythonizePath(fileUrl))
         }
     }
 
@@ -194,6 +194,14 @@ ApplicationWindow {
         target: backend
         onInputConfigurationChanged: {
             idDeviceModel.modelReset()
+        }
+    }
+    Connections {
+        target: backend
+        onReloadUi: {
+            idDeviceModel.modelReset()
+            idDeviceListModel.modelReset()
+            idInputConfigurationPanel.reload()
         }
     }
 
