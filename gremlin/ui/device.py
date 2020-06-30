@@ -378,13 +378,15 @@ class VJoyDevices(QtCore.QObject):
             old_vjoy_input_id = self._get_vjoy_id()
             old_input_type = self._get_input_type()
             self.inputModel
-            if self._current_input_type in self._valid_types:
+            if self._current_input_type in self._valid_types and \
+                    self._current_vjoy_index > 0:
                 self.setSelection(
                     self._current_vjoy_index,
                     old_vjoy_input_id,
                     old_input_type
                 )
             else:
+                self._current_vjoy_index = self._devices[0].vjoy_id
                 self._current_input_index = 0
                 self._current_input_type = self._input_data[0][0]
 
