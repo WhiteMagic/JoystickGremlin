@@ -20,6 +20,7 @@ import logging
 import os
 import threading
 import time
+from typing import Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -332,7 +333,11 @@ class RemapModel(AbstractActionModel):
     axisModeChanged = Signal()
     axisScalingChanged = Signal()
 
-    def __init__(self):
+    def __init__(
+            self,
+            input_type: InputType=InputType.JoystickButton,
+            parent: Optional[QtCore.QObject]=None
+    ):
         super().__init__()
 
         # Determine a valid vjoy input

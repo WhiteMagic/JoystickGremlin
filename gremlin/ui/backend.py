@@ -131,7 +131,9 @@ class Backend(QtCore.QObject):
 
     @Slot(str, QtCore.QObject)
     def addAction(self, action_name: str, configuration: ActionConfigurationModel):
-        action = plugin_manager.ActionPlugins().get_class(action_name)()
+        action = plugin_manager.ActionPlugins().get_class(action_name)(
+            InputType.to_enum(configuration.behaviour)
+        )
         action_node = TreeNode(action, configuration.action_tree().root)
         configuration.modelReset.emit()
 

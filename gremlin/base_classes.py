@@ -37,7 +37,11 @@ class AbstractActionModel(QtCore.QObject):
 
     """Base class for all action related data calsses."""
 
-    def __init__(self, parent: Optional[QtCore.QObject] = None):
+    def __init__(
+            self,
+            input_type: InputType=InputType.JoystickButton,
+            parent: Optional[QtCore.QObject]=None
+    ):
         super().__init__(parent)
 
         self._id = uuid.uuid4()
