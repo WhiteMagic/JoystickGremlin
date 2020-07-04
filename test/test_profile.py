@@ -22,6 +22,7 @@ import os
 import pytest
 import tempfile
 import uuid
+from xml.etree import ElementTree
 
 import gremlin.error
 import gremlin.plugin_manager
@@ -42,6 +43,7 @@ xml_description = """
             <action-configuration>
                 <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
                 <behaviour>button</behaviour>
+                <description></description>
             </action-configuration>
         </input>
     </inputs>
@@ -100,6 +102,7 @@ xml_hierarchy = """
             <action-configuration>
                 <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
                 <behaviour>button</behaviour>
+                <description></description>
             </action-configuration>
         </input>
     </inputs>
@@ -150,14 +153,6 @@ xml_invalid = """
     </inputs>
 </profile>
 """
-
-
-@pytest.fixture(scope="session", autouse=True)
-def terminate_event_listener(request):
-    import gremlin.event_handler
-    request.addfinalizer(
-        lambda: gremlin.event_handler.EventListener().terminate()
-    )
 
 
 def _store_in_tmpfile(text: str) -> str:
@@ -246,3 +241,17 @@ def test_hierarchy():
     assert n4.value.description == "Node 4"
 
     os.remove(fpath)
+
+
+def test_mode_hierarchy():
+    xml = """
+    <modes>
+        <mode>Default</mode>
+        <mode>Separate</mode>
+        <mode parent="Default">Child</mode>
+    </modes>
+    """
+    fpath = _store_in_tmpfile(xml_hierarchy)
+
+    root = ElementTree.ElementTree()
+    root.parse(fpath)

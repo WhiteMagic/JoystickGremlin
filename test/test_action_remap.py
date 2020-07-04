@@ -71,18 +71,18 @@ xml_axis = """
 """
 
 
-def test_ctor():
-    r = remap.RemapModel()
+def test_ctor(joystick_init):
+    r = remap.RemapModel(types.InputType.JoystickButton)
 
-    assert r._vjoy_device_id == None
-    assert r._vjoy_input_id == None
-    assert r._input_type == None
+    assert r._vjoy_device_id == 1
+    assert r._vjoy_input_id == 1
+    assert r._input_type == types.InputType.JoystickButton
     assert r._axis_mode == types.AxisMode.Absolute
     assert r._axis_scaling == 1.0
 
 
 def test_from_xml():
-    r = remap.RemapModel()
+    r = remap.RemapModel(types.InputType.JoystickButton)
     r.from_xml(ElementTree.fromstring(xml_button))
     assert r._vjoy_device_id == 1
     assert r._vjoy_input_id == 12
@@ -100,7 +100,7 @@ def test_from_xml():
 
 
 def test_to_xml():
-    r = remap.RemapModel()
+    r = remap.RemapModel(types.InputType.JoystickButton)
 
     r._id = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
     r._vjoy_device_id = 2
