@@ -245,13 +245,25 @@ def test_hierarchy():
 
 def test_mode_hierarchy():
     xml = """
-    <modes>
-        <mode>Default</mode>
-        <mode>Separate</mode>
-        <mode parent="Default">Child</mode>
-    </modes>
+    <profile>
+        <modes>
+            <mode>Default</mode>
+            <mode>Separate</mode>
+            <mode parent="Default">Child</mode>
+            <mode>Three</mode>
+            <mode parent="Three">Levels</mode>
+            <mode parent="Levels">Deep</mode>
+        </modes>
+    </profile>
     """
-    fpath = _store_in_tmpfile(xml_hierarchy)
+    fpath = _store_in_tmpfile(xml)
 
-    root = ElementTree.ElementTree()
-    root.parse(fpath)
+    tree = ElementTree.parse(fpath)
+    root = tree.getroot()
+
+
+    mh = gremlin.profile.ModeHierarchy()
+    mh.from_xml(root)
+
+    assert mh.mode_list() == ["Child", "Deep", "Default", "Levels", "Separate", "Three"]
+    assert mh.first_mode == "Default"
