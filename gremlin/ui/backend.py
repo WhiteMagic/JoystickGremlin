@@ -140,13 +140,11 @@ class Backend(QtCore.QObject):
 
     @Slot()
     def newProfile(self) -> None:
-        # TODO: implement this for QML
-        # self.ui.actionActivate.setChecked(False)
-        # self.activate(False)
-
+        self.activate_gremlin(False)
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
         self.windowTitleChanged.emit()
+        self.reloadUi.emit()
 
     @Slot(str)
     def saveProfile(self, fpath) -> None:
