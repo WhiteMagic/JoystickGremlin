@@ -29,8 +29,8 @@ from PySide2 import QtCore, QtGui, QtWidgets
 
 import dill
 import gremlin.types
-from gremlin import common, error, input_devices, joystick_handling, profile, shared_state
-import gremlin.ui.common
+from gremlin import common, error, input_devices, joystick_handling, \
+    profile, shared_state
 
 
 def get_variable_definitions(fname):
@@ -202,7 +202,7 @@ class AbstractVariable(QtCore.QObject):
     """Represents the base class of all variables used in plugins."""
 
     # Signal emitted when the value of the variable changes
-    value_changed = QtCore.pyqtSignal(dict)
+    value_changed = QtCore.Signal(dict)
 
     def __init__(self, label, description, variable_type, is_optional=False):
         """Creates a new instance.
