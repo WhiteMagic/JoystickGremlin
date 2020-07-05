@@ -1510,10 +1510,30 @@ class ActionConfiguration:
 class ModeHierarchy:
 
     def __init__(self):
-        self._modes = []
+        self.hierarchy = []
 
-    def mode_list(self):
-        pass
+    @property
+    def first_mode(self) -> str:
+        """Returns the name of the first mode.
+
+        Returns:
+            Name of the first mode
+        """
+        return self.hierarchy[0].value
+
+    def mode_list(self) -> List[str]:
+        """Returns the list of all modes in the hierarchy.
+
+        Returns:
+            List of all mode names
+        """
+        mode_names = []
+        stack = self.hierarchy[:]
+        while len(stack) > 0:
+            node = stack.pop()
+            stack.extend(node.children[:])
+            mode_names.append(node.value)
+        return sorted(mode_names)
 
     def from_xml(self, root: ElementTree.Element) -> None:
         nodes = {}
@@ -1528,16 +1548,15 @@ class ModeHierarchy:
         for child, parent in node_parents.items():
             nodes[child].set_parent(nodes[parent])
 
-        self._modes = []
+        self.hierarchy = []
         for node in nodes.values():
             if node.parent is None:
-                self._modes.append(node)
-
+                self.hierarchy.append(node)
 
     def to_xml(self) -> ElementTree.Element:
         node = ElementTree.Element("nodes")
 
-        for tree in self._modes:
+        for tree in self.hierarchy:
             for i in range(tree.node_count):
                 tree_node = tree.node_at_index(i)
                 n_mode = ElementTree.Element("mode")
