@@ -150,7 +150,7 @@ Item {
                 if(drop.text != model.id)
                 {
                     drop.accept();
-                    idListView.model.moveAfter(drop.text, model.id);
+                    _listView.model.moveAfter(drop.text, model.id);
                 }
             }
         }

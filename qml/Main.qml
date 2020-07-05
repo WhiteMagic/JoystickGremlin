@@ -179,6 +179,56 @@ ApplicationWindow {
         }
     }
 
+    header: ToolBar {
+        Row {
+            anchors.fill: parent
+
+            ToolButton {
+                icon.source: "../gfx/profile_new.svg"
+
+                onClicked: {
+                    backend.newProfile()
+                }
+            }
+            ToolButton {
+                icon.source: "../gfx/profile_save.svg"
+
+                onClicked: {
+                    var fpath = backend.profilePath()
+                    if(fpath == "")
+                    {
+                        idSaveProfileFileDialog.open()
+                    }
+                    else
+                    {
+                        backend.saveProfile(fpath)
+                    }
+                }
+            }
+            ToolButton {
+                icon.source: "../gfx/profile_open.svg"
+
+                onClicked: {
+                    idLoadProfileFileDialog.open()
+                }
+            }
+            ToolButton {
+                icon.source: "../gfx/activate.svg"
+                icon.color: backend.gremlinActive ? "green" : "black"
+
+                onClicked: {
+                    backend.toggleActiveState()
+                }
+            }
+
+            ComboBox {
+                anchors.verticalCenter: parent.verticalCenter
+
+                model: ["Default", "  Alternative"]
+            }
+        }
+    }
+
 
     DeviceListModel {
         id: idDeviceListModel

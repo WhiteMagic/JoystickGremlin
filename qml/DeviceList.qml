@@ -30,7 +30,6 @@ import gremlin.ui.profile 1.0
 Item {
     id: root
 
-//    property int deviceIndex: 0
     property DeviceListModel deviceListModel
     property string deviceGuid: deviceListModel.guidAtIndex(0)
 

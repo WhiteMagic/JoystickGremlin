@@ -40,6 +40,7 @@ Item {
 
         Loader {
             active: actionConfiguration.inputType != "button"
+
             sourceComponent: Row {
                 Label {
                     id: idBehaviour
