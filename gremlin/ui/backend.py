@@ -72,9 +72,16 @@ class Backend(QtCore.QObject):
 
     @Slot()
     def toggleActiveState(self):
+        """Toggles Gremlin between active and inactive."""
         self.activate_gremlin(not self.runner.is_running())
 
     def activate_gremlin(self, activate: bool):
+        """Sets the activity state of Gremlin.
+
+        Args:
+            activate: If True activates the profile, if False deactivates
+                the profile if one is active
+        """
         if activate:
             # Generate the code for the profile and run it
             # self._profile_auto_activated = False
@@ -99,6 +106,15 @@ class Backend(QtCore.QObject):
 
     @Slot(InputIdentifier, result=int)
     def getActionCount(self, identifier: InputIdentifier) -> int:
+        """Returns the number of actions associated with an input.
+
+        Args:
+            identifier: Identifier of a specific InputItem
+
+        Returns:
+            Number of actions associated with the InputItem specified by
+            the provided identifier
+        """
         if identifier is None:
             return 0
 
@@ -115,6 +131,14 @@ class Backend(QtCore.QObject):
 
     @Slot(InputIdentifier, result=InputItemModel)
     def getInputItem(self, identifier: InputIdentifier) -> InputItemModel:
+        """Returns a model for a specified InputItem.
+
+        Args:
+            identifier: Identifier of a specific InputItem
+
+        Returns:
+            Model instance representing the specified InputItem
+        """
         try:
             item = self.profile.get_input_item(
                 identifier.device_guid,
@@ -128,18 +152,38 @@ class Backend(QtCore.QObject):
 
     @Slot(str, result=bool)
     def isActionExpanded(self, uuid_str: str) -> bool:
+        """Returns whether or not a specific action is expanded in the UI.
+
+        Args:
+            uuid_str: UUUID of the action in question represented as a string
+
+        Returns:
+            True if the action is expanded, False otherwise
+        """
         return self._action_state.get(uuid.UUID(uuid_str), True)
 
     @Slot(str, bool)
     def setIsActionExpanded(self, uuid_str, is_expanded) -> None:
+        """Sets a specific action's expanded state.
+
+        Args:
+            uuid_str: UUUID of the action in question represented as a string
+            is_expanded: True if the action is expanded, False otherwise
+        """
         self._action_state[uuid.UUID(uuid_str)] = bool(is_expanded)
 
     @Property(type="QVariantList", notify=recentProfilesChanged)
     def recentProfiles(self) -> "QVariantList":
+        """Returns a list of recently used profiles.
+
+        Returns:
+            List of recently used profiles
+        """
         return config.Configuration().recent_profiles
 
     @Slot()
     def newProfile(self) -> None:
+        """Creates a new profile."""
         self.activate_gremlin(False)
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
@@ -147,30 +191,63 @@ class Backend(QtCore.QObject):
         self.reloadUi.emit()
 
     @Slot(str)
-    def saveProfile(self, fpath) -> None:
+    def saveProfile(self, fpath: str) -> None:
+        """Saves the current profile in the given path.
+
+        Args:
+            path: Path to the file in which to store the current profile
+        """
         self.profile.fpath = QtCore.QUrl(fpath).toLocalFile()
         self.profile.to_xml(self.profile.fpath)
         self.windowTitleChanged.emit()
 
     @Slot(result=str)
     def profilePath(self) -> str:
+        """Returns the current profile's path.
+
+        Returns:
+            File path of the current profile
+        """
         return self.profile.fpath
 
     @Slot(str)
     def loadProfile(self, fpath):
+        """Loads a profile from the specified path.
+
+        Args:
+            fpath: Path to the file containing the profile to load
+        """
         self._load_profile(fpath)
         self.reloadUi.emit()
 
     # FIXME: This is a terrible hack to fool the type system
     @Slot(QtCore.QObject, result="QVariantList")
     def actionList(self, configuration: ActionConfigurationModel) -> List[str]:
+        """Returns a list of valid action plugins for a particular configuration.
+
+        Args:
+            configuration: Information about the action tree being configured
+
+        Returns:
+            List of valid actions for the given configuration
+        """
         action_list = plugin_manager.ActionPlugins().type_action_map[
             configuration.behaviour_type
         ]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
     @Slot(str, QtCore.QObject)
-    def addAction(self, action_name: str, configuration: ActionConfigurationModel):
+    def addAction(
+            self,
+            action_name: str,
+            configuration: ActionConfigurationModel
+    ) -> None:
+        """Adds a new action to the given configuration.
+
+        Args:
+            action_name: Name of the action to add
+            configuration: ActionTree configuration to which to add the action
+        """
         action = plugin_manager.ActionPlugins().get_class(action_name)(
             InputType.to_enum(configuration.behaviour)
         )
@@ -178,7 +255,13 @@ class Backend(QtCore.QObject):
         configuration.modelReset.emit()
 
     @Slot(InputIdentifier)
-    def newActionConfiguration(self, identifier: InputIdentifier):
+    def newActionConfiguration(self, identifier: InputIdentifier) -> None:
+        """Creates a new action configuration.
+
+        Args:
+            identifier: Identifier of the InputItem to which to add the
+                action configuration
+        """
         library_item = profile_library.LibraryItem()
         library_item.action_tree = profile_library.ActionTree()
         self.profile.library.add_item(library_item)
@@ -198,6 +281,11 @@ class Backend(QtCore.QObject):
 
     @Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:
+        """Returns the current window title.
+
+        Returns:
+            String to use as window title
+        """
         if self.profile and self.profile.fpath:
             return self.profile.fpath
         else:
@@ -205,14 +293,28 @@ class Backend(QtCore.QObject):
 
     @Property(str, notify=lastErrorChanged)
     def lastError(self) -> str:
+        """Returns the last error that occurred.
+
+        Returns:
+            Last error to occurr
+        """
         return self._last_error
 
-    def display_error(self, msg):
+    def display_error(self, msg: str) -> None:
+        """Forces the display of a specific error message.
+
+        Args:
+            msg: The error message to display
+        """
         self._last_error = msg
         self.lastErrorChanged.emit()
 
     def _load_profile(self, fpath):
-        """Attempts to load the profile at the provided path."""
+        """Attempts to load the profile at the provided path.
+
+        Args:
+            fpath: The file path from which to load the profile
+        """
         # Check if there exists a file with this path
         if not os.path.isfile(fpath):
             self.display_error(
