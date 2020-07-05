@@ -204,11 +204,11 @@ def test_simple_action():
     assert actions[1].value.description == "Feuer frei!"
     assert actions[1].value.id == uuid.UUID("f6d6a7af-baef-4b42-ab93-44608dedc859")
     assert actions[2].value.tag == "remap"
-    assert actions[2].value._vjoy_device_id == 2
-    assert actions[2].value._vjoy_input_id == 6
-    assert actions[2].value._input_type == gremlin.types.InputType.JoystickAxis
-    assert actions[2].value._axis_mode == gremlin.types.AxisMode.Relative
-    assert actions[2].value._axis_scaling == 1.5
+    assert actions[2].value.vjoy_device_id == 2
+    assert actions[2].value.vjoy_input_id == 6
+    assert actions[2].value.input_type == gremlin.types.InputType.JoystickAxis
+    assert actions[2].value.axis_mode == gremlin.types.AxisMode.Relative
+    assert actions[2].value.axis_scaling == 1.5
     assert actions[2].value.id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")
 
     os.remove(fpath)

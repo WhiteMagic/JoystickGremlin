@@ -74,38 +74,38 @@ xml_axis = """
 def test_ctor(joystick_init):
     r = remap.RemapModel(types.InputType.JoystickButton)
 
-    assert r._vjoy_device_id == 1
-    assert r._vjoy_input_id == 1
-    assert r._input_type == types.InputType.JoystickButton
-    assert r._axis_mode == types.AxisMode.Absolute
-    assert r._axis_scaling == 1.0
+    assert r.vjoy_device_id == 1
+    assert r.vjoy_input_id == 1
+    assert r.input_type == types.InputType.JoystickButton
+    assert r.axis_mode == types.AxisMode.Absolute
+    assert r.axis_scaling == 1.0
 
 
 def test_from_xml():
     r = remap.RemapModel(types.InputType.JoystickButton)
     r.from_xml(ElementTree.fromstring(xml_button))
-    assert r._vjoy_device_id == 1
-    assert r._vjoy_input_id == 12
-    assert r._input_type == types.InputType.JoystickButton
-    assert r._axis_mode == types.AxisMode.Absolute
-    assert r._axis_scaling == 1.0
+    assert r.vjoy_device_id == 1
+    assert r.vjoy_input_id == 12
+    assert r.input_type == types.InputType.JoystickButton
+    assert r.axis_mode == types.AxisMode.Absolute
+    assert r.axis_scaling == 1.0
 
     r = remap.RemapModel()
     r.from_xml(ElementTree.fromstring(xml_axis))
-    assert r._vjoy_device_id == 2
-    assert r._vjoy_input_id == 6
-    assert r._input_type == types.InputType.JoystickAxis
-    assert r._axis_mode == types.AxisMode.Relative
-    assert r._axis_scaling == 1.5
+    assert r.vjoy_device_id == 2
+    assert r.vjoy_input_id == 6
+    assert r.input_type == types.InputType.JoystickAxis
+    assert r.axis_mode == types.AxisMode.Relative
+    assert r.axis_scaling == 1.5
 
 
 def test_to_xml():
     r = remap.RemapModel(types.InputType.JoystickButton)
 
     r._id = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
-    r._vjoy_device_id = 2
-    r._vjoy_input_id = 14
-    r._input_type = types.InputType.JoystickButton
+    r.vjoy_device_id = 2
+    r.vjoy_input_id = 14
+    r.input_type = types.InputType.JoystickButton
 
     node = r.to_xml()
     assert node.find(
@@ -120,9 +120,9 @@ def test_to_xml():
     assert node.find("./property/name[.='axis-mode']") == None
     assert node.find("./property/name[.='axis-scaling']") == None
 
-    r._input_type = types.InputType.JoystickAxis
-    r._axis_mode = types.AxisMode.Absolute
-    r._axis_scaling = 0.75
+    r.input_type = types.InputType.JoystickAxis
+    r.axis_mode = types.AxisMode.Absolute
+    r.axis_scaling = 0.75
 
     node = r.to_xml()
     assert node.find(
