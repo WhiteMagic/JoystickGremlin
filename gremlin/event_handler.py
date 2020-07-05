@@ -403,18 +403,23 @@ class EventHandler(QtCore.QObject):
             permanent
         ))
 
-    def build_event_lookup(self, inheritance_tree):
-        """Builds the lookup table linking event to callback.
+    def build_event_lookup(self, modes):
+        """Builds the lookup table linking events to callbacks.
 
-        This takes mode inheritance into account.
+        This takes mode inheritance into account to create items in children
+        if they do not override a parent's action.
 
-        :param inheritance_tree the tree of parent and children in the
-            inheritance structure
+        Args:
+            modes: information about the mode hierarchy
         """
-        # Propagate events from parent to children if the children lack
-        # handlers for the available events
-        for parent, children in inheritance_tree.items():
+        stack = modes.hierarchy[:]
+        while len(stack) > 0:
+            node = stack.pop()
+            stack.extend(node.children[:])
+
             # Each device is treated separately
+            parent = node.value
+            children = [e.value for e in node.children]
             for device_guid in self.callbacks:
                 # Only attempt to copy handlers if we have any available in
                 # the parent mode
@@ -429,9 +434,6 @@ class EventHandler(QtCore.QObject):
                         for event, callbacks in parent_cb.items():
                             if event not in device_cb[child]:
                                 device_cb[child][event] = callbacks
-
-            # Recurse until we've dealt with all modes
-            self.build_event_lookup(children)
 
     def change_mode(self, new_mode):
         """Changes the currently active mode.

@@ -253,6 +253,31 @@ class ActionTree:
         self.root = TreeNode()
         self._root_id = uuid.uuid4()
 
+    def genertate_execution_tree(self) -> TreeNode:
+        """Returns a functor based tree repsentation to execute the instance.
+
+        Returns:
+            tree structure containing executable functors as its nodes
+        """
+        exec_tree = TreeNode()
+        exec_nodes = {self._root_id: exec_tree}
+        stack = self.root.children[::-1]
+        while len(stack) > 0:
+            node = stack.pop()
+            stack.extend(node.children[::-1])
+
+            # Create new node and insert it into the tree
+            exec_node = TreeNode()
+            exec_node.value = node.value.functor(node.value)
+            if node.parent == self.root:
+                exec_node.set_parent(exec_nodes[self._root_id])
+            else:
+                exec_node.set_parent(exec_nodes[node.parent.value.id])
+            exec_nodes[node.value.id] = exec_node
+
+        return exec_tree
+
+
     def from_xml(self, action_tree_node: ElementTree) -> None:
         """Populates the instance with the XML instance data.
 

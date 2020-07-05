@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import importlib
 import logging
 import os
@@ -26,8 +27,11 @@ import time
 import dill
 
 import gremlin
+import gremlin.actions
+import gremlin.profile
 from gremlin import event_handler, input_devices, \
     joystick_handling, macro, sendinput, user_plugin, util
+from gremlin.types import InputType, MergeAxisOperation
 import vjoy as vjoy_module
 
 
@@ -42,7 +46,7 @@ class CodeRunner:
         self.event_handler.add_plugin(input_devices.VJoyPlugin())
         self.event_handler.add_plugin(input_devices.KeyboardPlugin())
 
-        self._inheritance_tree = None
+        self._profile = None
         self._vjoy_curves = VJoyCurves()
         self._merge_axes = []
         self._running = False
@@ -54,72 +58,29 @@ class CodeRunner:
         """
         return self._running
 
-    def start(self, inheritance_tree, settings, start_mode, profile):
+    def start(self, profile: gremlin.profile.Profile, start_mode: str):
         """Starts listening to events and loads all existing callbacks.
 
-        :param inheritance_tree tree encoding inheritance between the
-            different modes
-        :param settings profile settings to apply at launch
-        :param start_mode the mode in which to start Gremlin
-        :param profile the profile to use when generating all the callbacks
+        Args:
+            profile: the profile to use when generating all the callbacks
+            start_mode: the mode in which to start Gremlin
         """
-        # Reset states to their default values
-        self._inheritance_tree = inheritance_tree
+        self._profile = profile
         self._reset_state()
 
         # Check if we want to override the start mode as determined by the
         # heuristic
+        settings = self._profile.settings
         if settings.startup_mode is not None:
-            if settings.startup_mode in gremlin.profile.mode_list(profile):
+            if settings.startup_mode in self._profile.modes.mode_list():
                 start_mode = settings.startup_mode
 
         # Set default macro action delay
         gremlin.macro.MacroManager().default_delay = settings.default_delay
 
-        # Retrieve list of current paths searched by Python
-        system_paths = [os.path.normcase(os.path.abspath(p)) for p in sys.path]
 
-        # Load the generated code
         try:
-            # Populate custom module variable registry
-            var_reg = user_plugin.variable_registry
-            for plugin in profile.plugins:
-                # Perform system path mangling for import statements
-                path, _ = os.path.split(
-                    os.path.normcase(os.path.abspath(plugin.file_name))
-                )
-                if path not in system_paths:
-                    system_paths.append(path)
-
-                # Load module specification so we can later create multiple
-                # instances if desired
-                spec = importlib.util.spec_from_file_location(
-                    "".join(random.choices(string.ascii_lowercase, k=16)),
-                    plugin.file_name
-                )
-
-                # Process each instance in turn
-                for instance in plugin.instances:
-                    # Skip all instances that are not fully configured
-                    if not instance.is_configured():
-                        continue
-
-                    # Store variable values in the registry
-                    for var in instance.variables.values():
-                        var_reg.set(
-                            plugin.file_name,
-                            instance.name,
-                            var.name,
-                            var.value
-                        )
-
-                    # Load the modules
-                    tmp = importlib.util.module_from_spec(spec)
-                    tmp.__gremlin_identifier = (plugin.file_name, instance.name)
-                    spec.loader.exec_module(tmp)
-
-            # Update system path list searched by Python
-            sys.path = system_paths
+            self._setup_plugins()
 
             # Create callbacks fom the user code
             callback_count = 0
@@ -138,7 +99,7 @@ class CodeRunner:
 
             # Add a fake keyboard action which does nothing to the callbacks
             # in every mode in order to have empty modes be "present"
-            for mode_name in gremlin.profile.mode_list(profile):
+            for mode_name in self._profile.modes.mode_list():
                 self.event_handler.add_callback(
                     0,
                     mode_name,
@@ -147,96 +108,54 @@ class CodeRunner:
                     False
                 )
 
-            # Create input callbacks based on the profile's content
-            for device in profile.devices.values():
-                for mode in device.modes.values():
-                    for input_items in mode.config.values():
-                        for input_item in input_items.values():
-                            # Only add callbacks for input items that actually
-                            # contain actions
-                            if len(input_item.containers) == 0:
-                                continue
-
-                            event = event_handler.Event(
-                                event_type=input_item.input_type,
-                                device_guid=device.device_guid,
-                                identifier=input_item.input_id
-                            )
-
-                            # Create possibly several callbacks depending
-                            # on the input item's content
-                            callbacks = []
-                            for container in input_item.containers:
-                                if not container.is_valid():
-                                    logging.getLogger("system").warning(
-                                        "Incomplete container ignored"
-                                    )
-                                    continue
-                                callbacks.extend(container.generate_callbacks())
-
-                            for cb_data in callbacks:
-                                if cb_data.event is None:
-                                    self.event_handler.add_callback(
-                                        device.device_guid,
-                                        mode.name,
-                                        event,
-                                        cb_data.callback,
-                                        input_item.always_execute
-                                    )
-                                else:
-                                    self.event_handler.add_callback(
-                                        dill.GUID_Virtual,
-                                        mode.name,
-                                        cb_data.event,
-                                        cb_data.callback,
-                                        input_item.always_execute
-                                    )
+            self._setup_profile()
 
             # Create merge axis callbacks
-            for entry in profile.merge_axes:
-                merge_axis = MergeAxis(
-                    entry["vjoy"]["vjoy_id"],
-                    entry["vjoy"]["axis_id"],
-                    entry["operation"]
-                )
-                self._merge_axes.append(merge_axis)
-
-                # Lower axis callback
-                event = event_handler.Event(
-                    event_type=gremlin.common.InputType.JoystickAxis,
-                    device_guid=entry["lower"]["device_guid"],
-                    identifier=entry["lower"]["axis_id"]
-                )
-                self.event_handler.add_callback(
-                    event.device_guid,
-                    entry["mode"],
-                    event,
-                    merge_axis.update_axis1,
-                    False
-                )
-
-                # Upper axis callback
-                event = event_handler.Event(
-                    event_type=gremlin.common.InputType.JoystickAxis,
-                    device_guid=entry["upper"]["device_guid"],
-                    identifier=entry["upper"]["axis_id"]
-                )
-                self.event_handler.add_callback(
-                    event.device_guid,
-                    entry["mode"],
-                    event,
-                    merge_axis.update_axis2,
-                    False
-                )
+            # for entry in profile.merge_axes:
+            #     merge_axis = MergeAxis(
+            #         entry["vjoy"]["vjoy_id"],
+            #         entry["vjoy"]["axis_id"],
+            #         entry["operation"]
+            #     )
+            #     self._merge_axes.append(merge_axis)
+            #
+            #     # Lower axis callback
+            #     event = event_handler.Event(
+            #         event_type=gremlin.common.InputType.JoystickAxis,
+            #         device_guid=entry["lower"]["device_guid"],
+            #         identifier=entry["lower"]["axis_id"]
+            #     )
+            #     self.event_handler.add_callback(
+            #         event.device_guid,
+            #         entry["mode"],
+            #         event,
+            #         merge_axis.update_axis1,
+            #         False
+            #     )
+            #
+            #     # Upper axis callback
+            #     event = event_handler.Event(
+            #         event_type=gremlin.common.InputType.JoystickAxis,
+            #         device_guid=entry["upper"]["device_guid"],
+            #         identifier=entry["upper"]["axis_id"]
+            #     )
+            #     self.event_handler.add_callback(
+            #         event.device_guid,
+            #         entry["mode"],
+            #         event,
+            #         merge_axis.update_axis2,
+            #         False
+            #     )
 
             # Create vJoy response curve setups
-            self._vjoy_curves.profile_data = profile.vjoy_devices
-            self.event_handler.mode_changed.connect(
-                self._vjoy_curves.mode_changed
-            )
+            # self._vjoy_curves.profile_data = profile.vjoy_devices
+            # self.event_handler.mode_changed.connect(
+            #     self._vjoy_curves.mode_changed
+            # )
 
-            # Use inheritance to build input action lookup table
-            self.event_handler.build_event_lookup(inheritance_tree)
+            # Use inheritance to build duplicate parent actions in children
+            # if the child mode does not override the parent's action
+            self.event_handler.build_event_lookup(self._profile.modes)
 
             # Set vJoy axis default values
             for vid, data in settings.vjoy_initial_values.items():
@@ -284,9 +203,9 @@ class CodeRunner:
             evt_lst.virtual_event.disconnect(self.event_handler.process_event)
             evt_lst.keyboard_event.disconnect(kb.keyboard_event)
             evt_lst.gremlin_active = False
-            self.event_handler.mode_changed.disconnect(
-                self._vjoy_curves.mode_changed
-            )
+            # self.event_handler.mode_changed.disconnect(
+            #     self._vjoy_curves.mode_changed
+            # )
         self._running = False
 
         # Empty callback registry
@@ -305,11 +224,150 @@ class CodeRunner:
 
     def _reset_state(self):
         """Resets all states to their default values."""
-        self.event_handler._active_mode =\
-            list(self._inheritance_tree.keys())[0]
-        self.event_handler._previous_mode =\
-            list(self._inheritance_tree.keys())[0]
+        self.event_handler._active_mode = self._profile.modes.first_mode
+        self.event_handler._previous_mode = self._profile.modes.first_mode
         input_devices.callback_registry.clear()
+
+    def _setup_plugins(self):
+        """Handles loading and configuring of loaded plugins."""
+        # Retrieve list of current paths searched by Python
+        system_paths = [os.path.normcase(os.path.abspath(p)) for p in sys.path]
+
+        # Populate custom module variable registry
+        var_reg = user_plugin.variable_registry
+        for plugin in self._profile.plugins:
+            # Perform system path mangling for import statements
+            path, _ = os.path.split(
+                os.path.normcase(os.path.abspath(plugin.file_name))
+            )
+            if path not in system_paths:
+                system_paths.append(path)
+
+            # Load module specification so we can later create multiple
+            # instances if desired
+            spec = importlib.util.spec_from_file_location(
+                "".join(random.choices(string.ascii_lowercase, k=16)),
+                plugin.file_name
+            )
+
+            # Process each instance in turn
+            for instance in plugin.instances:
+                # Skip all instances that are not fully configured
+                if not instance.is_configured():
+                    continue
+
+                # Store variable values in the registry
+                for var in instance.variables.values():
+                    var_reg.set(
+                        plugin.file_name,
+                        instance.name,
+                        var.name,
+                        var.value
+                    )
+
+                # Load the modules
+                tmp = importlib.util.module_from_spec(spec)
+                tmp.__gremlin_identifier = (plugin.file_name, instance.name)
+                spec.loader.exec_module(tmp)
+
+        # Update system path list searched by Python in order to locate the
+        # plugins properly
+        sys.path = system_paths
+
+    def _setup_profile(self):
+        item_list = sum(self._profile.inputs.values(), [])
+        action_list = sum([e.action_configurations for e in item_list], [])
+
+        # Create executable unit for each action
+        for action in action_list:
+            # Event on which to trigger this action
+            event = event_handler.Event(
+                event_type=action.input_item.input_type,
+                device_guid=action.input_item.device_id,
+                identifier=action.input_item.input_id
+            )
+
+            # Generate executable unit for the linked library item
+            exec_tree = \
+                action.library_reference.action_tree.genertate_execution_tree()
+            self.event_handler.add_callback(
+                event.device_guid,
+                action.input_item.mode,
+                event,
+                self._create_callback(exec_tree),
+                action.input_item.always_execute
+            )
+
+    def _callback(self, tree, event):
+        if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
+            value = gremlin.actions.Value(event.value)
+        elif event.event_type in [
+            InputType.JoystickButton,
+            InputType.Keyboard,
+            InputType.VirtualButton
+        ]:
+            value = gremlin.actions.Value(event.is_pressed)
+        else:
+            raise error.GremlinError("Invalid event type")
+
+        shared_value = copy.deepcopy(value)
+
+        # Execute the nodes in the tree
+        stack = tree.children[::-1]
+        while len(stack) > 0:
+            node = stack.pop()
+            result = node.value.process_event(event, shared_value)
+
+            if result:
+                stack.extend(node.children[::-1])
+
+    def _create_callback(self, tree):
+        return lambda event: self._callback(tree, event)
+
+        # # Create input callbacks based on the profile's content
+        # for device in profile.devices.values():
+        #     for mode in device.modes.values():
+        #         for input_items in mode.config.values():
+        #             for input_item in input_items.values():
+        #                 # Only add callbacks for input items that actually
+        #                 # contain actions
+        #                 if len(input_item.containers) == 0:
+        #                     continue
+        #
+        #                 event = event_handler.Event(
+        #                     event_type=input_item.input_type,
+        #                     device_guid=device.device_guid,
+        #                     identifier=input_item.input_id
+        #                 )
+        #
+        #                 # Create possibly several callbacks depending
+        #                 # on the input item's content
+        #                 callbacks = []
+        #                 for container in input_item.containers:
+        #                     if not container.is_valid():
+        #                         logging.getLogger("system").warning(
+        #                             "Incomplete container ignored"
+        #                         )
+        #                         continue
+        #                     callbacks.extend(container.generate_callbacks())
+        #
+        #                 for cb_data in callbacks:
+        #                     if cb_data.event is None:
+        #                         self.event_handler.add_callback(
+        #                             device.device_guid,
+        #                             mode.name,
+        #                             event,
+        #                             cb_data.callback,
+        #                             input_item.always_execute
+        #                         )
+        #                     else:
+        #                         self.event_handler.add_callback(
+        #                             dill.GUID_Virtual,
+        #                             mode.name,
+        #                             cb_data.event,
+        #                             cb_data.callback,
+        #                             input_item.always_execute
+        #                         )
 
 
 class VJoyCurves:
@@ -356,7 +414,7 @@ class MergeAxis:
             self,
             vjoy_id: int,
             input_id: int,
-            operation: gremlin.common.MergeAxisOperation
+            operation: MergeAxisOperation
     ):
         self.axis_values = [0.0, 0.0]
         self.vjoy_id = vjoy_id
@@ -366,13 +424,13 @@ class MergeAxis:
     def _update(self):
         """Updates the merged axis value."""
         value = 0.0
-        if self.operation == gremlin.common.MergeAxisOperation.Average:
+        if self.operation == MergeAxisOperation.Average:
             value = (self.axis_values[0] - self.axis_values[1]) / 2.0
-        elif self.operation == gremlin.common.MergeAxisOperation.Minimum:
+        elif self.operation == MergeAxisOperation.Minimum:
             value = min(self.axis_values[0], self.axis_values[1])
-        elif self.operation == gremlin.common.MergeAxisOperation.Maximum:
+        elif self.operation == MergeAxisOperation.Maximum:
             value = max(self.axis_values[0], self.axis_values[1])
-        elif self.operation == gremlin.common.MergeAxisOperation.Sum:
+        elif self.operation == MergeAxisOperation.Sum:
             value = gremlin.util.clamp(
                 self.axis_values[0] + self.axis_values[1],
                 -1.0,
