@@ -212,13 +212,8 @@ class RemapFunctor(AbstractFunctor):
 
     def __init__(self, action):
         super().__init__(action)
-        self.vjoy_device_id = action.vjoy_device_id
-        self.vjoy_input_id = action.vjoy_input_id
-        self.input_type = action.input_type
-        self.axis_mode = action.axis_mode
-        self.axis_scaling = action.axis_scaling
 
-        self.needs_auto_release = self._check_for_auto_release(action)
+        self.needs_auto_release = False #self._check_for_auto_release(action)
         self.thread_running = False
         self.should_stop_thread = False
         self.thread_last_update = time.time()
@@ -227,14 +222,14 @@ class RemapFunctor(AbstractFunctor):
         self.axis_value = 0.0
 
     def process_event(self, event, value):
-        if self.input_type == InputType.JoystickAxis:
-            if self.axis_mode == "absolute":
-                joystick_handling.VJoyProxy()[self.vjoy_device_id] \
-                    .axis(self.vjoy_input_id).value = value.current
+        if self.data.input_type == InputType.JoystickAxis:
+            if self.data.axis_mode == AxisMode.Absolute:
+                joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
+                    .axis(self.data.vjoy_input_id).value = value.current
             else:
                 self.should_stop_thread = abs(event.value) < 0.05
                 self.axis_delta_value = \
-                    value.current * (self.axis_scaling / 1000.0)
+                    value.current * (self.data.axis_scaling / 1000.0)
                 self.thread_last_update = time.time()
                 if self.thread_running is False:
                     if isinstance(self.thread, threading.Thread):
@@ -244,21 +239,21 @@ class RemapFunctor(AbstractFunctor):
                     )
                     self.thread.start()
 
-        elif self.input_type == InputType.JoystickButton:
+        elif self.data.input_type == InputType.JoystickButton:
             if event.event_type in [InputType.JoystickButton, InputType.Keyboard] \
                     and event.is_pressed \
                     and self.needs_auto_release:
                 input_devices.ButtonReleaseActions().register_button_release(
-                    (self.vjoy_device_id, self.vjoy_input_id),
+                    (self.data.vjoy_device_id, self.data.vjoy_input_id),
                     event
                 )
 
-            joystick_handling.VJoyProxy()[self.vjoy_device_id] \
-                .button(self.vjoy_input_id).is_pressed = value.current
+            joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
+                .button(self.data.vjoy_input_id).is_pressed = value.current
 
-        elif self.input_type == InputType.JoystickHat:
-            joystick_handling.VJoyProxy()[self.vjoy_device_id] \
-                .hat(self.vjoy_input_id).direction = value.current
+        elif self.data.input_type == InputType.JoystickHat:
+            joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
+                .hat(self.data.vjoy_input_id).direction = value.current
 
         return True
 
@@ -289,25 +284,25 @@ class RemapFunctor(AbstractFunctor):
             except gremlin.error.VJoyError:
                 self.thread_running = False
 
-    def _check_for_auto_release(self, action):
-        activation_condition = None
-        if action.parent.activation_condition:
-            activation_condition = action.parent.activation_condition
-        elif action.activation_condition:
-            activation_condition = action.activation_condition
-
-        # If an input action activation condition is present the auto release
-        # may have to be disabled
-        needs_auto_release = True
-        if activation_condition:
-            for condition in activation_condition.conditions:
-                if isinstance(condition, InputActionCondition):
-                    # Remap like actions typically have an always activation
-                    # condition associated with them
-                    if condition.comparison != "always":
-                        needs_auto_release = False
-
-        return needs_auto_release
+    # def _check_for_auto_release(self, action):
+    #     activation_condition = None
+    #     if action.parent.activation_condition:
+    #         activation_condition = action.parent.activation_condition
+    #     elif action.activation_condition:
+    #         activation_condition = action.activation_condition
+    #
+    #     # If an input action activation condition is present the auto release
+    #     # may have to be disabled
+    #     needs_auto_release = True
+    #     if activation_condition:
+    #         for condition in activation_condition.conditions:
+    #             if isinstance(condition, InputActionCondition):
+    #                 # Remap like actions typically have an always activation
+    #                 # condition associated with them
+    #                 if condition.comparison != "always":
+    #                     needs_auto_release = False
+    #
+    #     return needs_auto_release
 
 
 class RemapModel(AbstractActionModel):
@@ -349,95 +344,95 @@ class RemapModel(AbstractActionModel):
             input_id = device.axis_map[0].axis_index
 
         # Model variables
-        self._vjoy_device_id = vjoy_id
-        self._vjoy_input_id = input_id
-        self._input_type = input_type
-        self._axis_mode = AxisMode.Absolute
-        self._axis_scaling = 1.0
+        self.vjoy_device_id = vjoy_id
+        self.vjoy_input_id = input_id
+        self.input_type = input_type
+        self.axis_mode = AxisMode.Absolute
+        self.axis_scaling = 1.0
 
     def _get_vjoy_device_id(self) -> int:
-        return self._vjoy_device_id
+        return self.vjoy_device_id
 
     def _set_vjoy_device_id(self, vjoy_device_id: int) -> None:
-        if vjoy_device_id == self._vjoy_device_id:
+        if vjoy_device_id == self.vjoy_device_id:
             return
-        self._vjoy_device_id = vjoy_device_id
+        self.vjoy_device_id = vjoy_device_id
         self.vjoyDeviceIdChanged.emit()
 
     def _get_vjoy_input_id(self) -> int:
-        return self._vjoy_input_id
+        return self.vjoy_input_id
 
     def _set_vjoy_input_id(self, vjoy_input_id: int) -> None:
-        if vjoy_input_id == self._vjoy_input_id:
+        if vjoy_input_id == self.vjoy_input_id:
             return
-        self._vjoy_input_id = vjoy_input_id
+        self.vjoy_input_id = vjoy_input_id
         self.vjoyInputIdChanged.emit()
 
     def _get_input_type(self) -> str:
-        return InputType.to_string(self._input_type)
+        return InputType.to_string(self.input_type)
 
     def _set_input_type(self, input_type: str) -> None:
         input_type_tmp = InputType.to_enum(input_type)
-        if input_type_tmp == self._input_type:
+        if input_type_tmp == self.input_type:
             return
-        self._input_type = input_type_tmp
+        self.input_type = input_type_tmp
         self.inputTypeChanged.emit()
 
     def _get_axis_mode(self) -> str:
-        return AxisMode.to_string(self._axis_mode)
+        return AxisMode.to_string(self.axis_mode)
 
     def _set_axis_mode(self, axis_mode: str) -> None:
         axis_mode_tmp = AxisMode.to_enum(axis_mode)
-        if axis_mode_tmp == self._axis_mode:
+        if axis_mode_tmp == self.axis_mode:
             return
-        self._axis_mode = axis_mode_tmp
+        self.axis_mode = axis_mode_tmp
         self.axisModeChanged.emit()
 
     def _get_axis_scaling(self) -> float:
-        return self._axis_scaling
+        return self.axis_scaling
 
     def _set_axis_scaling(self, axis_scaling: float) -> None:
-        if axis_scaling == self._axis_scaling:
+        if axis_scaling == self.axis_scaling:
             return
-        self._axis_scaling = axis_scaling
+        self.axis_scaling = axis_scaling
         self.axisScalingChanged.emit()
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
-        self._vjoy_device_id = util.read_property(
+        self.vjoy_device_id = util.read_property(
             node, "vjoy-device-id", PropertyType.Int
         )
-        self._vjoy_input_id = util.read_property(
+        self.vjoy_input_id = util.read_property(
             node, "vjoy-input-id", PropertyType.Int
         )
-        self._input_type = util.read_property(
+        self.input_type = util.read_property(
             node, "input-type", PropertyType.InputType
         )
-        if self._input_type == InputType.JoystickAxis:
-            self._axis_mode = util.read_property(
+        if self.input_type == InputType.JoystickAxis:
+            self.axis_mode = util.read_property(
                 node, "axis-mode", PropertyType.AxisMode
             )
-            self._axis_scaling = util.read_property(
+            self.axis_scaling = util.read_property(
                 node, "axis-scaling", PropertyType.Float
             )
 
     def to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(RemapModel.tag, self._id)
         node.append(util.create_property_node(
-            "vjoy-device-id", self._vjoy_device_id, PropertyType.Int
+            "vjoy-device-id", self.vjoy_device_id, PropertyType.Int
         ))
         node.append(util.create_property_node(
-            "vjoy-input-id", self._vjoy_input_id, PropertyType.Int
+            "vjoy-input-id", self.vjoy_input_id, PropertyType.Int
         ))
         node.append(util.create_property_node(
-            "input-type", self._input_type, PropertyType.InputType
+            "input-type", self.input_type, PropertyType.InputType
         ))
-        if self._input_type == InputType.JoystickAxis:
+        if self.input_type == InputType.JoystickAxis:
             node.append(util.create_property_node(
-                "axis-mode", self._axis_mode, PropertyType.AxisMode
+                "axis-mode", self.axis_mode, PropertyType.AxisMode
             ))
             node.append(util.create_property_node(
-                "axis-scaling", self._axis_scaling, PropertyType.Float
+                "axis-scaling", self.axis_scaling, PropertyType.Float
             ))
         return node
 

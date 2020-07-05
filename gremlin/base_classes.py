@@ -397,7 +397,7 @@ class AbstractFunctor(metaclass=ABCMeta):
         :param instance the object which contains the information needed to
             execute it later on
         """
-        pass
+        self.data = instance
 
     @abstractmethod
     def process_event(self, event, value):
