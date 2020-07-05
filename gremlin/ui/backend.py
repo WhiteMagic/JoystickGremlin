@@ -25,6 +25,7 @@ import uuid
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
+from gremlin import code_runner
 from gremlin import common
 from gremlin import config
 from gremlin import error
@@ -49,6 +50,7 @@ class Backend(QtCore.QObject):
     lastErrorChanged = Signal()
     inputConfigurationChanged = Signal()
     reloadUi = Signal()
+    activityChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -56,6 +58,44 @@ class Backend(QtCore.QObject):
         self.profile = None
         self._last_error = ""
         self._action_state = {}
+        self.runner = code_runner.CodeRunner()
+
+    @Property(bool, notify=activityChanged)
+    def gremlinActive(self) -> bool:
+        """Returns whether or not a Gremlin profile is active.
+
+        Returns:
+            True if a profile is active, False otherwise
+        """
+        return self.runner.is_running()
+
+
+    @Slot()
+    def toggleActiveState(self):
+        self.activate_gremlin(not self.runner.is_running())
+
+    def activate_gremlin(self, activate: bool):
+        if activate:
+            # Generate the code for the profile and run it
+            # self._profile_auto_activated = False
+            self.runner.start(
+                self.profile,
+                "Default"
+            )
+            #self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon_active.ico"))
+        else:
+            # Stop running the code
+            self.runner.stop()
+            # self._update_statusbar_active(False)
+            # self._profile_auto_activated = False
+            # current_tab = self.ui.devices.currentWidget()
+            # if type(current_tab) in [
+            #     gremlin.ui.device_tab.JoystickDeviceTabWidget,
+            #     gremlin.ui.device_tab.KeyboardDeviceTabWidget
+            # ]:
+            #     self.ui.devices.currentWidget().refresh()
+            # self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon.ico"))
+        self.activityChanged.emit()
 
     @Slot(InputIdentifier, result=int)
     def getActionCount(self, identifier: InputIdentifier) -> int:
