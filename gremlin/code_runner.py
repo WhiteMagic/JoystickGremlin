@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from abc import ABCMeta, abstractmethod
 import copy
 import importlib
 import logging
@@ -23,16 +24,139 @@ import random
 import string
 import sys
 import time
+from typing import List, Tuple
 
 import dill
 
 import gremlin
 import gremlin.actions
+import gremlin.fsm
 import gremlin.profile
 from gremlin import event_handler, input_devices, \
     joystick_handling, macro, sendinput, user_plugin, util
-from gremlin.types import InputType, MergeAxisOperation
+from gremlin.types import AxisButtonDirection, HatDirection, InputType, \
+    MergeAxisOperation
 import vjoy as vjoy_module
+
+
+
+class VirtualButton(metaclass=ABCMeta):
+
+    """Implements a button like interface."""
+
+    def __init__(self):
+        """Creates a new instance."""
+        self._fsm = self._initialize_fsm()
+        #self._is_pressed = False
+
+    def _initialize_fsm(self):
+        """Initializes the state of the button FSM."""
+        states = ["up", "down"]
+        actions = ["press", "release"]
+        transitions = {
+            ("up", "press"): gremlin.fsm.Transition(self._press, "down"),
+            ("up", "release"): gremlin.fsm.Transition(self._noop, "up"),
+            ("down", "release"): gremlin.fsm.Transition(self._release, "up"),
+            ("down", "press"): gremlin.fsm.Transition(self._noop, "down")
+        }
+        return gremlin.fsm.FiniteStateMachine("up", states, actions, transitions)
+
+    @abstractmethod
+    def process_event(self, event: event_handler.Event) -> List[bool]:
+        """Process the input event and updates the value as needed.
+
+        Args:
+            event: The input event to process
+
+        Returns:
+            List of states to process
+        """
+        pass
+
+    def _press(self) -> bool:
+        """Executes the "press" action."""
+        return True
+
+    def _release(self) -> bool:
+        """Executes the "release" action."""
+        return True
+
+    def _noop(self) -> bool:
+        """Performs "noop" action."""
+        return False
+class VirtualHatButton(VirtualButton):
+
+    """Treats directional hat events as a button."""
+
+    def __init__(self, directions):
+        super().__init__()
+        self._directions = directions
+
+    def process_event(self, event: event_handler.Event) -> List[bool]:
+        is_pressed = HatDirection.to_enum(event.value) in self._directions
+        action = "press" if is_pressed else "release"
+        has_changed = self._fsm.perform(action)
+        return [is_pressed] if has_changed else []
+class CallbackObject:
+
+    """Represents the callback executed in reaction to an input."""
+
+    def __init__(self, action):
+        self._action = action
+        self._execution_tree = \
+            action.library_reference.action_tree.genertate_execution_tree()
+
+        self._generate_values = self._default_generate_values
+        self._virtual_button = None
+        if isinstance(self._action.virtual_button, gremlin.profile.VirtualAxisButton):
+            pass
+        elif isinstance(self._action.virtual_button, gremlin.profile.VirtualHatButton):
+            self._virtual_button = VirtualHatButton(
+                self._action.virtual_button.directions
+            )
+            self._generate_values = self._virtual_generate_values
+
+    def __call__(self, event):
+        values = self._generate_values(event)
+
+        for i, value in enumerate(values):
+            stack = self._execution_tree.children[::-1]
+            while len(stack) > 0:
+                node = stack.pop()
+                result = node.value.process_event(event, value)
+
+                # Only execute child nodes if the parent node was executed
+                # successfully
+                if result:
+                    stack.extend(node.children[::-1])
+
+            # Allow a short period of time before processing the execution
+            # tree again with a new value
+            if i < len(values)-1:
+                time.sleep(0.05)
+
+    def _default_generate_values(self, event):
+        if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
+            value = gremlin.actions.Value(event.value)
+        elif event.event_type in [InputType.JoystickButton, InputType.Keyboard]:
+            value = gremlin.actions.Value(event.is_pressed)
+        else:
+            raise error.GremlinError("Invalid event type")
+
+        return [value]
+
+    def _virtual_generate_values(self, event):
+        values = []
+        if event.event_type == InputType.JoystickAxis:
+            value = gremlin.actions.Value()
+        elif event.event_type == InputType.JoystickHat:
+            states = self._virtual_button.process_event(event)
+            for state in states:
+                values.append(gremlin.actions.Value(state))
+        else:
+            raise error.GremlinError("Invalid event type")
+
+        return values
 
 
 class CodeRunner:
@@ -288,17 +412,16 @@ class CodeRunner:
             )
 
             # Generate executable unit for the linked library item
-            exec_tree = \
-                action.library_reference.action_tree.genertate_execution_tree()
             self.event_handler.add_callback(
                 event.device_guid,
                 action.input_item.mode,
                 event,
-                self._create_callback(exec_tree),
+                self._create_callback(action),
                 action.input_item.always_execute
             )
 
-    def _callback(self, tree, event):
+    def _callback(self, tree, action, event):
+        values = self._generate_values(event)
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
             value = gremlin.actions.Value(event.value)
         elif event.event_type in [
@@ -321,8 +444,8 @@ class CodeRunner:
             if result:
                 stack.extend(node.children[::-1])
 
-    def _create_callback(self, tree):
-        return lambda event: self._callback(tree, event)
+    def _create_callback(self, action):
+        return CallbackObject(action)
 
         # # Create input callbacks based on the profile's content
         # for device in profile.devices.values():
