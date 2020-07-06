@@ -243,3 +243,24 @@ DropArea {
 ```
 
 The above is not a generic setup that can be directly used as it relies on and makes assumptions about the model and intended behavior. However, the general flow should be applicable to other UI elements. The base item's `Drag.onDragFinished` sets a flag which is used by the `MouseArea.onReleased` event to reset the position of the item if needed. The `DropArea.onDropped` event handler ensures the `Drag.onDragFinished` is notified of success and then goes on to handle model changes that are in line with the intended drag & drop behavior.
+
+## Icon Colors
+
+Icons on buttons and the like by default will be rendered black and white. This is caused by the tinting ability associated with colors. To display the icon's actual colors the `color` property of the `icon` has to be set to `transparent`.
+
+```qml
+// This results in the icon being shown using the colors defined in the image file
+Button {
+	icon.source: "path/to/icon.png"
+	icon.color: "transparent"
+}
+
+// This results in the icon being shown in red
+Button {
+	icon.source: "path/to/icon.png"
+	icon.color: "red"
+}
+```
+
+
+
