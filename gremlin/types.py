@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import enum
+from typing import Tuple, Union
 
 import gremlin.error
 
@@ -475,9 +476,12 @@ class HatDirection(enum.Enum):
             )
 
     @staticmethod
-    def to_enum(value: str) -> HatDirection:
+    def to_enum(value: Union[str, Tuple[int, int]]) -> HatDirection:
         try:
-            return _HatDirection_to_enum_lookup[value.lower()]
+            if isinstance(value, str):
+                return _HatDirection_to_enum_lookup[value.lower()]
+            else:
+                return _HatDirection_to_enum_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError(
                 "Invalid HatDirection in lookup"
@@ -496,6 +500,7 @@ _HatDirection_to_string_lookup = {
 }
 
 _HatDirection_to_enum_lookup = {
+    # String based
     "center": HatDirection.Center,
     "north": HatDirection.North,
     "north-east": HatDirection.NorthEast,
@@ -505,4 +510,14 @@ _HatDirection_to_enum_lookup = {
     "south-west": HatDirection.SouthWest,
     "west": HatDirection.West,
     "north-west": HatDirection.NorthWest,
+    # Direction tuple based
+    (0, 0): HatDirection.Center,
+    (0, 1): HatDirection.North,
+    (1, 1): HatDirection.NorthEast,
+    (1, 0): HatDirection.East,
+    (1, -1): HatDirection.SouthEast,
+    (0, -1): HatDirection.South,
+    (-1, -1): HatDirection.SouthWest,
+    (-1, 0): HatDirection.West,
+    (-1, 1): HatDirection.NorthWest,
 }
