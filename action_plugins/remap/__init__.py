@@ -27,183 +27,10 @@ from xml.etree import ElementTree
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
+from gremlin import joystick_handling
+from gremlin import util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.types import AxisMode, InputType, PropertyType
-from gremlin import joystick_handling
-import gremlin.util as util
-
-#from gremlin.base_classes import InputActionCondition
-#from gremlin import input_devices, joystick_handling, util
-#from gremlin.error import ProfileError
-#from gremlin.profile import safe_format, safe_read
-#import gremlin.ui.common
-#import gremlin.ui.input_item
-
-
-# class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
-#
-#     """Dialog which allows the selection of a vJoy output to use as
-#     as the remapping for the currently selected input.
-#     """
-#
-#     # Mapping from types to display names
-#     type_to_name_map = {
-#         InputType.JoystickAxis: "Axis",
-#         InputType.JoystickButton: "Button",
-#         InputType.JoystickHat: "Hat",
-#         InputType.Keyboard: "Button",
-#     }
-#     name_to_type_map = {
-#         "Axis": InputType.JoystickAxis,
-#         "Button": InputType.JoystickButton,
-#         "Hat": InputType.JoystickHat
-#     }
-#
-#     def __init__(self, action_data, library_reference, parent=None):
-#         """Creates a new RemapWidget.
-#
-#         :param action_data profile data managed by this widget
-#         :param parent the parent of this widget
-#         """
-#         super().__init__(action_data, library_reference, parent=parent)
-#
-#     def _create_ui(self):
-#         """Creates the UI components."""
-#         input_types = {
-#             InputType.Keyboard: [
-#                 InputType.JoystickButton
-#             ],
-#             InputType.JoystickAxis: [
-#                 InputType.JoystickAxis,
-#                 InputType.JoystickButton
-#             ],
-#             InputType.JoystickButton: [
-#                 InputType.JoystickButton
-#             ],
-#             InputType.JoystickHat: [
-#                 InputType.JoystickButton,
-#                 InputType.JoystickHat
-#             ]
-#         }
-#         self.vjoy_selector = gremlin.ui.common.VJoySelector(
-#             lambda x: self.save_changes(),
-#             input_types[self._get_input_type()],
-#             self.library_reference.get_settings().vjoy_as_input
-#         )
-#         self.main_layout.addWidget(self.vjoy_selector)
-#
-#         # Create UI widgets for absolute / relative axis modes if the remap
-#         # action is being added to an axis input type
-#         if self.library_reference.get_input_type() == InputType.JoystickAxis:
-#             self.remap_type_widget = QtWidgets.QWidget()
-#             self.remap_type_layout = QtWidgets.QHBoxLayout(self.remap_type_widget)
-#
-#             self.absolute_checkbox = QtWidgets.QRadioButton("Absolute")
-#             self.absolute_checkbox.setChecked(True)
-#             self.relative_checkbox = QtWidgets.QRadioButton("Relative")
-#             self.relative_scaling = gremlin.ui.common.DynamicDoubleSpinBox()
-#
-#             self.remap_type_layout.addStretch()
-#             self.remap_type_layout.addWidget(self.absolute_checkbox)
-#             self.remap_type_layout.addWidget(self.relative_checkbox)
-#             self.remap_type_layout.addWidget(self.relative_scaling)
-#             self.remap_type_layout.addWidget(QtWidgets.QLabel("Scale"))
-#
-#             self.remap_type_widget.hide()
-#             self.main_layout.addWidget(self.remap_type_widget)
-#
-#             # The widgets should only be shown when we actually map to an axis
-#             if self.action_data.input_type == InputType.JoystickAxis:
-#                 self.remap_type_widget.show()
-#
-#         self.main_layout.setContentsMargins(0, 0, 0, 0)
-#
-#     def _populate_ui(self):
-#         """Populates the UI components."""
-#         # Get the appropriate vjoy device identifier
-#         vjoy_dev_id = 0
-#         if self.action_data.vjoy_device_id not in [0, None]:
-#             vjoy_dev_id = self.action_data.vjoy_device_id
-#
-#         # Get the input type which can change depending on the container used
-#         input_type = self.action_data.input_type
-#         if self.action_data.parent.tag == "hat_buttons":
-#             input_type = InputType.JoystickButton
-#
-#         # Handle obscure bug which causes the action_data to contain no
-#         # input_type information
-#         if input_type is None:
-#             input_type = InputType.JoystickButton
-#             logging.getLogger("system").warning("None as input type encountered")
-#
-#         # If no valid input item is selected get the next unused one
-#         if self.action_data.vjoy_input_id in [0, None]:
-#             free_inputs = self._get_profile_root().list_unused_vjoy_inputs()
-#
-#             input_name = self.type_to_name_map[input_type].lower()
-#             input_type = self.name_to_type_map[input_name.capitalize()]
-#             if vjoy_dev_id == 0:
-#                 vjoy_dev_id = sorted(free_inputs.keys())[0]
-#             input_list = free_inputs[vjoy_dev_id][input_name]
-#             # If we have an unused item use it, otherwise use the first one
-#             if len(input_list) > 0:
-#                 vjoy_input_id = input_list[0]
-#             else:
-#                 vjoy_input_id = 1
-#         # If a valid input item is present use it
-#         else:
-#             vjoy_input_id = self.action_data.vjoy_input_id
-#
-#         try:
-#             self.vjoy_selector.set_selection(
-#                 input_type,
-#                 vjoy_dev_id,
-#                 vjoy_input_id
-#             )
-#
-#             if self.action_data.input_type == InputType.JoystickAxis:
-#                 if self.action_data.axis_mode == "absolute":
-#                     self.absolute_checkbox.setChecked(True)
-#                 else:
-#                     self.relative_checkbox.setChecked(True)
-#                 self.relative_scaling.setValue(self.action_data.axis_scaling)
-#
-#                 self.absolute_checkbox.clicked.connect(self.save_changes)
-#                 self.relative_checkbox.clicked.connect(self.save_changes)
-#                 self.relative_scaling.valueChanged.connect(self.save_changes)
-#
-#             # Save changes so the UI updates properly
-#             self.save_changes()
-#         except gremlin.error.GremlinError as e:
-#             util.display_error(
-#                 "A needed vJoy device is not accessible: {}\n\n".format(e) +
-#                 "Default values have been set for the input, but they are "
-#                 "not what has been specified."
-#             )
-#             logging.getLogger("system").error(str(e))
-#
-#     def save_changes(self):
-#         """Saves UI contents to the profile data storage."""
-#         # Store remap data
-#         try:
-#             vjoy_data = self.vjoy_selector.get_selection()
-#             input_type_changed = \
-#                 self.action_data.input_type != vjoy_data["input_type"]
-#             self.action_data.vjoy_device_id = vjoy_data["device_id"]
-#             self.action_data.vjoy_input_id = vjoy_data["input_id"]
-#             self.action_data.input_type = vjoy_data["input_type"]
-#
-#             if self.action_data.input_type == InputType.JoystickAxis:
-#                 self.action_data.axis_mode = "absolute"
-#                 if self.relative_checkbox.isChecked():
-#                     self.action_data.axis_mode = "relative"
-#                 self.action_data.axis_scaling = self.relative_scaling.value()
-#
-#             # Signal changes
-#             if input_type_changed:
-#                 self.action_modified.emit()
-#         except gremlin.error.GremlinError as e:
-#             logging.getLogger("system").error(str(e))
 
 
 class RemapFunctor(AbstractFunctor):
@@ -259,23 +86,25 @@ class RemapFunctor(AbstractFunctor):
 
     def relative_axis_thread(self):
         self.thread_running = True
-        vjoy_dev = joystick_handling.VJoyProxy()[self.vjoy_device_id]
-        self.axis_value = vjoy_dev.axis(self.vjoy_input_id).value
+        vjoy_dev = joystick_handling.VJoyProxy()[self.data.vjoy_device_id]
+        self.axis_value = vjoy_dev.axis(self.data.vjoy_input_id).value
         while self.thread_running:
             try:
                 # If the vjoy value has was changed from what we set it to
                 # in the last iteration, terminate the thread
-                change = vjoy_dev.axis(self.vjoy_input_id).value - self.axis_value
+                change = vjoy_dev.axis(self.data.vjoy_input_id).value - \
+                        self.axis_value
                 if abs(change) > 0.0001:
                     self.thread_running = False
                     self.should_stop_thread = True
                     return
 
-                self.axis_value = max(
+                self.axis_value = util.clamp(
+                    self.axis_value + self.axis_delta_value,
                     -1.0,
-                    min(1.0, self.axis_value + self.axis_delta_value)
+                    1.0
                 )
-                vjoy_dev.axis(self.vjoy_input_id).value = self.axis_value
+                vjoy_dev.axis(self.data.vjoy_input_id).value = self.axis_value
 
                 if self.should_stop_thread and \
                         self.thread_last_update + 1.0 < time.time():
