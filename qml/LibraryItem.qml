@@ -26,30 +26,26 @@ import gremlin.ui.profile 1.0
 
 Item {
     property ActionConfigurationModel action
+    property int itemSpacing : 10
 
-    height: idBaseItem.height
+    height: _baseItem.height
     width: parent.width
 
     Item {
-        id: idBaseItem
+        id: _baseItem
 
         property int sourceY
         property bool dragSuccess : false
 
         // Dimensions
-        height: {
-            if(idActionButton.checked) {
-                idActionButton.height + idAction.height + _actionSelector.height
-            } else {
-                idActionButton.height
-            }
-        }
+        height: _header.height + _headerSpacer.height + _action.height + _actionSelector.height
+
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.leftMargin: 10 + 20 * (model.depth - 1)
 
         // Drag & drop support
-        Drag.active: idDragArea.drag.active
+        Drag.active: _dragArea.drag.active
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
@@ -57,21 +53,21 @@ Item {
             "text/plain": model.id
         }
         Drag.onDragFinished: {
-            idBaseItem.dragSuccess = dropAction == Qt.MoveAction;
+            _baseItem.dragSuccess = dropAction == Qt.MoveAction;
         }
         Drag.onDragStarted: {
-            idBaseItem.sourceY = idBaseItem.y
+            _baseItem.sourceY = _baseItem.y
         }
 
         // Header
         Row {
-            id: idActionHeader
+            id: _header
 
-            anchors.top: idBaseItem.top
+            anchors.top: _baseItem.top
             spacing: 10
 
             FoldButton {
-                id: idActionButton
+                id: _actionButton
 
                 checked: backend.isActionExpanded(model.id)
                 icon.source: checked ? "../gfx/button_delete.png" : "../gfx/button_add.png"
@@ -82,67 +78,77 @@ Item {
             }
 
             Label {
-                id: idActionName
+                id: _actionName
 
-                anchors.verticalCenter: idActionButton.verticalCenter
+                anchors.verticalCenter: _actionButton.verticalCenter
 
                 text: model.name
             }
 
             Rectangle {
-                id: idSeparator
+                id: _headerSeparator
 
                 height: 2
-                width: idBaseItem.width - idActionButton.width - idActionName.width - 2 * idActionHeader.spacing - 10
-                anchors.verticalCenter: idActionButton.verticalCenter
+                width: _baseItem.width - _actionButton.width - _actionName.width - 2 * _header.spacing - 10
+                anchors.verticalCenter: _actionButton.verticalCenter
 
-                color: idActionButton.background.color
+                color: _actionButton.background.color
             }
+        }
+
+        BottomSpacer {
+            id: _headerSpacer
+
+            item: _header
+            spacing: _action.visible ? itemSpacing : 0
         }
 
         // Drag interface area
         MouseArea {
-            id: idDragArea
+            id: _dragArea
 
-            x: idActionName.x
-            y: idActionHeader.y
-            width: idActionName.width + idSeparator.width
-            height: idActionHeader.height
+            // Start at label field x coordinate, otherwise button stops working
+            x: _actionName.x
+            y: _header.y
+            width: _actionName.width + _headerSeparator.width
+            height: _header.height
 
-            drag.target: idBaseItem
+            drag.target: _baseItem
             drag.axis: Drag.YAxis
 
             onReleased: {
-                if(!idBaseItem.dragSuccess)
+                if(!_baseItem.dragSuccess)
                 {
-                    idBaseItem.y = idBaseItem.sourceY;
+                    _baseItem.y = _baseItem.sourceY;
                 }
             }
 
             // Create an image of the object to visualize the dragging
-            onPressed: idBaseItem.grabToImage(function(result) {
-                idBaseItem.Drag.imageSource = result.url
+            onPressed: _baseItem.grabToImage(function(result) {
+                _baseItem.Drag.imageSource = result.url
             })
         }
 
         // Drop area
         DropArea {
-            id: idDropArea
+            id: _dropArea
 
-            height: idBaseItem.height
-            anchors.left: idBaseItem.left
-            anchors.right: idBaseItem.right
-            anchors.top: idBaseItem.verticalCenter
+            height: _header.height + itemSpacing
+            anchors.left: _header.left
+            anchors.right: _header.right
+            y: _action.y + _action.height - height/2 + itemSpacing/2
 
             // Visualization of the drop indicator
             Rectangle {
+                id: _dropMarker
+
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.top: parent.verticalCenter
+                anchors.verticalCenter: parent.verticalCenter
 
                 height: 5
 
-                opacity: idDropArea.containsDrag ? 1.0 : 0.0
+                opacity: _dropArea.containsDrag ? 1.0 : 0.0
                 color: Universal.accent
             }
 
@@ -157,13 +163,15 @@ Item {
 
         // Dynamic QML item loading
         Item {
-            id: idAction
+            id: _action
 
-            anchors.left: idBaseItem.left
-            anchors.right: idBaseItem.right
-            anchors.top: idActionHeader.bottom
-            anchors.topMargin: 10
-            visible: idActionButton.checked
+            anchors.left: _baseItem.left
+            anchors.right: _baseItem.right
+            anchors.top: _headerSpacer.bottom
+            
+            height: visible ? implicitHeight : 0
+            
+            visible: _actionButton.checked
 
             // Dynamically load the QML item
             Component.onCompleted: {
@@ -171,16 +179,16 @@ Item {
                 if (component) {
                     if (component.status == Component.Ready) {
                         var obj = component.createObject(
-                            idAction,
+                            _action,
                             {
                                 model: profileData,
                                 actionConfiguration: action
                             }
                         );
 
-                        idAction.height = obj.height;
-                        obj.anchors.left = idAction.left;
-                        obj.anchors.right = idAction.right;
+                        _action.implicitHeight = obj.height;
+                        obj.anchors.left = _action.left;
+                        obj.anchors.right = _action.right;
 
                     } else if (component.status == Component.Error) {
                         console.log("Error loading component:", component.errorString());
@@ -192,17 +200,21 @@ Item {
         // On each valid level/item need to have a dropdown with actions
         Loader {
             id: _actionSelector
-            anchors.top: idAction.visible ? idAction.bottom : idActionHeader.bottom
-            anchors.topMargin: 10
+            anchors.top: _action.bottom
 
             active: model.isLastSibling
 
-            sourceComponent: ActionSelector {
-                configuration: action
+            sourceComponent: Column {
+                Rectangle {
+                    height: itemSpacing
+                    width: 1
+                }
+                ActionSelector {
+                    configuration: action
+                }
             }
+
         }
-
-
 
     } // Item
 

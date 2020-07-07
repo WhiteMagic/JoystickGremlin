@@ -33,7 +33,7 @@ Item {
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.rightMargin: 10
-    height: _listView.childrenRect.height + _header.height + _headerBorder.height
+    height: _listView.contentItem.height + _header.height + _headerBorder.height
 
 
     // +------------------------------------------------------------------------
@@ -58,7 +58,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         height: childrenRect.height
-        spacing: 20
+        spacing: 10
 
         model: actionConfiguration
 
@@ -69,6 +69,7 @@ Item {
 
         delegate: LibraryItem {
             action: idRoot.actionConfiguration
+            itemSpacing: _listView.spacing
         }
     }
 
