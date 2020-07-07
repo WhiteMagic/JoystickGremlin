@@ -271,3 +271,20 @@ def test_nodes_matching():
     assert n1.nodes_matching(lambda x: x.value % 2 == 0) == [n1, n2, n3, n4]
     assert n1.nodes_matching(lambda x: x.value / 5 == 0) == []
     assert n1.nodes_matching(lambda x: x.value % 3 == 0) == [n3]
+
+
+def test_sibling_reordering():
+    n1 = TreeNode(1)
+    n2 = TreeNode(2, n1)
+    n3 = TreeNode(3, n1)
+    n4 = TreeNode(4, n1)
+
+    assert n1.children == [n2, n3, n4]
+
+    n4.detach()
+    n2.insert_sibling_before(n4)
+    assert n1.children == [n4, n2, n3]
+
+    n4.detach()
+    n2.insert_sibling_after(n4)
+    assert n1.children == [n2, n4, n3]

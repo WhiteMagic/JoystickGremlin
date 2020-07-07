@@ -85,6 +85,21 @@ class TreeNode:
         index = self.parent.children.index(self)
         self.parent.children.insert(index+1, other)
 
+    def insert_sibling_before(self, other: TreeNode) -> None:
+        """Inserts a new sibling before this node.
+
+        Args:
+            other: the node to add as sibling
+        """
+        if self.parent is None:
+            raise gremlin.error.GremlinError(
+                "Cannot add sibling node to root node."
+            )
+
+        other.parent = self.parent
+        index = self.parent.children.index(self)
+        self.parent.children.insert(index, other)
+
     def set_parent(self, other: TreeNode) -> None:
         """Sets the parent of this node.
 
