@@ -161,6 +161,44 @@ Item {
             }
         }
 
+        // Drop area atop the header
+        Loader {
+            anchors.left: _header.left
+            anchors.right: _header.right
+
+            active: model.isFirstSibling
+            sourceComponent: DropArea {
+                id: _topDropArea
+
+                height: _header.height
+                anchors.left: parent.left
+                anchors.right: parent.right
+                y: _header.y - itemSpacing
+
+                // Visualization of the drop indicator
+                Rectangle {
+                    id: _topDropMarker
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+
+                    height: 5
+
+                    opacity: _topDropArea.containsDrag ? 1.0 : 0.0
+                    color: Universal.accent
+                }
+
+                onDropped: {
+                    if(drop.text != model.id)
+                    {
+                        drop.accept();
+                        _listView.model.moveBefore(drop.text, model.id);
+                    }
+                }
+            }
+        }
+
         // Dynamic QML item loading
         Item {
             id: _action

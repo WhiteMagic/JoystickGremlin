@@ -211,6 +211,7 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 4: QtCore.QByteArray("qmlPath".encode()),
         QtCore.Qt.UserRole + 5: QtCore.QByteArray("id".encode()),
         QtCore.Qt.UserRole + 6: QtCore.QByteArray("isLastSibling".encode()),
+        QtCore.Qt.UserRole + 7: QtCore.QByteArray("isFirstSibling".encode()),
     }
 
     behaviourChanged = Signal()
@@ -252,6 +253,8 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
                 return str(node.value.id)
             elif role_name == "isLastSibling":
                 return node.parent.children[-1] == node
+            elif role_name == "isFirstSibling":
+                return node.parent.children[0] == node
         except error.GremlinError as e:
             print(f"Invalid index: {e}")
 
@@ -284,6 +287,25 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         if source_node != target_node:
             source_node.detach()
             target_node.insert_sibling_after(source_node)
+
+        self.layoutChanged.emit()
+
+    @Slot(str, str)
+    def moveBefore(self, source: str, target: str) -> None:
+        """Positions the source node before the target node.
+
+        Args:
+            source: string uuid value of the source node
+            target: string uuid valiue of the target node
+        """
+        # Retrieve nodes
+        source_node = self._find_node_with_id(uuid.UUID(source))
+        target_node = self._find_node_with_id(uuid.UUID(target))
+
+        # Reorder nodes
+        if source_node != target_node:
+            source_node.detach()
+            target_node.insert_sibling_before(source_node)
 
         self.layoutChanged.emit()
 
