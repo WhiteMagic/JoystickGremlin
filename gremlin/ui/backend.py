@@ -197,7 +197,7 @@ class Backend(QtCore.QObject):
         Args:
             path: Path to the file in which to store the current profile
         """
-        self.profile.fpath = QtCore.QUrl(fpath).toLocalFile()
+        self.profile.fpath = fpath
         self.profile.to_xml(self.profile.fpath)
         self.windowTitleChanged.emit()
 
