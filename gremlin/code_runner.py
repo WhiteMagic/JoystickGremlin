@@ -84,6 +84,63 @@ class VirtualButton(metaclass=ABCMeta):
     def _noop(self) -> bool:
         """Performs "noop" action."""
         return False
+
+
+class VirtualAxisButton(VirtualButton):
+
+    def __init__(
+            self,
+            lower_limit: float,
+            upper_limit: float,
+            direction: AxisButtonDirection
+    ):
+        super().__init__()
+        self._lower_limit = lower_limit
+        self._upper_limit = upper_limit
+        self._direction = direction
+        self._last_value = None
+
+    def process_event(self, event: event_handler.Event) -> List[bool]:
+        forced_activation = False
+        direction = AxisButtonDirection.Anywhere
+        if self._last_value is None:
+            self._last_value = event.value
+        else:
+            # Check if we moved over the activation region between two
+            # consecutive measurements
+            if self._last_value < self._lower_limit and \
+                    event.value > self._upper_limit:
+                forced_activation = True
+            elif self._last_value > self._upper_limit and \
+                    event.value < self._lower_limit:
+                forced_activation = True
+
+            # Determine direction in which the axis is moving
+            if self._last_value < event.value:
+                direction = AxisButtonDirection.Below
+            elif self._last_value > event.value:
+                direction = AxisButtonDirection.Above
+
+        self._last_value = event.value
+
+        # If the input moved across the activation the activation will be
+        # forced by returning a pulse signal.
+        states = []
+        if forced_activation:
+            self._fsm.perform("press")
+            self._fsm.perform("release")
+            states = [True, False]
+        inside_range = self._lower_limit <= event.value <= self._upper_limit
+        valid_direction = direction == self._direction or \
+            self._direction == AxisButtonDirection.Anywhere
+        if inside_range and valid_direction:
+            states = [True] if self._fsm.perform("press") else []
+        else:
+            states = [False] if self._fsm.perform("release") else []
+
+        return states
+
+
 class VirtualHatButton(VirtualButton):
 
     """Treats directional hat events as a button."""
@@ -97,6 +154,8 @@ class VirtualHatButton(VirtualButton):
         action = "press" if is_pressed else "release"
         has_changed = self._fsm.perform(action)
         return [is_pressed] if has_changed else []
+
+
 class CallbackObject:
 
     """Represents the callback executed in reaction to an input."""
@@ -109,7 +168,12 @@ class CallbackObject:
         self._generate_values = self._default_generate_values
         self._virtual_button = None
         if isinstance(self._action.virtual_button, gremlin.profile.VirtualAxisButton):
-            pass
+            self._virtual_button = VirtualAxisButton(
+                self._action.virtual_button.lower_limit,
+                self._action.virtual_button.upper_limit,
+                self._action.virtual_button.direction
+            )
+            self._generate_values = self._virtual_generate_values
         elif isinstance(self._action.virtual_button, gremlin.profile.VirtualHatButton):
             self._virtual_button = VirtualHatButton(
                 self._action.virtual_button.directions
@@ -147,9 +211,7 @@ class CallbackObject:
 
     def _virtual_generate_values(self, event):
         values = []
-        if event.event_type == InputType.JoystickAxis:
-            value = gremlin.actions.Value()
-        elif event.event_type == InputType.JoystickHat:
+        if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
             states = self._virtual_button.process_event(event)
             for state in states:
                 values.append(gremlin.actions.Value(state))
