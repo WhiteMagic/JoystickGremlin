@@ -1350,6 +1350,7 @@ class Profile:
             item.device_id = device_guid
             item.input_type = input_type
             item.input_id = input_id
+            item.mode = self.modes.first_mode
             self.inputs[device_guid].append(item)
             return item
         else:
