@@ -227,7 +227,6 @@ if __name__ == "__main__":
         0,
         "InputItemModel"
     )
-
     QtQml.qmlRegisterType(
         gremlin.ui.profile.ActionConfigurationListModel,
         "gremlin.ui.profile",
