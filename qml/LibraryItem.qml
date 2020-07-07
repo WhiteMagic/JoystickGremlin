@@ -89,10 +89,19 @@ Item {
                 id: _headerSeparator
 
                 height: 2
-                width: _baseItem.width - _actionButton.width - _actionName.width - 2 * _header.spacing - 10
+                width: _baseItem.width - _actionButton.width - _actionName.width - _removeButton.width - 3 * _header.spacing - 10
                 anchors.verticalCenter: _actionButton.verticalCenter
 
                 color: _actionButton.background.color
+            }
+
+            Button {
+                id: _removeButton
+                icon.source: "../gfx/delete.svg"
+
+                onClicked: {
+                    _listView.model.remove(model.id);
+                }
             }
         }
 

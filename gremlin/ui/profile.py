@@ -309,6 +309,12 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
 
         self.layoutChanged.emit()
 
+    @Slot(str)
+    def remove(self, item):
+        node = self._find_node_with_id(uuid.UUID(item))
+        node.detach()
+        self.layoutChanged.emit()
+
     def _get_behaviour(self) -> str:
         return InputType.to_string(self._action_configuration.behaviour)
 
