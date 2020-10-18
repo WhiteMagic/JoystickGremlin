@@ -262,5 +262,7 @@ Button {
 }
 ```
 
+## Python Object to QML Life Time
 
+Returning a QML object instance from Python to QML code will in most cases fail to work as the Python object will be cleaned up, resulting in QML seeing a `null` object. The correct way to work around this is to use the `parent` parameter available to every `QtObject` based class. As such when creating an object in Python which is intended as a return type to QML UI code the `parent` parameter of the object should never be `None` but rather an instance of another QML object which will persist longer than the new object being created.
 
