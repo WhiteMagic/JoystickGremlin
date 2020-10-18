@@ -17,6 +17,7 @@
 
 
 import QtQuick 2.14
+import QtQuick.Layouts 1.154
 import QtQuick.Controls.Universal 2.14
 
 

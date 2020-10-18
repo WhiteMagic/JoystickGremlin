@@ -18,31 +18,42 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
-
 import QtQuick.Controls.Universal 2.14
+import QtQuick.Layouts 1.14
 
 import gremlin.ui.profile 1.0
 
 
 Item {
-    property ActionConfigurationModel action
+    id: _root
+
+    property ActionNodeModel action
+    property ActionTreeModel actionTree
     property int itemSpacing : 10
 
     height: _baseItem.height
     width: parent.width
 
+    Component.onCompleted: {
+        console.log(width)
+    }
+
+    ColumnLayout{
     Item {
+    //ColumnLayout {
         id: _baseItem
 
         property int sourceY
         property bool dragSuccess : false
 
         // Dimensions
-        height: _header.height + _headerSpacer.height + _action.height + _actionSelector.height
+        //height: _header.height + _headerSpacer.height + _action.height +
+        //    _actionSelector.height
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.leftMargin: 10 + 20 * (model.depth - 1)
+        //anchors.left: parent.left
+        //anchors.right: parent.right
+        anchors.leftMargin: 10 + 20 * (_root.action.depth - 0)
+        anchors.rightMargin: 10
 
         // Drag & drop support
         Drag.active: _dragArea.drag.active
@@ -50,7 +61,7 @@ Item {
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
         Drag.mimeData: {
-            "text/plain": model.id
+            "text/plain": _root.action.id
         }
         Drag.onDragFinished: {
             _baseItem.dragSuccess = dropAction == Qt.MoveAction;
@@ -63,17 +74,17 @@ Item {
         Row {
             id: _header
 
-            anchors.top: _baseItem.top
+            //anchors.top: _baseItem.top
             spacing: 10
 
             FoldButton {
                 id: _actionButton
 
-                checked: backend.isActionExpanded(model.id)
+                checked: backend.isActionExpanded(_root.action.id)
                 icon.source: checked ? "../gfx/button_delete.png" : "../gfx/button_add.png"
 
                 onClicked: {
-                    backend.setIsActionExpanded(model.id, checked)
+                    backend.setIsActionExpanded(_root.action.id, checked)
                 }
             }
 
@@ -82,14 +93,14 @@ Item {
 
                 anchors.verticalCenter: _actionButton.verticalCenter
 
-                text: model.name
+                text: _root.action.name
             }
 
             Rectangle {
                 id: _headerSeparator
 
                 height: 2
-                width: _baseItem.width - _actionButton.width - _actionName.width - _removeButton.width - 3 * _header.spacing - 10
+                width: _baseItem.width - _actionButton.width - _actionName.width - _removeButton.width - 3 * _header.spacing + _root.action.depth * _header.spacing
                 anchors.verticalCenter: _actionButton.verticalCenter
 
                 color: _actionButton.background.color
@@ -99,9 +110,10 @@ Item {
                 id: _removeButton
                 icon.source: "../gfx/delete.svg"
 
-                onClicked: {
-                    _listView.model.remove(model.id);
-                }
+// FIXME: Reimplement this
+//                onClicked: {
+//                    _listView.model.remove(model.id);
+//                }
             }
         }
 
@@ -143,8 +155,8 @@ Item {
             id: _dropArea
 
             height: _header.height + itemSpacing
-            anchors.left: _header.left
-            anchors.right: _header.right
+            //anchors.left: _header.left
+            //anchors.right: _header.right
             y: _action.y + _action.height - height/2 + itemSpacing/2
 
             // Visualization of the drop indicator
@@ -162,20 +174,21 @@ Item {
             }
 
             onDropped: {
-                if(drop.text != model.id)
+                if(drop.text != _root.action.id)
                 {
                     drop.accept();
-                    _listView.model.moveAfter(drop.text, model.id);
+                    // FIXME: reimplement this
+                    //_listView.model.moveAfter(drop.text, model.id);
                 }
             }
         }
 
         // Drop area atop the header
         Loader {
-            anchors.left: _header.left
-            anchors.right: _header.right
+            //anchors.left: _header.left
+            //anchors.right: _header.right
 
-            active: model.isFirstSibling
+            active: _root.action.isFirstSibling
             sourceComponent: DropArea {
                 id: _topDropArea
 
@@ -199,10 +212,11 @@ Item {
                 }
 
                 onDropped: {
-                    if(drop.text != model.id)
+                    if(drop.text != _root.action.id)
                     {
                         drop.accept();
-                        _listView.model.moveBefore(drop.text, model.id);
+                        // FIXME: reimplement this
+                        //_listView.model.moveBefore(drop.text, model.id);
                     }
                 }
             }
@@ -212,9 +226,9 @@ Item {
         Item {
             id: _action
 
-            anchors.left: _baseItem.left
-            anchors.right: _baseItem.right
-            anchors.top: _headerSpacer.bottom
+            //anchors.left: _baseItem.left
+            //anchors.right: _baseItem.right
+            //anchors.top: _headerSpacer.bottom
             
             height: visible ? implicitHeight : 0
             
@@ -222,14 +236,14 @@ Item {
 
             // Dynamically load the QML item
             Component.onCompleted: {
-                var component = Qt.createComponent(Qt.resolvedUrl(qmlPath));
+                var component = Qt.createComponent(Qt.resolvedUrl(_root.action.qmlPath));
                 if (component) {
                     if (component.status == Component.Ready) {
                         var obj = component.createObject(
                             _action,
                             {
-                                model: profileData,
-                                actionConfiguration: action
+                                model: _root.action.actionModel,
+                                actionTree: actionTree
                             }
                         );
 
@@ -247,9 +261,9 @@ Item {
         // On each valid level/item need to have a dropdown with actions
         Loader {
             id: _actionSelector
-            anchors.top: _action.bottom
+            //anchors.top: _action.bottom
 
-            active: model.isLastSibling
+            active: _root.action.isLastSibling
 
             sourceComponent: Column {
                 Rectangle {
@@ -257,12 +271,13 @@ Item {
                     width: 1
                 }
                 ActionSelector {
-                    configuration: action
+                    actionTree: _root.actionTree
                 }
             }
 
         }
 
     } // Item
+    }
 
 } // Component (delegate)

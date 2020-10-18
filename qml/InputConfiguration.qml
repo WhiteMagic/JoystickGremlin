@@ -18,7 +18,6 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
-import QtQuick.Layouts 1.14
 import QtQuick.Window 2.14
 
 import QtQuick.Controls.Universal 2.14
@@ -28,72 +27,82 @@ import gremlin.ui.device 1.0
 
 
 Item {
-    id: idRoot
+    id: _root
 
     property ActionConfigurationListModel actionConfigurationListModel
     property InputIdentifier inputIdentifier
 
     function reload() {
-        idRoot.actionConfigurationListModel =
-            backend.getInputItem(idRoot.inputIdentifier).actionConfigurations
+        _root.actionConfigurationListModel =
+            backend.getInputItem(_root.inputIdentifier).actionConfigurations
     }
 
     onInputIdentifierChanged: {
-        idRoot.actionConfigurationListModel =
-            backend.getInputItem(idRoot.inputIdentifier).actionConfigurations
+        _root.actionConfigurationListModel =
+            backend.getInputItem(_root.inputIdentifier).actionConfigurations
     }
 
-    ListView {
-        id: idListView
+    Component.onCompleted: {
+        console.log(width + " " + height + " | " + x + " " + y)
+    }
 
-        anchors.top: parent.top
-        anchors.bottom: idNewActionButton.top
+    Column {
+        //width: parent.width
         anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: 10
+            anchors.right: parent.right
 
-        // Make it behave like a sensible scrolling container
-        ScrollBar.vertical: ScrollBar {
-            policy: ScrollBar.AlwaysOn
-        }
-        flickableDirection: Flickable.VerticalFlick
-        boundsBehavior: Flickable.StopAtBounds
+        ListView {
+            id: _listView
 
-        // Content to visualize
-        model: actionConfigurationListModel
-        delegate: idEntryDelegate
-    }
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-    Component {
-        id: idEntryDelegate
+            spacing: 10
 
-        ActionConfiguration {
-            actionConfiguration: modelData
-        }
-    }
-
-    Rectangle {
-        id: idNewActionButton
-
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 40
-
-        color: Universal.background
-
-        Button {
-            text: "Create new action sequence"
-
-            anchors.bottom: parent.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            onClicked: {
-                backend.newActionConfiguration(idRoot.inputIdentifier)
-                actionConfigurationListModel.modelReset()
+            // Make it behave like a sensible scrolling container
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AlwaysOn
             }
+            flickableDirection: Flickable.VerticalFlick
+            boundsBehavior: Flickable.StopAtBounds
+
+            // Content to visualize
+            model: actionConfigurationListModel
+            delegate: _entryDelegate
         }
 
-    }
+        Component {
+            id: _entryDelegate
 
+            ActionTree {
+                width: _listView.width
+
+                actionTree: modelData
+            }
+
+        }
+
+        // Button to add a new action configuration to the currently
+        // active input
+        Rectangle {
+            id: _newActionButton
+            
+            width: parent.width
+            height: 40
+
+            color: Universal.background
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                text: "Create new action sequence"
+                
+                onClicked: {
+                    backend.newActionConfiguration(_root.inputIdentifier)
+                    actionConfigurationListModel.modelReset()
+                }
+            }
+
+        }
+    }
 }

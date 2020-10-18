@@ -26,32 +26,34 @@ import QtQuick.Controls.Universal 2.14
 import gremlin.ui.device 1.0
 
 
+// Visualizes the inputs and information about their associated actions
+// contained in a Device instance
 Item {
-    id: root
+    id: _root
 
     property Device device
     property int inputIndex
     property InputIdentifier inputIdentifier
+    property int minimumWidth: _inputList.minimumWidth
 
-
-    // Sychronize input selection when underlying device changes
+    // Sychronize input selection when the underlying device changes
     Connections {
         target: device
         onDeviceChanged: {
-            inputIndex = idInputList.currentIndex
+            inputIndex = _inputList.currentIndex
             inputIdentifier = device.inputIdentifier(inputIndex);
         }
     }
 
-
-    ListView
-    {
-        id: idInputList
+    // List of all the inputs available on the device
+    ListView {
+        id: _inputList
         anchors.fill: parent
 
-        width: parent.width
+        property int minimumWidth: 200
+
         model: device
-        delegate: idDeviceDelegate
+        delegate: _deviceDelegate
 
         onCurrentIndexChanged: {
             inputIndex = currentIndex;
@@ -62,37 +64,51 @@ Item {
         ScrollBar.vertical: ScrollBar {}
         flickableDirection: Flickable.VerticalFlick
         boundsBehavior: Flickable.StopAtBounds
+
+
     }
 
+    // Renders the information about a single input, including name and
+    // overview of the assopciated actions
     Component {
-        id: idDeviceDelegate
+        id: _deviceDelegate
 
         Rectangle {
-            id: idInputDisplay
+            id: _inputDisplay
 
-            width: parent.width
+            width: _inputList.width
+            implicitWidth: _input_label.width + _input_overview.width + 50
             height: 50
 
-            color: model.index == idInputList.currentIndex ? Universal.chromeMediumColor : Universal.background
+            // Dynamically compute the minimum width required to fully display the input
+            // information. This is used to properly configure the SplitView component.
+            Component.onCompleted: {
+                _inputList.minimumWidth = Math.max(_inputList.minimumWidth, implicitWidth)
+            }
+
+            color: model.index == _inputList.currentIndex
+                ? Universal.chromeMediumColor : Universal.background
 
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    idInputList.currentIndex = model.index;
+                    _inputList.currentIndex = model.index;
                 }
             }
 
             Label {
+                id: _input_label
                 text: name
 
                 anchors.verticalCenter: parent.verticalCenter
             }
 
             Label {
+                id: _input_overview
                 text: actionCount ? actionCount : ""
 
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.right: idInputDisplay.right
+                anchors.right: _inputDisplay.right
                 anchors.rightMargin: 15
             }
         }

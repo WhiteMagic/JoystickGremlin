@@ -25,13 +25,13 @@ import gremlin.ui.profile 1.0
 Item {
     id: _root
 
-    property ActionConfigurationModel configuration
+    property ActionTreeModel actionTree
 
     width: _combobox.width + _button.width
     height: _combobox.height
 
-    onConfigurationChanged: {
-        _combobox.model = backend.actionList(configuration)
+    onActionTreeChanged: {
+        _combobox.model = backend.actionList(actionTree)
     }
 
     ComboBox {
@@ -45,7 +45,7 @@ Item {
         text: "Add Action"
 
         onClicked: {
-            backend.addAction(_combobox.currentText, configuration)
+            backend.addAction(_combobox.currentText, actionTree)
         }
     }
 

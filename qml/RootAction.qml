@@ -16,11 +16,41 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import QtQuick 2.14
+import QtQuick.Controls 2.14
+import QtQuick.Layouts 1.14
+import QtQuick.Window 2.14
+
+import QtQuick.Controls.Universal 2.14
+
+import gremlin.ui.profile 1.0
+import gremlin.plugins 1.0
 
 
-Rectangle {
-    anchors.fill: parent
+Item {
+    id: _root
 
-    color: "green"
-    opacity: 0.5
+    property ActionTreeModel actionTree
+    property var model
+
+    //height: _content.childrenRect.height
+    //width: parent.width
+
+    // Show all child nodes
+    ColumnLayout {
+        id: _content
+
+        Layout.fillWidth: true
+        //width: parent.width
+
+        Repeater {
+            model: _root.actionTree.rootNodes
+
+            ActionNode {
+                action: modelData
+                actionTree: _root.actionTree
+            }
+        }
+    }
+
+    DebugBox {}
 }

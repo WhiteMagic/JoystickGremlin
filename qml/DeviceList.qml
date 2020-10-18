@@ -27,15 +27,17 @@ import gremlin.ui.device 1.0
 import gremlin.ui.profile 1.0
 
 
+// ListView item customized to render DeviceListModel instances as a set
+// of horizontal tabs
 Item {
     id: root
 
     property DeviceListModel deviceListModel
     property string deviceGuid: deviceListModel.guidAtIndex(0)
 
-
+    // List view of all inputs present on the currently active device
     ListView {
-        id: idDeviceList
+        id: _deviceList
         anchors.fill: parent
         orientation: ListView.Horizontal
 
@@ -48,6 +50,8 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
     }
 
+    // Display name of the device and change background based on the
+    // selection state of the device
     Component {
         id: idDeviceDelegate
 
@@ -61,13 +65,14 @@ Item {
             bottomPadding: 10
 
             background: Rectangle {
-                color: model.index == idDeviceList.currentIndex ? Universal.chromeMediumColor : Universal.background
+                color: model.index == _deviceList.currentIndex
+                    ? Universal.chromeMediumColor : Universal.background
             }
 
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    idDeviceList.currentIndex = model.index
+                    _deviceList.currentIndex = model.index
                     root.deviceGuid = model.guid
                 }
             }

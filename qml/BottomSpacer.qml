@@ -26,9 +26,9 @@ Item {
     property Item item
     property int spacing : 10
 
-    anchors.top: item.bottom
-    anchors.left: item.left
-    anchors.right: item.right
+    //anchors.top: item.bottom
+    //anchors.left: item.left
+    //anchors.right: item.right
 
     height: idSpacer.height
 

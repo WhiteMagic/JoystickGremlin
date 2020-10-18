@@ -33,7 +33,7 @@ ApplicationWindow {
     width: 1000
     height: 680
     visible: true
-    id: root
+    id: _root
 
     MessageDialog {
         id: idErrorDialog
@@ -231,11 +231,11 @@ ApplicationWindow {
 
 
     DeviceListModel {
-        id: idDeviceListModel
+        id: _deviceListModel
     }
 
     Device {
-        id: idDeviceModel
+        id: _deviceModel
     }
 
 
@@ -243,57 +243,60 @@ ApplicationWindow {
     Connections {
         target: backend
         onInputConfigurationChanged: {
-            idDeviceModel.modelReset()
+            _deviceModel.modelReset()
         }
     }
     Connections {
         target: backend
         onReloadUi: {
-            idDeviceModel.modelReset()
-            idDeviceListModel.modelReset()
-            idInputConfigurationPanel.reload()
+            _deviceModel.modelReset()
+            _deviceListModel.modelReset()
+            _inputConfigurationPanel.reload()
         }
     }
 
-    // List of all detected devices
+    // Horizonbtal list of "tabs" listing all detected devices
     DeviceList {
-        id: idDevicePanel
+        id: _devicePanel
 
-        height: 50
         z: 1
-        anchors.top: parent.top
+        height: 50
         anchors.left: parent.left
         anchors.right: parent.right
+        anchors.top: parent.top
 
-        deviceListModel: idDeviceListModel
+        deviceListModel: _deviceListModel
 
         // Trigger a model update on the DeviceInputList
         onDeviceGuidChanged: {
-            idDeviceModel.guid = deviceGuid
+            _deviceModel.guid = deviceGuid
         }
     }
 
-    // Device inputs and configuration of a specific input
+    // Main UI are containing the list of inputs of the active device on
+    // the left and the action associated with the currently selected input
+    // on the right.
     SplitView {
-        id: idContentLayout
+        id: _contentLayout
 
-        anchors.top: idDevicePanel.bottom
+        // Ensure the widget covers the entire remaining area in the window
+        anchors.top: _devicePanel.bottom
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         orientation: Qt.Horizontal
 
-        // List all inputs of a single device
+        // List of the inputs of the currently selected device
         DeviceInputList {
-            id: idDeviceInputList
-            device: idDeviceModel
-            SplitView.minimumWidth: 200
+            id: _deviceInputList
+            device: _deviceModel
+            SplitView.minimumWidth: minimumWidth
 
             // Trigger a model update on the InputConfiguration
             onInputIdentifierChanged: {
-                idInputConfigurationPanel.actionConfigurationListModel =
+                _inputConfigurationPanel.actionConfigurationListModel =
                     backend.getInputItem(inputIdentifier).actionConfigurations
-                idInputConfigurationPanel.inputIdentifier = inputIdentifier
+                _inputConfigurationPanel.inputIdentifier = inputIdentifier
             }
 
             // Ensure initial state of input list and input configuration is
@@ -303,9 +306,12 @@ ApplicationWindow {
             }
         }
 
-        // Configuration of the selected input
+        // List of the actions associated with the currently selected input
         InputConfiguration {
-            id: idInputConfigurationPanel
+            id: _inputConfigurationPanel
+
+            SplitView.fillWidth: true
+            SplitView.minimumWidth: 600
         }
     }
 

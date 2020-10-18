@@ -16,10 +16,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import QtQuick 2.14
+import QtQuick.Layouts 1.14
 
 
 Rectangle {
-    anchors.fill: parent
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     color: "green"
     opacity: 0.5

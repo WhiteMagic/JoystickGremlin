@@ -23,7 +23,9 @@ import gremlin.ui.profile 1.0
 
 
 Item {
-    property ActionConfigurationModel actionConfiguration
+    id: _root
+
+    property ActionTreeModel actionTree
 
     width: idContent.width
     height: idContent.height
@@ -32,14 +34,14 @@ Item {
         id: idContent
 
         Loader {
-            active: actionConfiguration.inputType == "button"
+            active: _root.actionTree.inputType == "button"
             sourceComponent: RadioButton {
                 visible: false
             }
         }
 
         Loader {
-            active: actionConfiguration.inputType != "button"
+            active: _root.actionTree.inputType != "button"
 
             sourceComponent: Row {
                 Label {
@@ -56,35 +58,35 @@ Item {
 
                     text: "Button"
 
-                    checked: actionConfiguration.behaviour == "button"
+                    checked: _root.actionTree.behaviour == "button"
                     onClicked: {
-                        actionConfiguration.behaviour = "button"
+                        _root.actionTree.behaviour = "button"
                     }
                 }
 
                 Loader {
-                    active: actionConfiguration.inputType == "axis"
+                    active: _root.actionTree.inputType == "axis"
                     sourceComponent: RadioButton {
                         id: idBehaviourAxis
 
                         text: "Axis"
 
-                        checked: actionConfiguration.behaviour == "axis"
+                        checked: _root.actionTree.behaviour == "axis"
                         onClicked: {
-                            actionConfiguration.behaviour = "axis"
+                            _root.actionTree.behaviour = "axis"
                         }
                     }
                 }
                 Loader {
-                    active: actionConfiguration.inputType == "hat"
+                    active: _root.actionTree.inputType == "hat"
                     sourceComponent: RadioButton {
                         id: idBehaviourHat
 
                         text: "Hat"
 
-                        checked: actionConfiguration.behaviour == "hat"
+                        checked: _root.actionTree.behaviour == "hat"
                         onClicked: {
-                            actionConfiguration.behaviour = "hat"
+                            _root.actionTree.behaviour = "hat"
                         }
                     }
                 }
