@@ -184,11 +184,14 @@ def create_feature(data):
                 "Display": "expand",
                 "ConfigurableDirectory": "INSTALLDIR"
             })
-    node.append(create_node(
-        "ComponentRef", {"Id": "ProgramMenuDir"}
-    ))
+    # node.append(create_node(
+    #     "ComponentRef", {"Id": "ProgramMenuDir"}
+    # ))
     node.append(create_node(
         "ComponentRef", {"Id": "H2ikProgramFilesFolder"}
+    ))
+    node.append(create_node(
+        "ComponentRef", {"Id": "ApplicationShortcut"}
     ))
     for entry in data.values():
         node.append(create_node(
@@ -226,8 +229,8 @@ def create_document():
             # "Id": "bec63861-eeae-4f75-bb01-3a76cab1c319", # 10.0.0
             # "Id": "5598cb71-2825-4a78-8f4b-682aefd14323", # 11.0.0
             # "Id": "290a3110-0745-48d6-93d2-d954cb584b6f", # 12.0.0
-            #"Id": "6019660b-26bd-430b-9b95-ca6a55201060",  # 13.0.0
-            "Id": "0dad4221-c8cf-4424-8dcd-3886274e89ef", # 13.1.0
+            # "Id": "6019660b-26bd-430b-9b95-ca6a55201060",  # 13.0.0
+            "Id": "0dad4221-c8cf-4424-8dcd-3886274e89ef", # 13.1.0 - 13.3.0
             "UpgradeCode": "0464914b-97da-4889-8699-bcde4e767517",
             "Language": "1033",
             "Codepage": "1252",
@@ -323,73 +326,86 @@ def create_ui_node(parent):
     parent.append(ui)
 
 
-def create_shortcuts(doc, root):
+def create_shortcuts(doc, root, product_node):
     """Creates program shortcut nodes.
 
     :param doc the main document
     :param root the root directory node
     """
     # Find the executable node and add shortcut entries
-    for node in doc.iter("File"):
-        if node.get("Id") == "file_joystick_gremlin.exe":
-            node.append(create_node(
-                "Shortcut",
-                {
-                    "Id": "startmenu_joystick_gremlin",
-                    "Directory": "ProgramMenuDir",
-                    "Name": "Joystick Gremlin",
-                    "WorkingDirectory": "INSTALLDIR",
-                    "Advertise": "yes",
-                    "Icon": "icon.ico"
-                }
-            ))
-            node.append(create_node(
-                "Shortcut",
-                {
-                    "Id": "desktop_joystick_gremlin",
-                    "Directory": "DesktopFolder",
-                    "Name": "Joystick Gremlin",
-                    "WorkingDirectory": "INSTALLDIR",
-                    "Advertise": "yes",
-                    "Icon": "icon.ico"
-                }
-            ))
+    # for node in doc.iter("File"):
+    #     if node.get("Id") == "file_joystick_gremlin.exe":
+    #         node.append(create_node(
+    #             "Shortcut",
+    #             {
+    #                 "Id": "startmenu_joystick_gremlin",
+    #                 "Directory": "ProgramMenuDir",
+    #                 "Name": "Joystick Gremlin",
+    #                 "Target": "[INSTALLDIR]joystick_gremlin.exe",
+    #                 "WorkingDirectory": "INSTALLDIR",
+    #                 "Advertise": "no",
+    #                 "Icon": "icon.ico"
+    #             }
+    #         ))
+    #         node.append(create_node(
+    #             "Shortcut",
+    #             {
+    #                 "Id": "desktop_joystick_gremlin",
+    #                 "Directory": "DesktopFolder",
+    #                 "Name": "Joystick Gremlin",
+    #                 "Target": "[INSTALLDIR]joystick_gremlin.exe",
+    #                 "WorkingDirectory": "INSTALLDIR",
+    #                 "Advertise": "no",
+    #                 "Icon": "icon.ico"
+    #             }
+    #         ))
 
     # Create folder names used for the shortcuts
-    n1 = create_node(
-        "Directory",
-        {"Id": "ProgramMenuFolder", "Name": "Programs"}
-    )
-    n2 = create_node(
-        "Directory",
-        {"Id": "ProgramMenuDir", "Name": "Joystick Gremlin"}
-    )
-    n3 = create_node(
-        "Component",
-        {"Id": "ProgramMenuDir", "Guid": "e7a50051-e76c-457e-9d43-824ae5ce7ef5"}
-    )
-    n3.append(create_node(
-        "RemoveFolder",
-        {"Id": "ProgramMenuDir", "On": "uninstall"}
-    ))
-    n3.append(create_node(
-        "RegistryValue",
-        {
-            "Root": "HKCU",
-            "Key": "Software\H2ik\Joystick Gremlin",
-            "Type": "string",
-            "Value": "",
-            "KeyPath": "yes"
-        }
-    ))
-    n2.append(n3)
-    n1.append(n2)
-    root.append(n1)
+    # n1 = create_node(
+    #     "Directory",
+    #     {"Id": "ProgramMenuFolder", "Name": "Programs"}
+    # )
+    # n2 = create_node(
+    #     "Directory",
+    #     {"Id": "ProgramMenuDir", "Name": "Joystick Gremlin"}
+    # )
+    # n3 = create_node(
+    #     "Component",
+    #     {"Id": "ProgramMenuDir", "Guid": "e7a50051-e76c-457e-9d43-824ae5ce7ef5"}
+    # )
+    # n3.append(create_node(
+    #     "RemoveFolder",
+    #     {"Id": "ProgramMenuDir", "On": "uninstall"}
+    # ))
+    # n3.append(create_node(
+    #     "RegistryValue",
+    #     {
+    #         "Root": "HKCU",
+    #         "Key": "Software\H2ik\Joystick Gremlin",
+    #         "Type": "string",
+    #         "Value": "",
+    #         "KeyPath": "yes"
+    #     }
+    # ))
+    # n2.append(n3)
+    # n1.append(n2)
+    # root.append(n1)
+    #
+    # root.append(create_node(
+    #     "Directory",
+    #     {"Id": "DesktopFolder", "Name": "Desktop"}
+    # ))
 
-    root.append(create_node(
+    menu_folder_node = create_node(
         "Directory",
-        {"Id": "DesktopFolder", "Name": "Desktop"}
-    ))
+        {"Id": "ProgramMenuFolder"}
+    )
+    app_folder_node = create_node(
+        "Directory",
+        {"Id": "ApplicationProgramsFolder", "Name": "Joystick Gremlin"}
+    )
+    menu_folder_node.append(app_folder_node)
+    root.append(menu_folder_node)
 
     # Create the used icon
     product = doc.find("Product")
@@ -398,6 +414,50 @@ def create_shortcuts(doc, root):
         {"Id": "icon.ico", "SourceFile": "joystick_gremlin\gfx\icon.ico"}
     ))
 
+    # Create shortcut folder
+    n1 = create_node("DirectoryRef", {"Id": "ApplicationProgramsFolder"})
+    n2 = create_node(
+        "Component",
+        {
+            "Id": "ApplicationShortcut",
+            "Guid": "c8b6efdf-915f-44a8-8690-125c4edfa158"
+        }
+    )
+    n3 = create_node(
+        "Shortcut",
+        {
+            "Id": "ApplicationStartMenuShortcut",
+            "Name": "Joystick Gremlin",
+            "Target": "[#file_joystick_gremlin.exe]",
+            "WorkingDirectory": "INSTALLDIR",
+            "Advertise": "no",
+            "Icon": "icon.ico"
+        }
+    )
+    n4 = create_node(
+        "RemoveFolder",
+        {
+            "Id": "ApplicationProgramsFolder",
+            "On": "uninstall"
+        })
+
+    n5 = create_node(
+        "RegistryValue",
+        {
+            "Root": "HKCU",
+            "Key": "Software\H2IK\JoystickGremlin",
+            "Name": "installed",
+            "Type": "integer",
+            "Value": "1",
+            "KeyPath": "yes"
+        }
+    )
+
+    n2.append(n3)
+    n2.append(n4)
+    n2.append(n5)
+    n1.append(n2)
+    product_node.append(n1)
 
 def write_xml(node, fname):
     """Saves the XML document to the given file.
@@ -450,7 +510,7 @@ def main():
     product = document.find("Product")
     product.append(structure["root"])
     product.append(create_feature(data))
-    create_shortcuts(document, structure["root"])
+    create_shortcuts(document, structure["root"], product)
     create_ui_node(product)
 
     # Save the XML document
