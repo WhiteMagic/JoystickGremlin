@@ -37,7 +37,7 @@ from gremlin import shared_state
 from gremlin.tree import TreeNode
 from gremlin.types import InputType
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import ActionConfigurationModel, InputItemModel
+from gremlin.ui.profile import ActionNodeModel, ActionTreeModel, InputItemModel
 
 
 @common.SingletonDecorator
@@ -160,7 +160,8 @@ class Backend(QtCore.QObject):
         Returns:
             True if the action is expanded, False otherwise
         """
-        return self._action_state.get(uuid.UUID(uuid_str), True)
+        return True
+        #return self._action_state.get(uuid.UUID(uuid_str), True)
 
     @Slot(str, bool)
     def setIsActionExpanded(self, uuid_str, is_expanded) -> None:
@@ -222,7 +223,7 @@ class Backend(QtCore.QObject):
 
     # FIXME: This is a terrible hack to fool the type system
     @Slot(QtCore.QObject, result="QVariantList")
-    def actionList(self, configuration: ActionConfigurationModel) -> List[str]:
+    def actionList(self, action_tree: ActionTreeModel) -> List[str]:
         """Returns a list of valid action plugins for a particular configuration.
 
         Args:
@@ -232,7 +233,7 @@ class Backend(QtCore.QObject):
             List of valid actions for the given configuration
         """
         action_list = plugin_manager.ActionPlugins().type_action_map[
-            configuration.behaviour_type
+            action_tree.behaviour_type
         ]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
@@ -240,7 +241,7 @@ class Backend(QtCore.QObject):
     def addAction(
             self,
             action_name: str,
-            configuration: ActionConfigurationModel
+            action_tree: ActionTreeModel
     ) -> None:
         """Adds a new action to the given configuration.
 
@@ -249,10 +250,12 @@ class Backend(QtCore.QObject):
             configuration: ActionTree configuration to which to add the action
         """
         action = plugin_manager.ActionPlugins().get_class(action_name)(
-            InputType.to_enum(configuration.behaviour)
+            action_tree.action_tree(),
+            InputType.to_enum(action_tree.behaviour)
         )
-        action_node = TreeNode(action, configuration.action_tree().root)
-        configuration.modelReset.emit()
+        # TODO: This node bit needs to change
+        #action_node = TreeNode(action, action_tree.action_tree().root)
+        action_tree.modelReset.emit()
 
     @Slot(InputIdentifier)
     def newActionConfiguration(self, identifier: InputIdentifier) -> None:

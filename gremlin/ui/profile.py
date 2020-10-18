@@ -18,12 +18,14 @@
 from __future__ import annotations
 
 import typing
+from typing import List
 import uuid
 
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
-from gremlin import error, profile, tree, util
+from gremlin import error, profile, process_monitor, tree, util
+from gremlin.base_classes import AbstractActionModel
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
 
@@ -67,7 +69,10 @@ class ActionConfigurationListModel(QtCore.QAbstractListModel):
         return len(self._action_configurations)
 
     def data(self, index: QtCore.QModelIndex, role: int=...) -> typing.Any:
-        return ActionConfigurationModel(self._action_configurations[index.row()])
+        return ActionTreeModel(
+            self._action_configurations[index.row()],
+            parent=self
+        )
 
     def roleNames(self) -> typing.Dict:
         return ActionConfigurationListModel.roles
@@ -195,81 +200,40 @@ class VirtualButtonModel(QtCore.QObject):
     )
 
 
-class ActionConfigurationModel(QtCore.QAbstractListModel):
+class ActionNodeModel(QtCore.QObject):
 
-    """Model representing the ActionConfiguration structure for display via QML.
-
-    The index uses the depth first enumeration of the ActionTree instance
-    contained in this action configuration. Index 0 refers to the root node
-    which by construction contains no data.
-    """
-
-    roles = {
-        QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
-        QtCore.Qt.UserRole + 2: QtCore.QByteArray("depth".encode()),
-        QtCore.Qt.UserRole + 3: QtCore.QByteArray("profileData".encode()),
-        QtCore.Qt.UserRole + 4: QtCore.QByteArray("qmlPath".encode()),
-        QtCore.Qt.UserRole + 5: QtCore.QByteArray("id".encode()),
-        QtCore.Qt.UserRole + 6: QtCore.QByteArray("isLastSibling".encode()),
-        QtCore.Qt.UserRole + 7: QtCore.QByteArray("isFirstSibling".encode()),
-    }
-
-    behaviourChanged = Signal()
-    descriptionChanged = Signal()
-    virtualButtonChanged = Signal()
+    actionChanged = Signal()
 
     def __init__(
             self,
-            action_configuration: profile.ActionConfiguration,
+            node: tree.TreeNode,
+            action_tree: profile_library.ActionTree,
             parent=None
     ):
         super().__init__(parent)
 
-        self._action_configuration = action_configuration
-        self._action_tree = action_configuration.library_reference.action_tree
-        self._virtual_button_model = VirtualButtonModel(
-            self._action_configuration.virtual_button
-        )
+        self._action_tree = action_tree
+        self._node = node
 
-    def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
-        return self._action_tree.root.node_count - 1
+    @Property(type="QVariant", notify=actionChanged)
+    def actionModel(self) -> AbstractActionModel:
+        return self._node.value
 
-    def data(self, index: QtCore.QModelIndex, role: int=...) -> typing.Any:
-        if role not in ActionConfigurationModel.roles:
-            return "Unknown"
+    @Property(type=str, notify=actionChanged)
+    def name(self) -> str:
+        return self._node.value.name
 
-        role_name = ActionConfigurationModel.roles[role].data().decode()
-        try:
-            node = self._action_tree.root.node_at_index(index.row() + 1)
-            if role_name == "depth":
-                return node.depth
-            elif role_name == "name":
-                return f"{node.value.name}"
-            elif role_name == "qmlPath":
-                return node.value.qml_path()
-            elif role_name == "profileData":
-                return node.value
-            elif role_name == "id":
-                return str(node.value.id)
-            elif role_name == "isLastSibling":
-                return node.parent.children[-1] == node
-            elif role_name == "isFirstSibling":
-                return node.parent.children[0] == node
-        except error.GremlinError as e:
-            print(f"Invalid index: {e}")
+    @Property(type=int, notify=actionChanged)
+    def depth(self) -> int:
+        return self._node.depth
 
-    def roleNames(self) -> typing.Dict:
-        return ActionConfigurationModel.roles
+    @Property(type=str, notify=actionChanged)
+    def qmlPath(self) -> str:
+        return self._node.value.qml_path()
 
-    @Property(type=str, constant=True)
-    def inputType(self) -> str:
-        return InputType.to_string(
-            self._action_configuration.input_item.input_type
-        )
-
-    @Property(type=VirtualButtonModel, notify=virtualButtonChanged)
-    def virtualButton(self) -> VirtualButtonModel:
-        return self._virtual_button_model
+    @Property(type=str, notify=actionChanged)
+    def id(self) -> str:
+        return str(self._node.value.id)
 
     @Slot(str, str)
     def moveAfter(self, source: str, target: str) -> None:
@@ -315,6 +279,90 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         node.detach()
         self.layoutChanged.emit()
 
+    @Property(type=bool, notify=actionChanged)
+    def isFirstSibling(self) -> bool:
+        if self._node.parent is None:
+            return True
+        else:
+            return self._node.parent.children[0] == self._node
+
+    @Property(type=bool, notify=actionChanged)
+    def isLastSibling(self) -> bool:
+        if self._node.parent is None:
+            return True
+        else:
+            return self._node.parent.children[-1] == self._node
+
+    def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
+        """Returns the node with the desired id from the action tree.
+
+        Args:
+            uuid: uuid of the node to retrieve
+
+        Returns:
+            The TreeNode corresponding to the given uuid
+        """
+        predicate = lambda x: True if x.value and x.value.id == uuid else False
+        nodes = self._action_tree.root.nodes_matching(predicate)
+
+        if len(nodes) != 1:
+            raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
+        return nodes[0]
+
+
+
+class ActionTreeModel(QtCore.QObject):
+
+    """Model representing an ActionTree instance."""
+
+    behaviourChanged = Signal()
+    descriptionChanged = Signal()
+    virtualButtonChanged = Signal()
+    actionCountChanged = Signal()
+    rootActionChanged = Signal()
+
+    def __init__(
+            self,
+            action_configuration: profile.ActionConfiguration,
+            parent=None
+    ):
+        super().__init__(parent)
+
+        self._action_configuration = action_configuration
+        self._action_tree = action_configuration.library_reference.action_tree
+        self._virtual_button_model = VirtualButtonModel(
+            self._action_configuration.virtual_button
+        )
+
+    @Property(type=ActionNodeModel, notify=rootActionChanged)
+    def rootAction(self) -> ActionNodeModel:
+        return ActionNodeModel(
+            self._action_tree.root,
+            self._action_tree,
+            parent=self
+        )
+
+    @Property(type=str, constant=True)
+    def inputType(self) -> str:
+        return InputType.to_string(
+            self._action_configuration.input_item.input_type
+        )
+
+    @Property(type=VirtualButtonModel, notify=virtualButtonChanged)
+    def virtualButton(self) -> VirtualButtonModel:
+        return self._virtual_button_model
+
+    @Property(type=int, notify=actionCountChanged)
+    def actionCount(self) -> int:
+        return self._action_tree.root.node_count
+
+    @Property(type="QVariantList", notify=rootActionChanged)
+    def rootNodes(self) -> List[ActionNodeModel]:
+        return [
+            ActionNodeModel(node, self, parent=self)
+            for node in self._action_tree.root.children
+        ]
+
     def _get_behaviour(self) -> str:
         return InputType.to_string(self._action_configuration.behaviour)
 
@@ -359,22 +407,6 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
             self._action_configuration.description = description
             self.descriptionChanged.emit()
 
-    def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
-        """Returns the node with the desired id from the action tree.
-
-        Args:
-            uuid: uuid of the node to retrieve
-
-        Returns:
-            The TreeNode corresponding to the given uuid
-        """
-        predicate = lambda x: True if x.value and x.value.id == uuid else False
-        nodes = self._action_tree.root.nodes_matching(predicate)
-
-        if len(nodes) != 1:
-            raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
-        return nodes[0]
-
     @property
     def behaviour_type(self):
         return self._action_configuration.behaviour
@@ -395,3 +427,205 @@ class ActionConfigurationModel(QtCore.QAbstractListModel):
         fset=_set_description,
         notify=descriptionChanged
     )
+
+
+# class ActionConfigurationModel(QtCore.QAbstractListModel):
+#
+#     """Model representing the ActionConfiguration structure for display via QML.
+#
+#     The index uses the depth first enumeration of the ActionTree instance
+#     contained in this action configuration. Index 0 refers to the root node
+#     which by construction contains no data.
+#     """
+#
+#     roles = {
+#         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
+#         QtCore.Qt.UserRole + 2: QtCore.QByteArray("depth".encode()),
+#         QtCore.Qt.UserRole + 3: QtCore.QByteArray("profileData".encode()),
+#         QtCore.Qt.UserRole + 4: QtCore.QByteArray("qmlPath".encode()),
+#         QtCore.Qt.UserRole + 5: QtCore.QByteArray("id".encode()),
+#         QtCore.Qt.UserRole + 6: QtCore.QByteArray("isLastSibling".encode()),
+#         QtCore.Qt.UserRole + 7: QtCore.QByteArray("isFirstSibling".encode()),
+#     }
+#
+#     behaviourChanged = Signal()
+#     descriptionChanged = Signal()
+#     virtualButtonChanged = Signal()
+#
+#     def __init__(
+#             self,
+#             action_configuration: profile.ActionConfiguration,
+#             parent=None
+#     ):
+#         super().__init__(parent)
+#
+#         self._action_configuration = action_configuration
+#         self._action_tree = action_configuration.library_reference.action_tree
+#         self._virtual_button_model = VirtualButtonModel(
+#             self._action_configuration.virtual_button
+#         )
+#
+#     def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
+#         return self._action_tree.root.node_count - 1
+#
+#     def data(self, index: QtCore.QModelIndex, role: int=...) -> typing.Any:
+#         if role not in ActionConfigurationModel.roles:
+#             return "Unknown"
+#
+#         role_name = ActionConfigurationModel.roles[role].data().decode()
+#         try:
+#             node = self._action_tree.root.node_at_index(index.row() + 1)
+#             if role_name == "depth":
+#                 return node.depth
+#             elif role_name == "name":
+#                 return f"{node.value.name}"
+#             elif role_name == "qmlPath":
+#                 return node.value.qml_path()
+#             elif role_name == "profileData":
+#                 return node.value
+#             elif role_name == "id":
+#                 return str(node.value.id)
+#             elif role_name == "isLastSibling":
+#                 return node.parent.children[-1] == node
+#             elif role_name == "isFirstSibling":
+#                 return node.parent.children[0] == node
+#         except error.GremlinError as e:
+#             print(f"Invalid index: {e}")
+#
+#     def roleNames(self) -> typing.Dict:
+#         return ActionConfigurationModel.roles
+#
+#     @Property(type=str, constant=True)
+#     def inputType(self) -> str:
+#         return InputType.to_string(
+#             self._action_configuration.input_item.input_type
+#         )
+#
+#     @Property(type=VirtualButtonModel, notify=virtualButtonChanged)
+#     def virtualButton(self) -> VirtualButtonModel:
+#         return self._virtual_button_model
+#
+#     @Slot(str, str)
+#     def moveAfter(self, source: str, target: str) -> None:
+#         """Positions the source node after the target node.
+#
+#         Args:
+#             source: string uuid value of the source node
+#             target: string uuid valiue of the target node
+#         """
+#         # Retrieve nodes
+#         source_node = self._find_node_with_id(uuid.UUID(source))
+#         target_node = self._find_node_with_id(uuid.UUID(target))
+#
+#         # Reorder nodes
+#         if source_node != target_node:
+#             source_node.detach()
+#             target_node.insert_sibling_after(source_node)
+#
+#         self.layoutChanged.emit()
+#
+#     @Slot(str, str)
+#     def moveBefore(self, source: str, target: str) -> None:
+#         """Positions the source node before the target node.
+#
+#         Args:
+#             source: string uuid value of the source node
+#             target: string uuid valiue of the target node
+#         """
+#         # Retrieve nodes
+#         source_node = self._find_node_with_id(uuid.UUID(source))
+#         target_node = self._find_node_with_id(uuid.UUID(target))
+#
+#         # Reorder nodes
+#         if source_node != target_node:
+#             source_node.detach()
+#             target_node.insert_sibling_before(source_node)
+#
+#         self.layoutChanged.emit()
+#
+#     @Slot(str)
+#     def remove(self, item):
+#         node = self._find_node_with_id(uuid.UUID(item))
+#         node.detach()
+#         self.layoutChanged.emit()
+#
+#     def _get_behaviour(self) -> str:
+#         return InputType.to_string(self._action_configuration.behaviour)
+#
+#     def _set_behaviour(self, text: str) -> None:
+#         behaviour = InputType.to_enum(text)
+#         if behaviour != self._action_configuration.behaviour:
+#             self._action_configuration.behaviour = behaviour
+#
+#             # Ensure a virtual button instance exists of the correct type
+#             # if one is needed
+#             input_type = self._action_configuration.input_item.input_type
+#             if input_type == InputType.JoystickAxis and \
+#                     behaviour == InputType.JoystickButton:
+#                 if not isinstance(
+#                         self._action_configuration.virtual_button,
+#                         profile.VirtualAxisButton
+#                 ):
+#                     self._action_configuration.virtual_button = \
+#                         profile.VirtualAxisButton()
+#                     self._virtual_button_model = VirtualButtonModel(
+#                         self._action_configuration.virtual_button
+#                     )
+#             elif input_type == InputType.JoystickHat and \
+#                     behaviour == InputType.JoystickButton:
+#                 if not isinstance(
+#                         self._action_configuration.virtual_button,
+#                         profile.VirtualHatButton
+#                 ):
+#                     self._action_configuration.virtual_button = \
+#                         profile.VirtualHatButton()
+#                     self._virtual_button_model = VirtualButtonModel(
+#                         self._action_configuration.virtual_button
+#                     )
+#
+#             self.behaviourChanged.emit()
+#
+#     def _get_description(self) -> str:
+#         return self._action_configuration.description
+#
+#     def _set_description(self, description: str) -> None:
+#         if description != self._action_configuration.description:
+#             self._action_configuration.description = description
+#             self.descriptionChanged.emit()
+#
+#     def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
+#         """Returns the node with the desired id from the action tree.
+#
+#         Args:
+#             uuid: uuid of the node to retrieve
+#
+#         Returns:
+#             The TreeNode corresponding to the given uuid
+#         """
+#         predicate = lambda x: True if x.value and x.value.id == uuid else False
+#         nodes = self._action_tree.root.nodes_matching(predicate)
+#
+#         if len(nodes) != 1:
+#             raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
+#         return nodes[0]
+#
+#     @property
+#     def behaviour_type(self):
+#         return self._action_configuration.behaviour
+#
+#     def action_tree(self):
+#         return self._action_tree
+#
+#     behaviour = Property(
+#         str,
+#         fget=_get_behaviour,
+#         fset=_set_behaviour,
+#         notify=behaviourChanged
+#     )
+#
+#     description = Property(
+#         str,
+#         fget=_get_description,
+#         fset=_set_description,
+#         notify=descriptionChanged
+#     )

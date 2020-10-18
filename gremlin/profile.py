@@ -1520,7 +1520,10 @@ class ModeHierarchy:
         Returns:
             Name of the first mode
         """
-        return self.hierarchy[0].value
+        if len(self.hierarchy) == 0:
+            return "Default"
+        else:
+            return self.hierarchy[0].value
 
     def mode_list(self) -> List[str]:
         """Returns the list of all modes in the hierarchy.

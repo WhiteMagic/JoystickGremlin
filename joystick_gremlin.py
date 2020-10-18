@@ -39,17 +39,17 @@ import dill
 install_path = os.path.normcase(os.path.dirname(os.path.abspath(sys.argv[0])))
 os.chdir(install_path)
 
-import gremlin.ui.axis_calibration
-import gremlin.ui.common
-import gremlin.ui.device_tab
-import gremlin.ui.dialogs
-import gremlin.ui.input_viewer
-import gremlin.ui.merge_axis
-import gremlin.ui.user_plugin_management
-import gremlin.ui.profile_creator
-import gremlin.ui.profile_settings
+import gremlin.ui_old.axis_calibration
+import gremlin.ui_old.common
+import gremlin.ui_old.device_tab
+import gremlin.ui_old.dialogs
+import gremlin.ui_old.input_viewer
+import gremlin.ui_old.merge_axis
+import gremlin.ui_old.user_plugin_management
+import gremlin.ui_old.profile_creator
+import gremlin.ui_old.profile_settings
 
-from gremlin.ui.ui_gremlin import Ui_Gremlin
+from gremlin.ui_old.ui_gremlin import Ui_Gremlin
 
 
 class GremlinUi(QtWidgets.QMainWindow):

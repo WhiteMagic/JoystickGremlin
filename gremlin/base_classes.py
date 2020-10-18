@@ -37,14 +37,18 @@ class AbstractActionModel(QtCore.QObject):
 
     """Base class for all action related data calsses."""
 
+    modelChanged = QtCore.Signal()
+
     def __init__(
             self,
+            action_tree: profile_library.ActionTree,
             input_type: InputType=InputType.JoystickButton,
             parent: Optional[QtCore.QObject]=None
     ):
         super().__init__(parent)
 
         self._id = uuid.uuid4()
+        self._action_tree = action_tree
 
     @property
     def id(self) -> uuid.UUID:
@@ -65,7 +69,7 @@ class AbstractActionModel(QtCore.QObject):
             "AbstractActionModel.qml_path not implemented in subclass"
         )
 
-    def from_xml(self, node: ElementTree) -> None:
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the instance's values with the content of the XML node.
 
         Args:
@@ -75,7 +79,7 @@ class AbstractActionModel(QtCore.QObject):
             "AbstractActionModel.from_xml not implemented in subclass"
         )
 
-    def to_xml(self) -> ElementTree:
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node representing the instance's contents.
 
         Returns:

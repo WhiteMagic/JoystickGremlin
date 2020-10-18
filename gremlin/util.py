@@ -484,6 +484,21 @@ def read_property(
         )
 
 
+def read_action_ids(node: ElementTree.Element) -> List[uuid.UUID]:
+    """Returns all action-id child nodes from the provided node.
+
+    Args:
+        node: XML node to parse
+
+    Returns:
+        List containing found action-id entries
+    """
+    ids = []
+    for entry in node.iter("action-id"):
+        ids.append(uuid.UUID(entry.text))
+    return ids
+
+
 def has_correct_type(value: Any, property_type: PropertyType) -> bool:
     """Returns whether or not a value is of the correct type.
 
