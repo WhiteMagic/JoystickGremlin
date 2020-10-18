@@ -17,6 +17,7 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
+import QtQuick.Layouts 1.14
 import QtQuick.Window 2.14
 
 import QtQuick.Controls.Universal 2.14
@@ -29,33 +30,36 @@ import "../../qml"
 Item {
     id: idRoot
 
-    property ActionConfigurationModel actionConfiguration
+    property ActionTreeModel actionTree
     property DescriptionModel model
 
-    height: Math.max(idLabel.height, idDescription.height)
+    //height: Math.max(idLabel.height, idDescription.height)
+    //width: parent.width
 
-    Label {
-        id: idLabel
-        text: "Description"
+    ColumnLayout {
+        Label {
+            id: idLabel
+            text: "Description"
 
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.margins: 10
-    }
-    TextField {
-        id: idDescription
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.margins: 10
+        }
+        TextField {
+            id: idDescription
 
-        anchors.left: idLabel.right
-        anchors.right: parent.right
-        anchors.margins: 10
-        anchors.verticalCenter: parent.verticalCenter
+            anchors.left: idLabel.right
+            anchors.right: parent.right
+            anchors.margins: 10
+            anchors.verticalCenter: parent.verticalCenter
 
-        placeholderText: null != model ? null : "Enter description"
-        text: model.description//null != model ? model.description : null
-        selectByMouse: true
+            placeholderText: null != model ? null : "Enter description"
+            text: model.description
+            selectByMouse: true
 
-        onTextChanged: {
-            model.description = text
+            onTextChanged: {
+                model.description = text
+            }
         }
     }
 }

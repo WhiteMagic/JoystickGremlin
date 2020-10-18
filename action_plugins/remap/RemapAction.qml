@@ -17,8 +17,8 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
-
 import QtQuick.Controls.Universal 2.14
+import QtQuick.Layouts 1.14
 
 import gremlin.ui.profile 1.0
 import gremlin.plugins 1.0
@@ -28,77 +28,78 @@ import "../../qml"
 Item {
     id: idRoot
 
-    property ActionConfigurationModel actionConfiguration
+    property ActionTreeModel actionTree
     property RemapModel model
 
-    height: idVjoy.height
+    //height: idVjoy.height
+    //width: parent.width
 
-    Item {
-        VJoySelector {
-            id: idVjoy
+    ColumnLayout {
+        Item {
+            VJoySelector {
+                id: idVjoy
 
-            anchors.left: parent.left
+                anchors.left: parent.left
 
-            inputType: model.inputType
-            vjoyInputId: model.vjoyInputId
-            vjoyDeviceId: model.vjoyDeviceId
-            validTypes: [actionConfiguration.behaviour]
+                inputType: model.inputType
+                vjoyInputId: model.vjoyInputId
+                vjoyDeviceId: model.vjoyDeviceId
+                validTypes: [actionTree.behaviour]
 
-            onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
-            onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
-            onInputTypeChanged: { model.inputType = inputType }
-        }
-
-        // UI for a physical axis behaving as an axis
-        Row {
-            anchors.left: idVjoy.right
-            spacing: 10
-
-            visible: actionConfiguration.behaviour == "axis"
-
-            Rectangle {
-                width: 10
-                height: 1
+                onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
+                onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
+                onInputTypeChanged: { model.inputType = inputType }
             }
 
-            RadioButton {
-                text: "Absolute"
-                checked: true
+            // UI for a physical axis behaving as an axis
+            Row {
+                anchors.left: idVjoy.right
+                spacing: 10
 
-                onCheckedChanged: {
-                    model.axisMode = "absolute"
+                visible: actionTree.behaviour == "axis"
+
+                Rectangle {
+                    width: 10
+                    height: 1
                 }
-            }
-            RadioButton {
-                id: idRelativeMode
-                text: "Relative"
 
-                onCheckedChanged: {
-                    model.axisMode = "relative"
+                RadioButton {
+                    text: "Absolute"
+                    checked: true
+
+                    onCheckedChanged: {
+                        model.axisMode = "absolute"
+                    }
                 }
-            }
+                RadioButton {
+                    id: idRelativeMode
+                    text: "Relative"
 
-            Label {
-                text: "Scaling"
-                anchors.verticalCenter: parent.verticalCenter
-                visible: idRelativeMode.checked
-            }
+                    onCheckedChanged: {
+                        model.axisMode = "relative"
+                    }
+                }
 
-            FloatSpinBox {
-                id: idScaling
+                Label {
+                    text: "Scaling"
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: idRelativeMode.checked
+                }
 
-                visible: idRelativeMode.checked
-                minValue: 0
-                maxValue: 100
-                value: 1
-                stepSize: 0.1
+                FloatSpinBox {
+                    id: idScaling
 
-                onValueChanged: {
-                    model.axisScaling = value
+                    visible: idRelativeMode.checked
+                    minValue: 0
+                    maxValue: 100
+                    value: 1
+                    stepSize: 0.1
+
+                    onValueChanged: {
+                        model.axisScaling = value
+                    }
                 }
             }
         }
     }
-
-//    DebugBox {}
 }

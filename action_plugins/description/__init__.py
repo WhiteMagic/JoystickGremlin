@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+from typing import Optional
 from xml.etree import ElementTree
 
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
+from gremlin import profile_library
 from gremlin.actions import Value
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.event_handler import Event
@@ -68,8 +69,13 @@ class DescriptionModel(AbstractActionModel):
     # Signal emitted when the description variable's content changes
     descriptionChanged = Signal()
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(
+            self,
+            action_tree: profile_library.ActionTree,
+            input_type: InputType = InputType.JoystickButton,
+            parent: Optional[QtCore.QObject] = None
+    ):
+        super().__init__(action_tree, input_type, parent)
 
         # Model variables
         self._description = ""

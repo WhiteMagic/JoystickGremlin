@@ -27,8 +27,7 @@ from xml.etree import ElementTree
 from PySide2 import QtCore
 from PySide2.QtCore import Property, Signal, Slot
 
-from gremlin import joystick_handling
-from gremlin import util
+from gremlin import joystick_handling, profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.types import AxisMode, InputType, PropertyType
 
@@ -159,10 +158,11 @@ class RemapModel(AbstractActionModel):
 
     def __init__(
             self,
+            action_tree: profile_library.ActionTree,
             input_type: InputType=InputType.JoystickButton,
             parent: Optional[QtCore.QObject]=None
     ):
-        super().__init__()
+        super().__init__(action_tree, input_type, parent)
 
         # Determine a valid vjoy input
         all_devs = joystick_handling.vjoy_devices()
