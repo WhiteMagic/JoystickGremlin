@@ -1,0 +1,207 @@
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <input-type>button</input-type>
+            <input-id>4</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <library-reference>01544449-be83-4776-ac4d-a05240006660</library-reference>
+                <behaviour>button</behaviour>
+                <description></description>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <input-type>axis</input-type>
+            <input-id>6</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <library-reference>58af0d4e-66f0-41c9-b5d3-085fecda6713</library-reference>
+                <behaviour>button</behaviour>
+                <virtual-button>
+                    <lower-limit>-0.2</lower-limit>
+                    <upper-limit>0.3</upper-limit>
+                    <direction>below</direction>
+                </virtual-button>
+                <description>This is just a test!</description>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <input-type>button</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
+                <behaviour>button</behaviour>
+                <description></description>
+            </action-configuration>
+            <action-configuration>
+                <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
+                <behaviour>button</behaviour>
+                <description></description>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <input-type>button</input-type>
+            <input-id>2</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <library-reference>69e2bb6f-9715-4869-9ed4-e23b81dab15f</library-reference>
+                <behaviour>button</behaviour>
+                <description></description>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <input-type>hat</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <library-reference>69e2bb6f-9715-4869-9ed4-e23b81dab15f</library-reference>
+                <behaviour>button</behaviour>
+                <virtual-button>
+                    <hat-direction>north</hat-direction>
+                    <hat-direction>east</hat-direction>
+                </virtual-button>
+                <description></description>
+            </action-configuration>
+        </input>
+    </inputs>
+
+    <modes>
+        <mode>Default</mode>
+        <mode>Separate</mode>
+        <mode parent="Default">Child</mode>
+    </modes>
+
+    <library>
+        <library-item id="ac905a47-9ad3-4b65-b702-fbae1d133609">
+            <action-tree root="ec663ba4-264a-4c76-98c0-6054058cae9f">
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133600" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>This is a test</value>
+                    </property>
+                </action>
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133601" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Feuer frei!</value>
+                    </property>
+                </action>
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133602" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Liebe ist fur Alle da</value>
+                    </property>
+                </action>
+                <action id="0c905a47-9ad3-4b65-b702-fbae1d133603" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Reise reise</value>
+                    </property>
+                </action>
+            </action-tree>
+        </library-item>
+        <library-item id="69e2bb6f-9715-4869-9ed4-e23b81dab15f">
+            <action-tree root="0441ac77-744d-46a4-b6ee-003f02515ae6">
+                <action id="d542c1aa-b1bb-418b-b92a-5707f78d9943" parent="0441ac77-744d-46a4-b6ee-003f02515ae6" type="remap">
+                    <property type="int">
+                        <name>vjoy-device-id</name>
+                        <value>1</value>
+                    </property>
+                    <property type="int">
+                        <name>vjoy-input-id</name>
+                        <value>10</value>
+                    </property>
+                    <property type="input_type">
+                        <name>input-type</name>
+                        <value>button</value>
+                    </property>
+                </action>
+                <action id="d542c1aa-b1bb-418b-b92a-5707f78d9943" parent="0441ac77-744d-46a4-b6ee-003f02515ae6" type="remap">
+                    <property type="int">
+                        <name>vjoy-device-id</name>
+                        <value>1</value>
+                    </property>
+                    <property type="int">
+                        <name>vjoy-input-id</name>
+                        <value>10</value>
+                    </property>
+                    <property type="input_type">
+                        <name>input-type</name>
+                        <value>button</value>
+                    </property>
+                </action>
+            </action-tree>
+        </library-item>
+        <library-item id="58af0d4e-66f0-41c9-b5d3-085fecda6713">
+            <action-tree root="cfcf43e8-f99d-42ce-95d9-6c0a36c8836a">
+                <action id="d7c5afe9-b67b-4384-97a8-6d1cd2b768f3" parent="cfcf43e8-f99d-42ce-95d9-6c0a36c8836a" type="remap">
+                    <property type="int">
+                        <name>vjoy-device-id</name>
+                        <value>1</value>
+                    </property>
+                    <property type="int">
+                        <name>vjoy-input-id</name>
+                        <value>12</value>
+                    </property>
+                    <property type="input_type">
+                        <name>input-type</name>
+                        <value>button</value>
+                    </property>
+                </action>
+            </action-tree>
+        </library-item>
+        <library-item id="01544449-be83-4776-ac4d-a05240006660">
+            <action-tree root="3f38de2e-d5e8-4d7c-a72c-ed68e3aedd83">
+                <action id="422f57c7-f524-4c0f-85a3-82a40f84aca0" parent="3f38de2e-d5e8-4d7c-a72c-ed68e3aedd83" type="condition">
+                    <if-actions>
+                        <action-id>fbe6be7b-07c9-4400-94f2-caa245ebcc7e</action-id>
+                        <action-id>80e29257-f2ad-43bf-b5ab-9229d01e64d7</action-id>
+                    </if-actions>
+                    <else-actions>
+                        <action-id>2bf10c03-a9d3-4410-a56a-70643e2c05b8</action-id>
+                    </else-actions>
+                </action>
+                <action id="fbe6be7b-07c9-4400-94f2-caa245ebcc7e" parent="422f57c7-f524-4c0f-85a3-82a40f84aca0" type="remap">
+                    <property type="int">
+                        <name>vjoy-device-id</name>
+                        <value>1</value>
+                    </property>
+                    <property type="int">
+                        <name>vjoy-input-id</name>
+                        <value>11</value>
+                    </property>
+                    <property type="input_type">
+                        <name>input-type</name>
+                        <value>button</value>
+                    </property>
+                </action>
+                <action id="80e29257-f2ad-43bf-b5ab-9229d01e64d7" parent="422f57c7-f524-4c0f-85a3-82a40f84aca0" type="description">
+                    <property type="string">
+                        <name>description</name>
+                        <value>Condition successful</value>
+                    </property>
+                </action>
+                <action id="2bf10c03-a9d3-4410-a56a-70643e2c05b8" parent="422f57c7-f524-4c0f-85a3-82a40f84aca0" type="remap">
+                    <property type="int">
+                        <name>vjoy-device-id</name>
+                        <value>1</value>
+                    </property>
+                    <property type="int">
+                        <name>vjoy-input-id</name>
+                        <value>12</value>
+                    </property>
+                    <property type="input_type">
+                        <name>input-type</name>
+                        <value>button</value>
+                    </property>
+                </action>
+            </action-tree>
+        </library-item>
+    </library>
+</profile>
