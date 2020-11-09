@@ -21,7 +21,7 @@ import os
 import time
 import threading
 
-from PyQt5 import QtCore
+from PySide2 import QtCore
 
 import win32gui
 import win32process
@@ -37,7 +37,7 @@ class ProcessMonitor(QtCore.QObject):
     """
 
     # Signal emitted when the active window changes
-    process_changed = QtCore.pyqtSignal(str)
+    process_changed = QtCore.Signal(str)
 
     # Definition of the flags for limited information queries
     PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
