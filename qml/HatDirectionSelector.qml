@@ -23,12 +23,15 @@ import gremlin.ui.profile 1.0
 
 
 Item {
-    id: root
+    id: _root
 
     property VirtualButtonModel virtualButton
 
+    height: _checkboxes.height
+    width: _checkboxes.width
+
     Row {
-        id: idCheckboxes
+        id: _checkboxes
 
         spacing: 10
 

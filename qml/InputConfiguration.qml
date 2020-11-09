@@ -42,20 +42,20 @@ Item {
             backend.getInputItem(_root.inputIdentifier).actionConfigurations
     }
 
-    Component.onCompleted: {
-        console.log(width + " " + height + " | " + x + " " + y)
-    }
+    height: _root.height
 
     Column {
-        //width: parent.width
-        anchors.left: parent.left
-            anchors.right: parent.right
+        width: parent.width
+        //anchors.left: parent.left
+        //anchors.right: parent.right
+        //height: parent.height
 
         ListView {
             id: _listView
 
             anchors.left: parent.left
             anchors.right: parent.right
+            height: _root.height - _newActionButton.height
 
             spacing: 10
 
@@ -79,7 +79,13 @@ Item {
 
                 actionTree: modelData
             }
-
+//            Rectangle {
+//                color: "green"
+//                opacity: 0.5
+//
+//                width: _listView.width
+//                height: 100
+//            }
         }
 
         // Button to add a new action configuration to the currently

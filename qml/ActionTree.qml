@@ -27,7 +27,6 @@ import QtQuick.Controls.Universal 2.14
 import gremlin.ui.profile 1.0
 
 
-
 Item {
     id: _root
 
@@ -41,15 +40,18 @@ Item {
     // height: _header.height
     // width: _header.width
 
-    //height: _header.height
+    height: _layout.height
 
-
+    // Content
     Column {
         id: _layout
 
-        width: parent.width
-        
-    
+        anchors.left: _root.left
+        anchors.right: _root.right
+        anchors.leftMargin: 10
+        anchors.rightMargin: 20
+
+
         // +------------------------------------------------------------------------
         // | Header
         // +------------------------------------------------------------------------
@@ -63,7 +65,6 @@ Item {
         }
 
         // BottomBorder {}
-
 
 
 // General header
