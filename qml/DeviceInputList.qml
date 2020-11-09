@@ -39,7 +39,8 @@ Item {
     // Sychronize input selection when the underlying device changes
     Connections {
         target: device
-        onDeviceChanged: {
+        //onDeviceChanged: {
+        function onDeviceChanged() {
             inputIndex = _inputList.currentIndex
             inputIdentifier = device.inputIdentifier(inputIndex);
         }
