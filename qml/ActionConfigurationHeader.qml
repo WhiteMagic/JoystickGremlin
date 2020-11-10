@@ -171,7 +171,7 @@ Item {
 
     // Fill the entire widget with a backgrund color
     Rectangle {
-        color: Universal.baseMediumLowColor
+        color: Universal.background
 
         z: -1
         anchors.fill: _layout
