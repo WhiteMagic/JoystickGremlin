@@ -64,7 +64,7 @@ Item {
             actionTree: _root.actionTree
         }
 
-        // BottomBorder {}
+        BottomBorder {}
 
 
 // General header
@@ -224,18 +224,21 @@ Item {
         //     anchors.right: parent.right
         // }
 
-        // Loader {
-        //     id: _actionSelector
 
-        //     anchors.top: _action.bottom
-        //     anchors.left: parent.left
-        //     anchors.leftMargin: 10
+        // +--------------------------------------------------------------------
+        // | Action selection dropdown
+        // +--------------------------------------------------------------------
+        Loader {
+            id: _actionSelector
 
-        //     active: actionTree.actionCount == 0
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-        //     sourceComponent: ActionSelector {
-        //         actionTree: actionTree
-        //     }
-        // }
+            active: actionTree.actionCount == 0
+
+            sourceComponent: ActionSelector {
+                actionTree: actionTree
+            }
+        }
     }
 } // Item
