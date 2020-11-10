@@ -17,40 +17,32 @@
 
 
 import QtQuick 2.14
-import QtQuick.Layouts 1.154
+import QtQuick.Layouts 1.14
 import QtQuick.Controls.Universal 2.14
 
 
 Item {
-    property Item item
-
-    anchors.top: item.bottom
-    anchors.left: item.left
-    anchors.right: item.right
-
-    height: idBorder.height + idSpacer.height
+    height: _border.height
+    width: parent.width
 
     Rectangle {
-        id: idBorder
+        id: _border
 
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
+        width: parent.width
+        height: _line.height + _line.anchors.topMargin + _line.anchors.bottomMargin
 
-        height: 2
+        Rectangle {
+            id: _line
 
-        color: Universal.accent
-    }
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.topMargin: 5
+            anchors.bottomMargin: 10
 
-    Rectangle {
-        id: idSpacer
+            height: 2
 
-        anchors.top: idBorder.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        height: 10
-
-        color: Universal.background
+            color: Universal.accent
+        }
     }
 }
