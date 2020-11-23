@@ -18,29 +18,14 @@
 
 import QtQuick 2.14
 import QtQuick.Controls.Universal 2.14
+import QtQuick.Layouts 1.14
 
 
-Item {
-    id: root
-
-    property Item item
+Rectangle {
     property int spacing : 10
 
-    //anchors.top: item.bottom
-    //anchors.left: item.left
-    //anchors.right: item.right
+    height: spacing
+    Layout.fillWidth: true
 
-    height: idSpacer.height
-
-    Rectangle {
-        id: idSpacer
-
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        height: root.spacing
-
-        color: "red"//Universal.background
-    }
+    color: Universal.background
 }
