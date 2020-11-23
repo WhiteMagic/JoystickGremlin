@@ -266,3 +266,35 @@ Button {
 
 Returning a QML object instance from Python to QML code will in most cases fail to work as the Python object will be cleaned up, resulting in QML seeing a `null` object. The correct way to work around this is to use the `parent` parameter available to every `QtObject` based class. As such when creating an object in Python which is intended as a return type to QML UI code the `parent` parameter of the object should never be `None` but rather an instance of another QML object which will persist longer than the new object being created.
 
+## Base Plugin UI Layout
+
+To make new plugins render properly in the UI the following template should be followed. If this is not done there is a good chance that the plugin will not use all available space or be drawn across other elements.
+
+```
+import QtQuick 2.14
+import QtQuick.Controls 2.14
+import QtQuick.Layouts 1.14
+
+Item {
+    height: _layout.height
+
+    RowLayout {
+        id: _layout
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        Label {
+            Layout.preferredWidth: 150
+            text: "Description"
+        }
+        Label {
+        	Layout.fillWidth: true
+        	text: "Using the remaining space"
+        }
+    }
+}
+```
+
+The above setup exploits the fact that when the plugin's UI code is dynamically created the height of the plugin is retrieved from this UI element while the width is dictated by the parent element in which this UI element is embedded. This UI element is resized during creation to with within the parent's width.
+
