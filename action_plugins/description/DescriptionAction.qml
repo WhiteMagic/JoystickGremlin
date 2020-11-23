@@ -28,30 +28,29 @@ import "../../qml"
 
 
 Item {
-    id: idRoot
-
     property ActionTreeModel actionTree
     property DescriptionModel model
 
-    //height: Math.max(idLabel.height, idDescription.height)
-    //width: parent.width
+    height: _layout.height
 
-    ColumnLayout {
+    RowLayout {
+        id: _layout
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+
         Label {
-            id: idLabel
-            text: "Description"
+            id: _label
 
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: 10
+            Layout.preferredWidth: 150
+
+            text: "Description"
         }
         TextField {
-            id: idDescription
+            id: _description
 
-            anchors.left: idLabel.right
-            anchors.right: parent.right
-            anchors.margins: 10
-            anchors.verticalCenter: parent.verticalCenter
+            Layout.fillWidth: true
 
             placeholderText: null != model ? null : "Enter description"
             text: model.description
