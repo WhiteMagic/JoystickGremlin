@@ -41,6 +41,6 @@ Item {
 
         height: root.spacing
 
-        color: Universal.background
+        color: "red"//Universal.background
     }
 }
