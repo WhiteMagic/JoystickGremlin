@@ -32,15 +32,16 @@ Item {
     property ActionTreeModel actionTree
     property var model
 
-    //height: _content.childrenRect.height
-    //width: parent.width
+    height: _content.childrenRect.height
 
     // Show all child nodes
     ColumnLayout {
         id: _content
 
-        Layout.fillWidth: true
-        //width: parent.width
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        spacing: 10
 
         Repeater {
             model: _root.actionTree.rootNodes
@@ -48,9 +49,10 @@ Item {
             ActionNode {
                 action: modelData
                 actionTree: _root.actionTree
+
+                //width: _content.width
+                Layout.fillWidth: true
             }
         }
     }
-
-    DebugBox {}
 }
