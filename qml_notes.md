@@ -7,7 +7,7 @@ This contains a collection of good to know things when working with QML and Pyth
 One of the nice properties of QML is that it has property binding, i.e. it can be directly fed with values from any `QtObject` based instance if it exposes its values properly. This can be achieved through the following:
 
 ```{python}
-from Pyside2 import QtCore, QtQML
+from PySide6 import QtCore, QtQML
 
 class DemoModel(QtCore.QObject):
     
@@ -61,7 +61,7 @@ It is possible to call Python functions which return a value from QML as long as
 ```{python}
 import random
 
-from Pyside2 import QtCore
+from PySide6 import QtCore
 
 class Backend(QtCore):
     
@@ -81,7 +81,7 @@ Accessing data from a Python model via custom names is the more convenient then 
 
 ```{python}
 from typing import Any, Dict
-from PySide2 import QtCore, QtQML
+from PySide6 import QtCore, QtQML
 
 class ColorModel(QtCore.QAbstractListModel):
     
@@ -142,10 +142,10 @@ Component {
 
 ## Simple List Models
 
-At times it is useful to return a simple list of strings to be displayed by a QML view or repeater. Providing the model via property causes some issues as QML is not happy with the actual data types exposed by PySide2. As such to specify the correct type of `QVariantList` the type information has to be provided as a string.
+At times it is useful to return a simple list of strings to be displayed by a QML view or repeater. Providing the model via property causes some issues as QML is not happy with the actual data types exposed by PySide6. As such to specify the correct type of `QVariantList` the type information has to be provided as a string.
 
 ```{python}
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 @QtCore.Property(type="QVariantList")
 def listData():

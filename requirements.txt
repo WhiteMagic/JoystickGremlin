@@ -1,4 +1,4 @@
-PySide2
+PySide6
 reportlab
 PyInstaller
 pywin32

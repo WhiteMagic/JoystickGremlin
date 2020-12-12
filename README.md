@@ -34,7 +34,7 @@ Used Software & Other Sources
 Joystick Gremlin uses the following software and resources:
 
 - [Python 3.7](https://www.python.org)
-- [PySide2](https://www.qt.io/qt-for-python)
+- [PySide6](https://www.qt.io/qt-for-python)
 - [PyWin32](http://sourceforge.net/projects/pywin32)
 - [Reportlab](https://www.reportlab.com/)
 - [PyTest](https://docs.pytest.org/en/latest/)
