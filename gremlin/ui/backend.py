@@ -139,6 +139,8 @@ class Backend(QtCore.QObject):
         Returns:
             Model instance representing the specified InputItem
         """
+        if identifier is None:
+            return
         try:
             item = self.profile.get_input_item(
                 identifier.device_guid,
@@ -160,15 +162,14 @@ class Backend(QtCore.QObject):
         Returns:
             True if the action is expanded, False otherwise
         """
-        return True
-        #return self._action_state.get(uuid.UUID(uuid_str), True)
+        return self._action_state.get(uuid.UUID(uuid_str), True)
 
     @Slot(str, bool)
     def setIsActionExpanded(self, uuid_str, is_expanded) -> None:
         """Sets a specific action's expanded state.
 
         Args:
-            uuid_str: UUUID of the action in question represented as a string
+            uuid_str: UUID of the action in question represented as a string
             is_expanded: True if the action is expanded, False otherwise
         """
         self._action_state[uuid.UUID(uuid_str)] = bool(is_expanded)
@@ -255,7 +256,7 @@ class Backend(QtCore.QObject):
         )
         # TODO: This node bit needs to change
         #action_node = TreeNode(action, action_tree.action_tree().root)
-        action_tree.modelReset.emit()
+        #action_tree.modelReset.emit()
 
     @Slot(InputIdentifier)
     def newActionConfiguration(self, identifier: InputIdentifier) -> None:
