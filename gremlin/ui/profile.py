@@ -42,7 +42,7 @@ class InputItemModel(QtCore.QObject):
 
         self._input_item = input_item
 
-    @Property(QtCore.QObject, constant=True)
+    @Property(QtCore.QObject)
     def actionConfigurations(self) -> ActionConfigurationListModel:
         return ActionConfigurationListModel(
             self._input_item.action_configurations,
@@ -320,6 +320,7 @@ class ActionTreeModel(QtCore.QObject):
     virtualButtonChanged = Signal()
     actionCountChanged = Signal()
     rootActionChanged = Signal()
+    inputTypeChanged = Signal()
 
     def __init__(
             self,
@@ -342,7 +343,7 @@ class ActionTreeModel(QtCore.QObject):
             parent=self
         )
 
-    @Property(type=str, constant=True)
+    @Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
         return InputType.to_string(
             self._action_configuration.input_item.input_type
