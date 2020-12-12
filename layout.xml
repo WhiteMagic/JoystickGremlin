@@ -1,7 +1,7 @@
 <profile version="14">
     <inputs>
         <input>
-            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
             <input-type>button</input-type>
             <input-id>4</input-id>
             <mode>Default</mode>
@@ -12,7 +12,7 @@
             </action-configuration>
         </input>
         <input>
-            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
             <input-type>axis</input-type>
             <input-id>6</input-id>
             <mode>Default</mode>
@@ -28,7 +28,7 @@
             </action-configuration>
         </input>
         <input>
-            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
             <input-type>button</input-type>
             <input-id>1</input-id>
             <mode>Default</mode>
@@ -44,7 +44,7 @@
             </action-configuration>
         </input>
         <input>
-            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
             <input-type>button</input-type>
             <input-id>2</input-id>
             <mode>Default</mode>
@@ -55,7 +55,7 @@
             </action-configuration>
         </input>
         <input>
-            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
             <input-type>hat</input-type>
             <input-id>1</input-id>
             <mode>Default</mode>
