@@ -184,14 +184,14 @@ ApplicationWindow {
             anchors.fill: parent
 
             ToolButton {
-                icon.source: "../gfx/profile_new.svg"
+                icon.source: "qrc:///icons/profile_new"
 
                 onClicked: {
                     backend.newProfile()
                 }
             }
             ToolButton {
-                icon.source: "../gfx/profile_save.svg"
+                icon.source: "qrc:///icons/profile_save"
 
                 onClicked: {
                     var fpath = backend.profilePath()
@@ -206,14 +206,14 @@ ApplicationWindow {
                 }
             }
             ToolButton {
-                icon.source: "../gfx/profile_open.svg"
+                icon.source: "qrc:///icons/profile_open"
 
                 onClicked: {
                     idLoadProfileFileDialog.open()
                 }
             }
             ToolButton {
-                icon.source: "../gfx/activate.svg"
+                icon.source: "qrc:///icons/activate"
                 icon.color: backend.gremlinActive ? "green" : "black"
 
                 onClicked: {

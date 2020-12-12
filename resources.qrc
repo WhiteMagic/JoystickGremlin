@@ -1,0 +1,14 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="icons">
+        <file alias="activate">gfx/activate.svg</file>
+        <file alias="button_add">gfx/button_add.png</file>
+        <file alias="button_delete">gfx/button_delete.png</file>
+        <file alias="close">gfx/close.png</file>
+        <file alias="delete">gfx/delete.svg</file>
+        <file alias="profile_new">gfx/profile_new.svg</file>
+        <file alias="profile_open">gfx/profile_open.svg</file>
+        <file alias="profile_save">gfx/profile_save.svg</file>
+        <file alias="profile_save_as">gfx/profile_save_as.svg</file>
+    </qresource>
+</RCC>

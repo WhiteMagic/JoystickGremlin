@@ -74,7 +74,7 @@ Item {
                 id: _foldButton
 
                 checked: backend.isActionExpanded(_root.action.id)
-                icon.source: checked ? "../gfx/button_delete.png" : "../gfx/button_add.png"
+                icon.source: checked ? "qrc:///icons/button_delete" : "qrc:///icons/button_add"
 
                 onClicked: {
                     backend.setIsActionExpanded(_root.action.id, checked)
@@ -101,7 +101,7 @@ Item {
             }
 
             Button {
-                icon.source: "../gfx/delete.svg"
+                icon.source: "qrc:///icons/delete"
 
 // FIXME: Reimplement this
 //                onClicked: {

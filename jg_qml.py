@@ -33,6 +33,8 @@ import traceback
 #from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 from PySide6 import QtCore, QtGui, QtQml, QtQuick
 
+import resources
+
 import dill
 
 # Figure out the location of the code / executable and change the working

@@ -63,7 +63,7 @@ Item {
             Button {
                 id: _headerRemove
 
-                icon.source: "../gfx/close.png"
+                icon.source: "qrc:///icons/close"
             }
         }
 
