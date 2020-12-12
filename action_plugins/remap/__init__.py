@@ -24,8 +24,8 @@ from typing import Optional
 import uuid
 from xml.etree import ElementTree
 
-from PySide2 import QtCore
-from PySide2.QtCore import Property, Signal, Slot
+from PySide6 import QtCore
+from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import joystick_handling, profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor

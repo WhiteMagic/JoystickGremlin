@@ -29,7 +29,7 @@ import uuid
 from uuid import UUID
 from xml.etree import ElementTree
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 import dill
 from dill import GUID

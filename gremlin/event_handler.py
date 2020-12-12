@@ -21,7 +21,7 @@ import logging
 import time
 from threading import Thread, Timer
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 import dill
 import gremlin.keyboard

@@ -21,7 +21,7 @@ import logging
 import os
 import pickle
 import time
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from xml.etree import ElementTree
 
 import gremlin.keyboard

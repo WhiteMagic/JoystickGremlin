@@ -20,8 +20,8 @@ from __future__ import annotations
 import random
 import typing
 
-from PySide2 import QtCore, QtQml
-from PySide2.QtCore import Property, Signal, Slot
+from PySide6 import QtCore, QtQml
+from PySide6.QtCore import Property, Signal, Slot
 
 import dill
 

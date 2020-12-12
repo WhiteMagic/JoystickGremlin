@@ -18,8 +18,8 @@
 from typing import Optional
 from xml.etree import ElementTree
 
-from PySide2 import QtCore
-from PySide2.QtCore import Property, Signal, Slot
+from PySide6 import QtCore
+from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import profile_library
 from gremlin.actions import Value

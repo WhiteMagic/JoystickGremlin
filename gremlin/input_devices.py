@@ -23,7 +23,7 @@ import logging
 import time
 import threading
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 import gremlin.keyboard
 import gremlin.types

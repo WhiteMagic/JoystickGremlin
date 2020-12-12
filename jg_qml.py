@@ -31,7 +31,7 @@ import traceback
 # Import QtMultimedia so pyinstaller doesn't miss it
 #import PyQt5
 #from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
-from PySide2 import QtCore, QtGui, QtQml, QtQuick, QtWebEngine
+from PySide6 import QtCore, QtGui, QtQml, QtQuick
 
 import dill
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         sys.excepthook = exception_hook
 
     # Initialize QT components
-    QtWebEngine.QtWebEngine.initialize()
+    #QtWebEngine.QtWebEngine.initialize()
 
     # Prevent blurry fonts that Qt seems to like
     QtQuick.QQuickWindow.setTextRenderType(

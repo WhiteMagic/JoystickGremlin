@@ -20,7 +20,7 @@ import importlib
 import logging
 import os
 
-from PySide2 import QtQml
+from PySide6 import QtQml
 
 import gremlin.types
 from . import common, error

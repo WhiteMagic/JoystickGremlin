@@ -21,7 +21,7 @@ import os
 import time
 import threading
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 import win32gui
 import win32process

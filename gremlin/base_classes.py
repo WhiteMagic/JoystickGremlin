@@ -23,7 +23,7 @@ from typing import Optional
 import uuid
 from xml.etree import ElementTree
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 import dill
 
