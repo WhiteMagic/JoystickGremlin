@@ -18,6 +18,7 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
+import QtQuick.Layouts 1.14
 import QtQuick.Window 2.14
 
 import QtQuick.Controls.Universal 2.14
@@ -42,20 +43,15 @@ Item {
             backend.getInputItem(_root.inputIdentifier).actionConfigurations
     }
 
-    height: _root.height
 
-    Column {
-        width: parent.width
-        //anchors.left: parent.left
-        //anchors.right: parent.right
-        //height: parent.height
+    ColumnLayout {
+        anchors.fill: parent
 
         ListView {
             id: _listView
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: _root.height - _newActionButton.height
+            Layout.fillHeight: true
+            Layout.fillWidth: true
 
             spacing: 10
 
@@ -79,22 +75,15 @@ Item {
 
                 actionTree: modelData
             }
-//            Rectangle {
-//                color: "green"
-//                opacity: 0.5
-//
-//                width: _listView.width
-//                height: 100
-//            }
         }
 
         // Button to add a new action configuration to the currently
         // active input
         Rectangle {
             id: _newActionButton
-            
-            width: parent.width
-            height: 40
+
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
 
             color: Universal.background
 

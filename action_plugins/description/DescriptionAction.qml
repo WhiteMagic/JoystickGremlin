@@ -31,14 +31,13 @@ Item {
     property ActionTreeModel actionTree
     property DescriptionModel model
 
-    height: _layout.height
+    implicitHeight: _content.childrenRect.height
 
     RowLayout {
-        id: _layout
+        id: _content
 
         anchors.left: parent.left
         anchors.right: parent.right
-
 
         Label {
             id: _label

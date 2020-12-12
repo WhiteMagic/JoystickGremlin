@@ -65,8 +65,6 @@ Item {
         ScrollBar.vertical: ScrollBar {}
         flickableDirection: Flickable.VerticalFlick
         boundsBehavior: Flickable.StopAtBounds
-
-
     }
 
     // Renders the information about a single input, including name and

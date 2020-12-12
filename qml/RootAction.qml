@@ -32,7 +32,7 @@ Item {
     property ActionTreeModel actionTree
     property var model
 
-    height: _content.childrenRect.height
+    implicitHeight: _content.childrenRect.height
 
     // Show all child nodes
     ColumnLayout {
@@ -50,7 +50,6 @@ Item {
                 action: modelData
                 actionTree: _root.actionTree
 
-                //width: _content.width
                 Layout.fillWidth: true
             }
         }

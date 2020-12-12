@@ -31,7 +31,12 @@ Item {
     property ActionTreeModel actionTree
     property int itemSpacing : 10
 
-    height: _content.childrenRect.height
+    implicitHeight: _content.childrenRect.height
+
+    onImplicitHeightChanged: {
+        console.log("ActionNode " + implicitHeight)
+        parent.implicitHeight = implicitHeight
+    }
 
     ColumnLayout {
         id: _content
@@ -41,8 +46,6 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
-//        anchors.leftMargin: 10 + 20 * (_root.action.depth - 0)
-//        anchors.rightMargin: 10
 
         // Drag & drop support
 //        Drag.active: _dragArea.drag.active
@@ -64,6 +67,7 @@ Item {
             id: _header
 
             Layout.fillWidth: true
+            Layout.preferredHeight: _foldButton.height
             spacing: 10
 
             FoldButton {
@@ -74,6 +78,13 @@ Item {
 
                 onClicked: {
                     backend.setIsActionExpanded(_root.action.id, checked)
+
+
+//                    _action.visible = checked
+//                    var height = checked ? _action.itemHeight : 0
+//                    _action.Layout.preferredHeight = height
+//                    _action.height = height
+                    _action.height = _action.Layout.preferredHeight
                 }
             }
 
@@ -99,22 +110,19 @@ Item {
             }
         }
 
-        VerticalSpacer {
-            spacing: _action.visible ? itemSpacing : 0
-        }
-//        Rectangle {
-//            height: 10
-//            Layout.fillWidth: true
+//        VerticalSpacer {
+//            spacing: _action.visible ? itemSpacing : 0
 //        }
 
         // Dynamic QML item loading
         Item {
             id: _action
 
-            Layout.fillWidth: true
+            property int itemHeight : 0
 
-            height: visible ? implicitHeight : 0
-            visible: true //_actionButton.checked
+            Layout.fillWidth: true
+            Layout.preferredHeight: _foldButton.checked ? itemHeight : 0
+            visible: _foldButton.checked
 
             // Dynamically load the QML item
             Component.onCompleted: {
@@ -132,10 +140,9 @@ Item {
                             }
                         );
 
-                        _action.implicitHeight = obj.height
+                        _action.itemHeight = obj.implicitHeight
                         obj.anchors.left = _action.left
                         obj.anchors.right = _action.right
-
 
 //                        var obj = Qt.createQmlObject(
 //                            '

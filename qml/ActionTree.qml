@@ -32,19 +32,15 @@ Item {
 
     property ActionTreeModel actionTree
 
-    // anchors.left: parent.left
-    // anchors.right: parent.right
-    // anchors.rightMargin: 10
-    // height: _header.height + _headerBorder.height + _action.height +
-    //     _actionSelector.height
-    // height: _header.height
-    // width: _header.width
+    implicitHeight: _content.childrenRect.height
 
-    height: _layout.height
+    onImplicitHeightChanged: {
+        console.log("ActionTree " + implicitHeight)
+    }
 
     // Content
-    Column {
-        id: _layout
+    ColumnLayout {
+        id: _content
 
         anchors.left: _root.left
         anchors.right: _root.right
@@ -58,8 +54,7 @@ Item {
         ActionConfigurationHeader {
             id: _header
 
-            anchors.left: parent.left
-            anchors.right: parent.right
+            Layout.fillWidth: true
 
             actionTree: _root.actionTree
         }
@@ -67,162 +62,17 @@ Item {
         BottomBorder {}
 
 
-// General header
-        // Rectangle {
-        //     id: _generalHeader
-
-        //     Layout.fillWidth: true
-            
-        //     implicitHeight: Math.max(_description.height, _behaviour.height, _headerRemove.height)
-
-        //     color: Universal.background
-
-        //     TextField {
-        //         id: _description
-
-        //         placeholderText: "Description"
-        //         text: "" != _root.actionTree.description ? _root.actionTree.description : null
-
-        //         anchors.left: _generalHeader.left
-        //         anchors.right: _behaviour.left
-        //         anchors.verticalCenter: _behaviour.verticalCenter
-
-        //         onTextChanged: {
-        //             _root.actionTree.description = text
-        //         }
-        //     }
-
-        //     InputBehaviour {
-        //         id: _behaviour
-
-        //         actionTree: _root.actionTree
-
-        //         anchors.right: _headerRemove.left
-        //     }
-
-        //     Button {
-        //         id: _headerRemove
-
-        //         icon.source: "../gfx/close.png"
-        //         anchors.right: _generalHeader.right
-        //     }
-        // }
-
-        // // Behaviour controls header portion
-        // Item {
-        //     id: _behaviourControls
-
-        //     Layout.fillWidth: true
-        //     implicitHeight: Math.max(_behaviourAxisButton.height, _behaviourHatButton.height)
-        //     // height: _behaviourAxisButton.active ? _behaviourAxisButton.height : 0 +
-        //     //         _behaviourHatButton.active ? _behaviourHatButton.sourceComponent.height : 0
-
-
-        //     // UI for a physical axis behaving as a button
-        //     Loader {
-        //         id: _behaviourAxisButton
-
-        //         active: _root.actionTree.behaviour == "button" && _root.actionTree.inputType == "axis"
-        //         onActiveChanged: {
-        //             visible: active
-
-        //             height = 0
-        //         }
-
-        //         sourceComponent: Row {
-        //             spacing: 10
-
-        //             Label {
-        //                 anchors.verticalCenter: _axisRange.verticalCenter
-        //                 text: "Activate between"
-        //             }
-        //             NumericalRangeSlider {
-        //                 id: _axisRange
-
-        //                 from: -1.0
-        //                 to: 1.0
-        //                 firstValue: _root.actionTree.virtualButton.lowerLimit
-        //                 secondValue: _root.actionTree.virtualButton.upperLimit
-        //                 stepSize: 0.1
-        //                 decimals: 3
-
-        //                 onFirstValueChanged: {
-        //                     _root.actionTree.virtualButton.lowerLimit = firstValue
-        //                 }
-        //                 onSecondValueChanged: {
-        //                     _root.actionTree.virtualButton.upperLimit = secondValue
-        //                 }
-        //             }
-        //             Label {
-        //                 anchors.verticalCenter: _axisRange.verticalCenter
-        //                 text: "when entered from"
-        //             }
-        //             ComboBox {
-        //                 model: ["Anywhere", "Above", "Below"]
-
-        //                 // Select the correct entry
-        //                 Component.onCompleted: {
-        //                     currentIndex = find(
-        //                         _root.actionTree.virtualButton.direction,
-        //                         Qt.MatchFixedString
-        //                     )
-        //                 }
-
-        //                 // TODO: Figure out the best way to handle initialization
-        //                 //       without overwriting model values
-        //                 //onCurrentTextChanged: {
-        //                 onActivated: {
-        //                     _root.actionTree.virtualButton.direction = currentText
-        //                 }
-        //             }
-        //         }
-        //     }
-
-        //     // UI for a physical hat behaving as a button
-        //     Loader {
-        //         id: _behaviourHatButton
-
-        //         active: _root.actionTree.behaviour == "button" && _root.actionTree.inputType == "hat"
-
-        //         sourceComponent: Row {
-        //             spacing: 10
-        //             height: 40
-
-        //             HatDirectionSelector {
-        //                 virtualButton: _root.actionTree.virtualButton
-        //             }
-        //         }
-        //     }
-        // }
-
-        // Rectangle {
-        //     Layout.fillWidth: true
-        //     implicitHeight: 10
-
-        //     color: Universal.background
-        // }
-        // Rectangle {
-        //     Layout.fillWidth: true
-        //     implicitHeight: 2
-
-        //     color: Universal.accent
-        // }
-
-
-
-        // +------------------------------------------------------------------------
+        // +--------------------------------------------------------------------
         // | Render the root action node
-        // +------------------------------------------------------------------------
-        // ActionNode {
-        //     id: _action
+        // +--------------------------------------------------------------------
+        ActionNode {
+            id: _action
 
-        //     action: _root.actionTree.rootAction
-        //     actionTree: _root.actionTree
+            Layout.fillWidth: true
 
-        //     anchors.top: _headerBorder.bottom
-        //     anchors.left: parent.left
-        //     anchors.right: parent.right
-        // }
+            action: _root.actionTree.rootAction
+            actionTree: _root.actionTree
+        }
 
 
         // +--------------------------------------------------------------------
@@ -231,8 +81,7 @@ Item {
         Loader {
             id: _actionSelector
 
-            anchors.left: parent.left
-            anchors.right: parent.right
+            Layout.fillWidth: true
 
             active: actionTree.actionCount == 0
 
