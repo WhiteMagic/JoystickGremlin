@@ -16,10 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import QtQuick 2.14
-import QtQuick.Controls 2.14
-import QtQuick.Dialogs 1.3
-import QtQuick.Window 2.14
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Window 2.15
+import Qt.labs.platform 1.1 as Dialogs
 
 import gremlin.ui.device 1.0
 
@@ -35,10 +35,10 @@ ApplicationWindow {
     visible: true
     id: _root
 
-    MessageDialog {
+    Dialogs.MessageDialog {
         id: idErrorDialog
         title: "An error occurred"
-        standardButtons: StandardButton.Ok
+        buttons: MessageDialog.Ok
 
         text: backend.lastError
 
@@ -47,26 +47,22 @@ ApplicationWindow {
         }
     }
 
-    FileDialog {
+    Dialogs.FileDialog {
         id: idSaveProfileFileDialog
         title: "Please choose a file"
-        folder: shortcuts.home
         defaultSuffix: "xml"
         nameFilters: ["Profile files (*.xml)"]
-        selectExisting: false
 
         onAccepted: {
             backend.saveProfile(Helpers.pythonizePath(fileUrl))
         }
     }
 
-    FileDialog {
+    Dialogs.FileDialog {
         id: idLoadProfileFileDialog
         title: "Please choose a file"
-        folder: shortcuts.home
         defaultSuffix: "xml"
         nameFilters: ["Profile files (*.xml)"]
-        selectExisting: true
 
         onAccepted: {
             backend.loadProfile(Helpers.pythonizePath(fileUrl))
