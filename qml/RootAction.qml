@@ -32,7 +32,7 @@ Item {
     property ActionTreeModel actionTree
     property var model
 
-    implicitHeight: _content.childrenRect.height
+    implicitHeight: _content.height
 
     // Show all child nodes
     ColumnLayout {

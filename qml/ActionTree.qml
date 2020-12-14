@@ -32,11 +32,7 @@ Item {
 
     property ActionTreeModel actionTree
 
-    implicitHeight: _content.childrenRect.height
-
-    onImplicitHeightChanged: {
-        console.log("ActionTree " + implicitHeight)
-    }
+    implicitHeight: _content.height
 
     // Content
     ColumnLayout {
@@ -47,10 +43,9 @@ Item {
         anchors.leftMargin: 10
         anchors.rightMargin: 20
 
-
-        // +------------------------------------------------------------------------
+        // +--------------------------------------------------------------------
         // | Header
-        // +------------------------------------------------------------------------
+        // +--------------------------------------------------------------------
         ActionConfigurationHeader {
             id: _header
 

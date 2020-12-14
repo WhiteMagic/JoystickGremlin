@@ -31,7 +31,7 @@ Item {
     property ActionTreeModel actionTree
     property DescriptionModel model
 
-    implicitHeight: _content.childrenRect.height
+    implicitHeight: _content.height
 
     RowLayout {
         id: _content

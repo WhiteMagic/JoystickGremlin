@@ -31,12 +31,7 @@ Item {
     property ActionTreeModel actionTree
     property int itemSpacing : 10
 
-    implicitHeight: _content.childrenRect.height
-
-    onImplicitHeightChanged: {
-        console.log("ActionNode " + implicitHeight)
-        parent.implicitHeight = implicitHeight
-    }
+    implicitHeight: _content.height
 
     ColumnLayout {
         id: _content
@@ -78,13 +73,6 @@ Item {
 
                 onClicked: {
                     backend.setIsActionExpanded(_root.action.id, checked)
-
-
-//                    _action.visible = checked
-//                    var height = checked ? _action.itemHeight : 0
-//                    _action.Layout.preferredHeight = height
-//                    _action.height = height
-                    _action.height = _action.Layout.preferredHeight
                 }
             }
 
@@ -118,11 +106,18 @@ Item {
         Item {
             id: _action
 
-            property int itemHeight : 0
+            property var dynamicItem: null
 
             Layout.fillWidth: true
-            Layout.preferredHeight: _foldButton.checked ? itemHeight : 0
+            Layout.preferredHeight: _foldButton.checked ? implicitHeight : 0
             visible: _foldButton.checked
+
+            Connections {
+                target: _action.dynamicItem
+                function onImplicitHeightChanged() {
+                    _action.implicitHeight = _action.dynamicItem.implicitHeight
+                }
+            }
 
             // Dynamically load the QML item
             Component.onCompleted: {
@@ -132,7 +127,7 @@ Item {
 
                 if (component) {
                     if (component.status == Component.Ready) {
-                        var obj = component.createObject(
+                        _action.dynamicItem = component.createObject(
                             _action,
                             {
                                 model: _root.action.actionModel,
@@ -140,39 +135,9 @@ Item {
                             }
                         );
 
-                        _action.itemHeight = obj.implicitHeight
-                        obj.anchors.left = _action.left
-                        obj.anchors.right = _action.right
-
-//                        var obj = Qt.createQmlObject(
-//                            '
-//                                import QtQuick 2.14
-//                                import QtQuick.Layouts 1.14
-//
-//                                Item {
-//                                    height: _layout.height
-//
-//                                    ColumnLayout {
-//                                        id: _layout
-//
-//                                        anchors.left: parent.left
-//                                        anchors.right: parent.right
-//
-//                                        Rectangle {
-//                                            color: "red"
-//                                            height: 20
-//
-//                                            Layout.fillWidth: true
-//                                        }
-//                                    }
-//                                }
-//                            ',
-//                            _action,
-//                            "dynamicSnippet1"
-//                        );
-//                        _action.implicitHeight = obj.height
-//                        obj.anchors.left = _action.left
-//                        obj.anchors.right = _action.right
+                        _action.implicitHeight = _action.dynamicItem.implicitHeight
+                        _action.dynamicItem.anchors.left = _action.left
+                        _action.dynamicItem.anchors.right = _action.right
                     } else if (component.status == Component.Error) {
                         console.log("Error loading component:", component.errorString());
                     }
