@@ -82,7 +82,7 @@ class FileWatcher(QtCore.QObject):
             time.sleep(1)
 
 
-def read_bool(node: ElementTree, key: str, default_value: bool = False) -> bool:
+def read_bool(node: ElementTree.Element, key: str, default_value: bool = False) -> bool:
     """Attempts to read a boolean value.
 
     If there is an error when reading the given field from the node
@@ -155,14 +155,14 @@ def parse_guid(value: str) -> dill.GUID:
             raw_guid.Data4[i] = tmp.bytes[8 + i]
 
         return dill.GUID(raw_guid)
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError) as _:
         raise error.GremlinError(f"Failed parsing GUID from value '{value}'")
 
 
 def safe_read(
         node: ElementTree.Element,
         key: str,
-        type_cast: Callable[[str], Any],
+        type_cast: Optional[Callable[[str], Any]] = None,
         default_value: Optional[Any] = None
 ) -> Any:
     """Safely reads an attribute from an XML node.

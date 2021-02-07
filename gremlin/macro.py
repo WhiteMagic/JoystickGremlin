@@ -81,7 +81,7 @@ class MacroManager:
 
             # Terminate any macro that is still active
             with self._flags_lock:
-                for key, value in self._flags.items():
+                for key in self._flags:
                     self._flags[key] = False
 
     def queue_macro(self, macro):
@@ -118,7 +118,7 @@ class MacroManager:
             with self._queue_lock:
                 entries_to_remove = []
                 has_exclusive = False
-                for i, entry in enumerate(self._queue):
+                for entry in self._queue:
                     # Terminate macro if needed
                     if entry.state is False:
                         if entry.macro.id in self._flags \
@@ -126,7 +126,6 @@ class MacroManager:
                             # Terminate currently running macro
                             with self._flags_lock:
                                 self._flags[entry.macro.id] = False
-                            # del self._queue[i]
 
                             # Remove all queued up macros with the same id as
                             # they should have been impossible to queue up
