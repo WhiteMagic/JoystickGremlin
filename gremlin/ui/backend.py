@@ -224,17 +224,17 @@ class Backend(QtCore.QObject):
 
     # FIXME: This is a terrible hack to fool the type system
     @Slot(QtCore.QObject, result="QVariantList")
-    def actionList(self, action_tree: ActionTreeModel) -> List[str]:
+    def actionList(self, action_node: ActionNodeModel) -> List[str]:
         """Returns a list of valid action plugins for a particular configuration.
 
         Args:
-            configuration: Information about the action tree being configured
+            action_node: instance to use to determine valid actions
 
         Returns:
             List of valid actions for the given configuration
         """
         action_list = plugin_manager.ActionPlugins().type_action_map[
-            action_tree.behaviour_type
+            action_node.action_configuration.behaviour
         ]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
@@ -242,7 +242,7 @@ class Backend(QtCore.QObject):
     def addAction(
             self,
             action_name: str,
-            action_tree: ActionTreeModel
+            action_node: ActionNodeModel
     ) -> None:
         """Adds a new action to the given configuration.
 
@@ -251,12 +251,14 @@ class Backend(QtCore.QObject):
             configuration: ActionTree configuration to which to add the action
         """
         action = plugin_manager.ActionPlugins().get_class(action_name)(
-            action_tree.action_tree(),
-            InputType.to_enum(action_tree.behaviour)
+            action_node.action_configuration.library_reference.action_tree,
+            action_node.action_configuration.behaviour
         )
-        # TODO: This node bit needs to change
-        #action_node = TreeNode(action, action_tree.action_tree().root)
-        #action_tree.modelReset.emit()
+        if action_node.tree_node.parent is None:
+            TreeNode(action, action_node.tree_node)
+        else:
+            TreeNode(action, action_node.tree_node.parent)
+        action_node.parent().rootActionChanged.emit()
 
     @Slot(InputIdentifier)
     def newActionConfiguration(self, identifier: InputIdentifier) -> None:

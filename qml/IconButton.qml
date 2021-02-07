@@ -19,34 +19,13 @@
 import QtQuick 2.14
 import QtQuick.Controls 2.14
 
-import gremlin.ui.profile 1.0
 
-
-Item {
-    id: _root
-
-    property ActionNodeModel actionNode
-
-    width: _combobox.width + _button.width
-    height: _combobox.height
-
-    onActionNodeChanged: {
-        _combobox.model = backend.actionList(actionNode)
-    }
-
-    ComboBox {
-        id: _combobox
-        model: []
-    }
-    Button {
-        id: _button
-        anchors.left: _combobox.right
-        anchors.leftMargin: 10
-        text: "Add Action"
-
-        onClicked: {
-            backend.addAction(_combobox.currentText, actionNode)
-        }
-    }
-
+Button {
+  font.family: "FontAwesome"
+  font.pixelSize: 16
+  
+  background: Rectangle {
+    anchors.fill: parent
+    color: "transparent"
+  }
 }

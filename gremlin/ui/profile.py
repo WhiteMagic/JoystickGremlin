@@ -24,7 +24,7 @@ import uuid
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, profile, process_monitor, tree, util
+from gremlin import error, profile, profile_library, tree, util
 from gremlin.base_classes import AbstractActionModel
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
@@ -60,7 +60,7 @@ class ActionConfigurationListModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("fake".encode()),
     }
 
-    def __init__(self, items, parent=None):
+    def __init__(self, items: List[profile.ActionConfiguration], parent=None):
         super().__init__(parent)
 
         self._action_configurations = items
@@ -207,13 +207,21 @@ class ActionNodeModel(QtCore.QObject):
     def __init__(
             self,
             node: tree.TreeNode,
-            action_tree: profile_library.ActionTree,
+            action_configuration: profile.ActionConfiguration,
             parent=None
     ):
         super().__init__(parent)
 
-        self._action_tree = action_tree
+        self._action_configuration = action_configuration
         self._node = node
+
+    @property
+    def action_configuration(self) -> profile.ActionConfiguration:
+        return self._action_configuration
+
+    @property
+    def tree_node(self) -> tree.TreeNode:
+        return self._node
 
     @Property(type="QVariant", notify=actionChanged)
     def actionModel(self) -> AbstractActionModel:
@@ -252,7 +260,8 @@ class ActionNodeModel(QtCore.QObject):
             source_node.detach()
             target_node.insert_sibling_after(source_node)
 
-        self.layoutChanged.emit()
+        self.actionChanged.emit()
+        self.parent().rootActionChanged.emit()
 
     @Slot(str, str)
     def moveBefore(self, source: str, target: str) -> None:
@@ -271,13 +280,13 @@ class ActionNodeModel(QtCore.QObject):
             source_node.detach()
             target_node.insert_sibling_before(source_node)
 
-        self.layoutChanged.emit()
+        self.actionChanged.emit()
+        self.parent().rootActionChanged.emit()
 
-    @Slot(str)
-    def remove(self, item):
-        node = self._find_node_with_id(uuid.UUID(item))
-        node.detach()
-        self.layoutChanged.emit()
+    @Slot()
+    def remove(self) -> None:
+        self._node.detach()
+        self.parent().rootActionChanged.emit()
 
     @Property(type=bool, notify=actionChanged)
     def isFirstSibling(self) -> bool:
@@ -293,6 +302,10 @@ class ActionNodeModel(QtCore.QObject):
         else:
             return self._node.parent.children[-1] == self._node
 
+    @Property(type=bool, notify=actionChanged)
+    def isRootNode(self) -> bool:
+        return isinstance(self._node.value, profile_library.RootAction)
+
     def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
         """Returns the node with the desired id from the action tree.
 
@@ -303,12 +316,11 @@ class ActionNodeModel(QtCore.QObject):
             The TreeNode corresponding to the given uuid
         """
         predicate = lambda x: True if x.value and x.value.id == uuid else False
-        nodes = self._action_tree.root.nodes_matching(predicate)
+        nodes = self._action_tree.action_tree().root.nodes_matching(predicate)
 
         if len(nodes) != 1:
             raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
         return nodes[0]
-
 
 
 class ActionTreeModel(QtCore.QObject):
@@ -339,9 +351,16 @@ class ActionTreeModel(QtCore.QObject):
     def rootAction(self) -> ActionNodeModel:
         return ActionNodeModel(
             self._action_tree.root,
-            self._action_tree,
+            self._action_configuration,
             parent=self
         )
+
+    @Property(type="QVariantList", notify=rootActionChanged)
+    def rootNodes(self) -> List[ActionNodeModel]:
+        return [
+            ActionNodeModel(node, self._action_configuration, parent=self)
+            for node in self._action_tree.root.children
+        ]
 
     @Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
@@ -356,13 +375,6 @@ class ActionTreeModel(QtCore.QObject):
     @Property(type=int, notify=actionCountChanged)
     def actionCount(self) -> int:
         return self._action_tree.root.node_count
-
-    @Property(type="QVariantList", notify=rootActionChanged)
-    def rootNodes(self) -> List[ActionNodeModel]:
-        return [
-            ActionNodeModel(node, self, parent=self)
-            for node in self._action_tree.root.children
-        ]
 
     def _get_behaviour(self) -> str:
         return InputType.to_string(self._action_configuration.behaviour)
@@ -412,6 +424,7 @@ class ActionTreeModel(QtCore.QObject):
     def behaviour_type(self):
         return self._action_configuration.behaviour
 
+    @property
     def action_tree(self):
         return self._action_tree
 

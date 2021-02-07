@@ -81,7 +81,7 @@ Item {
             active: actionTree.actionCount == 0
 
             sourceComponent: ActionSelector {
-                actionTree: actionTree
+                actionNode: _root.actionTree.rootAction
             }
         }
     }

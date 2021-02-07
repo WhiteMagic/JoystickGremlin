@@ -6,8 +6,10 @@ import QtQuick.Controls.Universal 2.14
 Button {
     id: control
 
+    font.family: "FontAwesome"
+    font.pixelSize: 16
+
     checkable: true
-    display: AbstractButton.IconOnly
 
     background: Rectangle {
         implicitWidth: 32

@@ -43,19 +43,19 @@ Item {
         anchors.right: parent.right
 
         // Drag & drop support
-//        Drag.active: _dragArea.drag.active
-//        Drag.dragType: Drag.Automatic
-//        Drag.supportedActions: Qt.MoveAction
-//        Drag.proposedAction: Qt.MoveAction
-//        Drag.mimeData: {
-//            "text/plain": _root.action.id
-//        }
-//        Drag.onDragFinished: {
-//            _content.dragSuccess = dropAction == Qt.MoveAction;
-//        }
-//        Drag.onDragStarted: {
-//            _content.sourceY = _content.y
-//        }
+        Drag.active: _dragArea.drag.active
+        Drag.dragType: Drag.Automatic
+        Drag.supportedActions: Qt.MoveAction
+        Drag.proposedAction: Qt.MoveAction
+        Drag.mimeData: {
+            "text/plain": _root.action.id
+        }
+        Drag.onDragFinished: {
+            _content.dragSuccess = dropAction == Qt.MoveAction;
+        }
+        Drag.onDragStarted: {
+            _content.sourceY = _content.y
+        }
 
         // Header
         RowLayout {
@@ -65,11 +65,11 @@ Item {
             Layout.preferredHeight: _foldButton.height
             spacing: 10
 
-            FoldButton {
+            IconButton {
                 id: _foldButton
 
                 checked: backend.isActionExpanded(_root.action.id)
-                icon.source: checked ? "qrc:///icons/button_delete" : "qrc:///icons/button_add"
+                text: checked ? "\uf146" : "\uf0fe"
 
                 onClicked: {
                     backend.setIsActionExpanded(_root.action.id, checked)
@@ -85,22 +85,17 @@ Item {
                 height: 2
                 Layout.alignment: Qt.AlignVCenter
 
-                color: _foldButton.background.color
+                color: Universal.baseLowColor
             }
 
-            Button {
-                icon.source: "qrc:///icons/delete"
+            IconButton {
+                text: "\uf2ed"
 
-// FIXME: Reimplement this
-//                onClicked: {
-//                    _listView.model.remove(model.id);
-//                }
+                onClicked: {
+                   modelData.remove()
+                }
             }
         }
-
-//        VerticalSpacer {
-//            spacing: _action.visible ? itemSpacing : 0
-//        }
 
         // Dynamic QML item loading
         Item {
@@ -145,38 +140,36 @@ Item {
             }
         }
 
-        // On each valid level/item need to have a dropdown with actions
-//        Loader {
-//            id: _actionSelector
-//
-//            active: _root.action.isLastSibling
-//
-//            sourceComponent: Column {
-//                Rectangle {
-//                    height: itemSpacing
-//                    width: 1
-//                }
-//                ActionSelector {
-//                    actionTree: _root.actionTree
-//                }
-//            }
-//        }
+        // Last node of each subtree is followed by a dropdown to add additional actions
+       Loader {
+           active: _root.action.isLastSibling
 
-    //} // Item
+           sourceComponent: Column {
+               Rectangle {
+                   height: itemSpacing
+                   width: 1
+               }
+               ActionSelector {
+                   actionNode: _root.action
+               }
+           }
+       }
     }
 
-/*
+
     // +------------------------------------------------------------------------
     // | Drag & Drop support
     // +------------------------------------------------------------------------
+    
     // Drag interface area
     MouseArea {
         id: _dragArea
 
         // Start at label field x coordinate, otherwise button stops working
-        x: _actionName.x
+        x: _header.x
         y: _header.y
-        width: _actionName.width + _headerSeparator.width
+        z: -1
+        width: _header.width
         height: _header.height
 
         drag.target: _content
@@ -195,52 +188,48 @@ Item {
         })
     }
 
-    // Drop area
-    DropArea {
-        id: _dropArea
+    // Drop area below every non-root action
+    Loader {
+        active: !_root.action.isRootNode
+        sourceComponent: DropArea {
+            x: _action.x
+            y: (_action.visible ? _action.y + _action.height : _header.y + _header.height) - height/2 + itemSpacing/2
+            width: _action.width
+            height: 30
 
-        height: _header.height + itemSpacing
-        anchors.left: _header.left
-        anchors.right: _header.right
-        y: _action.y + _action.height - height/2 + itemSpacing/2
+            // Visualization of the drop indicator
+            Rectangle {
+                id: _dropMarker
 
-        // Visualization of the drop indicator
-        Rectangle {
-            id: _dropMarker
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+                height: 5
 
-            height: 5
+                opacity: parent.containsDrag ? 1.0 : 0.0
+                color: Universal.accent
+            }
 
-            opacity: _dropArea.containsDrag ? 1.0 : 0.0
-            color: Universal.accent
-        }
-
-        onDropped: {
-            if(drop.text != _root.action.id)
-            {
-                drop.accept();
-                // FIXME: reimplement this
-                //_listView.model.moveAfter(drop.text, model.id);
+            onDropped: {
+                if(drop.text != _root.action.id)
+                {
+                    drop.accept();
+                    modelData.moveAfter(drop.text, modelData.id);
+                }
             }
         }
     }
 
-    // Drop area atop the header
+    // Drop area above the first action of a subtree
     Loader {
-        //anchors.left: _header.left
-        //anchors.right: _header.right
-
-        active: _root.action.isFirstSibling
+        active: _root.action.isFirstSibling && !_root.action.isRootNode
         sourceComponent: DropArea {
-            id: _topDropArea
-
-            height: _header.height
-            anchors.left: parent.left
-            anchors.right: parent.right
-            y: _header.y - itemSpacing
+            
+            x: _header.x
+            y: _header.y -itemSpacing/2
+            width: _action.width
+            height: 30
 
             // Visualization of the drop indicator
             Rectangle {
@@ -252,7 +241,7 @@ Item {
 
                 height: 5
 
-                opacity: _topDropArea.containsDrag ? 1.0 : 0.0
+                opacity: parent.containsDrag ? 1.0 : 0.0
                 color: Universal.accent
             }
 
@@ -260,12 +249,10 @@ Item {
                 if(drop.text != _root.action.id)
                 {
                     drop.accept();
-                    // FIXME: reimplement this
-                    //_listView.model.moveBefore(drop.text, model.id);
+                    modelData.moveBefore(drop.text, modelData.id);
                 }
             }
         }
     }
-*/
 
-} // Component (delegate)
+}
