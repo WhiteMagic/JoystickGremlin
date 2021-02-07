@@ -11,4 +11,7 @@
         <file alias="profile_save">gfx/profile_save.svg</file>
         <file alias="profile_save_as">gfx/profile_save_as.svg</file>
     </qresource>
+    <qresource prefix="/">
+        <file alias="FontAwesome">gfx/fa5_free_solid.otf</file>
+    </qresource>
 </RCC>
