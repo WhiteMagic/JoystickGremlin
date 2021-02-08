@@ -298,3 +298,9 @@ Item {
 
 The above setup exploits the fact that when the plugin's UI code is dynamically created the height of the plugin is retrieved from this UI element while the width is dictated by the parent element in which this UI element is embedded. This UI element is resized during creation to with within the parent's width.
 
+## Resource file generation
+
+The `pyside6-rcc` programs converts the contents of a QRC file into a python module which can be loaded and used later on. When a venv is used the program resides within the scripts folder. Invoking the program takes the following form.
+
+```.\venv\Scripts\pyside6-rcc.exe .\resources.qrc -o .\resources.py```
+
