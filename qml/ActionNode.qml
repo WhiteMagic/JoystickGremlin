@@ -133,6 +133,7 @@ Item {
                         _action.implicitHeight = _action.dynamicItem.implicitHeight
                         _action.dynamicItem.anchors.left = _action.left
                         _action.dynamicItem.anchors.right = _action.right
+                        _action.dynamicItem.anchors.leftMargin = _foldButton.width
                     } else if (component.status == Component.Error) {
                         console.log("Error loading component:", component.errorString());
                     }
