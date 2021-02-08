@@ -31,38 +31,33 @@ Item {
     property ActionTreeModel actionTree
     property RemapModel model
 
-    //height: idVjoy.height
-    //width: parent.width
+    implicitHeight: _content.height
 
-    ColumnLayout {
-        Item {
-            VJoySelector {
-                id: idVjoy
+    RowLayout {
+        id: _content
 
-                anchors.left: parent.left
+        anchors.left: parent.left
+        anchors.right: parent.right
 
-                inputType: model.inputType
-                vjoyInputId: model.vjoyInputId
-                vjoyDeviceId: model.vjoyDeviceId
-                validTypes: [actionTree.behaviour]
+        VJoySelector {
+            id: idVjoy
 
-                onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
-                onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
-                onInputTypeChanged: { model.inputType = inputType }
-            }
+            inputType: model.inputType
+            vjoyInputId: model.vjoyInputId
+            vjoyDeviceId: model.vjoyDeviceId
+            validTypes: [actionTree.behaviour]
 
-            // UI for a physical axis behaving as an axis
-            Row {
-                anchors.left: idVjoy.right
-                spacing: 10
+            onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
+            onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
+            onInputTypeChanged: { model.inputType = inputType }
+        }
 
-                visible: actionTree.behaviour == "axis"
+        // UI for a physical axis behaving as an axis
+        Loader {
+            active: actionTree.behaviour == "axis"
+            Layout.fillWidth: true
 
-                Rectangle {
-                    width: 10
-                    height: 1
-                }
-
+            sourceComponent: Row {
                 RadioButton {
                     text: "Absolute"
                     checked: true
