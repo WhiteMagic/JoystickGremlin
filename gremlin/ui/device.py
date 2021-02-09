@@ -375,18 +375,17 @@ class VJoyDevices(QtCore.QObject):
             # selection if the input type is part of the new set of valid
             # types. If this is not possible set the selection to the first
             # entry of the available values.
-            old_vjoy_input_id = self._get_vjoy_id()
+            old_vjoy_id = self._get_vjoy_id()
             old_input_type = self._get_input_type()
             self.inputModel
-            if self._current_input_type in self._valid_types and \
-                    self._current_vjoy_index > 0:
+            try:
                 self.setSelection(
                     self._current_vjoy_index,
-                    old_vjoy_input_id,
+                    old_vjoy_id,
                     old_input_type
                 )
-            else:
-                self._current_vjoy_index = self._devices[0].vjoy_id
+            except error.GremlinError as e:
+                self._current_vjoy_index = 0
                 self._current_input_index = 0
                 self._current_input_type = self._input_data[0][0]
 
@@ -415,7 +414,7 @@ class VJoyDevices(QtCore.QObject):
 
     def _set_vjoy_index(self, index: int) -> None:
         if index != self._current_vjoy_index:
-            if index > len(self._devices):
+            if index >= len(self._devices):
                 raise error.GremlinError(
                     f"Invalid device index used device with index {index} "
                     f"does not exist"
