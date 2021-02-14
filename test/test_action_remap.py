@@ -24,6 +24,7 @@ from xml.etree import ElementTree
 
 import gremlin.error as error
 import gremlin.types as types
+import gremlin.profile_library as profile_library
 
 import action_plugins.remap as remap
 
@@ -72,7 +73,10 @@ xml_axis = """
 
 
 def test_ctor(joystick_init):
-    r = remap.RemapModel(types.InputType.JoystickButton)
+    r = remap.RemapModel(
+        profile_library.ActionTree(),
+        types.InputType.JoystickButton
+    )
 
     assert r.vjoy_device_id == 1
     assert r.vjoy_input_id == 1
@@ -82,7 +86,10 @@ def test_ctor(joystick_init):
 
 
 def test_from_xml():
-    r = remap.RemapModel(types.InputType.JoystickButton)
+    r = remap.RemapModel(
+        profile_library.ActionTree(),
+        types.InputType.JoystickButton
+    )
     r.from_xml(ElementTree.fromstring(xml_button))
     assert r.vjoy_device_id == 1
     assert r.vjoy_input_id == 12
@@ -90,7 +97,7 @@ def test_from_xml():
     assert r.axis_mode == types.AxisMode.Absolute
     assert r.axis_scaling == 1.0
 
-    r = remap.RemapModel()
+    r = remap.RemapModel(profile_library.ActionTree())
     r.from_xml(ElementTree.fromstring(xml_axis))
     assert r.vjoy_device_id == 2
     assert r.vjoy_input_id == 6
@@ -100,7 +107,10 @@ def test_from_xml():
 
 
 def test_to_xml():
-    r = remap.RemapModel(types.InputType.JoystickButton)
+    r = remap.RemapModel(
+        profile_library.ActionTree(),
+        types.InputType.JoystickButton
+    )
 
     r._id = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
     r.vjoy_device_id = 2
