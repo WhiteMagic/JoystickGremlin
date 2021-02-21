@@ -19,7 +19,6 @@ from abc import abstractmethod, ABCMeta
 from functools import partial
 import logging
 
-import dill
 import gremlin.keyboard
 import gremlin.types
 
@@ -92,34 +91,34 @@ class Value:
         self._current = current
 
 
-class ActivationCondition:
+# class ActivationCondition:
 
-    """Represents a set of conditions dictating the activation of actions.
+#     """Represents a set of conditions dictating the activation of actions.
 
-    This class contains a set of functions which evaluate to either True or
-    False which is used to indicate whether or not the entire condition is
-    True or False.
-    """
+#     This class contains a set of functions which evaluate to either True or
+#     False which is used to indicate whether or not the entire condition is
+#     True or False.
+#     """
 
-    rule_function = {
-        base_classes.ActivationRule.All: smart_all,
-        base_classes.ActivationRule.Any: smart_any
-    }
+#     rule_function = {
+#         base_classes.ActivationRule.All: smart_all,
+#         base_classes.ActivationRule.Any: smart_any
+#     }
 
-    def __init__(self, conditions, rule):
-        self._conditions = conditions
-        self._rule = rule
+#     def __init__(self, conditions, rule):
+#         self._conditions = conditions
+#         self._rule = rule
 
-    def process_event(self, event, value):
-        """Returns whether or not a condition is satisfied, i.e. true.
+#     def process_event(self, event, value):
+#         """Returns whether or not a condition is satisfied, i.e. true.
 
-        :param event the event this condition was triggered through
-        :param value process event value
-        :return True if all conditions are satisfied, False otherwise
-        """
-        return ActivationCondition.rule_function[self._rule](
-            [partial(c, event, value) for c in self._conditions]
-        )
+#         :param event the event this condition was triggered through
+#         :param value process event value
+#         :return True if all conditions are satisfied, False otherwise
+#         """
+#         return ActivationCondition.rule_function[self._rule](
+#             [partial(c, event, value) for c in self._conditions]
+#         )
 
 
 class AbstractCondition(metaclass=ABCMeta):
