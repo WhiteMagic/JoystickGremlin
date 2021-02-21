@@ -368,14 +368,15 @@ class VJoyDevices(QtCore.QObject):
 
             # When changing the input type attempt to preserve the existing
             # selection if the input type is part of the new set of valid
-            # types. If this is not possible set the selection to the first
-            # entry of the available values.
+            # types. If this is not possible, an exception is thrown and the
+            # selection is set to the first entry of the available values.
             old_vjoy_id = self._get_vjoy_id()
             old_input_type = self._get_input_type()
+            # Refresh the UI elements
             self.inputModel
             try:
                 self.setSelection(
-                    self._current_vjoy_index,
+                    self._get_vjoy_id(),
                     old_vjoy_id,
                     old_input_type
                 )
