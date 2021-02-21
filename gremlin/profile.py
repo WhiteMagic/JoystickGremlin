@@ -1314,6 +1314,31 @@ class Profile:
         with codecs.open(fpath, "w", "utf-8-sig") as out:
             out.write(dom_xml.toprettyxml(indent="    "))
 
+    def get_input_count(
+            self,
+            device_guid: dill.GUID,
+            input_type: InputType,
+            input_id: int
+    ) -> int:
+        """Returns the number of InputItem instances corresponding to the provided information.
+
+        Args:
+            device_guid: GUID of the device
+            input_type: type of the input
+            input_id: id of the input
+
+        Returns:
+            Number of InputItem instances linked with the given information
+        """
+        if device_guid not in self.inputs:
+            return 0
+
+        for item in self.inputs[device_guid]:
+            if item.input_type == input_type and item.input_id == input_id:
+                return len(item.action_configurations)
+
+        return 0
+
     def get_input_item(
             self,
             device_guid: dill.GUID,
