@@ -28,7 +28,6 @@ Item {
     id: _root
 
     property ActionNodeModel action
-    property ActionTreeModel actionTree
     property int itemSpacing : 10
 
     implicitHeight: _content.height
@@ -125,8 +124,7 @@ Item {
                         _action.dynamicItem = component.createObject(
                             _action,
                             {
-                                model: _root.action.actionModel,
-                                actionTree: actionTree
+                                model: _root.action.actionModel
                             }
                         );
 

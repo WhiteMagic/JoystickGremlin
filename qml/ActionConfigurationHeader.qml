@@ -28,7 +28,7 @@ import gremlin.ui.profile 1.0
 Item {
     id: _root
 
-    property ActionTreeModel actionTree
+    property InputItemBindingModel inputBinding
 
     height: _generalHeader.height + _behaviorAxisButton.height + _behaviorHatButton.height
 
@@ -47,17 +47,17 @@ Item {
                 width: _root.width - _behavior.width - _headerRemove.width
 
                 placeholderText: "Description"
-                text: "" != actionTree.description ? actionTree.description : null
+                text: "" != _root.inputBinding.description ? _root.inputBinding.description : null
 
                 onTextChanged: {
-                    actionTree.description = text
+                    _root.inputBinding.description = text
                 }
             }
 
             InputBehavior {
                 id: _behavior
 
-                actionTree: _root.actionTree
+                inputBinding: _root.inputBinding
             }
 
             Button {
@@ -97,16 +97,16 @@ Item {
 
                     from: -1.0
                     to: 1.0
-                    firstValue: actionTree.virtualButton.lowerLimit
-                    secondValue: actionTree.virtualButton.upperLimit
+                    firstValue: _root.inputBinding.virtualButton.lowerLimit
+                    secondValue: _root.inputBinding.virtualButton.upperLimit
                     stepSize: 0.1
                     decimals: 3
 
                     onFirstValueChanged: {
-                        actionTree.virtualButton.lowerLimit = firstValue
+                        _root.inputBinding.virtualButton.lowerLimit = firstValue
                     }
                     onSecondValueChanged: {
-                        actionTree.virtualButton.upperLimit = secondValue
+                        _root.inputBinding.virtualButton.upperLimit = secondValue
                     }
                 }
                 Label {
@@ -121,7 +121,7 @@ Item {
                     // Select the correct entry
                     Component.onCompleted: {
                         currentIndex = find(
-                            actionTree.virtualButton.direction,
+                            _root.inputBinding.virtualButton.direction,
                             Qt.MatchFixedString
                         )
                     }
@@ -130,7 +130,7 @@ Item {
                     //       without overwriting model values
                     //onCurrentTextChanged: {
                     onActivated: {
-                        actionTree.virtualButton.direction = currentText
+                        _root.inputBinding.virtualButton.direction = currentText
                     }
                 }
             }
@@ -162,7 +162,7 @@ Item {
                 HatDirectionSelector {
                     id: _hatDirection
 
-                    virtualButton: actionTree.virtualButton
+                    virtualButton: _root.inputBinding.virtualButton
                 }
             }
         }

@@ -26,9 +26,6 @@ import "../../qml"
 
 
 Item {
-    id: idRoot
-
-    property ActionTreeModel actionTree
     property RemapModel model
 
     implicitHeight: _content.height
@@ -40,12 +37,10 @@ Item {
         anchors.right: parent.right
 
         VJoySelector {
-            id: idVjoy
-
             inputType: model.inputType
             vjoyInputId: model.vjoyInputId
             vjoyDeviceId: model.vjoyDeviceId
-            validTypes: [actionTree.behaviour]
+            validTypes: [model.inputType]
 
             onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
             onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
@@ -54,7 +49,7 @@ Item {
 
         // UI for a physical axis behaving as an axis
         Loader {
-            active: actionTree.behaviour == "axis"
+            active: model.inputType == "axis"
             Layout.fillWidth: true
 
             sourceComponent: Row {
@@ -67,7 +62,7 @@ Item {
                     }
                 }
                 RadioButton {
-                    id: idRelativeMode
+                    id: _relativeMode
                     text: "Relative"
 
                     onCheckedChanged: {
@@ -78,13 +73,11 @@ Item {
                 Label {
                     text: "Scaling"
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: idRelativeMode.checked
+                    visible: _relativeMode.checked
                 }
 
                 FloatSpinBox {
-                    id: idScaling
-
-                    visible: idRelativeMode.checked
+                    visible: _relativeMode.checked
                     minValue: 0
                     maxValue: 100
                     value: 1

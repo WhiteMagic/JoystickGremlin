@@ -23,60 +23,60 @@ import gremlin.ui.device 1.0
 
 
 Item {
-    id: idRoot
+    id: _root
 
     property string inputType
     property int vjoyDeviceId
     property int vjoyInputId
     property var validTypes
 
-    height: Math.max(idDevice.height, idSpacer.height, idInput.height)
-    width: idDevice.width + idSpacer.width + idInput.width
+    height: Math.max(_device.height, idSpacer.height, idInput.height)
+    width: _device.width + idSpacer.width + idInput.width
 
     // React to the validTypes value being changed from an external source
     onValidTypesChanged: {
-        idVjoy.validTypes = validTypes
+        _vjoy.validTypes = validTypes
     }
 
 
     VJoyDevices {
-        id: idVjoy
+        id: _vjoy
 
         Component.onCompleted: {
-            validTypes = idRoot.validTypes
+            validTypes = _root.validTypes
             setSelection(
-                idRoot.vjoyDeviceId,
-                idRoot.vjoyInputId,
-                idRoot.inputType
+                _root.vjoyDeviceId,
+                _root.vjoyInputId,
+                _root.inputType
             )
         }
 
         onVjoyIndexChanged: {
-            idRoot.vjoyDeviceId = idVjoy.vjoyId
+            _root.vjoyDeviceId = _vjoy.vjoyId
         }
         onInputIndexChanged: {
-            idRoot.vjoyInputId = idVjoy.inputId
-            idRoot.inputType = idVjoy.inputType
+            _root.vjoyInputId = _vjoy.inputId
+            _root.inputType = _vjoy.inputType
         }
     }
 
     ComboBox {
-        id: idDevice
+        id: _device
 
         anchors.left: parent.left
         width: 150
 
-        model: idVjoy.deviceModel
-        currentIndex: idVjoy.vjoyIndex
+        model: _vjoy.deviceModel
+        currentIndex: _vjoy.vjoyIndex
 
         onActivated: {
-            idVjoy.vjoyIndex = index
+            _vjoy.vjoyIndex = index;
         }
     }
 
     Rectangle {
         id: idSpacer
-        anchors.left: idDevice.right
+        anchors.left: _device.right
         width: 10
         height: 1
 
@@ -89,11 +89,11 @@ Item {
         anchors.left: idSpacer.right
         width: 150
 
-        model: idVjoy.inputModel
-        currentIndex: idVjoy.inputIndex
+        model: _vjoy.inputModel
+        currentIndex: _vjoy.inputIndex
 
         onActivated: {
-            idVjoy.inputIndex = index
+            _vjoy.inputIndex = index
         }
     }
 }

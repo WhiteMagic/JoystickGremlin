@@ -73,7 +73,7 @@ Item {
             ActionTree {
                 width: _listView.width
 
-                actionTree: modelData
+                inputBinding: modelData
             }
         }
 

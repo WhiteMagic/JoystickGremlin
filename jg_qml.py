@@ -244,11 +244,11 @@ if __name__ == "__main__":
         "ActionNodeModel"
     )
     QtQml.qmlRegisterType(
-        gremlin.ui.profile.ActionTreeModel,
+        gremlin.ui.profile.InputItemBindingModel,
         "gremlin.ui.profile",
         1,
         0,
-        "ActionTreeModel"
+        "InputItemBindingModel"
     )
     QtQml.qmlRegisterType(
         gremlin.ui.profile.VirtualButtonModel,

@@ -30,7 +30,7 @@ import gremlin.ui.profile 1.0
 Item {
     id: _root
 
-    property ActionTreeModel actionTree
+    property InputItemBindingModel inputBinding
 
     implicitHeight: _content.height
 
@@ -38,8 +38,8 @@ Item {
     ColumnLayout {
         id: _content
 
-        anchors.left: _root.left
-        anchors.right: _root.right
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.leftMargin: 10
         anchors.rightMargin: 20
 
@@ -47,11 +47,9 @@ Item {
         // | Header
         // +--------------------------------------------------------------------
         ActionConfigurationHeader {
-            id: _header
-
             Layout.fillWidth: true
 
-            actionTree: _root.actionTree
+            inputBinding: _root.inputBinding
         }
 
         BottomBorder {}
@@ -61,12 +59,9 @@ Item {
         // | Render the root action node
         // +--------------------------------------------------------------------
         ActionNode {
-            id: _action
-
             Layout.fillWidth: true
 
-            action: _root.actionTree.rootAction
-            actionTree: _root.actionTree
+            action: _root.inputBinding.rootAction
         }
 
 
@@ -74,14 +69,12 @@ Item {
         // | Action selection dropdown
         // +--------------------------------------------------------------------
         Loader {
-            id: _actionSelector
-
             Layout.fillWidth: true
 
-            active: actionTree.actionCount == 0
+            active: _root.inputBinding.actionCount == 0
 
             sourceComponent: ActionSelector {
-                actionNode: _root.actionTree.rootAction
+                actionNode: _root.inputBinding.rootAction
             }
         }
     }
