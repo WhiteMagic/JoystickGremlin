@@ -327,7 +327,7 @@ class ActionTreeModel(QtCore.QObject):
 
     """Model representing an ActionTree instance."""
 
-    behaviourChanged = Signal()
+    behaviorChanged = Signal()
     descriptionChanged = Signal()
     virtualButtonChanged = Signal()
     actionCountChanged = Signal()
@@ -376,19 +376,19 @@ class ActionTreeModel(QtCore.QObject):
     def actionCount(self) -> int:
         return self._action_tree.root.node_count
 
-    def _get_behaviour(self) -> str:
-        return InputType.to_string(self._action_configuration.behaviour)
+    def _get_behavior(self) -> str:
+        return InputType.to_string(self._input_item_binding.behavior)
 
-    def _set_behaviour(self, text: str) -> None:
-        behaviour = InputType.to_enum(text)
-        if behaviour != self._action_configuration.behaviour:
-            self._action_configuration.behaviour = behaviour
+    def _set_behavior(self, text: str) -> None:
+        behavior = InputType.to_enum(text)
+        if behavior != self._input_item_binding.behavior:
+            self._input_item_binding.behavior = behavior
 
             # Ensure a virtual button instance exists of the correct type
             # if one is needed
             input_type = self._action_configuration.input_item.input_type
             if input_type == InputType.JoystickAxis and \
-                    behaviour == InputType.JoystickButton:
+                    behavior == InputType.JoystickButton:
                 if not isinstance(
                         self._action_configuration.virtual_button,
                         profile.VirtualAxisButton
@@ -399,7 +399,7 @@ class ActionTreeModel(QtCore.QObject):
                         self._action_configuration.virtual_button
                     )
             elif input_type == InputType.JoystickHat and \
-                    behaviour == InputType.JoystickButton:
+                    behavior == InputType.JoystickButton:
                 if not isinstance(
                         self._action_configuration.virtual_button,
                         profile.VirtualHatButton
@@ -410,7 +410,7 @@ class ActionTreeModel(QtCore.QObject):
                         self._action_configuration.virtual_button
                     )
 
-            self.behaviourChanged.emit()
+            self.behaviorChanged.emit()
 
     def _get_description(self) -> str:
         return self._action_configuration.description
@@ -421,18 +421,18 @@ class ActionTreeModel(QtCore.QObject):
             self.descriptionChanged.emit()
 
     @property
-    def behaviour_type(self):
-        return self._action_configuration.behaviour
+    def behavior_type(self):
+        return self._input_item_binding.behavior
 
     @property
     def action_tree(self):
         return self._action_tree
 
-    behaviour = Property(
+    behavior = Property(
         str,
-        fget=_get_behaviour,
-        fset=_set_behaviour,
-        notify=behaviourChanged
+        fget=_get_behavior,
+        fset=_set_behavior,
+        notify=behaviorChanged
     )
 
     description = Property(

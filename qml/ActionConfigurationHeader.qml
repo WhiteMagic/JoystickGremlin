@@ -30,7 +30,7 @@ Item {
 
     property ActionTreeModel actionTree
 
-    height: _generalHeader.height + _behaviourAxisButton.height + _behaviourHatButton.height
+    height: _generalHeader.height + _behaviorAxisButton.height + _behaviorHatButton.height
 
 
     // Content
@@ -44,7 +44,7 @@ Item {
             TextField {
                 id: _description
 
-                width: _root.width - _behaviour.width - _headerRemove.width
+                width: _root.width - _behavior.width - _headerRemove.width
 
                 placeholderText: "Description"
                 text: "" != actionTree.description ? actionTree.description : null
@@ -54,8 +54,8 @@ Item {
                 }
             }
 
-            InputBehaviour {
-                id: _behaviour
+            InputBehavior {
+                id: _behavior
 
                 actionTree: _root.actionTree
             }
@@ -69,9 +69,9 @@ Item {
 
         // UI for a physical axis behaving as a button
         Loader {
-            id: _behaviourAxisButton
+            id: _behaviorAxisButton
 
-            active: actionTree.behaviour == "button" && actionTree.inputType == "axis"
+            active: _root.inputBinding.behavior == "button" && _root.inputBinding.inputType == "axis"
             onActiveChanged: {
                 visible: active
                 height = active ? item.contentHeight : 0
@@ -138,9 +138,9 @@ Item {
 
         // UI for a physical hat behaving as a button
         Loader {
-            id: _behaviourHatButton
+            id: _behaviorHatButton
 
-            active: actionTree.behaviour == "button" && actionTree.inputType == "hat"
+            active: _root.inputBinding.behavior == "button" && _root.inputBinding.inputType == "hat"
             onActiveChanged: {
                 visible: active
                 height = active ? item.contentHeight : 0

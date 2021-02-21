@@ -1427,13 +1427,13 @@ class InputItem:
 
 class ActionConfiguration:
 
-    """Links together a LibraryItem and it's activation behaviour."""
+    """Links together a LibraryItem and it's activation behavior."""
 
     def __init__(self, input_item: InputItem):
         self.input_item = input_item
         self.description = ""
         self.library_reference = None
-        self.behaviour = None
+        self.behavior = None
         self.virtual_button = None
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -1445,7 +1445,7 @@ class ActionConfiguration:
                 f"item {reference_id}"
             )
         self.library_reference = self.input_item.library[reference_id]
-        self.behaviour = read_subelement(node, "behaviour")
+        self.behavior = read_subelement(node, "behavior")
         self.virtual_button = self._parse_virtual_button(node)
 
     def to_xml(self) -> ElementTree.Element:
@@ -1454,7 +1454,7 @@ class ActionConfiguration:
         node.append(
             create_subelement_node("library-reference", self.library_reference.id)
         )
-        node.append(create_subelement_node("behaviour", self.behaviour))
+        node.append(create_subelement_node("behavior", self.behavior))
         vb_node = self._write_virtual_button()
         if vb_node is not None:
             node.append(vb_node)
@@ -1465,10 +1465,10 @@ class ActionConfiguration:
         # Ensure the configuration requires a virtual button
         virtual_button = None
         if self.input_item.input_type == InputType.JoystickAxis and \
-                self.behaviour == InputType.JoystickButton:
+                self.behavior == InputType.JoystickButton:
             virtual_button = VirtualAxisButton()
         elif self.input_item.input_type == InputType.JoystickHat and \
-                self.behaviour == InputType.JoystickButton:
+                self.behavior == InputType.JoystickButton:
             virtual_button = VirtualHatButton()
 
         # Ensure we have a virtual button entry to parse
@@ -1487,10 +1487,10 @@ class ActionConfiguration:
         # Ascertain whether or not a virtual button node needs to be created
         needs_virtual_button = False
         if self.input_item.input_type == InputType.JoystickAxis and \
-                self.behaviour == InputType.JoystickButton:
+                self.behavior == InputType.JoystickButton:
             needs_virtual_button = True
         elif self.input_item.input_type == InputType.JoystickHat and \
-                self.behaviour == InputType.JoystickButton:
+                self.behavior == InputType.JoystickButton:
             needs_virtual_button = True
 
         # Ensure there is no virtual button information present

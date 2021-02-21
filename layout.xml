@@ -1,24 +1,24 @@
 <profile version="14">
     <inputs>
         <input>
-            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
+            <device-id>57BEF3F0-BE1A-11E9-8001-444553540000</device-id>
             <input-type>button</input-type>
             <input-id>4</input-id>
             <mode>Default</mode>
             <action-configuration>
                 <library-reference>01544449-be83-4776-ac4d-a05240006660</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <description></description>
             </action-configuration>
         </input>
         <input>
-            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
+            <device-id>57BEF3F0-BE1A-11E9-8001-444553540000</device-id>
             <input-type>axis</input-type>
-            <input-id>6</input-id>
+            <input-id>2</input-id>
             <mode>Default</mode>
             <action-configuration>
                 <library-reference>58af0d4e-66f0-41c9-b5d3-085fecda6713</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <virtual-button>
                     <lower-limit>-0.2</lower-limit>
                     <upper-limit>0.3</upper-limit>
@@ -28,40 +28,40 @@
             </action-configuration>
         </input>
         <input>
-            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
+            <device-id>57BEF3F0-BE1A-11E9-8001-444553540000</device-id>
             <input-type>button</input-type>
             <input-id>1</input-id>
             <mode>Default</mode>
             <action-configuration>
                 <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <description></description>
             </action-configuration>
             <action-configuration>
                 <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <description></description>
             </action-configuration>
         </input>
         <input>
-            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
+            <device-id>57BEF3F0-BE1A-11E9-8001-444553540000</device-id>
             <input-type>button</input-type>
             <input-id>2</input-id>
             <mode>Default</mode>
             <action-configuration>
                 <library-reference>69e2bb6f-9715-4869-9ed4-e23b81dab15f</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <description></description>
             </action-configuration>
         </input>
         <input>
-            <device-id>0C392ED0-E6EA-11E8-8004-444553540000</device-id>
+            <device-id>57BEF3F0-BE1A-11E9-8001-444553540000</device-id>
             <input-type>hat</input-type>
             <input-id>1</input-id>
             <mode>Default</mode>
             <action-configuration>
                 <library-reference>69e2bb6f-9715-4869-9ed4-e23b81dab15f</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <virtual-button>
                     <hat-direction>north</hat-direction>
                     <hat-direction>east</hat-direction>
@@ -166,6 +166,46 @@
                     <else-actions>
                         <action-id>2bf10c03-a9d3-4410-a56a-70643e2c05b8</action-id>
                     </else-actions>
+                    <property type="string">
+                        <name>logical-operator</name>
+                        <value>all</value>
+                    </property>
+                    <condition>
+                        <property type="string">
+                            <name>condition-type</name>
+                            <value>input-state</value>
+                        </property>
+                        <property type="input_type">
+                            <name>input-type</name>
+                            <value>button</value>
+                        </property>
+                        <property type="bool">
+                            <name>is-pressed</name>
+                            <value>false</value>
+                        </property>
+                    </condition>
+                    <condition>
+                        <property type="string">
+                            <name>condition-type</name>
+                            <value>joystick</value>
+                        </property>
+                        <property type="string">
+                            <name>device-id</name>
+                            <value>57BEF3F0-BE1A-11E9-8001-444553540000</value>
+                        </property>
+                        <property type="string">
+                            <name>input-type</name>
+                            <value>button</value>
+                        </property>
+                        <property type="int">
+                            <name>input-id</name>
+                            <value>23</value>
+                        </property>
+                        <property type="bool">
+                            <name>is-pressed</name>
+                            <value>true</value>
+                        </property>
+                    </condition>
                 </action>
                 <action id="fbe6be7b-07c9-4400-94f2-caa245ebcc7e" parent="422f57c7-f524-4c0f-85a3-82a40f84aca0" type="remap">
                     <property type="int">

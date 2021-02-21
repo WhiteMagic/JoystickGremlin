@@ -25,7 +25,7 @@ import gremlin.ui.profile 1.0
 Item {
     id: _root
 
-    property ActionTreeModel actionTree
+    property InputItemBindingModel inputBinding
 
     width: idContent.width
     height: idContent.height
@@ -34,59 +34,59 @@ Item {
         id: idContent
 
         Loader {
-            active: _root.actionTree.inputType == "button"
+            active: _root.inputBinding.inputType == "button"
             sourceComponent: RadioButton {
                 visible: false
             }
         }
 
         Loader {
-            active: _root.actionTree.inputType != "button"
+            active: _root.inputBinding.inputType != "button"
 
             sourceComponent: Row {
                 Label {
-                    id: idBehaviour
+                    id: idBehavior
 
                     leftPadding: 20
                     text: "Treat as"
 
-                    anchors.verticalCenter: idBehaviourButton.verticalCenter
+                    anchors.verticalCenter: idBehaviorButton.verticalCenter
                 }
 
                 RadioButton {
-                    id: idBehaviourButton
+                    id: idBehaviorButton
 
                     text: "Button"
 
-                    checked: _root.actionTree.behaviour == "button"
+                    checked: _root.inputBinding.behavior == "button"
                     onClicked: {
-                        _root.actionTree.behaviour = "button"
+                        _root.inputBinding.behavior = "button"
                     }
                 }
 
                 Loader {
-                    active: _root.actionTree.inputType == "axis"
+                    active: _root.inputBinding.inputType == "axis"
                     sourceComponent: RadioButton {
-                        id: idBehaviourAxis
+                        id: idBehaviorAxis
 
                         text: "Axis"
 
-                        checked: _root.actionTree.behaviour == "axis"
+                        checked: _root.inputBinding.behavior == "axis"
                         onClicked: {
-                            _root.actionTree.behaviour = "axis"
+                            _root.inputBinding.behavior = "axis"
                         }
                     }
                 }
                 Loader {
-                    active: _root.actionTree.inputType == "hat"
+                    active: _root.inputBinding.inputType == "hat"
                     sourceComponent: RadioButton {
-                        id: idBehaviourHat
+                        id: idBehaviorHat
 
                         text: "Hat"
 
-                        checked: _root.actionTree.behaviour == "hat"
+                        checked: _root.inputBinding.behavior == "hat"
                         onClicked: {
-                            _root.actionTree.behaviour = "hat"
+                            _root.inputBinding.behavior = "hat"
                         }
                     }
                 }

@@ -45,7 +45,7 @@ def suspend_input_highlighting():
 
 
 def set_suspend_input_highlighting(value):
-    """Sets the input highlighting behaviour.
+    """Sets the input highlighting behavior.
 
     :param value if True disables automatic selection of used inputs, if False
         inputs will automatically be selected upon use

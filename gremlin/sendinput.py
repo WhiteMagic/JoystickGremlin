@@ -69,7 +69,7 @@ class MotionType(enum.Enum):
 
 class MouseMotion:
 
-    """Base class of all mouse motion behaviours."""
+    """Base class of all mouse motion behaviors."""
 
     # Time step between calls
     delta_t = 0.01

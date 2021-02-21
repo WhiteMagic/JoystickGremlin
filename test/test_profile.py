@@ -42,7 +42,7 @@ xml_description = """
             <mode>Default</mode>
             <action-configuration>
                 <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <description></description>
             </action-configuration>
         </input>
@@ -101,7 +101,7 @@ xml_hierarchy = """
             <mode>Default</mode>
             <action-configuration>
                 <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
-                <behaviour>button</behaviour>
+                <behavior>button</behavior>
                 <description></description>
             </action-configuration>
         </input>
