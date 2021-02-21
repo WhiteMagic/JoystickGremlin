@@ -24,7 +24,8 @@ import uuid
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, profile, profile_library, tree, util
+from gremlin import error, profile, tree, util
+from gremlin.profile_library import ActionTree, RootAction
 from gremlin.base_classes import AbstractActionModel
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
@@ -60,7 +61,7 @@ class ActionConfigurationListModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("fake".encode()),
     }
 
-    def __init__(self, items: List[profile.ActionConfiguration], parent=None):
+    def __init__(self, items: List[profile.InputItemBinding], parent=None):
         super().__init__(parent)
 
         self._action_configurations = items
@@ -69,7 +70,7 @@ class ActionConfigurationListModel(QtCore.QAbstractListModel):
         return len(self._action_configurations)
 
     def data(self, index: QtCore.QModelIndex, role: int=...) -> typing.Any:
-        return ActionTreeModel(
+        return InputItemBindingModel(
             self._action_configurations[index.row()],
             parent=self
         )
@@ -202,26 +203,38 @@ class VirtualButtonModel(QtCore.QObject):
 
 class ActionNodeModel(QtCore.QObject):
 
+    """QML model representing a single action instance."""
+
     actionChanged = Signal()
 
     def __init__(
             self,
             node: tree.TreeNode,
-            action_configuration: profile.ActionConfiguration,
+            input_type: InputType,
+            action_tree: ActionTree,
             parent=None
     ):
         super().__init__(parent)
 
-        self._action_configuration = action_configuration
         self._node = node
+        self._input_type = input_type
+        self._action_tree = action_tree
 
     @property
-    def action_configuration(self) -> profile.ActionConfiguration:
-        return self._action_configuration
-
-    @property
-    def tree_node(self) -> tree.TreeNode:
+    def node(self) -> tree.TreeNode:
         return self._node
+
+    @property
+    def input_type(self) -> InputType:
+        return self._input_type
+
+    @property
+    def action_tree(self) -> ActionTree:
+        return self._action_tree
+
+    Property(type=InputType, notify=actionChanged)
+    def inputType(self) -> InputType:
+        return self._input_type
 
     @Property(type="QVariant", notify=actionChanged)
     def actionModel(self) -> AbstractActionModel:
@@ -304,7 +317,7 @@ class ActionNodeModel(QtCore.QObject):
 
     @Property(type=bool, notify=actionChanged)
     def isRootNode(self) -> bool:
-        return isinstance(self._node.value, profile_library.RootAction)
+        return isinstance(self._node.value, RootAction)
 
     def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
         """Returns the node with the desired id from the action tree.
@@ -316,14 +329,14 @@ class ActionNodeModel(QtCore.QObject):
             The TreeNode corresponding to the given uuid
         """
         predicate = lambda x: True if x.value and x.value.id == uuid else False
-        nodes = self._action_tree.action_tree().root.nodes_matching(predicate)
+        nodes = self._action_tree.root.nodes_matching(predicate)
 
         if len(nodes) != 1:
             raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
         return nodes[0]
 
 
-class ActionTreeModel(QtCore.QObject):
+class InputItemBindingModel(QtCore.QObject):
 
     """Model representing an ActionTree instance."""
 
@@ -336,36 +349,42 @@ class ActionTreeModel(QtCore.QObject):
 
     def __init__(
             self,
-            action_configuration: profile.ActionConfiguration,
+            input_item_binding: profile.InputItemBinding,
             parent=None
     ):
         super().__init__(parent)
 
-        self._action_configuration = action_configuration
-        self._action_tree = action_configuration.library_reference.action_tree
+        self._input_item_binding = input_item_binding
+        self._action_tree = input_item_binding.library_reference.action_tree
         self._virtual_button_model = VirtualButtonModel(
-            self._action_configuration.virtual_button
+            self._input_item_binding.virtual_button
         )
 
     @Property(type=ActionNodeModel, notify=rootActionChanged)
     def rootAction(self) -> ActionNodeModel:
         return ActionNodeModel(
             self._action_tree.root,
-            self._action_configuration,
+            self._input_item_binding.behavior,
+            self._action_tree,
             parent=self
         )
 
-    @Property(type="QVariantList", notify=rootActionChanged)
+    @Property(type=list, notify=rootActionChanged)
     def rootNodes(self) -> List[ActionNodeModel]:
-        return [
-            ActionNodeModel(node, self._action_configuration, parent=self)
-            for node in self._action_tree.root.children
-        ]
+        nodes = []
+        for node in self._action_tree.root.children:
+            nodes.append(ActionNodeModel(
+                node,
+                self._input_item_binding.behavior,
+                self._action_tree,
+                parent=self
+            ))
+        return nodes
 
     @Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
         return InputType.to_string(
-            self._action_configuration.input_item.input_type
+            self._input_item_binding.input_item.input_type
         )
 
     @Property(type=VirtualButtonModel, notify=virtualButtonChanged)
@@ -386,38 +405,38 @@ class ActionTreeModel(QtCore.QObject):
 
             # Ensure a virtual button instance exists of the correct type
             # if one is needed
-            input_type = self._action_configuration.input_item.input_type
+            input_type = self._input_item_binding.input_item.input_type
             if input_type == InputType.JoystickAxis and \
                     behavior == InputType.JoystickButton:
                 if not isinstance(
-                        self._action_configuration.virtual_button,
+                        self._input_item_binding.virtual_button,
                         profile.VirtualAxisButton
                 ):
-                    self._action_configuration.virtual_button = \
+                    self._input_item_binding.virtual_button = \
                         profile.VirtualAxisButton()
                     self._virtual_button_model = VirtualButtonModel(
-                        self._action_configuration.virtual_button
+                        self._input_item_binding.virtual_button
                     )
             elif input_type == InputType.JoystickHat and \
                     behavior == InputType.JoystickButton:
                 if not isinstance(
-                        self._action_configuration.virtual_button,
+                        self._input_item_binding.virtual_button,
                         profile.VirtualHatButton
                 ):
-                    self._action_configuration.virtual_button = \
+                    self._input_item_binding.virtual_button = \
                         profile.VirtualHatButton()
                     self._virtual_button_model = VirtualButtonModel(
-                        self._action_configuration.virtual_button
+                        self._input_item_binding.virtual_button
                     )
 
             self.behaviorChanged.emit()
 
     def _get_description(self) -> str:
-        return self._action_configuration.description
+        return self._input_item_binding.description
 
     def _set_description(self, description: str) -> None:
-        if description != self._action_configuration.description:
-            self._action_configuration.description = description
+        if description != self._input_item_binding.description:
+            self._input_item_binding.description = description
             self.descriptionChanged.emit()
 
     @property
