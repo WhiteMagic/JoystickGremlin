@@ -30,14 +30,15 @@ import "../../qml"
 Item {
     id: _root
 
-    property ActionTreeModel actionTree
     property ConditionModel model
 
-    //height: _layout.height
-    //width: parent.width
+    implicitHeight: _content.height
 
     ColumnLayout {
-        id: _layout
+        id: _content
+
+        anchors.left: parent.left
+        anchors.right: parent.right
 
         Row {
             id: _logicalOperator
@@ -51,24 +52,21 @@ Item {
             }
             ComboBox {
                 id: _logicalOperatorSelector
-                model: ["any", "all"]
+                model: _root.model.logicalOperators
+
+                textRole: "text"
+                valueRole: "value"
+
+                onCurrentIndexChanged: {
+                    if(currentValue != null) {
+                        _root.model.logicalOperator = currentValue
+                    }
+                }
             }
             Label {
                 anchors.verticalCenter: _logicalOperator.verticalCenter
 
                 text: "of the following conditions are met"
-            }
-        }
-
-        ListView {
-            id: _conditionList
-
-            height: childrenRect.height
-
-            model: ["1", "2", "3"]
-
-            delegate: Label {
-                text: modelData
             }
         }
 
@@ -78,10 +76,19 @@ Item {
             spacing: 10
 
             ComboBox {
-                model: ["A", "B", "C"]
+                id: _condition
+
+                textRole: "text"
+                valueRole: "value"
+
+                model: _root.model.conditionOperators
             }
             Button {
                 text: "Add Condition"
+
+                onClicked: {
+                    _root.model.addCondition(_condition.currentValue)
+                }
             }
         }
 
@@ -92,15 +99,12 @@ Item {
         }
 
         Repeater {
-            id: _actionThen
-
             model: _root.model.trueActionNodes
 
             delegate: ActionNode {
-                id: _action
-
                 action: modelData
-                actionTree: _root.actionTree
+
+                Layout.fillWidth: true
             }
         }
 
@@ -111,15 +115,12 @@ Item {
         }
 
         Repeater {
-            id: _actionElse
-
-            model: _root.model.trueActionNodes
+            model: _root.model.falseActionNodes
 
             delegate: ActionNode {
-                id: _action
-
                 action: modelData
-                actionTree: _root.actionTree
+
+                Layout.fillWidth: true
             }
         }
 
