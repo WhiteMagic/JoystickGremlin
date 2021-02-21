@@ -1416,7 +1416,7 @@ class InputItem:
 
         # Parse every action configuration entry
         for entry in node.findall("action-configuration"):
-            action = ActionConfiguration(self)
+            action = InputItemBinding(self)
             action.from_xml(entry)
             self.action_configurations.append(action)
 
@@ -1450,7 +1450,7 @@ class InputItem:
                f"{self.input_id}"
 
 
-class ActionConfiguration:
+class InputItemBinding:
 
     """Links together a LibraryItem and it's activation behavior."""
 
