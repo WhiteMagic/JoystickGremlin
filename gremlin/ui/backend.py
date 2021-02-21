@@ -37,7 +37,7 @@ from gremlin import shared_state
 from gremlin.tree import TreeNode
 from gremlin.types import InputType
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import ActionNodeModel, ActionTreeModel, InputItemModel
+from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, InputItemModel
 
 
 @common.SingletonDecorator
@@ -222,8 +222,7 @@ class Backend(QtCore.QObject):
         self._load_profile(fpath)
         self.reloadUi.emit()
 
-    # FIXME: This is a terrible hack to fool the type system
-    @Slot(QtCore.QObject, result="QVariantList")
+    @Slot(QtCore.QObject, result=list)
     def actionList(self, action_node: ActionNodeModel) -> List[str]:
         """Returns a list of valid action plugins for a particular configuration.
 
@@ -234,7 +233,7 @@ class Backend(QtCore.QObject):
             List of valid actions for the given configuration
         """
         action_list = plugin_manager.ActionPlugins().type_action_map[
-            action_node.action_configuration.behaviour
+            action_node.input_type
         ]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
@@ -251,13 +250,13 @@ class Backend(QtCore.QObject):
             configuration: ActionTree configuration to which to add the action
         """
         action = plugin_manager.ActionPlugins().get_class(action_name)(
-            action_node.action_configuration.library_reference.action_tree,
-            action_node.action_configuration.behaviour
+            action_node.action_tree,
+            action_node.input_type
         )
-        if action_node.tree_node.parent is None:
-            TreeNode(action, action_node.tree_node)
+        if action_node.node.parent is None:
+            TreeNode(action, action_node.node)
         else:
-            TreeNode(action, action_node.tree_node.parent)
+            TreeNode(action, action_node.node.parent)
         action_node.parent().rootActionChanged.emit()
 
     @Slot(InputIdentifier)
@@ -279,9 +278,9 @@ class Backend(QtCore.QObject):
         )
         # TODO: automatically determine the mode
         input_item.mode = "Default"
-        action_config = profile.ActionConfiguration(input_item)
+        action_config = profile.InputItemBinding(input_item)
         action_config.library_reference = library_item
-        action_config.behaviour = identifier.input_type
+        action_config.behavior = identifier.input_type
         input_item.action_configurations.append(action_config)
         self.inputConfigurationChanged.emit()
 

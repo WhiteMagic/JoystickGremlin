@@ -169,7 +169,7 @@ class RemapModel(AbstractActionModel):
         device = joystick_handling.vjoy_devices()[0]
         vjoy_id = device.vjoy_id
         input_id = 1
-        if input_type == InputType.JoystickAxis:
+        if self._input_type == InputType.JoystickAxis:
             input_id = device.axis_map[0].axis_index
 
         # Model variables

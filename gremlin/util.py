@@ -649,11 +649,10 @@ def resource_path(relative_path: str) -> str:
     Returns:
         properly normalized resource path
     """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
+    base_path = script_path()
+    # PyInstaller creates a temp folder and stores path in _MEIPASS
+    if "_MEIPASS" in sys.__dict__:
         base_path = sys._MEIPASS
-    except Exception:
-        base_path = script_path()
 
     return os.path.normcase(os.path.join(base_path, relative_path))
 

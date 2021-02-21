@@ -17,11 +17,12 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod, ABCMeta
 import uuid
 from xml.etree import ElementTree
 
-from . import base_classes, common, error, plugin_manager
+from PySide6.QtCore import Property, Signal
+
+from . import error, plugin_manager
 from .tree import TreeNode
 from .util import safe_format, safe_read
 
@@ -30,7 +31,7 @@ class RootAction:
 
     """Represents the root node of any action tree.
 
-    This class mimicks the behaviour of base_classes.AbstractActionModel but
+    This class mimicks the behavior of base_classes.AbstractActionModel but
     is not intended to be serialized.
     """
 
@@ -224,8 +225,6 @@ class Library:
         # Each entry is a container with it's action sets but without
         # conditions or virtual button configuration
         self._items = {}
-
-        self._container_name_map = plugin_manager.ContainerPlugins().tag_map
 
     def __contains__(self, key: uuid.UUID) -> bool:
         """Checks if an item exists for the given key.
