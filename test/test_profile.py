@@ -193,7 +193,7 @@ def test_simple_action():
 
     action_configurations = p.inputs[guid][0].action_configurations
     assert len(action_configurations) == 1
-    assert isinstance(action_configurations[0], gremlin.profile.ActionConfiguration)
+    assert isinstance(action_configurations[0], gremlin.profile.InputItemBinding)
 
     actions = action_configurations[0].library_reference.action_tree.root.children
     assert len(actions) == 3
