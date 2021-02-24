@@ -57,10 +57,12 @@ Item {
                 textRole: "text"
                 valueRole: "value"
 
-                onCurrentIndexChanged: {
-                    if(currentValue != null) {
-                        _root.model.logicalOperator = currentValue
-                    }
+                Component.onCompleted: {
+                    currentIndex = indexOfValue(_root.model.logicalOperator)
+                }
+
+                onActivated: {
+                    _root.model.logicalOperator = currentValue
                 }
             }
             Label {

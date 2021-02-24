@@ -592,7 +592,7 @@ class ConditionModel(AbstractActionModel):
         return self._conditions
 
     def _get_logical_operator(self) -> str:
-        return LogicalOperators.to_display(self._logical_operator)
+        return str(self._logical_operator.value)
 
     def _set_logical_operator(self, value: str) -> None:
         try:
