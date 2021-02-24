@@ -48,7 +48,7 @@ Item {
             Label {
                 anchors.verticalCenter: _logicalOperator.verticalCenter
 
-                text: "If "
+                text: "When "
             }
             ComboBox {
                 id: _logicalOperatorSelector
@@ -67,6 +67,14 @@ Item {
                 anchors.verticalCenter: _logicalOperator.verticalCenter
 
                 text: "of the following conditions are met"
+            }
+        }
+
+        Repeater {
+            model: _root.model.conditions
+
+            delegate: ConditionComparator {
+                model: modelData
             }
         }
 

@@ -23,7 +23,7 @@ from typing import List, Optional
 import uuid
 from xml.etree import ElementTree
 
-from PySide6 import QtCore
+from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import actions, error, profile_library, util
@@ -131,9 +131,13 @@ class AbstractCondition(QtCore.QObject):
 
     """Base class of all individual condition representations."""
 
+    conditionTypeChanged = Signal()
+
     def __init__(self, parent: Optional[QtCore.QObject]=None):
         """Creates a new instance."""
-        pass
+        super().__init__(parent)
+
+        self._condition_type = None
 
     def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
@@ -164,6 +168,10 @@ class AbstractCondition(QtCore.QObject):
         raise error.MissingImplementationError(
             "AbstractCondition.is_valid not implemented in subclass"
         )
+    
+    @Property(str, notify=conditionTypeChanged)
+    def conditionType(self) -> str:
+        return ConditionOperators.to_string(self._condition_type)
 
 
 class KeyboardCondition(AbstractCondition):
@@ -342,9 +350,19 @@ class InputStateCondition(AbstractCondition):
     or not the input item is being pressed or released.
     """
 
-    class AxisComparator:
+    comparatorChanged = Signal()
+
+    class Comparator(QtCore.QObject):
+
+        def __init__(self, parent=None):
+            super().__init__(parent)
+
+
+    class AxisComparator(Comparator):
 
         def __init__(self, low: float, high: float):
+            super().__init__()
+
             if low > high:
                 low, high = high, low
             self.low = low
@@ -354,30 +372,47 @@ class InputStateCondition(AbstractCondition):
             return self.low <= value.current <= self.high
 
 
-    class ButtonComparator:
+    class ButtonComparator(Comparator):
+
+        isPressedChanged = Signal()
 
         def __init__(self, is_pressed: bool):
+            super().__init__()
+
             self.is_pressed = is_pressed
         
         def __call__(self, value: actions.Value):
             return value.current == self.is_pressed
     
+        def _set_is_pressed(self, value: str):
+            is_pressed = value == "Pressed"
+            if is_pressed != self.is_pressed:
+                self.is_pressed = is_pressed
+                self.isPressedChanged.emit()
 
-    class HatComparator:
+        @Property(str, fset=_set_is_pressed, notify=isPressedChanged)
+        def isPressed(self) -> str:
+            return "Pressed" if self.is_pressed else "Released"
+
+
+    class HatComparator(Comparator):
 
         def __init__(self, direction: str):
+            super().__init__()
+
             self.direction = direction
         
         def __call__(self, value: actions.Value):
             return True
 
 
-    def __init__(self):
+    def __init__(self, parent=None):
         """Creates a new instance."""
-        super().__init__()
+        super().__init__(parent)
 
-        self.comparator = None
-        self._input_type = None
+        self._condition_type = ConditionOperators.InputState
+        self._comparator = None
+        self.input_type = None
 
     def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
@@ -385,25 +420,25 @@ class InputStateCondition(AbstractCondition):
         Args:
             node: the XML node to parse for data
         """
-        self._input_type = util.read_property(
+        self.input_type = util.read_property(
             node, "input-type", PropertyType.InputType
         )
-        if self._input_type in [InputType.JoystickButton, InputType.Keyboard]:
-            self.comparator = InputStateCondition.ButtonComparator(
+        if self.input_type in [InputType.JoystickButton, InputType.Keyboard]:
+            self._comparator = InputStateCondition.ButtonComparator(
                 util.read_property(node, "is-pressed", PropertyType.Bool)
             )
-        elif self._input_type == InputType.JoystickAxis:
-            self.comparator = InputStateCondition.AxisComparator(
+        elif self.input_type == InputType.JoystickAxis:
+            self._comparator = InputStateCondition.AxisComparator(
                 util.read_property(node, "low", PropertyType.Float),
                 util.read_property(node, "high", PropertyType.Float)
             )
-        elif self._input_type == InputType.JoystickHat:
-            self.comparator = InputStateCondition.HatComparator(
+        elif self.input_type == InputType.JoystickHat:
+            self._comparator = InputStateCondition.HatComparator(
                 util.read_property(node, "direction", PropertyType.String)
             )
         else:
             raise error.ProfileError(
-                f"Invalid condition type specified {self._input_type}"
+                f"Invalid condition type specified {self.input_type}"
             )
 
     def to_xml(self) -> ElementTree:
@@ -420,40 +455,48 @@ class InputStateCondition(AbstractCondition):
         ))
         node.append(util.create_property_node(
             "input-type",
-            self._input_type,
+            self.input_type,
             PropertyType.InputType
         ))
-        if self._input_type in [InputType.JoystickButton, InputType.Keyboard]:
+        if self.input_type in [InputType.JoystickButton, InputType.Keyboard]:
             node.append(util.create_property_node(
                 "is-pressed",
-                self.comparator.is_pressed,
+                self._comparator.is_pressed,
                 PropertyType.Bool
             ))
-        elif self._input_type == InputType.JoystickAxis:
+        elif self.input_type == InputType.JoystickAxis:
             node.append(util.create_property_node(
                 "low",
-                self.comparator.low,
+                self._comparator.low,
                 PropertyType.Float
             ))
             node.append(util.create_property_node(
                 "high",
-                self.comparator.high,
+                self._comparator.high,
                 PropertyType.Float
             ))
-        elif self._input_type == InputType.JoystickHat:
+        elif self.input_type == InputType.JoystickHat:
             node.append(util.create_property_node(
                 "direction",
-                self.comparator.direction,
+                self._comparator.direction,
                 PropertyType.String
             ))
         else:
             raise error.ProfileError(
-                f"Invalid condition type encountered {self._input_type}"
+                f"Invalid condition type encountered {self.input_type}"
             )
         return node
     
     def is_valid(self) -> bool:
-        return self.comparator != None
+        return self._comparator != None
+
+    @Property(str, constant=True)
+    def inputType(self) -> str:
+        return InputType.to_string(self.input_type)
+
+    @Property(Comparator, notify=comparatorChanged)
+    def comparator(self) -> Comparator:
+        return self._comparator
 
 
 class ConditionModel(AbstractActionModel):
@@ -487,16 +530,20 @@ class ConditionModel(AbstractActionModel):
         self._false_action_ids = []
         self._conditions = []
 
-    @Slot(int, bool)
+    @Slot(int)
     def addCondition(self, condition: int) -> None:
         """Adds a new condition.
 
         Args:
             condition: Numerical value of the condition enum
-            is_true: Whether or not the condition is for the true or false
-                path of the condition
         """
-        node = self._action_tree.root.nodes_matching(lambda x: x.value.id == self.id)
+        #node = self._action_tree.root.nodes_matching(lambda x: x.value.id == self.id)
+
+        if ConditionOperators(condition) == ConditionOperators.InputState:
+            cond = InputStateCondition(self)
+            cond.input_type = self._input_type
+            cond._comparator = InputStateCondition.ButtonComparator(True)
+            self._conditions.append(cond)
 
         self.conditionsChanged.emit()
 
@@ -600,3 +647,11 @@ class ConditionModel(AbstractActionModel):
 
 
 create = ConditionModel
+
+QtQml.qmlRegisterType(
+    InputStateCondition,
+    "gremlin.action_plugins",
+    1,
+    0,
+    "InputStateCondition"
+)

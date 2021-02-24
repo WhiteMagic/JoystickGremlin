@@ -73,9 +73,9 @@ def test_from_xml():
     
     cond = c._conditions[0]
     assert isinstance(cond, condition.InputStateCondition)
-    assert isinstance(cond.comparator, condition.InputStateCondition.ButtonComparator)
-    assert cond._input_type == types.InputType.JoystickButton
-    assert cond.comparator.is_pressed == False
+    assert isinstance(cond._comparator, condition.InputStateCondition.ButtonComparator)
+    assert cond.input_type == types.InputType.JoystickButton
+    assert cond._comparator.is_pressed == False
     assert cond.is_valid()
 
 
@@ -86,8 +86,8 @@ def test_to_xml():
     )
 
     cond = condition.InputStateCondition()
-    cond._input_type = types.InputType.JoystickButton
-    cond.comparator = condition.InputStateCondition.ButtonComparator(True)
+    cond.input_type = types.InputType.JoystickButton
+    cond._comparator = condition.InputStateCondition.ButtonComparator(True)
     c._conditions.append(cond)
 
     node = c.to_xml()
