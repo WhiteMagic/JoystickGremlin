@@ -547,6 +547,14 @@ class ConditionModel(AbstractActionModel):
 
         self.conditionsChanged.emit()
 
+    @Slot(int)
+    def removeCondition(self, index: int) -> None:
+        if index >= len(self._conditions):
+            raise error.GremlinError("Attempting to remove a non-existent condition.")
+
+        del self._conditions[index]
+        self.conditionsChanged.emit()
+
     @Property(list, constant=True)
     def logicalOperators(self) -> List[str]:
         return [

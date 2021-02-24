@@ -73,8 +73,19 @@ Item {
         Repeater {
             model: _root.model.conditions
 
-            delegate: ConditionComparator {
-                model: modelData
+            delegate: RowLayout {
+                ConditionComparator {
+                    model: modelData
+
+                    Layout.fillWidth: true
+                }
+                IconButton {
+                    text: "\uf2ed"
+
+                    onClicked: {
+                        _root.model.removeCondition(index)
+                    }
+            }
             }
         }
 
