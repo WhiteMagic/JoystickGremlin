@@ -124,7 +124,8 @@ Item {
                         _action.dynamicItem = component.createObject(
                             _action,
                             {
-                                model: _root.action.actionModel
+                                node: _root.action,
+                                action: _root.action.actionModel
                             }
                         );
 

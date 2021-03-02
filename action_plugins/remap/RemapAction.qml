@@ -26,7 +26,8 @@ import "../../qml"
 
 
 Item {
-    property RemapModel model
+    property ActionNodeModel node
+    property RemapModel action
 
     implicitHeight: _content.height
 
@@ -37,19 +38,19 @@ Item {
         anchors.right: parent.right
 
         VJoySelector {
-            inputType: model.inputType
-            vjoyInputId: model.vjoyInputId
-            vjoyDeviceId: model.vjoyDeviceId
-            validTypes: [model.inputType]
+            inputType: action.inputType
+            vjoyInputId: action.vjoyInputId
+            vjoyDeviceId: action.vjoyDeviceId
+            validTypes: [action.inputType]
 
-            onVjoyInputIdChanged: { model.vjoyInputId = vjoyInputId }
-            onVjoyDeviceIdChanged: { model.vjoyDeviceId = vjoyDeviceId }
-            onInputTypeChanged: { model.inputType = inputType }
+            onVjoyInputIdChanged: { action.vjoyInputId = vjoyInputId }
+            onVjoyDeviceIdChanged: { action.vjoyDeviceId = vjoyDeviceId }
+            onInputTypeChanged: { action.inputType = inputType }
         }
 
         // UI for a physical axis behaving as an axis
         Loader {
-            active: model.inputType == "axis"
+            active: action.inputType == "axis"
             Layout.fillWidth: true
 
             sourceComponent: Row {
@@ -58,7 +59,7 @@ Item {
                     checked: true
 
                     onCheckedChanged: {
-                        model.axisMode = "absolute"
+                        action.axisMode = "absolute"
                     }
                 }
                 RadioButton {
@@ -66,7 +67,7 @@ Item {
                     text: "Relative"
 
                     onCheckedChanged: {
-                        model.axisMode = "relative"
+                        action.axisMode = "relative"
                     }
                 }
 
@@ -84,7 +85,7 @@ Item {
                     stepSize: 0.1
 
                     onValueChanged: {
-                        model.axisScaling = value
+                        action.axisScaling = value
                     }
                 }
             }

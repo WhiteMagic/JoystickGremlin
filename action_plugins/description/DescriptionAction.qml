@@ -28,7 +28,8 @@ import "../../qml"
 
 
 Item {
-    property DescriptionModel model
+    property ActionNodeModel node
+    property DescriptionModel action
 
     implicitHeight: _content.height
 
@@ -50,12 +51,12 @@ Item {
 
             Layout.fillWidth: true
 
-            placeholderText: null != model ? null : "Enter description"
-            text: model.description
+            placeholderText: null != action ? null : "Enter description"
+            text: action.description
             selectByMouse: true
 
             onTextChanged: {
-                model.description = text
+                action.description = text
             }
         }
     }

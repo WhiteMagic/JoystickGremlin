@@ -30,7 +30,8 @@ import "../../qml"
 Item {
     id: _root
 
-    property ConditionModel model
+    property ActionNodeModel node
+    property ConditionModel action
 
     implicitHeight: _content.height
 
@@ -52,17 +53,17 @@ Item {
             }
             ComboBox {
                 id: _logicalOperatorSelector
-                model: _root.model.logicalOperators
+                model: _root.action.logicalOperators
 
                 textRole: "text"
                 valueRole: "value"
 
                 Component.onCompleted: {
-                    currentIndex = indexOfValue(_root.model.logicalOperator)
+                    currentIndex = indexOfValue(_root.action.logicalOperator)
                 }
 
                 onActivated: {
-                    _root.model.logicalOperator = currentValue
+                    _root.action.logicalOperator = currentValue
                 }
             }
             Label {
@@ -73,7 +74,7 @@ Item {
         }
 
         Repeater {
-            model: _root.model.conditions
+            model: _root.action.conditions
 
             delegate: RowLayout {
                 ConditionComparator {
@@ -85,7 +86,7 @@ Item {
                     text: "\uf2ed"
 
                     onClicked: {
-                        _root.model.removeCondition(index)
+                        _root.action.removeCondition(index)
                     }
             }
             }
@@ -102,13 +103,13 @@ Item {
                 textRole: "text"
                 valueRole: "value"
 
-                model: _root.model.conditionOperators
+                model: _root.action.conditionOperators
             }
             Button {
                 text: "Add Condition"
 
                 onClicked: {
-                    _root.model.addCondition(_condition.currentValue)
+                    _root.action.addCondition(_condition.currentValue)
                 }
             }
         }
@@ -120,7 +121,7 @@ Item {
         }
 
         Repeater {
-            model: _root.model.trueActionNodes
+            model: _root.action.trueActionNodes
 
             delegate: ActionNode {
                 action: modelData
@@ -136,7 +137,7 @@ Item {
         }
 
         Repeater {
-            model: _root.model.falseActionNodes
+            model: _root.action.falseActionNodes
 
             delegate: ActionNode {
                 action: modelData
