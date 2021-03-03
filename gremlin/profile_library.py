@@ -266,8 +266,8 @@ class Library:
         Args:
             uuid: unique identifier of the item to delete
         """
-        if item.id in self._items:
-            del self._items[item.id]
+        if uuid in self._items:
+            del self._items[uuid]
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Parses an library node to populate this instance.
