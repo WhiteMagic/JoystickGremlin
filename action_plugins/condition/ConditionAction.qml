@@ -130,6 +130,17 @@ Item {
             }
         }
 
+        Column {
+            Rectangle {
+                height: itemSpacing
+                width: 1
+            }
+            ActionSelector {
+                actionNode: _root.node
+                callback: function(x) { _root.action.addAction(x, "if"); }
+            }
+        }
+
         Label {
             id: _labelElse
 

@@ -151,6 +151,7 @@ Item {
                }
                ActionSelector {
                    actionNode: _root.action
+                   callback: _root.action.appendNewAction
                }
            }
        }

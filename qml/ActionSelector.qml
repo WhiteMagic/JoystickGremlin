@@ -26,6 +26,7 @@ Item {
     id: _root
 
     property ActionNodeModel actionNode
+    property var callback: null
 
     width: _combobox.width + _button.width
     height: _combobox.height
@@ -45,7 +46,7 @@ Item {
         text: "Add Action"
 
         onClicked: {
-            backend.addAction(_combobox.currentText, actionNode)
+            _root.callback(_combobox.currentText)
         }
     }
 

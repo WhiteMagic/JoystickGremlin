@@ -24,9 +24,10 @@ import uuid
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, profile, tree, util
+from gremlin import error, plugin_manager, profile, tree, util
 from gremlin.profile_library import ActionTree, RootAction
 from gremlin.base_classes import AbstractActionModel
+from gremlin.tree import TreeNode
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
 
@@ -295,6 +296,30 @@ class ActionNodeModel(QtCore.QObject):
 
         self.actionChanged.emit()
         self.parent().rootActionChanged.emit()
+
+    @Slot(str)
+    def appendNewAction(self, action_name: str) -> None:
+        """Creates a new action and appends it in the action tree after this node.
+
+        Args:
+            action_name: name of the action to add
+        """
+        action = plugin_manager.ActionPlugins().get_class(action_name)(
+            self._action_tree,
+            self._input_type
+        )
+        if self._node.parent is None:
+            TreeNode(action, self._node)
+        else:
+            TreeNode(action, self._node.parent)
+
+        parent = self.parent()
+        while parent is not None:
+            if isinstance(parent, InputItemBindingModel):
+                parent.rootActionChanged.emit()
+                break
+            else:
+                parent = parent.parent()
 
     @Slot()
     def remove(self) -> None:

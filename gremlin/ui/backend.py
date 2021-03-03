@@ -237,28 +237,6 @@ class Backend(QtCore.QObject):
         ]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
-    @Slot(str, QtCore.QObject)
-    def addAction(
-            self,
-            action_name: str,
-            action_node: ActionNodeModel
-    ) -> None:
-        """Adds a new action to the given configuration.
-
-        Args:
-            action_name: Name of the action to add
-            configuration: ActionTree configuration to which to add the action
-        """
-        action = plugin_manager.ActionPlugins().get_class(action_name)(
-            action_node.action_tree,
-            action_node.input_type
-        )
-        if action_node.node.parent is None:
-            TreeNode(action, action_node.node)
-        else:
-            TreeNode(action, action_node.node.parent)
-        action_node.parent().rootActionChanged.emit()
-
     @Slot(InputIdentifier)
     def newActionConfiguration(self, identifier: InputIdentifier) -> None:
         """Creates a new action configuration.
