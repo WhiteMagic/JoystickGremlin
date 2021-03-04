@@ -24,6 +24,7 @@ import os
 import random
 import string
 import uuid
+import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -386,7 +387,7 @@ class IntegerVariable(NumericalVariable):
             is_optional
         )
 
-        _init_numerical(self, 0, 0, 10)
+        _init_numerical(self, 0, -sys.maxsize, sys.maxsize)
         self._load_from_registry(self._get_identifier())
 
 
@@ -413,7 +414,7 @@ class FloatVariable(NumericalVariable):
             is_optional
         )
 
-        _init_numerical(self, 0, -1.0, 1.0)
+        _init_numerical(self, 0.0, -float('inf'), float('inf'))
         self._load_from_registry(self._get_identifier())
 
 
