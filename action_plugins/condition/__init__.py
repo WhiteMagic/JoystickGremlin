@@ -604,6 +604,7 @@ class ConditionModel(AbstractActionModel):
         for node in self._action_tree.root.nodes_matching(
                 lambda x: x.value.id in self._true_action_ids
         ):
+            node.value.setParent(self)
             nodes.append(ActionNodeModel(node, self._input_type, self._action_tree, parent=self))
         return nodes
 
@@ -613,6 +614,7 @@ class ConditionModel(AbstractActionModel):
         for node in self._action_tree.root.nodes_matching(
                 lambda x: x.value.id in self._false_action_ids
         ):
+            node.value.setParent(self)
             nodes.append(ActionNodeModel(node, self._input_type, self._action_tree, parent=self))
         return nodes
 

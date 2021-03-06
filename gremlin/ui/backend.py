@@ -174,8 +174,8 @@ class Backend(QtCore.QObject):
         """
         self._action_state[uuid.UUID(uuid_str)] = bool(is_expanded)
 
-    @Property(type="QVariantList", notify=recentProfilesChanged)
-    def recentProfiles(self) -> "QVariantList":
+    @Property(type=list, notify=recentProfilesChanged)
+    def recentProfiles(self) -> List[str]:
         """Returns a list of recently used profiles.
 
         Returns:

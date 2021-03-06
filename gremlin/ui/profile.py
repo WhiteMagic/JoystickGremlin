@@ -275,7 +275,7 @@ class ActionNodeModel(QtCore.QObject):
             target_node.insert_sibling_after(source_node)
 
         self.actionChanged.emit()
-        self.parent().rootActionChanged.emit()
+        self._signal_change()
 
     @Slot(str, str)
     def moveBefore(self, source: str, target: str) -> None:
@@ -295,7 +295,7 @@ class ActionNodeModel(QtCore.QObject):
             target_node.insert_sibling_before(source_node)
 
         self.actionChanged.emit()
-        self.parent().rootActionChanged.emit()
+        self._signal_change()
 
     @Slot(str)
     def appendNewAction(self, action_name: str) -> None:
@@ -313,18 +313,12 @@ class ActionNodeModel(QtCore.QObject):
         else:
             TreeNode(action, self._node.parent)
 
-        parent = self.parent()
-        while parent is not None:
-            if isinstance(parent, InputItemBindingModel):
-                parent.rootActionChanged.emit()
-                break
-            else:
-                parent = parent.parent()
+        self._signal_change()
 
     @Slot()
     def remove(self) -> None:
         self._node.detach()
-        self.parent().rootActionChanged.emit()
+        self._signal_change()
 
     @Property(type=bool, notify=actionChanged)
     def isFirstSibling(self) -> bool:
@@ -341,8 +335,28 @@ class ActionNodeModel(QtCore.QObject):
             return self._node.parent.children[-1] == self._node
 
     @Property(type=bool, notify=actionChanged)
+    def hasChildren(self) -> bool:
+        return len(self._node.children) > 0
+
+    @Property(type=bool, notify=actionChanged)
     def isRootNode(self) -> bool:
         return isinstance(self._node.value, RootAction)
+
+    def _signal_change(self) -> None:
+        parent = self.parent()
+        while parent is not None:
+            if isinstance(parent, InputItemBindingModel):
+                break
+            else:
+                parent = parent.parent()
+
+        if isinstance(parent, InputItemBindingModel):
+            parent.rootActionChanged.emit()
+        else:
+            raise error.GremlinError(
+                "Unable to signal action node change due to corrupted "
+                "action tree structure"
+            )
 
     def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
         """Returns the node with the desired id from the action tree.
@@ -386,7 +400,7 @@ class InputItemBindingModel(QtCore.QObject):
         )
 
     @Property(type=ActionNodeModel, notify=rootActionChanged)
-    def rootAction(self) -> ActionNodeModel:
+    def rootNode(self) -> ActionNodeModel:
         return ActionNodeModel(
             self._action_tree.root,
             self._input_item_binding.behavior,
@@ -395,9 +409,10 @@ class InputItemBindingModel(QtCore.QObject):
         )
 
     @Property(type=list, notify=rootActionChanged)
-    def rootNodes(self) -> List[ActionNodeModel]:
+    def topLevelNodes(self) -> List[ActionNodeModel]:
         nodes = []
         for node in self._action_tree.root.children:
+            node.value.setParent(self)
             nodes.append(ActionNodeModel(
                 node,
                 self._input_item_binding.behavior,
