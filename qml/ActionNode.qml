@@ -142,7 +142,7 @@ Item {
 
         // Last node of each subtree is followed by a dropdown to add additional actions
        Loader {
-           active: _root.action.isLastSibling
+           active: _root.action.isLastSibling && _root.action.name != "Root"
 
            sourceComponent: Column {
                Rectangle {
