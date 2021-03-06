@@ -18,6 +18,8 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
+import QtQuick.Controls.Universal 2.14
+import QtQuick.Layouts 1.14
 
 import gremlin.ui.profile 1.0
 
@@ -28,26 +30,41 @@ Item {
     property ActionNodeModel actionNode
     property var callback: null
 
-    width: _combobox.width + _button.width
-    height: _combobox.height
+    implicitHeight: _content.height
+    implicitWidth: _button.width + _combobox.width + 13
 
     onActionNodeChanged: {
         _combobox.model = backend.actionList(actionNode)
     }
 
-    ComboBox {
-        id: _combobox
-        model: []
-    }
-    Button {
-        id: _button
-        anchors.left: _combobox.right
-        anchors.leftMargin: 10
-        text: "Add Action"
+    RowLayout {
+        id: _content
 
-        onClicked: {
-            _root.callback(_combobox.currentText)
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        Button {
+            id: _button
+
+            Layout.leftMargin: 8
+            text: "Add Action"
+
+            onClicked: {
+                _root.callback(_combobox.currentText)
+            }
+        }
+
+        ComboBox {
+            id: _combobox
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            Layout.rightMargin: 40
+
+            height: 2
+            color: Universal.baseLowColor
         }
     }
-
 }

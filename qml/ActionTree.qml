@@ -63,28 +63,11 @@ Item {
             color: Universal.accent
         }
 
-
         // +--------------------------------------------------------------------
         // | Render the root action node
         // +--------------------------------------------------------------------
-        ActionNode {
+        RootAction {
             Layout.fillWidth: true
-
-            action: _root.inputBinding.rootAction
-        }
-
-
-        // +--------------------------------------------------------------------
-        // | Action selection dropdown
-        // +--------------------------------------------------------------------
-        Loader {
-            Layout.fillWidth: true
-
-            active: _root.inputBinding.actionCount == 0
-
-            sourceComponent: ActionSelector {
-                actionNode: _root.inputBinding.rootAction
-            }
         }
     }
-} // Item
+}

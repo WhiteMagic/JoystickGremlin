@@ -22,7 +22,7 @@ Item {
             anchors.right: parent.right
 
             Label {
-                text: "Activate when this input is"
+                text: "This input is"
             }
 
             ComboBox {

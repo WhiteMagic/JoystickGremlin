@@ -29,8 +29,6 @@ import gremlin.plugins 1.0
 Item {
     id: _root
 
-    property var model
-
     implicitHeight: _content.height
 
     // Show all child nodes
@@ -46,12 +44,12 @@ Item {
             // The root action does not truly exist as an action and as such receives some information via
             // the inputBinding instance which technically is accessible in all top level QML elements inside
             // the action tree element.
-            model: inputBinding.rootNodes
+            model: inputBinding.topLevelNodes
 
             ActionNode {
-                action: modelData
-
                 Layout.fillWidth: true
+
+                action: modelData
             }
         }
     }

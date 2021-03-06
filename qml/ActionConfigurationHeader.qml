@@ -34,17 +34,21 @@ Item {
 
 
     // Content
-    Column {
+    ColumnLayout {
         id: _layout
 
+        anchors.left: parent.left
+        anchors.right: parent.right
+
         // Default header components visible with every input
-        Row {
+        RowLayout {
             id: _generalHeader
 
             TextField {
                 id: _description
 
-                width: _root.width - _behavior.width - _headerRemove.width
+                //width: _root.width - _behavior.width - _headerRemove.width
+                Layout.fillWidth: true
 
                 placeholderText: "Description"
                 text: "" != _root.inputBinding.description ? _root.inputBinding.description : null
@@ -58,6 +62,13 @@ Item {
                 id: _behavior
 
                 inputBinding: _root.inputBinding
+            }
+
+            ActionSelector {
+                Layout.alignment: Qt.AlignRight
+
+                actionNode: _root.inputBinding.rootNode
+                callback: actionNode.appendNewAction
             }
 
             Button {

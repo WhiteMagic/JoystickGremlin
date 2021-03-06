@@ -23,7 +23,6 @@ import QtQuick.Controls.Universal 2.14
 
 Item {
     height: _border.height
-    width: parent.width
 
     Rectangle {
         id: _border

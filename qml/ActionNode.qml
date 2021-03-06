@@ -139,22 +139,6 @@ Item {
                 }
             }
         }
-
-        // Last node of each subtree is followed by a dropdown to add additional actions
-       Loader {
-           active: _root.action.isLastSibling && _root.action.name != "Root"
-
-           sourceComponent: Column {
-               Rectangle {
-                   height: itemSpacing
-                   width: 1
-               }
-               ActionSelector {
-                   actionNode: _root.action
-                   callback: _root.action.appendNewAction
-               }
-           }
-       }
     }
 
 

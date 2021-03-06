@@ -17,6 +17,7 @@
 
 import QtQuick 2.14
 import QtQuick.Controls 2.14
+import QtQuick.Controls.Universal 2.14
 import QtQuick.Layouts 1.14
 import QtQuick.Window 2.14
 
@@ -41,14 +42,13 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        Row {
+        // +-------------------------------------------------------------------
+        // | Logical condition setup
+        // +-------------------------------------------------------------------
+        RowLayout {
             id: _logicalOperator
 
-            spacing: 10
-
             Label {
-                anchors.verticalCenter: _logicalOperator.verticalCenter
-
                 text: "When "
             }
             ComboBox {
@@ -67,10 +67,35 @@ Item {
                 }
             }
             Label {
-                anchors.verticalCenter: _logicalOperator.verticalCenter
-
                 text: "of the following conditions are met"
             }
+
+            Rectangle {
+                Layout.fillWidth: true
+            }
+
+            Button {
+                text: "Add Condition"
+
+                onClicked: {
+                    _root.action.addCondition(_condition.currentValue)
+                }
+            }
+
+            ComboBox {
+                id: _condition
+
+                textRole: "text"
+                valueRole: "value"
+
+                model: _root.action.conditionOperators
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            height: 2
+            color: Universal.accent
         }
 
         Repeater {
@@ -88,36 +113,32 @@ Item {
                     onClicked: {
                         _root.action.removeCondition(index)
                     }
-            }
-            }
-        }
-
-        Row {
-            id: _conditionTypes
-
-            spacing: 10
-
-            ComboBox {
-                id: _condition
-
-                textRole: "text"
-                valueRole: "value"
-
-                model: _root.action.conditionOperators
-            }
-            Button {
-                text: "Add Condition"
-
-                onClicked: {
-                    _root.action.addCondition(_condition.currentValue)
                 }
             }
         }
 
-        Label {
-            id: _labelThen
+        // +-------------------------------------------------------------------
+        // | True actions
+        // +-------------------------------------------------------------------
+        RowLayout {
+            Label {
+                text: "Condition is <b>true</b>"
+            }
 
-            text: "Then"
+            Rectangle {
+                Layout.fillWidth: true
+            }
+
+            ActionSelector {
+                actionNode: _root.node
+                callback: function(x) { _root.action.addAction(x, "if"); }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            height: 2
+            color: "green"
         }
 
         Repeater {
@@ -130,21 +151,28 @@ Item {
             }
         }
 
-        Column {
-            Rectangle {
-                height: itemSpacing
-                width: 1
+        // +-------------------------------------------------------------------
+        // | False actions
+        // +-------------------------------------------------------------------
+        RowLayout {
+            Label {
+                text: "Condition is <b>false</b>"
             }
+
+            Rectangle {
+                Layout.fillWidth: true
+            }
+
             ActionSelector {
                 actionNode: _root.node
-                callback: function(x) { _root.action.addAction(x, "if"); }
+                callback: function(x) { _root.action.addAction(x, "else"); }
             }
         }
-
-        Label {
-            id: _labelElse
-
-            text: "Else"
+        
+        Rectangle {
+            Layout.fillWidth: true
+            height: 2
+            color: "red"
         }
 
         Repeater {
@@ -156,6 +184,5 @@ Item {
                 Layout.fillWidth: true
             }
         }
-
     }
 }
