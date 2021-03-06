@@ -52,7 +52,16 @@ Item {
             inputBinding: _root.inputBinding
         }
 
-        BottomBorder {}
+        // Bottom border
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            Layout.topMargin: 5
+            Layout.bottomMargin: 10
+
+            height: 2
+            color: Universal.accent
+        }
 
 
         // +--------------------------------------------------------------------
