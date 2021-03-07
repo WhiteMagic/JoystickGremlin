@@ -499,6 +499,23 @@ def read_action_ids(node: ElementTree.Element) -> List[uuid.UUID]:
     return ids
 
 
+def create_action_ids(name: str, action_ids: List[uuid.UUID]) -> ElementTree.Element:
+    """Returns a node containing the given action ids.
+
+    Args:
+        name: name of the node to generate
+        action_ids: uuid to enter as action ids
+    Returns:
+        XML node containing the action ids grouped under a single node
+    """
+    node = ElementTree.Element(name)
+    for uuid in action_ids:
+        entry = ElementTree.Element("action-id")
+        entry.text = str(uuid)
+        node.append(entry)
+    return node
+
+
 def has_correct_type(value: Any, property_type: PropertyType) -> bool:
     """Returns whether or not a value is of the correct type.
 
