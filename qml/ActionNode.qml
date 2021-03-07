@@ -76,7 +76,7 @@ Item {
             }
 
             Label {
-                text: _root.action.name
+                text: `<b>${_root.action.name}</b>`
             }
 
             Rectangle {
