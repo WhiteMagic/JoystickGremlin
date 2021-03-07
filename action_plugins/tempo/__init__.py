@@ -361,6 +361,8 @@ class TempoModel(AbstractActionModel):
         node.append(util.create_property_node(
             "activate-on", self._activate_on, PropertyType.String
         ))
+
+        return node
     
     def qml_path(self) -> str:
         return "file:///" + QtCore.QFile(
