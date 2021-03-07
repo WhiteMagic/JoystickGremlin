@@ -562,7 +562,7 @@ class ConditionModel(AbstractActionModel):
             self._input_type
         )
 
-        predicate = lambda x: True if x.value.id == self.id else False
+        predicate = lambda x: True if x.value and x.value.id == self.id else False
         nodes = self._action_tree.root.nodes_matching(predicate)
         if len(nodes) != 1:
             raise error.GremlinError(f"Node with ID {self.id} has invalid state")
