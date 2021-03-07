@@ -20,7 +20,7 @@ import QtQuick.Controls 2.14
 
 
 Item {
-    id: root
+    id: _root
 
     property real minValue
     property real maxValue
@@ -28,47 +28,47 @@ Item {
     property real value
     property int decimals: 2
 
-    width: spinbox.width
-    height: spinbox.height
+    implicitWidth: _spinbox.width
+    implicitHeight: _spinbox.height
 
     SpinBox {
-        id: spinbox
+        id: _spinbox
 
-        value: root.value * (10 ** root.decimals)
-        from: root.minValue * (10 ** root.decimals)
-        to: root.maxValue * (10 ** root.decimals)
-        stepSize: root.stepSize * (10 ** root.decimals)
+        value: _root.value * (10 ** _root.decimals)
+        from: _root.minValue * (10 ** _root.decimals)
+        to: _root.maxValue * (10 ** _root.decimals)
+        stepSize: _root.stepSize * (10 ** _root.decimals)
         editable: true
 
         contentItem: TextInput {
             z: 2
-            text: spinbox.textFromValue(spinbox.value, spinbox.locale)
+            text: _spinbox.textFromValue(_spinbox.value, _spinbox.locale)
 
-            font: spinbox.font
+            font: _spinbox.font
             horizontalAlignment: Qt.AlignHCenter
             verticalAlignment: Qt.AlignVCenter
 
-            readOnly: !spinbox.editable
-            validator: spinbox.validator
+            readOnly: !_spinbox.editable
+            validator: _spinbox.validator
             selectByMouse: true
             inputMethodHints: Qt.ImhFormattedNumbersOnly
         }
 
         validator: DoubleValidator {
-            bottom: Math.min(spinbox.from, spinbox.to)
-            top:  Math.max(spinbox.from, spinbox.to)
+            bottom: Math.min(_spinbox.from, _spinbox.to)
+            top:  Math.max(_spinbox.from, _spinbox.to)
         }
 
         textFromValue: function(value, locale) {
-            return Number(value / (10 ** root.decimals)).toLocaleString(locale, "f", root.decimals)
+            return Number(value / (10 ** _root.decimals)).toLocaleString(locale, "f", _root.decimals)
         }
 
         valueFromText: function(text, locale) {
-            return Number.fromLocaleString(locale, text) * (10 ** root.decimals)
+            return Number.fromLocaleString(locale, text) * (10 ** _root.decimals)
         }
 
         onValueChanged: {
-            root.value = value / (10 ** root.decimals)
+            _root.value = value / (10 ** _root.decimals)
         }
     }
 }
