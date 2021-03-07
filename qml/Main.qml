@@ -50,22 +50,28 @@ ApplicationWindow {
     Dialogs.FileDialog {
         id: idSaveProfileFileDialog
         title: "Please choose a file"
+
+        acceptLabel: "Save"
         defaultSuffix: "xml"
+        fileMode: Dialogs.FileDialog.SaveFile
         nameFilters: ["Profile files (*.xml)"]
 
         onAccepted: {
-            backend.saveProfile(Helpers.pythonizePath(fileUrl))
+            backend.saveProfile(Helpers.pythonizePath(file))
         }
     }
 
     Dialogs.FileDialog {
         id: idLoadProfileFileDialog
         title: "Please choose a file"
+
+        acceptLabel: "Open"
         defaultSuffix: "xml"
+        fileMode: Dialogs.FileDialog.OpenFile
         nameFilters: ["Profile files (*.xml)"]
 
         onAccepted: {
-            backend.loadProfile(Helpers.pythonizePath(fileUrl))
+            backend.loadProfile(Helpers.pythonizePath(file))
         }
     }
 
