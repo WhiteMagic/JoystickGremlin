@@ -29,7 +29,7 @@ from PySide6 import QtCore
 from . import error
 from .profile_library import ActionTree
 from .types import InputType
-
+from gremlin.ui.profile import ActionNodeModel
 
 
 class AbstractActionModel(QtCore.QObject):
@@ -98,6 +98,13 @@ class AbstractActionModel(QtCore.QObject):
         raise error.MissingImplementationError(
             "AbstractActionModel.is_valid not implemented in subclass"
         )
+
+    def _create_node_list(self, action_ids):
+        nodes = []
+        for node in self._action_tree.root.nodes_matching(lambda x: x.value.id in action_ids):
+            node.value.setParent(self)
+            nodes.append(ActionNodeModel(node, self._input_type, self._action_tree, parent=self))
+        return nodes
 
 
 # class ActivationCondition:

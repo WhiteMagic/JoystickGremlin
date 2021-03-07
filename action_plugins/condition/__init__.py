@@ -600,23 +600,11 @@ class ConditionModel(AbstractActionModel):
 
     @Property(list, notify=actionsChanged)
     def trueActionNodes(self) -> List[ActionNodeModel]:
-        nodes = []
-        for node in self._action_tree.root.nodes_matching(
-                lambda x: x.value.id in self._true_action_ids
-        ):
-            node.value.setParent(self)
-            nodes.append(ActionNodeModel(node, self._input_type, self._action_tree, parent=self))
-        return nodes
+        return self._create_node_list(self._true_action_ids)
 
     @Property(list, notify=actionsChanged)
     def falseActionNodes(self) -> List[ActionNodeModel]:
-        nodes = []
-        for node in self._action_tree.root.nodes_matching(
-                lambda x: x.value.id in self._false_action_ids
-        ):
-            node.value.setParent(self)
-            nodes.append(ActionNodeModel(node, self._input_type, self._action_tree, parent=self))
-        return nodes
+        return self._create_node_list(self._false_action_ids)
 
     @Property(list, notify=conditionsChanged)
     def conditions(self):

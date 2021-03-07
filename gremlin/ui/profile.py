@@ -26,7 +26,6 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import error, plugin_manager, profile, tree, util
 from gremlin.profile_library import ActionTree, RootAction
-from gremlin.base_classes import AbstractActionModel
 from gremlin.tree import TreeNode
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
@@ -238,7 +237,7 @@ class ActionNodeModel(QtCore.QObject):
         return self._input_type
 
     @Property(type="QVariant", notify=actionChanged)
-    def actionModel(self) -> AbstractActionModel:
+    def actionModel(self) -> "AbstractActionModel":
         return self._node.value
 
     @Property(type=str, notify=actionChanged)
