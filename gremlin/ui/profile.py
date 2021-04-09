@@ -434,6 +434,10 @@ class InputItemBindingModel(QtCore.QObject):
     def actionCount(self) -> int:
         return self._action_tree.root.node_count
 
+    @property
+    def input_item_binding(self) -> profile.InputItemBinding:
+        return self._input_item_binding
+
     def _get_behavior(self) -> str:
         return InputType.to_string(self._input_item_binding.behavior)
 

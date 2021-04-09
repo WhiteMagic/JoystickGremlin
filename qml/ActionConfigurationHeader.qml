@@ -75,6 +75,9 @@ Item {
                 id: _headerRemove
 
                 icon.source: "qrc:///icons/close"
+                onClicked: {
+                    backend.deleteActionConfiguration(inputBinding)
+                }
             }
         }
 

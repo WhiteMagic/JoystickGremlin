@@ -1449,6 +1449,15 @@ class InputItem:
         return f"{self.device_id}: {InputType.to_string(self.input_type)} " \
                f"{self.input_id}"
 
+    def remove_item_binding(self, binding: InputItemBinding) -> None:
+        """Removes the given binding instance if present.
+
+        Args:
+            binding: InputItemBinding instance to remove from the item
+        """
+        if binding in self.action_configurations:
+            del self.action_configurations[self.action_configurations.index(binding)]
+
 
 class InputItemBinding:
 

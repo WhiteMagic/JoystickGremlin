@@ -262,6 +262,14 @@ class Backend(QtCore.QObject):
         input_item.action_configurations.append(action_config)
         self.inputConfigurationChanged.emit()
 
+    @Slot(InputItemBindingModel)
+    def deleteActionConfiguration(self, input_binding: InputItemBindingModel) -> None:
+        input_binding.input_item_binding.input_item.remove_item_binding(
+            input_binding.input_item_binding
+        )
+        self.inputConfigurationChanged.emit()
+        self.reloadUi.emit()
+
     @Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:
         """Returns the current window title.
