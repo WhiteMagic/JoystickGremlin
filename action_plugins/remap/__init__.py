@@ -27,7 +27,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import joystick_handling, profile_library, util
+from gremlin import error, joystick_handling, profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.types import AxisMode, InputType, PropertyType
 
@@ -66,13 +66,14 @@ class RemapFunctor(AbstractFunctor):
                     self.thread.start()
 
         elif self.data.input_type == InputType.JoystickButton:
-            if event.event_type in [InputType.JoystickButton, InputType.Keyboard] \
-                    and event.is_pressed \
-                    and self.needs_auto_release:
-                input_devices.ButtonReleaseActions().register_button_release(
-                    (self.data.vjoy_device_id, self.data.vjoy_input_id),
-                    event
-                )
+            # FIXME: reimplement
+            # if event.event_type in [InputType.JoystickButton, InputType.Keyboard] \
+            #         and event.is_pressed \
+            #         and self.needs_auto_release:
+            #     input_devices.ButtonReleaseActions().register_button_release(
+            #         (self.data.vjoy_device_id, self.data.vjoy_input_id),
+            #         event
+            #     )
 
             joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
                 .button(self.data.vjoy_input_id).is_pressed = value.current
@@ -109,7 +110,7 @@ class RemapFunctor(AbstractFunctor):
                         self.thread_last_update + 1.0 < time.time():
                     self.thread_running = False
                 time.sleep(0.01)
-            except gremlin.error.VJoyError:
+            except error.VJoyError:
                 self.thread_running = False
 
     # def _check_for_auto_release(self, action):

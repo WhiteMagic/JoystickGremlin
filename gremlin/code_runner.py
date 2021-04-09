@@ -264,7 +264,6 @@ class CodeRunner:
         # Set default macro action delay
         gremlin.macro.MacroManager().default_delay = settings.default_delay
 
-
         try:
             self._setup_plugins()
 

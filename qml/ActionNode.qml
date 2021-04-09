@@ -32,6 +32,9 @@ Item {
 
     implicitHeight: _content.height
 
+    // +------------------------------------------------------------------------
+    // | Rendering of the node's content
+    // +------------------------------------------------------------------------
     ColumnLayout {
         id: _content
 

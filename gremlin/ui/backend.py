@@ -34,8 +34,6 @@ from gremlin import profile
 from gremlin import profile_library
 from gremlin import shared_state
 
-from gremlin.tree import TreeNode
-from gremlin.types import InputType
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, InputItemModel
 

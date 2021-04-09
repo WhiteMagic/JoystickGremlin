@@ -90,7 +90,7 @@ Item {
             Button {
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                text: "Create new action sequence"
+                text: "New Action Sequence"
                 
                 onClicked: {
                     backend.newActionConfiguration(_root.inputIdentifier)
