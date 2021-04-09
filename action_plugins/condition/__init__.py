@@ -655,6 +655,13 @@ class ConditionModel(AbstractActionModel):
         ))
         for condition in self._conditions:
             node.append(condition.to_xml())
+        node.append(util.create_action_ids(
+            "if-actions", self._true_action_ids
+        ))
+        node.append(util.create_action_ids(
+            "else-actions", self._false_action_ids
+        ))
+
         return node
 
     def is_valid(self) -> bool:
