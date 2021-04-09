@@ -2,6 +2,7 @@
 *.pyc
 *.wxs
 
+.vscode
 .idea
 __pycache__
 
