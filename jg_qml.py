@@ -230,11 +230,11 @@ if __name__ == "__main__":
         "InputItemModel"
     )
     QtQml.qmlRegisterType(
-        gremlin.ui.profile.ActionConfigurationListModel,
+        gremlin.ui.profile.InputItemBindingListModel,
         "gremlin.ui.profile",
         1,
         0,
-        "ActionConfigurationListModel"
+        "InputItemBindingListModel"
     )
     QtQml.qmlRegisterType(
         gremlin.ui.profile.ActionNodeModel,

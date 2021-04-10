@@ -46,7 +46,7 @@ Item {
         // +--------------------------------------------------------------------
         // | Header
         // +--------------------------------------------------------------------
-        ActionConfigurationHeader {
+        InputItemBindingConfigurationHeader {
             Layout.fillWidth: true
 
             inputBinding: _root.inputBinding

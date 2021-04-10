@@ -298,8 +298,8 @@ ApplicationWindow {
 
             // Trigger a model update on the InputConfiguration
             onInputIdentifierChanged: {
-                _inputConfigurationPanel.actionConfigurationListModel =
-                    backend.getInputItem(inputIdentifier).actionConfigurations
+                _inputConfigurationPanel.inputItemBindingListModel =
+                    backend.getInputItem(inputIdentifier).inputItemBindings
                 _inputConfigurationPanel.inputIdentifier = inputIdentifier
             }
 

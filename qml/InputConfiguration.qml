@@ -30,17 +30,17 @@ import gremlin.ui.device 1.0
 Item {
     id: _root
 
-    property ActionConfigurationListModel actionConfigurationListModel
+    property InputItemBindingListModel inputItemBindingListModel
     property InputIdentifier inputIdentifier
 
     function reload() {
-        _root.actionConfigurationListModel =
-            backend.getInputItem(_root.inputIdentifier).actionConfigurations
+        _root.inputItemBindingListModel =
+            backend.getInputItem(_root.inputIdentifier).inputItemBindings
     }
 
     onInputIdentifierChanged: {
-        _root.actionConfigurationListModel =
-            backend.getInputItem(_root.inputIdentifier).actionConfigurations
+        _root.inputItemBindingListModel =
+            backend.getInputItem(_root.inputIdentifier).inputItemBindings
     }
 
 
@@ -63,7 +63,7 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
 
             // Content to visualize
-            model: actionConfigurationListModel
+            model: _root.inputItemBindingListModel
             delegate: _entryDelegate
         }
 
@@ -93,8 +93,8 @@ Item {
                 text: "New Action Sequence"
                 
                 onClicked: {
-                    backend.newActionConfiguration(_root.inputIdentifier)
-                    actionConfigurationListModel.modelReset()
+                    backend.newInputBinding(_root.inputIdentifier)
+                    inputItemBindingListModel.modelReset()
                 }
             }
 

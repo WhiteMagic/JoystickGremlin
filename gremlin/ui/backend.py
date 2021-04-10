@@ -236,7 +236,7 @@ class Backend(QtCore.QObject):
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
     @Slot(InputIdentifier)
-    def newActionConfiguration(self, identifier: InputIdentifier) -> None:
+    def newInputBinding(self, identifier: InputIdentifier) -> None:
         """Creates a new action configuration.
 
         Args:
@@ -261,7 +261,7 @@ class Backend(QtCore.QObject):
         self.inputConfigurationChanged.emit()
 
     @Slot(InputItemBindingModel)
-    def deleteActionConfiguration(self, input_binding: InputItemBindingModel) -> None:
+    def deleteInputBinding(self, input_binding: InputItemBindingModel) -> None:
         input_binding.input_item_binding.input_item.remove_item_binding(
             input_binding.input_item_binding
         )

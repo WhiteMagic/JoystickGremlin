@@ -76,7 +76,7 @@ Item {
 
                 icon.source: "qrc:///icons/close"
                 onClicked: {
-                    backend.deleteActionConfiguration(inputBinding)
+                    backend.deleteInputBinding(inputBinding)
                 }
             }
         }

@@ -44,16 +44,16 @@ class InputItemModel(QtCore.QObject):
         self._input_item = input_item
 
     @Property(QtCore.QObject)
-    def actionConfigurations(self) -> ActionConfigurationListModel:
-        return ActionConfigurationListModel(
+    def inputItemBindings(self) -> InputItemBindingListModel:
+        return InputItemBindingListModel(
             self._input_item.action_configurations,
             self
         )
 
 
-class ActionConfigurationListModel(QtCore.QAbstractListModel):
+class InputItemBindingListModel(QtCore.QAbstractListModel):
 
-    """List model of all ActionConfiguration instances of a single input item."""
+    """List model of all InputItemBinding instances of a single input item."""
 
     # This fake single role and the roleName function are needed to have the
     # modelData property available in the QML delegate
@@ -76,7 +76,7 @@ class ActionConfigurationListModel(QtCore.QAbstractListModel):
         )
 
     def roleNames(self) -> typing.Dict:
-        return ActionConfigurationListModel.roles
+        return InputItemBindingListModel.roles
 
 
 class VirtualButtonModel(QtCore.QObject):

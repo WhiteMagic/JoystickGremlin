@@ -26,6 +26,8 @@ import "../../qml"
 
 
 Item {
+    id: _root
+
     property ActionNodeModel node
     property RemapModel action
 
@@ -38,19 +40,19 @@ Item {
         anchors.right: parent.right
 
         VJoySelector {
-            inputType: action.inputType
-            vjoyInputId: action.vjoyInputId
-            vjoyDeviceId: action.vjoyDeviceId
-            validTypes: [action.inputType]
+            inputType: _root.action.inputType
+            vjoyInputId: _root.action.vjoyInputId
+            vjoyDeviceId: _root.action.vjoyDeviceId
+            validTypes: [_root.action.inputType]
 
-            onVjoyInputIdChanged: { action.vjoyInputId = vjoyInputId }
-            onVjoyDeviceIdChanged: { action.vjoyDeviceId = vjoyDeviceId }
-            onInputTypeChanged: { action.inputType = inputType }
+            onVjoyInputIdChanged: { _root.action.vjoyInputId = vjoyInputId }
+            onVjoyDeviceIdChanged: { _root.action.vjoyDeviceId = vjoyDeviceId }
+            onInputTypeChanged: { _root.action.inputType = inputType }
         }
 
         // UI for a physical axis behaving as an axis
         Loader {
-            active: action.inputType == "axis"
+            active: _root.action.inputType == "axis"
             Layout.fillWidth: true
 
             sourceComponent: Row {
@@ -59,7 +61,7 @@ Item {
                     checked: true
 
                     onCheckedChanged: {
-                        action.axisMode = "absolute"
+                        _root.action.axisMode = "absolute"
                     }
                 }
                 RadioButton {
@@ -67,7 +69,7 @@ Item {
                     text: "Relative"
 
                     onCheckedChanged: {
-                        action.axisMode = "relative"
+                        _root.action.axisMode = "relative"
                     }
                 }
 
@@ -85,7 +87,7 @@ Item {
                     stepSize: 0.1
 
                     onValueChanged: {
-                        action.axisScaling = value
+                        _root.action.axisScaling = value
                     }
                 }
             }
