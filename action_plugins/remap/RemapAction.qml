@@ -43,7 +43,7 @@ Item {
             inputType: _root.action.inputType
             vjoyInputId: _root.action.vjoyInputId
             vjoyDeviceId: _root.action.vjoyDeviceId
-            validTypes: [_root.action.inputType]
+            validTypes: [inputBinding.behavior]
 
             onVjoyInputIdChanged: { _root.action.vjoyInputId = vjoyInputId }
             onVjoyDeviceIdChanged: { _root.action.vjoyDeviceId = vjoyDeviceId }
