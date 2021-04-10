@@ -1592,7 +1592,7 @@ class ModeHierarchy:
                 self.hierarchy.append(node)
 
     def to_xml(self) -> ElementTree.Element:
-        node = ElementTree.Element("nodes")
+        node = ElementTree.Element("modes")
 
         for tree in self.hierarchy:
             for i in range(tree.node_count):
