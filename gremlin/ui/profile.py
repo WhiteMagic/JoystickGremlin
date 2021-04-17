@@ -25,6 +25,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import error, plugin_manager, profile, tree, util
+from gremlin.ui import backend
 from gremlin.profile_library import ActionTree, RootAction
 from gremlin.tree import TreeNode
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
@@ -264,17 +265,20 @@ class ActionNodeModel(QtCore.QObject):
             source: string uuid value of the source node
             target: string uuid valiue of the target node
         """
-        # Retrieve nodes
-        source_node = self._find_node_with_id(uuid.UUID(source))
-        target_node = self._find_node_with_id(uuid.UUID(target))
+        try:
+            # Retrieve nodes
+            source_node = self._find_node_with_id(uuid.UUID(source))
+            target_node = self._find_node_with_id(uuid.UUID(target))
 
-        # Reorder nodes
-        if source_node != target_node:
-            source_node.detach()
-            target_node.insert_sibling_after(source_node)
+            # Reorder nodes
+            if source_node != target_node:
+                source_node.detach()
+                target_node.insert_sibling_after(source_node)
 
-        self.actionChanged.emit()
-        self._signal_change()
+            self.actionChanged.emit()
+            self._signal_change()
+        except error.GremlinError:
+            backend.Backend().reloadUi.emit()
 
     @Slot(str, str)
     def moveBefore(self, source: str, target: str) -> None:
@@ -284,17 +288,20 @@ class ActionNodeModel(QtCore.QObject):
             source: string uuid value of the source node
             target: string uuid valiue of the target node
         """
-        # Retrieve nodes
-        source_node = self._find_node_with_id(uuid.UUID(source))
-        target_node = self._find_node_with_id(uuid.UUID(target))
+        try:
+            # Retrieve nodes
+            source_node = self._find_node_with_id(uuid.UUID(source))
+            target_node = self._find_node_with_id(uuid.UUID(target))
 
-        # Reorder nodes
-        if source_node != target_node:
-            source_node.detach()
-            target_node.insert_sibling_before(source_node)
+            # Reorder nodes
+            if source_node != target_node:
+                source_node.detach()
+                target_node.insert_sibling_before(source_node)
 
-        self.actionChanged.emit()
-        self._signal_change()
+            self.actionChanged.emit()
+            self._signal_change()
+        except error.GremlinError:
+            backend.Backend().reloadUi.emit()
 
     @Slot(str)
     def appendNewAction(self, action_name: str) -> None:
