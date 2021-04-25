@@ -270,18 +270,18 @@ class ActionNodeModel(QtCore.QObject):
             source_node = self._find_node_with_id(uuid.UUID(source))
             target_node = self._find_node_with_id(uuid.UUID(target))
 
-            # Reorder nodes
+            # Reorder nodes, first action level then profile level
             if source_node != target_node:
-                # Perform reordering on the logical tree level
-                source_node.detach()
-                target_node.insert_sibling_after(source_node)
-
                 # Perform reordering on the parent node level if needed
                 source_node.parent.value.remove_action(source_node.value)
                 target_node.parent.value.add_action_after(
                     target_node.value,
                     source_node.value
                 )
+
+                # Perform reordering on the logical tree level
+                source_node.detach()
+                target_node.insert_sibling_after(source_node)
 
             self.actionChanged.emit()
             self._signal_change()
@@ -301,18 +301,18 @@ class ActionNodeModel(QtCore.QObject):
             source_node = self._find_node_with_id(uuid.UUID(source))
             target_node = self._find_node_with_id(uuid.UUID(target))
 
-            # Reorder nodes
+            # Reorder nodes, first action level then profile level
             if source_node != target_node:
-                # Perform reordering on the logical tree level
-                source_node.detach()
-                target_node.insert_sibling_before(source_node)
-
                 # Perform reordering on the parent node level if needed
                 source_node.parent.value.remove_action(source_node.value)
                 target_node.parent.value.add_action_before(
                     target_node.value,
                     source_node.value
                 )
+
+                # Perform reordering on the logical tree level
+                source_node.detach()
+                target_node.insert_sibling_before(source_node)
 
             self.actionChanged.emit()
             self._signal_change()
