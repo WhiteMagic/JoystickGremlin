@@ -667,6 +667,43 @@ class ConditionModel(AbstractActionModel):
     def is_valid(self) -> bool:
         return True
 
+    def remove_action(self, action: AbstractActionModel) -> None:
+        """Removes the provided action from this action.
+
+        Args:
+            action: the action to remove
+        """
+        self._remove_from_list(self._true_action_ids, action.id)
+        self._remove_from_list(self._false_action_ids, action.id)
+
+    def add_action_after(
+        self,
+        anchor: AbstractActionModel,
+        action: AbstractActionModel
+    ) -> None:
+        """Adds the provided action after the specified anchor.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        self._insert_into_list(self._true_action_ids, anchor.id, action.id, True)
+        self._insert_into_list(self._false_action_ids, anchor.id, action.id, True)
+
+    def add_action_before(
+        self,
+        anchor: AbstractActionModel,
+        action: AbstractActionModel
+    ) -> None:
+        """Adds the provided action before the specified anchor.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        self._insert_into_list(self._true_action_ids, anchor.id, action.id, False)
+        self._insert_into_list(self._false_action_ids, anchor.id, action.id, False)
+
     def qml_path(self) -> str:
         return "file:///" + QtCore.QFile(
             "core_plugins:condition/ConditionAction.qml"

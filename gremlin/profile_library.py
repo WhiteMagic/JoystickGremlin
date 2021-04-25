@@ -53,6 +53,32 @@ class RootAction:
     def qml_path(self) -> str:
         return "RootAction.qml"
 
+    def remove_action(self, action) -> None:
+        """Removes the provided action from this action.
+
+        Args:
+            action: the action to remove
+        """
+        pass
+
+    def add_action_after(self,  anchor, action) -> None:
+        """Adds the provided action after the specified anchor.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        pass
+
+    def add_action_before(self,  anchor, action) -> None:
+        """Adds the provided action before the specified anchor.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        pass
+
 
 class ActionTree:
 

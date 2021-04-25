@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
 
 from abc import abstractmethod, ABCMeta
 from gremlin import actions
 
 import logging
-from typing import Optional
+from typing import Any, List, Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -99,12 +100,76 @@ class AbstractActionModel(QtCore.QObject):
             "AbstractActionModel.is_valid not implemented in subclass"
         )
 
+    def remove_action(self, action: AbstractActionModel) -> None:
+        """Removes the provided action from this action.
+
+        Args:
+            action: the action to remove
+        """
+        pass
+
+    def add_action_after(
+        self,
+        anchor: AbstractActionModel,
+        action: AbstractActionModel
+    ) -> None:
+        """Adds the provided action after the specified anchor.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        pass
+
+    def add_action_before(
+        self,
+        anchor: AbstractActionModel,
+        action: AbstractActionModel
+    ) -> None:
+        """Adds the provided action before the specified anchor.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        pass
+
     def _create_node_list(self, action_ids):
         nodes = []
         for node in self._action_tree.root.nodes_matching(lambda x: x.value.id in action_ids):
             node.value.setParent(self)
             nodes.append(ActionNodeModel(node, self._input_type, self._action_tree, parent=self))
         return nodes
+
+    def _remove_from_list(self, storage: List[Any], value: Any) -> None:
+        """Removes the provided value from the list storage.
+
+        Args:
+            storage: list object from which to remove the value
+            value: value to remove
+        """
+        if value in storage:
+            storage.remove(value)
+
+    def _insert_into_list(
+        self,
+        storage: List[Any],
+        anchor: Any,
+        value: Any,
+        append: bool=True
+    ) -> None:
+        """Inserts the given value into the storage.
+
+        Args:
+            storage: list object into which to insert the value
+            anchor: value around which to insert the new value
+            value: new value to insert into the list
+            append: append if True, prepend if False
+        """
+        if anchor in storage:
+            index = storage.index(anchor)
+            index = index + 1 if append else index
+            storage.insert(index, value)
 
 
 # class ActivationCondition:

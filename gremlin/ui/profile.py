@@ -272,8 +272,16 @@ class ActionNodeModel(QtCore.QObject):
 
             # Reorder nodes
             if source_node != target_node:
+                # Perform reordering on the logical tree level
                 source_node.detach()
                 target_node.insert_sibling_after(source_node)
+
+                # Perform reordering on the parent node level if needed
+                source_node.parent.value.remove_action(source_node.value)
+                target_node.parent.value.add_action_after(
+                    target_node.value,
+                    source_node.value
+                )
 
             self.actionChanged.emit()
             self._signal_change()
@@ -295,8 +303,16 @@ class ActionNodeModel(QtCore.QObject):
 
             # Reorder nodes
             if source_node != target_node:
+                # Perform reordering on the logical tree level
                 source_node.detach()
                 target_node.insert_sibling_before(source_node)
+
+                # Perform reordering on the parent node level if needed
+                source_node.parent.value.remove_action(source_node.value)
+                target_node.parent.value.add_action_before(
+                    target_node.value,
+                    source_node.value
+                )
 
             self.actionChanged.emit()
             self._signal_change()
