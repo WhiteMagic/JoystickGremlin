@@ -15,28 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+from __future__ import annotations
+
 from typing import Optional
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal, Slot
+from PySide6.QtCore import Property, Signal
 
-from gremlin import profile_library
-from gremlin.actions import Value
+from gremlin import actions, event_handler, profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
-from gremlin.event_handler import Event
 from gremlin.types import InputType, PropertyType
-import gremlin.util as util
 
 
 class DescriptionFunctor(AbstractFunctor):
 
     """Implements the function executed of the Description action at runtime."""
 
-    def __init__(self, action):
+    def __init__(self, action: DescriptionModel):
         super().__init__(action)
 
-    def process_event(self, event: Event, value: Value) -> bool:
+    def process_event(
+        self,
+        event: event_handler.Event,
+        value: actions.Value
+    ) -> bool:
         """Processes the provided event.
 
         Args:
@@ -72,7 +76,7 @@ class DescriptionModel(AbstractActionModel):
     def __init__(
             self,
             action_tree: profile_library.ActionTree,
-            input_type: InputType = InputType.JoystickButton,
+            input_type: InputType=InputType.JoystickButton,
             parent: Optional[QtCore.QObject] = None
     ):
         super().__init__(action_tree, input_type, parent)
