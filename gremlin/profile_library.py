@@ -70,15 +70,6 @@ class RootAction:
         """
         pass
 
-    def add_action_before(self,  anchor, action) -> None:
-        """Adds the provided action before the specified anchor.
-
-        Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
-        """
-        pass
-
 
 class ActionTree:
 

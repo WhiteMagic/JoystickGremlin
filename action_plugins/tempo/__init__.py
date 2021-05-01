@@ -396,20 +396,6 @@ class TempoModel(AbstractActionModel):
         self._insert_into_list(self._short_action_ids, anchor.id, action.id, True)
         self._insert_into_list(self._long_action_ids, anchor.id, action.id, True)
 
-    def add_action_before(
-        self,
-        anchor: AbstractActionModel,
-        action: AbstractActionModel
-    ) -> None:
-        """Adds the provided action before the specified anchor.
-
-        Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
-        """
-        self._insert_into_list(self._short_action_ids, anchor.id, action.id, False)
-        self._insert_into_list(self._long_action_ids, anchor.id, action.id, False)
-
     def insert_action(self, container: str, action: AbstractActionModel) -> None:
         if container == "short":
             self._short_action_ids.insert(0, action.id)

@@ -318,37 +318,6 @@ class ActionNodeModel(QtCore.QObject):
         except error.GremlinError:
             backend.Backend().reloadUi.emit()
 
-    @Slot(str, str)
-    def moveBefore(self, source: str, target: str) -> None:
-        """Positions the source node before the target node.
-
-        Args:
-            source: string uuid value of the source node
-            target: string uuid valiue of the target node
-        """
-        try:
-            # Retrieve nodes
-            source_node = self._find_node_with_id(uuid.UUID(source))
-            target_node = self._find_node_with_id(uuid.UUID(target))
-
-            # Reorder nodes, first action level then profile level
-            if source_node != target_node:
-                # Perform reordering on the parent node level if needed
-                source_node.parent.value.remove_action(source_node.value)
-                target_node.parent.value.add_action_before(
-                    target_node.value,
-                    source_node.value
-                )
-
-                # Perform reordering on the logical tree level
-                source_node.detach()
-                target_node.insert_sibling_before(source_node)
-
-            self.actionChanged.emit()
-            self._signal_change()
-        except error.GremlinError:
-            backend.Backend().reloadUi.emit()
-
     @Slot(str)
     def appendNewAction(self, action_name: str) -> None:
         """Creates a new action and appends it in the action tree after this node.
