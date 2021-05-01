@@ -542,6 +542,17 @@ class VJoy:
                         self.vjoy_id
                 ))
 
+    def is_owned(self) -> bool:
+        """Returns True if the vJoy device is owned by the current process.
+
+        Returns:
+            True if the current process owns this vJoy device, False othwerwise
+        """
+        if self.vjoy_id is not None:
+            return self.pid == VJoyInterface.GetOwnerPid(self.vjoy_id)
+        else:
+            return False
+
     @property
     def axis_count(self):
         """Returns the number of axes present in this device.
