@@ -341,9 +341,10 @@ if __name__ == "__main__":
     # if vjoy_working:
     #     # Properly terminate the runner instance should it be running
     #     ui.runner.stop()
+    backend.runner.stop()
 
     # Relinquish control over all VJoy devices used
-    # gremlin.joystick_handling.VJoyProxy.reset()
+    gremlin.joystick_handling.VJoyProxy.reset()
 
     # hg.remove_process(os.getpid())
 
