@@ -338,7 +338,7 @@ class ActionNodeModel(QtCore.QObject):
 
     @Slot()
     def remove(self) -> None:
-        # FIXME: this will not remove the action from any parent action specific storage
+        self._node.parent.value.remove_action(self._node.value)
         self._node.detach()
         self._signal_change()
 
