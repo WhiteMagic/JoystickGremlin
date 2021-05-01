@@ -89,6 +89,11 @@ class RemapFunctor(AbstractFunctor):
         vjoy_dev = joystick_handling.VJoyProxy()[self.data.vjoy_device_id]
         self.axis_value = vjoy_dev.axis(self.data.vjoy_input_id).value
         while self.thread_running:
+            # Abort if the vJoy device is no longer valid
+            if not vjoy_dev.is_owned():
+                self.thread_running = False
+                return
+
             try:
                 # If the vjoy value has was changed from what we set it to
                 # in the last iteration, terminate the thread
