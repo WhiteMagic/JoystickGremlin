@@ -205,7 +205,7 @@ class CallbackObject:
         elif event.event_type in [InputType.JoystickButton, InputType.Keyboard]:
             value = gremlin.actions.Value(event.is_pressed)
         else:
-            raise error.GremlinError("Invalid event type")
+            raise gremlin.error.GremlinError("Invalid event type")
 
         return [value]
 
@@ -216,7 +216,7 @@ class CallbackObject:
             for state in states:
                 values.append(gremlin.actions.Value(state))
         else:
-            raise error.GremlinError("Invalid event type")
+            raise gremlin.error.GremlinError("Invalid event type")
 
         return values
 
@@ -492,7 +492,7 @@ class CodeRunner:
         ]:
             value = gremlin.actions.Value(event.is_pressed)
         else:
-            raise error.GremlinError("Invalid event type")
+            raise gremlin.error.GremlinError("Invalid event type")
 
         shared_value = copy.deepcopy(value)
 
