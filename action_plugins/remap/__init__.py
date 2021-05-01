@@ -16,27 +16,31 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import logging
-import os
+from __future__ import annotations
+
 import threading
 import time
 from typing import Optional
-import uuid
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal, Slot
+from PySide6.QtCore import Property, Signal
 
-from gremlin import error, joystick_handling, profile_library, util
+from gremlin import actions, error, event_handler, joystick_handling, \
+    profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.types import AxisMode, InputType, PropertyType
+
+
+# TODO:
+# - check auto-release functionality once modes are back
 
 
 class RemapFunctor(AbstractFunctor):
 
     """Executes a remap action when called."""
 
-    def __init__(self, action):
+    def __init__(self, action: RemapModel):
         super().__init__(action)
 
         self.needs_auto_release = False #self._check_for_auto_release(action)
@@ -47,7 +51,11 @@ class RemapFunctor(AbstractFunctor):
         self.axis_delta_value = 0.0
         self.axis_value = 0.0
 
-    def process_event(self, event, value):
+    def process_event(
+        self,
+        event: event_handler.Event,
+        value: actions.Value
+    ) -> bool:
         if self.data.input_type == InputType.JoystickAxis:
             if self.data.axis_mode == AxisMode.Absolute:
                 joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
@@ -84,7 +92,7 @@ class RemapFunctor(AbstractFunctor):
 
         return True
 
-    def relative_axis_thread(self):
+    def relative_axis_thread(self) -> None:
         self.thread_running = True
         vjoy_dev = joystick_handling.VJoyProxy()[self.data.vjoy_device_id]
         self.axis_value = vjoy_dev.axis(self.data.vjoy_input_id).value
@@ -171,7 +179,6 @@ class RemapModel(AbstractActionModel):
         super().__init__(action_tree, input_type, parent)
 
         # Determine a valid vjoy input
-        all_devs = joystick_handling.vjoy_devices()
         device = joystick_handling.vjoy_devices()[0]
         vjoy_id = device.vjoy_id
         input_id = 1
@@ -310,154 +317,6 @@ class RemapModel(AbstractActionModel):
         fset=_set_axis_scaling,
         notify=axisScalingChanged
     )
-
-
-# class Remap(gremlin.base_classes.AbstractAction):
-#
-#     """Action remapping physical joystick inputs to vJoy inputs."""
-#
-#     name = "Remap"
-#     tag = "remap"
-#
-#     default_button_activation = (True, True)
-#     input_types = [
-#         InputType.JoystickAxis,
-#         InputType.JoystickButton,
-#         InputType.JoystickHat,
-#         InputType.Keyboard
-#     ]
-#
-#     functor = RemapFunctor
-#     widget = RemapWidget
-#
-#     def __init__(self, parent):
-#         """Creates a new instance.
-#
-#         :param parent the container to which this action belongs
-#         """
-#         super().__init__(parent)
-#
-#         # Set vjoy ids to None so we know to pick the next best one
-#         # automatically
-#         self.vjoy_device_id = None
-#         self.vjoy_input_id = None
-#         #self.input_type = self.parent.parent.input_type
-#         self.input_type = InputType.JoystickButton
-#         self.axis_mode = "absolute"
-#         self.axis_scaling = 1.0
-#
-#     def icon(self):
-#         """Returns the icon corresponding to the remapped input.
-#
-#         :return icon representing the remap action
-#         """
-#         # Do not return a valid icon if the input id itself is invalid
-#         if self.vjoy_input_id is None:
-#             return None
-#
-#         input_string = "axis"
-#         if self.input_type == InputType.JoystickButton:
-#             input_string = "button"
-#         elif self.input_type == InputType.JoystickHat:
-#             input_string = "hat"
-#         return "action_plugins/remap/gfx/icon_{}_{:03d}.png".format(
-#                 input_string,
-#                 self.vjoy_input_id
-#             )
-#
-#     def requires_virtual_button(self, input_type):
-#         """Returns whether or not the action requires an activation condition
-#         for the specified input type.
-#
-#         Parameters
-#         ==========
-#         input_type : gremlin.common.InputType
-#             Input type for which to run the check
-#
-#         Returns
-#         =======
-#         bool
-#             True if an activation condition is required, False otherwise
-#         """
-#         #input_type = self.get_input_type()
-#
-#         if input_type in [InputType.JoystickButton, InputType.Keyboard]:
-#             return False
-#         elif input_type == InputType.JoystickAxis:
-#             if self.input_type == InputType.JoystickAxis:
-#                 return False
-#             else:
-#                 return True
-#         elif input_type == InputType.JoystickHat:
-#             if self.input_type == InputType.JoystickHat:
-#                 return False
-#             else:
-#                 return True
-#
-#     def _parse_xml(self, node):
-#         """Populates the data storage with data from the XML node.
-#
-#         :param node XML node with which to populate the storage
-#         """
-#         try:
-#             if "axis" in node.attrib:
-#                 self.input_type = InputType.JoystickAxis
-#                 self.vjoy_input_id = safe_read(node, "axis", int)
-#             elif "button" in node.attrib:
-#                 self.input_type = InputType.JoystickButton
-#                 self.vjoy_input_id = safe_read(node, "button", int)
-#             elif "hat" in node.attrib:
-#                 self.input_type = InputType.JoystickHat
-#                 self.vjoy_input_id = safe_read(node, "hat", int)
-#             elif "keyboard" in node.attrib:
-#                 self.input_type = InputType.Keyboard
-#                 self.vjoy_input_id = safe_read(node, "button", int)
-#             else:
-#                 raise gremlin.error.GremlinError(
-#                     "Invalid remap type provided: {}".format(node.attrib)
-#                 )
-#
-#             self.vjoy_device_id = safe_read(node, "vjoy", int)
-#
-#             # if self.get_input_type() == InputType.JoystickAxis and \
-#             #         self.input_type == InputType.JoystickAxis:
-#             self.axis_mode = safe_read(node, "axis-type", str, "absolute")
-#             self.axis_scaling = safe_read(node, "axis-scaling", float, 1.0)
-#         except ProfileError:
-#             self.vjoy_input_id = None
-#             self.vjoy_device_id = None
-#
-#     def _generate_xml(self):
-#         """Returns an XML node encoding this action's data.
-#
-#         :return XML node containing the action's data
-#         """
-#         node = ElementTree.Element("remap")
-#         node.set("vjoy", str(self.vjoy_device_id))
-#         if self.input_type == InputType.Keyboard:
-#             node.set(
-#                 InputType.to_string(InputType.JoystickButton),
-#                 str(self.vjoy_input_id)
-#             )
-#         else:
-#             node.set(
-#                 InputType.to_string(self.input_type),
-#                 str(self.vjoy_input_id)
-#             )
-#
-#         if self.get_input_type() == InputType.JoystickAxis and \
-#                 self.input_type == InputType.JoystickAxis:
-#             node.set("axis-type", safe_format(self.axis_mode, str))
-#             node.set("axis-scaling", safe_format(self.axis_scaling, float))
-#
-#         return node
-#
-#     def _is_valid(self):
-#         """Returns whether or not the action is configured properly.
-#
-#         :return True if the action is configured correctly, False otherwise
-#         """
-#         return not(self.vjoy_device_id is None or self.vjoy_input_id is None)
 
 
 create = RemapModel
