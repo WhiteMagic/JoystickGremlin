@@ -118,19 +118,18 @@ def parse_bool(value: str, default_value: bool = False) -> bool:
         return default_value
 
     # Attempt to parse the value
-    try:
+    if value.isnumeric():
         int_value = int(value)
-        if int_value in [0, 1]:
+        if int(value) in [0, 1]:
             return int_value == 1
         else:
             raise error.ProfileError(f"Invalid bool value used: {value}")
-    except ValueError:
-        if value.lower() in ["true", "false"]:
-            return True if value.lower() == "true" else False
-        else:
-            raise error.ProfileError(f"Invalid bool value used: {value}")
-    except TypeError:
-        raise error.ProfileError(f"Invalid type provided: {type(value)}")
+    elif value.lower() in ["true", "false"]:
+        return True if value.lower() == "true" else False
+    else:
+        raise error.ProfileError(
+            f"Invalid bool type/value used: {type(value)}/{value}"
+        )
 
 
 def parse_guid(value: str) -> dill.GUID:
