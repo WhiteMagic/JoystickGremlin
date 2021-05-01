@@ -136,6 +136,7 @@ Item {
         }
 
         Rectangle {
+            id: _trueDivider
             Layout.fillWidth: true
             height: 2
             color: "green"
@@ -170,6 +171,7 @@ Item {
         }
         
         Rectangle {
+            id: _falseDivider
             Layout.fillWidth: true
             height: 2
             color: "red"
@@ -182,6 +184,69 @@ Item {
                 action: modelData
 
                 Layout.fillWidth: true
+            }
+        }
+
+        // Bottom spacer
+        Rectangle {
+            Layout.fillWidth: true
+            height: 10
+        }
+    }
+
+
+    // Drop action for insertion into empty/first slot of the short actions
+    DropArea {
+        x: _trueDivider.x
+        y: _trueDivider.y
+        width: _trueDivider.width
+        height: 30
+
+        // Visualization of the drop indicator
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+
+            height: 5
+
+            opacity: parent.containsDrag ? 1.0 : 0.0
+            color: Universal.accent
+        }
+
+        onDropped: {
+            if(drop.text != _root.action.id)
+            {
+                drop.accept();
+                modelData.dropAction(drop.text, modelData.id, "true");
+            }
+        }
+    }
+
+    // Drop action for insertion into empty/first slot of the long actions
+    DropArea {
+        x: _falseDivider.x
+        y: _falseDivider.y
+        width: _falseDivider.width
+        height: 30
+
+        // Visualization of the drop indicator
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+
+            height: 5
+
+            opacity: parent.containsDrag ? 1.0 : 0.0
+            color: Universal.accent
+        }
+
+        onDropped: {
+            if(drop.text != _root.action.id)
+            {
+                drop.accept();
+                modelData.dropAction(drop.text, modelData.id, "false");
             }
         }
     }

@@ -103,6 +103,7 @@ Item {
         }
 
         Rectangle {
+            id: _shortDivider
             Layout.fillWidth: true
             height: 2
             color: Universal.baseLowColor
@@ -137,6 +138,7 @@ Item {
         }
 
         Rectangle {
+            id: _longDivider
             Layout.fillWidth: true
             height: 2
             color: Universal.baseLowColor
@@ -149,6 +151,68 @@ Item {
                 action: modelData
 
                 Layout.fillWidth: true
+            }
+        }
+
+        // Bottom spacer
+        Rectangle {
+            Layout.fillWidth: true
+            height: 10
+        }
+    }
+
+    // Drop action for insertion into empty/first slot of the short actions
+    DropArea {
+        x: _shortDivider.x
+        y: _shortDivider.y
+        width: _shortDivider.width
+        height: 30
+
+        // Visualization of the drop indicator
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+
+            height: 5
+
+            opacity: parent.containsDrag ? 1.0 : 0.0
+            color: Universal.accent
+        }
+
+        onDropped: {
+            if(drop.text != _root.action.id)
+            {
+                drop.accept();
+                modelData.dropAction(drop.text, modelData.id, "short");
+            }
+        }
+    }
+
+    // Drop action for insertion into empty/first slot of the long actions
+    DropArea {
+        x: _longDivider.x
+        y: _longDivider.y
+        width: _longDivider.width
+        height: 30
+
+        // Visualization of the drop indicator
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+
+            height: 5
+
+            opacity: parent.containsDrag ? 1.0 : 0.0
+            color: Universal.accent
+        }
+
+        onDropped: {
+            if(drop.text != _root.action.id)
+            {
+                drop.accept();
+                modelData.dropAction(drop.text, modelData.id, "long");
             }
         }
     }

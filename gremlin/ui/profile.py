@@ -257,8 +257,38 @@ class ActionNodeModel(QtCore.QObject):
     def id(self) -> str:
         return str(self._node.value.id)
 
-    @Slot(str, str)
-    def moveAfter(self, source: str, target: str) -> None:
+    @Slot(str, str, str)
+    def dropAction(self, source: str, target: str, method: str) -> None:
+        """Handles dropping an action on an UI item.
+
+        Args:
+            source: identifier of the acion being dropped
+            target: identifier of the location on which the source is dropped
+            method: type of drop action to perform
+        """
+        if method == "append":
+            self._append_drop_action(source, target)
+        else:
+            try:
+                # Retrieve tree nodes corresponding to the actions
+                source_node = self._find_node_with_id(uuid.UUID(source))
+                target_node = self._find_node_with_id(uuid.UUID(target))
+
+                # Handle action level reordering
+                source_node.parent.value.remove_action(source_node.value)
+                target_node.value.insert_action(method, source_node.value)
+
+                # Handle tree level reodering
+                source_node.detach()
+                target_node.insert_child(source_node, 0)
+
+                # Redraw UI
+                self.actionChanged.emit()
+                self._signal_change()
+            except error.GremlinError:
+                backend.Backend().reloadUi.emit()
+
+    def _append_drop_action(self, source: str, target: str) -> None:
         """Positions the source node after the target node.
 
         Args:
@@ -339,6 +369,7 @@ class ActionNodeModel(QtCore.QObject):
 
     @Slot()
     def remove(self) -> None:
+        # FIXME: this will not remove the action from any parent action specific storage
         self._node.detach()
         self._signal_change()
 

@@ -121,18 +121,17 @@ class AbstractActionModel(QtCore.QObject):
         """
         pass
 
-    def add_action_before(
-        self,
-        anchor: AbstractActionModel,
-        action: AbstractActionModel
-    ) -> None:
-        """Adds the provided action before the specified anchor.
+    def insert_action(self, container: str, action: AbstractActionModel) -> None:
+        """Inserts the action into a specific container.
 
         Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
+            container: label of the container into which to insert the
+                provided action
+            action: the action to insert
         """
-        pass
+        raise error.MissingImplementationError(
+            "AbstractActionModel.insert_action not implemented in subclass"
+        )
 
     def _create_node_list(self, action_ids):
         nodes = []

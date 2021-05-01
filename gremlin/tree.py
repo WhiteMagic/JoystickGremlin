@@ -56,6 +56,16 @@ class TreeNode:
         other.parent = self
         self.children.append(other)
 
+    def insert_child(self, other: TreeNode, index: int) -> None:
+        """Inserts a new child at the given position.
+
+        Args:
+            other: the node to add as a child
+            index: the index at which to insert the new child
+        """
+        other.parent = self
+        self.children.insert(index, other)
+
     def append_sibling(self, other: TreeNode) -> None:
         """Adds a sibling node to the tree at the end of the list of siblings.
 

@@ -690,19 +690,15 @@ class ConditionModel(AbstractActionModel):
         self._insert_into_list(self._true_action_ids, anchor.id, action.id, True)
         self._insert_into_list(self._false_action_ids, anchor.id, action.id, True)
 
-    def add_action_before(
-        self,
-        anchor: AbstractActionModel,
-        action: AbstractActionModel
-    ) -> None:
-        """Adds the provided action before the specified anchor.
-
-        Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
-        """
-        self._insert_into_list(self._true_action_ids, anchor.id, action.id, False)
-        self._insert_into_list(self._false_action_ids, anchor.id, action.id, False)
+    def insert_action(self, container: str, action: AbstractActionModel) -> None:
+        if container == "true":
+            self._true_action_ids.insert(0, action.id)
+        elif container == "false":
+            self._false_action_ids.insert(0, action.id)
+        else:
+            raise error.GremlinError(
+                f"Invalid container for a Condition action: '{container}`"
+            )
 
     def qml_path(self) -> str:
         return "file:///" + QtCore.QFile(

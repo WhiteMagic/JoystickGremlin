@@ -203,44 +203,9 @@ Item {
                 if(drop.text != _root.action.id)
                 {
                     drop.accept();
-                    modelData.moveAfter(drop.text, modelData.id);
+                    modelData.dropAction(drop.text, modelData.id, "append");
                 }
             }
         }
     }
-
-    // Drop area above the first action of a subtree
-    Loader {
-        active: _root.action.isFirstSibling && !_root.action.isRootNode
-        sourceComponent: DropArea {
-            
-            x: _header.x
-            y: _header.y -itemSpacing/2
-            width: _action.width
-            height: 30
-
-            // Visualization of the drop indicator
-            Rectangle {
-                id: _topDropMarker
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-
-                height: 5
-
-                opacity: parent.containsDrag ? 1.0 : 0.0
-                color: Universal.accent
-            }
-
-            onDropped: {
-                if(drop.text != _root.action.id)
-                {
-                    drop.accept();
-                    modelData.moveBefore(drop.text, modelData.id);
-                }
-            }
-        }
-    }
-
 }

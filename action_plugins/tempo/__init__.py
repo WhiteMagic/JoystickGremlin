@@ -410,6 +410,16 @@ class TempoModel(AbstractActionModel):
         self._insert_into_list(self._short_action_ids, anchor.id, action.id, False)
         self._insert_into_list(self._long_action_ids, anchor.id, action.id, False)
 
+    def insert_action(self, container: str, action: AbstractActionModel) -> None:
+        if container == "short":
+            self._short_action_ids.insert(0, action.id)
+        elif container == "long":
+            self._long_action_ids.insert(0, action.id)
+        else:
+            raise error.GremlinError(
+                f"Invalid container for a Tempo action: '{container}`"
+            )
+
     @Slot(str, str)
     def addAction(self, action_name: str, activation: str) -> None:
         """Adds a new action to one of the two condition branches.
