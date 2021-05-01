@@ -53,7 +53,7 @@ class Backend(QtCore.QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.profile = None
+        self.profile = profile.Profile()
         self._last_error = ""
         self._action_state = {}
         self.runner = code_runner.CodeRunner()
