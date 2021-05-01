@@ -368,19 +368,25 @@ class VJoyDevices(QtCore.QObject):
 
             # When changing the input type attempt to preserve the existing
             # selection if the input type is part of the new set of valid
-            # types. If this is not possible, an exception is thrown and the
-            # selection is set to the first entry of the available values.
+            # types. If this is not possible, the selection is set to the
+            # first entry of the available values.
             old_vjoy_id = self._get_vjoy_id()
             old_input_type = self._get_input_type()
+
             # Refresh the UI elements
             self.inputModel
-            try:
+
+            input_label = common.input_to_ui_string(
+                InputType.to_enum(old_input_type),
+                old_vjoy_id
+            )
+            if input_label in self._input_items:
                 self.setSelection(
                     self._get_vjoy_id(),
                     old_vjoy_id,
                     old_input_type
                 )
-            except error.GremlinError as e:
+            else:
                 self._current_vjoy_index = 0
                 self._current_input_index = 0
                 self._current_input_type = self._input_data[0][0]
