@@ -431,7 +431,7 @@ class Hat:
         if direction not in Hat.to_continuous_direction:
             raise VJoyError(
                 "Invalid direction specified - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, direction)
+                    _error_string(self.vjoy_id, self.hat_id, direction)
                 )
             )
 
@@ -443,7 +443,7 @@ class Hat:
         ):
             raise VJoyError(
                 "Failed to set hat direction - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._direction)
+                    _error_string(self.vjoy_id, self.hat_id, self._direction)
                 )
             )
 
