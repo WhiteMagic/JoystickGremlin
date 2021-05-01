@@ -468,6 +468,7 @@ class InputItemBindingModel(QtCore.QObject):
         behavior = InputType.to_enum(text)
         if behavior != self._input_item_binding.behavior:
             self._input_item_binding.behavior = behavior
+            self._input_item_binding.virtual_button = None
 
             # Ensure a virtual button instance exists of the correct type
             # if one is needed
