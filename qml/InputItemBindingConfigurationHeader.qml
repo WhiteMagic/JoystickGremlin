@@ -47,7 +47,6 @@ Item {
             TextField {
                 id: _description
 
-                //width: _root.width - _behavior.width - _headerRemove.width
                 Layout.fillWidth: true
 
                 placeholderText: "Description"
