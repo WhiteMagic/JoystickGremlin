@@ -55,7 +55,7 @@ class RemapFunctor(AbstractFunctor):
         self,
         event: event_handler.Event,
         value: actions.Value
-    ) -> bool:
+    ) -> None:
         if self.data.input_type == InputType.JoystickAxis:
             if self.data.axis_mode == AxisMode.Absolute:
                 joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
@@ -89,8 +89,6 @@ class RemapFunctor(AbstractFunctor):
         elif self.data.input_type == InputType.JoystickHat:
             joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
                 .hat(self.data.vjoy_input_id).direction = value.current
-
-        return True
 
     def relative_axis_thread(self) -> None:
         self.thread_running = True

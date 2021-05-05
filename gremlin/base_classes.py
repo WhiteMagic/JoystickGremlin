@@ -27,7 +27,8 @@ from xml.etree import ElementTree
 
 from PySide6 import QtCore
 
-from . import error
+from . import actions, error
+from .event_handler import Event
 from .profile_library import ActionTree
 from .types import InputType
 from gremlin.ui.profile import ActionNodeModel
@@ -240,7 +241,7 @@ class AbstractFunctor(metaclass=ABCMeta):
         self.data = instance
 
     @abstractmethod
-    def process_event(self, event, value):
+    def process_event(self, event: Event, value: actions.Value) -> None:
         """Processes the functor using the provided event and value data.
 
         :param event the raw event that caused the functor to be executed

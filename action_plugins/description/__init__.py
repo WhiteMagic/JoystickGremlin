@@ -40,17 +40,14 @@ class DescriptionFunctor(AbstractFunctor):
         self,
         event: event_handler.Event,
         value: actions.Value
-    ) -> bool:
+    ) -> None:
         """Processes the provided event.
 
         Args:
             event: the input event to process
             value: the potentially modified input value
-
-        Returns:
-            True if the execution should continue, False otherwise
         """
-        return True
+        pass
 
 
 class DescriptionModel(AbstractActionModel):

@@ -26,7 +26,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import actions, error, plugin_manager, profile_library, util
+from gremlin import actions, error, event_handler, plugin_manager, profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
@@ -124,8 +124,12 @@ class ConditionFunctor(AbstractFunctor):
     def __init__(self, action):
         super().__init__(action)
 
-    def process_event(self, event, value):
-        return True
+    def process_event(
+        self,
+        event: event_handler.Event,
+        value: actions.Value
+    ) -> None:
+        pass
 
 
 class AbstractCondition(QtCore.QObject):
