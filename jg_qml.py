@@ -264,7 +264,7 @@ if __name__ == "__main__":
     engine.rootContext().setContextProperty("backend", backend)
 
     # Load a profile
-    backend.loadProfile("layout.xml")
+    #backend.loadProfile("layout.xml")
 
     # Load plugin code and UI elements
     syslog.info("Initializing plugins")
