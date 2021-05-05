@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 from __future__ import annotations
+
 import copy
 import logging
 import threading
@@ -26,7 +28,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, util, plugin_manager, profile_library
+from gremlin import actions, error, event_handler, plugin_manager, \
+    profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
@@ -34,6 +37,7 @@ from gremlin.ui.profile import ActionNodeModel
 
 
 # class TempoContainerWidget(gremlin.ui.input_item.AbstractContainerWidget):
+class TempoFunctor(AbstractFunctor):
 
 #     """Container with two actions, triggered based on activation duration."""
 
@@ -216,7 +220,7 @@ from gremlin.ui.profile import ActionNodeModel
 
 class TempoContainerFunctor(AbstractFunctor):
 
-    def __init__(self, action):
+    def __init__(self, action: TempoModel):
         super().__init__(action)
 
         self.start_time = 0
@@ -224,16 +228,24 @@ class TempoContainerFunctor(AbstractFunctor):
         self.value_press = None
         self.event_press = None
 
-    def process_event(self, event, value):
+        self.short_actions = \
+            [a.node.value.functor(a.node.value) for a in action.shortActions]
+        self.long_actions = \
+            [a.node.value.functor(a.node.value) for a in action.longActions]
+
+    def process_event(
+        self,
+        event: event_handler.Event,
+        value: actions.Value
+    ) -> None:
         # TODO: Currently this does not handle hat or axis events, however
         #       virtual buttons created on those inputs is supported
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
-                "Invalid data type received in Tempo container: {}".format(
-                    type(event.value)
-                )
+                f"Invalid data type received in Tempo container: "
+                f"{type(event.value)}"
             )
-            return False
+            return
 
         # Copy state when input is pressed
         if value.current:
@@ -243,17 +255,21 @@ class TempoContainerFunctor(AbstractFunctor):
         # Execute tempo logic
         if value.current:
             self.start_time = time.time()
-            self.timer = threading.Timer(self.delay, self._long_press)
+            self.timer = threading.Timer(self.data.threshold, self._long_press)
             self.timer.start()
 
-            if self.activate_on == "press":
-                self.short_set.process_event(self.event_press, self.value_press)
+            if self.data.activateOn == "press":
+                self._process_event(
+                    self.short_actions,
+                    self.event_press,
+                    self.value_press
+                )
         else:
             # Short press
-            if (self.start_time + self.delay) > time.time():
+            if (self.start_time + self.data.threshold) > time.time():
                 self.timer.cancel()
 
-                if self.activate_on == "release":
+                if self.data.activateOn == "release":
                     threading.Thread(target=lambda: self._short_press(
                         self.event_press,
                         self.value_press,
@@ -261,18 +277,22 @@ class TempoContainerFunctor(AbstractFunctor):
                         value
                     )).start()
                 else:
-                    self.short_set.process_event(event, value)
+                    self._process_event(self.short_actions, event, value)
             # Long press
             else:
-                self.long_set.process_event(event, value)
-                if self.activate_on == "press":
-                    self.short_set.process_event(event, value)
+                self._process_event(self.long_actions, event, value)
+                if self.data.activateOn == "press":
+                    self._process_event(self.short_actions, event, value)
 
             self.timer = None
 
-        return True
-
-    def _short_press(self, event_p, value_p, event_r, value_r):
+    def _short_press(
+        self,
+        event_p: event_handler.Event,
+        value_p: actions.Value,
+        event_r: event_handler.Event,
+        value_r: actions.Value
+    ):
         """Callback executed for a short press action.
 
         :param event_p event to press the action
@@ -280,13 +300,33 @@ class TempoContainerFunctor(AbstractFunctor):
         :param event_r event to release the action
         :param value_r value to release the action
         """
-        self.short_set.process_event(event_p, value_p)
+        self._process_event(self.short_actions, event_p, value_p)
         time.sleep(0.05)
-        self.short_set.process_event(event_r, value_r)
+        self._process_event(self.short_actions, event_r, value_r)
 
     def _long_press(self):
         """Callback executed, when the delay expires."""
-        self.long_set.process_event(self.event_press, self.value_press)
+        self._process_event(
+            self.long_actions,
+            self.event_press,
+            self.value_press
+        )
+
+    def _process_event(
+        self,
+        actions: List[AbstractFunctor],
+        event: event_handler.Event,
+        value: actions.Value
+    ):
+        """Processes the provided event data with every provided action.
+
+        Args:
+            actions: List of actions to process the event with
+            event: event to process
+            value: value of the event
+        """
+        for action in actions:
+            action.process_event(event, value)
 
 
 class TempoModel(AbstractActionModel):
@@ -302,7 +342,7 @@ class TempoModel(AbstractActionModel):
     name = "Tempo"
     tag = "tempo"
 
-    functor = TempoContainerFunctor
+    functor = TempoFunctor
     
     input_types = [
         InputType.JoystickAxis,
