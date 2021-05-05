@@ -162,8 +162,9 @@ class CallbackObject:
 
     def __init__(self, action):
         self._action = action
-        self._execution_tree = \
-            action.library_reference.action_tree.genertate_execution_tree()
+        self._functors = []
+        for node in action.library_reference.action_tree.root.children:
+            self._functors.append(node.value.functor(node.value))
 
         self._generate_values = self._default_generate_values
         self._virtual_button = None
@@ -184,18 +185,10 @@ class CallbackObject:
         values = self._generate_values(event)
 
         for i, value in enumerate(values):
-            stack = self._execution_tree.children[::-1]
-            while len(stack) > 0:
-                node = stack.pop()
-                result = node.value.process_event(event, value)
+            for func in self._functors:
+                func.process_event(event, value)
 
-                # Only execute child nodes if the parent node was executed
-                # successfully
-                if result:
-                    stack.extend(node.children[::-1])
-
-            # Allow a short period of time before processing the execution
-            # tree again with a new value
+            # Pause between the execution of the binding
             if i < len(values)-1:
                 time.sleep(0.05)
 
