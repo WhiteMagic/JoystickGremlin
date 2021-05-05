@@ -67,7 +67,6 @@ class Backend(QtCore.QObject):
         """
         return self.runner.is_running()
 
-
     @Slot()
     def toggleActiveState(self):
         """Toggles Gremlin between active and inactive."""

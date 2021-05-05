@@ -121,7 +121,7 @@ class ConditionOperators(enum.Enum):
 
 class ConditionFunctor(AbstractFunctor):
 
-    def __init__(self, action):
+    def __init__(self, action: ConditionOperators):
         super().__init__(action)
 
     def process_event(
