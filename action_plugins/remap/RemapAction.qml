@@ -40,19 +40,19 @@ Item {
         anchors.right: parent.right
 
         VJoySelector {
-            inputType: _root.action.inputType
+            vjoyInputType: _root.action.vjoyInputType
             vjoyInputId: _root.action.vjoyInputId
             vjoyDeviceId: _root.action.vjoyDeviceId
             validTypes: [inputBinding.behavior]
 
             onVjoyInputIdChanged: { _root.action.vjoyInputId = vjoyInputId }
             onVjoyDeviceIdChanged: { _root.action.vjoyDeviceId = vjoyDeviceId }
-            onInputTypeChanged: { _root.action.inputType = inputType }
+            onVjoyInputTypeChanged: { _root.action.vjoyInputType = vjoyInputType }
         }
 
         // UI for a physical axis behaving as an axis
         Loader {
-            active: _root.action.inputType == "axis"
+            active: _root.action.vjoyInputType == "axis"
             Layout.fillWidth: true
 
             sourceComponent: Row {

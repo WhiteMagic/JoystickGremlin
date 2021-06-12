@@ -275,7 +275,7 @@ class TempoModel(AbstractActionModel):
         """
         action = plugin_manager.ActionPlugins().get_class(action_name)(
             self._action_tree,
-            self._input_type
+            self.behavior_type
         )
 
         predicate = lambda x: True if x.value and x.value.id == self.id else False
@@ -308,7 +308,7 @@ class TempoModel(AbstractActionModel):
     @Property(float, fset=_set_threshold, notify=thresholdChanged)
     def threshold(self) -> float:
         return self._threshold
-    
+
     def _set_activate_on(self, value: str) -> None:
         if value not in ["press", "release"]:
             raise error.GremlinError(f"Received invalid activateOn value {value}")

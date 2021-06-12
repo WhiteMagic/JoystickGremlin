@@ -139,9 +139,6 @@ Item {
                         )
                     }
 
-                    // TODO: Figure out the best way to handle initialization
-                    //       without overwriting model values
-                    //onCurrentTextChanged: {
                     onActivated: {
                         _root.inputBinding.virtualButton.direction = currentText
                     }

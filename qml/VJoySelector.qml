@@ -25,7 +25,7 @@ import gremlin.ui.device 1.0
 Item {
     id: _root
 
-    property string inputType
+    property string vjoyInputType
     property int vjoyDeviceId
     property int vjoyInputId
     property var validTypes
@@ -47,7 +47,7 @@ Item {
             setSelection(
                 _root.vjoyDeviceId,
                 _root.vjoyInputId,
-                _root.inputType
+                _root.vjoyInputType
             )
         }
 
@@ -56,7 +56,7 @@ Item {
         }
         onInputIndexChanged: {
             _root.vjoyInputId = _vjoy.inputId
-            _root.inputType = _vjoy.inputType
+            _root.vjoyInputType = _vjoy.vjoyInputType
         }
     }
 

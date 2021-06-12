@@ -25,6 +25,7 @@ from PySide6.QtCore import Property, Signal
 from . import error, plugin_manager
 from .tree import TreeNode
 from .util import safe_format, safe_read
+from .types import InputType
 
 
 class RootAction:
@@ -67,6 +68,17 @@ class RootAction:
         Args:
             anchor: action after which to insert the given action
             action: the action to remove
+        """
+        pass
+
+    def set_behavior_type(self, new_behavior: InputType) -> None:
+        """Sets the behavior of the root node.
+
+        NoOp implementation to fit in with the rest of the rest of the node
+        system.
+
+        Args:
+            new_behavior: new behavior of the node
         """
         pass
 

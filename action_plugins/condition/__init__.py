@@ -546,7 +546,7 @@ class ConditionModel(AbstractActionModel):
 
         if ConditionOperators(condition) == ConditionOperators.InputState:
             cond = InputStateCondition(self)
-            cond.input_type = self._input_type
+            cond.input_type = self.behavior_type
             cond._comparator = InputStateCondition.ButtonComparator(True)
             self._conditions.append(cond)
 
@@ -563,7 +563,7 @@ class ConditionModel(AbstractActionModel):
         """
         action = plugin_manager.ActionPlugins().get_class(action_name)(
             self._action_tree,
-            self._input_type
+            self.behavior_type
         )
 
         predicate = lambda x: True if x.value and x.value.id == self.id else False

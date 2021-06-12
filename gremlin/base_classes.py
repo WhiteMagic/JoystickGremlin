@@ -64,7 +64,7 @@ class AbstractActionModel(QtCore.QObject):
     def behavior_type(self) -> InputType:
         return self._behavior_type
 
-    def set_behavior_type(self, new_behavior):
+    def set_behavior_type(self, new_behavior: InputType):
         old_behavior = self._behavior_type
         self._behavior_type = new_behavior
         if old_behavior != new_behavior:

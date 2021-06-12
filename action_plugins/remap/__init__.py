@@ -56,7 +56,7 @@ class RemapFunctor(AbstractFunctor):
         event: event_handler.Event,
         value: actions.Value
     ) -> None:
-        if self.data.input_type == InputType.JoystickAxis:
+        if self.data.vjoy_input_type == InputType.JoystickAxis:
             if self.data.axis_mode == AxisMode.Absolute:
                 joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
                     .axis(self.data.vjoy_input_id).value = value.current
@@ -73,7 +73,7 @@ class RemapFunctor(AbstractFunctor):
                     )
                     self.thread.start()
 
-        elif self.data.input_type == InputType.JoystickButton:
+        elif self.data.vjoy_input_type == InputType.JoystickButton:
             # FIXME: reimplement
             # if event.event_type in [InputType.JoystickButton, InputType.Keyboard] \
             #         and event.is_pressed \
@@ -86,7 +86,7 @@ class RemapFunctor(AbstractFunctor):
             joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
                 .button(self.data.vjoy_input_id).is_pressed = value.current
 
-        elif self.data.input_type == InputType.JoystickHat:
+        elif self.data.vjoy_input_type == InputType.JoystickHat:
             joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
                 .hat(self.data.vjoy_input_id).direction = value.current
 
@@ -171,22 +171,22 @@ class RemapModel(AbstractActionModel):
     def __init__(
             self,
             action_tree: profile_library.ActionTree,
-            input_type: InputType=InputType.JoystickButton,
+            behavior_type: InputType=InputType.JoystickButton,
             parent: Optional[QtCore.QObject]=None
     ):
-        super().__init__(action_tree, input_type, parent)
+        super().__init__(action_tree, behavior_type, parent)
 
         # Determine a valid vjoy input
         device = joystick_handling.vjoy_devices()[0]
         vjoy_id = device.vjoy_id
         input_id = 1
-        if self._input_type == InputType.JoystickAxis:
+        if behavior_type == InputType.JoystickAxis:
             input_id = device.axis_map[0].axis_index
 
         # Model variables
         self.vjoy_device_id = vjoy_id
         self.vjoy_input_id = input_id
-        self.input_type = input_type
+        self.vjoy_input_type = behavior_type
         self.axis_mode = AxisMode.Absolute
         self.axis_scaling = 1.0
 
@@ -208,14 +208,14 @@ class RemapModel(AbstractActionModel):
         self.vjoy_input_id = vjoy_input_id
         self.vjoyInputIdChanged.emit()
 
-    def _get_input_type(self) -> str:
-        return InputType.to_string(self.input_type)
+    def _get_vjoy_input_type(self) -> str:
+        return InputType.to_string(self.vjoy_input_type)
 
-    def _set_input_type(self, input_type: str) -> None:
+    def _set_vjoy_input_type(self, input_type: str) -> None:
         input_type_tmp = InputType.to_enum(input_type)
-        if input_type_tmp == self.input_type:
+        if input_type_tmp == self.vjoy_input_type:
             return
-        self.input_type = input_type_tmp
+        self.vjoy_input_type = input_type_tmp
         self.inputTypeChanged.emit()
 
     def _get_axis_mode(self) -> str:
@@ -245,10 +245,10 @@ class RemapModel(AbstractActionModel):
         self.vjoy_input_id = util.read_property(
             node, "vjoy-input-id", PropertyType.Int
         )
-        self.input_type = util.read_property(
-            node, "input-type", PropertyType.InputType
+        self.vjoy_input_type = util.read_property(
+            node, "vjoy-input-type", PropertyType.InputType
         )
-        if self.input_type == InputType.JoystickAxis:
+        if self.vjoy_input_type == InputType.JoystickAxis:
             self.axis_mode = util.read_property(
                 node, "axis-mode", PropertyType.AxisMode
             )
@@ -265,9 +265,9 @@ class RemapModel(AbstractActionModel):
             "vjoy-input-id", self.vjoy_input_id, PropertyType.Int
         ))
         node.append(util.create_property_node(
-            "input-type", self.input_type, PropertyType.InputType
+            "vjoy-input-type", self.vjoy_input_type, PropertyType.InputType
         ))
-        if self.input_type == InputType.JoystickAxis:
+        if self.vjoy_input_type == InputType.JoystickAxis:
             node.append(util.create_property_node(
                 "axis-mode", self.axis_mode, PropertyType.AxisMode
             ))
@@ -284,6 +284,14 @@ class RemapModel(AbstractActionModel):
             "core_plugins:remap/RemapAction.qml"
         ).fileName()
 
+    def _handle_behavior_change(
+        self,
+        old_behavior: InputType,
+        new_behavior: InputType
+    ) -> None:
+        self._set_vjoy_input_type(InputType.to_string(new_behavior))
+
+
     # Define properties
     vjoyDeviceId = Property(
         int,
@@ -297,10 +305,10 @@ class RemapModel(AbstractActionModel):
         fset=_set_vjoy_input_id,
         notify=vjoyInputIdChanged
     )
-    inputType = Property(
+    vjoyInputType = Property(
         str,
-        fget=_get_input_type,
-        fset=_set_input_type,
+        fget=_get_vjoy_input_type,
+        fset=_set_vjoy_input_type,
         notify=inputTypeChanged
     )
     axisMode = Property(
