@@ -496,7 +496,16 @@ class InputItemBindingModel(QtCore.QObject):
                         self._input_item_binding.virtual_button
                     )
 
+            # Update input type of all actions
+            # node_list = self._action_tree.root.nodes_matching(lambda x: True)
+            for node in self._action_tree.root.nodes_matching(lambda x: True):
+                node.value.set_behavior_type(behavior)
+
+            # Force full redraw of the action
             self.behaviorChanged.emit()
+            self.rootActionChanged.emit()
+            # This one might be overkill
+            backend.Backend().reloadUi.emit()
 
     def _get_description(self) -> str:
         return self._input_item_binding.description

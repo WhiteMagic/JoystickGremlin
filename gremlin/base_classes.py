@@ -42,14 +42,14 @@ class AbstractActionModel(QtCore.QObject):
     def __init__(
             self,
             action_tree: ActionTree,
-            input_type: InputType=InputType.JoystickButton,
+            behavior_type: InputType=InputType.JoystickButton,
             parent: Optional[QtCore.QObject]=None
     ):
         super().__init__(parent)
 
         self._id = uuid.uuid4()
         self._action_tree = action_tree
-        self._input_type = input_type
+        self._behavior_type = behavior_type
 
     @property
     def id(self) -> uuid.UUID:
@@ -59,6 +59,16 @@ class AbstractActionModel(QtCore.QObject):
             Unique identifier of this action
         """
         return self._id
+
+    @property
+    def behavior_type(self) -> InputType:
+        return self._behavior_type
+
+    def set_behavior_type(self, new_behavior):
+        old_behavior = self._behavior_type
+        self._behavior_type = new_behavior
+        if old_behavior != new_behavior:
+            self._handle_behavior_change(old_behavior, new_behavior)
 
     def qml_path(self) -> str:
         """Returns the path to the QML file visualizing the action.
@@ -133,11 +143,26 @@ class AbstractActionModel(QtCore.QObject):
             "AbstractActionModel.insert_action not implemented in subclass"
         )
 
+    def _handle_behavior_change(
+        self,
+        old_behavior: InputType,
+        new_behavior: InputType
+    ) -> None:
+        """Handles changing of the behavior type of the action.
+
+        This function will only be called when the two behaviors are different.
+
+        Args:
+            old_behavior: type describing the old behavior
+            new_behavior: type describing the new behavior
+        """
+        pass
+
     def _create_node_list(self, action_ids):
         nodes = []
         for node in self._action_tree.root.nodes_matching(lambda x: x.value.id in action_ids):
             node.value.setParent(self)
-            nodes.append(ActionNodeModel(node, self._input_type, self._action_tree, parent=self))
+            nodes.append(ActionNodeModel(node, self.behavior_type, self._action_tree, parent=self))
         return nodes
 
     def _remove_from_list(self, storage: List[Any], value: Any) -> None:
