@@ -98,19 +98,19 @@
     existing custom modules will have to be modified. The modification requires
     the straight forward change of the decorators.
 </p>
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">t16000</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
-    <span class="s2">&quot;T16000.M&quot;</span><span class="p">,</span>
-    <span class="mi">72331539</span><span class="p">,</span>
-    <span class="s2">&quot;Default&quot;</span>
-<span class="p">)</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">t16000 = gremlin.input_devices.JoystickDecorator(
+    &quot;T16000.M&quot;,
+    72331539,
+    &quot;Default&quot;
+)</code></pre></figure>
 <p class="text-justify">
     needs to be replaced with
 </p>
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">t16000</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
-    <span class="s2">&quot;T16000.M&quot;</span><span class="p">,</span>
-    <span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">DeviceIdentifier</span><span class="p">(</span><span class="mi">72331539</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-    <span class="s2">&quot;Default&quot;</span>
-<span class="p">)</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">t16000 = gremlin.input_devices.JoystickDecorator(
+    &quot;T16000.M&quot;,
+    gremlin.common.DeviceIdentifier(72331539, 2),
+    &quot;Default&quot;
+)</code></pre></figure>
 <p class="text-justify">
     The benefit of this is that no matter whether or not you use duplicate
     devices the code is the same and it allows the implementation of a
@@ -156,7 +156,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: April 9, 2019</p>
+            <p class="text-muted">Last update: June 23, 2021</p>
         </div>
     </div>
 </footer>

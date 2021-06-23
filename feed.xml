@@ -118,19 +118,19 @@
     Due to the change in input handling library existing custom modules
     will no longer work, as they now require the GUID. 
 &lt;/p&gt;
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t16000&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_devices&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JoystickDecorator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;T16000.M&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;common&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeviceIdentifier&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;72331539&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;Default&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;t16000 = gremlin.input_devices.JoystickDecorator(
+    &amp;quot;T16000.M&amp;quot;,
+    gremlin.common.DeviceIdentifier(72331539, 2),
+    &amp;quot;Default&amp;quot;
+)&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 &lt;p class=&quot;text-justify&quot;&gt;
     needs to be replaced with
 &lt;/p&gt;
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t16000&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_devices&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JoystickDecorator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;T16000.M&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;{a48e6486-ba2f-457d-945b-7c684b9ec7e7}&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;Default&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;t16000 = gremlin.input_devices.JoystickDecorator(
+    &amp;quot;T16000.M&amp;quot;,
+    &amp;quot;{a48e6486-ba2f-457d-945b-7c684b9ec7e7}&amp;quot;,
+    &amp;quot;Default&amp;quot;
+)&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 &lt;p class=&quot;text-justify&quot;&gt;
     The new library should solve certain issues with SDL2 and more
     importantly no longer ever get confused about the identity of
@@ -146,7 +146,7 @@
     &lt;li&gt;User plugin system added, allows plugins to be written that can
         be configured via the UI&lt;/li&gt;
     &lt;li&gt;Remap actions for axis now support a relative mode which
-        increments an axis' value based on the axis' deflection&lt;/li&gt;
+        increments an axis&apos; value based on the axis&apos; deflection&lt;/li&gt;
     &lt;li&gt;Macros can issue relative axis motion to vJoy axis&lt;/li&gt;
     &lt;li&gt;Two new containers, double tap and smart toggle, thanks to jmriego&lt;/li&gt;
     &lt;li&gt;vJoy inputs can now be used in conditions&lt;/li&gt;
@@ -191,19 +191,19 @@
     existing custom modules will have to be modified. The modification requires
     the straight forward change of the decorators.
 &lt;/p&gt;
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t16000&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_devices&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JoystickDecorator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;T16000.M&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;mi&quot;&gt;72331539&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;Default&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;t16000 = gremlin.input_devices.JoystickDecorator(
+    &amp;quot;T16000.M&amp;quot;,
+    72331539,
+    &amp;quot;Default&amp;quot;
+)&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 &lt;p class=&quot;text-justify&quot;&gt;
     needs to be replaced with
 &lt;/p&gt;
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t16000&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input_devices&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JoystickDecorator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;T16000.M&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;common&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeviceIdentifier&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;72331539&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&amp;quot;Default&amp;quot;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python3&quot; data-lang=&quot;python3&quot;&gt;t16000 = gremlin.input_devices.JoystickDecorator(
+    &amp;quot;T16000.M&amp;quot;,
+    gremlin.common.DeviceIdentifier(72331539, 2),
+    &amp;quot;Default&amp;quot;
+)&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 &lt;p class=&quot;text-justify&quot;&gt;
     The benefit of this is that no matter whether or not you use duplicate
     devices the code is the same and it allows the implementation of a
@@ -225,7 +225,7 @@
 &lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
     &lt;li&gt;Fix offset by one bug in the axis calibration usage&lt;/li&gt;
-    &lt;li&gt;Don't ignore injected keyboard events as that breaks conditions etc.&lt;/li&gt;
+    &lt;li&gt;Don&apos;t ignore injected keyboard events as that breaks conditions etc.&lt;/li&gt;
     &lt;li&gt;Make value input boxes behave correctly with different decimal place character&lt;/li&gt;
     &lt;li&gt;Save profiles as UTF-8 to prevent issues with non ASCII characters&lt;/li&gt;
     &lt;li&gt;More robust recovery of vJoy device ownership&lt;/li&gt;
@@ -418,14 +418,14 @@
 
 &lt;h2&gt;Fixes&lt;/h2&gt;
 &lt;ul&gt;
-    &lt;li&gt;Should no longer crash on media key usage (can't use them yet)&lt;/li&gt;
+    &lt;li&gt;Should no longer crash on media key usage (can&apos;t use them yet)&lt;/li&gt;
     &lt;li&gt;Properly release vJoy devices when they are not in use&lt;/li&gt;
     &lt;li&gt;Value entry boxes should now be less annoying to use&lt;/li&gt;
     &lt;li&gt;Reading XML profiles should be a bit more robust now&lt;/li&gt;
     &lt;li&gt;Update SDL to the current version 2.0.6&lt;/li&gt;
     &lt;li&gt;Response curve input field changes should now be stored again&lt;/li&gt;
     &lt;li&gt;Crash due to activation race condition fixed&lt;/li&gt;
-    &lt;li&gt;Input repeater and input highlighting code improved to work better with axes that don't physically reset to center&lt;/li&gt;
+    &lt;li&gt;Input repeater and input highlighting code improved to work better with axes that don&apos;t physically reset to center&lt;/li&gt;
     &lt;li&gt;Cheatsheet generation should no longer crash when no save file is provided&lt;/li&gt;
     &lt;li&gt;Logging added for vJoy and SDL device matching, to help debug mapping issues in the future&lt;/li&gt;
     &lt;li&gt;Somewhat improve the &quot;Do you want to save these changes&quot; dialog logic&lt;/li&gt;

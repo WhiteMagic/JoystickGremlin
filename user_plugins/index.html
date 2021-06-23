@@ -129,9 +129,9 @@
 
 <p class="text-justify">
     The general structure of a callback is as follows:
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="nd">@decorator_function</span><span class="p">(</span><span class="o">&lt;</span><span class="nb">input</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">callback_function</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">optional</span> <span class="n">parameter</span> <span class="nb">list</span><span class="o">&gt;</span><span class="p">):</span>
-    <span class="o">&lt;</span><span class="n">callback</span> <span class="n">implementation</span><span class="o">&gt;</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">@decorator_function(&lt;input name&gt;)
+def callback_function(event, &lt;optional parameter list&gt;):
+    &lt;callback implementation&gt;</code></pre></figure>
 </p>
 
 <p class="text-justify">
@@ -209,17 +209,17 @@
     as defined by the device. The following demonstrates typical usage:
 </p>
 
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="c1"># Access the first vJoy device and press the third button</span>
-<span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">is_pressed</span> <span class="o">=</span> <span class="kc">True</span>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3"># Access the first vJoy device and press the third button
+vjoy[1].button(3).is_pressed = True
 
-<span class="c1"># Access the second vJoy device and move the Y axis to -0.25</span>
-<span class="n">vjoy</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">AxisName</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.25</span>
-<span class="c1"># or equivalently</span>
-<span class="n">vjoy</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.25</span>
+# Access the second vJoy device and move the Y axis to -0.25
+vjoy[2].axis(AxisName.Y).value = -0.25
+# or equivalently
+vjoy[2].axis(2).value = -0.25
 
-<span class="c1"># Access the first vJoy device and move the first hat to</span>
-<span class="c1"># the top right position</span>
-<span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></code></pre></figure>
+# Access the first vJoy device and move the first hat to
+# the top right position
+vjoy[1].hat(1).direction = (1, 1)</code></pre></figure>
 
 
 <h3>Joystick State</h3>
@@ -236,7 +236,7 @@
     In order to access a specific joystick its system id needs to be
     known. Using the device's system id as index the joystick can be
     accessed by:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">joystick_device</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3">joystick_device = joy[device_guid]</code></pre></figure>
 </p>
 
 
@@ -245,7 +245,7 @@
     To read the current value of a joystick axis both the index of the
     axis as well as the system id of the joystick, starting with 1, are
     needed, with these the axis value is obtained as:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">axis_value</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">axis_index</span><span class="p">)</span><span class="o">.</span><span class="n">value</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3">axis_value = joy[device_guid].axis(axis_index).value</code></pre></figure>
 </p>
 
 <p class="text-justify">
@@ -253,7 +253,7 @@
     To read the current state of a button both the joystick's system id
     as well as index of the button, starting at 1, are needed. The
     following then reads the button state:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">button_id</span><span class="p">)</span><span class="o">.</span><span class="n">is_pressed</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3">state = joy[device_guid].button(button_id).is_pressed</code></pre></figure>
 </p>
 
 
@@ -265,7 +265,7 @@
     \in \left\{-1, 0, 1\right\}\). A \(x\) value of 1 is right
     and -1 left while a value of 1 for \(y\) means up and -1 down. A
     value of \(0\) represents a centred position. The value is read as follows:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">position</span> <span class="o">=</span> <span class="n">joy</span><span class="p">[</span><span class="n">device_guid</span><span class="p">]</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="n">hat_id</span><span class="p">)</span><span class="o">.</span><span class="n">direction</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3">position = joy[device_guid].hat(hat_id).direction</code></pre></figure>
 </p>
 
 
@@ -283,7 +283,7 @@
     <code>gremlin.macro.Key</code> instance corresponding to the key is
     needed. Both can be found in the <code>gremlin.macro</code> module.
     Reading the state is then done as follows:
-    <figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">is_pressed</span> <span class="o">=</span> <span class="n">keyboard</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code></pre></figure>
+    <figure class="highlight"><pre><code class="language-python3" data-lang="python3">is_pressed = keyboard.is_pressed(key)</code></pre></figure>
 </p>
 
 
@@ -298,11 +298,11 @@
     one for joysticks and one for the keyboard. Joystick decorators are created
     for specific devices using the
     <code>gremlin.input_devices.JoystickDecorator</code> class as follows:
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="n">joystick_decorator</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
-    <span class="s2">&quot;&lt;device name&gt;&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;{&lt;device guid&gt;}&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;&lt;mode&gt;&quot;</span>
-<span class="p">)</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">joystick_decorator = gremlin.input_devices.JoystickDecorator(
+    &quot;&lt;device name&gt;&quot;,
+    &quot;{&lt;device guid&gt;}&quot;,
+    &quot;&lt;mode&gt;&quot;
+)</code></pre></figure>
 </p>
 
 <p class="text-justify">
@@ -310,24 +310,24 @@
     device. An object created in this way has three decorators
     customised for the given joystick and mode, which can be used as
     follows:
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="nd">@joystick_decorator</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">axis_callback</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-    <span class="k">pass</span>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">@joystick_decorator.axis(1)
+def axis_callback(event):
+    pass
 
-<span class="nd">@joystick_decorator</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">button_callback</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-    <span class="k">pass</span>
+@joystick_decorator.button(4)
+def button_callback(event):
+    pass
 
-<span class="nd">@joytick_decorator</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">hat_callback</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-    <span class="k">pass</span></code></pre></figure>
+@joytick_decorator.hat(2)
+def hat_callback(event):
+    pass</code></pre></figure>
 </p>
 
 <p class="text-justify">
     The keyboard decorator can be used directly as follows:
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="nd">@gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">keyboard</span><span class="p">(</span><span class="o">&lt;</span><span class="n">key</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mode</span><span class="o">&gt;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">keyboard_callback</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-    <span class="k">pass</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">@gremlin.input_devices.keyboard(&lt;key name&gt;, &lt;mode&gt;)
+def keyboard_callback(event):
+    pass</code></pre></figure>
 </p>
 
 <p class="text-justify">
@@ -362,9 +362,9 @@
     shown below.
 </p>
 
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="nd">@gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">periodic</span><span class="p">(</span><span class="o">&lt;</span><span class="n">seconds</span><span class="o">&gt;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">periodic_function</span><span class="p">():</span>
-    <span class="k">pass</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">@gremlin.input_devices.periodic(&lt;seconds&gt;)
+def periodic_function():
+    pass</code></pre></figure>
 </p>
 
 
@@ -655,79 +655,79 @@
     buttons and map them to a single virtual hat output.
 </p>
 
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="kn">import</span> <span class="nn">gremlin</span>
-<span class="kn">from</span> <span class="nn">gremlin.user_plugin</span> <span class="k">import</span> <span class="o">*</span>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">import gremlin
+from gremlin.user_plugin import *
 
 
-<span class="n">mode</span> <span class="o">=</span> <span class="n">ModeVariable</span><span class="p">(</span>
-        <span class="s2">&quot;Mode&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;The mode to use for this mapping&quot;</span>
-<span class="p">)</span>
-<span class="n">vjoy_hat</span> <span class="o">=</span> <span class="n">VirtualInputVariable</span><span class="p">(</span>
-        <span class="s2">&quot;Output Hat&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;vJoy hat to use as the output&quot;</span><span class="p">,</span>
-        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickHat</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="n">btn_1</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
-        <span class="s2">&quot;Button Up&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Button which will be mapped to the up direction of the hat.&quot;</span><span class="p">,</span>
-        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="n">btn_2</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
-        <span class="s2">&quot;Button Right&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Button which will be mapped to the right direction of the hat.&quot;</span><span class="p">,</span>
-        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="n">btn_3</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
-        <span class="s2">&quot;Button Down&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Button which will be mapped to the down direction of the hat.&quot;</span><span class="p">,</span>
-        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="n">btn_4</span> <span class="o">=</span> <span class="n">PhysicalInputVariable</span><span class="p">(</span>
-        <span class="s2">&quot;Button Left&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Button which will be mapped to the left direction of the hat.&quot;</span><span class="p">,</span>
-        <span class="p">[</span><span class="n">gremlin</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">InputType</span><span class="o">.</span><span class="n">JoystickButton</span><span class="p">]</span>
-<span class="p">)</span>
+mode = ModeVariable(
+        &quot;Mode&quot;,
+        &quot;The mode to use for this mapping&quot;
+)
+vjoy_hat = VirtualInputVariable(
+        &quot;Output Hat&quot;,
+        &quot;vJoy hat to use as the output&quot;,
+        [gremlin.common.InputType.JoystickHat]
+)
+btn_1 = PhysicalInputVariable(
+        &quot;Button Up&quot;,
+        &quot;Button which will be mapped to the up direction of the hat.&quot;,
+        [gremlin.common.InputType.JoystickButton]
+)
+btn_2 = PhysicalInputVariable(
+        &quot;Button Right&quot;,
+        &quot;Button which will be mapped to the right direction of the hat.&quot;,
+        [gremlin.common.InputType.JoystickButton]
+)
+btn_3 = PhysicalInputVariable(
+        &quot;Button Down&quot;,
+        &quot;Button which will be mapped to the down direction of the hat.&quot;,
+        [gremlin.common.InputType.JoystickButton]
+)
+btn_4 = PhysicalInputVariable(
+        &quot;Button Left&quot;,
+        &quot;Button which will be mapped to the left direction of the hat.&quot;,
+        [gremlin.common.InputType.JoystickButton]
+)
 
-<span class="n">state</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+state = [0, 0]
 
-<span class="n">decorator_1</span> <span class="o">=</span> <span class="n">btn_1</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="n">decorator_2</span> <span class="o">=</span> <span class="n">btn_2</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="n">decorator_3</span> <span class="o">=</span> <span class="n">btn_3</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="n">decorator_4</span> <span class="o">=</span> <span class="n">btn_4</span><span class="o">.</span><span class="n">create_decorator</span><span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">device</span> <span class="o">=</span> <span class="n">vjoy</span><span class="p">[</span><span class="n">vjoy_hat</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;device_id&quot;</span><span class="p">]]</span>
-    <span class="n">device</span><span class="o">.</span><span class="n">hat</span><span class="p">(</span><span class="n">vjoy_hat</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;input_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">direction</span>  <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+decorator_1 = btn_1.create_decorator(mode.value)
+decorator_2 = btn_2.create_decorator(mode.value)
+decorator_3 = btn_3.create_decorator(mode.value)
+decorator_4 = btn_4.create_decorator(mode.value)
 
 
-<span class="nd">@decorator_1</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_1</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">button_1</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">global</span> <span class="n">state</span>
-    <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
-    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span>
+def set_state(vjoy):
+    device = vjoy[vjoy_hat.value[&quot;device_id&quot;]]
+    device.hat(vjoy_hat.value[&quot;input_id&quot;]).direction  = tuple(state)
 
 
-<span class="nd">@decorator_2</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_2</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">button_2</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">global</span> <span class="n">state</span>
-    <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
-    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span>
+@decorator_1.button(btn_1.input_id)
+def button_1(event, vjoy):
+    global state
+    state[1] = 1 if event.is_pressed else 0
+    set_state(vjoy)
 
 
-<span class="nd">@decorator_3</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_3</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">button_3</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">global</span> <span class="n">state</span>
-    <span class="n">state</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
-    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span>
+@decorator_2.button(btn_2.input_id)
+def button_2(event, vjoy):
+    global state
+    state[0] = 1 if event.is_pressed else 0
+    set_state(vjoy)
 
 
-<span class="nd">@decorator_4</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="n">btn_4</span><span class="o">.</span><span class="n">input_id</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">button_4</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">global</span> <span class="n">state</span>
-    <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span> <span class="k">else</span> <span class="mi">0</span>
-    <span class="n">set_state</span><span class="p">(</span><span class="n">vjoy</span><span class="p">)</span></code></pre></figure>
+@decorator_3.button(btn_3.input_id)
+def button_3(event, vjoy):
+    global state
+    state[1] = -1 if event.is_pressed else 0
+    set_state(vjoy)
+
+
+@decorator_4.button(btn_4.input_id)
+def button_4(event, vjoy):
+    global state
+    state[0] = -1 if event.is_pressed else 0
+    set_state(vjoy)</code></pre></figure>
 
 
 
@@ -767,31 +767,31 @@
     <kbd>4</kbd> number keys.
 </p>
 
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="kn">import</span> <span class="nn">gremlin</span>
-<span class="kn">from</span> <span class="nn">vjoy.vjoy</span> <span class="k">import</span> <span class="n">AxisName</span>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">import gremlin
+from vjoy.vjoy import AxisName
 
-<span class="k">def</span> <span class="nf">set_throttle</span><span class="p">(</span><span class="n">vjoy</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">AxisName</span><span class="o">.</span><span class="n">Z</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+def set_throttle(vjoy, value):
+    vjoy[1].axis(AxisName.Z).value = value
 
-<span class="nd">@gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">keyboard</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;Global&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">throttle_0</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">set_throttle</span><span class="p">(</span><span class="n">vjoy</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+@gremlin.input_devices.keyboard(&quot;1&quot;, &quot;Global&quot;)
+def throttle_0(event, vjoy):
+    if event.is_pressed:
+        set_throttle(vjoy, -1.0)
 
-<span class="nd">@gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">keyboard</span><span class="p">(</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;Global&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">throttle_33</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">set_throttle</span><span class="p">(</span><span class="n">vjoy</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.33</span><span class="p">)</span>
+@gremlin.input_devices.keyboard(&quot;2&quot;, &quot;Global&quot;)
+def throttle_33(event, vjoy):
+    if event.is_pressed:
+        set_throttle(vjoy, -0.33)
 
-<span class="nd">@gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">keyboard</span><span class="p">(</span><span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;Global&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">throttle_66</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">set_throttle</span><span class="p">(</span><span class="n">vjoy</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">)</span>
+@gremlin.input_devices.keyboard(&quot;3&quot;, &quot;Global&quot;)
+def throttle_66(event, vjoy):
+    if event.is_pressed:
+        set_throttle(vjoy, 0.33)
 
-<span class="nd">@gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">keyboard</span><span class="p">(</span><span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="s2">&quot;Global&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">throttle_100</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">set_throttle</span><span class="p">(</span><span class="n">vjoy</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span></code></pre></figure>
+@gremlin.input_devices.keyboard(&quot;4&quot;, &quot;Global&quot;)
+def throttle_100(event, vjoy):
+    if event.is_pressed:
+        set_throttle(vjoy, 1.0)</code></pre></figure>
 
 
 <h3>Joystick Response Curve</h3>
@@ -802,31 +802,31 @@
     joystick.
 </p>
 
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="kn">import</span> <span class="nn">gremlin</span>
-<span class="kn">from</span> <span class="nn">gremlin.spline</span> <span class="k">import</span> <span class="n">CubicSpline</span>
-<span class="kn">from</span> <span class="nn">vjoy.vjoy</span> <span class="k">import</span> <span class="n">AxisName</span>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">import gremlin
+from gremlin.spline import CubicSpline
+from vjoy.vjoy import AxisName
 
-<span class="n">chfs</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
-    <span class="s2">&quot;CH Fighterstick USB&quot;</span><span class="p">,</span>
-    <span class="mi">2382820288</span><span class="p">,</span>
-    <span class="s2">&quot;Global&quot;</span>
-<span class="p">)</span>
+chfs = gremlin.input_devices.JoystickDecorator(
+    &quot;CH Fighterstick USB&quot;,
+    2382820288,
+    &quot;Global&quot;
+)
 
-<span class="n">curve</span> <span class="o">=</span> <span class="n">CubicSpline</span><span class="p">([</span>
-    <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
-    <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">),</span>
-    <span class="p">(</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">),</span>
-    <span class="p">(</span> <span class="mf">0.5</span><span class="p">,</span>  <span class="mf">0.25</span><span class="p">),</span>
-    <span class="p">(</span> <span class="mf">1.0</span><span class="p">,</span>  <span class="mf">1.0</span><span class="p">)</span>
-<span class="p">])</span>
+curve = CubicSpline([
+    (-1.0, -1.0),
+    (-0.5, -0.25),
+    ( 0.0,  0.0),
+    ( 0.5,  0.25),
+    ( 1.0,  1.0)
+])
 
-<span class="nd">@chfs</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">pitch</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">AxisName</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">curve</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+@chfs.axis(1)
+def pitch(event, vjoy):
+    vjoy[1].axis(AxisName.X).value = curve(event.value)
 
-<span class="nd">@chfs</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">yaw</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">AxisName</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">curve</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></code></pre></figure>
+@chfs.axis(2)
+def yaw(event, vjoy):
+    vjoy[1].axis(AxisName.Y).value = curve(event.value)</code></pre></figure>
 
 
 <h3>Mode Switching</h3>
@@ -841,34 +841,34 @@
     the <em>Global</em> mode when the button is pressed.
 </p>
 
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="kn">import</span> <span class="nn">gremlin</span>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">import gremlin
 
-<span class="n">chfs</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
-    <span class="s2">&quot;CH Fighterstick USB&quot;</span><span class="p">,</span>
-    <span class="mi">2382820288</span><span class="p">,</span>
-    <span class="s2">&quot;Global&quot;</span>
-<span class="p">)</span>
+chfs = gremlin.input_devices.JoystickDecorator(
+    &quot;CH Fighterstick USB&quot;,
+    2382820288,
+    &quot;Global&quot;
+)
 
-<span class="n">mode_list</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">control_action</span><span class="o">.</span><span class="n">ModeList</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">,</span> <span class="s2">&quot;Radio&quot;</span><span class="p">,</span> <span class="s2">&quot;Landing&quot;</span><span class="p">]</span>
-<span class="p">)</span>
+mode_list = gremlin.control_action.ModeList(
+        [&quot;Global&quot;, &quot;Radio&quot;, &quot;Landing&quot;]
+)
 
-<span class="nd">@chfs</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">temporary_mode_switch</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">gremlin</span><span class="o">.</span><span class="n">control_action</span><span class="o">.</span><span class="n">switch_mode</span><span class="p">(</span><span class="s2">&quot;Radio&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">gremlin</span><span class="o">.</span><span class="n">control_action</span><span class="o">.</span><span class="n">switch_to_previous_mode</span><span class="p">()</span>
+@chfs.button(10)
+def temporary_mode_switch(event):
+    if event.is_pressed:
+        gremlin.control_action.switch_mode(&quot;Radio&quot;)
+    else:
+        gremlin.control_action.switch_to_previous_mode()
 
-<span class="nd">@chfs</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">cycle_modes</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">gremlin</span><span class="o">.</span><span class="n">control_action</span><span class="o">.</span><span class="n">cycle_modes</span><span class="p">(</span><span class="n">mode_list</span><span class="p">)</span>
+@chfs.button(11)
+def cycle_modes(event):
+    if event.is_pressed:
+        gremlin.control_action.cycle_modes(mode_list)
 
-<span class="nd">@chfs</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">switch_to_global</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">gremlin</span><span class="o">.</span><span class="n">control_action</span><span class="o">.</span><span class="n">switch_mode</span><span class="p">(</span><span class="s2">&quot;Global&quot;</span><span class="p">)</span></code></pre></figure>
+@chfs.button(12)
+def switch_to_global(event):
+    if event.is_pressed:
+        gremlin.control_action.switch_mode(&quot;Global&quot;)</code></pre></figure>
 
 
 <h3>Precision Mode</h3>
@@ -884,57 +884,57 @@
     deflection.
 </p>
 
-<figure class="highlight"><pre><code class="language-python3" data-lang="python3"><span></span><span class="kn">import</span> <span class="nn">gremlin</span>
-<span class="kn">from</span> <span class="nn">gremlin.spline</span> <span class="k">import</span> <span class="n">CubicSpline</span>
-<span class="kn">from</span> <span class="nn">vjoy.vjoy</span> <span class="k">import</span> <span class="n">AxisName</span>
+<figure class="highlight"><pre><code class="language-python3" data-lang="python3">import gremlin
+from gremlin.spline import CubicSpline
+from vjoy.vjoy import AxisName
 
-<span class="n">tm16000</span> <span class="o">=</span> <span class="n">gremlin</span><span class="o">.</span><span class="n">input_devices</span><span class="o">.</span><span class="n">JoystickDecorator</span><span class="p">(</span>
-        <span class="s2">&quot;Thrustmaster T.16000M&quot;</span><span class="p">,</span> <span class="mi">1325664945</span><span class="p">,</span> <span class="s2">&quot;Global&quot;</span>
-<span class="p">)</span>
+tm16000 = gremlin.input_devices.JoystickDecorator(
+        &quot;Thrustmaster T.16000M&quot;, 1325664945, &quot;Global&quot;
+)
 
-<span class="n">default_curve</span> <span class="o">=</span> <span class="n">CubicSpline</span><span class="p">(</span>
-        <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]</span>
-<span class="p">)</span>
-<span class="n">precision_curve</span> <span class="o">=</span> <span class="n">CubicSpline</span><span class="p">(</span>
-        <span class="p">[(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)]</span>
-<span class="p">)</span>
+default_curve = CubicSpline(
+        [(-1.0, -1.0), (0.0, 0.0), (1.0, 1.0)]
+)
+precision_curve = CubicSpline(
+        [(-1.0, -0.5), (0.0, 0.0), (1.0, 0.5)]
+)
 
-<span class="n">active_weapon_groups</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">active_curve</span> <span class="o">=</span> <span class="n">default_curve</span>
+active_weapon_groups = {}
+active_curve = default_curve
 
-<span class="k">def</span> <span class="nf">set_weapon_group</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="n">is_pressed</span><span class="p">):</span>
-    <span class="k">global</span> <span class="n">active_curve</span>
-    <span class="k">global</span> <span class="n">active_weapon_groups</span>
-    <span class="k">if</span> <span class="n">is_pressed</span><span class="p">:</span>
-        <span class="n">active_curve</span> <span class="o">=</span> <span class="n">precision_curve</span>
-        <span class="n">active_weapon_groups</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">active_weapon_groups</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">active_weapon_groups</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">active_curve</span> <span class="o">=</span> <span class="n">default_curve</span>
+def set_weapon_group(gid, is_pressed):
+    global active_curve
+    global active_weapon_groups
+    if is_pressed:
+        active_curve = precision_curve
+        active_weapon_groups[gid] = True
+    else:
+        active_weapon_groups[gid] = False
+        if sum(active_weapon_groups.values()) == 0:
+            active_curve = default_curve
 
-<span class="nd">@tm16000</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">weapon_group_1</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">set_weapon_group</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">)</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_pressed</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span>
+@tm16000.button(1)
+def weapon_group_1(event, vjoy):
+    set_weapon_group(1, event.is_pressed)
+    vjoy[1].button(1).is_pressed = event.is_pressed
 
-<span class="nd">@tm16000</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">weapon_group_2</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">set_weapon_group</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">)</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">is_pressed</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span>
+@tm16000.button(2)
+def weapon_group_2(event, vjoy):
+    set_weapon_group(2, event.is_pressed)
+    vjoy[1].button(2).is_pressed = event.is_pressed
 
-<span class="nd">@tm16000</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">weapon_group_3</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">set_weapon_group</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">)</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">is_pressed</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">is_pressed</span>
+@tm16000.button(3)
+def weapon_group_3(event, vjoy):
+    set_weapon_group(3, event.is_pressed)
+    vjoy[1].button(3).is_pressed = event.is_pressed
 
-<span class="nd">@tm16000</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">pitch</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">AxisName</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">active_curve</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+@tm16000.axis(1)
+def pitch(event, vjoy):
+    vjoy[1].axis(AxisName.X).value = active_curve(event.value)
 
-<span class="nd">@tm16000</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">yaw</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">vjoy</span><span class="p">):</span>
-    <span class="n">vjoy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="n">AxisName</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">active_curve</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></code></pre></figure>
+@tm16000.axis(2)
+def yaw(event, vjoy):
+    vjoy[1].axis(AxisName.Y).value = active_curve(event.value)</code></pre></figure>
 
                 </div>
                 <div class="col-md-2"></div>
@@ -945,7 +945,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: April 9, 2019</p>
+            <p class="text-muted">Last update: June 23, 2021</p>
         </div>
     </div>
 </footer>
