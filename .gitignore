@@ -1,2 +1,4 @@
 *.sw[op]
 _site
+.jekyll-cache/
+/tags
