@@ -15,4 +15,4 @@ description:  A tool for configuring and managing joystick devices
 
 # Build settings
 markdown: kramdown
-highlighter: pygments
+highlighter: rogue
