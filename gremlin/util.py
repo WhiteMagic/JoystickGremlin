@@ -278,7 +278,7 @@ _element_parsers = {
     "library-reference": lambda x: uuid.UUID(x.text),
     "lower-limit": lambda x: float(x.text),
     "upper-limit": lambda x: float(x.text),
-    "direction": lambda x: AxisButtonDirection.to_enum(x.text),
+    "axis-button-direction": lambda x: AxisButtonDirection.to_enum(x.text),
     "hat-direction": lambda x: HatDirection.to_enum(x.text),
 }
 
@@ -292,7 +292,7 @@ _element_types = {
     "library-reference": uuid.UUID,
     "lower-limit": float,
     "upper-limit": float,
-    "direction": AxisButtonDirection,
+    "axis-button-direction": AxisButtonDirection,
     "hat-direction": HatDirection,
 }
 
@@ -306,7 +306,7 @@ _element_to_string = {
     "library-reference": str,
     "lower-limit": str,
     "upper-limit": str,
-    "direction": lambda x: AxisButtonDirection.to_string(x),
+    "axis-button-direction": lambda x: AxisButtonDirection.to_string(x),
     "hat-direction": lambda x: HatDirection.to_string(x),
 }
 
