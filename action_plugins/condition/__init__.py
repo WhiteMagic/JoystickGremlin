@@ -144,65 +144,98 @@ class AbstractCondition(QtCore.QObject):
 #             self.is_extended is not None
 
 
-# class JoystickCondition(AbstractCondition):
+class JoystickCondition(AbstractCondition):
 
-#     """Joystick state based condition.
+    """Joystick input state based condition.
 
-#     This condition is based on the state of a joystick axis, button, or hat.
-#     """
+    This condition is based on the state of a joystick axis, button, or hat.
+    """
 
-#     def __init__(self):
-#         """Creates a new instance."""
-#         super().__init__()
-#         self.device_guid = 0
-#         self.input_type = None
-#         self.input_id = 0
-#         self.range = [0.0, 0.0]
-#         self.device_name = ""
+    comparatorChanged = Signal()
 
-#     def from_xml(self, node: ElementTree) -> None:
-#         """Populates the object with data from an XML node.
+    def __init__(self):
+        """Creates a new instance."""
+        super().__init__()
 
-#         Args:
-#             node: the XML node to parse for data
-#         """
-#         self.comparison = safe_read(node, "comparison")
+        self._condition_type = ConditionType.Joystick
 
-#         self.input_type = InputType.to_enum(safe_read(node, "input"))
-#         self.input_id = safe_read(node, "id", int)
-#         self.device_guid = parse_guid(node.get("device-guid"))
-#         self.device_name = safe_read(node, "device-name")
-#         if self.input_type == InputType.JoystickAxis:
-#             self.range = [
-#                 safe_read(node, "range-low", float),
-#                 safe_read(node, "range-high", float)
-#             ]
+        self.device_guid = 0
+        self.device_name = ""
+        self.input_type = None
+        self.input_id = 0
 
-#     def to_xml(self) -> ElementTree:
-#         """Returns an XML node containing the objects data.
+    def from_xml(self, node: ElementTree) -> None:
+        """Populates the object with data from an XML node.
 
-#         Returns:
-#             XML node containing the object's data
-#         """
-#         node = ElementTree.Element("condition")
-#         node.set("comparison", str(self.comparison))
-#         node.set("condition-type", "joystick")
-#         node.set("input", InputType.to_string(self.input_type))
-#         node.set("id", str(self.input_id))
-#         node.set("device-guid", str(self.device_guid))
-#         node.set("device-name", str(self.device_name))
-#         if self.input_type == InputType.JoystickAxis:
-#             node.set("range-low", str(self.range[0]))
-#             node.set("range-high", str(self.range[1]))
-#         return node
+        Args:
+            node: the XML node to parse for data
+        """
+        self.device_guid = util.read_property(
+            node, "device-guid", PropertyType.GUID
+        )
+        self.device_guid = util.read_property(
+            node, "device-name", PropertyType.String
+        )
+        self.input_type = util.read_property(
+            node, "input-type", PropertyType.InputType
+        )
+        self.input_id = util.read_property(
+            node, "input-id", PropertyType.Int,
+        )
+        if self.input_type == InputType.JoystickAxis:
+            self.range[0] = util.read_property(
+                node, "range-low", PropertyType.Float
+            )
+            self.range[1] = util.read_property(
+                node, "range-high", PropertyType.Float
+            )
 
-#     def is_valid(self) -> bool:
-#         """Returns whether or not a condition is fully specified.
+    def to_xml(self) -> ElementTree:
+        """Returns an XML node containing the objects data.
 
-#         Returns:
-#             True if the condition is properly specified, False otherwise
-#         """
-#         return super().is_valid() and self.input_type is not None
+        Returns:
+            XML node containing the object's data
+        """
+        node = ElementTree.Element("condition")
+
+        entries = [
+            ["condition-type", "joystick", PropertyType.String],
+            ["device-guide", self.device_guid, PropertyType.GUID],
+            ["device-name", self.device_name, PropertyType.String],
+            ["input-type", self.input_type, PropertyType.InputType],
+            ["input-id", self.input_id, PropertyType.Int]
+        ]
+        if self.input_type == InputType.JoystickAxis:
+            entries.append(["range-low", self.range[0], PropertyType.Float])
+            entries.append(["range-high", self.range[1], PropertyType.Float])
+
+        for e in entries:
+            node.append(util.create_property_node(e[0], e[1], e[2]))
+        return node
+
+    def is_valid(self) -> bool:
+        """Returns whether or not a condition is fully specified.
+
+        Returns:
+            True if the condition is properly specified, False otherwise
+        """
+        return self._comparator != None and self.input_type != None
+
+    @Property(str, constant=True)
+    def inputType(self) -> str:
+        return InputType.to_string(self.input_type)
+
+    @Property(int)
+    def inputId(self) -> int:
+        return self.input_id
+
+    @Property(str)
+    def deviceName(self) -> str:
+        return self.device_name
+
+    @Property(str)
+    def deviceGuid(self) -> str:
+        return str(self.device_guid)
 
 
 # class VJoyCondition(AbstractCondition):
