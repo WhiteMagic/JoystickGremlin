@@ -39,12 +39,14 @@ class AbstractCondition(QtCore.QObject):
     """Base class of all individual condition representations."""
 
     conditionTypeChanged = Signal()
+    comparatorChanged = Signal()
 
     def __init__(self, parent: Optional[QtCore.QObject]=None):
         """Creates a new instance."""
         super().__init__(parent)
 
         self._condition_type = None
+        self._comparator = None
 
     def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
@@ -72,13 +74,25 @@ class AbstractCondition(QtCore.QObject):
         Returns:
             True if the condition is properly specified, False otherwise
         """
-        raise error.MissingImplementationError(
-            "AbstractCondition.is_valid not implemented in subclass"
-        )
-    
+        return self._condition_type is not None and self._comparator is not None
+
+    def __call__(self, value: actions.Value) -> bool:
+        """Evaluates the truth state of the condition.
+
+        Args:
+            value: value of the input event being evaluates
+
+        Returns:
+            True if the condition is fulfilled, False otherwise
+        """
+        return self._comparator(value)
     @Property(str, notify=conditionTypeChanged)
     def conditionType(self) -> str:
-        return ConditionOperators.to_string(self._condition_type)
+        return ConditionType.to_string(self._condition_type)
+
+    @Property(comparator.AbstractComparator, notify=comparatorChanged)
+    def comparator(self) -> comparator.AbstractComparator:
+        return self._comparator
 
 
 # class KeyboardCondition(AbstractCondition):
