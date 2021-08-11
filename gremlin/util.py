@@ -461,22 +461,62 @@ def read_property(
         The value of the property element of the given name
     """
     # Retrieve the individual elements
-    p_node = action_node.find(f"./property/name[.='{name}']/..")
-    if p_node is None:
+    return _process_property(
+        action_node.find(f"./property/name[.='{name}']/.."),
+        name,
+        property_type
+    )
+
+
+def read_properties(
+        action_node: ElementTree.Element,
+        name: str,
+        property_type: PropertyType
+) -> Any:
+    """Returns the values of all properties with the given name.
+
+    Args:
+        action_node: element from which to extract the property values
+        name: name of the property element to return the values for
+        property_type: PropertyType the values should have
+
+    Returns:
+        List of values corresponding to the property element of the given name
+    """
+    # Retrieve the individual elements
+    p_nodes = action_node.findall(f"./property/name[.='{name}']/..")
+    return [_process_property(node, name, property_type) for node in p_nodes]
+
+
+def _process_property(
+        property_node: ElementTree.Element,
+        name: str,
+        property_type: PropertyType
+) -> Any:
+    """Processes a single XML node corresponding to a specific property.
+
+    Args:
+        property_node: element which contains the value to extract
+        name: name of the property element to return the value of
+        property_type: PropertyType the value should have
+
+    Returns:
+        The value of the given property element
+    """
+    if property_node is None:
         raise error.ProfileError(f"No property named '{name}' exists.")
 
-    n_node = p_node.find(f"./name")
-    v_node = p_node.find(f"./value")
+    v_node = property_node.find(f"./value")
     if v_node is None:
         raise error.ProfileError(
             f"Value element of property '{name}' is missing"
         )
-    if "type" not in p_node.keys():
+    if "type" not in property_node.keys():
         raise error.ProfileError(
             f"Property element is missing the 'type' attribute."
         )
 
-    p_type = PropertyType.to_enum(p_node.get("type"))
+    p_type = PropertyType.to_enum(property_node.get("type"))
     if p_type != property_type:
         raise error.ProfileError(
             f"Property type mismatch, got '{p_type}' expected '{property_type}'"
