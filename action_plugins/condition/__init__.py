@@ -17,21 +17,22 @@
 
 from __future__ import annotations
 
-import enum
 import logging
 from typing import List, Optional
-import uuid
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import actions, error, event_handler, plugin_manager, profile_library, util
+from gremlin import actions, error, event_handler, plugin_manager, \
+    profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor
 from gremlin.tree import TreeNode
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ConditionType, InputType, LogicalOperator, \
+    PropertyType
 from gremlin.ui.profile import ActionNodeModel
 
+from . import comparator
 
 
 class AbstractCondition(QtCore.QObject):
@@ -86,6 +87,7 @@ class AbstractCondition(QtCore.QObject):
             True if the condition is fulfilled, False otherwise
         """
         return self._comparator(value)
+
     @Property(str, notify=conditionTypeChanged)
     def conditionType(self) -> str:
         return ConditionType.to_string(self._condition_type)
@@ -308,8 +310,7 @@ class InputStateCondition(AbstractCondition):
         """Creates a new instance."""
         super().__init__(parent)
 
-        self._condition_type = ConditionOperators.InputState
-        self._comparator = None
+        self._condition_type = ConditionType.InputState
         self.input_type = None
 
     def from_xml(self, node: ElementTree) -> None:
@@ -384,17 +385,50 @@ class InputStateCondition(AbstractCondition):
                 f"Invalid condition type encountered {self.input_type}"
             )
         return node
-    
-    def is_valid(self) -> bool:
-        return self._comparator != None
 
     @Property(str, constant=True)
     def inputType(self) -> str:
         return InputType.to_string(self.input_type)
 
-    @Property(Comparator, notify=comparatorChanged)
-    def comparator(self) -> Comparator:
-        return self._comparator
+
+class ConditionFunctor(AbstractFunctor):
+
+    def __init__(self, action: ConditionModel):
+        super().__init__(action)
+
+        self.true_actions = \
+            [a.node.value.functor(a.node.value) for a in action.trueActionNodes]
+        self.false_actions = \
+            [a.node.value.functor(a.node.value) for a in action.falseActionNodes]
+
+    def process_event(
+        self,
+        event: event_handler.Event,
+        value: actions.Value
+    ) -> None:
+        actions = self.true_actions if \
+            self._condition_truth_state(value) else self.false_actions
+        for action in actions:
+            action.process_event(event, value)
+
+    def _condition_truth_state(self, value: actions.Value) -> bool:
+        """Returns the truth value of the condition.
+
+        Args:
+            value: value of the event being evaluated
+
+        Returns:
+            True if the condition evaluates to True, False otherwise
+        """
+        outcomes = [cond(value) for cond in self.data.conditions]
+        if self.data._logical_operator == LogicalOperator.All:
+            return all(outcomes)
+        elif self.data._logical_operator == LogicalOperator.Any:
+            return any(outcomes)
+        else:
+            raise error.GremlinError(
+                f"Invalid logical operator present {self.data._logical_operator}"
+            )
 
 
 class ConditionModel(AbstractActionModel):
@@ -423,7 +457,7 @@ class ConditionModel(AbstractActionModel):
     ):
         super().__init__(action_tree, input_type, parent)
 
-        self._logical_operator = LogicalOperators.All
+        self._logical_operator = LogicalOperator.All
         self._true_action_ids = []
         self._false_action_ids = []
         self._conditions = []
@@ -437,7 +471,7 @@ class ConditionModel(AbstractActionModel):
         """
         #node = self._action_tree.root.nodes_matching(lambda x: x.value.id == self.id)
 
-        if ConditionOperators(condition) == ConditionOperators.InputState:
+        if ConditionType(condition) == ConditionType.InputState:
             cond = InputStateCondition(self)
             cond.input_type = self.behavior_type
             cond._comparator = InputStateCondition.ButtonComparator(True)
@@ -484,15 +518,15 @@ class ConditionModel(AbstractActionModel):
     @Property(list, constant=True)
     def logicalOperators(self) -> List[str]:
         return [
-            {"value": str(e.value), "text": LogicalOperators.to_display(e)}
-            for e in LogicalOperators
+            {"value": str(e.value), "text": LogicalOperator.to_display(e)}
+            for e in LogicalOperator
         ]
 
     @Property(list, constant=True)
     def conditionOperators(self) -> List[str]:
         return [
-            {"value": str(e.value), "text": ConditionOperators.to_display(e)}
-            for e in ConditionOperators
+            {"value": str(e.value), "text": ConditionType.to_display(e)}
+            for e in ConditionType
         ]
 
     @Property(list, notify=actionsChanged)
@@ -512,7 +546,7 @@ class ConditionModel(AbstractActionModel):
 
     def _set_logical_operator(self, value: str) -> None:
         try:
-            operator = LogicalOperators(int(value))
+            operator = LogicalOperator(int(value))
             if operator == self._logical_operator:
                 return
             self._logical_operator = operator
@@ -529,16 +563,16 @@ class ConditionModel(AbstractActionModel):
         # Parse ELSE action ids
         self._false_action_ids = util.read_action_ids(node.find("else-actions"))
 
-        self._logical_operator = LogicalOperators.to_enum(
+        self._logical_operator = LogicalOperator.to_enum(
             util.read_property(node, "logical-operator", PropertyType.String)
         )
-        
+
         self._conditions = []
         for entry in node.iter("condition"):
-            condition_type = ConditionOperators.to_enum(
+            condition_type = ConditionType.to_enum(
                 util.read_property(entry, "condition-type", PropertyType.String)
             )
-            if condition_type == ConditionOperators.InputState:
+            if condition_type == ConditionType.InputState:
                 condition = InputStateCondition()
                 condition.from_xml(entry)
                 self._conditions.append(condition)
@@ -547,7 +581,7 @@ class ConditionModel(AbstractActionModel):
         node = util.create_action_node(ConditionModel.tag, self._id)
         node.append(util.create_property_node(
             "logical-operator",
-            LogicalOperators.to_string(self._logical_operator),
+            LogicalOperator.to_string(self._logical_operator),
             PropertyType.String
         ))
         for condition in self._conditions:
