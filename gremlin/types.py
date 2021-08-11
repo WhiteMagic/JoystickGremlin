@@ -524,3 +524,105 @@ _HatDirection_to_enum_lookup = {
     (-1, 0): HatDirection.West,
     (-1, 1): HatDirection.NorthWest,
 }
+
+
+class LogicalOperator(enum.Enum):
+
+    """Enumeration of possible condition combinations."""
+
+    Any = 1
+    All = 2
+
+    @staticmethod
+    def to_display(instance: LogicalOperator) -> str:
+        lookup = {
+            LogicalOperator.Any: "Any",
+            LogicalOperator.All: "All"
+        }
+        value = lookup.get(instance, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid logical operator type: {str(instance)}"
+            )
+        return value
+
+    @staticmethod
+    def to_string(instance: LogicalOperator) -> str:
+        lookup = {
+            LogicalOperator.Any: "any",
+            LogicalOperator.All: "all"
+        }
+        value = lookup.get(instance, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid logical operator type: {str(instance)}"
+            )
+        return value
+
+    @staticmethod
+    def to_enum(string: str) -> LogicalOperator:
+        lookup = {
+            "any": LogicalOperator.Any,
+            "all": LogicalOperator.All
+        }
+        value = lookup.get(string, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid logical operator type: {str(string)}"
+            )
+        return value
+
+
+class ConditionType(enum.Enum):
+
+    """Enumeration of possible condition types."""
+
+    InputState = 1
+    Joystick = 2
+    Keyboard = 3
+    VJoy = 4
+
+    @staticmethod
+    def to_display(instance: ConditionType) -> str:
+        lookup = {
+            ConditionType.InputState: "Input State",
+            ConditionType.Joystick: "Joystick",
+            ConditionType.Keyboard: "Keyboard",
+            ConditionType.VJoy: "vJoy"
+        }
+        value = lookup.get(instance, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid condition operator type: {str(instance)}"
+            )
+        return value
+
+    @staticmethod
+    def to_string(instance: ConditionType) -> str:
+        lookup = {
+            ConditionType.InputState: "input-state",
+            ConditionType.Joystick: "joystick",
+            ConditionType.Keyboard: "keyboard",
+            ConditionType.VJoy: "vjoy"
+        }
+        value = lookup.get(instance, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid condition operator type: {str(instance)}"
+            )
+        return value
+
+    @staticmethod
+    def to_enum(string: str) -> ConditionType:
+        lookup = {
+            "input-state": ConditionType.InputState,
+            "joystick": ConditionType.Joystick,
+            "keyboard": ConditionType.Keyboard,
+            "vjoy": ConditionType.VJoy
+        }
+        value = lookup.get(string, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid condition operator type: {str(string)}"
+            )
+        return value
