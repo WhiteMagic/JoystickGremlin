@@ -35,7 +35,8 @@ import dill
 from dill import GUID
 
 from . import error
-from .types import AxisButtonDirection, AxisMode, InputType, PropertyType
+from .types import AxisButtonDirection, AxisMode, HatDirection, InputType, \
+    PropertyType
 
 
 # Table storing which modules have been imported already
@@ -236,6 +237,7 @@ _property_conversion = {
     PropertyType.Bool: lambda x: parse_bool(x, False),
     PropertyType.InputType: lambda x: InputType.to_enum(x),
     PropertyType.AxisMode: lambda x: AxisMode.to_enum(x),
+    PropertyType.HatDirection: lambda x: HatDirection.to_enum(x)
 }
 
 _property_to_string = {
@@ -245,6 +247,7 @@ _property_to_string = {
     PropertyType.Bool: str,
     PropertyType.InputType: lambda x: InputType.to_string(x),
     PropertyType.AxisMode: lambda x: AxisMode.to_string(x),
+    PropertyType.HatDirection: lambda x: HatDirection.to_string(x)
 }
 
 _type_lookup = {
@@ -261,7 +264,8 @@ _type_lookup = {
     PropertyType.MouseInput: None,
     PropertyType.GUID: dill.GUID,
     PropertyType.UUID: uuid.UUID,
-    PropertyType.AxisMode: AxisMode
+    PropertyType.AxisMode: AxisMode,
+    PropertyType.HatDirection: HatDirection
 }
 
 _element_parsers = {
@@ -275,6 +279,7 @@ _element_parsers = {
     "lower-limit": lambda x: float(x.text),
     "upper-limit": lambda x: float(x.text),
     "direction": lambda x: AxisButtonDirection.to_enum(x.text),
+    "hat-direction": lambda x: HatDirection.to_enum(x.text),
 }
 
 _element_types = {
@@ -288,6 +293,7 @@ _element_types = {
     "lower-limit": float,
     "upper-limit": float,
     "direction": AxisButtonDirection,
+    "hat-direction": HatDirection,
 }
 
 _element_to_string = {
@@ -301,6 +307,7 @@ _element_to_string = {
     "lower-limit": str,
     "upper-limit": str,
     "direction": lambda x: AxisButtonDirection.to_string(x),
+    "hat-direction": lambda x: HatDirection.to_string(x),
 }
 
 def create_subelement_node(
