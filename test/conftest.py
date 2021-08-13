@@ -9,8 +9,8 @@ import gremlin.event_handler
 import gremlin.joystick_handling
 
 
-@pytest.fixture
-def joystick_init(scope="session"):
+@pytest.fixture(scope="session", autouse=True)
+def joystick_init():
     dill.DILL.init()
     gremlin.joystick_handling.joystick_devices_initialization()
 

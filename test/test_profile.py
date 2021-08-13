@@ -73,7 +73,7 @@ xml_description = """
                         <value>6</value>
                     </property>
                     <property type="input_type">
-                        <name>input-type</name>
+                        <name>vjoy-input-type</name>
                         <value>axis</value>
                     </property>
                     <property type="axis_mode">
@@ -206,7 +206,7 @@ def test_simple_action():
     assert actions[2].value.tag == "remap"
     assert actions[2].value.vjoy_device_id == 2
     assert actions[2].value.vjoy_input_id == 6
-    assert actions[2].value.input_type == gremlin.types.InputType.JoystickAxis
+    assert actions[2].value.vjoy_input_type == gremlin.types.InputType.JoystickAxis
     assert actions[2].value.axis_mode == gremlin.types.AxisMode.Relative
     assert actions[2].value.axis_scaling == 1.5
     assert actions[2].value.id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")

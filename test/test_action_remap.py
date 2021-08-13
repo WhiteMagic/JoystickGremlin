@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2021 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
+import dill
 import gremlin.error as error
+import gremlin.joystick_handling
 import gremlin.types as types
 import gremlin.profile_library as profile_library
 
@@ -40,7 +42,7 @@ xml_button = """
             <value>12</value>
         </property>
         <property type="input_type">
-            <name>input-type</name>
+            <name>vjoy-input-type</name>
             <value>button</value>
         </property>
     </action>
@@ -57,7 +59,7 @@ xml_axis = """
             <value>6</value>
         </property>
         <property type="input_type">
-            <name>input-type</name>
+            <name>vjoy-input-type</name>
             <value>axis</value>
         </property>
         <property type="axis_mode">
@@ -125,7 +127,7 @@ def test_to_xml():
             "./property/name[.='vjoy-input-id']/../value"
         ).text == "14"
     assert node.find(
-            "./property/name[.='input-type']/../value"
+            "./property/name[.='vjoy-input-type']/../value"
         ).text == "button"
     assert node.find("./property/name[.='axis-mode']") == None
     assert node.find("./property/name[.='axis-scaling']") == None
@@ -142,7 +144,7 @@ def test_to_xml():
         "./property/name[.='vjoy-input-id']/../value"
     ).text == "14"
     assert node.find(
-        "./property/name[.='input-type']/../value"
+        "./property/name[.='vjoy-input-type']/../value"
     ).text == "axis"
     assert node.find(
         "./property/name[.='axis-mode']/../value"
