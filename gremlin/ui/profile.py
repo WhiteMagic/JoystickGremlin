@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import typing
-from typing import List
+from typing import List, TYPE_CHECKING
 import uuid
 
 from PySide6 import QtCore
@@ -29,6 +29,9 @@ from gremlin.profile_library import ActionTree, RootAction
 from gremlin import signal
 from gremlin.tree import TreeNode
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
+
+if TYPE_CHECKING:
+    from gremlin.base_classes import AbstractActionModel
 
 
 # Hierarchy of the item related classed:
@@ -238,7 +241,7 @@ class ActionNodeModel(QtCore.QObject):
         return self._input_type
 
     @Property(type="QVariant", notify=actionChanged)
-    def actionModel(self) -> "AbstractActionModel":
+    def actionModel(self) -> AbstractActionModel:
         return self._node.value
 
     @Property(type=str, notify=actionChanged)
