@@ -25,8 +25,8 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import error, plugin_manager, profile, tree, util
-from gremlin.ui import backend
 from gremlin.profile_library import ActionTree, RootAction
+from gremlin import signal
 from gremlin.tree import TreeNode
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
@@ -286,7 +286,7 @@ class ActionNodeModel(QtCore.QObject):
                 self.actionChanged.emit()
                 self._signal_change()
             except error.GremlinError:
-                backend.Backend().reloadUi.emit()
+                signal.reloadUi.emit()
 
     def _append_drop_action(self, source: str, target: str) -> None:
         """Positions the source node after the target node.
@@ -316,7 +316,7 @@ class ActionNodeModel(QtCore.QObject):
             self.actionChanged.emit()
             self._signal_change()
         except error.GremlinError:
-            backend.Backend().reloadUi.emit()
+            signal.reloadUi.emit()
 
     @Slot(str)
     def appendNewAction(self, action_name: str) -> None:
@@ -505,7 +505,7 @@ class InputItemBindingModel(QtCore.QObject):
             self.behaviorChanged.emit()
             self.rootActionChanged.emit()
             # This one might be overkill
-            backend.Backend().reloadUi.emit()
+            signal.reloadUi.emit()
 
     def _get_description(self) -> str:
         return self._input_item_binding.description

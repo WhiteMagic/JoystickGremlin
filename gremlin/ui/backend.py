@@ -47,7 +47,6 @@ class Backend(QtCore.QObject):
     recentProfilesChanged = Signal()
     lastErrorChanged = Signal()
     inputConfigurationChanged = Signal()
-    reloadUi = Signal()
     activityChanged = Signal()
 
     def __init__(self, parent=None):
