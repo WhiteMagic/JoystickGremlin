@@ -53,43 +53,6 @@ def smart_any(conditions):
     return False
 
 
-class Value:
-
-    """Represents an input value, keeping track of raw and "seen" value."""
-
-    def __init__(self, raw):
-        """Creates a new value and initializes it.
-
-        :param raw the initial raw data
-        """
-        self._raw = raw
-        self._current = raw
-
-    @property
-    def raw(self):
-        """Returns the raw unmodified value.
-
-        :return raw unmodified value
-        """
-        return self._raw
-
-    @property
-    def current(self):
-        """Returns the current, potentially, modified value.
-
-        :return current and potentially modified value
-        """
-        return self._current
-
-    @current.setter
-    def current(self, current):
-        """Sets the current value which may differ from the raw one.
-
-        :param current the new current value
-        """
-        self._current = current
-
-
 # class ActivationCondition:
 
 #     """Represents a set of conditions dictating the activation of actions.

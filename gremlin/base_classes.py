@@ -18,7 +18,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABCMeta
-from gremlin import actions
 
 from typing import Any, List, Optional
 import uuid
@@ -26,11 +25,49 @@ from xml.etree import ElementTree
 
 from PySide6 import QtCore
 
-from . import actions, error
-from .event_handler import Event
-from .profile_library import ActionTree
-from .types import InputType
+from gremlin import error
+from gremlin.event_handler import Event
+from gremlin.profile_library import ActionTree
+from gremlin.types import InputType
+
 from gremlin.ui.profile import ActionNodeModel
+
+
+class Value:
+
+    """Represents an input value, keeping track of raw and "seen" value."""
+
+    def __init__(self, raw):
+        """Creates a new value and initializes it.
+
+        :param raw the initial raw data
+        """
+        self._raw = raw
+        self._current = raw
+
+    @property
+    def raw(self):
+        """Returns the raw unmodified value.
+
+        :return raw unmodified value
+        """
+        return self._raw
+
+    @property
+    def current(self):
+        """Returns the current, potentially, modified value.
+
+        :return current and potentially modified value
+        """
+        return self._current
+
+    @current.setter
+    def current(self, current):
+        """Sets the current value which may differ from the raw one.
+
+        :param current the new current value
+        """
+        self._current = current
 
 
 class AbstractActionModel(QtCore.QObject):
@@ -214,7 +251,7 @@ class AbstractFunctor(metaclass=ABCMeta):
         self.data = instance
 
     @abstractmethod
-    def process_event(self, event: Event, value: actions.Value) -> None:
+    def process_event(self, event: Event, value: Value) -> None:
         """Processes the functor using the provided event and value data.
 
         :param event the raw event that caused the functor to be executed

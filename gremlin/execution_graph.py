@@ -22,7 +22,7 @@ import logging
 import time
 
 import gremlin.types
-from gremlin import actions, base_classes, common, error
+from gremlin import actions, base_classes, error
 
 
 CallbackData = namedtuple("ContainerCallback", ["callback", "event"])
@@ -54,13 +54,13 @@ class ContainerCallback:
             gremlin.types.InputType.JoystickAxis,
             gremlin.types.InputType.JoystickHat
         ]:
-            value = actions.Value(event.value)
+            value = base_classes.Value(event.value)
         elif event.event_type in [
             gremlin.types.InputType.JoystickButton,
             gremlin.types.InputType.Keyboard,
             gremlin.types.InputType.VirtualButton
         ]:
-            value = actions.Value(event.is_pressed)
+            value = base_classes.Value(event.is_pressed)
         else:
             raise error.GremlinError("Invalid event type")
 
@@ -95,7 +95,7 @@ class VirtualButtonCallback:
         """
         self._execution_graph.process_event(
             event,
-            actions.Value(event.is_pressed)
+            base_classes.Value(event.is_pressed)
         )
 
 

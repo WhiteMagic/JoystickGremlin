@@ -28,9 +28,9 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import actions, error, event_handler, plugin_manager, \
+from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor
+from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
 from gremlin.ui.profile import ActionNodeModel
@@ -54,7 +54,7 @@ class TempoFunctor(AbstractFunctor):
     def process_event(
         self,
         event: event_handler.Event,
-        value: actions.Value
+        value: Value
     ) -> None:
         # TODO: Currently this does not handle hat or axis events, however
         #       virtual buttons created on those inputs is supported
@@ -107,9 +107,9 @@ class TempoFunctor(AbstractFunctor):
     def _short_press(
         self,
         event_p: event_handler.Event,
-        value_p: actions.Value,
+        value_p: Value,
         event_r: event_handler.Event,
-        value_r: actions.Value
+        value_r: Value
     ):
         """Callback executed for a short press action.
 
@@ -134,7 +134,7 @@ class TempoFunctor(AbstractFunctor):
         self,
         actions: List[AbstractFunctor],
         event: event_handler.Event,
-        value: actions.Value
+        value: Value
     ):
         """Processes the provided event data with every provided action.
 

@@ -29,11 +29,11 @@ from typing import List, Tuple
 import dill
 
 import gremlin
-import gremlin.actions
+from gremlin.base_classes import Value
 import gremlin.fsm
 import gremlin.profile
-from gremlin import event_handler, input_devices, \
-    joystick_handling, macro, sendinput, user_plugin, util
+from gremlin import event_handler, input_devices, joystick_handling, macro, \
+    sendinput, user_plugin, util
 from gremlin.types import AxisButtonDirection, HatDirection, InputType, \
     MergeAxisOperation
 import vjoy as vjoy_module
@@ -194,9 +194,9 @@ class CallbackObject:
 
     def _default_generate_values(self, event):
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
-            value = gremlin.actions.Value(event.value)
+            value = Value(event.value)
         elif event.event_type in [InputType.JoystickButton, InputType.Keyboard]:
-            value = gremlin.actions.Value(event.is_pressed)
+            value = Value(event.is_pressed)
         else:
             raise gremlin.error.GremlinError("Invalid event type")
 
@@ -207,7 +207,7 @@ class CallbackObject:
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
             states = self._virtual_button.process_event(event)
             for state in states:
-                values.append(gremlin.actions.Value(state))
+                values.append(Value(state))
         else:
             raise gremlin.error.GremlinError("Invalid event type")
 
@@ -477,13 +477,13 @@ class CodeRunner:
     def _callback(self, tree, action, event):
         values = self._generate_values(event)
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
-            value = gremlin.actions.Value(event.value)
+            value = Value(event.value)
         elif event.event_type in [
             InputType.JoystickButton,
             InputType.Keyboard,
             InputType.VirtualButton
         ]:
-            value = gremlin.actions.Value(event.is_pressed)
+            value = Value(event.is_pressed)
         else:
             raise gremlin.error.GremlinError("Invalid event type")
 

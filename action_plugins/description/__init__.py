@@ -24,8 +24,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
-from gremlin import actions, event_handler, profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor
+from gremlin import event_handler, profile_library, util
+from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
 from gremlin.types import InputType, PropertyType
 
 
@@ -39,7 +39,7 @@ class DescriptionFunctor(AbstractFunctor):
     def process_event(
         self,
         event: event_handler.Event,
-        value: actions.Value
+        value: Value
     ) -> None:
         """Processes the provided event.
 
