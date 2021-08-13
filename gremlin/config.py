@@ -23,7 +23,7 @@ import re
 
 from PySide6 import QtCore
 
-from . import common, util
+from gremlin import common, util
 
 
 @common.SingletonDecorator

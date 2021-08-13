@@ -20,8 +20,8 @@ import ctypes
 from ctypes import wintypes
 import threading
 
-import gremlin.common
-import gremlin.types
+from gremlin.common import SingletonDecorator
+from gremlin.types import MouseButton
 
 user32 = ctypes.WinDLL("user32")
 
@@ -183,25 +183,25 @@ def process_mouse_event(n_code, w_param, l_param):
         button_id = None
         is_pressed = True
         if w_param in [WM_LBUTTONDOWN, WM_LBUTTONUP]:
-            button_id = gremlin.types.MouseButton.Left
+            button_id = MouseButton.Left
             is_pressed = w_param == WM_LBUTTONDOWN
         elif w_param in [WM_RBUTTONDOWN, WM_RBUTTONUP]:
-            button_id = gremlin.types.MouseButton.Right
+            button_id = MouseButton.Right
             is_pressed = w_param == WM_RBUTTONDOWN
         elif w_param in [WM_MBUTTONDOWN, WM_MBUTTONUP]:
-            button_id = gremlin.types.MouseButton.Middle
+            button_id = MouseButton.Middle
             is_pressed = w_param == WM_MBUTTONDOWN
         elif w_param in [WM_XBUTTONDOWN, WM_XBUTTONUP]:
             if msg.mouseData & (0x0001 << 16):
-                button_id = gremlin.types.MouseButton.Back
+                button_id = MouseButton.Back
             elif msg.mouseData & (0x0002 << 16):
-                button_id = gremlin.types.MouseButton.Forward
+                button_id = MouseButton.Forward
             is_pressed = w_param == WM_XBUTTONDOWN
         elif w_param == WM_MOUSEWHEEL:
             if (msg.mouseData >> 16) == 120:
-                button_id = gremlin.types.MouseButton.WheelUp
+                button_id = MouseButton.WheelUp
             elif (msg.mouseData >> 16) == 65416:
-                button_id = gremlin.types.MouseButton.WheelDown
+                button_id = MouseButton.WheelDown
 
         # Create the event and pass it to all all registered callbacks
         evt = MouseEvent(button_id, is_pressed, False)
@@ -280,7 +280,7 @@ class MouseEvent:
         return self._is_injected
 
 
-@gremlin.common.SingletonDecorator
+@SingletonDecorator
 class KeyboardHook:
 
     """Hooks into the event stream and grabs keyboard related events
@@ -335,7 +335,7 @@ class KeyboardHook:
             user32.DispatchMessageW(ctypes.byref(msg))
 
 
-@gremlin.common.SingletonDecorator
+@SingletonDecorator
 class MouseHook:
 
     """Hooks into the event stream and grabs mouse related events

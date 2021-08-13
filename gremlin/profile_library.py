@@ -20,12 +20,10 @@ from __future__ import annotations
 import uuid
 from xml.etree import ElementTree
 
-from PySide6.QtCore import Property, Signal
-
-from . import error, plugin_manager
-from .tree import TreeNode
-from .util import safe_format, safe_read
-from .types import InputType
+from gremlin import error, plugin_manager
+from gremlin.tree import TreeNode
+from gremlin.util import safe_format, safe_read
+from gremlin.types import InputType
 
 
 class RootAction:

@@ -23,10 +23,10 @@ import threading
 import time
 import os
 
-import gremlin.types
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
+
 from gremlin.error import VJoyError
-import gremlin.common
+from gremlin.types import AxisNames
 import gremlin.spline
 
 
@@ -41,7 +41,7 @@ def _error_string(vid, iid, value):
     return "vjoy: {} input: {} value: {}".format(vid, iid, value)
 
 
-class AxisName(enum.Enum):
+class AxisCode(enum.Enum):
 
     """Enumeration of the valid axis names."""
 
@@ -96,7 +96,7 @@ def axis_count(vjoy_id):
     :return number of axes
     """
     count = 0
-    for axis in AxisName:
+    for axis in AxisCode:
         if VJoyInterface.GetVJDAxisExist(vjoy_id, axis.value) > 0:
             count += 1
     return count
@@ -457,14 +457,14 @@ class VJoy:
 
     # Axis name mapping
     axis_equivalence = {
-        AxisName.X: 1,
-        AxisName.Y: 2,
-        AxisName.Z: 3,
-        AxisName.RX: 4,
-        AxisName.RY: 5,
-        AxisName.RZ: 6,
-        AxisName.SL0: 7,
-        AxisName.SL1: 8
+        AxisCode.X: 1,
+        AxisCode.Y: 2,
+        AxisCode.Z: 3,
+        AxisCode.RX: 4,
+        AxisCode.RY: 5,
+        AxisCode.RZ: 6,
+        AxisCode.SL0: 7,
+        AxisCode.SL1: 8
     }
 
     def __init__(self, vjoy_id):
@@ -776,12 +776,10 @@ class VJoy:
         :returns dictionary of Axis objects
         """
         axes = {}
-        for i, axis in enumerate(AxisName):
+        for i, axis in enumerate(AxisCode):
             if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value) > 0:
                 axes[i+1] = Axis(self, axis.value)
-                self._axis_names[i+1] = gremlin.types.AxisNames.to_string(
-                    gremlin.types.AxisNames(i + 1)
-                )
+                self._axis_names[i+1] = AxisNames.to_string(AxisNames(i + 1))
                 self._axis_lookup[len(self._axis_names)] = i+1
                 self._axis_lookup[axis] = i+1
         return axes

@@ -24,10 +24,11 @@ from threading import Thread, Timer
 from PySide6 import QtCore
 
 import dill
+
 import gremlin.keyboard
 import gremlin.types
-from . import common, config, error, joystick_handling, windows_event_hook, \
-    macro, util
+from gremlin import common, config, error, joystick_handling, util, \
+    windows_event_hook
 
 
 class Event:

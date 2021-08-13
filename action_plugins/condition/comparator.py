@@ -17,13 +17,13 @@
 
 
 from typing import List
-from vjoy.vjoy import Hat
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
-from gremlin import actions, error, util
+from gremlin import error, util
+from gremlin.base_classes import Value
 from gremlin.types import HatDirection, PropertyType
 
 
@@ -43,7 +43,7 @@ class AbstractComparator(QtCore.QObject):
         """
         super().__init__(parent)
 
-    def __call__(self, value: actions.Value) -> bool:
+    def __call__(self, value: Value) -> bool:
         """Evaluates the comparison returning a truth state.
 
         This method has to be implemented in all subclasses.
@@ -100,7 +100,7 @@ class AxisComparator(AbstractComparator):
         self.lower = lower
         self.upper = upper
 
-    def __call__(self, value: actions.Value) -> bool:
+    def __call__(self, value: Value) -> bool:
         """Returns whether or not the provided values is within the range.
 
         Args:
@@ -162,7 +162,7 @@ class ButtonComparator(AbstractComparator):
 
         self.is_pressed = is_pressed
 
-    def __call__(self, value: actions.Value) -> bool:
+    def __call__(self, value: Value) -> bool:
         """Returns True if the button states match, False otherwise.
 
         Args:
@@ -235,7 +235,7 @@ class HatComparator(AbstractComparator):
             PropertyType.HatDirection
         )
 
-    def __call__(self, value: actions.Value) -> bool:
+    def __call__(self, value: Value) -> bool:
         return value.current in self.directions
 
 
@@ -255,7 +255,9 @@ class KeyComparator(AbstractComparator):
 
         self.key_sequence = key_sequence
 
-    def __call__(self, value: actions.Value) -> bool:
+    # TODO: Implement XML to/from methods
+
+    def __call__(self, value: Value) -> bool:
         """Returns true if the key sequence is matched.
 
         Args:

@@ -32,11 +32,11 @@ from xml.etree import ElementTree
 import dill
 
 import action_plugins
-import gremlin.types
-from .types import InputType, HatDirection, PluginVariableType
-from . import base_classes, error, joystick_handling, \
+from gremlin.types import AxisButtonDirection, InputType, HatDirection, \
+    PluginVariableType
+from gremlin import base_classes, error, joystick_handling, \
     profile_library, tree
-from .util import safe_read, safe_format, read_bool, \
+from gremlin.util import safe_read, safe_format, read_bool, \
     read_subelement, parse_bool, parse_guid, create_subelement_node
 
 
@@ -1088,7 +1088,7 @@ class VirtualAxisButton(AbstractVirtualButton):
         super().__init__()
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
-        self.direction = gremlin.types.AxisButtonDirection.Anywhere
+        self.direction = AxisButtonDirection.Anywhere
 
     def from_xml(self, node):
         """Populates the virtual button based on the node's data.

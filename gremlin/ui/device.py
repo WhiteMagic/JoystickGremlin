@@ -17,10 +17,9 @@
 
 from __future__ import annotations
 
-import random
 import typing
 
-from PySide6 import QtCore, QtQml
+from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 import dill
@@ -28,11 +27,10 @@ import dill
 from gremlin import common
 from gremlin import error
 from gremlin import event_handler
-from gremlin import input_devices
 from gremlin import joystick_handling
-from gremlin import profile
 from gremlin.types import InputType
 from gremlin.util import parse_guid
+
 from gremlin.ui import backend
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2021 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,10 +17,9 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, Callable, List, Optional
 
-import gremlin.error
+from gremlin import error
 
 
 class TreeNode:
@@ -73,7 +72,7 @@ class TreeNode:
             other: the node to add as sibling
         """
         if self.parent is None:
-            raise gremlin.error.GremlinError(
+            raise error.GremlinError(
                 "Cannot add sibling node to root node."
             )
 
@@ -87,7 +86,7 @@ class TreeNode:
             other: the node to add as sibling
         """
         if self.parent is None:
-            raise gremlin.error.GremlinError(
+            raise error.GremlinError(
                 "Cannot add sibling node to root node."
             )
 
@@ -102,7 +101,7 @@ class TreeNode:
             other: the node to add as sibling
         """
         if self.parent is None:
-            raise gremlin.error.GremlinError(
+            raise error.GremlinError(
                 "Cannot add sibling node to root node."
             )
 
@@ -119,7 +118,7 @@ class TreeNode:
         # Check for direct cycles. If any are present resolve them and log
         # a warning message as this could be a sign of unintended behavior
         if other.is_descendant(self) or self.is_descendant(other):
-            raise gremlin.error.GremlinError(
+            raise error.GremlinError(
                 "Setting parent would cause a cycle, aborting"
             )
 
@@ -210,7 +209,7 @@ class TreeNode:
             node_index += 1
             stack.extend(node.children[::-1])
 
-        raise gremlin.error.GremlinError(f"No node with index {index} exists.")
+        raise error.GremlinError(f"No node with index {index} exists.")
 
     def nodes_matching(self, predicate: Callable[[TreeNode], bool]) -> List[TreeNode]:
         """Returns the list of nodes for which the predicate is true.
@@ -265,4 +264,4 @@ class TreeNode:
             index += 1
             stack.extend(node.children[::-1])
 
-        raise gremlin.error.GremlinError("Unable to determine depth index.")
+        raise error.GremlinError("Unable to determine depth index.")

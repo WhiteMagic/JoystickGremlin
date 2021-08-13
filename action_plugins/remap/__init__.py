@@ -26,9 +26,9 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
-from gremlin import actions, error, event_handler, joystick_handling, \
+from gremlin import error, event_handler, joystick_handling, \
     profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor
+from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
 from gremlin.types import AxisMode, InputType, PropertyType
 
 
@@ -54,7 +54,7 @@ class RemapFunctor(AbstractFunctor):
     def process_event(
         self,
         event: event_handler.Event,
-        value: actions.Value
+        value: Value
     ) -> None:
         if self.data.vjoy_input_type == InputType.JoystickAxis:
             if self.data.axis_mode == AxisMode.Absolute:

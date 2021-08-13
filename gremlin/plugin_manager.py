@@ -22,8 +22,8 @@ import os
 
 from PySide6 import QtQml
 
-import gremlin.types
-from . import common, error
+from gremlin import common, error
+from gremlin.types import InputType
 
 
 @common.SingletonDecorator
@@ -173,10 +173,10 @@ class ActionPlugins:
     def _create_type_action_map(self):
         """Creates a lookup table from input types to available actions."""
         self._type_to_action_map = {
-            gremlin.types.InputType.JoystickAxis: [],
-            gremlin.types.InputType.JoystickButton: [],
-            gremlin.types.InputType.JoystickHat: [],
-            gremlin.types.InputType.Keyboard: []
+            InputType.JoystickAxis: [],
+            InputType.JoystickButton: [],
+            InputType.JoystickHat: [],
+            InputType.Keyboard: []
         }
 
         for entry in self._plugins.values():

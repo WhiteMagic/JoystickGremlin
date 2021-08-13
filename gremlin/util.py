@@ -34,9 +34,9 @@ from PySide6 import QtCore, QtWidgets
 import dill
 from dill import GUID
 
-from . import error
-from .types import AxisButtonDirection, AxisMode, HatDirection, InputType, \
-    PropertyType
+from gremlin import error
+from gremlin.types import AxisButtonDirection, AxisMode, HatDirection, \
+    InputType, PropertyType
 
 
 # Table storing which modules have been imported already

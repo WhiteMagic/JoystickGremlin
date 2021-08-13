@@ -24,9 +24,9 @@ from xml.etree import ElementTree
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import actions, error, event_handler, plugin_manager, \
+from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor
+from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
@@ -77,7 +77,7 @@ class AbstractCondition(QtCore.QObject):
         """
         return self._condition_type is not None and self._comparator is not None
 
-    def __call__(self, value: actions.Value) -> bool:
+    def __call__(self, value: Value) -> bool:
         """Evaluates the truth state of the condition.
 
         Args:
@@ -404,14 +404,14 @@ class ConditionFunctor(AbstractFunctor):
     def process_event(
         self,
         event: event_handler.Event,
-        value: actions.Value
+        value: Value
     ) -> None:
         actions = self.true_actions if \
             self._condition_truth_state(value) else self.false_actions
         for action in actions:
             action.process_event(event, value)
 
-    def _condition_truth_state(self, value: actions.Value) -> bool:
+    def _condition_truth_state(self, value: Value) -> bool:
         """Returns the truth value of the condition.
 
         Args:
