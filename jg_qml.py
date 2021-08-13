@@ -50,15 +50,6 @@ os.environ["QT_QUICK_CONTROLS_UNIVERSAL_THEME"] = "Light"
 # os.environ["QML_IMPORT_TRACE"] = "1"
 # os.environ["QSG_RHI"] = "1"
 
-# import gremlin.ui.axis_calibration
-# import gremlin.ui.common
-# import gremlin.ui.device_tab
-# import gremlin.ui.dialogs
-# import gremlin.ui.input_viewer
-# import gremlin.ui.merge_axis
-# import gremlin.ui.user_plugin_management
-# import gremlin.ui.profile_creator
-# import gremlin.ui.profile_settings
 import gremlin.error
 import gremlin.plugin_manager
 import gremlin.util

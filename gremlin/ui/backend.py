@@ -33,9 +33,11 @@ from gremlin import plugin_manager
 from gremlin import profile
 from gremlin import profile_library
 from gremlin import shared_state
+from gremlin import signal
 
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, InputItemModel
+
 
 
 @common.SingletonDecorator
@@ -186,7 +188,7 @@ class Backend(QtCore.QObject):
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
         self.windowTitleChanged.emit()
-        self.reloadUi.emit()
+        signal.reloadUi.emit()
 
     @Slot(str)
     def saveProfile(self, fpath: str) -> None:
@@ -216,7 +218,7 @@ class Backend(QtCore.QObject):
             fpath: Path to the file containing the profile to load
         """
         self._load_profile(fpath)
-        self.reloadUi.emit()
+        signal.reloadUi.emit()
 
     @Slot(QtCore.QObject, result=list)
     def actionList(self, action_node: ActionNodeModel) -> List[str]:
@@ -264,7 +266,7 @@ class Backend(QtCore.QObject):
             input_binding.input_item_binding
         )
         self.inputConfigurationChanged.emit()
-        self.reloadUi.emit()
+        signal.reloadUi.emit()
 
     @Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:

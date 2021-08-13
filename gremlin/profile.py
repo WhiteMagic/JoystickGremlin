@@ -33,13 +33,11 @@ import dill
 
 import action_plugins
 import gremlin.types
-from .types import InputType, DeviceType, HatDirection, PluginVariableType, \
-    MergeAxisOperation
-from . import base_classes, common, error, input_devices, joystick_handling, \
-    plugin_manager, profile_library, tree
-from .util import parse_guid, safe_read, safe_format, read_bool, \
-    read_subelement, create_subelement_node
-#from gremlin.profile_library import  *
+from .types import InputType, HatDirection, PluginVariableType
+from . import base_classes, error, joystick_handling, \
+    profile_library, tree
+from .util import safe_read, safe_format, read_bool, \
+    read_subelement, parse_bool, parse_guid, create_subelement_node
 
 
 # Data struct representing profile information of a device
@@ -2525,7 +2523,7 @@ class PluginVariable:
             self.value = safe_read(node, "value", str, "")
         elif self.type == PluginVariableType.PhysicalInput:
             self.value = {
-                "device_id": util.parse_guid(node.attrib["device-guid"]),
+                "device_id": parse_guid(node.attrib["device-guid"]),
                 "device_name": safe_read(node, "device-name", str, ""),
                 "input_id": safe_read(node, "input-id", int, None),
                 "input_type": InputType.to_enum(
@@ -2567,7 +2565,7 @@ class PluginVariable:
         elif self.type == PluginVariableType.Bool:
             node.set("value", "1" if self.value else "0")
         elif self.type == PluginVariableType.PhysicalInput:
-            node.set("device-guid", write_guid(self.value["device_id"]))
+            node.set("device-guid", str(self.value["device_id"]))
             node.set("device-name", safe_format(self.value["device_name"], str))
             node.set("input-id", safe_format(self.value["input_id"], int))
             node.set("input-type", InputType.to_string(self.value["input_type"]))

@@ -22,8 +22,7 @@ import logging
 import gremlin.keyboard
 import gremlin.types
 
-from . import base_classes, common, event_handler, fsm, input_devices, \
-    joystick_handling, macro, util
+from . import input_devices, joystick_handling, util
 
 
 def smart_all(conditions):
