@@ -35,29 +35,6 @@ class SingletonDecorator:
         return self.instance
 
 
-# Mapping from hat direction tuples to their textual representation
-direction_tuple_lookup = {
-    (0, 0): "Center",
-    (0, 1): "North",
-    (1, 1): "North East",
-    (1, 0): "East",
-    (1, -1): "South East",
-    (0, -1): "South",
-    (-1, -1): "South West",
-    (-1, 0): "West",
-    (-1, 1): "North West",
-    "Center": (0, 0),
-    "North": (0, 1),
-    "North East": (1, 1),
-    "East": (1, 0),
-    "South East": (1, -1),
-    "South": (0, -1),
-    "South West": (-1, -1),
-    "West": (-1, 0),
-    "North West": (-1, 1)
-}
-
-
 def input_to_ui_string(input_type: InputType, input_id: int) -> str:
     """Returns a string for UI usage of an input.
 
