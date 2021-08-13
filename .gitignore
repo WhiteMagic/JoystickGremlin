@@ -5,6 +5,7 @@
 .vscode
 .idea
 __pycache__
+debug.txt
 
 /build
 /doc/build
