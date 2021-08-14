@@ -10,7 +10,7 @@ Item {
 
     implicitHeight: _button.height
 
-    property InputStateCondition model
+    property KeyboardCondition model
 
     Loader {
         id: _button
@@ -25,15 +25,6 @@ Item {
                 text: "This input is"
             }
 
-            ComboBox {
-                model: ["Pressed", "Released"]
-                onActivated: {
-                    _root.model.comparator.isPressed = currentValue
-                }
-                Component.onCompleted: {
-                    currentIndex = indexOfValue(_root.model.comparator.isPressed)
-                }
-            }
         }
     }
 }

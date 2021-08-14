@@ -155,9 +155,9 @@ class JoystickCondition(AbstractCondition):
 
     comparatorChanged = Signal()
 
-    def __init__(self):
+    def __init__(self, parent=None):
         """Creates a new instance."""
-        super().__init__()
+        super().__init__(parent)
 
         self._condition_type = ConditionType.Joystick
 
@@ -225,6 +225,8 @@ class JoystickCondition(AbstractCondition):
 
     @Property(str, constant=True)
     def inputType(self) -> str:
+        if self.input_type is None:
+            return "Unknown"
         return InputType.to_string(self.input_type)
 
     @Property(int)
@@ -474,7 +476,10 @@ class ConditionModel(AbstractActionModel):
         if ConditionType(condition) == ConditionType.InputState:
             cond = InputStateCondition(self)
             cond.input_type = self.behavior_type
-            cond._comparator = InputStateCondition.ButtonComparator(True)
+            cond._comparator = comparator.ButtonComparator(True)
+            self._conditions.append(cond)
+        elif ConditionType(condition) == ConditionType.Joystick:
+            cond = JoystickCondition(self)
             self._conditions.append(cond)
 
         self.conditionsChanged.emit()
@@ -653,3 +658,18 @@ QtQml.qmlRegisterType(
     0,
     "InputStateCondition"
 )
+QtQml.qmlRegisterType(
+    JoystickCondition,
+    "gremlin.action_plugins",
+    1,
+    0,
+    "JoystickCondition"
+)
+
+# QtQml.qmlRegisterType(
+#     comparator.ButtonComparator,
+#     "gremlin.action_plugins",
+#     1,
+#     0,
+#     "ButtonComparator"
+# )

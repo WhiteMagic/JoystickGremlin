@@ -102,7 +102,7 @@ Item {
             model: _root.action.conditions
 
             delegate: RowLayout {
-                ConditionComparator {
+                ConditionComparatorUI {
                     model: modelData
 
                     Layout.fillWidth: true
