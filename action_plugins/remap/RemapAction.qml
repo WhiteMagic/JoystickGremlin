@@ -21,7 +21,7 @@ import QtQuick.Controls.Universal 2.14
 import QtQuick.Layouts 1.14
 
 import gremlin.ui.profile 1.0
-import gremlin.plugins 1.0
+import gremlin.action_plugins 1.0
 import "../../qml"
 
 
