@@ -89,6 +89,94 @@
 </p>
 
 
+<h2>Shift Button</h2>
+<p class="text-justify">
+    Sometimes it is desirable to have a single physical button to have
+    different functionality based on whether or not another button is pressed.
+    There are two ways to achieve this with different advantages and
+    disadvantages. These two approaches differ in how the shift functinoality
+    is achieved:
+    <ol>
+        <li>Condition</li>
+        <li>Mode</li>
+    </ol>
+    In the following, these two approaches are explained. In the example,
+    <em>Warthog, Button 1</em> is the input with a shifted functionality, and
+    <em>T16000.M Button 2</em> is the shift button. The default, i.e.
+    unshifted, action is to a remap to <em>vJoy Button 1</em> while the shifted
+    action is a remap to <em>vJoy Button 2</em>.
+</p>
+
+
+<h3>Condition-Based Shift Button</h3>
+<p class="text-justify">
+    In this setup the shift functionality is achieved by having Gremlin do
+    different things using conditions to check if the shift button is pressed
+    or not. The two remap actions are added inside their own containers, to
+    allow a container condition to be added to each of them. In both cases the
+    condition checks the state of <em>T16000.M Button 2</em>. If that button is
+    not pressed the first remap action is executed, and if not the second one.
+    It is paramount that both the shifted as well as the default action have a
+    condition associated with them, otherwise the action lacking a condition
+    will be executed independent on the state of the shift button.
+</p>
+
+<p class="text-justify">
+    The advantage of this setup is that you can directly see what both the
+    default and shifted actions do. The downside is that this can get a bit
+    tedious when having many shifted actions. As a result, this approach is
+    usually preferred when only one or two inputs need to be shifted via a
+    particular shift button.
+</p>
+
+<div class="row bottom-gap">
+    <img class="img-fluid center-block" src="https://whitemagic.github.io/JoystickGremlin/images/ex_shift_mode_condition_1.png">
+    <img class="img-fluid center-block" src="https://whitemagic.github.io/JoystickGremlin/images/ex_shift_mode_condition_2.png">
+</div>
+
+<p class="text-justify">
+    <em>The above image shows how the example shift setup looks like when using conditions.</em>
+</p>
+
+
+<h3>Temporary Mode Shift Button</h3>
+<p class="text-justify">
+The other approach uses the mode system of Gremlin to use an entire mode to
+hold the shifted functionality. To this end a new mode, <em>Shift</em> in this
+example, is added. Crucially, this new mode is a parent of the <em>Default</em>
+mode, which ensures that all <em>Default</em> mode actions are still executed
+while in the <em>Shift</em> mode, with the exception of shifted buttons. The
+shift button <em>T16000.M Button 2</em> is assigned a <em>Temporary Mode
+Switch</em> action which will activate the <em>Shift</em> mode for as long as
+that button is pressed. The <em>Default</em> mode simply contains the default
+actions while the <em>Shift</em> mode holds the shift behaviour.
+</p>
+
+<p class="text-justify">
+    The advantage of this method is that adding shifted actions is straight
+    forward and one can easily see which inputs have a shift action associated
+    with them. The disadvantage is that this is only really suitable for
+    profiles with a single shift button, as having different buttons act as
+    different shift modes can quickly make for a hard to understand setup. As
+    such this is mainly useful when one wants to use a single button to
+    implement an entire shift mode.
+</p>
+
+<div class="row bottom-gap">
+    <img class="img-fluid center-block" src="https://whitemagic.github.io/JoystickGremlin/images/ex_shift_mode_mode_1.png">
+    <img class="img-fluid center-block" src="https://whitemagic.github.io/JoystickGremlin/images/ex_shift_mode_mode_2.png">
+</div>
+<div class="row bottom-gap">
+    <img class="img-fluid center-block" src="https://whitemagic.github.io/JoystickGremlin/images/ex_shift_mode_mode_3.png">
+    <img class="img-fluid center-block" src="https://whitemagic.github.io/JoystickGremlin/images/ex_shift_mode_mode_4.png">
+</div>
+
+<p class="text-justify">
+    <em>The above image shows how the example shift setup looks like when using a dedicated mode.</em>
+</p>
+
+
+
 <h2>Remapping a button</h2>
 <div class="embed-responsive embed-responsive-16by9 text-center">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/JQjbPK7KY08" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
@@ -143,7 +231,7 @@
         <footer class="footer">
     <div class="container">
         <div class="col-md-offset-2 col-md8">
-            <p class="text-muted">Last update: April 9, 2019</p>
+            <p class="text-muted">Last update: August 18, 2021</p>
         </div>
     </div>
 </footer>
