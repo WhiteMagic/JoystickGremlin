@@ -373,9 +373,9 @@ class IntegerVariable(NumericalVariable):
             self,
             label,
             description,
-            initial_value=0,
-            min_value=0,
-            max_value=10,
+            initial_value=None,
+            min_value=None,
+            max_value=None,
             is_optional=False
     ):
         super().__init__(
@@ -388,7 +388,7 @@ class IntegerVariable(NumericalVariable):
             is_optional
         )
 
-        _init_numerical(self, initial_value, min_value, max_value)
+        _init_numerical(self, 0, 0, 10)
         self._load_from_registry(self._get_identifier())
 
 
@@ -400,9 +400,9 @@ class FloatVariable(NumericalVariable):
             self,
             label,
             description,
-            initial_value=0,
-            min_value=-1.0,
-            max_value=1.0,
+            initial_value=None,
+            min_value=None,
+            max_value=None,
             is_optional=False
     ):
         super().__init__(
@@ -415,7 +415,7 @@ class FloatVariable(NumericalVariable):
             is_optional
         )
 
-        _init_numerical(self, initial_value, min_value, max_value)
+        _init_numerical(self, 0.0, -1.0, 1.0)
         self._load_from_registry(self._get_identifier())
 
 
