@@ -577,18 +577,14 @@ class ConditionType(enum.Enum):
 
     """Enumeration of possible condition types."""
 
-    InputState = 1
-    Joystick = 2
-    Keyboard = 3
-    VJoy = 4
+    Joystick = 1
+    Keyboard = 2
 
     @staticmethod
     def to_display(instance: ConditionType) -> str:
         lookup = {
-            ConditionType.InputState: "Input State",
             ConditionType.Joystick: "Joystick",
             ConditionType.Keyboard: "Keyboard",
-            ConditionType.VJoy: "vJoy"
         }
         value = lookup.get(instance, None)
         if value is None:
@@ -600,10 +596,8 @@ class ConditionType(enum.Enum):
     @staticmethod
     def to_string(instance: ConditionType) -> str:
         lookup = {
-            ConditionType.InputState: "input-state",
             ConditionType.Joystick: "joystick",
             ConditionType.Keyboard: "keyboard",
-            ConditionType.VJoy: "vjoy"
         }
         value = lookup.get(instance, None)
         if value is None:
@@ -615,10 +609,8 @@ class ConditionType(enum.Enum):
     @staticmethod
     def to_enum(string: str) -> ConditionType:
         lookup = {
-            "input-state": ConditionType.InputState,
             "joystick": ConditionType.Joystick,
             "keyboard": ConditionType.Keyboard,
-            "vjoy": ConditionType.VJoy
         }
         value = lookup.get(string, None)
         if value is None:

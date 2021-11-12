@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2019 Lionel Ott
+# Copyright (C) 2015 - 2021 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
+from dill import GUID
 
 from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
@@ -48,6 +49,18 @@ class AbstractCondition(QtCore.QObject):
 
         self._condition_type = None
         self._comparator = None
+        self._inputs = []
+
+    def __call__(self, value: Value) -> bool:
+        """Evaluates the truth state of the condition.
+
+        Args:
+            value: value of the input event being evaluates
+
+        Returns:
+            True if the condition is fulfilled, False otherwise
+        """
+        return self._comparator(value)
 
     def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
@@ -75,18 +88,9 @@ class AbstractCondition(QtCore.QObject):
         Returns:
             True if the condition is properly specified, False otherwise
         """
-        return self._condition_type is not None and self._comparator is not None
-
-    def __call__(self, value: Value) -> bool:
-        """Evaluates the truth state of the condition.
-
-        Args:
-            value: value of the input event being evaluates
-
-        Returns:
-            True if the condition is fulfilled, False otherwise
-        """
-        return self._comparator(value)
+        return self._condition_type is not None and \
+            self._comparator is not None and \
+            len(self._inputs) > 0
 
     @Property(str, notify=conditionTypeChanged)
     def conditionType(self) -> str:
@@ -97,53 +101,72 @@ class AbstractCondition(QtCore.QObject):
         return self._comparator
 
 
-# class KeyboardCondition(AbstractCondition):
+class KeyboardCondition(AbstractCondition):
 
-#     """Keyboard state based condition.
+    """Keyboard state based condition.
 
-#     The condition is for a single key and as such contains the key's scan
-#     code as well as the extended flag.
-#     """
+    The condition is for a single key and as such contains the key's scan
+    code as well as the extended flag.
+    """
 
-#     def __init__(self):
-#         """Creates a new instance."""
-#         super().__init__()
-#         self.scan_code = None
-#         self.is_extended = None
+    class Input:
 
-#     def from_xml(self, node: ElementTree) -> None:
-#         """Populates the object with data from an XML node.
+        def __init__(self) -> None:
+            self.scan_code = 0
+            self.is_extended = False
 
-#         Args:
-#             node: the XML node to parse for data
-#         """
-#         self.comparison = safe_read(node, "comparison")
-#         self.scan_code = safe_read(node, "scan-code", int)
-#         self.is_extended = parse_bool(safe_read(node, "extended"))
+        def from_xml(self, node: ElementTree) -> None:
+            self.scan_code = util.read_property(
+                node, "scan-code", PropertyType.Int
+            )
+            self.is_extended = util.read_property(
+                node, "is-extended", PropertyType.Bool
+            )
 
-#     def to_xml(self) -> ElementTree:
-#         """Returns an XML node containing the objects data.
+        def to_xml(self) -> ElementTree:
+            entries = [
+                "scan-code", self.scan_code, PropertyType.Int,
+                "is-extended", self.is_extended, PropertyType.Bool
+            ]
+            return util.create_node_from_data("input", entries)
 
-#         Returns:
-#             XML node containing the object's data
-#         """
-#         node = ElementTree.Element("condition")
-#         node.set("condition-type", "keyboard")
-#         node.set("input", "keyboard")
-#         node.set("comparison", str(self.comparison))
-#         node.set("scan-code", str(self.scan_code))
-#         node.set("extended", str(self.is_extended))
-#         return node
 
-#     def is_valid(self) -> bool:
-#         """Returns whether or not a condition is fully specified.
+    def __init__(self, parent=None):
+        """Creates a new instance."""
+        super().__init__(parent)
 
-#         Returns:
-#             True if the condition is properly specified, False otherwise
-#         """
-#         return super().is_valid() and \
-#             self.scan_code is not None and \
-#             self.is_extended is not None
+        self._condition_type = ConditionType.Keyboard
+
+    def from_xml(self, node: ElementTree) -> None:
+        """Populates the object with data from an XML node.
+
+        Args:
+            node: the XML node to parse for data
+        """
+        for item_node in node.findall("input"):
+            i_node = KeyboardCondition.Input()
+            i_node.from_xml(item_node)
+            self._inputs.append(i_node)
+
+        # FIXME: where to get the input type from?
+        self._comparator = comparator.create_comparator(self.input_type, node)
+
+    def to_xml(self) -> ElementTree:
+        """Returns an XML node containing the objects data.
+
+        Returns:
+            XML node containing the object's data
+        """
+        entries = [
+            ["condition-type", "keyboard", PropertyType.String]
+        ]
+        node = util.create_node_from_data("condition", entries)
+
+        for entry in self._inputs:
+            node.append(entry.to_xml())
+        node.append(self._comparator.to_xml())
+
+        return node
 
 
 class JoystickCondition(AbstractCondition):
@@ -153,7 +176,37 @@ class JoystickCondition(AbstractCondition):
     This condition is based on the state of a joystick axis, button, or hat.
     """
 
-    comparatorChanged = Signal()
+    class Input:
+
+        def __init__(self) -> None:
+            self.device_guid = 0
+            self.device_name = ""
+            self.input_type = None
+            self.input_id = 0
+
+        def from_xml(self, node: ElementTree):
+            self.device_guid = util.read_property(
+                node, "device-guid", PropertyType.GUID
+            )
+            self.device_guid = util.read_property(
+                node, "device-name", PropertyType.String
+            )
+            self.input_type = util.read_property(
+                node, "input-type", PropertyType.InputType
+            )
+            self.input_id = util.read_property(
+                node, "input-id", PropertyType.Int
+            )
+
+        def to_xml(self) -> ElementTree:
+            entries = [
+                ["device-guide", self.device_guid, PropertyType.GUID],
+                ["device-name", self.device_name, PropertyType.String],
+                ["input-type", self.input_type, PropertyType.InputType],
+                ["input-id", self.input_id, PropertyType.Int]
+            ]
+            return util.create_node_from_data("input", entries)
+
 
     def __init__(self, parent=None):
         """Creates a new instance."""
@@ -161,36 +214,19 @@ class JoystickCondition(AbstractCondition):
 
         self._condition_type = ConditionType.Joystick
 
-        self.device_guid = 0
-        self.device_name = ""
-        self.input_type = None
-        self.input_id = 0
-
     def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
 
         Args:
             node: the XML node to parse for data
         """
-        self.device_guid = util.read_property(
-            node, "device-guid", PropertyType.GUID
-        )
-        self.device_guid = util.read_property(
-            node, "device-name", PropertyType.String
-        )
-        self.input_type = util.read_property(
-            node, "input-type", PropertyType.InputType
-        )
-        self.input_id = util.read_property(
-            node, "input-id", PropertyType.Int,
-        )
-        if self.input_type == InputType.JoystickAxis:
-            self.range[0] = util.read_property(
-                node, "range-low", PropertyType.Float
-            )
-            self.range[1] = util.read_property(
-                node, "range-high", PropertyType.Float
-            )
+        for item_node in node.findall("input"):
+            i_node = JoystickCondition.Input()
+            i_node.from_xml(item_node)
+            self._inputs.append(i_node)
+
+        # FIXME: where to get the input type from?
+        self._comparator = comparator.create_comparator(self.input_type, node)
 
     def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
@@ -198,31 +234,19 @@ class JoystickCondition(AbstractCondition):
         Returns:
             XML node containing the object's data
         """
-        node = ElementTree.Element("condition")
-
         entries = [
-            ["condition-type", "joystick", PropertyType.String],
-            ["device-guide", self.device_guid, PropertyType.GUID],
-            ["device-name", self.device_name, PropertyType.String],
-            ["input-type", self.input_type, PropertyType.InputType],
-            ["input-id", self.input_id, PropertyType.Int]
+            ["condition-type", "joystick", PropertyType.String]
         ]
-        if self.input_type == InputType.JoystickAxis:
-            entries.append(["range-low", self.range[0], PropertyType.Float])
-            entries.append(["range-high", self.range[1], PropertyType.Float])
+        node = util.create_node_from_data("condition", entries)
 
-        for e in entries:
-            node.append(util.create_property_node(e[0], e[1], e[2]))
+        for entry in self._inputs:
+            node.append(entry.to_xml())
+        node.append(self._comparator.to_xml())
+
         return node
 
-    def is_valid(self) -> bool:
-        """Returns whether or not a condition is fully specified.
-
-        Returns:
-            True if the condition is properly specified, False otherwise
-        """
-        return self._comparator != None and self.input_type != None
-
+    # FIXME: these property entries are now useless, likely all I need is a
+    #        way to create a string representation of the input collection
     @Property(str, constant=True)
     def inputType(self) -> str:
         if self.input_type is None:
@@ -240,157 +264,6 @@ class JoystickCondition(AbstractCondition):
     @Property(str)
     def deviceGuid(self) -> str:
         return str(self.device_guid)
-
-
-# class VJoyCondition(AbstractCondition):
-
-#     """vJoy device state based condition.
-
-#     This condition is based on the state of a vjoy axis, button, or hat.
-#     """
-
-#     def __init__(self):
-#         """Creates a new instance."""
-#         super().__init__()
-#         self.vjoy_id = 0
-#         self.input_type = None
-#         self.input_id = 0
-#         self.range = [0.0, 0.0]
-
-#     def from_xml(self, node: ElementTree) -> None:
-#         """Populates the object with data from an XML node.
-
-#         Args
-#             node: XML node to parse for data
-#         """
-#         self.comparison = safe_read(node, "comparison")
-
-#         self.input_type = InputType.to_enum(safe_read(node, "input"))
-#         self.input_id = safe_read(node, "id", int)
-#         self.vjoy_id = safe_read(node, "vjoy-id", int)
-#         if self.input_type == InputType.JoystickAxis:
-#             self.range = [
-#                 safe_read(node, "range-low", float),
-#                 safe_read(node, "range-high", float)
-#             ]
-
-#     def to_xml(self) -> ElementTree:
-#         """Returns an XML node containing the objects data.
-
-#         Returns:
-#             XML node containing the object's data
-#         """
-#         node = ElementTree.Element("condition")
-#         node.set("comparison", str(self.comparison))
-#         node.set("condition-type", "vjoy")
-#         node.set("input", InputType.to_string(self.input_type))
-#         node.set("id", str(self.input_id))
-#         node.set("vjoy-id", str(self.vjoy_id))
-#         if self.input_type == InputType.JoystickAxis:
-#             node.set("range-low", str(self.range[0]))
-#             node.set("range-high", str(self.range[1]))
-#         return node
-
-#     def is_valid(self) -> bool:
-#         """Returns whether or not a condition is fully specified.
-
-#         Returns:
-#             True if the condition is properly specified, False otherwise
-#         """
-#         return super().is_valid() and self.input_type is not None
-
-
-class InputStateCondition(AbstractCondition):
-
-    """Input item press / release state based condition.
-
-    The condition is for the current input item, triggering based on whether
-    or not the input item is being pressed or released.
-    """
-
-    def __init__(self, parent=None):
-        """Creates a new instance."""
-        super().__init__(parent)
-
-        self._condition_type = ConditionType.InputState
-        self.input_type = None
-
-    def from_xml(self, node: ElementTree) -> None:
-        """Populates the object with data from an XML node.
-
-        Args:
-            node: the XML node to parse for data
-        """
-        self.input_type = util.read_property(
-            node, "input-type", PropertyType.InputType
-        )
-        if self.input_type in [InputType.JoystickButton, InputType.Keyboard]:
-            self._comparator = InputStateCondition.ButtonComparator(
-                util.read_property(node, "is-pressed", PropertyType.Bool)
-            )
-        elif self.input_type == InputType.JoystickAxis:
-            self._comparator = InputStateCondition.AxisComparator(
-                util.read_property(node, "low", PropertyType.Float),
-                util.read_property(node, "high", PropertyType.Float)
-            )
-        elif self.input_type == InputType.JoystickHat:
-            self._comparator = InputStateCondition.HatComparator(
-                util.read_property(node, "direction", PropertyType.String)
-            )
-        else:
-            raise error.ProfileError(
-                f"Invalid condition type specified {self.input_type}"
-            )
-
-    def to_xml(self) -> ElementTree:
-        """Returns an XML node containing the objects data.
-
-        Returns:
-            XML node containing the object's data
-        """
-        node = ElementTree.Element("condition")
-        node.append(util.create_property_node(
-            "condition-type",
-            "input-state",
-            PropertyType.String
-        ))
-        node.append(util.create_property_node(
-            "input-type",
-            self.input_type,
-            PropertyType.InputType
-        ))
-        if self.input_type in [InputType.JoystickButton, InputType.Keyboard]:
-            node.append(util.create_property_node(
-                "is-pressed",
-                self._comparator.is_pressed,
-                PropertyType.Bool
-            ))
-        elif self.input_type == InputType.JoystickAxis:
-            node.append(util.create_property_node(
-                "low",
-                self._comparator.low,
-                PropertyType.Float
-            ))
-            node.append(util.create_property_node(
-                "high",
-                self._comparator.high,
-                PropertyType.Float
-            ))
-        elif self.input_type == InputType.JoystickHat:
-            node.append(util.create_property_node(
-                "direction",
-                self._comparator.direction,
-                PropertyType.String
-            ))
-        else:
-            raise error.ProfileError(
-                f"Invalid condition type encountered {self.input_type}"
-            )
-        return node
-
-    @Property(str, constant=True)
-    def inputType(self) -> str:
-        return InputType.to_string(self.input_type)
 
 
 class ConditionFunctor(AbstractFunctor):
@@ -473,12 +346,7 @@ class ConditionModel(AbstractActionModel):
         """
         #node = self._action_tree.root.nodes_matching(lambda x: x.value.id == self.id)
 
-        if ConditionType(condition) == ConditionType.InputState:
-            cond = InputStateCondition(self)
-            cond.input_type = self.behavior_type
-            cond._comparator = comparator.ButtonComparator(True)
-            self._conditions.append(cond)
-        elif ConditionType(condition) == ConditionType.Joystick:
+        if ConditionType(condition) == ConditionType.Joystick:
             cond = JoystickCondition(self)
             self._conditions.append(cond)
 
@@ -577,10 +445,6 @@ class ConditionModel(AbstractActionModel):
             condition_type = ConditionType.to_enum(
                 util.read_property(entry, "condition-type", PropertyType.String)
             )
-            if condition_type == ConditionType.InputState:
-                condition = InputStateCondition()
-                condition.from_xml(entry)
-                self._conditions.append(condition)
 
     def to_xml(self) -> ElementTree:
         node = util.create_action_node(ConditionModel.tag, self._id)
@@ -652,11 +516,18 @@ class ConditionModel(AbstractActionModel):
 create = ConditionModel
 
 QtQml.qmlRegisterType(
-    InputStateCondition,
+    JoystickCondition,
     "gremlin.action_plugins",
     1,
     0,
-    "InputStateCondition"
+    "JoystickCondition"
+)
+QtQml.qmlRegisterType(
+    KeyboardCondition,
+    "gremlin.action_plugins",
+    1,
+    0,
+    "KeyboardCondition"
 )
 QtQml.qmlRegisterType(
     JoystickCondition,
@@ -665,11 +536,3 @@ QtQml.qmlRegisterType(
     0,
     "JoystickCondition"
 )
-
-# QtQml.qmlRegisterType(
-#     comparator.ButtonComparator,
-#     "gremlin.action_plugins",
-#     1,
-#     0,
-#     "ButtonComparator"
-# )
