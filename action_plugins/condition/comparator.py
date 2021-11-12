@@ -24,7 +24,7 @@ from PySide6.QtCore import Property, Signal
 
 from gremlin import error, util
 from gremlin.base_classes import Value
-from gremlin.types import HatDirection, PropertyType
+from gremlin.types import HatDirection, InputType, PropertyType
 
 
 class AbstractComparator(QtCore.QObject):
@@ -58,16 +58,6 @@ class AbstractComparator(QtCore.QObject):
             "Comparator.__call__ not implemented in subclass"
         )
 
-    def to_xml(self) -> ElementTree.Element:
-        """Returns the comparator's information as an XML node.
-
-        Returns:
-            XML node representing the comparator
-        """
-        raise error.MissingImplementationError(
-            "Comparator.to_xml not implemented in subclass"
-        )
-
     def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the comparator's information using the XML node's data.
 
@@ -78,8 +68,18 @@ class AbstractComparator(QtCore.QObject):
             "Comparator.from_xml not implemented in subclass"
         )
 
+    def to_xml(self) -> ElementTree.Element:
+        """Returns the comparator's information as an XML node.
 
-class AxisComparator(AbstractComparator):
+        Returns:
+            XML node representing the comparator
+        """
+        raise error.MissingImplementationError(
+            "Comparator.to_xml not implemented in subclass"
+        )
+
+
+class RangeComparator(AbstractComparator):
 
     """Compares the state of an axis to a specific range."""
 
@@ -112,20 +112,17 @@ class AxisComparator(AbstractComparator):
         """
         return self.lower <= value.current <= self.upper
 
+    def from_xml(self, node: ElementTree.Element) -> None:
+        self.lower = util.read_property(node, "lower-limit", PropertyType.Float)
+        self.upper = util.read_property(node, "upper-limit", PropertyType.Float)
+
     def to_xml(self) -> ElementTree.Element:
-        node = ElementTree("comparator")
         entries = [
             ["comparator-type", "axis", PropertyType.String],
             ["lower-limit", self.lower, PropertyType.Float],
             ["upper-limit", self.upper, PropertyType.Float]
         ]
-        for entry in entries:
-            node.append(util.create_property_node(entry[0], entry[1], entry[2]))
-        return node
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        self.lower = util.read_property(node, "lower-limit", PropertyType.Float)
-        self.upper = util.read_property(node, "upper-limit", PropertyType.Float)
+        return util.create_node_from_data("comparator", entries)
 
     def _set_lower_limit(self, value: float) -> None:
         if self.lower != value:
@@ -146,7 +143,7 @@ class AxisComparator(AbstractComparator):
         return self.upper
 
 
-class ButtonComparator(AbstractComparator):
+class PressedComparator(AbstractComparator):
 
     """Compares the state of a button to a specific state."""
 
@@ -173,19 +170,16 @@ class ButtonComparator(AbstractComparator):
         """
         return value.current == self.is_pressed
 
+    def from_xml(self, node: ElementTree.Element) -> None:
+        self.is_pressed = \
+            util.read_property(node, "is-pressed", PropertyType.Bool)
+
     def to_xml(self) -> ElementTree.Element:
-        node = ElementTree.Element("comparator")
         entries = [
             ["comparator-type", "button", PropertyType.String],
             ["is-pressed", self.is_pressed, PropertyType.Bool]
         ]
-        for entry in entries:
-            node.append(util.create_property_node(entry[0], entry[1], entry[2]))
-        return node
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        self.is_pressed = \
-            util.read_property(node, "is-pressed", PropertyType.Bool)
+        return util.create_node_from_data("comparator", entries)
 
     def _set_is_pressed(self, value: str) -> None:
         is_pressed = value == "Pressed"
@@ -198,7 +192,7 @@ class ButtonComparator(AbstractComparator):
         return "Pressed" if self.is_pressed else "Released"
 
 
-class HatComparator(AbstractComparator):
+class DirectionComparator(AbstractComparator):
 
     """Compares the state of a hat to the specified states."""
 
@@ -214,19 +208,8 @@ class HatComparator(AbstractComparator):
 
         self.directions = directions
 
-    def to_xml(self) -> ElementTree.Element:
-        node = ElementTree("comparator")
-        node.append(util.create_property_node(
-            "comparator-type",
-            "hat",
-            PropertyType.String
-        ))
-        for entry in self.directions:
-            node.append(util.create_property_node(
-                "direction",
-                HatDirection.to_string(entry),
-                PropertyType.HatDirection
-            ))
+    def __call__(self, value: Value) -> bool:
+        return value.current in self.directions
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.directions = util.read_properties(
@@ -235,36 +218,40 @@ class HatComparator(AbstractComparator):
             PropertyType.HatDirection
         )
 
-    def __call__(self, value: Value) -> bool:
-        return value.current in self.directions
+    def to_xml(self) -> ElementTree.Element:
+        entries = [
+            ["comparator-type", "hat", PropertyType.String]
+        ]
+        for direction in self.directions:
+            entries.append(["direction", direction, PropertyType.HatDirection])
+        return util.create_node_from_data("comparator", entries)
 
 
-class KeyComparator(AbstractComparator):
+def create_comparator(
+    input_type: InputType,
+    node: ElementTree.Element
+) -> AbstractComparator:
+    """Returns a comparator object for the specified data.
 
-    """Comparator for key sequences."""
+    Args:
+        input_type: type of the associated input
+        node: XML node storing the condition information
 
-    keyChanged = Signal()
-
-    def __init__(self, key_sequence=List[float]):
-        """Creates a new keyboard comparator.
-
-        Args:
-            key_sequence: sequence of keys to compare against
-        """
-        super().__init__()
-
-        self.key_sequence = key_sequence
-
-    # TODO: Implement XML to/from methods
-
-    def __call__(self, value: Value) -> bool:
-        """Returns true if the key sequence is matched.
-
-        Args:
-            value: current input value
-
-        Returns:
-            True if the key sequence is valid, False otherwise
-        """
-        return True
-
+    Returns:
+        Comparator instance representing the stored information
+    """
+    if input_type in [InputType.JoystickButton, InputType.Keyboard]:
+        return PressedComparator(
+            util.read_property(node, "is-pressed", PropertyType.Bool)
+        )
+    elif input_type == InputType.JoystickAxis:
+        return RangeComparator(
+            util.read_property(node, "low", PropertyType.Float),
+            util.read_property(node, "high", PropertyType.Float)
+        )
+    elif input_type == InputType.JoystickHat:
+        return DirectionComparator(
+            util.read_properties(node, "direction", PropertyType.HatDirection)
+        )
+    else:
+        raise error.ProfileError(f"Unable to create comparator, unknown tpye.")
