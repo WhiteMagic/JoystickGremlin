@@ -24,7 +24,7 @@ import re
 import sys
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 import uuid
 from uuid import UUID
 from xml.etree import ElementTree
@@ -333,6 +333,26 @@ def create_subelement_node(
     node.text = _element_to_string[name](value)
     return node
 
+
+def create_node_from_data(
+    node_name: str,
+    properties: List[TypeVar[str, Any, PropertyType]]
+):
+    """Returns an XML node with the given name and property elements.
+
+    Args:
+        node_name: name of the node to create
+        properties: list of values from which to create property entries
+
+    Returns:
+        XML element node with the given name and property nodes
+    """
+    node = ElementTree.Element(node_name)
+    for entry in properties:
+        node.append(create_property_node(entry[0], entry[1], entry[2]))
+    return node
+
+
 def create_property_node(
         name: str,
         value: Any,
@@ -472,7 +492,7 @@ def read_properties(
         action_node: ElementTree.Element,
         name: str,
         property_type: PropertyType
-) -> Any:
+) -> List[Any]:
     """Returns the values of all properties with the given name.
 
     Args:
