@@ -68,7 +68,7 @@ def test_from_xml():
     c.from_xml(ElementTree.fromstring(xml_simple))
 
     assert len(c._conditions) == 1
-    assert c._logical_operator == condition.LogicalOperators.All
+    assert c._logical_operator == condition.LogicalOperator.All
     assert c.is_valid()
     
     cond = c._conditions[0]
@@ -113,5 +113,5 @@ def test_ctor():
     )
 
     assert len(c._conditions) == 0
-    assert c._logical_operator == condition.LogicalOperators.All
+    assert c._logical_operator == condition.LogicalOperator.All
     assert c.is_valid() == True
