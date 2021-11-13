@@ -336,7 +336,7 @@ def create_subelement_node(
 
 def create_node_from_data(
     node_name: str,
-    properties: List[TypeVar[str, Any, PropertyType]]
+    properties: List[TypeVar("PropertyData", str, Any, PropertyType)]
 ):
     """Returns an XML node with the given name and property elements.
 
