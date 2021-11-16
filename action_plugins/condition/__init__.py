@@ -200,7 +200,7 @@ class JoystickCondition(AbstractCondition):
 
         def to_xml(self) -> ElementTree:
             entries = [
-                ["device-guide", self.device_guid, PropertyType.GUID],
+                ["device-guid", self.device_guid, PropertyType.GUID],
                 ["device-name", self.device_name, PropertyType.String],
                 ["input-type", self.input_type, PropertyType.InputType],
                 ["input-id", self.input_id, PropertyType.Int]
@@ -226,7 +226,15 @@ class JoystickCondition(AbstractCondition):
             self._inputs.append(i_node)
 
         # FIXME: where to get the input type from?
-        self._comparator = comparator.create_comparator(self.input_type, node)
+        #self._comparator = comparator.create_comparator(self.input_type, node)
+        comp_node = node.find("comparator")
+        if comp_node is None:
+            raise error.ProfileError("Comparator node missing in condition.")
+
+        self._comparator = comparator.create_comparator(
+            InputType.JoystickButton,
+            comp_node
+        )
 
     def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
@@ -445,6 +453,12 @@ class ConditionModel(AbstractActionModel):
             condition_type = ConditionType.to_enum(
                 util.read_property(entry, "condition-type", PropertyType.String)
             )
+            cond_obj = None
+            if condition_type == ConditionType.Joystick:
+                cond_obj = JoystickCondition()
+            if cond_obj is not None:
+                cond_obj.from_xml(entry)
+                self._conditions.append(cond_obj)
 
     def to_xml(self) -> ElementTree:
         node = util.create_action_node(ConditionModel.tag, self._id)
