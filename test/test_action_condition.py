@@ -25,6 +25,7 @@ from xml.etree import ElementTree
 import gremlin.error as error
 import gremlin.types as types
 import gremlin.profile_library as profile_library
+import gremlin.util as util
 
 import action_plugins.condition as condition
 
@@ -45,16 +46,32 @@ xml_simple = """
     <condition>
       <property type="string">
         <name>condition-type</name>
-        <value>input-state</value>
+        <value>joystick</value>
       </property>
-      <property type="input_type">
-        <name>input-type</name>
-        <value>button</value>
-      </property>
-      <property type="bool">
-        <name>is-pressed</name>
-        <value>false</value>
-      </property>
+      <input>
+        <property type="guid">
+          <name>device-guid</name>
+          <value>4DCB3090-97EC-11EB-8003-444553540000</value>
+        </property>
+        <property type="string">
+          <name>device-name</name>
+          <value>Test</value>
+        </property>
+        <property type="input_type">
+          <name>input-type</name>
+          <value>button</value>
+        </property>
+        <property type="int">
+          <name>input-id</name>
+          <value>2</value>
+        </property>
+      </input>
+      <comparator>
+        <property type="bool">
+          <name>is-pressed</name>
+          <value>false</value>
+        </property>
+      </comparator>
     </condition>
   </action>
 """
@@ -72,9 +89,9 @@ def test_from_xml():
     assert c.is_valid()
     
     cond = c._conditions[0]
-    assert isinstance(cond, condition.InputStateCondition)
-    assert isinstance(cond._comparator, condition.InputStateCondition.ButtonComparator)
-    assert cond.input_type == types.InputType.JoystickButton
+    assert isinstance(cond, condition.JoystickCondition)
+    assert isinstance(cond._comparator, condition.comparator.PressedComparator)
+    assert cond._inputs[0].input_type == types.InputType.JoystickButton
     assert cond._comparator.is_pressed == False
     assert cond.is_valid()
 
@@ -85,9 +102,12 @@ def test_to_xml():
         types.InputType.JoystickButton
     )
 
-    cond = condition.InputStateCondition()
-    cond.input_type = types.InputType.JoystickButton
-    cond._comparator = condition.InputStateCondition.ButtonComparator(True)
+    cond = condition.JoystickCondition()
+    input_dev = condition.JoystickCondition.Input()
+    input_dev.device_guid = util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+    input_dev.input_type = types.InputType.JoystickButton
+    cond._inputs.append(input_dev)
+    cond._comparator = condition.comparator.PressedComparator(True)
     c._conditions.append(cond)
 
     node = c.to_xml()
@@ -96,12 +116,12 @@ def test_to_xml():
         ).text == "all"
     assert node.find(
             "./condition/property/name[.='condition-type']/../value"
-        ).text == "input-state"
+        ).text == "joystick"
     assert node.find(
-            "./condition/property/name[.='input-type']/../value"
+            "./condition/input/property/name[.='input-type']/../value"
         ).text == "button"
     assert node.find(
-            "./condition/property/name[.='is-pressed']/../value"
+            "./condition/comparator/property/name[.='is-pressed']/../value"
         ).text == "True"
 
 
