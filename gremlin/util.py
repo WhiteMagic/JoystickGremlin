@@ -237,7 +237,8 @@ _property_conversion = {
     PropertyType.Bool: lambda x: parse_bool(x, False),
     PropertyType.InputType: lambda x: InputType.to_enum(x),
     PropertyType.AxisMode: lambda x: AxisMode.to_enum(x),
-    PropertyType.HatDirection: lambda x: HatDirection.to_enum(x)
+    PropertyType.HatDirection: lambda x: HatDirection.to_enum(x),
+    PropertyType.GUID: lambda x: uuid.UUID(x),
 }
 
 _property_to_string = {
@@ -247,7 +248,8 @@ _property_to_string = {
     PropertyType.Bool: str,
     PropertyType.InputType: lambda x: InputType.to_string(x),
     PropertyType.AxisMode: lambda x: AxisMode.to_string(x),
-    PropertyType.HatDirection: lambda x: HatDirection.to_string(x)
+    PropertyType.HatDirection: lambda x: HatDirection.to_string(x),
+    PropertyType.GUID: lambda x: str(x),
 }
 
 _type_lookup = {
