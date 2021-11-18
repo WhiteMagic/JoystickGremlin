@@ -30,63 +30,18 @@ import gremlin.util as util
 import action_plugins.condition as condition
 
 
-xml_simple = """
-  <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="condition">
-    <if-actions>
-      <action-id>fbe6be7b-07c9-4400-94f2-caa245ebcc7e</action-id>
-      <action-id>80e29257-f2ad-43bf-b5ab-9229d01e64d7</action-id>
-    </if-actions>
-    <else-actions>
-      <action-id>2bf10c03-a9d3-4410-a56a-70643e2c05b8</action-id>
-    </else-actions>
-    <property type="string">
-      <name>logical-operator</name>
-      <value>all</value>
-    </property>
-    <condition>
-      <property type="string">
-        <name>condition-type</name>
-        <value>joystick</value>
-      </property>
-      <input>
-        <property type="guid">
-          <name>device-guid</name>
-          <value>4DCB3090-97EC-11EB-8003-444553540000</value>
-        </property>
-        <property type="string">
-          <name>device-name</name>
-          <value>Test</value>
-        </property>
-        <property type="input_type">
-          <name>input-type</name>
-          <value>button</value>
-        </property>
-        <property type="int">
-          <name>input-id</name>
-          <value>2</value>
-        </property>
-      </input>
-      <comparator>
-        <property type="bool">
-          <name>is-pressed</name>
-          <value>false</value>
-        </property>
-      </comparator>
-    </condition>
-  </action>
-"""
-
-
 def test_from_xml():
     c = condition.ConditionModel(
         profile_library.ActionTree(),
         types.InputType.JoystickButton
     )
-    c.from_xml(ElementTree.fromstring(xml_simple))
+    c.from_xml(ElementTree.fromstring(open("test/action_condition_simple.xml").read()))
 
     assert len(c._conditions) == 1
     assert c._logical_operator == condition.LogicalOperator.All
     assert c.is_valid()
+
+    assert len(c._conditions[0]._inputs) == 1
     
     cond = c._conditions[0]
     assert isinstance(cond, condition.JoystickCondition)
@@ -94,6 +49,71 @@ def test_from_xml():
     assert cond._inputs[0].input_type == types.InputType.JoystickButton
     assert cond._comparator.is_pressed == False
     assert cond.is_valid()
+
+
+def test_from_xml_complex():
+    c = condition.ConditionModel(
+        profile_library.ActionTree(),
+        types.InputType.JoystickButton
+    )
+    c.from_xml(ElementTree.fromstring(open("test/action_condition_complex.xml").read()))
+
+    # General information
+    assert len(c._conditions) == 4
+    assert c._logical_operator == condition.LogicalOperator.Any
+    assert c.is_valid()
+
+    # Input item data
+    assert len(c._conditions[0]._inputs) == 2
+    in1 = c._conditions[0]._inputs[0]
+    assert in1.input_type == types.InputType.JoystickButton
+    assert in1.input_id == 2
+    assert in1.device_name == "Test"
+    assert in1.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    in2 = c._conditions[0]._inputs[1]
+    assert in2.input_type == types.InputType.JoystickButton
+    assert in2.input_id == 42
+    assert in2.device_name == "Test 2"
+    assert in2.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540024")
+    in3 = c._conditions[2]._inputs[0]
+    assert in3.input_type == types.InputType.JoystickHat
+    assert in3.input_id == 1
+    assert in3.device_name == "Test"
+    assert in3.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    in4 = c._conditions[3]._inputs[0]
+    in4.scan_code = 42
+    in4.is_extended = True
+
+    # Condition data
+    assert len(c._conditions[0]._inputs) == 2
+    c1 = c._conditions[0]
+    assert isinstance(c1, condition.JoystickCondition)
+    assert isinstance(c1._comparator, condition.comparator.PressedComparator)
+    assert c1._inputs[0].input_type == types.InputType.JoystickButton
+    assert c1._comparator.is_pressed == False
+    assert c1.is_valid()
+    
+    c2 = c._conditions[1]
+    assert isinstance(c2, condition.JoystickCondition)
+    assert isinstance(c2._comparator, condition.comparator.RangeComparator)
+    assert c2._inputs[0].input_type == types.InputType.JoystickAxis
+    assert c2._comparator.lower == 0.2
+    assert c2._comparator.upper == 0.9
+    assert c2.is_valid()
+
+    c3 = c._conditions[2]
+    assert isinstance(c3, condition.JoystickCondition)
+    assert isinstance(c3._comparator, condition.comparator.DirectionComparator)
+    assert c3._inputs[0].input_type == types.InputType.JoystickHat
+    assert len(c3._comparator.directions) == 3
+    assert c3._comparator.directions[0] == types.HatDirection.North
+    assert c3._comparator.directions[1] == types.HatDirection.East
+    assert c3._comparator.directions[2] == types.HatDirection.NorthEast
+
+    c4 = c._conditions[3]
+    assert isinstance(c4, condition.KeyboardCondition)
+    assert isinstance(c4._comparator, condition.comparator.PressedComparator)
+    assert c4._comparator.is_pressed == False
 
 
 def test_to_xml():
@@ -123,7 +143,6 @@ def test_to_xml():
     assert node.find(
             "./condition/comparator/property/name[.='is-pressed']/../value"
         ).text == "True"
-
 
 
 def test_ctor():
