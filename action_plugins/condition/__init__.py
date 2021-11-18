@@ -148,8 +148,10 @@ class KeyboardCondition(AbstractCondition):
             i_node.from_xml(item_node)
             self._inputs.append(i_node)
 
-        # FIXME: where to get the input type from?
-        self._comparator = comparator.create_comparator(self.input_type, node)
+        comp_node = node.find("comparator")
+        if comp_node is None:
+            raise error.ProfileError("Comparator node missing in condition.")
+        self._comparator = comparator.create_comparator(comp_node)
 
     def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
@@ -188,7 +190,7 @@ class JoystickCondition(AbstractCondition):
             self.device_guid = util.read_property(
                 node, "device-guid", PropertyType.GUID
             )
-            self.device_guid = util.read_property(
+            self.device_name = util.read_property(
                 node, "device-name", PropertyType.String
             )
             self.input_type = util.read_property(
@@ -225,16 +227,10 @@ class JoystickCondition(AbstractCondition):
             i_node.from_xml(item_node)
             self._inputs.append(i_node)
 
-        # FIXME: where to get the input type from?
-        #self._comparator = comparator.create_comparator(self.input_type, node)
         comp_node = node.find("comparator")
         if comp_node is None:
             raise error.ProfileError("Comparator node missing in condition.")
-
-        self._comparator = comparator.create_comparator(
-            InputType.JoystickButton,
-            comp_node
-        )
+        self._comparator = comparator.create_comparator(comp_node)
 
     def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
@@ -456,6 +452,8 @@ class ConditionModel(AbstractActionModel):
             cond_obj = None
             if condition_type == ConditionType.Joystick:
                 cond_obj = JoystickCondition()
+            elif condition_type == ConditionType.Keyboard:
+                cond_obj = KeyboardCondition()
             if cond_obj is not None:
                 cond_obj.from_xml(entry)
                 self._conditions.append(cond_obj)

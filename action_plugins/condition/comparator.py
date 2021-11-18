@@ -227,31 +227,30 @@ class DirectionComparator(AbstractComparator):
         return util.create_node_from_data("comparator", entries)
 
 
-def create_comparator(
-    input_type: InputType,
-    node: ElementTree.Element
-) -> AbstractComparator:
+def create_comparator(node: ElementTree.Element) -> AbstractComparator:
     """Returns a comparator object for the specified data.
 
     Args:
-        input_type: type of the associated input
         node: XML node storing the condition information
 
     Returns:
         Comparator instance representing the stored information
     """
-    if input_type in [InputType.JoystickButton, InputType.Keyboard]:
+    comparator_type = util.read_property(node, "comparator-type", PropertyType.String)
+    if comparator_type in "pressed":
         return PressedComparator(
             util.read_property(node, "is-pressed", PropertyType.Bool)
         )
-    elif input_type == InputType.JoystickAxis:
+    elif comparator_type == "range":
         return RangeComparator(
-            util.read_property(node, "low", PropertyType.Float),
-            util.read_property(node, "high", PropertyType.Float)
+            util.read_property(node, "lower-limit", PropertyType.Float),
+            util.read_property(node, "upper-limit", PropertyType.Float)
         )
-    elif input_type == InputType.JoystickHat:
+    elif comparator_type == "direction":
         return DirectionComparator(
             util.read_properties(node, "direction", PropertyType.HatDirection)
         )
     else:
-        raise error.ProfileError(f"Unable to create comparator, unknown tpye.")
+        raise error.ProfileError(
+            f"Unable to create comparator, type \"{comparator_type}\" is unknown."
+        )
