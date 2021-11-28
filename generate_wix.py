@@ -45,7 +45,7 @@ def sanitize_path(path):
     :param path path to sanitize
     :return sanitized file path
     """
-    return path.replace("\\", "__").replace("-", "_")
+    return path.replace("\\", "__").replace("-", "_").replace("+", ".")
 
 
 def create_data_for_file(path):
