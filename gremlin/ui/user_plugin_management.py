@@ -107,6 +107,7 @@ class ModuleManagementController(QtCore.QObject):
 
         layout = self.view.right_panel.layout()
         gremlin.ui.common.clear_layout(layout)
+        self.scroll_layout = QtWidgets.QVBoxLayout()
         for var in variables:
             if type(var) in [
                 gremlin.user_plugin.BoolVariable,
@@ -143,7 +144,7 @@ class ModuleManagementController(QtCore.QObject):
                         self._update_value_variable
                     )
                 )
-                layout.addLayout(ui_element)
+                self.scroll_layout.addLayout(ui_element)
             else:
                 logging.getLogger("system").error(
                     "Invalid variable type encountered in user "
@@ -152,8 +153,15 @@ class ModuleManagementController(QtCore.QObject):
                         var.label
                     )
                 )
-                layout.addWidget(QtWidgets.QLabel(var.label))
-        layout.addStretch()
+                self.scroll_layout.addWidget(QtWidgets.QLabel(var.label))
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_widget = QtWidgets.QWidget()
+        self.scroll_widget.setLayout(self.scroll_layout)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_widget)
+        self.scroll_area.setHorizontalScrollBarPolicy(1)
+        self.scroll_area.setMinimumWidth(self.scroll_layout.minimumSize().width() + 19)
+        layout.addWidget(self.scroll_area)
 
     def _update_value_variable(self, data, widget, variable):
         if variable.type in [
