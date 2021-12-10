@@ -249,7 +249,7 @@ ApplicationWindow {
         }
     }
     Connections {
-        target: backend
+        target: signal
         function onReloadUi() {
             _deviceModel.modelReset()
             _deviceListModel.modelReset()

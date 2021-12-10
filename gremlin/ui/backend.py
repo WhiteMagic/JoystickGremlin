@@ -32,7 +32,7 @@ from gremlin import plugin_manager
 from gremlin import profile
 from gremlin import profile_library
 from gremlin import shared_state
-from gremlin import signal
+from gremlin.signal import signal
 
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, InputItemModel
