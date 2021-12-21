@@ -23,3 +23,5 @@ sensor:
       messages: '{{ value_json.messages }}'
       timestamp: '{{ value_json.tst }}'
 ```
+
+curl -X GET -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI5NmVhODNiZWY2MjI0MTMzYjFhMTlkYzI1MzNlYWQxMCIsImlhdCI6MTYwMzI2ODMyMSwiZXhwIjoxOTE4NjI4MzIxfQ.dotJa4fmn_iKt03QUD0CJXwpxU2KDOIXkzfqofpZHPw" -H "Content-Type: application/json" http://fm23.duckdns.org:8123/api/states/light.desk_segment_1

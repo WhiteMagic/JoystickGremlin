@@ -56,7 +56,7 @@ class HASwitchModeWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.mode_list.activated.connect(self._mode_list_changed_cb)
 
         self.entity_list = QtWidgets.QComboBox()
-        for entity in ENTITIES:
+        for entity, friendly_name in ENTITIES.items():
             self.entity_list.addItem(entity)
 
         # todo subinnerlayout for Descriptions
@@ -64,6 +64,8 @@ class HASwitchModeWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.main_layout.addWidget(self.entity_list)
         self.main_layout.addWidget(self.mode_list)
         self.main_layout.addLayout(self.inner_layout)
+
+
 
     def _mode_list_changed_cb(self):
         self.action_data.mode_name = self.mode_list.currentText()
@@ -97,9 +99,9 @@ class HASwitchModeFunctor(AbstractFunctor):
         self.text = action.text
         self.entity_name = action.entity_name
 
-    # fixme immer wenn text leer ist crashed es, ich muss also ein None setzen oder so
     def process_event(self, event, value):
         set_ha_entity_states(self.entity_name, self.mode_name,
+                             friendly_name=entities.get(self.entity_name, None),
                              attributes=self.text)
         return True
 

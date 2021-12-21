@@ -35,29 +35,27 @@ def get_from_ha(url):
     return response.json()
 
 
-def set_ha_entity_states(entity, state, attributes, friendly_name="Joystick Gremlin", ):
+def set_ha_entity_states(entity, state, attributes, friendly_name=None):
     if len(attributes) == 0:
         attributes = None
     if "sensor" in entity:
         post_request(entity=entity, state=state, friendly_name=friendly_name, attributes=attributes)
     elif "light" in entity:
-        post_service_light_to_ha(entity=entity, state=state, attributes=attributes)
+        post_service_to_ha(domain="light", entity=entity, state="turn_on", attributes=attributes)
     else:
         print(f"entity is wrong")
 
 
-def post_request(entity, state, friendly_name="Joystick Gremlin", attributes=None):
+def post_request(entity, state, friendly_name=None, attributes=None):
     now = datetime.now()
     date_time = now.strftime("%d.%m.%y %H:%M")
     post_url = f"{config_ha_jg.HA_URL}/api/states/{entity}"
-    post_attributes = {"friendly_name": friendly_name, "timestamp": date_time,
-                       "mode": state}
+    post_attributes = {
+            "friendly_name": friendly_name,
+            "timestamp": date_time,
+    }
     if attributes is not None:
         attr = json.loads(attributes)
-        print(attr)
-        if "rgb" in attr:
-            if not "brightness_pct" in attr:
-                attr.update({"brightness_pct": 20})
         post_attributes.update(attr)
     requests.post(post_url,
                   headers={
@@ -68,24 +66,28 @@ def post_request(entity, state, friendly_name="Joystick Gremlin", attributes=Non
                   )
 
 
-def post_service_light_to_ha(entity, state, attributes):
-    """
-    todo create services
-    ha_url + switch_suffix
-    add service 'turn_on' and 'turn_off'
+def post_service_to_ha(domain, entity, state, attributes=None):
+    post_url = f"{config_ha_jg.HA_URL}/api/services/{domain}/{state}"
+    payload = {"entity_id": entity}
+    if attributes is not None:
+        attr = json.loads(attributes)
+        payload.update(attr)
+    requests.post(post_url,
+                  headers={
+                      "Authorization": "Bearer " + config_ha_jg.TOKEN,
+                      "content-type": "application/json",
+                  },
+                  json=payload
+                  )
 
-    params:
-        entity_id
-    """
-    print(entity)
-    print(f"state is {state} with {attributes}")
 
-
-def get_friendly_name_from_entity(entity):
-    get_url = f"{config_ha_jg.HA_URL}/api/states/{entity}"
-    var = dict(get_from_ha(get_url))
-    return var["attributes"]["friendly_name"]
+def get_entity(entity):
+    get_url = f"{config_ha_jg.HA_URL}/api/service/{entity}"
+    return dict(get_from_ha(get_url))
 
 
 if __name__ == "__main__":
-    post_to_ha("asd", "lal aus module3")
+    #post_to_ha("asd", "lal aus module3")
+    #import pprint
+    #pprint.pprint(get_entity("light.desk_segment_2"))
+    post_service_to_ha("light", "light.desk_segment_2", "turn_on", '{"rgb_color":[100,0,200]}')

@@ -65,7 +65,7 @@ class VPC_LedModeWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.color_button = QtWidgets.QPushButton("change Color")
         self.color_button.clicked.connect(self._color_button_cb)
 
-        self.groupbox_layout.addWidget(self.color_button)
+        #self.groupbox_layout.addWidget(self.color_button)
         self.groupbox_layout.addWidget(self.color_button)
         self.main_layout.addWidget(self.device_list)
         self.main_layout.addWidget(self.command_list)
@@ -113,11 +113,13 @@ class VPC_LedModeWidget(gremlin.ui.input_item.AbstractActionWidget):
         device_id = self.device_list.findText(self.action_data.device_name)
         self.command_list.setCurrentIndex(command_id)
         self.device_list.setCurrentIndex(device_id)
-        self.last_color.setText(f"Current Color is: #{self.action_data.color} ")
-                               # f"'rgb': {self.hex2rgb(self.action_data.color)}")
+        self.last_color.setText(f"Current Color is: #{self.action_data.color}\n "
+                                f"'rgb': {self.hex2rgb(self.action_data.color)}")
         self.last_color.setStyleSheet(f'color: #{self.action_data.color}')
 
     def hex2rgb(self, color):
+        if len(color) == 0:
+            color = "000000"
         rgb = list(int(color[i:i + 2], 16) for i in (0, 2, 4))
         return rgb
 
