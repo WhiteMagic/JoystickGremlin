@@ -70,8 +70,7 @@ def post_service_to_ha(domain, entity, state, attributes=None):
     post_url = f"{config_ha_jg.HA_URL}/api/services/{domain}/{state}"
     payload = {"entity_id": entity}
     if attributes is not None:
-        attr = json.loads(attributes)
-        payload.update(attr)
+        payload.update(attributes)
     requests.post(post_url,
                   headers={
                       "Authorization": "Bearer " + config_ha_jg.TOKEN,
@@ -81,13 +80,14 @@ def post_service_to_ha(domain, entity, state, attributes=None):
                   )
 
 
-def get_entity(entity):
-    get_url = f"{config_ha_jg.HA_URL}/api/service/{entity}"
-    return dict(get_from_ha(get_url))
+def get_entity_items(entity):
+    get_url = f"{config_ha_jg.HA_URL}/api/states/{entity}"
+    var = dict(get_from_ha(get_url))
+    return var
 
 
 if __name__ == "__main__":
     #post_to_ha("asd", "lal aus module3")
-    #import pprint
+    import pprint
     #pprint.pprint(get_entity("light.desk_segment_2"))
-    post_service_to_ha("light", "light.desk_segment_2", "turn_on", '{"rgb_color":[100,0,200]}')
+    #post_service_to_ha("light", "light.desk_segment_2", "turn_on", '{"rgb_color":[100,0,200]}')
