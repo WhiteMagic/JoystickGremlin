@@ -20,6 +20,16 @@ COMMAND_LIST = ["00 - Set Default",
                 "43 - Set Slave-board LED 19 ", "44 - Set Slave-board LED 20 "
                 ]
 
+COLOR_DICT = {"Black": "000000",
+              "White_30": "404040", "White_60": "808080", "White_100": "FFFFFF",
+              "Red_30": "400000", "Red_60": "800000", "Red_100": "FF0000",
+              "Green_30": "004000", "Green_60": "008000", "Green_100": "00FF00",
+              "Blue_30": "000040", "Blue_60": "000080", "Blue_100": "0000FF",
+              "Yellow_30": "404000", "Yellow_60": "808000", "Yellow_100": "FFFF00",
+              "Cyan_30": "004040", "Cyan_60": "008080", "Cyan_100": "00FFFF",
+              "Magenta_30": "400040", "Magenta_60": "800080", "Magenta_100": "FF00FF"
+              }
+
 directory = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "vpc-led"))
 filepath = os.path.join(directory, "VPC_LED_Control.exe")
 

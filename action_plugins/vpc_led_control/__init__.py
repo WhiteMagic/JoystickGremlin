@@ -15,11 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-VPC Led Control is a modul to send Colour States from Joystick Gremlin to the Virpil Joystick LEDs.
-
-"""
-
 import os
 from xml.etree import ElementTree
 
@@ -61,12 +56,13 @@ class VPC_LedModeWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.group_box = QtWidgets.QGroupBox("Color")
         self.groupbox_layout = QtWidgets.QVBoxLayout(self.group_box)
         self.last_color = QtWidgets.QLabel()
-        self.groupbox_layout.addWidget(self.last_color)
-        self.color_button = QtWidgets.QPushButton("change Color")
-        self.color_button.clicked.connect(self._color_button_cb)
+        self.color_list = QtWidgets.QComboBox()
+        for color_name, hex_color in gremlin.vpc_led_controller.COLOR_DICT.items():
+            self.color_list.addItem(color_name)
+        self.color_list.activated.connect(self._color_list_change_cb)
 
-        #self.groupbox_layout.addWidget(self.color_button)
-        self.groupbox_layout.addWidget(self.color_button)
+        self.groupbox_layout.addWidget(self.color_list)
+        self.groupbox_layout.addWidget(self.last_color)
         self.main_layout.addWidget(self.device_list)
         self.main_layout.addWidget(self.command_list)
         self.main_layout.addWidget(self.group_box)
@@ -75,10 +71,9 @@ class VPC_LedModeWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.action_data.command = self.command_list.currentText()
         self.action_modified.emit()
 
-    def _color_button_cb(self):
-        self.button_press_dialog = QtWidgets.QColorDialog.getColor()
-        color_hex = str(self.button_press_dialog.name())
-        self.action_data.color = color_hex[1:]
+    def _color_list_change_cb(self):
+        self.action_data.color = gremlin.vpc_led_controller.COLOR_DICT.get(self.color_list.currentText())
+        self.color_name = self.color_list.currentText()
         self.action_modified.emit()
 
     def _device_list_changed_cb(self):
@@ -111,13 +106,19 @@ class VPC_LedModeWidget(gremlin.ui.input_item.AbstractActionWidget):
     def _populate_ui(self):
         command_id = self.command_list.findText(self.action_data.command)
         device_id = self.device_list.findText(self.action_data.device_name)
+        for k, v in gremlin.vpc_led_controller.COLOR_DICT.items():
+            if v == self.action_data.color:
+                color_id = self.color_list.findText(k)
+                self.color_list.setCurrentIndex(color_id)
+                break
         self.command_list.setCurrentIndex(command_id)
         self.device_list.setCurrentIndex(device_id)
-        self.last_color.setText(f"Current Color is: #{self.action_data.color}\n "
-                                f"'rgb': {self.hex2rgb(self.action_data.color)}")
+        self.last_color.setText(f"Current Color is: 'HexCode': #{self.action_data.color} "
+                                f"'rgb': {self.hex_to_rgb(self.action_data.color)}")
         self.last_color.setStyleSheet(f'color: #{self.action_data.color}')
 
-    def hex2rgb(self, color):
+    @staticmethod
+    def hex_to_rgb(color):
         if len(color) == 0:
             color = "000000"
         rgb = list(int(color[i:i + 2], 16) for i in (0, 2, 4))
