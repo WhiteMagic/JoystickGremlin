@@ -1,0 +1,12 @@
+*.sw[op]
+*.pyc
+*.wxs
+
+.idea
+__pycache__
+
+/build
+/doc
+/dist
+/releases
+/venv

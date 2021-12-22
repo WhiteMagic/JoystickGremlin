@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Gremlin</class>
+ <widget class="QMainWindow" name="Gremlin">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Joystick Gremlin</string>
+  </property>
+  <widget class="QWidget" name="main">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QTabWidget" name="devices">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Tab 1</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Tab 2</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <widget class="QMenu" name="menuRecent">
+     <property name="title">
+      <string>Recent</string>
+     </property>
+     <addaction name="actionEmpty"/>
+    </widget>
+    <addaction name="actionNewProfile"/>
+    <addaction name="actionLoadProfile"/>
+    <addaction name="menuRecent"/>
+    <addaction name="actionSaveProfile"/>
+    <addaction name="actionSaveProfileAs"/>
+    <addaction name="separator"/>
+    <addaction name="actionModifyProfile"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <addaction name="actionManageModes"/>
+    <addaction name="actionInputRepeater"/>
+    <addaction name="actionDeviceInformation"/>
+    <addaction name="actionCalibration"/>
+    <addaction name="actionInputViewer"/>
+    <addaction name="separator"/>
+    <addaction name="actionPDFCheatsheet"/>
+    <addaction name="separator"/>
+    <addaction name="actionOptions"/>
+    <addaction name="actionLogDisplay"/>
+   </widget>
+   <widget class="QMenu" name="menu_Help">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuActions">
+    <property name="title">
+     <string>&amp;Actions</string>
+    </property>
+    <addaction name="actionCreate1to1Mapping"/>
+    <addaction name="actionMergeAxis"/>
+    <addaction name="actionSwapDevices"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuActions"/>
+   <addaction name="menuTools"/>
+   <addaction name="menu_Help"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionOpen"/>
+   <addaction name="actionActivate"/>
+  </widget>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </action>
+  <action name="actionLoadProfile">
+   <property name="text">
+    <string>&amp;Load Profile</string>
+   </property>
+  </action>
+  <action name="actionActivate">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Activate</string>
+   </property>
+  </action>
+  <action name="actionNewProfile">
+   <property name="text">
+    <string>&amp;New Profile</string>
+   </property>
+  </action>
+  <action name="actionSaveProfile">
+   <property name="text">
+    <string>&amp;Save Profile</string>
+   </property>
+  </action>
+  <action name="actionSaveProfileAs">
+   <property name="text">
+    <string>&amp;Save Profile As</string>
+   </property>
+  </action>
+  <action name="actionGenerate">
+   <property name="text">
+    <string>Generate</string>
+   </property>
+  </action>
+  <action name="actionDeviceInformation">
+   <property name="text">
+    <string>Device Information</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionManageCustomModules">
+   <property name="text">
+    <string>&amp;Manage Custom Modules</string>
+   </property>
+  </action>
+  <action name="actionInputRepeater">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Input Repeater</string>
+   </property>
+  </action>
+  <action name="actionCalibration">
+   <property name="text">
+    <string>&amp;Calibration</string>
+   </property>
+  </action>
+  <action name="actionManageModes">
+   <property name="text">
+    <string>Manage Modes</string>
+   </property>
+  </action>
+  <action name="actionHTMLCheatsheet">
+   <property name="text">
+    <string>HTML Cheatsheet</string>
+   </property>
+  </action>
+  <action name="actionPDFCheatsheet">
+   <property name="text">
+    <string>PDF Cheatsheet</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>E&amp;xit</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>&amp;Options</string>
+   </property>
+  </action>
+  <action name="actionCreate1to1Mapping">
+   <property name="text">
+    <string>Create 1:1 mapping</string>
+   </property>
+  </action>
+  <action name="actionLogDisplay">
+   <property name="text">
+    <string>&amp;Log display</string>
+   </property>
+  </action>
+  <action name="actionMergeAxis">
+   <property name="text">
+    <string>&amp;Merge Axis</string>
+   </property>
+  </action>
+  <action name="actionModifyProfile">
+   <property name="text">
+    <string>Modify Profile</string>
+   </property>
+  </action>
+  <action name="actionRecent">
+   <property name="text">
+    <string>&amp;Recent</string>
+   </property>
+  </action>
+  <action name="actionEmpty">
+   <property name="text">
+    <string>Empty</string>
+   </property>
+  </action>
+  <action name="actionSwapDevices">
+   <property name="text">
+    <string>Swap Devices</string>
+   </property>
+  </action>
+  <action name="actionInputViewer">
+   <property name="text">
+    <string>Input Viewer</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

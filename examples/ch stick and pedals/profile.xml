@@ -1,0 +1,105 @@
+<?xml version="1.0" ?>
+<devices version="1">
+    <device id="0" name="keyboard" windows_id="0">
+        <mode name="Global">
+            <key extended="False" id="56">
+                <switch-mode name="roll" on-press="True" on-release="False"/>
+                <switch-mode name="Global" on-press="False" on-release="True"/>
+            </key>
+        </mode>
+        <mode name="roll"/>
+    </device>
+    <device id="2382820288" windows_id="2" name="CH Fighterstick USB">
+        <mode name="Global">
+            <hat id="1">
+                <remap hat="1" vjoy="1"/>
+            </hat>
+            <button id="1">
+                <remap button="1" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="2">
+                <remap button="2" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="3">
+                <remap button="3" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="4">
+                <remap button="4" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="5">
+                <remap button="5" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="6">
+                <remap button="6" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="7">
+                <remap button="7" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="8">
+                <remap button="8" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="9">
+                <remap button="9" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="10">
+                <remap button="10" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="11">
+                <remap button="11" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="12">
+                <remap button="12" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="13">
+                <remap button="13" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="14">
+                <remap button="14" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="15">
+                <remap button="15" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <button id="16">
+                <remap button="16" on-press="True" on-release="True" vjoy="1"/>
+            </button>
+            <axis id="1"/>
+            <axis id="2"/>
+            <axis id="3"/>
+        </mode>
+        <mode name="roll">
+            <hat id="1"/>
+            <button id="1"/>
+            <button id="2"/>
+            <button id="3"/>
+            <button id="4"/>
+            <button id="5"/>
+            <button id="6"/>
+            <button id="7"/>
+            <button id="8"/>
+            <button id="9"/>
+            <button id="10"/>
+            <button id="11"/>
+            <button id="12"/>
+            <button id="13"/>
+            <button id="14"/>
+            <button id="15"/>
+            <button id="16"/>
+            <axis id="1"/>
+            <axis id="2"/>
+            <axis id="3"/>
+        </mode>
+    </device>
+    <device id="2382820032" windows_id="1" name="CH Pro Pedals USB">
+        <mode name="Global">
+            <axis id="1"/>
+            <axis id="2"/>
+            <axis id="3">
+                <remap axis="4" vjoy="1"/>
+            </axis>
+        </mode>
+        <mode name="roll"/>
+    </device>
+    <import>
+        <module name="sc"/>
+    </import>
+</devices>
