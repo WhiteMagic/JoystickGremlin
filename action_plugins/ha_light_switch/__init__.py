@@ -186,32 +186,28 @@ class HALightSwitchFunctor(AbstractFunctor):
         self.text = action.text
         self.brightness = action.brightness
         self.effect = action.effect
-
-    def process_event(self, event, value):
+    
+     def process_event(self, event, value):
         # todo attr zusammenbauen
         if "light" in self.entity_name:
             domain = "light"
+            if isinstance(self.color, str):
+                rgb_list = self.color.lstrip("(").rstrip(")").split(",")[:3]
+            else:
+                rgb_list = self.color[:3]
+
+            rgb = list(map(int, rgb_list))
+            light_attributes = {"rgb_color": rgb, "effect": self.effect, "brightness": self.brightness}
+            if len(self.text) != 0:
+                light_attributes.update(json.loads(self.text))
         else:
             domain = "homeassistent"
+            if len(self.text) != 0:
+                light_attributes = json.loads(self.text)
+            else:
+                light_attributes = None
             print("Error Domain not set")
-        if isinstance(self.color, str):
-            rgb_list = self.color.lstrip("(").rstrip(")").split(",")[:3]
-
-        else:
-            rgb_list = self.color[:3]
-
-        rgb = list(map(int, rgb_list))
-        print(rgb)
-        light_attributes = {"rgb_color": rgb, "effect": self.effect, "brightness": self.brightness}
-        if len(self.text) != 0:
-            light_attributes.update(json.loads(self.text))
-        print(f"type: {type(light_attributes)}\n {light_attributes}")
         post_service_to_ha(domain, self.entity_name, self.command, attributes=light_attributes)
-        # print(f"domain: {domain}, Ent: {self.entity_name}, cmd: {self.command}\n"
-        #       f"color: {self.color} \n"
-        #       f"bright: {self.brightness} effect: {self.effect}\n"
-        #       f"zusatz atrr: {self.text}\n"
-        #       f"light_attr: {light_attributes}")
         return True
 
 
