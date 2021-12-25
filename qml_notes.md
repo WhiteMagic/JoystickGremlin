@@ -1,6 +1,6 @@
 # QML Notes
 
-This contains a collection of good to know things when working with QML and Python.
+This contains a collection of good to know things when working with QML and Python. Before anything else you should read this book in its entirety [Qt6 QML Book](https://www.qt.io/product/qt6/qml-book).
 
 ## Property Binding
 
@@ -10,26 +10,26 @@ One of the nice properties of QML is that it has property binding, i.e. it can b
 from PySide6 import QtCore, QtQML
 
 class DemoModel(QtCore.QObject):
-    
+
     variableChanged = QtCore.Signal()
-    
+
     def __init__(self, parent=None)
-    	super().__init__(parent)
-        
+        super().__init__(parent)
+
         self._variable = "Test"
 
     def _get_variable(self) -> str:
         return self._variable
-    
+
     def _set_variable(self, value: str) -> None:
         if value == self._variable:
             return
-        
+
         self._variable = value
         self.variableChanged.emit()
-    
+
     variable = QtCore.Property(
-    	str,
+        str,
         fget=_get_variable,
         fset=_set_variable,
         notify=variableChanged
@@ -40,15 +40,15 @@ The above skeleton exposes the `variable` member to QML and will notify the QML 
 
 ```{qml}
 Item {
-	property DemoModel model
+    property DemoModel model
 
-	TextField {
-		text: model.variable
-		
-		onTextChanged: {
-			model.variable = text
-		}
-	}
+    TextField {
+        text: model.variable
+
+        onTextChanged: {
+            model.variable = text
+        }
+    }
 }
 ```
 
@@ -64,13 +64,13 @@ import random
 from PySide6 import QtCore
 
 class Backend(QtCore):
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
-   	
+
     @QtCore.Slot(int, int, result=int)
     def randomInt(self, min_val: int, max_val: int) -> int:
-		return random.randint(min_val, max_val)
+        return random.randint(min_val, max_val)
 ```
 
 This allows the method to be called from within any QML file which has access to the an instance of the `Backend` class.
@@ -84,31 +84,31 @@ from typing import Any, Dict
 from PySide6 import QtCore, QtQML
 
 class ColorModel(QtCore.QAbstractListModel):
-    
+
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
         QtCore.Qt.UserRole + 2: QtCore.QByteArray("rgb".encode()),
     }
-    
+
     def __init__(self, parent: None):
         super().__init__(parent)
-        
+
         self._colors = []
-    
+
     def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
         return len(self._colors)
-    
+
     def data(self, index: QtCore.QModelIndex, role: int=...) -> Any:
-		if role not in ColorModel.roles:
-			raise("Invalid role specified")
-        
+        if role not in ColorModel.roles:
+            raise("Invalid role specified")
+
         role_name = SimpleModel.roles[role].data().decode()
         if role_name == "name":
             return self._colors[index.row].name
-       	elif role_name == "rgb":
+           elif role_name == "rgb":
             return self._colors[index.row].rgb
 
-	def roleNames(self) -> Dict:
+    def roleNames(self) -> Dict:
         return ColorModel.roles
 ```
 
@@ -134,9 +134,9 @@ ListView {
 }
 
 Component {
-	id: idDelegate
-	
-	...
+    id: idDelegate
+
+    ...
 }
 ```
 
@@ -172,14 +172,14 @@ Drag.active: idDragArea.drag.active
 Drag.supportedActions: Qt.MoveAction
 Drag.proposedAction: Qt.MoveAction
 Drag.mimeData: {
-	"text/plain": model.id
+    "text/plain": model.id
 }
 
 Drag.onDragFinished: {
-	idBaseItem.dragSuccess = dropAction == Qt.MoveAction;
+    idBaseItem.dragSuccess = dropAction == Qt.MoveAction;
 }
 Drag.onDragStarted: {
-	idBaseItem.sourceY = idBaseItem.y
+    idBaseItem.sourceY = idBaseItem.y
 }
 ```
 
@@ -187,7 +187,7 @@ Drag.onDragStarted: {
 
 ```
 MouseArea {
-	id: idDragArea
+    id: idDragArea
 
     drag.target: idBaseItem
     drag.axis: Drag.YAxis
@@ -195,13 +195,13 @@ MouseArea {
     onReleased: {
         if(!idBaseItem.dragSuccess)
         {
-	        // Reset item position
+            // Reset item position
         }
     }
 
     // Create an image of the object to visualize the dragging
     onPressed: idBaseItem.grabToImage(function(result) {
-    	idBaseItem.Drag.imageSource = result.url
+        idBaseItem.Drag.imageSource = result.url
     })
 }
 ```
@@ -223,20 +223,20 @@ DropArea {
         anchors.right: parent.right
         anchors.top: parent.verticalCenter
 
-	    height: 5
+        height: 5
 
         opacity: idDropArea.containsDrag ? 1.0 : 0.0
         color: "red"
     }
 
     onDropped: {
-    	// Signal that the drop was successful
+        // Signal that the drop was successful
         drop.accept();
-    
-    	// Handle model change
-    	if(drop.text != model.id)
+
+        // Handle model change
+        if(drop.text != model.id)
         {
-	        idListView.model.moveAfter(drop.text, model.id);
+            idListView.model.moveAfter(drop.text, model.id);
         }
     }
 }
@@ -251,14 +251,14 @@ Icons on buttons and the like by default will be rendered black and white. This 
 ```qml
 // This results in the icon being shown using the colors defined in the image file
 Button {
-	icon.source: "path/to/icon.png"
-	icon.color: "transparent"
+    icon.source: "path/to/icon.png"
+    icon.color: "transparent"
 }
 
 // This results in the icon being shown in red
 Button {
-	icon.source: "path/to/icon.png"
-	icon.color: "red"
+    icon.source: "path/to/icon.png"
+    icon.color: "red"
 }
 ```
 
@@ -289,8 +289,8 @@ Item {
             text: "Description"
         }
         Label {
-        	Layout.fillWidth: true
-        	text: "Using the remaining space"
+            Layout.fillWidth: true
+            text: "Using the remaining space"
         }
     }
 }
@@ -304,3 +304,6 @@ The `pyside6-rcc` programs converts the contents of a QRC file into a python mod
 
 ```.\venv\Scripts\pyside6-rcc.exe .\resources.qrc -o .\resources.py```
 
+```
+
+```
