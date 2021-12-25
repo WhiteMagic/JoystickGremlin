@@ -77,14 +77,6 @@ class VJoyError(GremlinError):
         super().__init__(value)
 
 
-class HidGuardianError(GremlinError):
-
-    """Exception raised when an error related to HidGuardian."""
-
-    def __init__(self, value):
-        super().__init__(value)
-
-
 class PluginError(GremlinError):
 
     """Exception raised when an error occurs withing a user plugin."""

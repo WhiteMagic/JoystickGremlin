@@ -154,10 +154,6 @@ if __name__ == "__main__":
         "software"
     )
 
-    # Initialize HidGuardian before we let SDL grab joystick data
-    # hg = gremlin.hid_guardian.HidGuardian()
-    # hg.add_process(os.getpid())
-
     # Create user interface
     app_id = u"joystick.gremlin"
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
@@ -336,8 +332,6 @@ if __name__ == "__main__":
 
     # Relinquish control over all VJoy devices used
     gremlin.joystick_handling.VJoyProxy.reset()
-
-    # hg.remove_process(os.getpid())
 
     syslog.info("Terminating Gremlin")
     sys.exit(0)
