@@ -180,7 +180,8 @@ Item {
             color: Universal.accent
         }
 
-        onDropped: {
+        onDropped: function(drop) 
+        {
             if(drop.text != _root.action.id)
             {
                 drop.accept();
@@ -208,7 +209,8 @@ Item {
             color: Universal.accent
         }
 
-        onDropped: {
+        onDropped: function(drop)
+        {
             if(drop.text != _root.action.id)
             {
                 drop.accept();
