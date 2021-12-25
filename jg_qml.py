@@ -50,6 +50,8 @@ os.environ["QT_QUICK_CONTROLS_UNIVERSAL_THEME"] = "Light"
 
 import gremlin.error
 import gremlin.plugin_manager
+import gremlin.types
+import gremlin.signal
 import gremlin.util
 
 import gremlin.ui.backend
@@ -182,6 +184,7 @@ if __name__ == "__main__":
     # Create backend instance
     backend = gremlin.ui.backend.Backend()
     engine.rootContext().setContextProperty("backend", backend)
+    engine.rootContext().setContextProperty("signal", gremlin.signal.signal)
 
     # Load a profile
     #backend.loadProfile("layout.xml")
