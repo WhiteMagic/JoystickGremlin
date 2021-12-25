@@ -2,3 +2,4 @@ PySide6
 reportlab
 PyInstaller
 pywin32
+pytest
