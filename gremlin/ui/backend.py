@@ -38,7 +38,6 @@ from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, InputItemModel
 
 
-
 @common.SingletonDecorator
 class Backend(QtCore.QObject):
 
@@ -49,6 +48,7 @@ class Backend(QtCore.QObject):
     lastErrorChanged = Signal()
     inputConfigurationChanged = Signal()
     activityChanged = Signal()
+
 
     def __init__(self, parent=None):
         super().__init__(parent)

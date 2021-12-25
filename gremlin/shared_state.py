@@ -44,11 +44,12 @@ def suspend_input_highlighting():
     return _suspend_input_highlighting
 
 
-def set_suspend_input_highlighting(value):
+def set_suspend_input_highlighting(value: bool) -> None:
     """Sets the input highlighting behavior.
 
-    :param value if True disables automatic selection of used inputs, if False
-        inputs will automatically be selected upon use
+    Args:
+        value: if True disables automatic selection of used inputs, if False
+            inputs will automatically be selected upon use
     """
     global _suspend_input_highlighting, _suspend_timer
     if _suspend_timer is not None:

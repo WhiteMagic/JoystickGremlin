@@ -29,8 +29,6 @@ import traceback
 
 
 # Import QtMultimedia so pyinstaller doesn't miss it
-#import PyQt5
-#from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 from PySide6 import QtCore, QtGui, QtQml, QtQuick
 
 import resources
@@ -162,9 +160,9 @@ if __name__ == "__main__":
     app.setApplicationDisplayName("Joystick Gremlin")
 
     # Configure QSettings to keep QT happy
-    app.setOrganizationName("H2IK");
-    app.setOrganizationDomain("http://whitemagic.github.io/JoystickGremlin/");
-    app.setApplicationName("Joystick Gremlin");
+    app.setOrganizationName("H2IK")
+    app.setOrganizationDomain("http://whitemagic.github.io/JoystickGremlin/")
+    app.setApplicationName("Joystick Gremlin")
 
     # Ensure joystick devices are correctly setup
     dill.DILL.init()
@@ -176,7 +174,10 @@ if __name__ == "__main__":
         gremlin.util.resource_path("action_plugins/")
     )
 
-    # Register data types for use in QML
+
+    # +-------------------------------------------------------------------------
+    # | Register data types for use in QML
+    # +-------------------------------------------------------------------------
 
     # Device related
     QtQml.qmlRegisterType(
@@ -318,7 +319,7 @@ if __name__ == "__main__":
 
     # Run UI
     syslog.info("Gremlin UI launching")
-    app.exec_()
+    app.exec()
     syslog.info("Gremlin UI terminated")
 
     # Terminate potentially running EventListener loop

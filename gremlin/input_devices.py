@@ -690,12 +690,15 @@ class JoystickInputSignificant:
         self._mre_registry = {}
         self._time_registry = {}
 
-    def should_process(self, event):
+    def should_process(self, event: event_handler.Event) -> bool:
         """Returns whether or not a particular event is significant enough to
         process.
 
-        :param event the event to check for significance
-        :return True if it should be processed, False otherwise
+        Args:
+            event: the event to check for significance
+        
+        Returns:
+            True if the event should be processed, False otherwise
         """
         self._mre_registry[event] = event
 
@@ -711,24 +714,31 @@ class JoystickInputSignificant:
             )
             return False
 
-    def last_event(self, event):
+    def last_event(self, event: event_handler.Event) -> event_handler.Event:
         """Returns the most recent event of this type.
 
-        :param event the type of event for which to return the most recent one
+        Args:
+            event: the type of event for which to return the most recent one
+        
+        Returns:
+            Latest event instance corresponding to the specified event
         """
         return self._mre_registry[event]
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets the detector to a clean state for subsequent uses."""
         self._event_registry = {}
         self._mre_registry = {}
         self._time_registry = {}
 
-    def _process_axis(self, event):
+    def _process_axis(self, event: event_handler.Event) -> bool:
         """Process an axis event.
 
-        :param event the axis event to process
-        :return True if it should be processed, False otherwise
+        Args:
+            event: the axis event to process
+        
+        Returns:
+            True if it should be processed, False otherwise
         """
         if event in self._event_registry:
             # Reset everything if we have no recent data
@@ -750,19 +760,25 @@ class JoystickInputSignificant:
             self._time_registry[event] = time.time()
             return False
 
-    def _process_button(self, event):
+    def _process_button(self, event: event_handler.Event) -> bool:
         """Process a button event.
 
-        :param event the button event to process
-        :return True if it should be processed, False otherwise
+        Args:
+            event: the button event to process
+        
+        Returns:
+            True if it should be processed, False otherwise
         """
         return True
 
-    def _process_hat(self, event):
+    def _process_hat(self, event: event_handler.Event) -> bool:
         """Process a hat event.
 
-        :param event the hat event to process
-        :return True if it should be processed, False otherwise
+        Args:
+            event: the hat event to process
+        
+        Returns:
+            True if it should be processed, False otherwise
         """
         return event.value != (0, 0)
 
