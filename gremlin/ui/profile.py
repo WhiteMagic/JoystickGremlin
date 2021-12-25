@@ -21,7 +21,7 @@ import typing
 from typing import List, TYPE_CHECKING
 import uuid
 
-from PySide6 import QtCore
+from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import error, plugin_manager, profile, tree, util
@@ -34,10 +34,15 @@ if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionModel
 
 
+QML_IMPORT_NAME = "gremlin.ui.profile"
+QML_IMPORT_MAJOR_VERSION = 1
+
+
 # Hierarchy of the item related classed:
 # InputItemModel -> LibraryItemListModel -> ActionTree
 
 
+@QtQml.QmlElement
 class InputItemModel(QtCore.QObject):
 
     """QML model class representing a LibraryItem instance."""
@@ -55,6 +60,7 @@ class InputItemModel(QtCore.QObject):
         )
 
 
+@QtQml.QmlElement
 class InputItemBindingListModel(QtCore.QAbstractListModel):
 
     """List model of all InputItemBinding instances of a single input item."""
@@ -83,6 +89,7 @@ class InputItemBindingListModel(QtCore.QAbstractListModel):
         return InputItemBindingListModel.roles
 
 
+@QtQml.QmlElement
 class VirtualButtonModel(QtCore.QObject):
 
     """Represents both axis and hat virtual buttons."""
@@ -205,6 +212,7 @@ class VirtualButtonModel(QtCore.QObject):
     )
 
 
+@QtQml.QmlElement
 class ActionNodeModel(QtCore.QObject):
 
     """QML model representing a single action instance."""
@@ -400,6 +408,7 @@ class ActionNodeModel(QtCore.QObject):
         return nodes[0]
 
 
+@QtQml.QmlElement
 class InputItemBindingModel(QtCore.QObject):
 
     """Model representing an ActionTree instance."""

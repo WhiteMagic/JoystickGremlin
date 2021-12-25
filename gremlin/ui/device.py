@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import typing
 
-from PySide6 import QtCore
+from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 import dill
@@ -34,7 +34,11 @@ from gremlin.util import parse_guid
 from gremlin.ui import backend
 
 
+QML_IMPORT_NAME = "gremlin.ui.device"
+QML_IMPORT_MAJOR_VERSION = 1
 
+
+@QtQml.QmlElement
 class InputIdentifier(QtCore.QObject):
 
     """Stores the identifier of a single input item."""
@@ -47,6 +51,7 @@ class InputIdentifier(QtCore.QObject):
         self.input_id = None
 
 
+@QtQml.QmlElement
 class DeviceListModel(QtCore.QAbstractListModel):
 
     """Model containing absic information about all connected devices."""
@@ -120,6 +125,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
         return str(self._devices[index].device_guid)
 
 
+@QtQml.QmlElement
 class Device(QtCore.QAbstractListModel):
 
     """Model providing access to information about a single device."""
@@ -233,6 +239,7 @@ class Device(QtCore.QAbstractListModel):
     )
 
 
+@QtQml.QmlElement
 class VJoyDevices(QtCore.QObject):
 
     """vJoy model used together with the VJoySelector QML.
