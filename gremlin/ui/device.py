@@ -34,7 +34,7 @@ from gremlin.util import parse_guid
 from gremlin.ui import backend
 
 
-QML_IMPORT_NAME = "gremlin.ui.device"
+QML_IMPORT_NAME = "Gremlin.Device"
 QML_IMPORT_MAJOR_VERSION = 1
 
 

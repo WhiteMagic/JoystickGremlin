@@ -22,8 +22,8 @@ import QtQuick.Window
 
 import QtQuick.Controls.Universal
 
-import gremlin.ui.profile
-import gremlin.action_plugins
+import Gremlin.ActionPlugins
+import Gremlin.Profile
 
 
 Item {

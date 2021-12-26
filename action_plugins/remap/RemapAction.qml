@@ -20,8 +20,8 @@ import QtQuick.Controls
 import QtQuick.Controls.Universal
 import QtQuick.Layouts
 
-import gremlin.ui.profile
-import gremlin.action_plugins
+import Gremlin.Profile
+import Gremlin.ActionPlugins
 import "../../qml"
 
 

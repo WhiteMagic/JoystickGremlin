@@ -23,7 +23,7 @@ import QtQuick.Window
 
 import QtQuick.Controls.Universal
 
-import gremlin.ui.device
+import Gremlin.Device
 
 
 // Visualizes the inputs and information about their associated actions

@@ -23,8 +23,8 @@ import QtQuick.Window
 
 import QtQuick.Controls.Universal
 
-import gremlin.ui.device
-import gremlin.ui.profile
+import Gremlin.Device
+import Gremlin.Profile
 
 
 // ListView item customized to render DeviceListModel instances as a set

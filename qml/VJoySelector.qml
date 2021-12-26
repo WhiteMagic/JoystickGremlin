@@ -19,7 +19,7 @@
 import QtQuick
 import QtQuick.Controls
 
-import gremlin.ui.device
+import Gremlin.Device
 
 
 Item {

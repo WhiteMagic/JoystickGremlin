@@ -21,7 +21,7 @@ import QtQuick.Controls
 import QtQuick.Window 
 import Qt.labs.platform as Dialogs
 
-import gremlin.ui.device
+import Gremlin.Device
 
 import "helpers.js" as Helpers
 

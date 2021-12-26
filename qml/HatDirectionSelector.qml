@@ -19,7 +19,7 @@
 import QtQuick
 import QtQuick.Controls
 
-import gremlin.ui.profile
+import Gremlin.Profile
 
 
 Item {

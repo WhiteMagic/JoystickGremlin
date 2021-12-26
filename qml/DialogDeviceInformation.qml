@@ -23,7 +23,7 @@ import QtQuick.Window
 
 import QtQuick.Controls.Universal
 
-import gremlin.ui.device
+import Gremlin.Device
 
 
 Window {

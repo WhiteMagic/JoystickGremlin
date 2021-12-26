@@ -23,8 +23,8 @@ import QtQuick.Window
 
 import QtQuick.Controls.Universal
 
-import gremlin.ui.profile
-import gremlin.ui.device
+import Gremlin.Device
+import Gremlin.Profile
 
 
 Item {

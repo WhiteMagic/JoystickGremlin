@@ -24,7 +24,7 @@ import QtQml.Models
 
 import QtQuick.Controls.Universal
 
-import gremlin.ui.profile
+import Gremlin.Profile
 
 
 Item {

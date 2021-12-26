@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionModel
 
 
-QML_IMPORT_NAME = "gremlin.ui.profile"
+QML_IMPORT_NAME = "Gremlin.Profile"
 QML_IMPORT_MAJOR_VERSION = 1
 
 

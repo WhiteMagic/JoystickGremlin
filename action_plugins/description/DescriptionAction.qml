@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -22,8 +23,8 @@ import QtQuick.Window
 
 import QtQuick.Controls.Universal
 
-import gremlin.ui.profile
-import gremlin.action_plugins
+import Gremlin.Profile
+import Gremlin.ActionPlugins
 import "../../qml"
 
 
