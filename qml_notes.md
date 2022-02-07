@@ -6,7 +6,7 @@ This contains a collection of good to know things when working with QML and Pyth
 
 One of the nice properties of QML is that it has property binding, i.e. it can be directly fed with values from any `QtObject` based instance if it exposes its values properly. This can be achieved through the following:
 
-```{python}
+```python
 from PySide6 import QtCore, QtQML
 
 class DemoModel(QtCore.QObject):
@@ -38,7 +38,7 @@ class DemoModel(QtCore.QObject):
 
 The above skeleton exposes the `variable` member to QML and will notify the QML side when the value of `variable` is changed. However, if the QML content representing the value of `variable` changes this is not sent back to the Python side. Apparently this two way communication is not support by QML and given this was the case back in 2010 it does not seem likely to ever be added. In order to support such a two way synchronization the QML side needs to actively updated the Python side.
 
-```{qml}
+```qml
 Item {
     property DemoModel model
 
@@ -58,7 +58,7 @@ The above QML snippet populates the textfield with the value of the `variable` f
 
 It is possible to call Python functions which return a value from QML as long as these are defined as `Slot` in a `QtCore` derived class. The `gremlin.ui.backend` class is a good example of a class making use of this.
 
-```{python}
+```python
 import random
 
 from PySide6 import QtCore
@@ -79,7 +79,7 @@ This allows the method to be called from within any QML file which has access to
 
 Accessing data from a Python model via custom names is the more convenient then having to deal with possibly changing indices. This is readily supported by QML by specifying additional model roles in the Python model being visualized via QML.
 
-```{python}
+```python
 from typing import Any, Dict
 from PySide6 import QtCore, QtQML
 
@@ -118,7 +118,7 @@ The above example specifies a simple class which holds colors. To permit QML to 
 
 Frequently models will contain a list of identical items that need to be visualized. As these items might be taking up more space then the ListView component has in the UI it is capable of scrolling. To turn the ListView into a container that has a scroll bar and behaves properly, i.e. like a desktop application and not a phone app the following setup is recommended.
 
-```{qml}
+```qml
 ListView {
     id: idListView
     anchors.fill: parent
@@ -144,7 +144,7 @@ Component {
 
 At times it is useful to return a simple list of strings to be displayed by a QML view or repeater. Providing the model via property causes some issues as QML is not happy with the actual data types exposed by PySide6. As such to specify the correct type of `QVariantList` the type information has to be provided as a string.
 
-```{python}
+```python
 from PySide6 import QtCore
 
 @QtCore.Property(type="QVariantList")
@@ -166,7 +166,7 @@ The behavior of the drag & drop system changes drastically based on the `Drag.dr
 
 **Item Drag values**
 
-```
+```qml
 Drag.dragType: Drag.automatic
 Drag.active: idDragArea.drag.active
 Drag.supportedActions: Qt.MoveAction
@@ -185,7 +185,7 @@ Drag.onDragStarted: {
 
 **Drag handle**
 
-```
+```qml
 MouseArea {
     id: idDragArea
 
@@ -208,7 +208,7 @@ MouseArea {
 
 **Drop Area**
 
-```
+```qml
 DropArea {
     id: idDropArea
 
@@ -270,7 +270,7 @@ Returning a QML object instance from Python to QML code will in most cases fail 
 
 To make new plugins render properly in the UI the following template should be followed. If this is not done there is a good chance that the plugin will not use all available space or be drawn across other elements.
 
-```
+```qml
 import QtQuick 2.14
 import QtQuick.Controls 2.14
 import QtQuick.Layouts 1.14
