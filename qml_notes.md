@@ -307,3 +307,53 @@ The `pyside6-rcc` programs converts the contents of a QRC file into a python mod
 ```
 
 ```
+
+## Signal Inheritance
+
+Dealing with signals in an inheritance hierarchy is somewhat annoying, as defining a property in a derived class using a signal defined in a parent doesn't work. As such, signals and properties have to be defined in the same class. To make matters worse the definition of the property binds the setter and getter function of the class in which the property is defined, making it impossible to redirect to a derived class' implementation. A solution around this is to have the actual setter/getter implementation be relegated to an implementation method which can be overriden in a derived class.
+
+```python
+from PySide6 import QtCore
+from PySide6.QtCore import Signal, Property
+
+
+class Base(QtCore.QObject):
+
+    updated = Signal()
+
+    def __init__(self):
+        super().__init__()
+
+        self._value = ""
+    def _get_value(self) -> str:
+        return self._get_value_impl()
+
+    def _get_value_impl(self) -> str:
+        return self._value
+
+    def _set_value(self, new_value: str) -> None:
+        self._set_value_impl(new_value)
+
+    def _set_value_impl(self, new_value: str) -> None:
+        if self._value != new_value:
+            self._value = new_value
+            self.updated.emit()
+
+    value = Property(
+        str,
+        _get_value,
+        _set_value,
+        notify=updated
+    )
+
+
+class Derived(Base):
+
+    def __init__(self):
+        super().__init__()
+
+    def _get_value_impl(self) -> str:
+        return self.value.capitalize()
+```
+
+This scheme allows redefining the behvaiour by reimplementing the implementation method where desired.
