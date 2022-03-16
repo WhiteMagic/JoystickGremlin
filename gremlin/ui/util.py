@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2021 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +17,10 @@
 
 
 from __future__ import annotations
+from ast import In
 
 from collections.abc import Callable
+from multiprocessing import Event
 import threading
 from typing import List, Optional
 
@@ -36,61 +38,33 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 @QtQml.QmlElement
-class RandomStuff(QtCore.QObject):
-
-    def __init__(self, parent=None):
-        super.__init__(parent)
-        print("blabla")
-
-
-@QtQml.QmlElement
 class InputListenerModel(QtCore.QObject):
 
     """Allows recording user inputs with an on-screen prompt."""
 
     # Signal emitted when the listening for inputs is done to let the UI
-    # know the overlay can be removed
-    listeningTerminated = Signal()
-
-    inputChanged = Signal(str)
+    # know the overlay can be removed and emits the recorded inputs
+    listeningTerminated = Signal(list)
+    # Signal emitted when the listener is activated or deactivated
+    enabledChanged = Signal(bool)
+    # Signal emitted when the accepted InputTypes change
     eventTypesChanged = Signal()
+    # Signal emitted when multiple inputs are accepted or ignored
+    multipleInputsChanged = Signal(bool)
 
-    # def __init__(
-    #         self,
-    #         callback: Callable[..., None],
-    #         event_types: List[InputType],
-    #         return_kb_event: bool=False,
-    #         multi_keys: bool=False,
-    #         filter_func: Optional[Callable[[event_handler.Event], bool]]=None,
-    #         parent: Optional[QtCore.QObject]=None
-    # ):
-    #     """Creates a new instance.
-
-    #     Args:
-    #         callback: the function to pass the user input to for processing
-    #         event_types: the type of events to react to
-    #         return_kb_event: return the keyboard event if True, otherwise the
-    #             key information itself is returned
-    #         multi_keys: return multiple inputs if True, otherwise only
-    #             the first input is returned
-    #         filter_func: function applied to input events to perform more
-    #             complex input event filtering
-    #         parent: the parent widget of this widget
-    #     """
     def __init__(self, parent: Optional[QtCore.QObject]=None):
         super().__init__(parent)
- 
-        self.callback = None
+
+        # List of InputTypes that will be listened to
         self._event_types = []
-        self._return_kb_event = None
-        self._multi_keys = False
-        self.filter_func = None
-
-        #self._abort_timer = threading.Timer(1.0, self.close)
-        self._multi_key_storage = []
-
-        # Disable ui input selection on joystick input
-        shared_state.set_suspend_input_highlighting(True)
+        # If True more than the first input will be returned
+        self._multiple_inputs = False
+        # Timer terminating the listening process in various scenarios
+        self._abort_timer = threading.Timer(1.0, self._stop_listening)
+        # Received inputs
+        self._inputs = []
+        # Flag indicating whether the listener is active or not
+        self._is_enabled = False
 
     def _get_event_types(self) -> List[str]:
         return [InputType.to_string(v) for v in self._event_types]
@@ -99,13 +73,32 @@ class InputListenerModel(QtCore.QObject):
         types = sorted([InputType.to_enum(v) for v in event_types])
         if types != self._event_types:
             self._event_types = types
-            self._disconnect_listeners()
-            self._connect_listeners()
-
             self.eventTypesChanged.emit()
 
-    def _get_current_input(self) -> str:
-        return f"Nothing"
+    def _get_current_inputs(self) -> List[str]:
+        return self._inputs
+
+    def _get_is_enabled(self) -> bool:
+        return self._is_enabled
+
+    def _set_is_enabled(self, is_enabled: bool) -> None:
+        if is_enabled != self._is_enabled:
+            self._is_enabled = is_enabled
+            shared_state.set_suspend_input_highlighting(self._is_enabled)
+            if self._is_enabled:
+                self._inputs = []
+                self._connect_listeners()
+            else:
+                self._disconnect_listeners()
+            self.enabledChanged.emit(self._is_enabled)
+
+    def _get_multiple_inputs(self) -> bool:
+        return self._multiple_inputs
+
+    def _set_multiple_inputs(self, value) -> None:
+        if value != self._multiple_inputs:
+            self._multiple_inputs = value
+            self.multipleInputsChanged.emit(self._multiple_inputs)
 
     def _connect_listeners(self) -> None:
         # Start listening to user inputs
@@ -118,15 +111,56 @@ class InputListenerModel(QtCore.QObject):
         elif InputType.Mouse in self._event_types:
             windows_event_hook.MouseHook().start()
             event_listener.mouse_event.connect(self._mouse_event_cb)
-    
+
     def _disconnect_listeners(self) -> None:
         event_listener = event_handler.EventListener()
-        event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        event_listener.joystick_event.disconnect(self._joy_event_cb)
-        event_listener.mouse_event.disconnect(self._mouse_event_cb)
+        try:
+            event_listener.keyboard_event.disconnect(self._kb_event_cb)
+        except RuntimeError as e:
+            pass
+        try:
+            event_listener.joystick_event.disconnect(self._joy_event_cb)
+        except RuntimeError as e:
+            pass
+        try:
+            event_listener.mouse_event.disconnect(self._mouse_event_cb)
+        except RuntimeError as e:
+            pass
 
         # Stop mouse hook in case it is running
+        # FIXME: can this break things?
         windows_event_hook.MouseHook().stop()
+
+    def _stop_listening(self) -> None:
+        """Stops all listening activities."""
+        self._disconnect_listeners()
+        shared_state.delayed_input_highlighting_suspension()
+        self.listeningTerminated.emit(self._inputs)
+
+    def _maybe_terminate_listening(self, event: event_handler.Event) -> None:
+        """Terminates listening to user input if adequate."""
+        # ESC key always triggers the abort timer
+        if event.is_pressed and event.event_type == InputType.Keyboard:
+            key = keyboard.key_from_code(
+                event.identifier[0],
+                event.identifier[1]
+            )
+            if key == keyboard.key_from_name("esc") and \
+                    not self._abort_timer.is_alive():
+                self._abort_timer = threading.Timer(1.0, self._stop_listening)
+                self._abort_timer.start()
+
+        # Only react to events being listened to and ignore events which do
+        # not support button like behavior
+        if event.event_type not in self._event_types:
+            return
+        if event.event_type not in [InputType.JoystickButton, InputType.Keyboard]:
+            return
+
+        # Terminate listening if a release event is observed
+        if not event.is_pressed:
+            self._abort_timer.cancel()
+            self.listeningTerminated.emit(self._inputs)
 
     def _joy_event_cb(self, event: event_handler.Event) -> None:
         """Passes the pressed joystick event to the provided callback.
@@ -143,19 +177,19 @@ class InputListenerModel(QtCore.QObject):
         # Only react to events we're interested in
         if event.event_type not in self._event_types:
             return
-        if self.filter_func is not None and not self.filter_func(event):
-            return
 
         # Ensure the event corresponds to a significant enough change in input
-        process_event = input_devices.JoystickInputSignificant() \
-            .should_process(event)
-        if event.event_type == InputType.JoystickButton:
-            process_event &= not event.is_pressed
+        process_event = \
+            input_devices.JoystickInputSignificant().should_process(event)
 
         if process_event:
             input_devices.JoystickInputSignificant().reset()
-            self.callback(event)
-            self.listeningTerminated.emit()
+            if event.event_type == InputType.JoystickButton and event.is_pressed:
+                self._inputs.append(event)
+            else:
+                self._inputs.append(event)
+            self._inputs = list(set(self._inputs))
+            self._maybe_terminate_listening(event)
 
     def _kb_event_cb(self, event: event_handler.Event) -> None:
         """Passes the pressed key to the provided callback.
@@ -163,48 +197,24 @@ class InputListenerModel(QtCore.QObject):
         Args:
             event: the keypress event to be processed
         """
-        print("X")
-        key = keyboard.key_from_code(
-                event.identifier[0],
-                event.identifier[1]
-        )
-
-        # Return immediately once the first key press is detected
-        if not self._multi_keys:
-            if event.is_pressed and key == keyboard.key_from_name("esc"):
-                if not self._abort_timer.is_alive():
-                    self._abort_timer.start()
-            elif not event.is_pressed and \
-                    InputType.Keyboard in self._event_types:
-                if not self._return_kb_event:
-                    self.callback(key)
-                else:
-                    self.callback(event)
-                self._abort_timer.cancel()
-                self.listeningTerminated.emit()
-        # Record all key presses and return on the first key release
-        else:
-            if event.is_pressed:
-                if InputType.Keyboard in self._event_types:
-                    if not self._return_kb_event:
-                        self._multi_key_storage.append(key)
-                    else:
-                        self._multi_key_storage.append(event)
-                if key == keyboard.key_from_name("esc"):
-                    # Start a timer and close if it expires, aborting the
-                    # user input request
-                    if not self._abort_timer.is_alive():
-                        self._abort_timer.start()
+        # Record events as needed
+        if event.event_type in self._event_types:
+            if self._multiple_inputs:
+                if event.is_pressed:
+                    self._inputs.append(event)
             else:
-                self._abort_timer.cancel()
-                self.callback(self._multi_key_storage)
-                self.listeningTerminated.emit()
+                if not event.is_pressed:
+                    self._inputs.append(event)
+            self._inputs = list(set(self._inputs))
+            self._maybe_terminate_listening(event)
 
         # Ensure the timer is cancelled and reset in case the ESC is released
         # and we're not looking to return keyboard events
+        key = keyboard.key_from_code(event.identifier[0], event.identifier[1])
         if key == keyboard.key_from_name("esc") and not event.is_pressed:
             self._abort_timer.cancel()
-            self._abort_timer = threading.Timer(1.0, self.close)
+            self._abort_timer = threading.Timer(1.0, self._stop_listening)
+            self._abort_timer.start()
 
     def _mouse_event_cb(self, event: event_handler.Event) -> None:
         """Passes the pressed mouse input to the provided callback.
@@ -212,51 +222,29 @@ class InputListenerModel(QtCore.QObject):
         Args:
             event: the mouse event to be processed
         """
-        self.callback(event)
-        self.listeningTerminated.emit()
-
-    def closeEvent(self, evt):
-        # FIXME: we have to call this ourselves as the close event won't
-        #        be seen by this anymore
-        """Closes the overlay window."""
-        event_listener = event_handler.EventListener()
-        event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        if InputType.JoystickAxis in self._event_types or \
-                InputType.JoystickButton in self._event_types or \
-                InputType.JoystickHat in self._event_types:
-            event_listener.joystick_event.disconnect(self._joy_event_cb)
-        elif InputType.Mouse in self._event_types:
-            event_listener.mouse_event.disconnect(self._mouse_event_cb)
-
-        # Stop mouse hook in case it is running
-        windows_event_hook.MouseHook().stop()
-
-        # Delay un-suspending input highlighting to allow an axis that's being
-        # moved to return to its center without triggering an input highlight
-        shared_state.delayed_input_highlighting_suspension()
-        super().closeEvent(evt)
-
-    def _valid_event_types_string(self):
-        """Returns a formatted string containing the valid event types.
-
-        :return string representing the valid event types
-        """
-        valid_str = []
-        if InputType.JoystickAxis in self._event_types:
-            valid_str.append("Axis")
-        if InputType.JoystickButton in self._event_types:
-            valid_str.append("Button")
-        if InputType.JoystickHat in self._event_types:
-            valid_str.append("Hat")
-        if InputType.Keyboard in self._event_types:
-            valid_str.append("Key")
-
-        return ", ".join(valid_str)
+        # FIXME: handle multiple input events
+        if event not in self._inputs:
+            self._inputs.append(event)
+        self._maybe_terminate_listening(event)
 
     currentInput = Property(
         str,
-        fget=_get_current_input,
-        notify=inputChanged
+        fget=_get_current_inputs,
+        notify=listeningTerminated
+    )
+
+    enabled = Property(
+        bool,
+        fget=_get_is_enabled,
+        fset=_set_is_enabled,
+        notify=enabledChanged
+    )
+
+    multipleInputs = Property(
+        bool,
+        fget=_get_multiple_inputs,
+        fset=_set_multiple_inputs,
+        notify=multipleInputsChanged
     )
 
     eventTypes = Property(

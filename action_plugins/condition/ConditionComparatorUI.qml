@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2021 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,29 +29,22 @@ Item {
 
     property var model
 
-    implicitHeight: Math.max([
-        _input_state.height,
-        _joystick.height,
-        // _vjoy.height,
-        // _keyboard.height
-    ])
+    implicitHeight: _content.height
 
-    Loader {
-        id: _input_state
-        active: _root.model.conditionType == "input-state"
+    RowLayout {
+        id: _content
 
-        sourceComponent: InputStateConditionUI {
-            model: modelData
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        Loader {
+            id: _joystick
+            active: true;//_root.model.conditionType == "joystick"
+
+            sourceComponent: JoystickConditionUI {
+                model: modelData
+            }
         }
-    }
-    Loader {
-        id: _joystick
-        active: _root.model.conditionType == "joystick"
-
-        sourceComponent: JoystickConditionUI {
-            model: modelData
-        }
-    }
     // Loader {
     //     id: _vjoy
     //     active: _root.model.conditionType == "vjoy"
@@ -68,4 +61,5 @@ Item {
     //         model: modelData
     //     }
     // }
+    }
 }

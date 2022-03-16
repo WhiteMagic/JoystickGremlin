@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2021 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,13 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 
-import gremlin.action_plugins
-import gremlin.ui.util
+import Gremlin.ActionPlugins
+import Gremlin.Util
 
 import "../../qml"
 
@@ -29,23 +30,31 @@ import "../../qml"
 Item {
     id: _root
 
-    implicitHeight: _button.height
-
     property JoystickCondition model
+    
+    implicitHeight: _content.height
 
-    Loader {
-        id: _button
 
-        active: _root.model.inputType == "button"
+    RowLayout {
+        id: _content
 
-        sourceComponent: RowLayout {
-            anchors.left: parent.left
-            anchors.right: parent.right
+        anchors.left: parent.left
+        anchors.right: parent.right
+        
+        Layout.fillWidth: true
 
-            Label {
-                text: "This input is"
-            }
+        InputListener {
+            callback: _root.model.updateInputs
+            multipleInputs: true
+            eventTypes: ["button"]
+        }
 
+        Label {
+            text: "Input"
+        }
+
+        Label {
+            text: _root.model.inputs
         }
     }
 }

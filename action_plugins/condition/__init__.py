@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2021 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,13 +42,17 @@ class AbstractCondition(QtCore.QObject):
 
     conditionTypeChanged = Signal()
     comparatorChanged = Signal()
+    inputsChanged = Signal()
 
     def __init__(self, parent: Optional[QtCore.QObject]=None):
         """Creates a new instance."""
         super().__init__(parent)
 
+        # Specific condition type needed for QT side of things
         self._condition_type = None
+        # Comparator object implementing the condition
         self._comparator = None
+        # Inputs used within the comparator
         self._inputs = []
 
     def __call__(self, value: Value) -> bool:
@@ -99,6 +103,35 @@ class AbstractCondition(QtCore.QObject):
     @Property(comparator.AbstractComparator, notify=comparatorChanged)
     def comparator(self) -> comparator.AbstractComparator:
         return self._comparator
+
+    def _update_inputs(self, input_list: List[event_handler.Event]) -> None:
+        print(input_list)
+        if set(input_list) != set(self._inputs):
+            self._inputs = input_list
+            self.inputsChanged.emit()
+
+    def _get_inputs(self) -> str:
+        return self._get_inputs_impl()
+
+    def _get_inputs_impl(self) -> str:
+        raise error.GremlinError(
+            "AbstractCondition::_get_inputs_impl implementation missing"
+        )
+
+    def _set_inputs(self, data: List) -> None:
+        self._set_inputs_impl(data)
+
+    def _set_inputs_impl(self, data: List) -> None:
+        raise error.GremlinError(
+            "AbstractCondition::_set_inputs_impl implementation missing"
+        )
+
+    inputs = Property(
+        str,
+        _get_inputs,
+        _set_inputs,
+        notify=inputsChanged
+    )
 
 
 class KeyboardCondition(AbstractCondition):
@@ -249,25 +282,16 @@ class JoystickCondition(AbstractCondition):
 
         return node
 
-    # FIXME: these property entries are now useless, likely all I need is a
-    #        way to create a string representation of the input collection
-    @Property(str, constant=True)
-    def inputType(self) -> str:
-        if self.input_type is None:
-            return "Unknown"
-        return InputType.to_string(self.input_type)
+    def _get_inputs_impl(self) -> str:
+        return ", ".join(str(v.identifier) for v in self._inputs)
 
-    @Property(int)
-    def inputId(self) -> int:
-        return self.input_id
+    def _set_inputs_impl(self, data: List[str]) -> None:
+        print(data)
 
-    @Property(str)
-    def deviceName(self) -> str:
-        return self.device_name
-
-    @Property(str)
-    def deviceGuid(self) -> str:
-        return str(self.device_guid)
+    @Slot(list)
+    def updateInputs(self, data: List[event_handler.Event]) -> None:
+        self._update_inputs(data)
+        #self.inputsChanged.emit()  
 
 
 class ConditionFunctor(AbstractFunctor):
@@ -529,21 +553,21 @@ create = ConditionModel
 
 QtQml.qmlRegisterType(
     JoystickCondition,
-    "gremlin.action_plugins",
+    "Gremlin.ActionPlugins",
     1,
     0,
     "JoystickCondition"
 )
 QtQml.qmlRegisterType(
     KeyboardCondition,
-    "gremlin.action_plugins",
+    "Gremlin.ActionPlugins",
     1,
     0,
     "KeyboardCondition"
 )
 QtQml.qmlRegisterType(
     JoystickCondition,
-    "gremlin.action_plugins",
+    "Gremlin.ActionPlugins",
     1,
     0,
     "JoystickCondition"
