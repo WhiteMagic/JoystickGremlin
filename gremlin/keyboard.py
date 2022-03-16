@@ -1,3 +1,21 @@
+# -*- coding: utf-8; -*-
+
+# Copyright (C) 2015 - 2022 Lionel Ott
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import ctypes
 import logging
 from ctypes import wintypes
@@ -271,14 +289,17 @@ def key_from_name(name):
         return key
 
 
-def key_from_code(scan_code, is_extended):
+def key_from_code(scan_code: int, is_extended: bool) -> Key:
     """Returns the key corresponding to the provided scan code.
 
     If no key exists with the provided scan code None is returned.
 
-    :param scan_code the scan code of the desired key
-    :param is_extended flag indicating if the key is extended
-    :return Key instance or None
+    Params:
+        scan_code the scan code of the desired key
+        is_extended flag indicating if the key is extended
+    
+    Returns:
+        Key instance or None
     """
     global g_scan_code_to_key, g_name_to_key
 
