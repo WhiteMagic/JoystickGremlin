@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -309,7 +309,17 @@ def joystick_devices_initialization():
     vjoy_proxy.reset()
 
     # Update device list which will be used when queries for joystick devices
-    # are made
-    _joystick_devices = devices
+    # are made. Order the devices such that vJoy devices are last and the
+    # physical devices are ordered by name.
+    sorted_devices = sorted(
+        [dev for dev in devices if not dev.is_virtual],
+        key=lambda x: x.name
+    )
+    sorted_devices.extend(sorted(
+        [dev for dev in devices if dev.is_virtual],
+        key=lambda x: x.vjoy_id
+    ))
+
+    _joystick_devices = sorted_devices
 
     _joystick_init_lock.release()
