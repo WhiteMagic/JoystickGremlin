@@ -30,6 +30,7 @@ Item {
     property var model
 
     implicitHeight: _content.height
+    Layout.fillWidth: true
 
     RowLayout {
         id: _content

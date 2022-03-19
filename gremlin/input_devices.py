@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,9 +25,10 @@ import threading
 
 from PySide6 import QtCore
 
+import gremlin.common
 import gremlin.keyboard
 import gremlin.types
-from dill import DILL, GUID_Invalid
+from dill import DILL, GUID, GUID_Invalid
 
 from . import common, error, event_handler, joystick_handling, \
     macro, util
@@ -939,3 +940,39 @@ def deadzone(value, low, low_center, high_center, high):
         return min(1, max(0, (value - high_center) / abs(high - high_center)))
     else:
         return max(-1, min(0, (value - low_center) / abs(low - low_center)))
+
+
+def format_input(event: event_handler.Event) -> str:
+    """Formats the input specified the the device and event into a string.
+    
+    Args:
+        event: event to format
+    
+    Returns:
+        Textual representation of the event
+    """
+    # Retrieve device instance belonging to this event
+    device = None
+    for dev in joystick_handling.joystick_devices():
+        if dev.device_guid == event.device_guid:
+            device = dev
+            break
+
+    # Retrieve device name
+    label = ""
+    if device is None:
+        logging.warning(
+            f"Unable to find a device with GUID {str(event.device_guid)}"
+        )
+        label = "Unknown"
+    else:
+        label = device.name
+
+    # Retrive input name
+    label += " - "
+    label += gremlin.common.input_to_ui_string(
+        event.event_type,
+        event.identifier
+    )
+
+    return label

@@ -34,7 +34,6 @@ Item {
     
     implicitHeight: _content.height
 
-
     RowLayout {
         id: _content
 
@@ -43,18 +42,17 @@ Item {
         
         Layout.fillWidth: true
 
+        Label {
+            text: "Joystick Condition" + _root.model.inputs
+        }
+
         InputListener {
+            Layout.alignment: Qt.AlignRight | Qt.AlignTop
+
+            
             callback: _root.model.updateInputs
             multipleInputs: true
             eventTypes: ["button"]
-        }
-
-        Label {
-            text: "Input"
-        }
-
-        Label {
-            text: _root.model.inputs
         }
     }
 }

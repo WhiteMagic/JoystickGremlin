@@ -28,6 +28,7 @@ from dill import GUID
 from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
+from gremlin.input_devices import format_input
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
@@ -283,7 +284,14 @@ class JoystickCondition(AbstractCondition):
         return node
 
     def _get_inputs_impl(self) -> str:
-        return ", ".join(str(v.identifier) for v in self._inputs)
+        if len(self._inputs) == 0:
+            return ": None"
+        else:
+            label = "<ul>"
+            for entry in self._inputs:
+                label += f"<li>{format_input(entry)}</li>"
+            label += "</ul>"
+            return label
 
     def _set_inputs_impl(self, data: List[str]) -> None:
         print(data)

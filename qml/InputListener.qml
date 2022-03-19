@@ -91,14 +91,6 @@ Item {
         
         Layout.fillWidth: true
 
-        Label {
-            text: "Input"
-        }
-
-        Label {
-            text: "Stuff"
-        }
-
         Popup {
             id: _popup
 
