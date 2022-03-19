@@ -43,7 +43,7 @@ class AbstractCondition(QtCore.QObject):
 
     conditionTypeChanged = Signal()
     comparatorChanged = Signal()
-    inputsChanged = Signal()
+    inputsChanged = Signal(list)
 
     def __init__(self, parent: Optional[QtCore.QObject]=None):
         """Creates a new instance."""
@@ -106,15 +106,14 @@ class AbstractCondition(QtCore.QObject):
         return self._comparator
 
     def _update_inputs(self, input_list: List[event_handler.Event]) -> None:
-        print(input_list)
         if set(input_list) != set(self._inputs):
             self._inputs = input_list
-            self.inputsChanged.emit()
+            self.inputsChanged.emit(self._get_inputs())
 
-    def _get_inputs(self) -> str:
+    def _get_inputs(self) -> List[str]:
         return self._get_inputs_impl()
 
-    def _get_inputs_impl(self) -> str:
+    def _get_inputs_impl(self) -> List[str]:
         raise error.GremlinError(
             "AbstractCondition::_get_inputs_impl implementation missing"
         )
@@ -128,7 +127,7 @@ class AbstractCondition(QtCore.QObject):
         )
 
     inputs = Property(
-        str,
+        list,
         _get_inputs,
         _set_inputs,
         notify=inputsChanged
@@ -212,38 +211,6 @@ class JoystickCondition(AbstractCondition):
     This condition is based on the state of a joystick axis, button, or hat.
     """
 
-    class Input:
-
-        def __init__(self) -> None:
-            self.device_guid = 0
-            self.device_name = ""
-            self.input_type = None
-            self.input_id = 0
-
-        def from_xml(self, node: ElementTree):
-            self.device_guid = util.read_property(
-                node, "device-guid", PropertyType.GUID
-            )
-            self.device_name = util.read_property(
-                node, "device-name", PropertyType.String
-            )
-            self.input_type = util.read_property(
-                node, "input-type", PropertyType.InputType
-            )
-            self.input_id = util.read_property(
-                node, "input-id", PropertyType.Int
-            )
-
-        def to_xml(self) -> ElementTree:
-            entries = [
-                ["device-guid", self.device_guid, PropertyType.GUID],
-                ["device-name", self.device_name, PropertyType.String],
-                ["input-type", self.input_type, PropertyType.InputType],
-                ["input-id", self.input_id, PropertyType.Int]
-            ]
-            return util.create_node_from_data("input", entries)
-
-
     def __init__(self, parent=None):
         """Creates a new instance."""
         super().__init__(parent)
@@ -256,10 +223,13 @@ class JoystickCondition(AbstractCondition):
         Args:
             node: the XML node to parse for data
         """
-        for item_node in node.findall("input"):
-            i_node = JoystickCondition.Input()
-            i_node.from_xml(item_node)
-            self._inputs.append(i_node)
+        for entry in node.findall("input"):
+            event = event_handler.Event(
+                util.read_property(entry, "input-type", PropertyType.InputType),
+                util.read_property(entry, "input-id", PropertyType.Int),
+                util.read_property(entry, "device-guid", PropertyType.GUID)
+            )
+            self._inputs.append(event)
 
         comp_node = node.find("comparator")
         if comp_node is None:
@@ -278,28 +248,27 @@ class JoystickCondition(AbstractCondition):
         node = util.create_node_from_data("condition", entries)
 
         for entry in self._inputs:
-            node.append(entry.to_xml())
+            node.append(util.create_node_from_data(
+                "input",
+                [
+                    ("device-guid", entry.device_guid, PropertyType.GUID),
+                    ("input-type", entry.event_type, PropertyType.InputType),
+                    ("input-id", entry.identifier, PropertyType.Int)
+                ]
+            ))
         node.append(self._comparator.to_xml())
 
         return node
 
-    def _get_inputs_impl(self) -> str:
-        if len(self._inputs) == 0:
-            return ": None"
-        else:
-            label = "<ul>"
-            for entry in self._inputs:
-                label += f"<li>{format_input(entry)}</li>"
-            label += "</ul>"
-            return label
+    def _get_inputs_impl(self) -> List[str]:
+        return [format_input(v) for v in self._inputs]
 
-    def _set_inputs_impl(self, data: List[str]) -> None:
-        print(data)
+    def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
+        self._update_inputs(data)
 
     @Slot(list)
     def updateInputs(self, data: List[event_handler.Event]) -> None:
         self._update_inputs(data)
-        #self.inputsChanged.emit()  
 
 
 class ConditionFunctor(AbstractFunctor):

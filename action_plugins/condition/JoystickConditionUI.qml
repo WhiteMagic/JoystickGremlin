@@ -31,7 +31,21 @@ Item {
     id: _root
 
     property JoystickCondition model
+    property string conditionText: "None"
     
+    // Format the condition inputs as an unordered list
+    Connections {
+        target: model
+        function onInputsChanged(data)
+        {
+            _root.conditionText = "<ul>";
+            data.forEach(function(entry) {
+                _root.conditionText += "<li>" + entry + "</li>";
+            })
+            _root.conditionText += "</ul>";
+        }
+    }
+
     implicitHeight: _content.height
 
     RowLayout {
@@ -43,13 +57,12 @@ Item {
         Layout.fillWidth: true
 
         Label {
-            text: "Joystick Condition" + _root.model.inputs
+            text: "Joystick Condition" + _root.conditionText
         }
 
         InputListener {
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
 
-            
             callback: _root.model.updateInputs
             multipleInputs: true
             eventTypes: ["button"]

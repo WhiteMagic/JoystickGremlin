@@ -40,7 +40,7 @@ Item {
 
         Loader {
             id: _joystick
-            active: true;//_root.model.conditionType == "joystick"
+            active: _root.model.conditionType == "joystick"
 
             sourceComponent: JoystickConditionUI {
                 model: modelData
