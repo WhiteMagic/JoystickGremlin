@@ -23,7 +23,6 @@ from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
-from dill import GUID
 
 from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
@@ -227,14 +226,16 @@ class JoystickCondition(AbstractCondition):
             event = event_handler.Event(
                 util.read_property(entry, "input-type", PropertyType.InputType),
                 util.read_property(entry, "input-id", PropertyType.Int),
-                util.read_property(entry, "device-guid", PropertyType.GUID)
+                util.parse_guid(str(
+                    util.read_property(entry, "device-guid", PropertyType.GUID)
+                ))
             )
             self._inputs.append(event)
 
         comp_node = node.find("comparator")
         if comp_node is None:
             raise error.ProfileError("Comparator node missing in condition.")
-        self._comparator = comparator.create_comparator(comp_node)
+        self._comparator = comparator.create_comparator_from_xml(comp_node)
 
     def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
@@ -268,6 +269,35 @@ class JoystickCondition(AbstractCondition):
 
     @Slot(list)
     def updateInputs(self, data: List[event_handler.Event]) -> None:
+        # Verify the comparator type is still adequate and modify / warn as
+        # needed. First determine the correct type and then check if changes
+        # are needed.
+        input_types = [evt.event_type for evt in data]
+        if len(set(input_types)) > 1:
+            # Should never happen for a condition to make sense
+            raise error.GremlinError(
+                f"Multiple InputType types present in a single condition"
+            )
+
+        # Check if the comparator type has to change
+        if len(input_types) == 0:
+            self._comparator = None
+        else:
+            comparator_map = {
+                InputType.JoystickAxis: comparator.RangeComparator,
+                InputType.JoystickButton: comparator.PressedComparator,
+                InputType.JoystickHat: comparator.DirectionComparator
+            }
+            comparator_types = {
+                InputType.JoystickAxis: "range",
+                InputType.JoystickButton: "button",
+                InputType.JoystickHat: "direction"
+            }
+            if not isinstance(self._comparator, comparator_map[input_types[0]]):
+                self._comparator = comparator.create_default_comparator(
+                    comparator_types[input_types[0]]
+                )
+
         self._update_inputs(data)
 
 

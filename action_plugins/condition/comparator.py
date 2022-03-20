@@ -227,7 +227,28 @@ class DirectionComparator(AbstractComparator):
         return util.create_node_from_data("comparator", entries)
 
 
-def create_comparator(node: ElementTree.Element) -> AbstractComparator:
+def create_default_comparator(comparator_type: str) -> AbstractComparator:
+    """Creates a comparator object of appropriate type with default values.
+    
+    Args:
+        comparator_type: type of comparator to create
+    
+    Returns:
+        Default initialized comparator
+    """
+    if comparator_type == "button":
+        return PressedComparator(True)
+    elif comparator_type == "range":
+        return RangeComparator(0.0, 1.0)
+    elif comparator_type == "direction":
+        return DirectionComparator([HatDirection.North])
+    else:
+        raise error.ProfileError(
+            f"Unable to create comparator, type \"{comparator_type}\" is unknown."
+        )
+
+
+def create_comparator_from_xml(node: ElementTree.Element) -> AbstractComparator:
     """Returns a comparator object for the specified data.
 
     Args:
@@ -236,8 +257,12 @@ def create_comparator(node: ElementTree.Element) -> AbstractComparator:
     Returns:
         Comparator instance representing the stored information
     """
-    comparator_type = util.read_property(node, "comparator-type", PropertyType.String)
-    if comparator_type in "pressed":
+    comparator_type = util.read_property(
+        node,
+        "comparator-type",
+        PropertyType.String
+    )
+    if comparator_type == "button":
         return PressedComparator(
             util.read_property(node, "is-pressed", PropertyType.Bool)
         )

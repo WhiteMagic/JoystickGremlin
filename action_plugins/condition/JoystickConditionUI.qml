@@ -30,19 +30,25 @@ import "../../qml"
 Item {
     id: _root
 
+    function formatInputs(data)
+    {
+        var text = "<ul>";
+        data.forEach(function(entry) {
+            text += "<li>" + entry + "</li>";
+        })
+        text += "</ul>";
+        return text;
+    }
+
     property JoystickCondition model
-    property string conditionText: "None"
+    property string conditionText: formatInputs(model.inputs)
     
     // Format the condition inputs as an unordered list
     Connections {
         target: model
         function onInputsChanged(data)
         {
-            _root.conditionText = "<ul>";
-            data.forEach(function(entry) {
-                _root.conditionText += "<li>" + entry + "</li>";
-            })
-            _root.conditionText += "</ul>";
+            _root.conditionText = formatInputs(data);
         }
     }
 
