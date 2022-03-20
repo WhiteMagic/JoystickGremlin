@@ -19,12 +19,16 @@
 from typing import List
 from xml.etree import ElementTree
 
-from PySide6 import QtCore
+from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal
 
 from gremlin import error, util
 from gremlin.base_classes import Value
 from gremlin.types import HatDirection, InputType, PropertyType
+
+
+QML_IMPORT_NAME = "Gremlin.ActionPlugins"
+QML_IMPORT_MAJOR_VERSION = 1
 
 
 class AbstractComparator(QtCore.QObject):
@@ -79,6 +83,8 @@ class AbstractComparator(QtCore.QObject):
         )
 
 
+
+@QtQml.QmlElement
 class RangeComparator(AbstractComparator):
 
     """Compares the state of an axis to a specific range."""
@@ -143,6 +149,7 @@ class RangeComparator(AbstractComparator):
         return self.upper
 
 
+@QtQml.QmlElement
 class PressedComparator(AbstractComparator):
 
     """Compares the state of a button to a specific state."""
@@ -192,6 +199,7 @@ class PressedComparator(AbstractComparator):
         return "Pressed" if self.is_pressed else "Released"
 
 
+@QtQml.QmlElement
 class DirectionComparator(AbstractComparator):
 
     """Compares the state of a hat to the specified states."""

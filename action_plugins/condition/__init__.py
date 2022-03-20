@@ -36,6 +36,10 @@ from gremlin.ui.profile import ActionNodeModel
 from . import comparator
 
 
+QML_IMPORT_NAME = "Gremlin.ActionPlugins"
+QML_IMPORT_MAJOR_VERSION = 1
+
+
 class AbstractCondition(QtCore.QObject):
 
     """Base class of all individual condition representations."""
@@ -133,6 +137,7 @@ class AbstractCondition(QtCore.QObject):
     )
 
 
+@QtQml.QmlElement
 class KeyboardCondition(AbstractCondition):
 
     """Keyboard state based condition.
@@ -203,6 +208,7 @@ class KeyboardCondition(AbstractCondition):
         return node
 
 
+@QtQml.QmlElement
 class JoystickCondition(AbstractCondition):
 
     """Joystick input state based condition.
@@ -341,6 +347,7 @@ class ConditionFunctor(AbstractFunctor):
             )
 
 
+@QtQml.QmlElement
 class ConditionModel(AbstractActionModel):
 
     version = 1
@@ -557,25 +564,3 @@ class ConditionModel(AbstractActionModel):
 
 
 create = ConditionModel
-
-QtQml.qmlRegisterType(
-    JoystickCondition,
-    "Gremlin.ActionPlugins",
-    1,
-    0,
-    "JoystickCondition"
-)
-QtQml.qmlRegisterType(
-    KeyboardCondition,
-    "Gremlin.ActionPlugins",
-    1,
-    0,
-    "KeyboardCondition"
-)
-QtQml.qmlRegisterType(
-    JoystickCondition,
-    "Gremlin.ActionPlugins",
-    1,
-    0,
-    "JoystickCondition"
-)
