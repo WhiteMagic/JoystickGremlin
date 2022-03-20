@@ -42,7 +42,7 @@ Item {
 
     property JoystickCondition model
     property string conditionText: formatInputs(model.inputs)
-    
+
     // Format the condition inputs as an unordered list
     Connections {
         target: model

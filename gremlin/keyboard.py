@@ -297,7 +297,7 @@ def key_from_code(scan_code: int, is_extended: bool) -> Key:
     Params:
         scan_code the scan code of the desired key
         is_extended flag indicating if the key is extended
-    
+
     Returns:
         Key instance or None
     """

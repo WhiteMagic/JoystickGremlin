@@ -69,7 +69,7 @@ Item {
             RadioButton {
                 text: "press"
                 checked: _root.action.activateOn == "press"
-                
+
                 onClicked: {
                     _root.action.activateOn = "press"
                 }
@@ -180,7 +180,7 @@ Item {
             color: Universal.accent
         }
 
-        onDropped: function(drop) 
+        onDropped: function(drop)
         {
             if(drop.text != _root.action.id)
             {

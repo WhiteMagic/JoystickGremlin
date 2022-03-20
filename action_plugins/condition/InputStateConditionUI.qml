@@ -39,7 +39,7 @@ Item {
         // sourceComponent: ButtonComparator {
         //     comparator: _root.model.comparator
         // }
-        
+
         sourceComponent: RowLayout {
             anchors.left: parent.left
             anchors.right: parent.right

@@ -161,7 +161,7 @@ class TempoModel(AbstractActionModel):
     tag = "tempo"
 
     functor = TempoFunctor
-    
+
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
@@ -222,7 +222,7 @@ class TempoModel(AbstractActionModel):
         ))
 
         return node
-    
+
     def qml_path(self) -> str:
         return "file:///" + QtCore.QFile(
             "core_plugins:tempo/TempoAction.qml"
@@ -316,10 +316,10 @@ class TempoModel(AbstractActionModel):
         if self._activate_on != value:
             self._activate_on = value
             self.activateOnChanged.emit()
-    
+
     @Property(str, fset=_set_activate_on, notify=activateOnChanged)
     def activateOn(self) -> str:
         return self._activate_on
-                
+
 
 create = TempoModel

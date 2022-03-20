@@ -88,7 +88,7 @@ Item {
     // Main display
     RowLayout {
         id: _content
-        
+
         Layout.fillWidth: true
 
         Popup {
@@ -126,11 +126,9 @@ Item {
 
             onClicked: function()
             {
-                _popup.open()                
+                _popup.open()
             }
         }
     }
-
-
 
 }

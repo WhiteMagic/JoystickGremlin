@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -171,7 +171,7 @@ Item {
                 callback: function(x) { _root.action.addAction(x, "else"); }
             }
         }
-        
+
         Rectangle {
             id: _falseDivider
             Layout.fillWidth: true

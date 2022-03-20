@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@ import QtQuick.Controls
 
 
 Button {
-  font.family: "FontAwesome"
-  font.pixelSize: 16
-  
-  background: Rectangle {
-    anchors.fill: parent
-    color: "transparent"
-  }
+    font.family: "FontAwesome"
+    font.pixelSize: 16
+
+    background: Rectangle {
+        anchors.fill: parent
+        color: "transparent"
+    }
 }

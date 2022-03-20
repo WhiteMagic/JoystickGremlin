@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2021 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ def test_from_xml():
     assert c.is_valid()
 
     assert len(c._conditions[0]._inputs) == 1
-    
+
     cond = c._conditions[0]
     assert isinstance(cond, condition.JoystickCondition)
     assert isinstance(cond._comparator, condition.comparator.PressedComparator)
@@ -92,7 +92,7 @@ def test_from_xml_complex():
     assert c1._inputs[0].input_type == types.InputType.JoystickButton
     assert c1._comparator.is_pressed == False
     assert c1.is_valid()
-    
+
     c2 = c._conditions[1]
     assert isinstance(c2, condition.JoystickCondition)
     assert isinstance(c2._comparator, condition.comparator.RangeComparator)

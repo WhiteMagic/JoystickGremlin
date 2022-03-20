@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Window 
+import QtQuick.Window
 import Qt.labs.platform as Dialogs
 
 import Gremlin.Device

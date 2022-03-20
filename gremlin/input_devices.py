@@ -697,7 +697,7 @@ class JoystickInputSignificant:
 
         Args:
             event: the event to check for significance
-        
+
         Returns:
             True if the event should be processed, False otherwise
         """
@@ -720,7 +720,7 @@ class JoystickInputSignificant:
 
         Args:
             event: the type of event for which to return the most recent one
-        
+
         Returns:
             Latest event instance corresponding to the specified event
         """
@@ -737,7 +737,7 @@ class JoystickInputSignificant:
 
         Args:
             event: the axis event to process
-        
+
         Returns:
             True if it should be processed, False otherwise
         """
@@ -766,7 +766,7 @@ class JoystickInputSignificant:
 
         Args:
             event: the button event to process
-        
+
         Returns:
             True if it should be processed, False otherwise
         """
@@ -777,7 +777,7 @@ class JoystickInputSignificant:
 
         Args:
             event: the hat event to process
-        
+
         Returns:
             True if it should be processed, False otherwise
         """
@@ -944,10 +944,10 @@ def deadzone(value, low, low_center, high_center, high):
 
 def format_input(event: event_handler.Event) -> str:
     """Formats the input specified the the device and event into a string.
-    
+
     Args:
         event: event to format
-    
+
     Returns:
         Textual representation of the event
     """

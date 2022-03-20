@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ xml_description = """
             </action-configuration>
         </input>
     </inputs>
-    
+
     <library>
         <library-item id="ac905a47-9ad3-4b65-b702-fbae1d133609">
             <action-tree root="ec663ba4-264a-4c76-98c0-6054058cae9f">

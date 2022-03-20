@@ -217,14 +217,14 @@ class ProfileConverter:
 
     def _convert_from_v3(self, root, fname=None):
         """Converts v3 profiles to v4 profiles.
-        
+
         The following operations are performed in this conversion:
         - embed all actions in individual BasicContainer containers
         - remove button and keyboard conditions
         - move hat and axis condition from actions to containers
         - replace double macros for keyboard remaps with the new map to
           keyboard action
-        
+
         :param root the v3 profile
         :return v4 representation of the profile
         """

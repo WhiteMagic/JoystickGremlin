@@ -26,7 +26,7 @@ The main features are:
 Joystick Gremlin provides a graphical user interface which allows commonly
 performed tasks, such as input remapping, axis response curve setups, and macro
 recording to be performed easily. Functionality that is not accessible via the
-UI can be implemented through custom modules. 
+UI can be implemented through custom modules.
 
 
 Used Software & Other Sources
@@ -44,7 +44,7 @@ Joystick Gremlin uses the following software and resources:
 
 Currently the 32bit version of Python is needed and the following packages
 should be installed via PiP to get the source running:
- 
+
 
 Generating the MSI Installer
 ----------------------------
