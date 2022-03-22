@@ -193,6 +193,7 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             height: 10
+            color: "transparent"
         }
     }
 
