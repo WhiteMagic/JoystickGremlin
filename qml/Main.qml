@@ -18,6 +18,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Window
 import Qt.labs.platform as Dialogs
 
@@ -182,7 +183,7 @@ ApplicationWindow {
     }
 
     header: ToolBar {
-        Row {
+        RowLayout {
             anchors.fill: parent
 
             ToolButton {
@@ -223,9 +224,19 @@ ApplicationWindow {
                 }
             }
 
-            ComboBox {
-                anchors.verticalCenter: parent.verticalCenter
+            Rectangle {
+                Layout.fillWidth: true
+            }
 
+            Switch {
+                text: "Dark Mode"
+
+                onToggled: function() {
+                    _root.Universal.theme = position ? Universal.Dark : Universal.Light;
+                }
+            }
+
+            ComboBox {
                 model: ["Default", "  Alternative"]
             }
         }
