@@ -30,8 +30,7 @@ import gremlin.keyboard
 import gremlin.types
 from dill import DILL, GUID, GUID_Invalid
 
-from . import common, error, event_handler, joystick_handling, \
-    macro, util
+from . import common, error, event_handler, joystick_handling, util
 
 
 class CallbackRegistry:
@@ -247,8 +246,7 @@ class JoystickWrapper:
 
         @property
         def is_pressed(self):
-            val = DILL.get_button(self._joystick_guid, self._index)
-            return val #DILL.get_button(self._joystick_guid, self._index)
+            return DILL.get_button(self._joystick_guid, self._index)
 
     class Hat(Input):
 

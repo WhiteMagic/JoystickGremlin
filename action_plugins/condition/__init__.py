@@ -68,7 +68,7 @@ class AbstractCondition(QtCore.QObject):
         Returns:
             True if the condition is fulfilled, False otherwise
         """
-        return self._comparator(value)
+        return self._comparator(value, self._inputs)
 
     def from_xml(self, node: ElementTree) -> None:
         """Populates the object with data from an XML node.
@@ -296,7 +296,7 @@ class JoystickCondition(AbstractCondition):
             }
             comparator_types = {
                 InputType.JoystickAxis: "range",
-                InputType.JoystickButton: "button",
+                InputType.JoystickButton: "pressed",
                 InputType.JoystickHat: "direction"
             }
             if not isinstance(self._comparator, comparator_map[input_types[0]]):

@@ -54,13 +54,13 @@ Item {
     //         model: modelData
     //     }
     // }
-    // Loader {
-    //     id: _keyboard
-    //     active: _root.model.conditionType == "keyboard"
+        Loader {
+            id: _keyboard
+            active: _root.model.conditionType == "keyboard"
 
-    //     sourceComponent: KeyboardConditionUI {
-    //         model: modelData
-    //     }
-    // }
+            sourceComponent: KeyboardConditionUI {
+                model: modelData
+            }
+        }
     }
 }

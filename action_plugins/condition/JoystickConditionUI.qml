@@ -53,17 +53,38 @@ Item {
     }
 
     implicitHeight: _content.height
+    implicitWidth: _content.width
 
     RowLayout {
         id: _content
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-        
-        Layout.fillWidth: true
-
+        // FIXME: this likely needs to be moved inside the loaders as it  will
+        //        be input type specific as well
         Label {
             text: "Joystick Condition" + _root.conditionText
+        }
+
+        // Loaders for the specific types of inputs
+        Loader {
+            active: _root.model.comparator && _root.model.comparator.typeName == "pressed"
+
+            sourceComponent: PressedComparatorUI {
+                comparator: _root.model.comparator
+            }
+        }
+        Loader {
+            active: _root.model.comparator && _root.model.comparator.typeName == "range"
+
+            sourceComponent: PressedComparatorUI {
+                comparator: _root.model.comparator
+            }
+        }
+        Loader {
+            active: _root.model.comparator && _root.model.comparator.typeName == "direction"
+
+            sourceComponent: PressedComparatorUI {
+                comparator: _root.model.comparator
+            }
         }
 
         InputListener {
