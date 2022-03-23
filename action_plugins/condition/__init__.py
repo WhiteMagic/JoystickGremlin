@@ -112,6 +112,7 @@ class AbstractCondition(QtCore.QObject):
         if set(input_list) != set(self._inputs):
             self._inputs = input_list
             self.inputsChanged.emit(self._get_inputs())
+            self.comparatorChanged.emit()
 
     def _get_inputs(self) -> List[str]:
         return self._get_inputs_impl()
