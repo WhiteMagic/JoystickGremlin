@@ -24,10 +24,13 @@ from xml.etree import ElementTree
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
+from dill import GUID_Keyboard
+
 from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
 from gremlin.input_devices import format_input
+from gremlin.keyboard import key_from_code
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
@@ -182,14 +185,21 @@ class KeyboardCondition(AbstractCondition):
             node: the XML node to parse for data
         """
         for item_node in node.findall("input"):
-            i_node = KeyboardCondition.Input()
-            i_node.from_xml(item_node)
-            self._inputs.append(i_node)
+            key_id = (
+                util.read_property(item_node, "scan-code", PropertyType.Int),
+                util.read_property(item_node, "is-extended", PropertyType.Bool)
+            )
+            event = event_handler.Event(
+                InputType.Keyboard,
+                key_id,
+                GUID_Keyboard
+            )
+            self._inputs.append(event)
 
         comp_node = node.find("comparator")
         if comp_node is None:
             raise error.ProfileError("Comparator node missing in condition.")
-        self._comparator = comparator.create_comparator(comp_node)
+        self._comparator = comparator.create_comparator_from_xml(comp_node)
 
     def to_xml(self) -> ElementTree:
         """Returns an XML node containing the objects data.
@@ -202,11 +212,51 @@ class KeyboardCondition(AbstractCondition):
         ]
         node = util.create_node_from_data("condition", entries)
 
-        for entry in self._inputs:
-            node.append(entry.to_xml())
+        for event in self._inputs:
+            node.append(util.create_node_from_data(
+                "input",
+                [
+                    ("scan-code", event.identifier[0], PropertyType.Int),
+                    ("is-extended", event.identifier[1], PropertyType.Bool)
+                ]
+            ))
         node.append(self._comparator.to_xml())
 
         return node
+
+    def _get_inputs_impl(self) -> List[str]:
+        return [key_from_code(*v.identifier).name for v in self._inputs]
+
+    def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
+        self._update_inputs(data)
+
+    @Slot(list)
+    def updateInputs(self, data: List[event_handler.Event]) -> None:
+        # Verify the comparator type is still adequate and modify / warn as
+        # needed. First determine the correct type and then check if changes
+        # are needed.
+        input_types = [evt.event_type for evt in data]
+        if len(set(input_types)) > 1:
+            # Should never happen for a condition to make sense
+            raise error.GremlinError(
+                f"Multiple InputType types present in a single condition"
+            )
+        elif input_types[0] != InputType.Keyboard:
+            raise error.GremlinError(
+                f"Found non Keyboard input type" + \
+                f"({InputType.to_string(input_types[0])}) " + \
+                f"in a keyboard condition."
+            )
+
+        # Check if the comparator type has to change
+        if len(input_types) == 0:
+            self._comparator = None
+        else:
+            if not isinstance(self._comparator, comparator.PressedComparator):
+                self._comparator = \
+                    comparator.create_default_comparator("pressed")
+
+        self._update_inputs(data)
 
 
 @QtQml.QmlElement
@@ -255,13 +305,13 @@ class JoystickCondition(AbstractCondition):
         ]
         node = util.create_node_from_data("condition", entries)
 
-        for entry in self._inputs:
+        for event in self._inputs:
             node.append(util.create_node_from_data(
                 "input",
                 [
-                    ("device-guid", entry.device_guid, PropertyType.GUID),
-                    ("input-type", entry.event_type, PropertyType.InputType),
-                    ("input-id", entry.identifier, PropertyType.Int)
+                    ("device-guid", event.device_guid, PropertyType.GUID),
+                    ("input-type", event.event_type, PropertyType.InputType),
+                    ("input-id", event.identifier, PropertyType.Int)
                 ]
             ))
         node.append(self._comparator.to_xml())
@@ -391,6 +441,9 @@ class ConditionModel(AbstractActionModel):
 
         if ConditionType(condition) == ConditionType.Joystick:
             cond = JoystickCondition(self)
+            self._conditions.append(cond)
+        elif ConditionType(condition) == ConditionType.Keyboard:
+            cond = KeyboardCondition(self)
             self._conditions.append(cond)
 
         self.conditionsChanged.emit()

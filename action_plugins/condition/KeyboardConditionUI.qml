@@ -22,28 +22,60 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.ActionPlugins
+import Gremlin.Util
+
+import "../../qml"
 
 
 Item {
     id: _root
 
-    implicitHeight: _button.height
+    function formatInputs(data)
+    {
+        var text = "<ul>";
+        data.forEach(function(entry) {
+            text += "<li>" + entry + "</li>";
+        })
+        text += "</ul>";
+        return text;
+    }
 
     property KeyboardCondition model
+    property string conditionText: formatInputs(model.inputs)
 
-    Loader {
-        id: _button
+    // Format the condition inputs as an unordered list
+    Connections {
+        target: model
+        function onInputsChanged(data)
+        {
+            _root.conditionText = formatInputs(data);
+        }
+    }
 
-        active: _root.model.inputType == "button"
+    implicitHeight: _content.height
+    implicitWidth: _content.width
 
-        sourceComponent: RowLayout {
-            anchors.left: parent.left
-            anchors.right: parent.right
+    RowLayout {
+        id: _content
 
-            Label {
-                text: "This input is"
+        Label {
+            text: "Keyboard Condition" + _root.conditionText
+        }
+
+        Loader {
+            active: _root.model.comparator
+
+            sourceComponent: PressedComparatorUI {
+                comparator: _root.model.comparator
             }
+        }
 
+        InputListener {
+            Layout.alignment: Qt.AlignRight | Qt.AlignTop
+
+            callback: _root.model.updateInputs
+            multipleInputs: true
+            eventTypes: ["key"]
         }
     }
 }
