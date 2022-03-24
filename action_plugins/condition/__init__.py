@@ -150,28 +150,6 @@ class KeyboardCondition(AbstractCondition):
     code as well as the extended flag.
     """
 
-    class Input:
-
-        def __init__(self) -> None:
-            self.scan_code = 0
-            self.is_extended = False
-
-        def from_xml(self, node: ElementTree) -> None:
-            self.scan_code = util.read_property(
-                node, "scan-code", PropertyType.Int
-            )
-            self.is_extended = util.read_property(
-                node, "is-extended", PropertyType.Bool
-            )
-
-        def to_xml(self) -> ElementTree:
-            entries = [
-                "scan-code", self.scan_code, PropertyType.Int,
-                "is-extended", self.is_extended, PropertyType.Bool
-            ]
-            return util.create_node_from_data("input", entries)
-
-
     def __init__(self, parent=None):
         """Creates a new instance."""
         super().__init__(parent)
