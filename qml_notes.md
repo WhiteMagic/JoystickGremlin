@@ -357,3 +357,9 @@ class Derived(Base):
 ```
 
 This scheme allows redefining the behvaiour by reimplementing the implementation method where desired.
+
+## Component vs. Item
+
+A `Component` is effectively a class, i.e. a template of what an instantiation will look like. As such a `Componen` does not represent a specific object but can be used to create them. This can happen via the use in a delegate which will create an instance for each entry in the model. Another option is for dynamic object creation via the `createObject()` function of the `Component`.
+
+An `Item` on the other hand is an explicitly existing object that is rendered and exists as defined. Its main purpose is the creation of complex user defined widgets that can be integrated to build up a custom UI.
