@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 import QtQuick
 import QtQuick.Controls
@@ -41,8 +42,9 @@ Item {
         spacing: 10
 
         Repeater {
-            // The root action does not truly exist as an action and as such receives some information via
-            // the inputBinding instance which technically is accessible in all top level QML elements inside
+            // The root action does not truly exist as an action and as such
+            // receives some information via the inputBinding instance which
+            // technically is accessible in all top level QML elements inside
             // the action tree element.
             model: inputBinding.topLevelNodes
 

@@ -45,8 +45,11 @@ Item {
 
 
     ColumnLayout {
+        id: _content
+
         anchors.fill: parent
 
+        // Show all actions associated with this input
         ListView {
             id: _listView
 
@@ -71,7 +74,10 @@ Item {
             id: _entryDelegate
 
             ActionTree {
-                width: _listView.width
+                // Have to set the width here as Layout fields don't exist
+                // and we have to fill the view itself which will resize
+                // based on the layout
+                implicitWidth: ListView.view.width
 
                 inputBinding: modelData
             }
@@ -97,7 +103,6 @@ Item {
                     inputItemBindingListModel.modelReset()
                 }
             }
-
         }
     }
 }

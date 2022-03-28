@@ -43,6 +43,8 @@ Item {
     property JoystickCondition model
     property string conditionText: formatInputs(model.inputs)
 
+    implicitHeight: _content.height
+
     // Format the condition inputs as an unordered list
     Connections {
         target: model
@@ -50,49 +52,82 @@ Item {
         {
             _root.conditionText = formatInputs(data);
         }
+        // function onComparatorChanged()
+        // {
+        //     if(model.comparator)
+        //     {
+        //         _comparator.sourceComponent = Qt.createQmlObject(`
+        //             PressedComparatorUI {
+        //                 comparator: model.comparator
+        //             }`,
+        //             _comparator,
+        //             "ComparatorUI"
+        //         );
+        //     }
+        //     else
+        //     {
+        //         _comparator.sourceComponent = undefined;
+        //     }
+        // }
     }
 
-    implicitHeight: _content.height
-    implicitWidth: _content.width
-
-    RowLayout {
+    ColumnLayout {
         id: _content
 
-        // FIXME: this likely needs to be moved inside the loaders as it  will
-        //        be input type specific as well
-        Label {
-            text: "Joystick Condition" + _root.conditionText
-        }
+        anchors.left: parent.left
+        anchors.right: parent.right
 
-        // Loaders for the specific types of inputs
-        Loader {
-            active: _root.model.comparator && _root.model.comparator.typeName == "pressed"
+        RowLayout {
+            // FIXME: this likely needs to be moved inside the loaders as it  will
+            //        be input type specific as well
+            Label {
+                Layout.preferredWidth: 150
 
-            sourceComponent: PressedComparatorUI {
-                comparator: _root.model.comparator
+                text: "Joystick Condition"
+            }
+
+            // Loaders for the specific types of inputs
+            Loader {
+                Layout.fillWidth: true
+
+                active: _root.model.comparator && _root.model.comparator.typeName == "pressed"
+
+                sourceComponent: PressedComparatorUI {
+                    comparator: _root.model.comparator
+                }
+            }
+            Loader {
+                Layout.fillWidth: true
+
+                active: _root.model.comparator && _root.model.comparator.typeName == "range"
+
+                sourceComponent: PressedComparatorUI {
+                    comparator: _root.model.comparator
+                }
+            }
+            Loader {
+                Layout.fillWidth: true
+
+                active: _root.model.comparator && _root.model.comparator.typeName == "direction"
+
+                sourceComponent: PressedComparatorUI {
+                    comparator: _root.model.comparator
+                }
+            }
+
+            InputListener {
+                callback: _root.model.updateInputs
+                multipleInputs: true
+                eventTypes: ["axis", "button", "hat"]
             }
         }
-        Loader {
-            active: _root.model.comparator && _root.model.comparator.typeName == "range"
 
-            sourceComponent: PressedComparatorUI {
-                comparator: _root.model.comparator
+        RowLayout {
+            Label {
+                Layout.fillWidth: true
+
+                text: _root.conditionText
             }
-        }
-        Loader {
-            active: _root.model.comparator && _root.model.comparator.typeName == "direction"
-
-            sourceComponent: PressedComparatorUI {
-                comparator: _root.model.comparator
-            }
-        }
-
-        InputListener {
-            Layout.alignment: Qt.AlignRight | Qt.AlignTop
-
-            callback: _root.model.updateInputs
-            multipleInputs: true
-            eventTypes: ["button"]
         }
     }
 }

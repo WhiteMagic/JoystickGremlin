@@ -49,6 +49,8 @@ Item {
         RowLayout {
             id: _logicalOperator
 
+            Layout.fillWidth: true
+
             Label {
                 text: "When "
             }
@@ -95,6 +97,7 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
+
             height: 2
             color: Universal.accent
         }
@@ -104,11 +107,14 @@ Item {
 
             delegate: RowLayout {
                 ConditionComparatorUI {
-                    model: modelData
-
                     Layout.fillWidth: true
+
+                    model: modelData
                 }
                 IconButton {
+                    Layout.alignment: Qt.AlignTop
+                    Layout.topMargin: 4
+
                     text: "\uf2ed"
 
                     onClicked: function(index)
@@ -196,7 +202,6 @@ Item {
             color: "transparent"
         }
     }
-
 
     // Drop action for insertion into empty/first slot of the true actions
     DropArea {

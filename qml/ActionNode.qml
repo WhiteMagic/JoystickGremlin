@@ -38,11 +38,11 @@ Item {
     ColumnLayout {
         id: _content
 
-        property int sourceY
-        property bool dragSuccess : false
-
         anchors.left: parent.left
         anchors.right: parent.right
+
+        property int sourceY
+        property bool dragSuccess : false
 
         // Drag & drop support
         Drag.active: _dragArea.drag.active
@@ -59,7 +59,9 @@ Item {
             _content.sourceY = _content.y
         }
 
-        // Header
+        // +--------------------------------------------------------------------
+        // | Header
+        // +--------------------------------------------------------------------
         RowLayout {
             id: _header
 
@@ -99,31 +101,49 @@ Item {
             }
         }
 
-        // Dynamic QML item loading
-        Item {
+        // +--------------------------------------------------------------------
+        // | Dynamic QML item loading
+        // +--------------------------------------------------------------------
+        RowLayout {
             id: _action
 
             property var dynamicItem: null
 
             Layout.fillWidth: true
-            Layout.preferredHeight: _foldButton.checked ? implicitHeight : 0
+            //Layout.preferredHeight: _foldButton.checked ? implicitHeight : 0
             visible: _foldButton.checked
 
-            Connections {
-                target: _action.dynamicItem
-                function onImplicitHeightChanged() {
-                    _action.implicitHeight = _action.dynamicItem.implicitHeight
-                }
+            // Synchronize the container item's height with that of the
+            // dynamically created element
+            Binding {
+                target: _action
+                property: "implicitHeight"
+                value: _action.dynamicItem.implicitHeight
+                when: _action.dynamicItem != null
             }
 
             // Dynamically load the QML item
-            Component.onCompleted: {
+            Component.onCompleted: function()
+            {
                 var component = Qt.createComponent(
                     Qt.resolvedUrl(_root.action.qmlPath)
                 )
 
-                if (component) {
-                    if (component.status == Component.Ready) {
+                if(component.status == Component.Ready ||
+                        component.status == Component.Error
+                )
+                {
+                    finishCreation();
+                }
+                else
+                {
+                    component.statusChanged.connect(finishCreation);
+                }
+
+                function finishCreation()
+                {
+                    if(component.status === Component.Ready)
+                    {
                         _action.dynamicItem = component.createObject(
                             _action,
                             {
@@ -132,18 +152,24 @@ Item {
                             }
                         );
 
-                        _action.implicitHeight = _action.dynamicItem.implicitHeight
-                        _action.dynamicItem.anchors.left = _action.left
-                        _action.dynamicItem.anchors.right = _action.right
-                        _action.dynamicItem.anchors.leftMargin = _foldButton.width
-                    } else if (component.status == Component.Error) {
-                        console.log("Error loading component:", component.errorString());
+                        // As this object is created within a layout we can
+                        // use the fillWidth property to ensure this object
+                        // uses all available space. Height is controlled by
+                        // the contents of the item and propagate up to the
+                        // layout itself.
+                        _action.dynamicItem.Layout.fillWidth = true
+                    }
+                    else if(component.status == Component.Error)
+                    {
+                        console.log(
+                            "Error loading component: ",
+                            component.errorString()
+                        );
                     }
                 }
             }
         }
     }
-
 
     // +------------------------------------------------------------------------
     // | Drag & Drop support

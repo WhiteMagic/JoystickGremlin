@@ -268,64 +268,67 @@ ApplicationWindow {
         }
     }
 
-    // Horizonbtal list of "tabs" listing all detected devices
-    DeviceList {
-        id: _devicePanel
+    // Main window content
+    ColumnLayout {
+        anchors.fill: parent
 
-        z: 1
-        height: 50
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
+        // Horizonbtal list of "tabs" listing all detected devices
+        DeviceList {
+            id: _devicePanel
 
-        deviceListModel: _deviceListModel
+            Layout.preferredHeight: 50
+            Layout.fillWidth: true
+            z: 1
 
-        // Trigger a model update on the DeviceInputList
-        onDeviceGuidChanged: {
-            _deviceModel.guid = deviceGuid
-        }
-    }
+            deviceListModel: _deviceListModel
 
-    // Main UI are containing the list of inputs of the active device on
-    // the left and the action associated with the currently selected input
-    // on the right.
-    SplitView {
-        id: _contentLayout
-
-        // Ensure the widget covers the entire remaining area in the window
-        anchors.top: _devicePanel.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        orientation: Qt.Horizontal
-
-        // List of the inputs of the currently selected device
-        DeviceInputList {
-            id: _deviceInputList
-            device: _deviceModel
-            SplitView.minimumWidth: minimumWidth
-
-            // Trigger a model update on the InputConfiguration
-            onInputIdentifierChanged: {
-                _inputConfigurationPanel.inputItemBindingListModel =
-                    backend.getInputItem(inputIdentifier).inputItemBindings
-                _inputConfigurationPanel.inputIdentifier = inputIdentifier
-            }
-
-            // Ensure initial state of input list and input configuration is
-            // synchronized
-            Component.onCompleted: {
-                inputIdentifier = device.inputIdentifier(inputIndex)
+            // Trigger a model update on the DeviceInputList
+            onDeviceGuidChanged: {
+                _deviceModel.guid = deviceGuid
             }
         }
 
-        // List of the actions associated with the currently selected input
-        InputConfiguration {
-            id: _inputConfigurationPanel
+        // Main UI which contains the active device's inputs on the left and
+        // actions assigned to the currently selected input on the right.
+        SplitView {
+            // Ensure the widget covers the entire remaining area in the window
+            Layout.fillHeight: true
+            Layout.fillWidth: true
 
-            SplitView.fillWidth: true
-            SplitView.minimumWidth: 600
+            orientation: Qt.Horizontal
+
+            // List of the inputs of the currently selected device
+            DeviceInputList {
+                id: _deviceInputList
+                
+                SplitView.minimumWidth: minimumWidth
+
+                device: _deviceModel
+
+                // Trigger a model update on the InputConfiguration
+                onInputIdentifierChanged: {
+                    _inputConfigurationPanel.inputItemBindingListModel =
+                        backend.getInputItem(inputIdentifier).inputItemBindings
+                    _inputConfigurationPanel.inputIdentifier = inputIdentifier
+                }
+
+                // Ensure initial state of input list and input configuration is
+                // synchronized
+                Component.onCompleted: {
+                    inputIdentifier = device.inputIdentifier(inputIndex)
+                }
+            }
+
+            // List of the actions associated with the currently selected input
+            InputConfiguration {
+                id: _inputConfigurationPanel
+
+                SplitView.fillWidth: true
+                SplitView.fillHeight: true
+                SplitView.minimumWidth: 600
+            }
         }
+
     }
 
 } // ApplicationWindow

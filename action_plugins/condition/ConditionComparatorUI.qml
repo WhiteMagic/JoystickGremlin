@@ -30,7 +30,6 @@ Item {
     property var model
 
     implicitHeight: _content.height
-    Layout.fillWidth: true
 
     RowLayout {
         id: _content
@@ -44,6 +43,8 @@ Item {
 
             sourceComponent: JoystickConditionUI {
                 model: modelData
+
+                implicitWidth: _content.width
             }
         }
     // Loader {
@@ -52,6 +53,8 @@ Item {
 
     //     sourceComponent: VJoyConditionUI {
     //         model: modelData
+    //
+    //         implicitWidth: _content.width
     //     }
     // }
         Loader {
@@ -60,6 +63,8 @@ Item {
 
             sourceComponent: KeyboardConditionUI {
                 model: modelData
+
+                implicitWidth: _content.width
             }
         }
     }

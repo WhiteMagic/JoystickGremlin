@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,14 +40,14 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: 10
-        anchors.rightMargin: 20
 
         // +--------------------------------------------------------------------
         // | Header
         // +--------------------------------------------------------------------
         InputItemBindingConfigurationHeader {
             Layout.fillWidth: true
+            Layout.leftMargin: 10
+            Layout.rightMargin: 20
 
             inputBinding: _root.inputBinding
         }
@@ -58,6 +58,8 @@ Item {
             Layout.alignment: Qt.AlignVCenter
             Layout.topMargin: 5
             Layout.bottomMargin: 10
+            Layout.leftMargin: 10
+            Layout.rightMargin: 20
 
             height: 2
             color: Universal.accent
@@ -68,6 +70,8 @@ Item {
         // +--------------------------------------------------------------------
         RootAction {
             Layout.fillWidth: true
+            Layout.leftMargin: 10
+            Layout.rightMargin: 20
         }
     }
 }

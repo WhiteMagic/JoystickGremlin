@@ -53,29 +53,43 @@ Item {
     }
 
     implicitHeight: _content.height
-    implicitWidth: _content.width
 
-    RowLayout {
+    ColumnLayout {
         id: _content
 
-        Label {
-            text: "Keyboard Condition" + _root.conditionText
-        }
+        anchors.left: parent.left
+        anchors.right: parent.right
 
-        Loader {
-            active: _root.model.comparator
+        RowLayout {
+            Label {
+                Layout.preferredWidth: 150
 
-            sourceComponent: PressedComparatorUI {
-                comparator: _root.model.comparator
+                text: "Keyboard Condition"
             }
+
+            Loader {
+                Layout.fillWidth: true
+
+                active: _root.model.comparator
+
+                sourceComponent: PressedComparatorUI {
+                    comparator: _root.model.comparator
+                }
+            }
+
+            InputListener {
+                callback: _root.model.updateInputs
+                multipleInputs: true
+                eventTypes: ["key"]
+            }
+
         }
 
-        InputListener {
-            Layout.alignment: Qt.AlignRight | Qt.AlignTop
-
-            callback: _root.model.updateInputs
-            multipleInputs: true
-            eventTypes: ["key"]
+        RowLayout {
+            Label {
+                Layout.fillWidth: true
+                text: _root.conditionText
+            }
         }
     }
 }
