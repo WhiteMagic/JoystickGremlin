@@ -70,7 +70,10 @@ class InputListenerModel(QtCore.QObject):
         return [InputType.to_string(v) for v in self._event_types]
 
     def _set_event_types(self, event_types: List[str]) -> None:
-        types = sorted([InputType.to_enum(v) for v in event_types])
+        types = sorted(
+            [InputType.to_enum(v) for v in event_types],
+            key=lambda v: InputType.to_string(v)
+        )
         if types != self._event_types:
             self._event_types = types
             self.eventTypesChanged.emit()
@@ -150,12 +153,15 @@ class InputListenerModel(QtCore.QObject):
                 self._abort_timer = threading.Timer(1.0, self._stop_listening)
                 self._abort_timer.start()
 
-        # Only react to events being listened to and ignore events which do
-        # not support button like behavior
+        # Only react to events being listened to
         if event.event_type not in self._event_types:
             return
-        if event.event_type not in [InputType.JoystickButton, InputType.Keyboard]:
-            return
+
+        # Ignore multi event setting for axis and hat events
+        if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
+            self._inputs = [event]
+            self._abort_timer.cancel()
+            self.listeningTerminated.emit(self._inputs)
 
         # Terminate listening if a release event is observed
         if not event.is_pressed:
