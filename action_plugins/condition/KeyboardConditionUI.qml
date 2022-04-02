@@ -68,8 +68,6 @@ Item {
             }
 
             Loader {
-                Layout.fillWidth: true
-
                 active: _root.model.comparator
 
                 sourceComponent: PressedComparatorUI {
@@ -78,6 +76,9 @@ Item {
             }
 
             InputListener {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignRight
+
                 callback: _root.model.updateInputs
                 multipleInputs: true
                 eventTypes: ["key"]
@@ -88,6 +89,7 @@ Item {
         RowLayout {
             Label {
                 Layout.fillWidth: true
+
                 text: _root.conditionText
             }
         }

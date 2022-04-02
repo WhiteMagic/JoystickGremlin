@@ -89,7 +89,8 @@ Item {
     RowLayout {
         id: _content
 
-        Layout.fillWidth: true
+        anchors.left: parent.left
+        anchors.right: parent.right
 
         Popup {
             id: _popup

@@ -88,8 +88,6 @@ Item {
 
             // Loaders for the specific types of inputs
             Loader {
-                Layout.fillWidth: true
-
                 active: _root.model.comparator && _root.model.comparator.typeName == "pressed"
 
                 sourceComponent: PressedComparatorUI {
@@ -97,17 +95,13 @@ Item {
                 }
             }
             Loader {
-                Layout.fillWidth: true
-
                 active: _root.model.comparator && _root.model.comparator.typeName == "range"
 
-                sourceComponent: PressedComparatorUI {
+                sourceComponent: RangeComparatorUI {
                     comparator: _root.model.comparator
                 }
             }
             Loader {
-                Layout.fillWidth: true
-
                 active: _root.model.comparator && _root.model.comparator.typeName == "direction"
 
                 sourceComponent: PressedComparatorUI {
@@ -116,6 +110,10 @@ Item {
             }
 
             InputListener {
+                id: _tmp
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignRight
+
                 callback: _root.model.updateInputs
                 multipleInputs: true
                 eventTypes: ["axis", "button", "hat"]

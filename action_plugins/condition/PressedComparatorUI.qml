@@ -28,14 +28,11 @@ Item {
 
     property PressedComparator comparator
 
-    implicitWidth: _content.width
     implicitHeight: _content.height
+    implicitWidth: _content.width
 
     RowLayout {
         id: _content
-
-        // anchors.left: parent.left
-        // anchors.right: parent.right
 
         Label {
             text: "This input is"
