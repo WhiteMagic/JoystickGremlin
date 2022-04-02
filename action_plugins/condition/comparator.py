@@ -133,7 +133,20 @@ class RangeComparator(AbstractComparator):
             True if the value is between the lower and upper value,
             False otherwise
         """
-        return self.lower <= value.current <= self.upper
+        # Retrieve state of the events which should be just one
+        if len(events) > 1:
+            raise error.GremlinError(
+                "More than a single device in a range comparator"
+            )
+        if events[0].event_type != InputType.JoystickAxis:
+            raise error.GremlinError(
+                f"Received type other than an axis in a range comparator."
+            )
+        
+        axis = input_devices.JoystickProxy()[events[0].device_guid].axis(
+            events[0].identifier
+        )
+        return self.lower <= axis.value <= self.upper
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.lower = util.read_property(node, "lower-limit", PropertyType.Float)
