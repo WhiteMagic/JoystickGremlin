@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import typing
-from typing import List, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 import uuid
 
 from PySide6 import QtCore, QtQml
@@ -209,6 +209,86 @@ class VirtualButtonModel(QtCore.QObject):
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.NorthWest),
         fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.NorthWest, x),
         notify=hatDirectionChanged
+    )
+
+
+@QtQml.QmlElement
+class HatDirectionModel(QtCore.QObject):
+
+    """QML model representing the directions of a hat."""
+
+    directionsChanged = Signal()
+
+    def __init__(
+        self,
+        directions: List[HatDirection],
+        parent: Optional[QtCore.QObject]=None
+    ):
+        super().__init__(parent)
+
+        self.directions = directions
+
+    def _get_hat_state(self, direction: HatDirection) -> bool:
+        return direction in self.directions
+
+    def _set_hat_state(self, direction: HatDirection, is_active: bool) -> None:
+        if is_active:
+            if direction not in self.directions:
+                self.directions.append(direction)
+                self.directionsChanged.emit()
+        else:
+            if direction in self.directions:
+                index = self.directions.index(direction)
+                del self.directions[index]
+                self.directionsChanged.emit()
+
+    hatNorth = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.North),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.North, x),
+        notify=directionsChanged
+    )
+    hatNorthEast = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.NorthEast),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.NorthEast, x),
+        notify=directionsChanged
+    )
+    hatEast = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.East),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.East, x),
+        notify=directionsChanged
+    )
+    hatSouthEast = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.SouthEast),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.SouthEast, x),
+        notify=directionsChanged
+    )
+    hatSouth = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.South),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.South, x),
+        notify=directionsChanged
+    )
+    hatSouthWest = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.SouthWest),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.SouthWest, x),
+        notify=directionsChanged
+    )
+    hatWest = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.West),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.West, x),
+        notify=directionsChanged
+    )
+    hatNorthWest = Property(
+        bool,
+        fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.NorthWest),
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.NorthWest, x),
+        notify=directionsChanged
     )
 
 

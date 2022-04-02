@@ -25,7 +25,7 @@ import Gremlin.Profile
 Item {
     id: _root
 
-    property VirtualButtonModel virtualButton
+    property HatDirectionModel directions
 
     implicitHeight: _checkboxes.height
     implicitWidth: _checkboxes.width
@@ -38,72 +38,72 @@ Item {
         IconCheckBox {
             image: "../gfx/hat_n.png"
 
-            checked: virtualButton.hatNorth
+            checked: directions.hatNorth
             onCheckedChanged: {
-                virtualButton.hatNorth = checked
+                directions.hatNorth = checked
             }
         }
 
         IconCheckBox {
             image: "../gfx/hat_ne.png"
 
-            checked: virtualButton.hatNorthEast
+            checked: directions.hatNorthEast
             onCheckedChanged: {
-                virtualButton.hatNorthEast = checked
+                directions.hatNorthEast = checked
             }
         }
 
         IconCheckBox {
             image: "../gfx/hat_e.png"
 
-            checked: virtualButton.hatEast
+            checked: directions.hatEast
             onCheckedChanged: {
-                virtualButton.hatEast = checked
+                directions.hatEast = checked
             }
         }
 
         IconCheckBox {
             image: "../gfx/hat_se.png"
 
-            checked: virtualButton.hatSouthEast
+            checked: directions.hatSouthEast
             onCheckedChanged: {
-                virtualButton.hatSouthEast = checked
+                directions.hatSouthEast = checked
             }
         }
 
         IconCheckBox {
             image: "../gfx/hat_s.png"
 
-            checked: virtualButton.hatSouth
+            checked: directions.hatSouth
             onCheckedChanged: {
-                virtualButton.hatSouth = checked
+                directions.hatSouth = checked
             }
         }
 
         IconCheckBox {
             image: "../gfx/hat_sw.png"
 
-            checked: virtualButton.hatSouthWest
+            checked: directions.hatSouthWest
             onCheckedChanged: {
-                virtualButton.hatSouthWest = checked
+                directions.hatSouthWest = checked
             }
         }
 
         IconCheckBox {
             image: "../gfx/hat_w.png"
 
-            checked: virtualButton.hatWest
+            checked: directions.hatWest
             onCheckedChanged: {
-                virtualButton.hatWest = checked
+                directions.hatWest = checked
             }
         }
 
         IconCheckBox {
             image: "../gfx/hat_nw.png"
 
-            checked: virtualButton.hatNorthWest
+            checked: directions.hatNorthWest
             onCheckedChanged: {
-                virtualButton.hatNorthWest = checked
+                directions.hatNorthWest = checked
             }
         }
     }

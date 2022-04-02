@@ -104,7 +104,7 @@ Item {
             Loader {
                 active: _root.model.comparator && _root.model.comparator.typeName == "direction"
 
-                sourceComponent: PressedComparatorUI {
+                sourceComponent: DirectionComparatorUI {
                     comparator: _root.model.comparator
                 }
             }

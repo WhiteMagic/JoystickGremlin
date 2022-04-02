@@ -25,6 +25,7 @@ from PySide6.QtCore import Property, Signal
 from gremlin import error, event_handler, input_devices, keyboard, util
 from gremlin.base_classes import Value
 from gremlin.types import HatDirection, InputType, PropertyType
+from gremlin.ui.profile import HatDirectionModel
 
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -304,9 +305,23 @@ class DirectionComparator(AbstractComparator):
         super().__init__()
 
         self.directions = directions
+        self._model = HatDirectionModel(self.directions)
 
     def __call__(self, value: Value, events: List[event_handler.Event]) -> bool:
-        return value.current in self.directions
+        # Retrieve state of the events which should be just one
+        if len(events) > 1:
+            raise error.GremlinError(
+                "More than a single device in a direction comparator"
+            )
+        if events[0].event_type != InputType.JoystickHat:
+            raise error.GremlinError(
+                f"Received type other than a hat in a direction comparator."
+            )
+
+        hat = input_devices.JoystickProxy()[events[0].device_guid].hat(
+            events[0].identifier
+        )
+        return HatDirection.to_enum(hat.direction) in self.directions
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.directions = util.read_properties(
@@ -325,6 +340,10 @@ class DirectionComparator(AbstractComparator):
 
     def _comparator_type(self) -> str:
         return "direction"
+
+    @Property(HatDirectionModel, notify=directionsChanged)
+    def model(self) -> HatDirectionModel:
+        return self._model
 
 
 def create_default_comparator(comparator_type: str) -> AbstractComparator:
