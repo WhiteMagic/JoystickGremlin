@@ -30,45 +30,75 @@ import "../../qml"
 Item {
     id: _root
 
+    property JoystickCondition model
+    property string conditionText: formatInputs(model.inputs)
+    property var comparatorUi: null
+
+    implicitHeight: _content.height
+
     function formatInputs(data)
     {
         var text = "<ul>";
-        data.forEach(function(entry) {
+        data.forEach(function(entry)
+        {
             text += "<li>" + entry + "</li>";
         })
         text += "</ul>";
         return text;
     }
 
-    property JoystickCondition model
-    property string conditionText: formatInputs(model.inputs)
+    function updateComparatorUi()
+    {
+        if(!model.comparator)
+        {
+            return;
+        }
 
-    implicitHeight: _content.height
+        if(comparatorUi !== null)
+        {
+            comparatorUi.destroy();
+        }
 
-    // Format the condition inputs as an unordered list
+        var qml_string = "";
+        if(model.comparator.typeName == "pressed")
+        {
+            qml_string = `PressedComparatorUI {comparator: model.comparator}`;
+        }
+        else if(model.comparator.typeName == "range")
+        {
+            qml_string = `RangeComparatorUI {comparator: model.comparator}`;
+        }
+        else if(model.comparator.typeName == "direction")
+        {
+            qml_string = `DirectionComparatorUI {comparator: model.comparator}`;
+        }
+        comparatorUi = Qt.createQmlObject(qml_string, _comparator, "Comparator");
+        _comparator.implicitHeight = comparatorUi.implicitHeight;
+        _comparator.implicitWidth = comparatorUi.implicitWidth;
+    }
+
+    // Load appropriate comprator UI element
+    Component.onCompleted: function()
+    {
+        updateComparatorUi();
+    }
+
+    // React to model changes
     Connections {
         target: model
+
+        // Format the user inputs
         function onInputsChanged(data)
         {
             _root.conditionText = formatInputs(data);
         }
-        // function onComparatorChanged()
-        // {
-        //     if(model.comparator)
-        //     {
-        //         _comparator.sourceComponent = Qt.createQmlObject(`
-        //             PressedComparatorUI {
-        //                 comparator: model.comparator
-        //             }`,
-        //             _comparator,
-        //             "ComparatorUI"
-        //         );
-        //     }
-        //     else
-        //     {
-        //         _comparator.sourceComponent = undefined;
-        //     }
-        // }
+
+        // Change comparator UI element when needed
+        function onComparatorChanged()
+        {
+            updateComparatorUi();
+        }
+            
     }
 
     ColumnLayout {
@@ -78,42 +108,21 @@ Item {
         anchors.right: parent.right
 
         RowLayout {
-            // FIXME: this likely needs to be moved inside the loaders as it  will
-            //        be input type specific as well
             Label {
                 Layout.preferredWidth: 150
 
                 text: "Joystick Condition"
             }
 
-            // Loaders for the specific types of inputs
-            Loader {
-                active: _root.model.comparator && _root.model.comparator.typeName == "pressed"
-
-                sourceComponent: PressedComparatorUI {
-                    comparator: _root.model.comparator
-                }
+            Item {
+                id: _comparator
             }
-            Loader {
-                active: _root.model.comparator && _root.model.comparator.typeName == "range"
 
-                sourceComponent: RangeComparatorUI {
-                    comparator: _root.model.comparator
-                }
-            }
-            Loader {
-                active: _root.model.comparator && _root.model.comparator.typeName == "direction"
-
-                sourceComponent: DirectionComparatorUI {
-                    comparator: _root.model.comparator
-                }
+            Rectangle {
+                Layout.fillWidth: true
             }
 
             InputListener {
-                id: _tmp
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignRight
-
                 callback: _root.model.updateInputs
                 multipleInputs: true
                 eventTypes: ["axis", "button", "hat"]

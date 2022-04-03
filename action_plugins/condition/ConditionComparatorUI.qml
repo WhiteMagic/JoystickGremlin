@@ -23,6 +23,8 @@ import QtQuick.Window
 
 import Gremlin.ActionPlugins
 
+import "../../qml"
+
 
 Item {
     id: _root

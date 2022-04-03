@@ -118,8 +118,8 @@ Item {
             Binding {
                 target: _action
                 property: "implicitHeight"
-                value: _action.dynamicItem.implicitHeight
-                when: _action.dynamicItem != null
+                value: _action.dynamicItem === null ? 0 : _action.dynamicItem.implicitHeight
+                when: _action.dynamicItem !== null
             }
 
             // Dynamically load the QML item

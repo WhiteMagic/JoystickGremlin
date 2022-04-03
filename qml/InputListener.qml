@@ -32,8 +32,8 @@ Item {
     property alias multipleInputs: _listener.multipleInputs
     property var callback
 
-    implicitHeight: _content.height
-    implicitWidth: _content.width
+    implicitHeight: _button.height
+    implicitWidth: _button.width
 
     // Underlying input listener model
     InputListenerModel {
@@ -85,51 +85,41 @@ Item {
         }
     }
 
-    // Main display
-    RowLayout {
-        id: _content
+    Button {
+        id: _button
+        text: "Record Inputs"
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        Popup {
-            id: _popup
-
-            parent: Overlay.overlay
-
-            anchors.centerIn: Overlay.overlay
-
-            dim: true
-            modal: true
-            focus: true
-            closePolicy: Popup.NoAutoClose
-
-            // Overlay display
-            ColumnLayout {
-                id: _layout
-                anchors.fill: parent
-
-                RowLayout {
-                    Label {
-                        text: "Waiting for user input"
-                    }
-                    Label {
-                        text: _listener.currentInput
-                    }
-                }
-            }
-        }
-
-        Button {
-            id: _button
-            text: "Record Inputs"
-            Layout.alignment: Qt.AlignRight
-
-            onClicked: function()
-            {
-                _popup.open()
-            }
+        onClicked: function()
+        {
+            _popup.open()
         }
     }
 
+    Popup {
+        id: _popup
+
+        parent: Overlay.overlay
+
+        anchors.centerIn: Overlay.overlay
+
+        dim: true
+        modal: true
+        focus: true
+        closePolicy: Popup.NoAutoClose
+
+        // Overlay display
+        ColumnLayout {
+            id: _layout
+            anchors.fill: parent
+
+            RowLayout {
+                Label {
+                    text: "Waiting for user input"
+                }
+                Label {
+                    text: _listener.currentInput
+                }
+            }
+        }
+    }
 }

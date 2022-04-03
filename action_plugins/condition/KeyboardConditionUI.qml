@@ -30,6 +30,11 @@ import "../../qml"
 Item {
     id: _root
 
+    property KeyboardCondition model
+    property string conditionText: formatInputs(model.inputs)
+
+    implicitHeight: _content.height
+
     function formatInputs(data)
     {
         var text = "<ul>";
@@ -40,9 +45,6 @@ Item {
         return text;
     }
 
-    property KeyboardCondition model
-    property string conditionText: formatInputs(model.inputs)
-
     // Format the condition inputs as an unordered list
     Connections {
         target: model
@@ -51,8 +53,6 @@ Item {
             _root.conditionText = formatInputs(data);
         }
     }
-
-    implicitHeight: _content.height
 
     ColumnLayout {
         id: _content
@@ -75,10 +75,11 @@ Item {
                 }
             }
 
-            InputListener {
+            Rectangle {
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignRight
+            }
 
+            InputListener {
                 callback: _root.model.updateInputs
                 multipleInputs: true
                 eventTypes: ["key"]
