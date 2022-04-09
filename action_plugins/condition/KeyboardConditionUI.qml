@@ -32,8 +32,10 @@ Item {
 
     property KeyboardCondition model
     property string conditionText: formatInputs(model.inputs)
+    property var comparatorUi: null
 
     implicitHeight: _content.height
+
 
     function formatInputs(data)
     {
@@ -45,12 +47,48 @@ Item {
         return text;
     }
 
+    function updateComparatorUi()
+    {
+        if(!model.comparator)
+        {
+            return;
+        }
+
+        if(comparatorUi !== null)
+        {
+            comparatorUi.destroy();
+        }
+
+        var qml_string = "";
+        if(model.comparator.typeName == "pressed")
+        {
+            qml_string = `PressedComparatorUI {comparator: model.comparator}`;
+        }
+        comparatorUi = Qt.createQmlObject(qml_string, _comparator, "Comparator");
+        _comparator.implicitHeight = comparatorUi.implicitHeight;
+        _comparator.implicitWidth = comparatorUi.implicitWidth;
+    }
+
+    // Load appropriate comprator UI element
+    Component.onCompleted: function()
+    {
+        updateComparatorUi();
+    }
+
     // Format the condition inputs as an unordered list
     Connections {
         target: model
+
+        // Format the user inputs
         function onInputsChanged(data)
         {
             _root.conditionText = formatInputs(data);
+        }
+
+        // Change comparator UI element when needed
+        function onComparatorChanged()
+        {
+            updateComparatorUi();
         }
     }
 
@@ -67,12 +105,8 @@ Item {
                 text: "Keyboard Condition"
             }
 
-            Loader {
-                active: _root.model.comparator
-
-                sourceComponent: PressedComparatorUI {
-                    comparator: _root.model.comparator
-                }
+            Item {
+                id: _comparator
             }
 
             Rectangle {
