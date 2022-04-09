@@ -112,7 +112,6 @@ Item {
 
             Layout.fillWidth: true
             Layout.leftMargin: _foldButton.width + _header.spacing
-            //Layout.preferredHeight: _foldButton.checked ? implicitHeight : 0
             visible: _foldButton.checked
 
             // Synchronize the container item's height with that of the
@@ -208,9 +207,9 @@ Item {
     Loader {
         active: !_root.action.isRootNode
         sourceComponent: DropArea {
-            x: _action.x
+            x: _header.x
             y: (_action.visible ? _action.y + _action.height : _header.y + _header.height) - height/2 + itemSpacing/2
-            width: _action.width
+            width: _header.width
             height: 30
 
             // Visualization of the drop indicator
