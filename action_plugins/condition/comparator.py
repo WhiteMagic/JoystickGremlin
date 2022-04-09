@@ -210,6 +210,10 @@ class PressedComparator(AbstractComparator):
         Returns:
             True if the button has matching state, False otherwise
         """
+        # Check whether to use events or value
+        if len(events) == 0:
+            return self._process_value(value)
+
         # Ensure all events are of the same type
         if len(set([evt.event_type for evt in events])) > 1:
             raise error.GremlinError(
@@ -250,6 +254,17 @@ class PressedComparator(AbstractComparator):
     @Property(str, fset=_set_is_pressed, notify=isPressedChanged)
     def isPressed(self) -> str:
         return "Pressed" if self.is_pressed else "Released"
+
+    def _process_value(self, value: Value) -> bool:
+        """Processes the comparator against the provided value.
+        
+        Args:
+            Value instance of the activating input.
+        
+        Returns:
+            True if the pressed state matches, False otherwise
+        """
+        return value.current == self.is_pressed
 
     def _process_button(self, events: List[event_handler.Event]) -> bool:
         """Processess the comparator for a set of buttons.

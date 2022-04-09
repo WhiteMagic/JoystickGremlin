@@ -579,12 +579,14 @@ class ConditionType(enum.Enum):
 
     Joystick = 1
     Keyboard = 2
+    CurrentInput = 3
 
     @staticmethod
     def to_display(instance: ConditionType) -> str:
         lookup = {
             ConditionType.Joystick: "Joystick",
             ConditionType.Keyboard: "Keyboard",
+            ConditionType.CurrentInput: "Current Input",
         }
         value = lookup.get(instance, None)
         if value is None:
@@ -598,6 +600,7 @@ class ConditionType(enum.Enum):
         lookup = {
             ConditionType.Joystick: "joystick",
             ConditionType.Keyboard: "keyboard",
+            ConditionType.CurrentInput: "current_input",
         }
         value = lookup.get(instance, None)
         if value is None:
@@ -611,6 +614,7 @@ class ConditionType(enum.Enum):
         lookup = {
             "joystick": ConditionType.Joystick,
             "keyboard": ConditionType.Keyboard,
+            "current_input": ConditionType.CurrentInput,
         }
         value = lookup.get(string, None)
         if value is None:

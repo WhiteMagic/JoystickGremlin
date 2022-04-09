@@ -33,6 +33,7 @@ Item {
 
     implicitHeight: _content.height
 
+
     RowLayout {
         id: _content
 
@@ -44,11 +45,22 @@ Item {
             active: _root.model.conditionType == "joystick"
 
             sourceComponent: JoystickConditionUI {
-                model: modelData
+                model: _root.model
 
                 implicitWidth: _content.width
             }
         }
+        Loader {
+            id: _self
+            active: _root.model.conditionType == "current_input"
+
+            sourceComponent: CurrentInputConditionUI {
+                model: _root.model
+
+                implicitWidth: _content.width
+            }
+        }
+
     // Loader {
     //     id: _vjoy
     //     active: _root.model.conditionType == "vjoy"
@@ -64,7 +76,7 @@ Item {
             active: _root.model.conditionType == "keyboard"
 
             sourceComponent: KeyboardConditionUI {
-                model: modelData
+                model: _root.model
 
                 implicitWidth: _content.width
             }

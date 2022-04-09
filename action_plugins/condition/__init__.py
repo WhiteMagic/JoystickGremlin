@@ -107,6 +107,43 @@ class AbstractCondition(QtCore.QObject):
     def conditionType(self) -> str:
         return ConditionType.to_string(self._condition_type)
 
+    def set_condition_type(self, condition_type: ConditionType):
+        """Sets the condition type to the provided one.
+        
+        This allows modifying the condition type from within code without
+        UI based intervetion. The UI should cause input type changes by
+        setting the inputs.
+
+        Args:
+            condition_type: type of condition to use
+        """
+        self._set_condition_type_impl(condition_type)
+
+    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+        raise error.GremlinError(
+            "AbstractCondition::_set_condition_type_impl implementation missing"
+        )
+
+    def _create_comparator(self, input_type: InputType):
+        """Creates the comparator based on the current condition type."""
+        comparator_map = {
+            InputType.JoystickAxis: comparator.RangeComparator,
+            InputType.JoystickButton: comparator.PressedComparator,
+            InputType.JoystickHat: comparator.DirectionComparator,
+            InputType.Keyboard: comparator.PressedComparator,
+        }
+        comparator_types = {
+            InputType.JoystickAxis: "range",
+            InputType.JoystickButton: "pressed",
+            InputType.JoystickHat: "direction",
+            InputType.Keyboard: "pressed",
+        }
+        if not isinstance(self._comparator, comparator_map[input_type]):
+            self._comparator = comparator.create_default_comparator(
+                comparator_types[input_type]
+            )
+            self.comparatorChanged.emit()
+
     @Property(comparator.AbstractComparator, notify=comparatorChanged)
     def comparator(self) -> comparator.AbstractComparator:
         return self._comparator
@@ -115,7 +152,6 @@ class AbstractCondition(QtCore.QObject):
         if set(input_list) != set(self._inputs):
             self._inputs = input_list
             self.inputsChanged.emit(self._get_inputs())
-            self.comparatorChanged.emit()
 
     def _get_inputs(self) -> List[str]:
         return self._get_inputs_impl()
@@ -207,6 +243,9 @@ class KeyboardCondition(AbstractCondition):
 
     def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
         self._update_inputs(data)
+
+    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+        pass
 
     @Slot(list)
     def updateInputs(self, data: List[event_handler.Event]) -> None:
@@ -302,6 +341,9 @@ class JoystickCondition(AbstractCondition):
     def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
         self._update_inputs(data)
 
+    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+        pass
+
     @Slot(list)
     def updateInputs(self, data: List[event_handler.Event]) -> None:
         # Verify the comparator type is still adequate and modify / warn as
@@ -318,22 +360,46 @@ class JoystickCondition(AbstractCondition):
         if len(input_types) == 0:
             self._comparator = None
         else:
-            comparator_map = {
-                InputType.JoystickAxis: comparator.RangeComparator,
-                InputType.JoystickButton: comparator.PressedComparator,
-                InputType.JoystickHat: comparator.DirectionComparator
-            }
-            comparator_types = {
-                InputType.JoystickAxis: "range",
-                InputType.JoystickButton: "pressed",
-                InputType.JoystickHat: "direction"
-            }
-            if not isinstance(self._comparator, comparator_map[input_types[0]]):
-                self._comparator = comparator.create_default_comparator(
-                    comparator_types[input_types[0]]
-                )
+            self._create_comparator(input_types[0])
 
         self._update_inputs(data)
+
+
+@QtQml.QmlElement
+class CurrentInputCondition(AbstractCondition):
+
+    def __init__(self, parent: Optional[QtCore.QObject]=None):
+        super().__init__(parent)
+
+        self._condition_type = ConditionType.CurrentInput
+
+    def from_xml(self, node: ElementTree) -> None:
+        comp_node = node.find("comparator")
+        if comp_node is None:
+            raise error.ProfileError("Comparator node missing in condition.")
+        self._comparator = comparator.create_comparator_from_xml(comp_node)
+
+    def to_xml(self) -> ElementTree:
+        entries = [
+            ["condition-type", "current_input", PropertyType.String]
+        ]
+        node = util.create_node_from_data("condition", entries)
+        node.append(self._comparator.to_xml())
+        return node
+
+    def _get_inputs_impl(self) -> List[str]:
+        return ["Current Input"]
+
+    def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
+        self._update_inputs(data)
+
+    def set_input_type(self, input_type: InputType):
+        self._create_comparator(input_type)
+
+    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+        if self._condition_type != condition_type:
+            self._condition_type = condition_type
+            self.conditionTypeChanged.emit()
 
 
 class ConditionFunctor(AbstractFunctor):
@@ -415,13 +481,18 @@ class ConditionModel(AbstractActionModel):
         Args:
             condition: Numerical value of the condition enum
         """
-        #node = self._action_tree.root.nodes_matching(lambda x: x.value.id == self.id)
+        condition_lookup = {
+            ConditionType.Joystick: JoystickCondition,
+            ConditionType.Keyboard: KeyboardCondition,
+            ConditionType.CurrentInput: CurrentInputCondition,
+        }
 
-        if ConditionType(condition) == ConditionType.Joystick:
-            cond = JoystickCondition(self)
-            self._conditions.append(cond)
-        elif ConditionType(condition) == ConditionType.Keyboard:
-            cond = KeyboardCondition(self)
+        condition_type = ConditionType(condition)
+        if condition_type in condition_lookup:
+            cond = condition_lookup[condition_type](self)
+            # If the condition is a CurrentInput one set the input type
+            if condition_type == ConditionType.CurrentInput:
+                cond.set_input_type(self.behavior_type)
             self._conditions.append(cond)
 
         self.conditionsChanged.emit()
@@ -524,6 +595,8 @@ class ConditionModel(AbstractActionModel):
                 cond_obj = JoystickCondition()
             elif condition_type == ConditionType.Keyboard:
                 cond_obj = KeyboardCondition()
+            elif condition_type == ConditionType.CurrentInput:
+                cond_obj = CurrentInputCondition()
             if cond_obj is not None:
                 cond_obj.from_xml(entry)
                 self._conditions.append(cond_obj)
