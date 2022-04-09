@@ -110,6 +110,7 @@ Item {
             property var dynamicItem: null
 
             Layout.fillWidth: true
+            Layout.leftMargin: _foldButton.width + _header.spacing
             //Layout.preferredHeight: _foldButton.checked ? implicitHeight : 0
             visible: _foldButton.checked
 
