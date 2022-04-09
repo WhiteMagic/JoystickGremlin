@@ -106,6 +106,8 @@ Item {
             model: _root.action.conditions
 
             delegate: RowLayout {
+                property int conditionIndex: index
+
                 ConditionComparatorUI {
                     Layout.fillWidth: true
 
@@ -117,9 +119,10 @@ Item {
 
                     text: "\uf2ed"
 
-                    onClicked: function(index)
+                    onClicked: function()
                     {
-                        _root.action.removeCondition(index)
+                        console.log("Deleting :" + conditionIndex)
+                        _root.action.removeCondition(conditionIndex)
                     }
                 }
             }
