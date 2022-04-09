@@ -33,6 +33,7 @@ Item {
 
     implicitHeight: _content.height
 
+
     RowLayout {
         id: _content
 
@@ -58,7 +59,7 @@ Item {
             sourceComponent: Row {
                 RadioButton {
                     text: "Absolute"
-                    checked: true
+                    checked: _root.action.axisMode == "absolute"
 
                     onCheckedChanged: {
                         _root.action.axisMode = "absolute"
@@ -67,6 +68,7 @@ Item {
                 RadioButton {
                     id: _relativeMode
                     text: "Relative"
+                    checked: _root.action.axisMode == "relative"
 
                     onCheckedChanged: {
                         _root.action.axisMode = "relative"
