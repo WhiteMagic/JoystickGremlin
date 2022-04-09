@@ -52,7 +52,8 @@ Item {
         Drag.mimeData: {
             "text/plain": _root.action.id
         }
-        Drag.onDragFinished: {
+        Drag.onDragFinished: function(dropAction)
+        {
             _content.dragSuccess = dropAction == Qt.MoveAction;
         }
         Drag.onDragStarted: {
@@ -226,7 +227,8 @@ Item {
                 color: Universal.accent
             }
 
-            onDropped: {
+            onDropped: function(drop)
+            {
                 if(drop.text != _root.action.id)
                 {
                     drop.accept();
