@@ -1097,7 +1097,7 @@ class VirtualAxisButton(AbstractVirtualButton):
         """
         self.lower_limit = read_subelement(node, "lower-limit")
         self.upper_limit = read_subelement(node, "upper-limit")
-        self.direction = read_subelement(node, "direction")
+        self.direction = read_subelement(node, "axis-button-direction")
 
     def to_xml(self):
         """Returns an XML node representing the data of this instance.
@@ -1107,7 +1107,9 @@ class VirtualAxisButton(AbstractVirtualButton):
         node = ElementTree.Element("virtual-button")
         node.append(create_subelement_node("lower-limit", self.lower_limit))
         node.append(create_subelement_node("upper-limit", self.upper_limit))
-        node.append(create_subelement_node("direction", self.direction))
+        node.append(
+            create_subelement_node("axis-button-direction", self.direction)
+        )
         return node
 
 

@@ -56,7 +56,7 @@ Item {
         }
         onInputIndexChanged: {
             _root.vjoyInputId = _vjoy.inputId
-            _root.vjoyInputType = _vjoy.vjoyInputType
+            _root.vjoyInputType = _vjoy.inputType
         }
     }
 
@@ -92,7 +92,8 @@ Item {
         model: _vjoy.inputModel
         currentIndex: _vjoy.inputIndex
 
-        onActivated: {
+        onActivated: function(index)
+        {
             _vjoy.inputIndex = index
         }
     }

@@ -41,7 +41,7 @@ Item {
         anchors.right: parent.right
 
         VJoySelector {
-            vjoyInputType: _root.action.vjoyInputType
+            vjoyInputType: inputBinding.behavior
             vjoyInputId: _root.action.vjoyInputId
             vjoyDeviceId: _root.action.vjoyDeviceId
             validTypes: [inputBinding.behavior]
