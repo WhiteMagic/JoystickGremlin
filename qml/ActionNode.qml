@@ -72,6 +72,7 @@ Item {
             IconButton {
                 id: _foldButton
 
+                checkable: true
                 checked: backend.isActionExpanded(_root.action.id)
                 text: checked ? "\uf146" : "\uf0fe"
 
