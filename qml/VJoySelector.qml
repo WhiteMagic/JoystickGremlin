@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import Gremlin.Device
 
@@ -30,14 +31,18 @@ Item {
     property int vjoyInputId
     property var validTypes
 
-    height: Math.max(_device.height, idSpacer.height, idInput.height)
-    width: _device.width + idSpacer.width + idInput.width
+    implicitHeight: _content.height
+    implicitWidth: _content.implicitWidth
 
-    // React to the validTypes value being changed from an external source
-    onValidTypesChanged: {
-        _vjoy.validTypes = validTypes
+    Component.onCompleted: {
+        console.log(_content.implicitWidth)
     }
 
+    // React to the validTypes value being changed from an external source
+    onValidTypesChanged: function()
+    {
+        _vjoy.validTypes = validTypes
+    }
 
     VJoyDevices {
         id: _vjoy
@@ -60,41 +65,41 @@ Item {
         }
     }
 
-    ComboBox {
-        id: _device
+    RowLayout {
+        id: _content
 
         anchors.left: parent.left
-        width: 150
+        anchors.right: parent.right
+        spacing: 10
 
-        model: _vjoy.deviceModel
-        currentIndex: _vjoy.vjoyIndex
+        ComboBox {
+            id: _device
 
-        onActivated: {
-            _vjoy.vjoyIndex = index;
+            Layout.minimumWidth: 150
+            Layout.fillWidth: true
+
+            model: _vjoy.deviceModel
+            currentIndex: _vjoy.vjoyIndex
+
+            onActivated: function(index)
+            {
+                _vjoy.vjoyIndex = index;
+            }
         }
-    }
 
-    Rectangle {
-        id: idSpacer
-        anchors.left: _device.right
-        width: 10
-        height: 1
+        ComboBox {
+            id: _input
 
-        color: "transparent"
-    }
+            Layout.minimumWidth: 150
+            Layout.fillWidth: true
 
-    ComboBox {
-        id: idInput
+            model: _vjoy.inputModel
+            currentIndex: _vjoy.inputIndex
 
-        anchors.left: idSpacer.right
-        width: 150
-
-        model: _vjoy.inputModel
-        currentIndex: _vjoy.inputIndex
-
-        onActivated: function(index)
-        {
-            _vjoy.inputIndex = index
+            onActivated: function(index)
+            {
+                _vjoy.inputIndex = index
+            }
         }
     }
 }
