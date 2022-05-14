@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import copy
 import logging
 import os
 import shutil
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Set
 import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -1059,18 +1059,20 @@ class AbstractVirtualButton(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the virtual button based on the node's data.
 
-        :param node the node containing data for this instance
+        Args:
+            node: the XML node containing data for this instance
         """
         pass
 
     @abstractmethod
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node representing the data of this instance.
 
-        :return XML node containing the instance's data
+        Returns:
+            XML node containing the instance's data
         """
         pass
 
@@ -1079,30 +1081,34 @@ class VirtualAxisButton(AbstractVirtualButton):
 
     """Virtual button which turns an axis range into a button."""
 
-    def __init__(self, lower_limit=0.0, upper_limit=0.0):
+    def __init__(self, lower_limit: float=0.0, upper_limit: float=0.0):
         """Creates a new instance.
 
-        :param lower_limit the lower limit of the virtual button
-        :param upper_limit the upper limit of the virtual button
+        Args:
+            lower_limit: the lower limit of the virtual button
+            upper_limit: the upper limit of the virtual button
         """
         super().__init__()
+
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
         self.direction = AxisButtonDirection.Anywhere
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the virtual button based on the node's data.
 
-        :param node the node containing data for this instance
+        Args:
+            node: the node containing data for this instance
         """
         self.lower_limit = read_subelement(node, "lower-limit")
         self.upper_limit = read_subelement(node, "upper-limit")
         self.direction = read_subelement(node, "axis-button-direction")
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node representing the data of this instance.
 
-        :return XML node containing the instance's data
+        Returns:
+            XML node containing the instance's data
         """
         node = ElementTree.Element("virtual-button")
         node.append(create_subelement_node("lower-limit", self.lower_limit))
@@ -1117,27 +1123,31 @@ class VirtualHatButton(AbstractVirtualButton):
 
     """Virtual button which combines hat directions into a button."""
 
-    def __init__(self, directions=()):
+    def __init__(self, directions: Set=()):
         """Creates a instance.
 
-        :param directions list of direction that form the virtual button
+        Args:
+            directions: list of direction that form the virtual button
         """
         super().__init__()
+
         self.directions = list(set(directions))
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree) -> None:
         """Populates the activation condition based on the node's data.
 
-        :param node the node containing data for this instance
+        Args:
+            node: the node containing data for this instance
         """
         self.directions = []
         for hd_node in node.findall("hat-direction"):
             self.directions.append(HatDirection.to_enum(hd_node.text))
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree:
         """Returns an XML node representing the data of this instance.
 
-        :return XML node containing the instance's data
+        Returns:
+            XML node containing the instance's data
         """
         node = ElementTree.Element("virtual-button")
         for direction in self.directions:
@@ -1151,10 +1161,11 @@ class Settings:
 
     """Stores general profile specific settings."""
 
-    def __init__(self, parent):
+    def __init__(self, parent: Profile):
         """Creates a new instance.
 
-        :param parent the parent profile
+        Args:
+            parent the parent profile
         """
         self.parent = parent
         self.vjoy_as_input = {}
@@ -1162,10 +1173,46 @@ class Settings:
         self.startup_mode = None
         self.default_delay = 0.05
 
-    def to_xml(self):
+    def from_xml(self, node: ElementTree) -> None:
+        """Populates the data storage with the XML node's contents.
+
+        Args:
+            node the node containing the settings data
+        """
+        if not node:
+            return
+
+        # Startup mode
+        self.startup_mode = None
+        if node.find("startup-mode") is not None:
+            self.startup_mode = node.find("startup-mode").text
+
+        # Default delay
+        self.default_delay = 0.05
+        if node.find("default-delay") is not None:
+            self.default_delay = float(node.find("default-delay").text)
+
+        # vJoy as input settings
+        self.vjoy_as_input = {}
+        for vjoy_node in node.findall("vjoy-input"):
+            vid = safe_read(vjoy_node, "id", int)
+            self.vjoy_as_input[vid] = True
+
+        # vjoy initialization values
+        self.vjoy_initial_values = {}
+        for vjoy_node in node.findall("vjoy"):
+            vid = safe_read(vjoy_node, "id", int)
+            self.vjoy_initial_values[vid] = {}
+            for axis_node in vjoy_node.findall("axis"):
+                aid = safe_read(axis_node, "id", int)
+                value = safe_read(axis_node, "value", float, 0.0)
+                self.vjoy_initial_values[vid][aid] = value
+
+    def to_xml(self) -> ElementTree:
         """Returns an XML node containing the settings.
 
-        :return XML node containing the settings
+        Returns:
+            XML node containing the settings
         """
         node = ElementTree.Element("settings")
 
@@ -1200,46 +1247,15 @@ class Settings:
 
         return node
 
-    def from_xml(self, node):
-        """Populates the data storage with the XML node's contents.
-
-        :param node the node containing the settings data
-        """
-        if not node:
-            return
-
-        # Startup mode
-        self.startup_mode = None
-        if node.find("startup-mode") is not None:
-            self.startup_mode = node.find("startup-mode").text
-
-        # Default delay
-        self.default_delay = 0.05
-        if node.find("default-delay") is not None:
-            self.default_delay = float(node.find("default-delay").text)
-
-        # vJoy as input settings
-        self.vjoy_as_input = {}
-        for vjoy_node in node.findall("vjoy-input"):
-            vid = safe_read(vjoy_node, "id", int)
-            self.vjoy_as_input[vid] = True
-
-        # vjoy initialization values
-        self.vjoy_initial_values = {}
-        for vjoy_node in node.findall("vjoy"):
-            vid = safe_read(vjoy_node, "id", int)
-            self.vjoy_initial_values[vid] = {}
-            for axis_node in vjoy_node.findall("axis"):
-                aid = safe_read(axis_node, "id", int)
-                value = safe_read(axis_node, "value", float, 0.0)
-                self.vjoy_initial_values[vid][aid] = value
-
-    def get_initial_vjoy_axis_value(self, vid, aid):
+    def get_initial_vjoy_axis_value(self, vid: int, aid: int) -> float:
         """Returns the initial value a vJoy axis should use.
 
-        :param vid the id of the virtual joystick
-        :param aid the id of the axis
-        :return default value for the specified axis
+        Args:
+            vid the id of the virtual joystick
+            aid the id of the axis
+        
+        Returns:
+            default value for the specified axis
         """
         value = 0.0
         if vid in self.vjoy_initial_values:
@@ -1247,12 +1263,18 @@ class Settings:
                 value = self.vjoy_initial_values[vid][aid]
         return value
 
-    def set_initial_vjoy_axis_value(self, vid, aid, value):
+    def set_initial_vjoy_axis_value(
+        self,
+        vid: int,
+        aid: int,
+        value: float
+    ) -> None:
         """Sets the default value for a particular vJoy axis.
 
-        :param vid the id of the virtual joystick
-        :param aid the id of the axis
-        :param value the default value to use with the specified axis
+        Args:
+            vid the id of the virtual joystick
+            aid the id of the axis
+            value the default value to use with the specified axis
         """
         if vid not in self.vjoy_initial_values:
             self.vjoy_initial_values[vid] = {}
@@ -1272,6 +1294,11 @@ class Profile:
         self.fpath = None
 
     def from_xml(self, fpath: str) -> None:
+        """Reads the content of an XML file and initializes the profile.
+        
+        Args:
+            fpath: path to the XML file to parse
+        """
         # Parse file into an XML document
         self.fpath = fpath
         tree = ElementTree.parse(fpath)
@@ -1290,6 +1317,11 @@ class Profile:
             self.inputs[item.device_id].append(item)
 
     def to_xml(self, fpath: str) -> None:
+        """Writes the profile's content to an XML file.
+        
+        Args:
+            fpath: path to the XML file in which to write the content
+        """
         root = ElementTree.Element("profile")
         root.set("version", str(ProfileConverter.current_version))
 
@@ -1320,7 +1352,8 @@ class Profile:
             input_type: InputType,
             input_id: int
     ) -> int:
-        """Returns the number of InputItem instances corresponding to the provided information.
+        """Returns the number of InputItem instances corresponding to the
+        provided information.
 
         Args:
             device_guid: GUID of the device
@@ -1384,16 +1417,17 @@ class Profile:
                 f"{input_id} of device {device_guid}"
             )
 
-    def _parse_actions(self, node: ElementTree.Element) -> List[Any]:
-        pass
-
 
 class InputItem:
 
     """Represents the configuration of a single input in a particular mode."""
 
     def __init__(self, library: profile_library.Library):
-        """Creates a new instance."""
+        """Creates a new instance.
+        
+        Args:
+            library: library instance that contains all action definitions
+        """
         self.device_id = None
         self.input_type = None
         self.input_id = None
@@ -1403,7 +1437,7 @@ class InputItem:
         self.always_execute = False
         self.is_active = True
 
-    def from_xml(self, node: ElementTree.Element):
+    def from_xml(self, node: ElementTree.Element) -> None:
         self.device_id = read_subelement(node, "device-id")
         self.input_type = read_subelement(node, "input-type")
         self.input_id = read_subelement(node, "input-id")
@@ -1495,7 +1529,10 @@ class InputItemBinding:
 
         return node
 
-    def _parse_virtual_button(self, node: ElementTree.Element) -> AbstractVirtualButton:
+    def _parse_virtual_button(
+        self,
+        node: ElementTree.Element
+    ) -> AbstractVirtualButton:
         # Ensure the configuration requires a virtual button
         virtual_button = None
         if self.input_item.input_type == InputType.JoystickAxis and \
