@@ -37,6 +37,15 @@ Item {
         _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
     }
 
+    // Reload UI when the model to display changes
+    Connections {
+        target: backend
+
+        function onInputConfigurationChanged()
+        {
+            _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
+        }
+    }
 
     // Widget content
     ColumnLayout {
@@ -186,7 +195,6 @@ Item {
 
                 onClicked: {
                     backend.newInputBinding(_root.inputIdentifier)
-                    inputItemBindingListModel.modelReset()
                 }
             }
         }
