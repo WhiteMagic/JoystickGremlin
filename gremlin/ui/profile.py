@@ -66,6 +66,12 @@ class InputItemModel(QtCore.QObject):
             target: identifier of the location on which the source is dropped
             method: type of drop action to perform
         """
+        # Force a UI refresh without performing any model changes if both
+        # source and target item are identical, i.e. an invalid drag&drop
+        if source == target:
+            self.bindingsChanged.emit()
+            return
+
         source_id = uuid.UUID(source)
         target_id = uuid.UUID(target)
         source_entry = None
