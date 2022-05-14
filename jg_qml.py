@@ -92,6 +92,20 @@ def exception_hook(exception_type, value, trace):
     gremlin.util.display_error(msg)
 
 
+def shutdown_cleanup():
+    """Handles cleanup before terminating Gremlin."""
+    # Terminate potentially running EventListener loop
+    event_listener = gremlin.event_handler.EventListener()
+    event_listener.terminate()
+
+    # Terminate profile runner
+    backend = gremlin.ui.backend.Backend()
+    backend.runner.stop()
+
+    # Relinquish control over all VJoy devices used
+    gremlin.joystick_handling.VJoyProxy.reset()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -113,12 +127,6 @@ if __name__ == "__main__":
     # Path manging to ensure Gremlin starts independent of the CWD
     sys.path.insert(0, gremlin.util.userprofile_path())
     gremlin.util.setup_userprofile()
-
-    # Fix some dumb Qt bugs
-    # QtWidgets.QApplication.addLibraryPath(os.path.join(
-    #     os.path.dirname(PyQt5.__file__),
-    #     "plugins"
-    # ))
 
     # Configure logging for system and user events
     configure_logger({
@@ -146,14 +154,12 @@ if __name__ == "__main__":
     #QtWebEngine.QtWebEngine.initialize()
 
     # Prevent blurry fonts that Qt seems to like
-    QtQuick.QQuickWindow.setTextRenderType(
-        QtQuick.QQuickWindow.NativeTextRendering
-    )
-    # User software rendering to prevent flickering on variable refresh rate
+    # QtQuick.QQuickWindow.setTextRenderType(
+    #     QtQuick.QQuickWindow.NativeTextRendering
+    # )
+    # Use software rendering to prevent flickering on variable refresh rate
     # displays
-    QtQuick.QQuickWindow.setSceneGraphBackend(
-        "software"
-    )
+    QtQuick.QQuickWindow.setSceneGraphBackend("software")
 
     # Create user interface
     app_id = u"joystick.gremlin"
@@ -171,6 +177,7 @@ if __name__ == "__main__":
     dill.DILL.init()
     gremlin.joystick_handling.joystick_devices_initialization()
 
+    # Create application and UI engine
     engine = QtQml.QQmlApplicationEngine(parent=app)
     QtCore.QDir.addSearchPath(
         "core_plugins",
@@ -182,13 +189,10 @@ if __name__ == "__main__":
     # | Register data types for use in QML
     # +-------------------------------------------------------------------------
 
-    # Create backend instance
+    # Create backend instance and register it in the engine
     backend = gremlin.ui.backend.Backend()
     engine.rootContext().setContextProperty("backend", backend)
     engine.rootContext().setContextProperty("signal", gremlin.signal.signal)
-
-    # Load a profile
-    #backend.loadProfile("layout.xml")
 
     # Load plugin code and UI elements
     syslog.info("Initializing plugins")
@@ -199,7 +203,6 @@ if __name__ == "__main__":
 
     # Initialize main UI
     engine.load(QtCore.QUrl.fromLocalFile("qml/Main.qml"))
-    # engine.load(QtCore.QUrl.fromLocalFile("qml/Test.qml"))
     if not engine.rootObjects():
         sys.exit(-1)
 
@@ -235,18 +238,9 @@ if __name__ == "__main__":
     #     event_listener.terminate()
     #     sys.exit(0)
 
-    # Initialize action plugins
-    # syslog.info("Initializing plugins")
-    # gremlin.plugin_manager.ActionPlugins()
-    # gremlin.plugin_manager.ContainerPlugins()
-
-    # Create Gremlin UI
-    # ui = GremlinUi()
-    # syslog.info("Gremlin UI created")
-
     # Handle user provided command line arguments
-    # if args.profile is not None and os.path.isfile(args.profile):
-    #     ui._do_load_profile(args.profile)
+    if args.profile is not None and os.path.isfile(args.profile):
+        backend.loadProfile(args.profile)
     # if args.enable:
     #     ui.ui.actionActivate.setChecked(True)
     #     ui.activate(True)
@@ -255,20 +249,9 @@ if __name__ == "__main__":
 
     # Run UI
     syslog.info("Gremlin UI launching")
+    app.aboutToQuit.connect(shutdown_cleanup)
     app.exec()
     syslog.info("Gremlin UI terminated")
-
-    # Terminate potentially running EventListener loop
-    event_listener = gremlin.event_handler.EventListener()
-    event_listener.terminate()
-
-    # if vjoy_working:
-    #     # Properly terminate the runner instance should it be running
-    #     ui.runner.stop()
-    backend.runner.stop()
-
-    # Relinquish control over all VJoy devices used
-    gremlin.joystick_handling.VJoyProxy.reset()
 
     syslog.info("Terminating Gremlin")
     sys.exit(0)
