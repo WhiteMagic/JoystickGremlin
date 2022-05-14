@@ -105,6 +105,11 @@ class AbstractCondition(QtCore.QObject):
 
     @Property(str, notify=conditionTypeChanged)
     def conditionType(self) -> str:
+        """Returns the name of the condition type.
+        
+        Returns:
+            String representation of the condition's type
+        """
         return ConditionType.to_string(self._condition_type)
 
     def set_condition_type(self, condition_type: ConditionType):
@@ -125,7 +130,11 @@ class AbstractCondition(QtCore.QObject):
         )
 
     def _create_comparator(self, input_type: InputType):
-        """Creates the comparator based on the current condition type."""
+        """Creates the comparator based on the current condition type.
+        
+        Args:
+            input_type: type of input the comparator is meant for
+        """
         comparator_map = {
             InputType.JoystickAxis: comparator.RangeComparator,
             InputType.JoystickButton: comparator.PressedComparator,
