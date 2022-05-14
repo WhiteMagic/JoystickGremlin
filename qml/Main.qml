@@ -18,9 +18,9 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQuick.Window
-import Qt.labs.platform as Dialogs
 
 import Gremlin.Device
 
@@ -36,10 +36,10 @@ ApplicationWindow {
     visible: true
     id: _root
 
-    Dialogs.MessageDialog {
+    MessageDialog {
         id: idErrorDialog
         title: "An error occurred"
-        buttons: Dialogs.MessageDialog.Ok
+        buttons: MessageDialog.Ok
 
         text: backend.lastError
 
@@ -48,31 +48,33 @@ ApplicationWindow {
         }
     }
 
-    Dialogs.FileDialog {
+    FileDialog {
         id: idSaveProfileFileDialog
         title: "Please choose a file"
 
         acceptLabel: "Save"
         defaultSuffix: "xml"
-        fileMode: Dialogs.FileDialog.SaveFile
+        fileMode: FileDialog.SaveFile
         nameFilters: ["Profile files (*.xml)"]
 
-        onAccepted: {
-            backend.saveProfile(Helpers.pythonizePath(file))
+        onAccepted: function()
+        {
+            backend.saveProfile(Helpers.pythonizePath(currentFile))
         }
     }
 
-    Dialogs.FileDialog {
+    FileDialog {
         id: idLoadProfileFileDialog
         title: "Please choose a file"
 
         acceptLabel: "Open"
         defaultSuffix: "xml"
-        fileMode: Dialogs.FileDialog.OpenFile
+        fileMode: FileDialog.OpenFile
         nameFilters: ["Profile files (*.xml)"]
 
-        onAccepted: {
-            backend.loadProfile(Helpers.pythonizePath(file))
+        onAccepted: function()
+        {
+            backend.loadProfile(Helpers.pythonizePath(currentFile))
         }
     }
 
