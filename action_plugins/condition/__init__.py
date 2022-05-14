@@ -109,7 +109,7 @@ class AbstractCondition(QtCore.QObject):
 
     def set_condition_type(self, condition_type: ConditionType):
         """Sets the condition type to the provided one.
-        
+
         This allows modifying the condition type from within code without
         UI based intervetion. The UI should cause input type changes by
         setting the inputs.

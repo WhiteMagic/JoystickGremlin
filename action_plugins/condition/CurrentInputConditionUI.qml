@@ -80,7 +80,6 @@ Item {
         {
             updateComparatorUi();
         }
-            
     }
 
     ColumnLayout {

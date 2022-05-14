@@ -121,7 +121,6 @@ Item {
 
                     onClicked: function()
                     {
-                        console.log("Deleting :" + conditionIndex)
                         _root.action.removeCondition(conditionIndex)
                     }
                 }

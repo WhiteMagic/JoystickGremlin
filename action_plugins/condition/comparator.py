@@ -143,7 +143,7 @@ class RangeComparator(AbstractComparator):
             raise error.GremlinError(
                 f"Received type other than an axis in a range comparator."
             )
-        
+
         axis = input_devices.JoystickProxy()[events[0].device_guid].axis(
             events[0].identifier
         )
@@ -257,10 +257,10 @@ class PressedComparator(AbstractComparator):
 
     def _process_value(self, value: Value) -> bool:
         """Processes the comparator against the provided value.
-        
+
         Args:
             Value instance of the activating input.
-        
+
         Returns:
             True if the pressed state matches, False otherwise
         """
@@ -268,10 +268,10 @@ class PressedComparator(AbstractComparator):
 
     def _process_button(self, events: List[event_handler.Event]) -> bool:
         """Processess the comparator for a set of buttons.
-        
+
         Args:
             events: joystick buttons to check in the comparator
-        
+
         Returns:
             True if the comparator holds for all buttons, False if at least one
             button fails the comparator
@@ -285,7 +285,7 @@ class PressedComparator(AbstractComparator):
 
     def _process_keyboard(self, events: List[event_handler.Event]) -> bool:
         """Processes the comparator for a set of keys.
-        
+
         Args:
             events: list of keys whose state is to be evaluated
 

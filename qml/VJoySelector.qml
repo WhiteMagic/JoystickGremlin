@@ -34,10 +34,6 @@ Item {
     implicitHeight: _content.height
     implicitWidth: _content.implicitWidth
 
-    Component.onCompleted: {
-        console.log(_content.implicitWidth)
-    }
-
     // React to the validTypes value being changed from an external source
     onValidTypesChanged: function()
     {

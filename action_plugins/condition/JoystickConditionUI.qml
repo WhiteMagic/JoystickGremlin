@@ -98,7 +98,6 @@ Item {
         {
             updateComparatorUi();
         }
-            
     }
 
     ColumnLayout {
