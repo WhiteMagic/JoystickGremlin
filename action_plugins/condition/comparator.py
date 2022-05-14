@@ -134,6 +134,10 @@ class RangeComparator(AbstractComparator):
             True if the value is between the lower and upper value,
             False otherwise
         """
+        # Check whether to use events or value
+        if len(events) == 0:
+            return self.lower <= value.current <= self.upper
+
         # Retrieve state of the events which should be just one
         if len(events) > 1:
             raise error.GremlinError(
@@ -323,6 +327,10 @@ class DirectionComparator(AbstractComparator):
         self._model = HatDirectionModel(self.directions)
 
     def __call__(self, value: Value, events: List[event_handler.Event]) -> bool:
+        # Check whether to use events or value
+        if len(events) == 0:
+            return HatDirection.to_enum(value.current) in self.directions
+
         # Retrieve state of the events which should be just one
         if len(events) > 1:
             raise error.GremlinError(
