@@ -30,20 +30,15 @@ import Gremlin.Profile
 Item {
     id: _root
 
-    property InputItemBindingListModel inputItemBindingListModel
     property InputIdentifier inputIdentifier
-
-    function reload() {
-        _root.inputItemBindingListModel =
-            backend.getInputItem(_root.inputIdentifier).inputItemBindings
-    }
+    property InputItemModel inputItemModel
 
     onInputIdentifierChanged: {
-        _root.inputItemBindingListModel =
-            backend.getInputItem(_root.inputIdentifier).inputItemBindings
+        _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
     }
 
 
+    // Widget content
     ColumnLayout {
         id: _content
 
@@ -66,20 +61,98 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
 
             // Content to visualize
-            model: _root.inputItemBindingListModel
+            model: _root.inputItemModel.inputItemBindings
             delegate: _entryDelegate
         }
 
+        // ListView delegate definition rendering individual bindings
+        // via ActionTree instances
         Component {
             id: _entryDelegate
 
-            ActionTree {
-                // Have to set the width here as Layout fields don't exist
-                // and we have to fill the view itself which will resize
-                // based on the layout
-                implicitWidth: ListView.view.width
+            Item {
+                id: _delegate
 
-                inputBinding: modelData
+                height: _actionTree.height + _dropArea.height
+                width: _actionTree.width
+
+                required property int index
+                required property var modelData
+                property var view: ListView.view
+
+                ActionTree {
+                    id: _actionTree
+                    // Have to set the width here as Layout fields don't exist
+                    // and we have to fill the view itself which will resize
+                    // based on the layout
+                    implicitWidth: view.width
+
+                    // Drag & Drop support
+                    Drag.active: _dragArea.drag.active
+                    Drag.dragType: Drag.Automatic
+                    Drag.supportedActions: Qt.MoveAction
+                    Drag.mimeData: {
+                        "text/plain": modelData.actionTreeId
+                    }
+
+                    inputBinding: modelData
+                }
+
+                // Drag & Drop drag area
+                MouseArea {
+                    id: _dragArea
+
+                    // Start at label field x coordinate, otherwise button
+                    // stops working
+                    x: _actionTree.x
+                    y: _actionTree.y
+                    z: -1
+                    width: _actionTree.width
+                    height: _actionTree.height
+
+                    // Setup object to drag
+                    drag.target: _actionTree
+                    drag.axis: Drag.YAxis
+
+                    // Create an image of the object to visualize the dragging
+                    onPressed: _actionTree.grabToImage(function(result) {
+                        _actionTree.Drag.imageSource = result.url
+                    })
+                }
+
+                // Drag & Drop drop area
+                DropArea {
+                    id: _dropArea
+
+                    x: _actionTree.x
+                    y: _actionTree.y + _actionTree.height
+                    width: _actionTree.width
+                    height: 30
+
+                    // Visualization of the drop indicator
+                    Rectangle {
+                        id: _dropMarker
+
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        height: 5
+
+                        opacity: parent.containsDrag ? 1.0 : 0.0
+                        color: Universal.accent
+                    }
+
+                    onDropped: function(drop)
+                    {
+                        drop.accept()
+                        _root.inputItemModel.dropAction(
+                            drop.text,
+                            modelData.actionTreeId,
+                            "append"
+                        )
+                    }
+                }
             }
         }
 

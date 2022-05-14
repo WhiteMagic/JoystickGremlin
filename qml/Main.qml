@@ -300,15 +300,13 @@ ApplicationWindow {
             // List of the inputs of the currently selected device
             DeviceInputList {
                 id: _deviceInputList
-                
+
                 SplitView.minimumWidth: minimumWidth
 
                 device: _deviceModel
 
                 // Trigger a model update on the InputConfiguration
                 onInputIdentifierChanged: {
-                    _inputConfigurationPanel.inputItemBindingListModel =
-                        backend.getInputItem(inputIdentifier).inputItemBindings
                     _inputConfigurationPanel.inputIdentifier = inputIdentifier
                 }
 

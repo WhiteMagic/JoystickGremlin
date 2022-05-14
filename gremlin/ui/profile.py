@@ -38,26 +38,48 @@ QML_IMPORT_NAME = "Gremlin.Profile"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-# Hierarchy of the item related classed:
-# InputItemModel -> LibraryItemListModel -> ActionTree
-
-
 @QtQml.QmlElement
 class InputItemModel(QtCore.QObject):
 
     """QML model class representing a LibraryItem instance."""
+
+    bindingsChanged = Signal()
 
     def __init__(self, input_item: profile.InputItem, parent=None):
         super().__init__(parent)
 
         self._input_item = input_item
 
-    @Property(QtCore.QObject)
+    @Property(QtCore.QObject, notify=bindingsChanged)
     def inputItemBindings(self) -> InputItemBindingListModel:
         return InputItemBindingListModel(
             self._input_item.action_configurations,
             self
         )
+
+    @Slot(str, str, str)
+    def dropAction(self, source: str, target: str, method: str) -> None:
+        """Handles dropping an action tree element
+
+        Args:
+            source: identifier of the tree being dropped
+            target: identifier of the location on which the source is dropped
+            method: type of drop action to perform
+        """
+        source_id = uuid.UUID(source)
+        target_id = uuid.UUID(target)
+        source_entry = None
+        for idx, entry in enumerate(self._input_item.action_configurations):
+            entry_id = entry.library_reference.action_tree.root.value.id
+            if entry_id == source_id:
+                source_entry = self._input_item.action_configurations.pop(idx)
+        if source_entry is not None:
+            for idx, entry in enumerate(self._input_item.action_configurations):
+                entry_id = entry.library_reference.action_tree.root.value.id
+                if entry_id == target_id:
+                    self._input_item.action_configurations.insert(idx+1, source_entry)
+
+        self.bindingsChanged.emit()
 
 
 @QtQml.QmlElement
@@ -555,6 +577,10 @@ class InputItemBindingModel(QtCore.QObject):
     @Property(type=int, notify=actionCountChanged)
     def actionCount(self) -> int:
         return self._action_tree.root.node_count
+
+    @Property(str, constant=True)
+    def actionTreeId(self) -> str:
+        return str(self._action_tree.root.value.id)
 
     @property
     def input_item_binding(self) -> profile.InputItemBinding:
