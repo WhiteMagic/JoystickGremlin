@@ -41,9 +41,6 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        property int sourceY
-        property bool dragSuccess : false
-
         // Drag & drop support
         Drag.active: _dragArea.drag.active
         Drag.dragType: Drag.Automatic
@@ -51,13 +48,6 @@ Item {
         Drag.proposedAction: Qt.MoveAction
         Drag.mimeData: {
             "text/plain": _root.action.id
-        }
-        Drag.onDragFinished: function(dropAction)
-        {
-            _content.dragSuccess = dropAction == Qt.MoveAction;
-        }
-        Drag.onDragStarted: {
-            _content.sourceY = _content.y
         }
 
         // +--------------------------------------------------------------------
@@ -191,14 +181,7 @@ Item {
         drag.target: _content
         drag.axis: Drag.YAxis
 
-        onReleased: {
-            if(!_content.dragSuccess)
-            {
-                _content.y = _content.sourceY;
-            }
-        }
-
-        // Create an image of the object to visualize the dragging
+        // Create an image of the object being dragged for visualization
         onPressed: _content.grabToImage(function(result) {
             _content.Drag.imageSource = result.url
         })
@@ -229,11 +212,8 @@ Item {
 
             onDropped: function(drop)
             {
-                if(drop.text != _root.action.id)
-                {
-                    drop.accept();
-                    modelData.dropAction(drop.text, modelData.id, "append");
-                }
+                drop.accept();
+                modelData.dropAction(drop.text, modelData.id, "append");
             }
         }
     }

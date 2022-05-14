@@ -357,6 +357,13 @@ class ActionNodeModel(QtCore.QObject):
             target: identifier of the location on which the source is dropped
             method: type of drop action to perform
         """
+        # Force a UI refresh without performing any model changes if both
+        # source and target item are identical, i.e. an invalid drag&drop
+        if source == target:
+            self.actionChanged.emit()
+            self._signal_change()
+            return
+
         if method == "append":
             self._append_drop_action(source, target)
         else:
