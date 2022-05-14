@@ -47,7 +47,9 @@ Item {
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
         Drag.mimeData: {
-            "text/plain": _root.action.id
+            "text/plain": _root.action.id,
+            "type": "action",
+            "root": _root.action.rootId
         }
 
         // +--------------------------------------------------------------------
@@ -196,6 +198,8 @@ Item {
             width: _header.width
             height: 30
 
+            property bool validDrag: false
+
             // Visualization of the drop indicator
             Rectangle {
                 id: _dropMarker
@@ -206,8 +210,19 @@ Item {
 
                 height: 5
 
-                opacity: parent.containsDrag ? 1.0 : 0.0
+                opacity: parent.validDrag ? 1.0 : 0.0
                 color: Universal.accent
+            }
+
+            onEntered: function(drag)
+            {
+                validDrag = drag.getDataAsString("type") == "action" &&
+                    drag.getDataAsString("root") == _root.action.rootId
+            }
+
+            onExited: function()
+            {
+                validDrag = false
             }
 
             onDropped: function(drop)

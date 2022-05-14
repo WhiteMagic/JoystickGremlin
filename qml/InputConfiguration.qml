@@ -92,7 +92,8 @@ Item {
                     Drag.dragType: Drag.Automatic
                     Drag.supportedActions: Qt.MoveAction
                     Drag.mimeData: {
-                        "text/plain": modelData.actionTreeId
+                        "text/plain": modelData.actionTreeId,
+                        "type": "actiontree"
                     }
 
                     inputBinding: modelData
@@ -129,6 +130,8 @@ Item {
                     width: _actionTree.width
                     height: 30
 
+                    property bool validDrag: false
+
                     // Visualization of the drop indicator
                     Rectangle {
                         id: _dropMarker
@@ -139,8 +142,18 @@ Item {
 
                         height: 5
 
-                        opacity: parent.containsDrag ? 1.0 : 0.0
+                        opacity: parent.validDrag ? 1.0 : 0.0
                         color: Universal.accent
+                    }
+
+                    onEntered: function(drag)
+                    {
+                        validDrag = drag.getDataAsString("type") == "actiontree"
+                    }
+
+                    onExited: function()
+                    {
+                        validDrag = false
                     }
 
                     onDropped: function(drop)

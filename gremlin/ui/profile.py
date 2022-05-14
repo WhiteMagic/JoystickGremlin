@@ -376,6 +376,15 @@ class ActionNodeModel(QtCore.QObject):
     def id(self) -> str:
         return str(self._node.value.id)
 
+    @Property(type=str, notify=actionChanged)
+    def rootId(self) -> str:
+        """Returns the UUID of the action's root node.
+        
+        Returns:
+            UUID of the root node
+        """
+        return str(self._action_tree.root.value.id)
+
     @Slot(str, str, str)
     def dropAction(self, source: str, target: str, method: str) -> None:
         """Handles dropping an action on an UI item.
