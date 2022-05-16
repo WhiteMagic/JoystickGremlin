@@ -106,7 +106,7 @@ class AbstractCondition(QtCore.QObject):
     @Property(str, notify=conditionTypeChanged)
     def conditionType(self) -> str:
         """Returns the name of the condition type.
-        
+
         Returns:
             String representation of the condition's type
         """
@@ -131,7 +131,7 @@ class AbstractCondition(QtCore.QObject):
 
     def _create_comparator(self, input_type: InputType):
         """Creates the comparator based on the current condition type.
-        
+
         Args:
             input_type: type of input the comparator is meant for
         """
@@ -421,11 +421,7 @@ class ConditionFunctor(AbstractFunctor):
         self.false_actions = \
             [a.node.value.functor(a.node.value) for a in action.falseActionNodes]
 
-    def process_event(
-        self,
-        event: event_handler.Event,
-        value: Value
-    ) -> None:
+    def process_event(self, event: event_handler.Event, value: Value) -> None:
         actions = self.true_actions if \
             self._condition_truth_state(value) else self.false_actions
         for action in actions:

@@ -31,13 +31,11 @@ import dill
 import gremlin
 from gremlin.base_classes import Value
 import gremlin.fsm
-import gremlin.profile
-from gremlin import event_handler, input_devices, joystick_handling, macro, \
-    sendinput, user_plugin, util
+from gremlin import error, event_handler, input_devices, joystick_handling, \
+    macro, profile, sendinput, user_plugin, util
 from gremlin.types import AxisButtonDirection, HatDirection, InputType, \
     MergeAxisOperation
 import vjoy as vjoy_module
-
 
 
 class VirtualButton(metaclass=ABCMeta):
@@ -47,7 +45,6 @@ class VirtualButton(metaclass=ABCMeta):
     def __init__(self):
         """Creates a new instance."""
         self._fsm = self._initialize_fsm()
-        #self._is_pressed = False
 
     def _initialize_fsm(self):
         """Initializes the state of the button FSM."""
@@ -156,62 +153,151 @@ class VirtualHatButton(VirtualButton):
         return [is_pressed] if has_changed else []
 
 
+class VirtualButtonFunctor:
+
+    def __init__(
+        self,
+        virtual_button: VirtualButton,
+        event_template: event_handler.Event
+    ):
+        self._virtual_button = virtual_button
+        self._event_template = event_template
+        self._event_listener = event_handler.EventListener()
+
+    def process_event(self, event: event_handler.Event, value: Value) -> None:
+        states = self._virtual_button.process_event(event)
+        for state in states:
+            new_event = self._event_template.clone()
+            new_event.is_pressed = state
+            new_event.raw_value = state
+            self._event_listener.virtual_event.emit(new_event)
+
 class CallbackObject:
 
     """Represents the callback executed in reaction to an input."""
 
-    def __init__(self, action):
-        self._action = action
+    c_next_virtual_identifier = 1
+
+    def __init__(self, binding: gremlin.profile.InputItemBinding):
+        """Creates a new callback instance for a specific input item.
+        
+        Args:
+            action: actions bound to a single input item
+        """
+        self._binding = binding
         self._functors = []
-        for node in action.library_reference.action_tree.root.children:
-            self._functors.append(node.value.functor(node.value))
+        self._virtual_identifier = 0
 
-        self._generate_values = self._default_generate_values
-        self._virtual_button = None
-        if isinstance(self._action.virtual_button, gremlin.profile.VirtualAxisButton):
-            self._virtual_button = VirtualAxisButton(
-                self._action.virtual_button.lower_limit,
-                self._action.virtual_button.upper_limit,
-                self._action.virtual_button.direction
-            )
-            self._generate_values = self._virtual_generate_values
-        elif isinstance(self._action.virtual_button, gremlin.profile.VirtualHatButton):
-            self._virtual_button = VirtualHatButton(
-                self._action.virtual_button.directions
-            )
-            self._generate_values = self._virtual_generate_values
+        # Differentiate between bindings utilizing virtual buttons and those
+        # that react to raw physical inputs
+        if self._binding.virtual_button is not None:
+            self._virtual_identifier = CallbackObject.c_next_virtual_identifier
+            CallbackObject.c_next_virtual_identifier += 1
+            self._virtual_event_setup()
+        else:
+            self._physical_event_setup()
 
-    def __call__(self, event):
+    def __call__(self, event: event_handler.Event) -> None:
         values = self._generate_values(event)
-
         for i, value in enumerate(values):
             for func in self._functors:
                 func.process_event(event, value)
 
-            # Pause between the execution of the binding
+            # Pause between the execution of subsequent bindings
             if i < len(values)-1:
                 time.sleep(0.05)
 
-    def _default_generate_values(self, event):
+    def _physical_event_setup(self) -> None:
+        """Configures the callback object for traditional physical events."""
+        for node in self._binding.library_reference.action_tree.root.children:
+            self._functors.append(node.value.functor(node.value))
+
+    def _virtual_event_setup(self) -> None:
+        """Configures the callback object for virtual button handling.
+        
+        This creates callbacks that emit virtual button events in reaction to
+        the input items physical events. The actions bound to the input item
+        in turn will trigger in response to the emitted virtual events.
+        """
+        # Create template virtual event
+        virtual_event = event_handler.Event(
+            InputType.VirtualButton,
+            self._virtual_identifier,
+            dill.GUID_Virtual,
+            is_pressed=False,
+            raw_value=False
+        )
+
+        # Create virtual button instance and virtual event generator
+        vb_instance = self._binding.virtual_button
+        if isinstance(vb_instance, gremlin.profile.VirtualAxisButton):
+            self._functors = [
+                VirtualButtonFunctor(
+                    VirtualAxisButton(
+                        vb_instance.lower_limit,
+                        vb_instance.upper_limit,
+                        vb_instance.direction
+                    ),
+                    virtual_event
+                )
+            ]
+        elif isinstance(vb_instance, gremlin.profile.VirtualHatButton):
+            self._functors = [
+                VirtualButtonFunctor(
+                    VirtualHatButton(vb_instance.directions),
+                    virtual_event
+                )
+            ]
+        else:
+            raise error.GremlinError(
+                "Attempting to create virtual event setup when no virtual " +
+                "button is configured."
+            )
+
+        # Create new callback entries for the virtual button event to execute
+        # the actions. This requires the creation of "fake" InputItem and
+        # InputItemBinding instances to create another CallbackObject to
+        # handle the virtual button events.
+        # Create virtual InputItem instance
+        phys_item = self._binding.input_item
+        virt_item = profile.InputItem(phys_item.library)
+        virt_item.device_id = dill.GUID_Virtual
+        virt_item.input_type = InputType.VirtualButton
+        virt_item.input_id = self._virtual_identifier
+        virt_item.mode = phys_item.mode
+        virt_item.action_configurations = phys_item.action_configurations
+        virt_item.always_execute = phys_item.always_execute
+        virt_item.is_active = phys_item.is_active
+        # Create virtual InputItemBinding instance
+        virt_binding = profile.InputItemBinding(virt_item)
+        virt_binding.description = self._binding.description
+        virt_binding.library_reference = self._binding.library_reference
+        virt_binding.behavior = InputType.JoystickButton
+        virt_binding.virtual_button = None
+        # Create callback reacting to the virtual button event using the new
+        # virtual binding that mirrors the original physical one
+        eh = event_handler.EventHandler()
+        eh.add_callback(
+            dill.GUID_Virtual,
+            self._binding.input_item.mode,
+            virtual_event,
+            CallbackObject(virt_binding),
+            virt_binding.input_item.always_execute
+        )
+
+    def _generate_values(self, event):
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
             value = Value(event.value)
-        elif event.event_type in [InputType.JoystickButton, InputType.Keyboard]:
+        elif event.event_type in [
+            InputType.JoystickButton,
+            InputType.Keyboard,
+            InputType.VirtualButton
+        ]:
             value = Value(event.is_pressed)
         else:
             raise gremlin.error.GremlinError("Invalid event type")
 
         return [value]
-
-    def _virtual_generate_values(self, event):
-        values = []
-        if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
-            states = self._virtual_button.process_event(event)
-            for state in states:
-                values.append(Value(state))
-        else:
-            raise gremlin.error.GremlinError("Invalid event type")
-
-        return values
 
 
 class CodeRunner:
@@ -470,82 +556,9 @@ class CodeRunner:
                 event.device_guid,
                 action.input_item.mode,
                 event,
-                self._create_callback(action),
+                CallbackObject(action),
                 action.input_item.always_execute
             )
-
-    def _callback(self, tree, action, event):
-        values = self._generate_values(event)
-        if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
-            value = Value(event.value)
-        elif event.event_type in [
-            InputType.JoystickButton,
-            InputType.Keyboard,
-            InputType.VirtualButton
-        ]:
-            value = Value(event.is_pressed)
-        else:
-            raise gremlin.error.GremlinError("Invalid event type")
-
-        shared_value = copy.deepcopy(value)
-
-        # Execute the nodes in the tree
-        stack = tree.children[::-1]
-        while len(stack) > 0:
-            node = stack.pop()
-            result = node.value.process_event(event, shared_value)
-
-            if result:
-                stack.extend(node.children[::-1])
-
-    def _create_callback(self, action):
-        return CallbackObject(action)
-
-        # # Create input callbacks based on the profile's content
-        # for device in profile.devices.values():
-        #     for mode in device.modes.values():
-        #         for input_items in mode.config.values():
-        #             for input_item in input_items.values():
-        #                 # Only add callbacks for input items that actually
-        #                 # contain actions
-        #                 if len(input_item.containers) == 0:
-        #                     continue
-        #
-        #                 event = event_handler.Event(
-        #                     event_type=input_item.input_type,
-        #                     device_guid=device.device_guid,
-        #                     identifier=input_item.input_id
-        #                 )
-        #
-        #                 # Create possibly several callbacks depending
-        #                 # on the input item's content
-        #                 callbacks = []
-        #                 for container in input_item.containers:
-        #                     if not container.is_valid():
-        #                         logging.getLogger("system").warning(
-        #                             "Incomplete container ignored"
-        #                         )
-        #                         continue
-        #                     callbacks.extend(container.generate_callbacks())
-        #
-        #                 for cb_data in callbacks:
-        #                     if cb_data.event is None:
-        #                         self.event_handler.add_callback(
-        #                             device.device_guid,
-        #                             mode.name,
-        #                             event,
-        #                             cb_data.callback,
-        #                             input_item.always_execute
-        #                         )
-        #                     else:
-        #                         self.event_handler.add_callback(
-        #                             dill.GUID_Virtual,
-        #                             mode.name,
-        #                             cb_data.event,
-        #                             cb_data.callback,
-        #                             input_item.always_execute
-        #                         )
-
 
 class VJoyCurves:
 

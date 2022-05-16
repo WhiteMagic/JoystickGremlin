@@ -16,12 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import collections
 import functools
 import heapq
 import inspect
 import logging
 import time
 import threading
+from typing import Callable
 
 from PySide6 import QtCore
 
@@ -586,6 +588,11 @@ class JoystickDecorator:
         )
 
 
+ButtonReleaseEntry = collections.namedtuple(
+    "Entry", ["callback", "event", "mode"]
+)
+
+
 @common.SingletonDecorator
 class ButtonReleaseActions(QtCore.QObject):
 
@@ -604,12 +611,17 @@ class ButtonReleaseActions(QtCore.QObject):
         self._current_mode = eh.active_mode
         eh.mode_changed.connect(self._mode_changed_cb)
 
-    def register_callback(self, callback, physical_event):
+    def register_callback(
+        self,
+        callback: Callable[[], None],
+        physical_event: event_handler.Event
+    ) -> None:
         """Registers a callback with the system.
 
-        :param callback the function to run when the corresponding button is
-            released
-        :param physical_event the physical event of the button being pressed
+        Args:
+            callback: the function to run when the corresponding button is
+                released
+            physical_event: the physical event of the button being pressed
         """
         release_evt = physical_event.clone()
         release_evt.is_pressed = False
@@ -618,57 +630,72 @@ class ButtonReleaseActions(QtCore.QObject):
             self._registry[release_evt] = []
         # Do not record the mode since we may want to run the release action
         # independent of a mode
-        self._registry[release_evt].append((callback, None))
+        self._registry[release_evt].append(
+            ButtonReleaseEntry(callback, release_evt, None)
+        )
 
-    def register_button_release(self, vjoy_input, physical_event):
+    def register_button_release(
+        self,
+        vjoy_input: int,
+        physical_event: event_handler.Event,
+        activate_on: bool
+    ):
         """Registers a physical and vjoy button pair for tracking.
 
-        This method ensures that vjoy buttons are released even if they
-        have been pressed in a different mode then the active one when
-        the physical button that pressed them is released.
+        This method ensures that a vjoy button is pressed/released when the
+        specified physical event occurs next. This is useful for cases where
+        an action was triggered in a different mode or using a different
+        condition.
 
-        :param vjoy_input the vjoy button to release, represented as
-            (vjoy_device_id, vjoy_button_id)
-        :param physical_event the button event when release should
-            trigger the release of the vjoy button
+        Args:
+            vjoy_input: the vjoy button to release, represented as
+                (vjoy_device_id, vjoy_button_id)
+            physical_event: the button event when release should
+                trigger the release of the vjoy button
         """
         release_evt = physical_event.clone()
-        release_evt.is_pressed = False
+        release_evt.is_pressed = activate_on
 
         if release_evt not in self._registry:
             self._registry[release_evt] = []
         # Record current mode so we only release if we've changed mode
-        self._registry[release_evt].append((
-            lambda: self._create_release_callback(vjoy_input),
+        self._registry[release_evt].append(ButtonReleaseEntry(
+            lambda: self._release_callback_prototype(vjoy_input),
+            release_evt,
             self._current_mode
         ))
 
-    def _create_release_callback(self, vjoy_input):
-        """Creates a button release callback.
+    def _release_callback_prototype(self, vjoy_input: int) -> None:
+        """Prototype of a button release callback, used with lambdas.
 
-        :param vjoy_input the vjoy input data to use in the release
-        :return button release callback
+        Args:
+            vjoy_input: the vjoy input data to use in the release
         """
         vjoy = joystick_handling.VJoyProxy()
-        # Check if the button is valid otherwise we cause Gremlin
-        # to crash
+        # Check if the button is valid otherwise we cause Gremlin to crash
         if vjoy[vjoy_input[0]].is_button_valid(vjoy_input[1]):
             vjoy[vjoy_input[0]].button(vjoy_input[1]).is_pressed = False
         else:
             logging.getLogger("system").warning(
-                "Attempted to use non existent button: vJoy {:d} button {:d}".format(
-                    vjoy_input[0], vjoy_input[1])
+                f"Attempted to use non existent button: " +
+                f"vJoy {vjoy_input[0]:d} button {vjoy_input[1]:d}"
             )
 
-    def _input_event_cb(self, evt):
+    def _input_event_cb(self, event: event_handler.Event):
         """Runs callbacks associated with the given event.
 
-        :param evt the event to process
+        Args:
+            event: the event to process
         """
-        if evt in self._registry and not evt.is_pressed:
-            for entry in self._registry[evt]:
-                entry[0]()
-            self._registry[evt] = []
+        #if evt in [e for e in self._registry if e.is_pressed != evt.is_pressed]:
+        if event in self._registry:
+            new_list = []
+            for entry in self._registry[event]:
+                if entry.event.is_pressed == event.is_pressed:
+                    entry.callback()
+                else:
+                    new_list.append(entry)
+            self._registry[event] = new_list
 
     def _mode_changed_cb(self, mode):
         """Updates the current mode variable.

@@ -1253,7 +1253,7 @@ class Settings:
         Args:
             vid the id of the virtual joystick
             aid the id of the axis
-        
+
         Returns:
             default value for the specified axis
         """
@@ -1295,7 +1295,7 @@ class Profile:
 
     def from_xml(self, fpath: str) -> None:
         """Reads the content of an XML file and initializes the profile.
-        
+
         Args:
             fpath: path to the XML file to parse
         """
@@ -1318,7 +1318,7 @@ class Profile:
 
     def to_xml(self, fpath: str) -> None:
         """Writes the profile's content to an XML file.
-        
+
         Args:
             fpath: path to the XML file in which to write the content
         """
@@ -1424,7 +1424,7 @@ class InputItem:
 
     def __init__(self, library: profile_library.Library):
         """Creates a new instance.
-        
+
         Args:
             library: library instance that contains all action definitions
         """

@@ -127,7 +127,17 @@ class VirtualButtonModel(QtCore.QObject):
     directionChanged = Signal()
     hatDirectionChanged = Signal()
 
-    def __init__(self, virtual_button, parent=None):
+    def __init__(
+        self,
+        virtual_button: profile.AbstractVirtualButton,
+        parent: Optional[QtCore.QObject]=None
+    ):
+        """Creates a new instance.
+        
+        Args:
+            virtual_button: the profile class representing the instance's data
+            parent: parent object of the widget
+        """
         super().__init__(parent)
 
         self.virtual_button = virtual_button
@@ -379,7 +389,7 @@ class ActionNodeModel(QtCore.QObject):
     @Property(type=str, notify=actionChanged)
     def rootId(self) -> str:
         """Returns the UUID of the action's root node.
-        
+
         Returns:
             UUID of the root node
         """
