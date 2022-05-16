@@ -33,6 +33,10 @@ Item {
     property InputIdentifier inputIdentifier
     property InputItemModel inputItemModel
 
+    function reload() {
+        _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
+    }
+
     onInputIdentifierChanged: {
         _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
     }
