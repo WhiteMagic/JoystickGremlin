@@ -94,5 +94,22 @@ Item {
                 }
             }
         }
+        // UI for a button input
+        Loader {
+            active: _root.action.vjoyInputType == "button"
+            Layout.fillWidth: true
+
+            sourceComponent: Row {
+                Switch {
+                    text: "Invert activation"
+                    checked: _root.action.buttonInverted
+
+                    onToggled: function()
+                    {
+                        _root.action.buttonInverted = checked
+                    }
+                }
+            }
+        }
     }
 }

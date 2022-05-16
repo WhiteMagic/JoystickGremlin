@@ -26,14 +26,10 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
-from gremlin import error, event_handler, joystick_handling, \
+from gremlin import error, event_handler, input_devices, joystick_handling, \
     profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
 from gremlin.types import AxisMode, InputType, PropertyType
-
-
-# TODO:
-# - check auto-release functionality once modes are back
 
 
 class RemapFunctor(AbstractFunctor):
@@ -74,17 +70,18 @@ class RemapFunctor(AbstractFunctor):
                     self.thread.start()
 
         elif self.data.vjoy_input_type == InputType.JoystickButton:
-            # FIXME: reimplement
-            # if event.event_type in [InputType.JoystickButton, InputType.Keyboard] \
-            #         and event.is_pressed \
-            #         and self.needs_auto_release:
-            #     input_devices.ButtonReleaseActions().register_button_release(
-            #         (self.data.vjoy_device_id, self.data.vjoy_input_id),
-            #         event
-            #     )
-
+            is_pressed = value.current
+            if self.data.button_inverted:
+                is_pressed = not is_pressed
             joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
-                .button(self.data.vjoy_input_id).is_pressed = value.current
+                .button(self.data.vjoy_input_id).is_pressed = is_pressed
+
+            if is_pressed:
+                input_devices.ButtonReleaseActions().register_button_release(
+                    (self.data.vjoy_device_id, self.data.vjoy_input_id),
+                    event,
+                    self.data.button_inverted
+                )
 
         elif self.data.vjoy_input_type == InputType.JoystickHat:
             joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
@@ -167,6 +164,7 @@ class RemapModel(AbstractActionModel):
     inputTypeChanged = Signal()
     axisModeChanged = Signal()
     axisScalingChanged = Signal()
+    buttonInvertedChanged = Signal()
 
     def __init__(
             self,
@@ -189,6 +187,7 @@ class RemapModel(AbstractActionModel):
         self.vjoy_input_type = behavior_type
         self.axis_mode = AxisMode.Absolute
         self.axis_scaling = 1.0
+        self.button_inverted = False
 
     def _get_vjoy_device_id(self) -> int:
         return self.vjoy_device_id
@@ -237,6 +236,15 @@ class RemapModel(AbstractActionModel):
         self.axis_scaling = axis_scaling
         self.axisScalingChanged.emit()
 
+    def _get_button_inverted(self) -> bool:
+        return self.button_inverted
+
+    def _set_button_inverted(self, button_inverted: bool) -> None:
+        if button_inverted == self.button_inverted:
+            return
+        self.button_inverted = button_inverted
+        self.buttonInvertedChanged.emit()
+
     def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
         self.vjoy_device_id = util.read_property(
@@ -254,6 +262,10 @@ class RemapModel(AbstractActionModel):
             )
             self.axis_scaling = util.read_property(
                 node, "axis-scaling", PropertyType.Float
+            )
+        if self.vjoy_input_type == InputType.JoystickButton:
+            self.button_inverted = util.read_property(
+                node, "button-inverted", PropertyType.Bool
             )
 
     def to_xml(self) -> ElementTree.Element:
@@ -273,6 +285,10 @@ class RemapModel(AbstractActionModel):
             ))
             node.append(util.create_property_node(
                 "axis-scaling", self.axis_scaling, PropertyType.Float
+            ))
+        if self.vjoy_input_type == InputType.JoystickButton:
+            node.append(util.create_property_node(
+                "button-inverted", self.button_inverted, PropertyType.Bool
             ))
         return node
 
@@ -322,6 +338,12 @@ class RemapModel(AbstractActionModel):
         fget=_get_axis_scaling,
         fset=_set_axis_scaling,
         notify=axisScalingChanged
+    )
+    buttonInverted = Property(
+        bool,
+        fget=_get_button_inverted,
+        fset=_set_button_inverted,
+        notify=buttonInvertedChanged
     )
 
 
