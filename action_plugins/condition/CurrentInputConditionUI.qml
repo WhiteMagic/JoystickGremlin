@@ -30,7 +30,7 @@ import "../../qml"
 Item {
     id: _root
 
-    property JoystickCondition model
+    property CurrentInputCondition model
     property var comparatorUi: null
 
     implicitHeight: _content.height
