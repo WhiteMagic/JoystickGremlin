@@ -111,6 +111,18 @@ class OptionsUi(common.BaseDialogUi):
             self.config.mode_change_message
         )
 
+        # PDF Cheatsheet don't display inherited items
+        self.pdf_cheatsheet_ignore_inherited = QtWidgets.QCheckBox(
+            "Don't display inherited bindings for PDF Cheatsheet"
+        )
+        self.pdf_cheatsheet_ignore_inherited.clicked.connect(
+            self._pdf_cheatsheet_ignore_inherited
+        )
+        self.pdf_cheatsheet_ignore_inherited.setChecked(
+            self.config.pdf_ignore_inherited
+        )
+
+
         # Default action selection
         self.default_action_layout = QtWidgets.QHBoxLayout()
         self.default_action_label = QtWidgets.QLabel("Default action")
@@ -167,6 +179,7 @@ class OptionsUi(common.BaseDialogUi):
         self.general_layout.addWidget(self.start_minimized)
         self.general_layout.addWidget(self.start_with_windows)
         self.general_layout.addWidget(self.show_mode_change_message)
+        self.general_layout.addWidget(self.pdf_cheatsheet_ignore_inherited)
         self.general_layout.addLayout(self.default_action_layout)
         self.general_layout.addLayout(self.macro_axis_polling_layout)
         self.general_layout.addLayout(self.macro_axis_minimum_change_layout)
@@ -526,6 +539,14 @@ If this option is on, the last active profile will remain active until a differe
         :param clicked whether or not the checkbox is ticked"""
         self.config.mode_change_message = clicked
         self.config.save()
+
+    def _pdf_cheatsheet_ignore_inherited(self, clicked):
+        """Stores the user's preference for displaying of inherited bindings in PDF Cheatsheet.
+
+        :param clicked whether or not the checkbox is ticked"""
+        self.config.pdf_ignore_inherited = clicked
+        self.config.save()
+
 
     def _update_profile(self):
         """Updates the profile associated with the current executable."""

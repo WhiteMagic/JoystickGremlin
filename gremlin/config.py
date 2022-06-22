@@ -381,6 +381,23 @@ class Configuration:
         self.save()
 
     @property
+    def pdf_ignore_inherited(self):
+        """Returns whether or not to ignore displaying of inherited bindings in PDF Cheatsheet.
+
+        :return True if the feature is enabled, False otherwise
+        """
+        return self._data.get("pdf_ignore_inherited", False)
+
+    @pdf_ignore_inherited.setter
+    def pdf_ignore_inherited(self, value):
+        """Sets whether or not to ignore displaying of inherited bindings in PDF Cheatsheet.
+
+        :param value True to enable the feature, False to disable
+        """
+        self._data["pdf_ignore_inherited"] = bool(value)
+        self.save()
+
+    @property
     def activate_on_launch(self):
         """Returns whether or not to activate the profile on launch.
 

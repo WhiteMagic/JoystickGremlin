@@ -325,11 +325,27 @@ class ModeFloat(Flowable):
         return []
 
 
-def generate_cheatsheet(fname, profile):
+def delete_inherited_layers(device, tree, storage):
+    """
+    Removes inherited entries from the storage
+    """
+
+    for mode in storage:
+        keys_to_be_deleted = []
+
+        for key, item in storage[mode].items():
+            if item.inherited_from is not None:
+                keys_to_be_deleted.append(key)
+
+        for key in keys_to_be_deleted:
+            storage[mode].pop(key)
+
+def generate_cheatsheet(fname, profile, config):
     """Generates a cheatsheet of the provided profile.
 
     :param fname the file to store the cheatsheet in
     :param profile the profile to process
+    :param config global configuration options
     """
 
     width, height = A4
@@ -348,6 +364,8 @@ def generate_cheatsheet(fname, profile):
     for key, device in profile.devices.items():
         device_storage[device] = {}
         recursive(device, inheritance_tree, device_storage[device])
+        if config.pdf_ignore_inherited:
+            delete_inherited_layers(device, inheritance_tree, device_storage[device])
 
     for dev, dev_data in device_storage.items():
         dev_float_added = False

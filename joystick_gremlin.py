@@ -914,7 +914,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             "PDF files (*.pdf)"
         )
         if len(fname) > 0:
-            gremlin.cheatsheet.generate_cheatsheet(fname, self._profile)
+            gremlin.cheatsheet.generate_cheatsheet(fname, self._profile, self.config)
 
     def _create_load_profile_function(self, fname):
         """Creates a callback to load a specific profile.
