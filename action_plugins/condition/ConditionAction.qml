@@ -95,13 +95,6 @@ Item {
             }
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-
-            height: 2
-            color: Universal.accent
-        }
-
         Repeater {
             model: _root.action.conditions
 
@@ -131,8 +124,10 @@ Item {
         // | True actions
         // +-------------------------------------------------------------------
         RowLayout {
+            id: _trueHeader
+
             Label {
-                text: "Condition is <b>true</b>"
+                text: "When the condition is <b>TRUE</b> then"
             }
 
             Rectangle {
@@ -143,13 +138,6 @@ Item {
                 actionNode: _root.node
                 callback: function(x) { _root.action.addAction(x, "if"); }
             }
-        }
-
-        Rectangle {
-            id: _trueDivider
-            Layout.fillWidth: true
-            height: 2
-            color: "green"
         }
 
         Repeater {
@@ -166,8 +154,10 @@ Item {
         // | False actions
         // +-------------------------------------------------------------------
         RowLayout {
+            id: _falseHeader
+
             Label {
-                text: "Condition is <b>false</b>"
+                text: "When the condition is <b>FALSE</b> then"
             }
 
             Rectangle {
@@ -178,13 +168,6 @@ Item {
                 actionNode: _root.node
                 callback: function(x) { _root.action.addAction(x, "else"); }
             }
-        }
-
-        Rectangle {
-            id: _falseDivider
-            Layout.fillWidth: true
-            height: 2
-            color: "red"
         }
 
         Repeater {

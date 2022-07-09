@@ -70,8 +70,17 @@ Item {
         // +--------------------------------------------------------------------
         RootAction {
             Layout.fillWidth: true
-            Layout.leftMargin: 10
+
+            // Prevent overlap with scrollbar
             Layout.rightMargin: 20
+        }
+
+        HorizontalDivider {
+            Layout.fillWidth: true
+            Layout.leftMargin: 5
+            Layout.rightMargin: 20
+
+            spacing: 15
         }
     }
 }

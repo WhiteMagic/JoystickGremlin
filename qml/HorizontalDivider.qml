@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2021 Lionel Ott
+// Copyright (C) 2015 - 2020 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,32 +17,27 @@
 
 
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Controls.Universal
 
 
-Button {
-    id: control
+Rectangle {
+    property int spacing: 10
+    property bool dividerVisible: true
+    property color dividerColor: Universal.accent
 
-    font.family: "FontAwesome"
-    font.pixelSize: 16
+    height: spacing
+    z: -1
 
-    checkable: true
+    Loader {
+        active: dividerVisible
 
-    background: Rectangle {
-        implicitWidth: 32
-        implicitHeight: 32
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
 
-        visible: !control.flat || control.down || control.checked || control.highlighted
-        color: control.down ? control.Universal.baseMediumLowColor : control.Universal.baseLowColor
-
-        Rectangle {
-            width: parent.width
-            height: parent.height
-            color: "transparent"
-            visible: control.hovered
-            border.width: 2
-            border.color: Universal.baseMediumLowColor
+        sourceComponent: Rectangle {
+            height: 1
+            color: dividerColor
         }
     }
 }

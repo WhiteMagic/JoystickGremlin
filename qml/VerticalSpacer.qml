@@ -25,7 +25,4 @@ Rectangle {
     property int spacing : 10
 
     height: spacing
-    Layout.fillWidth: true
-
-    color: Universal.background
 }

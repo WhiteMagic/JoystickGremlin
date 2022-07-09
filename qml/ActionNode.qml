@@ -40,6 +40,8 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
+        anchors.leftMargin: _root.action.depth > 1 ?
+            _foldButton.width + _root.itemSpacing : _root.itemSpacing
 
         // Drag & drop support
         Drag.active: _dragArea.drag.active
@@ -107,7 +109,7 @@ Item {
             property var dynamicItem: null
 
             Layout.fillWidth: true
-            Layout.leftMargin: _foldButton.width + _header.spacing
+
             visible: _foldButton.checked
 
             // Synchronize the container item's height with that of the
@@ -115,7 +117,8 @@ Item {
             Binding {
                 target: _action
                 property: "implicitHeight"
-                value: _action.dynamicItem === null ? 0 : _action.dynamicItem.implicitHeight
+                value: _action.dynamicItem === null ? 0 :
+                    _action.dynamicItem.implicitHeight
                 when: _action.dynamicItem !== null
             }
 

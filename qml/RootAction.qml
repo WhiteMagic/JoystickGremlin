@@ -39,8 +39,6 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        spacing: 10
-
         Repeater {
             // The root action does not truly exist as an action and as such
             // receives some information via the inputBinding instance which

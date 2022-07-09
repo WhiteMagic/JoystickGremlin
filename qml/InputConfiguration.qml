@@ -64,8 +64,6 @@ Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
 
-            spacing: 10
-
             // Make it behave like a sensible scrolling container
             ScrollBar.vertical: ScrollBar {
                 policy: ScrollBar.AlwaysOn

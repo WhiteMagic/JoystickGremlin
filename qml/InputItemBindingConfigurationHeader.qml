@@ -29,9 +29,11 @@ Item {
     id: _root
 
     property InputItemBindingModel inputBinding
+    property MouseArea dragHandleArea: _dragArea
 
-    height: _generalHeader.height + _behaviorAxisButton.height + _behaviorHatButton.height
-
+    height: _generalHeader.height + _behaviorAxisButton.height +
+        _behaviorHatButton.height
+    z: -1
 
     // Content
     ColumnLayout {
@@ -44,13 +46,32 @@ Item {
         RowLayout {
             id: _generalHeader
 
+            IconButton {
+                id: _handle
+
+                font.pixelSize: 24
+                horizontalPadding: -5
+                text: "\uF3FE"
+
+                // Drag handle mouse interaction area
+                MouseArea {
+                    id: _dragArea
+
+                    anchors.fill: parent
+
+                    drag.target: _handle
+                    drag.axis: Drag.YAxis
+                }
+            }
+
             TextField {
                 id: _description
 
                 Layout.fillWidth: true
 
                 placeholderText: "Description"
-                text: "" != _root.inputBinding.description ? _root.inputBinding.description : null
+                text: "" != _root.inputBinding.description ?
+                    _root.inputBinding.description : null
 
                 onTextChanged: {
                     _root.inputBinding.description = text
@@ -70,11 +91,14 @@ Item {
                 callback: actionNode.appendNewAction
             }
 
-            Button {
+            IconButton {
                 id: _headerRemove
 
-                icon.source: "qrc:///icons/close"
-                onClicked: {
+                text: "\uF628"
+                font.pixelSize: 24
+
+                onClicked: function()
+                {
                     backend.deleteInputBinding(inputBinding)
                 }
             }
@@ -84,7 +108,8 @@ Item {
         Loader {
             id: _behaviorAxisButton
 
-            active: _root.inputBinding.behavior == "button" && _root.inputBinding.inputType == "axis"
+            active: _root.inputBinding.behavior == "button" &&
+                 _root.inputBinding.inputType == "axis"
             onActiveChanged: {
                 visible: active
                 height = active ? item.contentHeight : 0
@@ -150,7 +175,8 @@ Item {
         Loader {
             id: _behaviorHatButton
 
-            active: _root.inputBinding.behavior == "button" && _root.inputBinding.inputType == "hat"
+            active: _root.inputBinding.behavior == "button" &&
+                _root.inputBinding.inputType == "hat"
             onActiveChanged: {
                 visible: active
                 height = active ? item.contentHeight : 0
@@ -176,14 +202,5 @@ Item {
                 }
             }
         }
-    }
-
-
-    // Fill the entire widget with a backgrund color
-    Rectangle {
-        color: Universal.background
-
-        z: -1
-        anchors.fill: _layout
     }
 }
