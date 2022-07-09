@@ -180,7 +180,7 @@ class AbstractCurveModel(QtCore.QObject):
 
     def __init__(self, profile_data, parent=None):
         """Initializes an empty model.
-        
+
         :param profile_data the data of this response curve
         """
         super().__init__(parent)

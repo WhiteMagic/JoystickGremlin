@@ -133,7 +133,7 @@ class VirtualButtonModel(QtCore.QObject):
         parent: Optional[QtCore.QObject]=None
     ):
         """Creates a new instance.
-        
+
         Args:
             virtual_button: the profile class representing the instance's data
             parent: parent object of the widget

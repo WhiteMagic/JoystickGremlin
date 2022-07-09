@@ -180,7 +180,7 @@ class CallbackObject:
 
     def __init__(self, binding: gremlin.profile.InputItemBinding):
         """Creates a new callback instance for a specific input item.
-        
+
         Args:
             action: actions bound to a single input item
         """
@@ -214,7 +214,7 @@ class CallbackObject:
 
     def _virtual_event_setup(self) -> None:
         """Configures the callback object for virtual button handling.
-        
+
         This creates callbacks that emit virtual button events in reaction to
         the input items physical events. The actions bound to the input item
         in turn will trigger in response to the emitted virtual events.

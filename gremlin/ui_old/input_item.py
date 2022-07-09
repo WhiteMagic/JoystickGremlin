@@ -869,14 +869,14 @@ class AbstractActionWidget(QtWidgets.QFrame):
 
     def _get_input_type(self):
         """Returns the input type this widget's action is associated with.
-        
+
         :return InputType corresponding to this action
         """
         return self.library_reference.parent.input_type
 
     def _get_profile_root(self):
         """Returns the root of the entire profile.
-        
+
         :return root Profile instance
         """
         root = self.library_reference.parent

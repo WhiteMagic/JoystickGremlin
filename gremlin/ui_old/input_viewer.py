@@ -312,7 +312,7 @@ class ButtonState(QtWidgets.QGroupBox):
         QPushButton:flat {
             border: none; /* no border for a flat push button */
         }
-        
+
         QPushButton:!enabled
         {
              color: #000000;
