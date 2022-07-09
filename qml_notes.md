@@ -116,7 +116,7 @@ The above example specifies a simple class which holds colors. To permit QML to 
 
 ## ListView
 
-Frequently models will contain a list of identical items that need to be visualized. As these items might be taking up more space then the ListView component has in the UI it is capable of scrolling. To turn the ListView into a container that has a scroll bar and behaves properly, i.e. like a desktop application and not a phone app the following setup is recommended.
+Frequently models will contain a list of identical items that need to be visualized. As these items might be taking up more space then the `ListView` component has in the UI it is capable of scrolling. To turn the `ListView` into a container that has a scroll bar and behaves properly, i.e. like a desktop application and not a phone app the following setup is recommended.
 
 ```qml
 ListView {
@@ -243,6 +243,22 @@ DropArea {
 ```
 
 The above is not a generic setup that can be directly used as it relies on and makes assumptions about the model and intended behavior. However, the general flow should be applicable to other UI elements. The base item's `Drag.onDragFinished` sets a flag which is used by the `MouseArea.onReleased` event to reset the position of the item if needed. The `DropArea.onDropped` event handler ensures the `Drag.onDragFinished` is notified of success and then goes on to handle model changes that are in line with the intended drag & drop behavior.
+
+### Action Drag & Drop
+
+The most common items that will require drag & drop support are actions and action trees. In order to have a uniform appearance and reduce code duplication three QML widgets have been created.
+
+- `DropMarker` shows a rectangular area when a drag event of the correct type enters its area
+- `DragDropArea` handles the logic of defining a `DropArea` and ensuring only valid drag events are reacted to
+- `ActionDragDropArea` is a specialization of the `DragDropArea` widget for use specifically with action items
+
+The `DragDropArea` and `ActionDragDropArea` widgets have the following properties that can be specified in order to customize the widgets.
+
+- `target` the widget to which the drop area is being attached to and placed around
+- `dropCallback` function to execute when a valid drop action occurs, the callback has one parameter `drop` which contains information about the item being dropped, as mime data
+- `validationCallback` is called whenever a drag enters the `DropArea` to decide whether or not the drag event is compatible with the current area. This callback is already specified and configured for the `ActionDragDropArea` widget
+
+In addition to these custom properties the usual properties of a `DropArea` are available as well. To adjust the placement of the widget specifying the `y` property may be required, especially if an item is changing position dynamically.
 
 ## Icon Colors
 
