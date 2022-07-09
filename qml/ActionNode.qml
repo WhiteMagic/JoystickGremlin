@@ -67,7 +67,10 @@ Item {
 
                 checkable: true
                 checked: backend.isActionExpanded(_root.action.id)
-                text: checked ? "\uf146" : "\uf0fe"
+                text: checked ? "\uF2E8" : "\uF4FC"
+
+                Layout.alignment: Qt.AlignBaseline
+                Layout.leftMargin: -10
 
                 onClicked: {
                     backend.setIsActionExpanded(_root.action.id, checked)
@@ -87,7 +90,7 @@ Item {
             }
 
             IconButton {
-                text: "\uf2ed"
+                text: "\uF5DD"
 
                 onClicked: {
                    modelData.remove()

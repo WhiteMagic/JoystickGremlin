@@ -117,7 +117,7 @@ Item {
                     Layout.alignment: Qt.AlignTop
                     Layout.topMargin: 4
 
-                    text: "\uf2ed"
+                    text: "\uF5DD"
 
                     onClicked: function()
                     {

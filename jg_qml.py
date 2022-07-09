@@ -198,8 +198,9 @@ if __name__ == "__main__":
     syslog.info("Initializing plugins")
     gremlin.plugin_manager.ActionPlugins()
 
-    if QtGui.QFontDatabase.addApplicationFont(":/FontAwesome") < 0:
-        syslog.error("Failed to load FontAwesome")
+    # Load icon fonts
+    if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:
+        syslog.error("Failed to load BootstrapIcons")
 
     # Initialize main UI
     engine.load(QtCore.QUrl.fromLocalFile("qml/Main.qml"))

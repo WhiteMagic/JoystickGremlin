@@ -21,8 +21,10 @@ import QtQuick.Controls
 
 
 Button {
-    font.family: "FontAwesome"
+    font.family: "BootstrapIcons"
     font.pixelSize: 16
+
+    topPadding: 10
 
     background: Rectangle {
         anchors.fill: parent
