@@ -179,70 +179,21 @@ Item {
                 Layout.fillWidth: true
             }
         }
-
-        // Bottom spacer
-        Rectangle {
-            Layout.fillWidth: true
-            height: 10
-            color: "transparent"
-        }
     }
 
     // Drop action for insertion into empty/first slot of the true actions
-    DropArea {
-        x: _trueDivider.x
-        y: _trueDivider.y
-        width: _trueDivider.width
-        height: 30
-
-        // Visualization of the drop indicator
-        Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-
-            height: 5
-
-            opacity: parent.containsDrag ? 1.0 : 0.0
-            color: Universal.accent
-        }
-
-        onDropped: function(drop)
-        {
-            if(drop.text != _root.action.id)
-            {
-                drop.accept();
-                modelData.dropAction(drop.text, modelData.id, "true");
-            }
+    ActionDragDropArea {
+        target: _trueHeader
+        dropCallback: function(drop) {
+            modelData.dropAction(drop.text, modelData.id, "true");
         }
     }
 
     // Drop action for insertion into empty/first slot of the false actions
-    DropArea {
-        x: _falseDivider.x
-        y: _falseDivider.y
-        width: _falseDivider.width
-        height: 30
-
-        // Visualization of the drop indicator
-        Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-
-            height: 5
-
-            opacity: parent.containsDrag ? 1.0 : 0.0
-            color: Universal.accent
-        }
-
-        onDropped: function(drop)
-        {
-            if(drop.text != _root.action.id)
-            {
-                drop.accept();
-                modelData.dropAction(drop.text, modelData.id, "false");
-            }
+    ActionDragDropArea {
+        target: _falseHeader
+        dropCallback: function(drop) {
+            modelData.dropAction(drop.text, modelData.id, "false");
         }
     }
 }

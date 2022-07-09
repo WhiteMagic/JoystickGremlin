@@ -53,6 +53,15 @@ Item {
             "type": "action",
             "root": _root.action.rootId
         }
+        Drag.onDragFinished: function(action)
+        {
+            // If the drop action ought to be ignore reset the ui by calling
+            // the InputConfiguration.qml reload function.
+            if(action == Qt.IgnoreAction)
+            {
+                reload();
+            }
+        }
 
         // +--------------------------------------------------------------------
         // | Header
@@ -190,50 +199,29 @@ Item {
         drag.axis: Drag.YAxis
 
         // Create an image of the object being dragged for visualization
-        onPressed: _content.grabToImage(function(result) {
-            _content.Drag.imageSource = result.url
-        })
+        onPressed: function()
+        {
+            _content.grabToImage(function(result)
+            {
+                _content.Drag.imageSource = result.url
+            })
+        }
     }
 
     // Drop area below every non-root action
     Loader {
         active: !_root.action.isRootNode
-        sourceComponent: DropArea {
-            x: _header.x
-            y: (_action.visible ? _action.y + _action.height : _header.y + _header.height) - height/2 + itemSpacing/2
-            width: _header.width
-            height: 30
 
-            property bool validDrag: false
+        sourceComponent: DragDropArea {
+            y: (_action.visible ? _action.y + _action.height : _header.y +
+                _header.height) - height/2 + itemSpacing/2
 
-            // Visualization of the drop indicator
-            Rectangle {
-                id: _dropMarker
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-
-                height: 5
-
-                opacity: parent.validDrag ? 1.0 : 0.0
-                color: Universal.accent
-            }
-
-            onEntered: function(drag)
-            {
-                validDrag = drag.getDataAsString("type") == "action" &&
+            target: _header
+            validationCallback: function(drag) {
+                return drag.getDataAsString("type") == "action" &&
                     drag.getDataAsString("root") == _root.action.rootId
             }
-
-            onExited: function()
-            {
-                validDrag = false
-            }
-
-            onDropped: function(drop)
-            {
-                drop.accept();
+            dropCallback: function(drop) {
                 modelData.dropAction(drop.text, modelData.id, "append");
             }
         }

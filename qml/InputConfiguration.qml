@@ -89,92 +89,66 @@ Item {
 
                 required property int index
                 required property var modelData
-                property var view: ListView.view
+                property ListView view: ListView.view
+
 
                 ActionTree {
                     id: _actionTree
+
                     // Have to set the width here as Layout fields don't exist
                     // and we have to fill the view itself which will resize
                     // based on the layout
                     implicitWidth: view.width
 
-                    // Drag & Drop support
-                    Drag.active: _dragArea.drag.active
-                    Drag.dragType: Drag.Automatic
-                    Drag.supportedActions: Qt.MoveAction
-                    Drag.mimeData: {
-                        "text/plain": modelData.actionTreeId,
-                        "type": "actiontree"
-                    }
-
                     inputBinding: modelData
                 }
 
-                // Drag & Drop drag area
-                MouseArea {
-                    id: _dragArea
 
-                    // Start at label field x coordinate, otherwise button
-                    // stops working
-                    x: _actionTree.x
-                    y: _actionTree.y
-                    z: -1
-                    width: _actionTree.width
-                    height: _actionTree.height
+                // +------------------------------------------------------------
+                // | Drag & Drop support
+                // +------------------------------------------------------------
+                Connections {
+                    target: _actionTree.headerWidget.dragHandleArea
+                    function onPressed()
+                    {
+                        _delegate.grabToImage(function(result)
+                        {
+                            _delegate.Drag.imageSource = result.url
+                        })
+                    }
+                }
 
-                    // Setup object to drag
-                    drag.target: _actionTree
-                    drag.axis: Drag.YAxis
+                Drag.active: _actionTree.headerWidget.dragHandleArea.drag.active
+                Drag.dragType: Drag.Automatic
+                Drag.supportedActions: Qt.MoveAction
+                Drag.proposedAction: Qt.MoveAction
+                Drag.mimeData: {
+                    "text/plain": modelData.actionTreeId,
+                    "type": "actiontree"
+                }
 
-                    // Create an image of the object to visualize the dragging
-                    onPressed: _actionTree.grabToImage(function(result) {
-                        _actionTree.Drag.imageSource = result.url
-                    })
+                Drag.onDragFinished: function(drop)
+                {
+                    // If the drop action ought to be ignore reset the ui
+                    if(drop == Qt.IgnoreAction) {
+                        reload();
+                    }
                 }
 
                 // Drag & Drop drop area
-                DropArea {
+                DragDropArea {
                     id: _dropArea
 
-                    x: _actionTree.x
-                    y: _actionTree.y + _actionTree.height
-                    width: _actionTree.width
-                    height: 30
-
-                    property bool validDrag: false
-
-                    // Visualization of the drop indicator
-                    Rectangle {
-                        id: _dropMarker
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        height: 5
-
-                        opacity: parent.validDrag ? 1.0 : 0.0
-                        color: Universal.accent
-                    }
-
-                    onEntered: function(drag)
-                    {
-                        validDrag = drag.getDataAsString("type") == "actiontree"
-                    }
-
-                    onExited: function()
-                    {
-                        validDrag = false
-                    }
-
-                    onDropped: function(drop)
-                    {
-                        drop.accept()
+                    target: _actionTree
+                    dropCallback: function(drop) {
                         _root.inputItemModel.dropAction(
                             drop.text,
                             modelData.actionTreeId,
                             "append"
                         )
+                    }
+                    validationCallback: function(drop) {
+                        return drag.getDataAsString("type") == "actiontree"
                     }
                 }
             }

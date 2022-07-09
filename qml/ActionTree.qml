@@ -31,6 +31,7 @@ Item {
     id: _root
 
     property InputItemBindingModel inputBinding
+    property InputItemBindingConfigurationHeader headerWidget: _header
 
     implicitHeight: _content.height
 
@@ -45,24 +46,13 @@ Item {
         // | Header
         // +--------------------------------------------------------------------
         InputItemBindingConfigurationHeader {
+            id: _header
+
             Layout.fillWidth: true
-            Layout.leftMargin: 10
+            Layout.leftMargin: 5
             Layout.rightMargin: 20
 
             inputBinding: _root.inputBinding
-        }
-
-        // Bottom border
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-            Layout.topMargin: 5
-            Layout.bottomMargin: 10
-            Layout.leftMargin: 10
-            Layout.rightMargin: 20
-
-            height: 2
-            color: Universal.accent
         }
 
         // +--------------------------------------------------------------------
