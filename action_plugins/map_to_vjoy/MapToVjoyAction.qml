@@ -29,7 +29,7 @@ Item {
     id: _root
 
     property ActionNodeModel node
-    property RemapModel action
+    property MapToVjoyModel action
 
     implicitHeight: _content.height
 

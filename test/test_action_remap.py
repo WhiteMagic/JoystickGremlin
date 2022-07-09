@@ -28,7 +28,7 @@ import gremlin.joystick_handling
 import gremlin.types as types
 import gremlin.profile_library as profile_library
 
-import action_plugins.remap as remap
+import action_plugins.map_to_vjoy as map_to_vjoy
 
 
 xml_button = """
@@ -75,7 +75,7 @@ xml_axis = """
 
 
 def test_ctor(joystick_init):
-    r = remap.RemapModel(
+    r = map_to_vjoy.MapToVjoyModel(
         profile_library.ActionTree(),
         types.InputType.JoystickButton
     )
@@ -88,7 +88,7 @@ def test_ctor(joystick_init):
 
 
 def test_from_xml():
-    r = remap.RemapModel(
+    r = map_to_vjoy.MapToVjoyModel(
         profile_library.ActionTree(),
         types.InputType.JoystickButton
     )
@@ -99,7 +99,7 @@ def test_from_xml():
     assert r.axis_mode == types.AxisMode.Absolute
     assert r.axis_scaling == 1.0
 
-    r = remap.RemapModel(profile_library.ActionTree())
+    r = map_to_vjoy.MapToVjoyModel(profile_library.ActionTree())
     r.from_xml(ElementTree.fromstring(xml_axis))
     assert r.vjoy_device_id == 2
     assert r.vjoy_input_id == 6
@@ -109,7 +109,7 @@ def test_from_xml():
 
 
 def test_to_xml():
-    r = remap.RemapModel(
+    r = map_to_vjoy.MapToVjoyModel(
         profile_library.ActionTree(),
         types.InputType.JoystickButton
     )
