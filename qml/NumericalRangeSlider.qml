@@ -58,7 +58,7 @@ Item {
         width: idFirstValueInput.width
         height: idFirstValueInput.height
 
-        TextInput {
+        TextField {
             id: idFirstValueInput
 
             padding: 5
@@ -115,7 +115,7 @@ Item {
         width: idSecondValueInput.width
         height: idSecondValueInput.height
 
-        TextInput {
+        TextField {
             id: idSecondValueInput
 
             padding: 5
@@ -138,7 +138,6 @@ Item {
                 }
                 root.secondValue = value
             }
-
         }
     }
 

@@ -56,15 +56,8 @@ Item {
 
         ComboBox {
             id: _combobox
-        }
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-            Layout.rightMargin: 40
-
-            height: 2
-            color: Universal.baseLowColor
+            implicitContentWidthPolicy: ComboBox.WidestText
         }
     }
 }

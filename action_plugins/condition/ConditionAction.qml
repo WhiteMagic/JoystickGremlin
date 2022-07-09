@@ -140,6 +140,16 @@ Item {
             }
         }
 
+        HorizontalDivider {
+            id: _trueDivider
+
+            Layout.fillWidth: true
+
+            dividerColor: Universal.baseLowColor
+            lineWidth: 2
+            spacing: 2
+        }
+
         Repeater {
             model: _root.action.trueActionNodes
 
@@ -170,6 +180,16 @@ Item {
             }
         }
 
+        HorizontalDivider {
+            id: _falseDivider
+
+            Layout.fillWidth: true
+
+            dividerColor: Universal.baseLowColor
+            lineWidth: 2
+            spacing: 2
+        }
+
         Repeater {
             model: _root.action.falseActionNodes
 
@@ -183,7 +203,7 @@ Item {
 
     // Drop action for insertion into empty/first slot of the true actions
     ActionDragDropArea {
-        target: _trueHeader
+        target: _trueDivider
         dropCallback: function(drop) {
             modelData.dropAction(drop.text, modelData.id, "true");
         }
@@ -191,7 +211,7 @@ Item {
 
     // Drop action for insertion into empty/first slot of the false actions
     ActionDragDropArea {
-        target: _falseHeader
+        target: _falseDivider
         dropCallback: function(drop) {
             modelData.dropAction(drop.text, modelData.id, "false");
         }

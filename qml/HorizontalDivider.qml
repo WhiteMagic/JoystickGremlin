@@ -22,11 +22,14 @@ import QtQuick.Controls.Universal
 
 Rectangle {
     property int spacing: 10
+    property int lineWidth: 1
     property bool dividerVisible: true
     property color dividerColor: Universal.accent
 
     height: spacing
     z: -1
+
+    color: Universal.background
 
     Loader {
         active: dividerVisible
@@ -36,7 +39,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
 
         sourceComponent: Rectangle {
-            height: 1
+            height: lineWidth
             color: dividerColor
         }
     }
