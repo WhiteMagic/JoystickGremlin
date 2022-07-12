@@ -624,12 +624,38 @@ class VJoyConditionWidget(AbstractConditionWidget):
         self.condition_data.vjoy_id = data["device_id"]
         self.condition_data.input_type = data["input_type"]
         self.condition_data.input_id = data["input_id"]
+        
+        valid_axis_condition = [
+            "inside",
+            "outside"
+            ]
+        valid_button_condition = [
+            "pressed",
+            "released"
+            ]
+        valid_hat_condition = [
+            "center",
+            "north",
+            "north-east",
+            "east",
+            "south-east",
+            "south",
+            "south-west",
+            "west",
+            "north-west"
+            ]
 
-        if data["input_type"] == InputType.JoystickAxis:
+        if (data["input_type"] == InputType.JoystickAxis and
+            self.condition_data.comparison not in valid_axis_condition
+           ):
             self.condition_data.comparison = "inside"
-        elif data["input_type"] == InputType.JoystickButton:
+        elif (data["input_type"] == InputType.JoystickButton and
+              self.condition_data.comparison not in valid_button_condition
+             ):
             self.condition_data.comparison = "pressed"
-        elif data["input_type"] == InputType.JoystickHat:
+        elif (data["input_type"] == InputType.JoystickHat and
+              self.condition_data.comparison not in valid_hat_condition
+             ):
             self.condition_data.comparison = \
                 util.hat_tuple_to_direction((0, 0))
         self._create_ui()
