@@ -13,16 +13,12 @@ for root, _, files in os.walk("action_plugins"):
             continue
         action_plugins_files.append((os.path.join(root, fname), root))
 container_plugins_files = []
-for root, _, files in os.walk("container_plugins"):
-    for fname in files:
-        if fname.endswith(".pyc"):
-            continue
-        container_plugins_files.append((os.path.join(root, fname), root))
 
 added_files = [
     ("about", "about"),
     ("doc", "doc"),
-    ("gfx", "gfx")
+    ("gfx", "gfx"),
+    ("qml", "qml")
 ]
 added_files.extend(action_plugins_files)
 added_files.extend(container_plugins_files)
@@ -32,8 +28,8 @@ added_binaries = [
 ]
 
 a = Analysis(
-    ["joystick_gremlin.py"],
-    pathex=['C:\\Users\\Ivan Dolvich\\PycharmProjects\\JoystickGremlin'],
+    ["jg_qml.py"],
+    pathex=['C:\\Users\\Ivan\\Code\\JoystickGremlin'],
     binaries=added_binaries,
     datas=added_files,
     hiddenimports=[],
@@ -44,6 +40,20 @@ a = Analysis(
     win_private_assemblies=None,
     cipher=block_cipher
 )
+
+to_keep = []
+to_exclude = {
+    "Qt6WebChannel.dll",
+    "Qt6WebEngineCore.dll",
+    "Qt6WebEngineQuick.dll",
+    "Qt6WebEngineQuickDelegatesQml.dll",
+    "Qt6WebSockets.dll"
+}
+# Only keep binaries we actually want, exlucindg a bunch of Qt crap
+for (dest, source, kind) in a.binaries:
+    if os.path.split(dest)[1] not in to_exclude:
+        to_keep.append((dest, source, kind))
+a.binaries = to_keep
 
 pyz = PYZ(
     a.pure,
