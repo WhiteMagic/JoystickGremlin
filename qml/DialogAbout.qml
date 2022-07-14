@@ -20,7 +20,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import QtWebView
+// import QtWebView
 
 import QtQuick.Controls.Universal
 
@@ -48,22 +48,22 @@ Window {
             }
         }
 
-        StackLayout {
-            currentIndex: bar.currentIndex
+        // StackLayout {
+        //     currentIndex: bar.currentIndex
 
-            WebView {
-                id: aboutTab
-                url: "../about/about.html"
-            }
-            WebView {
-                id: licenseTab
-                url: "../about/joystick_gremlin.html"
-            }
-            WebView {
-                id: thirdpartyTab
+        //     WebView {
+        //         id: aboutTab
+        //         url: "../about/about.html"
+        //     }
+        //     WebView {
+        //         id: licenseTab
+        //         url: "../about/joystick_gremlin.html"
+        //     }
+        //     WebView {
+        //         id: thirdpartyTab
 
-                url: "../about/third_party_licenses.html"
-            }
-        }
+        //         url: "../about/third_party_licenses.html"
+        //     }
+        // }
     }
 }
