@@ -272,7 +272,11 @@ ApplicationWindow {
 
     // Main window content
     ColumnLayout {
+        id: _columnLayout
+
         anchors.fill: parent
+
+        property InputConfiguration inputConfigurationWidget
 
         // Horizonbtal list of "tabs" listing all detected devices
         DeviceList {
@@ -293,6 +297,8 @@ ApplicationWindow {
         // Main UI which contains the active device's inputs on the left and
         // actions assigned to the currently selected input on the right.
         SplitView {
+            id: _splitView
+
             // Ensure the widget covers the entire remaining area in the window
             Layout.fillHeight: true
             Layout.fillWidth: true

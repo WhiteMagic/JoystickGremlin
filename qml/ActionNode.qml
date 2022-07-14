@@ -175,7 +175,15 @@ Item {
                             component.errorString()
                         );
                     }
+
+                    component.destroy()
                 }
+            }
+            
+            // Destroy the dynamic object instance
+            Component.onDestruction: function()
+            {
+                _action.dynamicItem.destroy()
             }
         }
     }

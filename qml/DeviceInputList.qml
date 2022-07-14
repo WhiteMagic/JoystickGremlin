@@ -57,8 +57,8 @@ Item {
         delegate: _deviceDelegate
 
         onCurrentIndexChanged: {
-            inputIndex = currentIndex;
-            inputIdentifier = device.inputIdentifier(currentIndex);
+            inputIndex = currentIndex
+            inputIdentifier = device.inputIdentifier(currentIndex)
         }
 
         // Make it behave like a sensible scrolling container
