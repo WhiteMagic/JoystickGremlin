@@ -246,7 +246,7 @@ The above is not a generic setup that can be directly used as it relies on and m
 
 ### Action Drag & Drop
 
-The most common items that will require drag & drop support are actions and action trees. In order to have a uniform appearance and reduce code duplication three QML widgets have been created.
+The most common items that will require drag & drop support are actions and action trees. In order to have a uniform appearance and reduce code duplication three QML widgets have been created which support the creation of a drop area. The drag component is not created inside an action but at a higher level and thus does not need to be considered for actions.
 
 - `DropMarker` shows a rectangular area when a drag event of the correct type enters its area
 - `DragDropArea` handles the logic of defining a `DropArea` and ensuring only valid drag events are reacted to
@@ -259,6 +259,17 @@ The `DragDropArea` and `ActionDragDropArea` widgets have the following propertie
 - `validationCallback` is called whenever a drag enters the `DropArea` to decide whether or not the drag event is compatible with the current area. This callback is already specified and configured for the `ActionDragDropArea` widget
 
 In addition to these custom properties the usual properties of a `DropArea` are available as well. To adjust the placement of the widget specifying the `y` property may be required, especially if an item is changing position dynamically.
+
+```
+ActionDragDropArea {
+    target: _placementIdentifier
+    dropCallback: function(drop) {
+    	// Action specific code to execute
+    }
+}
+```
+
+
 
 ## Icon Colors
 
