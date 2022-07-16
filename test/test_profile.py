@@ -63,7 +63,7 @@ xml_description = """
                         <value>Feuer frei!</value>
                     </property>
                 </action>
-                <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="remap">
+                <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="map-to-vjoy">
                     <property type="int">
                         <name>vjoy-device-id</name>
                         <value>2</value>
@@ -203,7 +203,7 @@ def test_simple_action():
     assert actions[1].value.tag == "description"
     assert actions[1].value.description == "Feuer frei!"
     assert actions[1].value.id == uuid.UUID("f6d6a7af-baef-4b42-ab93-44608dedc859")
-    assert actions[2].value.tag == "remap"
+    assert actions[2].value.tag == "map-to-vjoy"
     assert actions[2].value.vjoy_device_id == 2
     assert actions[2].value.vjoy_input_id == 6
     assert actions[2].value.vjoy_input_type == gremlin.types.InputType.JoystickAxis

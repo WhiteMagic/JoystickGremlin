@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
+
+from gremlin import event_handler
 sys.path.append(".")
 
 import pytest
@@ -46,7 +48,7 @@ def test_from_xml():
     cond = c._conditions[0]
     assert isinstance(cond, condition.JoystickCondition)
     assert isinstance(cond._comparator, condition.comparator.PressedComparator)
-    assert cond._inputs[0].input_type == types.InputType.JoystickButton
+    assert cond._inputs[0].event_type == types.InputType.JoystickButton
     assert cond._comparator.is_pressed == False
     assert cond.is_valid()
 
@@ -66,20 +68,17 @@ def test_from_xml_complex():
     # Input item data
     assert len(c._conditions[0]._inputs) == 2
     in1 = c._conditions[0]._inputs[0]
-    assert in1.input_type == types.InputType.JoystickButton
-    assert in1.input_id == 2
-    assert in1.device_name == "Test"
-    assert in1.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    assert in1.event_type == types.InputType.JoystickButton
+    assert in1.identifier == 2
+    assert in1.device_guid == util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
     in2 = c._conditions[0]._inputs[1]
-    assert in2.input_type == types.InputType.JoystickButton
-    assert in2.input_id == 42
-    assert in2.device_name == "Test 2"
-    assert in2.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540024")
+    assert in2.event_type == types.InputType.JoystickButton
+    assert in2.identifier == 42
+    assert in2.device_guid == util.parse_guid("4DCB3090-97EC-11EB-8003-444553540024")
     in3 = c._conditions[2]._inputs[0]
-    assert in3.input_type == types.InputType.JoystickHat
-    assert in3.input_id == 1
-    assert in3.device_name == "Test"
-    assert in3.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    assert in3.event_type == types.InputType.JoystickHat
+    assert in3.identifier == 1
+    assert in3.device_guid == util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
     in4 = c._conditions[3]._inputs[0]
     in4.scan_code = 42
     in4.is_extended = True
@@ -89,14 +88,14 @@ def test_from_xml_complex():
     c1 = c._conditions[0]
     assert isinstance(c1, condition.JoystickCondition)
     assert isinstance(c1._comparator, condition.comparator.PressedComparator)
-    assert c1._inputs[0].input_type == types.InputType.JoystickButton
+    assert c1._inputs[0].event_type == types.InputType.JoystickButton
     assert c1._comparator.is_pressed == False
     assert c1.is_valid()
 
     c2 = c._conditions[1]
     assert isinstance(c2, condition.JoystickCondition)
     assert isinstance(c2._comparator, condition.comparator.RangeComparator)
-    assert c2._inputs[0].input_type == types.InputType.JoystickAxis
+    assert c2._inputs[0].event_type == types.InputType.JoystickAxis
     assert c2._comparator.lower == 0.2
     assert c2._comparator.upper == 0.9
     assert c2.is_valid()
@@ -104,7 +103,7 @@ def test_from_xml_complex():
     c3 = c._conditions[2]
     assert isinstance(c3, condition.JoystickCondition)
     assert isinstance(c3._comparator, condition.comparator.DirectionComparator)
-    assert c3._inputs[0].input_type == types.InputType.JoystickHat
+    assert c3._inputs[0].event_type == types.InputType.JoystickHat
     assert len(c3._comparator.directions) == 3
     assert c3._comparator.directions[0] == types.HatDirection.North
     assert c3._comparator.directions[1] == types.HatDirection.East
@@ -123,9 +122,11 @@ def test_to_xml():
     )
 
     cond = condition.JoystickCondition()
-    input_dev = condition.JoystickCondition.Input()
-    input_dev.device_guid = util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
-    input_dev.input_type = types.InputType.JoystickButton
+    input_dev = event_handler.Event(
+        types.InputType.JoystickButton,
+        37,
+        util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+    )
     cond._inputs.append(input_dev)
     cond._comparator = condition.comparator.PressedComparator(True)
     c._conditions.append(cond)

@@ -45,6 +45,10 @@ xml_button = """
             <name>vjoy-input-type</name>
             <value>button</value>
         </property>
+        <property type="bool">
+            <name>button-inverted</name>
+            <value>false</value>
+        </property>
     </action>
 """
 
