@@ -813,8 +813,9 @@ class GremlinUi(QtWidgets.QMainWindow):
         """Handles changes in the active process.
 
         If the active process has a known associated profile it is
-        loaded and activated if none exists the application is
-        disabled.
+        loaded and activated. If none exists and the user has not
+        enabled the option to keep the last profile active, the current
+        profile is disabled,
 
         :param path the path to the currently active process executable
         """
@@ -827,7 +828,7 @@ class GremlinUi(QtWidgets.QMainWindow):
             self.ui.actionActivate.setChecked(True)
             self.activate(True)
             self._profile_auto_activated = True
-        elif self._profile_auto_activated:
+        elif self._profile_auto_activated and not self.config.keep_last_autoload:
             self.ui.actionActivate.setChecked(False)
             self.activate(False)
             self._profile_auto_activated = False

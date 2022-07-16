@@ -289,6 +289,31 @@ class Configuration:
             self.save()
 
     @property
+    def keep_last_autoload(self):
+        """Returns whether or not to keep last autoloaded profile active when it would otherwise
+        be automatically disabled.
+
+        This setting prevents unloading an autoloaded profile when not changing to another one.
+
+        :return True if last profile keeping is active, False otherwise
+        """
+        return self._data.get("keep_last_autoload", False)
+
+    @keep_last_autoload.setter
+    def keep_last_autoload(self, value):
+        """Sets whether or not to keep last autoloaded profile active when it would otherwise
+        be automatically disabled.
+
+        This setting prevents unloading an autoloaded profile when not changing to another one.
+
+        :param value Flag indicating whether or not to enable / disable the
+            feature
+        """
+        if type(value) == bool:
+            self._data["keep_last_autoload"] = value
+            self.save()
+
+    @property
     def highlight_input(self):
         """Returns whether or not to highlight inputs.
 

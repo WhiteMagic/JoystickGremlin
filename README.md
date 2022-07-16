@@ -4,6 +4,11 @@ Joystick Gremlin
 Introduction
 ------------
 
+**Getting Help:** If you have issues running Gremlin or questions on how to
+make certain things work, the best place to ask for help is in the
+#joystick-gremlin channel on the HOTAS discord which can be found here
+https://discord.gg/szqaJE7.
+
 Joystick Gremlin is a program that allows the configuration of joystick like
 devices, similar to what CH Control Manager and Thrustmaster's T.A.R.G.E.T. do
 for their respectively supported joysticks. However, Joystick Gremlin works

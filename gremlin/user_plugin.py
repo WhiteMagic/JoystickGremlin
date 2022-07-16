@@ -343,6 +343,8 @@ class NumericalVariable(AbstractVariable):
             )
         elif self.variable_type == gremlin.types.PluginVariableType.Float:
             value_widget = QtWidgets.QDoubleSpinBox()
+            value_widget.setDecimals(3)
+            value_widget.setRange(self.min_value, self.max_value)
             value_widget.setValue(float(value))
             value_widget.valueChanged.connect(
                 lambda x: self.value_changed.emit({"value": x})
@@ -414,7 +416,7 @@ class FloatVariable(NumericalVariable):
             is_optional
         )
 
-        _init_numerical(self, 0, -1.0, 1.0)
+        _init_numerical(self, 0.0, -1.0, 1.0)
         self._load_from_registry(self._get_identifier())
 
 
