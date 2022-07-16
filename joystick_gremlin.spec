@@ -12,7 +12,6 @@ for root, _, files in os.walk("action_plugins"):
         if fname.endswith(".pyc"):
             continue
         action_plugins_files.append((os.path.join(root, fname), root))
-container_plugins_files = []
 
 added_files = [
     ("about", "about"),
@@ -21,7 +20,6 @@ added_files = [
     ("qml", "qml")
 ]
 added_files.extend(action_plugins_files)
-added_files.extend(container_plugins_files)
 added_binaries = [
     ("vjoy/vJoyInterface.dll", "."),
     ("dill/dill.dll", "."),
