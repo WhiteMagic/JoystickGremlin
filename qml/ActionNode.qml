@@ -78,7 +78,7 @@ Item {
 
                 checkable: true
                 checked: backend.isActionExpanded(_root.action.id)
-                text: checked ? "\uF2E8" : "\uF4FC"
+                text: checked ? Constants.folded : Constants.unfolded
 
                 Layout.alignment: Qt.AlignBaseline
                 Layout.leftMargin: -10
@@ -179,7 +179,7 @@ Item {
                     component.destroy()
                 }
             }
-            
+
             // Destroy the dynamic object instance
             Component.onDestruction: function()
             {
