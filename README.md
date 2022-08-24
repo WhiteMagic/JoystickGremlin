@@ -44,7 +44,7 @@ Joystick Gremlin uses the following software and resources:
 - [Reportlab](https://www.reportlab.com/)
 - [PyTest](https://docs.pytest.org/en/latest/)
 - [PyInstaller](http://www.pyinstaller.org/)
-- [vJoy](http://vjoystick.sourceforge.net)
+- [vJoy](https://github.com/jshafer817/vJoy/releases/tag/v2.1.9.1)
 - [Modern UI Icons](http://modernuiicons.com/)
 
 Currently the 32bit version of Python is needed and the following packages
