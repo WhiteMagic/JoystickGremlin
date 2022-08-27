@@ -82,7 +82,7 @@ Item {
                 ColumnLayout {
                     required property int index
                     required property int identifier
-                    required property double axisValue
+                    required property double value
 
                     height: ListView.view.height
                     width: 60
@@ -98,12 +98,12 @@ Item {
 
                         from: -1
                         to: 1
-                        value: axisValue
+                        value: parent.value
                     }
                     Label {
                         Layout.alignment: Qt.AlignHCenter
 
-                        text: format_percentage(axisValue) + " %"
+                        text: format_percentage(value) + " %"
                     }
 
                 }

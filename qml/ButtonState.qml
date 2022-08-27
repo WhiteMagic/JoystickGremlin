@@ -35,9 +35,9 @@ Item {
     function compute_height(available_width)
     {
         var rows_required = Math.ceil(
-            _grid.count / Math.floor(available_width / _grid.cellWidth)
+            _button_grid.count / Math.floor(available_width / _button_grid.cellWidth)
         )
-        return rows_required * _grid.cellHeight + _header.height
+        return rows_required * _button_grid.cellHeight + _header.height
     }
 
     DeviceButtonState {
@@ -66,30 +66,41 @@ Item {
             }
         }
 
-        GridView {
-            id: _grid
+        RowLayout {
+            GridView {
+                id: _button_grid
 
-            Layout.fillWidth: true
-            Layout.preferredHeight: _root.implicitHeight
+                Layout.fillWidth: true
+                Layout.preferredWidth: 600
+                Layout.preferredHeight: _root.implicitHeight
 
-            cellWidth: 50
-            cellHeight: 50
+                cellWidth: 50
+                cellHeight: 50
 
-            model: _button_state
-            delegate: Component {
-                RoundButton {
-                    required property int index
-                    required property int identifier
-                    required property bool isPressed
+                model: _button_state
+                delegate: Component {
+                    RoundButton {
+                        required property int index
+                        required property int identifier
+                        required property bool value
 
-                    width: 40
-                    height: 40
-                    radius: 10
+                        width: 40
+                        height: 40
+                        radius: 10
 
-                    text: identifier
-                    checked: isPressed
+                        text: identifier
+                        checked: value
+                    }
                 }
             }
+
+            GridLayout {
+                id: _hat_grid
+
+                Layout.preferredWidth: 200
+                Layout.preferredHeight: _root.implicitHeight
+            }
+
         }
     }
 

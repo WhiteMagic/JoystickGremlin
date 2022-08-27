@@ -494,17 +494,16 @@ class VJoyDevices(QtCore.QObject):
     )
 
 
-@QtQml.QmlElement
-class DeviceButtonState(QtCore.QAbstractListModel):
+class AbstractDeviceState(QtCore.QAbstractListModel):
+
+    deviceChanged = Signal()
 
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("identifier".encode()),
-        QtCore.Qt.UserRole + 2: QtCore.QByteArray("isPressed".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("value".encode()),
     }
 
-    statusChanged = Signal()
-
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
 
         el = event_handler.EventListener()
@@ -512,126 +511,97 @@ class DeviceButtonState(QtCore.QAbstractListModel):
 
         self._device = None
         self._state = []
-
-    def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
-        if self._device is None:
-            return 0
-
-        return self._device.button_count
-
-    def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
-        if role not in DeviceButtonState.roles:
-            return False
-
-        role_name = DeviceButtonState.roles[role].data().decode()
-        if role_name == "identifier":
-            return self._state[index.row()]["identifier"]
-        elif role_name == "isPressed":
-            return self._state[index.row()]["isPressed"]
-
-    def roleNames(self) -> typing.Dict:
-        return DeviceButtonState.roles
-
-    def _set_guid(self, guid: str) -> None:
-        if self._device is not None and guid == str(self._device.device_guid):
-            return
-
-        self._device = dill.DILL.get_device_information_by_guid(parse_guid(guid))
-
-        self._state = []
-        for i in range(self._device.button_count):
-            self._state.append({
-                "identifier": i+1,
-                "isPressed": False
-            })
-
-        self.statusChanged.emit()
-
-    def _event_callback(self, event):
-        if event.device_guid != self._device.device_guid:
-            return
-
-        if event.event_type == InputType.JoystickButton:
-            idx = event.identifier-1
-            self._state[idx]["isPressed"] = event.is_pressed
-            self.dataChanged.emit(self.index(idx, 0), self.index(idx, 0))
-
-    guid = Property(
-        str,
-        fset=_set_guid
-    )
-
-
-@QtQml.QmlElement
-class DeviceAxisState(QtCore.QAbstractListModel):
-
-    roles = {
-        QtCore.Qt.UserRole + 1: QtCore.QByteArray("identifier".encode()),
-        QtCore.Qt.UserRole + 2: QtCore.QByteArray("axisValue".encode()),
-    }
-
-    valueChanged = Signal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        el = event_handler.EventListener()
-        el.joystick_event.connect(self._event_callback)
-
-        self._device = None
-        self._state = []
-        self._identifier_map = {}
-
-
-    def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
-        if self._device is None:
-            return 0
-
-        return self._device.axis_count
-
-    def data(self, index: QtCore.QModelIndex, role: int=...) -> typing.Any:
-        if role not in DeviceAxisState.roles:
-            return 0.0
-
-        role_name = DeviceAxisState.roles[role].data().decode()
-        if role_name == "identifier":
-            return self._state[index.row()]["identifier"]
-        elif role_name == "axisValue":
-            return self._state[index.row()]["axisValue"]
-        return 1.0
-
-    def roleNames(self) -> typing.Dict:
-        return DeviceAxisState.roles
-
-    def _set_guid(self, guid: str) -> None:
-        if self._device is not None and guid == str(self._device.device_guid):
-            return
-
-        self._device = dill.DILL.get_device_information_by_guid(parse_guid(guid))
-
-        self._state = []
-        for i in range(self._device.axis_count):
-            self._identifier_map[self._device.axis_map[i].axis_index] = i
-            self._state.append({
-                "identifier": self._device.axis_map[i].axis_index,
-                "axisValue": 0.0
-            })
-
-        self.valueChanged.emit()
 
     def _event_callback(self, event: event_handler.Event):
         if event.device_guid != self._device.device_guid:
             return
 
-        if event.event_type == InputType.JoystickAxis:
-            index = self._identifier_map[event.identifier]
-            self._state[index]["axisValue"] = event.value
-            self.dataChanged.emit(self.index(index, 0), self.index(index, 0))
+        self._event_handler_impl(event)
+
+    def _event_handler_impl(self, event: event_handler.Event) -> None:
+        raise error.GremlinError(
+            "AbstractDeviceState._event_handler_impl not implemented"
+        )
+
+    def _set_guid(self, guid: str) -> None:
+        if self._device is not None and guid == str(self._device.device_guid):
+            return
+
+        self._device = dill.DILL.get_device_information_by_guid(parse_guid(guid))
+        self._state = []
+        self._initialize_state()
+        self.deviceChanged.emit()
+
+    def _initilize_state(self) -> None:
+        raise error.GremlinError(
+            "AbstractDeviceState._initialize_state not implemented"
+        )
+
+    def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
+        if self._device is None:
+            return 0
+
+        return len(self._state)
+
+    def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
+        if role not in AbstractDeviceState.roles:
+            return False
+
+        role_name = DeviceButtonState.roles[role].data().decode()
+        return self._state[index.row()][role_name]
+
+    def roleNames(self) -> typing.Dict:
+        return DeviceButtonState.roles
 
     guid = Property(
         str,
-        fset=_set_guid
+        fset=_set_guid,
+        notify=deviceChanged
     )
+
+
+@QtQml.QmlElement
+class DeviceAxisState(AbstractDeviceState):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._identifier_map = {}
+
+    def _event_handler_impl(self, event: event_handler.Event) -> None:
+        if event.event_type == InputType.JoystickAxis:
+            index = self._identifier_map[event.identifier]
+            self._state[index]["value"] = event.value
+            self.dataChanged.emit(self.index(index, 0), self.index(index, 0))
+
+    def _initialize_state(self) -> None:
+        for i in range(self._device.axis_count):
+            self._identifier_map[self._device.axis_map[i].axis_index] = i
+            self._state.append({
+                "identifier": self._device.axis_map[i].axis_index,
+                "value": 0.0
+            })
+
+
+
+@QtQml.QmlElement
+class DeviceButtonState(AbstractDeviceState):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def _event_handler_impl(self, event):
+        if event.event_type == InputType.JoystickButton:
+            idx = event.identifier-1
+            self._state[idx]["value"] = event.is_pressed
+            self.dataChanged.emit(self.index(idx, 0), self.index(idx, 0))
+
+    def _initialize_state(self) -> None:
+        for i in range(self._device.button_count):
+            self._state.append({
+                "identifier": i+1,
+                "value": False
+            })
 
 
 @QtQml.QmlElement
