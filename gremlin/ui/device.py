@@ -17,9 +17,10 @@
 
 from __future__ import annotations
 
+import time
 import typing
 
-from PySide6 import QtCore, QtQml
+from PySide6 import QtCharts, QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 import dill
@@ -630,4 +631,98 @@ class DeviceAxisState(QtCore.QAbstractListModel):
     guid = Property(
         str,
         fset=_set_guid
+    )
+
+
+@QtQml.QmlElement
+class DeviceAxisSeries(QtCore.QObject):
+
+    windowSizeChanged = Signal()
+    deviceChanged = Signal()
+    axisCountChanged = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        el = event_handler.EventListener()
+        el.joystick_event.connect(self._event_callback)
+
+        self._device = None
+        self._state = []
+        self._identifier_map = {}
+        self._window_size = 20
+
+    def _set_guid(self, guid: str) -> None:
+        if self._device is not None and guid == str(self._device.device_guid):
+            return
+
+        self._device = dill.DILL.get_device_information_by_guid(parse_guid(guid))
+
+        self._state = []
+        for i in range(self._device.axis_count):
+            self._identifier_map[self._device.axis_map[i].axis_index] = i
+            self._state.append({
+                "identifier": self._device.axis_map[i].axis_index,
+                "timeSeries": []
+            })
+        self.deviceChanged.emit()
+
+    def _get_window_size(self) -> int:
+        return self._window_size
+
+    def _set_window_size(self, value: int) -> None:
+        if value != self._window_size:
+            self._window_size = value
+            self.windowSizeChanged.emit()
+
+    def _event_callback(self, event: event_handler.Event):
+        if event.device_guid != self._device.device_guid:
+            return
+
+        if event.event_type == InputType.JoystickAxis:
+            index = self._identifier_map[event.identifier]
+            self._state[index]["timeSeries"].append(
+                (time.time(), event.value)
+            )
+
+    @Property(int, notify=axisCountChanged)
+    def axisCount(self) -> int:
+        return self._device.axis_count
+
+    @Slot(QtCharts.QLineSeries, int)
+    def updateSeries(self, series: QtCharts.QLineSeries, identifier: int):
+        data = self._state[identifier]["timeSeries"]
+
+        if len(data) == 0:
+            series.replace([
+                QtCore.QPointF(0.0, 0.0),
+                QtCore.QPointF(self._window_size, 0.0),
+            ])
+            return
+
+        now  = time.time()
+        while now - data[0][0] > self._window_size:
+            data.pop(0)
+
+        time_series = []
+        for pt in data:
+            time_series.append(QtCore.QPointF(pt[0] - now, pt[1]))
+        time_series.append(QtCore.QPointF(0, data[-1][1]))
+        series.replace(time_series)
+
+    @Slot(int, result=int)
+    def axisIdentifier(self, index: int) -> int:
+        return self._state[index]["identifier"]
+
+    guid = Property(
+        str,
+        fset=_set_guid,
+        notify=deviceChanged
+    )
+
+    windowSize = Property(
+        int,
+        fset=_set_window_size,
+        fget=_get_window_size,
+        notify=windowSizeChanged
     )

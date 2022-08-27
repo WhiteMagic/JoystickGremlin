@@ -41,7 +41,6 @@ Window {
         for(let i=0; i<_stateDisplay.children.length; ++i)
         {
             var elem = _stateDisplay.children[i]
-            console.log(elem.compute_height(_stateDisplay.width))
             elem.implicitHeight = elem.compute_height(_stateDisplay.width)
         }
     }
@@ -143,6 +142,22 @@ Window {
 
                 Switch {
                     text: "Axes - Temporal"
+
+                    onClicked: function()
+                    {
+                        if(checked)
+                        {
+                            widget_axis_temp = create_widget(
+                                "AxesStateSeries.qml",
+                                guid,
+                                name
+                            )
+                        }
+                        else
+                        {
+                            widget_axis_temp.destroy()
+                        }
+                    }
                 }
                 Switch {
                     text: "Axes - Current"
@@ -156,7 +171,6 @@ Window {
                                 guid,
                                 name
                             )
-                            console.log(widget_axis_cur)
                         }
                         else
                         {
@@ -176,7 +190,6 @@ Window {
                                 guid,
                                 name
                             )
-                            console.log(widget_btn_hat)
                         }
                         else
                         {

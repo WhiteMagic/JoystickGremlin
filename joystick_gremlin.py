@@ -29,7 +29,7 @@ import traceback
 
 
 # Import QtMultimedia so pyinstaller doesn't miss it
-from PySide6 import QtCore, QtGui, QtQml, QtQuick
+from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
 
 import resources
 
@@ -159,12 +159,13 @@ if __name__ == "__main__":
     # )
     # Use software rendering to prevent flickering on variable refresh rate
     # displays
-    QtQuick.QQuickWindow.setSceneGraphBackend("software")
+    # QtQuick.QQuickWindow.setSceneGraphBackend("software")
+    QtQuick.QQuickWindow.setGraphicsApi(QtQuick.QSGRendererInterface.OpenGL)
 
     # Create user interface
     app_id = u"joystick.gremlin"
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-    app = QtGui.QGuiApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
     app.setApplicationDisplayName("Joystick Gremlin")
 
