@@ -225,6 +225,13 @@ ApplicationWindow {
                     backend.toggleActiveState()
                 }
             }
+            ToolButton {
+                icon.source: "qrc:///icons/activate"
+
+                onClicked: {
+                    Helpers.createComponent("DialogInputViewer.qml")
+                }
+            }
 
             Rectangle {
                 Layout.fillWidth: true
@@ -334,7 +341,6 @@ ApplicationWindow {
                 SplitView.minimumWidth: 600
             }
         }
-
     }
 
 } // ApplicationWindow

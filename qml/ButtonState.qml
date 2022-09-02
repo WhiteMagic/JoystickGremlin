@@ -46,6 +46,12 @@ Item {
         guid: deviceGuid
     }
 
+    DeviceHatState {
+        id: _hat_state
+
+        guid: deviceGuid
+    }
+
     ColumnLayout {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -99,6 +105,16 @@ Item {
 
                 Layout.preferredWidth: 200
                 Layout.preferredHeight: _root.implicitHeight
+                Layout.alignment: Qt.AlignTop
+
+                rows: 2
+                columns: 2
+
+                Repeater {
+                    model: _hat_state
+
+                    delegate: HatView {}
+                }
             }
 
         }

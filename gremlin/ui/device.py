@@ -583,7 +583,6 @@ class DeviceAxisState(AbstractDeviceState):
             })
 
 
-
 @QtQml.QmlElement
 class DeviceButtonState(AbstractDeviceState):
 
@@ -601,6 +600,26 @@ class DeviceButtonState(AbstractDeviceState):
             self._state.append({
                 "identifier": i+1,
                 "value": False
+            })
+
+
+@QtQml.QmlElement
+class DeviceHatState(AbstractDeviceState):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def _event_handler_impl(self, event):
+        if event.event_type == InputType.JoystickHat:
+            idx = event.identifier-1
+            self._state[idx]["value"] = event.value
+            self.dataChanged.emit(self.index(idx, 0), self.index(idx, 0))
+
+    def _initialize_state(self) -> None:
+        for i in range(self._device.hat_count):
+            self._state.append({
+                "identifier": i+1,
+                "value": (0, 0)
             })
 
 
