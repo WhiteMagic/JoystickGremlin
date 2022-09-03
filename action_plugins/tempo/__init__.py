@@ -31,6 +31,7 @@ from PySide6.QtCore import Property, Signal, Slot
 from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
 from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
+from gremlin.config import Configuration
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
 from gremlin.ui.profile import ActionNodeModel
@@ -186,7 +187,7 @@ class TempoModel(AbstractActionModel):
         super().__init__(action_tree, input_type, parent)
         self._short_action_ids = []
         self._long_action_ids = []
-        self._threshold = 0.5
+        self._threshold = Configuration().get("action.tempo.duration")
         self._activate_on = "release"
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -323,3 +324,4 @@ class TempoModel(AbstractActionModel):
 
 
 create = TempoModel
+Configuration().register("action.tempo.duration", PropertyType.Float, 0.5)

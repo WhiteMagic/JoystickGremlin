@@ -24,18 +24,19 @@ import uuid
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import code_runner
-from gremlin import common
-from gremlin import config
-from gremlin import error
-from gremlin import plugin_manager
-from gremlin import profile
-from gremlin import profile_library
-from gremlin import shared_state
-from gremlin.signal import signal
+from gremlin import code_runner, common, config, error, plugin_manager, \
+    profile, profile_library, shared_state, signal, types
 
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, InputItemModel
+from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, \
+    InputItemModel
+
+
+config.Configuration().register(
+    "global.recent_profiles",
+    types.PropertyType.List,
+    []
+)
 
 
 @common.SingletonDecorator
@@ -178,7 +179,7 @@ class Backend(QtCore.QObject):
         Returns:
             List of recently used profiles
         """
-        return config.Configuration().recent_profiles
+        return config.Configuration().get("global.recent_profiles")
 
     @Slot()
     def newProfile(self) -> None:
