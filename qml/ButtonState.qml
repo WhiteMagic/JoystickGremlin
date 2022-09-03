@@ -34,10 +34,15 @@ Item {
 
     function compute_height(available_width)
     {
-        var rows_required = Math.ceil(
+        var button_rows = Math.ceil(
             _button_grid.count / Math.floor(available_width / _button_grid.cellWidth)
         )
-        return rows_required * _button_grid.cellHeight + _header.height
+        var hat_rows = Math.ceil(_hat_grid.count / 2)
+
+        return Math.max(
+            button_rows * _button_grid.cellHeight,
+            hat_rows * _hat_grid.cellHeight
+         ) + _header.height
     }
 
     DeviceButtonState {
@@ -73,12 +78,17 @@ Item {
         }
 
         RowLayout {
+            // Button state display
             GridView {
                 id: _button_grid
 
                 Layout.fillWidth: true
                 Layout.preferredWidth: 600
                 Layout.preferredHeight: _root.implicitHeight
+                Layout.alignment: Qt.AlignTop
+
+                boundsMovement: Flickable.StopAtBounds
+                boundsBehavior: Flickable.StopAtBounds
 
                 cellWidth: 50
                 cellHeight: 50
@@ -94,29 +104,44 @@ Item {
                         height: 40
                         radius: 10
 
+                        hoverEnabled: false
+
                         text: identifier
                         checked: value
                     }
                 }
             }
 
-            GridLayout {
+            // Hat state display
+            GridView {
                 id: _hat_grid
 
+                Layout.fillWidth: true
+                Layout.minimumWidth: 200
                 Layout.preferredWidth: 200
                 Layout.preferredHeight: _root.implicitHeight
                 Layout.alignment: Qt.AlignTop
 
-                rows: 2
-                columns: 2
+                boundsMovement: Flickable.StopAtBounds
+                boundsBehavior: Flickable.StopAtBounds
 
-                Repeater {
-                    model: _hat_state
+                cellWidth: 100
+                cellHeight: 100
 
-                    delegate: HatView {}
+                model: _hat_state
+                delegate: Component {
+                    HatView {
+                        required property int identifier
+                        required property point value
+
+                        height: _hat_grid.cellHeight - 20
+                        width: _hat_grid.cellWidth - 20
+
+                        text: identifier
+                        currentValue: value
+                    }
                 }
             }
-
         }
     }
 

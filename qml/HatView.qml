@@ -30,27 +30,61 @@ import Gremlin.Device
 Item {
     id: _root
 
-    height: 100
-    width: 100
+    height: 200
+    width: 200
+
+    property point currentValue
+    property string text
+    property int currentIndex: -1
+
+    onCurrentValueChanged: function()
+    {
+        // Convert point into an index and store it
+        var lut = new Map()
+        lut.set(Qt.point(0, 0), -1)
+        lut.set(Qt.point(0, 1), 0)
+        lut.set(Qt.point(1, 1), 1)
+        lut.set(Qt.point(1, 0), 2)
+        lut.set(Qt.point(1, -1), 3)
+        lut.set(Qt.point(0, -1), 4)
+        lut.set(Qt.point(-1, -1), 5)
+        lut.set(Qt.point(-1, 0), 6)
+        lut.set(Qt.point(-1, 1), 7)
+
+        if(lut.has(currentValue))
+        {
+            currentIndex = lut.get(currentValue)
+        }
+    }
+
+    Label {
+        anchors.centerIn: parent
+
+        text: _root.text
+    }
 
     Repeater {
         model: 8
-
-        transform: Translate {
-            x: 50
-            y: 50
-        }
 
         delegate: Triangle {
             required property int index
 
             width: 15
             height: 15
-            color: "blue"
+            color: _root.currentIndex == index ? Universal.accent : Universal.baseLowColor
 
             transform: [
-                Translate { y: -50},
-                Rotation { angle: index*45 }
+                Translate {
+                    x: _root.width / 2 - width / 2
+                    y: 0
+                },
+                Rotation {
+                    angle: index*45
+                    origin {
+                        x: _root.width / 2
+                        y: _root.height / 2
+                    }
+                }
             ]
         }
     }

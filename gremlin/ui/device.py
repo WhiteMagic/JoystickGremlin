@@ -612,14 +612,16 @@ class DeviceHatState(AbstractDeviceState):
     def _event_handler_impl(self, event):
         if event.event_type == InputType.JoystickHat:
             idx = event.identifier-1
-            self._state[idx]["value"] = event.value
-            self.dataChanged.emit(self.index(idx, 0), self.index(idx, 0))
+            pt = QtCore.QPoint(event.value[0], event.value[1])
+            if pt != self._state[idx]["value"]:
+                self._state[idx]["value"] = pt
+                self.dataChanged.emit(self.index(idx, 0), self.index(idx, 0))
 
     def _initialize_state(self) -> None:
         for i in range(self._device.hat_count):
             self._state.append({
                 "identifier": i+1,
-                "value": (0, 0)
+                "value": QtCore.QPoint(0, 0)
             })
 
 
