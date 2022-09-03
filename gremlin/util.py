@@ -230,7 +230,7 @@ def safe_format(
 
 # Mapping between property types and the function converting the string
 # representation into the correct data type
-_property_conversion = {
+_property_from_string = {
     PropertyType.String: str,
     PropertyType.Int: int,
     PropertyType.Float: float,
@@ -239,7 +239,25 @@ _property_conversion = {
     PropertyType.AxisMode: lambda x: AxisMode.to_enum(x),
     PropertyType.HatDirection: lambda x: HatDirection.to_enum(x),
     PropertyType.GUID: lambda x: uuid.UUID(x),
+    PropertyType.List: lambda x: x.split("|")
 }
+
+def property_from_string(data_type: PropertyType, value: str) -> Any:
+    """Converts the provided string to the indicated type.
+
+    Args:
+        data_type: type of data into which to convert the string representation
+        value: string representation of the data to convert
+
+    Returns:
+        Converted data
+    """
+    if data_type not in _property_from_string:
+        raise error.GremlinError(
+            f"No known conversion from string to data type '{data_type}'"
+        )
+    return _property_from_string[data_type](value)
+
 
 _property_to_string = {
     PropertyType.String: str,
@@ -250,7 +268,26 @@ _property_to_string = {
     PropertyType.AxisMode: lambda x: AxisMode.to_string(x),
     PropertyType.HatDirection: lambda x: HatDirection.to_string(x),
     PropertyType.GUID: lambda x: str(x),
+    PropertyType.List: lambda x: "|".join(x),
 }
+
+def property_to_string(data_type: PropertyType, value: Any) -> str:
+    """Converts a value of a given data type into a string representation.
+
+    Args:
+        data_type: type of data to convert into a string representation
+        value: data to be converted to a string
+
+    Returns:
+        String representation of the original data
+    """
+    if data_type not in _property_to_string:
+        raise error.GremlinError(
+            f"No known conversion to string for data of type '{data_type}"
+        )
+
+    return _property_to_string[data_type](value)
+
 
 _type_lookup = {
     PropertyType.String: str,
@@ -544,7 +581,7 @@ def _process_property(
             f"Property type mismatch, got '{p_type}' expected '{property_type}'"
         )
     try:
-        return _property_conversion[p_type](v_node.text)
+        return _property_from_string[p_type](v_node.text)
     except Exception:
         raise error.ProfileError(
             f"Failed parsing property value '{v_node.text}' which "
@@ -888,7 +925,7 @@ _dill_hat_lookup = {
 
 def dill_hat_lookup(value: int) -> Tuple[int, int]:
     """Returns the tuple representation of a hat direction from raw value.
-    
+
     Args:
         value: raw hat value to convert
 
