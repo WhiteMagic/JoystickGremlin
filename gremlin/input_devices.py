@@ -259,9 +259,9 @@ class JoystickWrapper:
 
         @property
         def direction(self):
-            return util.dill_hat_lookup[
+            return util.dill_hat_lookup(
                 DILL.get_hat(self._joystick_guid, self._index)
-            ]
+            )
 
     def __init__(self, device_guid):
         """Creates a new wrapper object for the given object id.

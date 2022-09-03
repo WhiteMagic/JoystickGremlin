@@ -24,7 +24,7 @@ import re
 import sys
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
 import uuid
 from uuid import UUID
 from xml.etree import ElementTree
@@ -874,7 +874,7 @@ def clear_layout(layout):
         layout.removeItem(child)
 
 
-dill_hat_lookup = {
+_dill_hat_lookup = {
     -1: (0, 0),
     0: (0, 1),
     4500: (1, 1),
@@ -885,6 +885,17 @@ dill_hat_lookup = {
     27000: (-1, 0),
     31500: (-1, 1)
 }
+
+def dill_hat_lookup(value: int) -> Tuple[int, int]:
+    """Returns the tuple representation of a hat direction from raw value.
+    
+    Args:
+        value: raw hat value to convert
+
+    Returns:
+        Tuple representing the hat direction
+    """
+    return _dill_hat_lookup.get(value, (0, 0))
 
 
 def load_module(name):

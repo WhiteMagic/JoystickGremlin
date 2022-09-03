@@ -232,7 +232,7 @@ class EventListener(QtCore.QObject):
                 event_type=gremlin.types.InputType.JoystickHat,
                 device_guid=event.device_guid,
                 identifier=event.input_index,
-                value=util.dill_hat_lookup[event.value]
+                value=util.dill_hat_lookup(event.value)
             ))
 
     def _joystick_device_handler(self, data, action):
