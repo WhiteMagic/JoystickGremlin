@@ -268,7 +268,7 @@ _property_to_string = {
     PropertyType.AxisMode: lambda x: AxisMode.to_string(x),
     PropertyType.HatDirection: lambda x: HatDirection.to_string(x),
     PropertyType.GUID: lambda x: str(x),
-    PropertyType.List: lambda x: "|".join(x),
+    PropertyType.List: lambda x: "|".join([str(v) for v in x]),
 }
 
 def property_to_string(data_type: PropertyType, value: Any) -> str:

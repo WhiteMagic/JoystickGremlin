@@ -28,6 +28,9 @@ from PySide6 import QtCore
 from gremlin import common, error, util, types
 
 
+_config_file_path = os.path.join(util.userprofile_path(), "configuration.json")
+
+
 @common.SingletonDecorator
 class Configuration:
 
@@ -39,9 +42,7 @@ class Configuration:
         self._last_reload = None
         self.load()
 
-        self.watcher = QtCore.QFileSystemWatcher([
-            os.path.join(util.userprofile_path(), "configuration.json")
-        ])
+        self.watcher = QtCore.QFileSystemWatcher([_config_file_path])
         self.watcher.fileChanged.connect(self.load)
 
     def load(self):
@@ -50,13 +51,12 @@ class Configuration:
                 time.time() - self._last_reload < 1:
             return
 
-        fname = os.path.join(util.userprofile_path(), "configuration.json")
         # Attempt to load the configuration file if this fails set
         # default empty values.
         load_successful = False
         json_data = {}
-        if os.path.isfile(fname):
-            with open(fname) as hdl:
+        if os.path.isfile(_config_file_path):
+            with open(_config_file_path) as hdl:
                 try:
                     decoder = json.JSONDecoder()
                     json_data = decoder.decode(hdl.read())
@@ -93,8 +93,7 @@ class Configuration:
             }
 
         # Write data to file
-        fname = os.path.join(util.userprofile_path(), "configuration.json")
-        with open(fname, "w") as hdl:
+        with open(_config_file_path, "w") as hdl:
             encoder = json.JSONEncoder(
                 sort_keys=True,
                 indent=4
@@ -108,7 +107,7 @@ class Configuration:
         initial_value: Any
     ) -> None:
         """Registers a new configuration parameter.
-        
+
         Args:
             key: name by which the new parameter will be accessed
             data_type: type of data that is expected to be stored
@@ -122,7 +121,7 @@ class Configuration:
                     f"'{old_data_type}' to '{data_type}'")
             else:
                 return
-        
+
         self._data[key] = {
             "value": initial_value,
             "type": data_type
@@ -131,14 +130,14 @@ class Configuration:
 
     def set(self, key: str, value: Any) -> None:
         """Sets the value of a specific parameter.
-        
+
         Args:
             key: name of the parameter to store
             value: new value for the parameter
         """
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key '{key}' exists")
-        
+
         if util.has_correct_type(value, self._data[key]["type"]):
             self._data[key]["value"] = value
             self.save()
@@ -151,16 +150,16 @@ class Configuration:
 
     def get(self, key: str) -> Any:
         """Returns the value associated with the given parameter.
-        
+
         Args:
             key: name of the parameter whose value to retrieve
-        
+
         Returns:
             Value associated with the given parameter
         """
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key {key} exists")
-        
+
         return self._data[key]["value"]
 
     # def set_calibration(self, dev_id, limits):
