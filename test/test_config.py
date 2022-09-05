@@ -41,49 +41,71 @@ def modify_config():
 def test_simple(modify_config):
     c = gremlin.config.Configuration()
 
-    c.register("test.1", PropertyType.Int, 42)
-    c.register("test.2", PropertyType.Bool, False)
-    c.register("test.3", PropertyType.HatDirection, gremlin.types.HatDirection.NorthEast)
-    assert c.get("test.1") == 42
-    assert c.get("test.2") == False
-    assert c.get("test.3") == gremlin.types.HatDirection.NorthEast
+    c.register("test", "case", "1", PropertyType.Int, 42, "")
+    c.register("test", "case", "2", PropertyType.Bool, False, "")
+    c.register("test", "case", "3", PropertyType.HatDirection, gremlin.types.HatDirection.NorthEast, "")
+    assert c.value("test", "case", "1") == 42
+    assert c.value("test", "case", "2") == False
+    assert c.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
 
-    c.set("test.1", 37)
-    c.set("test.2", True)
-    c.set("test.3", gremlin.types.HatDirection.SouthWest)
-    assert c.get("test.1") == 37
-    assert c.get("test.2") == True
-    assert c.get("test.3") == gremlin.types.HatDirection.SouthWest
+    c.set("test", "case", "1", 37)
+    c.set("test", "case", "2", True)
+    c.set("test", "case", "3", gremlin.types.HatDirection.SouthWest)
+    assert c.value("test", "case", "1") == 37
+    assert c.value("test", "case", "2") == True
+    assert c.value("test", "case", "3") == gremlin.types.HatDirection.SouthWest
 
 def test_load_save(modify_config):
     c = gremlin.config.Configuration()
 
-    c.register("test.1", PropertyType.Int, 42)
-    c.register("test.2", PropertyType.Bool, False)
-    c.register("test.3", PropertyType.HatDirection, gremlin.types.HatDirection.NorthEast)
-    c.register("test.4", PropertyType.List, [1,2,3,4,5])
-    assert c.get("test.1") == 42
-    assert c.get("test.2") == False
-    assert c.get("test.3") == gremlin.types.HatDirection.NorthEast
-    assert c.get("test.4") == [1,2,3,4,5]
+    c.register("test", "case", "1", PropertyType.Int, 42, "one")
+    c.register("test", "case", "2", PropertyType.Bool, False, "two", True)
+    c.register("test", "case", "3", PropertyType.HatDirection, gremlin.types.HatDirection.NorthEast, "")
+    c.register("test", "case", "4", PropertyType.List, [1,2,3,4,5], "")
+    assert c.value("test", "case", "1") == 42
+    assert c.description("test", "case", "1") == "one"
+    assert c.expose("test", "case", "1") == False
+
+    assert c.value("test", "case", "2") == False
+    assert c.description("test", "case", "2") == "two"
+    assert c.expose("test", "case", "2") == True
+
+    assert c.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
+    assert c.description("test", "case", "3") == ""
+    assert c.expose("test", "case", "3") == False
+
+    assert c.value("test", "case", "4") == [1,2,3,4,5]
+    assert c.description("test", "case", "4") == ""
+    assert c.expose("test", "case", "4") == False
 
     c.save()
     c.load()
 
-    assert c.get("test.1") == 42
-    assert c.get("test.2") == False
-    assert c.get("test.3") == gremlin.types.HatDirection.NorthEast
-    assert c.get("test.4") == [1,2,3,4,5]
+    assert c.value("test", "case", "1") == 42
+    assert c.description("test", "case", "1") == "one"
+    assert c.expose("test", "case", "1") == False
+
+    assert c.value("test", "case", "2") == False
+    assert c.description("test", "case", "2") == "two"
+    assert c.expose("test", "case", "2") == True
+
+    assert c.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
+    assert c.description("test", "case", "3") == ""
+    assert c.expose("test", "case", "3") == False
+
+    assert c.value("test", "case", "4") == [1,2,3,4,5]
+    assert c.description("test", "case", "4") == ""
+    assert c.expose("test", "case", "4") == False
 
 def test_exceptions():
     c = gremlin.config.Configuration()
 
-    c.register("test.1", PropertyType.Int, 42)
+    c.register("test", "case", "1", PropertyType.Int, 42, "")
     with pytest.raises(gremlin.error.GremlinError):
-        c.set("test.1", 3.14)
-    
-    with pytest.raises(gremlin.error.GremlinError):
-        c.set("some.other", "test")
+        c.set("test", "case", "1", 3.14)
 
     with pytest.raises(gremlin.error.GremlinError):
-        c.get("does.not.exist")
+        c.set("test", "some", "other", "test")
+
+    with pytest.raises(gremlin.error.GremlinError):
+        c.value("does", "not", "exist")

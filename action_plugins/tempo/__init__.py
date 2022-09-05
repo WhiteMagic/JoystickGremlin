@@ -187,7 +187,7 @@ class TempoModel(AbstractActionModel):
         super().__init__(action_tree, input_type, parent)
         self._short_action_ids = []
         self._long_action_ids = []
-        self._threshold = Configuration().get("action.tempo.duration")
+        self._threshold = Configuration().value("action", "tempo", "duration")
         self._activate_on = "release"
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -324,4 +324,12 @@ class TempoModel(AbstractActionModel):
 
 
 create = TempoModel
-Configuration().register("action.tempo.duration", PropertyType.Float, 0.5)
+Configuration().register(
+    "action",
+    "tempo",
+    "duration",
+    PropertyType.Float,
+    0.5,
+    "Default time before triggering the long press action.",
+    True
+)
