@@ -68,12 +68,19 @@ class Configuration:
 
         # Convert data based on property types
         self._data = {}
-        for key, entry in json_data.items():
-            data_type = types.PropertyType.to_enum(entry["type"])
-            self._data[key] = {
-                "value": util.property_from_string(data_type, entry["value"]),
-                "type": data_type
-            }
+        for section, sec_data in json_data.items():
+            for group, grp_data in sec_data.items():
+               for name, entry in grp_data.items():
+                    data_type = types.PropertyType.to_enum(entry["type"])
+                    self._data[(section, group, name)] = {
+                        "value": util.property_from_string(
+                            data_type,
+                            entry["value"]
+                        ),
+                        "type": data_type,
+                        "description": entry["description"],
+                        "expose": entry["expose"]
+                    }
 
         # Save all data
         self._last_reload = time.time()
@@ -84,12 +91,21 @@ class Configuration:
         # Convert all data to string representations
         json_data = {}
         for key, entry in self._data.items():
-            json_data[key] = {
+            section = key[0]
+            group = key[1]
+            name = key[2]
+            if section not in json_data:
+                json_data[section] = {}
+            if group not in json_data[section]:
+                json_data[section][group] = {}
+            json_data[section][group][name] = {
                 "value": util.property_to_string(
                     entry["type"],
-                    entry["value"]
+                    entry["value"],
                 ),
-                "type": types.PropertyType.to_string(entry["type"])
+                "type": types.PropertyType.to_string(entry["type"]),
+                "description": entry["description"],
+                "expose": entry["expose"]
             }
 
         # Write data to file
@@ -102,39 +118,53 @@ class Configuration:
 
     def register(
         self,
-        key: str,
+        section: str,
+        group: str,
+        name: str,
         data_type: types.PropertyType,
-        initial_value: Any
+        initial_value: Any,
+        description: str,
+        expose: bool=False
     ) -> None:
         """Registers a new configuration parameter.
 
         Args:
-            key: name by which the new parameter will be accessed
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
             data_type: type of data that is expected to be stored
             initial_value: initial value of the paramter
+            description: description of the parameter's purpose
+            expose: if True expose the parameter via the UI to the user
         """
+        key = (section, group, name)
         if key in self._data:
             old_data_type = self._data[key]["type"]
             if data_type != old_data_type:
                 logging.warning(
-                    f"Data type for key '{key}' changed, updating from " +
+                    f"Data type for parameter '{key}' changed, updating from " +
                     f"'{old_data_type}' to '{data_type}'")
             else:
                 return
 
         self._data[key] = {
             "value": initial_value,
-            "type": data_type
+            "type": data_type,
+            "description": description,
+            "expose": expose
         }
         self.save()
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, section: str, group: str, name: str, value: Any) -> None:
         """Sets the value of a specific parameter.
 
         Args:
-            key: name of the parameter to store
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
             value: new value for the parameter
         """
+        key = (section, group, name)
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key '{key}' exists")
 
@@ -148,19 +178,56 @@ class Configuration:
                 f"'{data_type}' got '{type(value)}'"
             )
 
-    def get(self, key: str) -> Any:
+    def value(self, section: str, group: str, name: str) -> Any:
         """Returns the value associated with the given parameter.
 
         Args:
-            key: name of the parameter whose value to retrieve
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
 
         Returns:
             Value associated with the given parameter
         """
+        key = (section, group, name)
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key {key} exists")
 
         return self._data[key]["value"]
+
+    def description(self, section: str, group: str, name: str) -> str:
+        """Returns the description associated with the given parameter.
+
+        Args:
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
+
+        Returns:
+            Description associated with the given parameter
+        """
+        key = (section, group, name)
+        if key not in self._data:
+            raise error.GremlinError(f"No parameter with key {key} exists")
+
+        return self._data[key]["description"]
+
+    def expose(self, section: str, group: str, name: str) -> bool:
+        """Returns whether to expose a parameter in the UI.
+
+        Args:
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
+
+        Returns:
+            True if the parameter should be exposed via the UI.
+        """
+        key = (section, group, name)
+        if key not in self._data:
+            raise error.GremlinError(f"No parameter with key {key} exists")
+
+        return self._data[key]["expose"]
 
     # def set_calibration(self, dev_id, limits):
     #     """Sets the calibration data for all axes of a device.
