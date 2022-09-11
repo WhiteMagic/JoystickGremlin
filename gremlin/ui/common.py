@@ -21,6 +21,8 @@ import threading
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 import gremlin
+import logging
+import gremlin.joystick_handling
 
 
 class ContainerViewTypes(enum.Enum):
@@ -724,17 +726,44 @@ class VJoySelector(AbstractInputSelector):
 
     """Widget allowing the selection of vJoy inputs."""
 
-    def __init__(self, change_cb, valid_types, invalid_ids={}, parent=None):
+    def __init__(self, change_cb, valid_types, invalid_ids={}, profile=None, parent=None):
         """Creates a widget to select a vJoy output.
 
         :param change_cb callback to execute when the widget changes
         :param valid_types the input type to present in the selection
         :param invalid_ids list of vid values of vjoy devices to not consider
+        :param profile link to profile for up-to-date binding lists
         :param parent of this widget
         """
         self.invalid_ids = invalid_ids
         super().__init__(change_cb, valid_types, parent)
-
+        
+        # must call _create_binding_dropdown after 
+        # widget super().__init__() due to pyQt initialization
+        self.profile = profile
+        self._create_binding_dropdown()
+        
+    def get_selection(self):
+        # include binding in selection if applicable
+        selection = super().get_selection()
+        if self.binding_dropdown is not None:
+            selection["binding"] = self.binding_dropdown.currentText()
+        return selection
+        
+    def set_selection(self, input_type, device_id, input_id, binding=''):
+        # if binding passed, use that to populate vjoy instead of super func
+        # since this also calls _self.chage_cb, this also gives us a convenient way to set 
+        # preference for binding assignments during ui initialization
+        # if passed binding no longer exists -- set binding from vjoy
+        if self.binding_dropdown is None:
+            super().set_selection(input_type, device_id, input_id)
+        elif binding and self.binding_dropdown.findText(binding) != -1:
+            self.binding_dropdown.setCurrentText(binding)
+            self._set_selection_from_binding()
+        else:
+            super().set_selection(input_type, device_id, input_id)
+            self._set_selection_from_vjoy_item() # call this to update binding if one exists
+        
     def _initialize(self):
         potential_devices = sorted(
             gremlin.joystick_handling.vjoy_devices(),
@@ -760,7 +789,70 @@ class VJoySelector(AbstractInputSelector):
 
     def _device_identifier(self, device):
         return device.vjoy_id
-
+    
+    def _create_binding_dropdown(self):
+        if self.profile is None:
+            self.binding_dropdown = None
+            return # do not create a binding dropdown
+        self.binding_dropdown = QtWidgets.QComboBox(self)
+        self.binding_dropdown.setMaxVisibleItems(20)
+        for input_type in self.valid_types:
+            if self.profile.has_unbound_vjoys(input_type):
+                self.binding_dropdown.addItem("")
+                break # include blank if at least one unbound binding
+        binding_choices = list()
+        for input_type in self.valid_types:
+            bindings_of_type = self.profile.get_bindings_of_type(input_type)
+            if bindings_of_type:
+                binding_choices += bindings_of_type
+        binding_choices.sort() # sort for alphabetical order
+        self.binding_dropdown.addItems(binding_choices)
+        self.main_layout.addWidget(self.binding_dropdown)
+        self.binding_dropdown.activated.connect(self._set_selection_from_binding) # only update if user selects dropdown!
+        
+    def _set_selection_from_binding(self):
+        # update vjoy device/input dropdown selection based on selected binding
+        
+        # check if the binding selection actually changed
+        selection = self.get_selection()
+        device_guid = gremlin.joystick_handling.guid_from_vjoy_id(selection["device_id"])
+        input_type = selection["input_type"]
+        input_id = selection["input_id"]
+        binding = selection["binding"]
+        if binding == self.profile.get_binding_from_vjoy(device_guid, input_id, input_type):
+            return
+        
+        # use passed binding or first unbound and unused vjoy if binding is empty
+        if binding: 
+            selection = self.profile.get_vjoy_from_binding(binding)
+        else:
+            for input_type in self.valid_types:
+                selection = self.profile.get_first_free_vjoy_input_of_type(input_type)
+                if selection is not None:
+                    break
+            if selection is None:
+                logging.getLogger("system").warning("No unused and unbound VJoy Inputs to select! Ignoring...")
+                selection = self.get_selection()
+            
+        # update ui and pass to callback function from selection
+        super().set_selection(selection["input_type"],selection["device_id"],selection["input_id"])
+        super()._execute_callback()
+        
+    def _set_selection_from_vjoy_item(self):
+        # update binding dropdown based on selected vjoy device/input item
+        selection = self.get_selection()
+        device_guid = gremlin.joystick_handling.guid_from_vjoy_id(selection["device_id"])
+        input_type = selection["input_type"]
+        input_id = selection["input_id"]
+        
+        # update binding selection in ui if applicable
+        if self.binding_dropdown is not None:
+            binding = self.profile.get_binding_from_vjoy(device_guid,input_id,input_type)
+            self.binding_dropdown.setCurrentText(binding)
+        super()._execute_callback()
+    
+    def _execute_callback(self):
+        self._set_selection_from_vjoy_item()
 
 class ActionSelector(QtWidgets.QWidget):
 
