@@ -154,6 +154,27 @@ def vjoy_id_from_guid(guid):
     )
     return 1
 
+def guid_from_vjoy_id(vjoy_id):
+    """Returns the GUID corresponding to the given device vJoy id.
+
+    Parameters
+    ======
+    int
+        vJoy id corresponding to the provided device
+        
+    Return
+    ==========
+    guid : GUID
+        guid of the vjoy device in windows
+    """
+    for dev in vjoy_devices():
+        if dev.vjoy_id == vjoy_id:
+            return dev.device_guid
+
+    logging.getLogger("system").error(
+        "Could not find vJoy matching ID {}".format(str(vjoy_id))
+    )
+    return None
 
 def linear_axis_index(axis_map, axis_index):
     """Returns the linear index for an axis based on the axis index.
