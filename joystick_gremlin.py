@@ -376,22 +376,16 @@ class GremlinUi(QtWidgets.QMainWindow):
             gremlin.common.InputType.JoystickButton,
             gremlin.common.InputType.JoystickHat
         ]
-        type_name = {
-            gremlin.common.InputType.JoystickAxis: "axis",
-            gremlin.common.InputType.JoystickButton: "button",
-            gremlin.common.InputType.JoystickHat: "hat",
-        }
         main_profile = device_profile.parent
         for input_type in input_types:
             for entry in mode.config[input_type].values():
-                item_list = main_profile.list_unused_vjoy_inputs()
-
+                unused_inputs = main_profile.get_unused_vjoy_inputs()
                 container = container_plugins.repository["basic"](entry)
                 action = action_plugins.repository["remap"](container)
                 action.input_type = input_type
                 action.vjoy_device_id = 1
-                if len(item_list[1][type_name[input_type]]) > 0:
-                    action.vjoy_input_id = item_list[1][type_name[input_type]][0]
+                if len(unused_inputs[1][input_type]) > 0:
+                    action.vjoy_input_id = unused_inputs[1][input_type][0].input_id
                 else:
                     action.vjoy_input_id = 1
 
