@@ -25,7 +25,8 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import code_runner, common, config, error, plugin_manager, \
-    profile, profile_library, shared_state, signal, types
+    profile, profile_library, shared_state, types
+from gremlin.signal import signal
 
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, \
@@ -33,9 +34,13 @@ from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, \
 
 
 config.Configuration().register(
-    "global.recent_profiles",
+    "global",
+    "common",
+    "recent_profiles",
     types.PropertyType.List,
-    []
+    [],
+    "List of recently opened profiles",
+    False
 )
 
 
@@ -179,7 +184,7 @@ class Backend(QtCore.QObject):
         Returns:
             List of recently used profiles
         """
-        return config.Configuration().get("global.recent_profiles")
+        return config.Configuration().value("global", "common", "recent_profiles")
 
     @Slot()
     def newProfile(self) -> None:
@@ -352,8 +357,7 @@ class Backend(QtCore.QObject):
         except error.ProfileError as e:
             # Parsing the profile went wrong, stop loading and start with an
             # empty profile
-            cfg = config.Configuration()
-            cfg.last_profile = None
+            #cfg = config.Configuration()
             self.newProfile()
             self.display_error(
                 f"Failed to load the profile {fpath} due to:\n\n{e}"
