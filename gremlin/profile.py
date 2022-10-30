@@ -30,7 +30,7 @@ import dill
 
 import action_plugins
 from gremlin.common import DeviceType, InputType, MergeAxisOperation, \
-    PluginVariableType
+    PluginVariableType, input_to_ui_string
 from . import base_classes, common, error, input_devices, joystick_handling, \
     plugin_manager, util
 
@@ -221,7 +221,7 @@ class ProfileConverter:
     """Handle converting and checking profiles."""
 
     # Current profile version number
-    current_version = 9
+    current_version = 10
 
     def __init__(self):
         pass
@@ -258,6 +258,7 @@ class ProfileConverter:
             6: self._convert_from_v6,
             7: self._convert_from_v7,
             8: self._convert_from_v8,
+            9: self._convert_from_v9,
         }
 
         # Create a backup of the outdated profile
@@ -915,6 +916,29 @@ class ProfileConverter:
 
         return root
 
+    def _convert_from_v9(self, root, fname=None):
+        """Convert from a V9 profile to V10.
+
+        This adds the "binding" attribute to all mode InputItems.
+
+        Parameters
+        ----------
+        root : ElementTree
+            Root of the XML tree being modified
+
+        Returns
+        -------
+        ElementTree
+            Modified XML root element
+        """
+        root.attrib["version"] = "10"
+
+        for mode in root.findall(".//mode"):
+            for node in mode.findall("*"):
+                node.set("binding", "")
+
+        return root
+    
     def _p3_extract_map_to_keyboard(self, input_item):
         """Converts an old macro setup to a map to keyboard action.
 
@@ -1314,6 +1338,7 @@ class Profile:
         self.plugins = []
         self.settings = Settings(self)
         self.parent = None
+        self._bound_vjoys = self._empty_input_type_dict()
 
     def initialize_joystick_device(self, device, modes):
         """Ensures a joystick is properly initialized in the profile.
@@ -1390,63 +1415,107 @@ class Profile:
                 if mode.inherit is None:
                     root_modes.append(mode_name)
         return list(set(root_modes))
-
-    def list_unused_vjoy_inputs(self):
+    
+    def get_unused_vjoy_inputs(self):
         """Returns a list of unused vjoy inputs for the given profile.
 
-        :return dictionary of unused inputs for each input type
+        :return dictionary of unused InputItems for each input vjoy device and input type
         """
-        vjoy_devices = joystick_handling.vjoy_devices()
-
-        # Create list of all inputs provided by the vjoy devices
-        vjoy = {}
-        for entry in vjoy_devices:
-            vjoy[entry.vjoy_id] = {"axis": [], "button": [], "hat": []}
-            for i in range(entry.axis_count):
-                vjoy[entry.vjoy_id]["axis"].append(
-                    entry.axis_map[i].axis_index
-                )
-            for i in range(entry.button_count):
-                vjoy[entry.vjoy_id]["button"].append(i+1)
-            for i in range(entry.hat_count):
-                vjoy[entry.vjoy_id]["hat"].append(i+1)
-
-        # List all input types
-        all_input_types = [
-            InputType.JoystickAxis,
-            InputType.JoystickButton,
-            InputType.JoystickHat,
-            InputType.Keyboard
-        ]
-
         # Create a list of all used remap actions
         remap_actions = []
         for dev in self.devices.values():
             for mode in dev.modes.values():
-                for input_type in all_input_types:
-                    for item in mode.config[input_type].values():
-                        for container in item.containers:
-                            remap_actions.extend(
-                                extract_remap_actions(container.action_sets)
-                            )
+                for item in mode.all_input_items():
+                    for container in item.containers:
+                        remap_actions.extend(
+                            extract_remap_actions(container.action_sets)
+                        )
 
-        # Remove all remap actions from the list of available inputs
+        # Remove all valid remap actions from the list of available inputs
+        vjoy_inputs = self.get_all_vjoy_inputs()
         for act in remap_actions:
-            # Skip remap actions that have invalid configuration
-            if act.input_type is None:
-                continue
-
-            type_name = InputType.to_string(act.input_type)
+            
+            # remove remapped input from list
             if act.vjoy_input_id in [0, None] \
-                    or act.vjoy_device_id in [0, None] \
-                    or act.vjoy_input_id not in vjoy[act.vjoy_device_id][type_name]:
+                    or act.vjoy_device_id not in vjoy_inputs.keys() \
+                    or act.input_type not in vjoy_inputs[act.vjoy_device_id].keys():
                 continue
+            input_ids_to_search = [item.input_id for item in vjoy_inputs[act.vjoy_device_id][act.input_type]]
+            try:
+                used_item_index = input_ids_to_search.index(act.vjoy_input_id)
+                del vjoy_inputs[act.vjoy_device_id][act.input_type][used_item_index]
+            except ValueError:
+                continue
+            
+            # delete any now-empty parents
+            if not vjoy_inputs[act.vjoy_device_id][act.input_type]:
+                del vjoy_inputs[act.vjoy_device_id][act.input_type]
+            if not vjoy_inputs[act.vjoy_device_id]:
+                del vjoy_inputs[act.vjoy_device_id]
+            
+        return vjoy_inputs
 
-            idx = vjoy[act.vjoy_device_id][type_name].index(act.vjoy_input_id)
-            del vjoy[act.vjoy_device_id][type_name][idx]
+    def get_unbound_vjoy_inputs(self):
+        """Returns all vjoy inputs without a set binding for the given profile.
 
-        return vjoy
+        :return dictionary of unbound InputItems for each input vjoy device and input type
+        """
+        unbound_vjoy_inputs = {}
+        all_vjoy_inputs = self.get_all_vjoy_inputs()
+        for vjoy_id,vjoy_inputs in all_vjoy_inputs.items():
+            unbound_input_types = {}
+            for input_type,input_items in vjoy_inputs.items():
+                unbound_items = []
+                for item in input_items:
+                    if not item.binding:
+                        unbound_items.append(item)
+                if unbound_items:
+                    unbound_input_types[input_type] = unbound_items
+            if unbound_input_types:
+                unbound_vjoy_inputs[vjoy_id] = unbound_input_types
+        return unbound_vjoy_inputs
 
+    def get_first_free_vjoy_input_of_type(self, input_type):
+        """Returns the first unused and unbound vjoy input of the given type
+
+        :return InputItem corresponding to first unused and unbound vjoy input of correct type
+        """
+        unbound_vjoy_inputs = self.get_unbound_vjoy_inputs()
+        unused_vjoy_inputs = self.get_unused_vjoy_inputs()
+        
+        for vjoy_id in set(unbound_vjoy_inputs.keys()).intersection(unused_vjoy_inputs.keys()):
+            unbound_items = unbound_vjoy_inputs[vjoy_id].get(input_type, [])
+            unused_items = unused_vjoy_inputs[vjoy_id].get(input_type, [])
+            free_vjoy_inputs = list(set(unbound_items).intersection(unused_items))
+            if not free_vjoy_inputs:
+                continue # skip this vjoy if no free inputs of type
+            input_item = sorted(free_vjoy_inputs,key=lambda x: x.input_id)[0]
+            return {
+                "device_id": vjoy_id,
+                "input_id": input_item.input_id,
+                "input_type": input_item.input_type
+                }
+        return None # return None if no item found
+
+    def get_all_vjoy_inputs(self):
+        """Returns all possible vjoy inputs for the given profile.
+
+        :return dictionary of InputItems for each input vjoy device and input type 
+        """
+        vjoy_inputs = {}
+        for entry in joystick_handling.vjoy_devices():
+            vjoy_id = entry.vjoy_id
+            if vjoy_id in self.settings.vjoy_as_input.keys() and self.settings.vjoy_as_input[vjoy_id]:
+                continue # skip vjoy_as_input entries
+            vjoy_inputs[vjoy_id] = {}
+            dev = self.vjoy_devices[entry.device_guid]  # get vjoy Device profile
+            mode = dev.modes[next(iter(dev.modes))]     # get any mode -- all have same available inputs
+            for input_type in self._empty_input_type_dict():
+                items = mode.all_input_items_of_type(input_type)
+                if items: # only add input_type to dict if items exist to add
+                    vjoy_inputs[vjoy_id][input_type] = items
+        return vjoy_inputs
+    
     def from_xml(self, fname):
         """Parses the global XML document into the profile data structure.
 
@@ -1474,7 +1543,19 @@ class Profile:
             device = Device(self)
             device.from_xml(child)
             self.vjoy_devices[device.device_guid] = device
-
+            
+        # Gather list of unique bound vjoy items from all vjoy devices
+        # BoundVJoy uniqueness and existence across modes ensured by BoundVJoy class init
+        # looping over modes gets coverage in case a binding is defined in just one mode
+        bindings = self._empty_input_type_dict()
+        for dev in self.vjoy_devices.values():
+            for mode in dev.modes.values():
+                for input_type in bindings:
+                    for item in mode.all_input_items_of_type(input_type):
+                        if item.binding:
+                            bindings[input_type][item.binding] = BoundVJoy(item, self)
+        self._bound_vjoys = bindings
+        
         # Ensure that the profile contains an entry for every existing
         # device even if it was not part of the loaded XML and
         # replicate the modes present in the profile. This adds both entries
@@ -1615,6 +1696,94 @@ class Profile:
                 self.devices[device_guid] = device
             return self.devices[device_guid]
 
+    def get_vjoy_from_binding(self, binding):
+        """Returns VJoy device id, input id, and input type associated with binding
+
+        :param binding the binding assigned to desired VJoy input
+        :return vjoy device/input for corresponding binding
+        """    
+        # finding binding in list of all bound vjoys
+        # we can do this because all drop-downs are already filtered for correct type
+        # and binding list only allows one binding per vjoy output
+        bound_vjoy = self.get_all_bound_vjoys().get(binding, None)
+        if bound_vjoy is None:
+            return None
+        else:
+            return {
+                    "device_id": bound_vjoy.vjoy_id,
+                    "input_id": bound_vjoy.input_id,
+                    "input_type": bound_vjoy.input_type
+                    }
+
+    def get_bindings_of_type(self, input_type):
+        """Returns binding entries for given input type
+
+        :param input_type type of input
+        :return all bindings for given input_type
+        """    
+        return self._bound_vjoys[input_type].keys()
+    
+    def get_all_bound_vjoys(self):
+        """Returns list of all BoundVJoys across all input types"""
+        
+        all_bound_vjoys = {}
+        for input_type in self._bound_vjoys:
+            all_bound_vjoys.update(self._bound_vjoys[input_type])
+        return all_bound_vjoys
+    
+    def get_binding_from_vjoy(self, device_guid, input_id, input_type):
+        """Returns binding for given vjoy device and input, if any
+
+        :param device_guid vjoy device guid to query
+        :param input_id input id for device to query
+        :param input_type input type for query
+        :return binding for corresponding vjoy device/input
+        """    
+        
+        binding = ""
+        for bound_vjoy in self._bound_vjoys[input_type].values():
+            if bound_vjoy.vjoy_guid == device_guid and bound_vjoy.input_id == input_id:
+                binding = bound_vjoy.binding
+                break
+        return binding
+    
+    def has_unbound_vjoys(self, input_type):
+        """Returns true if there unbound vjoys of desired type
+
+        :param input_type type to check against
+        :return true if there are less bindings than total number of available
+        """
+        
+        nBoundVJoys = len(self._bound_vjoys[input_type])
+        nAvailable = 0
+        for dev in self.vjoy_devices.values():
+            mode = dev.modes[next(iter(dev.modes))]     # since bindings are shared across all modes, we just look at the first mode
+            nAvailable += len(mode.all_input_items_of_type(input_type))
+        return nBoundVJoys < nAvailable
+    
+    def update_bound_vjoy_description(self, input_item):
+        """Updates description for VJoys linked to passed input item
+        
+            Description considered "linked" only if a binding is defined
+        
+        :param input_item modified InputItem to update from
+        """
+        if input_item.binding:
+            bound_vjoy = self._bound_vjoys[input_item.input_type][input_item.binding]
+            bound_vjoy.description = input_item.description
+    
+    def sync_device_bindings(self, device_guid=None):
+        """Update bindings for given device
+        
+        Used to populate existing bindings to newly created modes
+        
+        :param device_guid device to match for updates on just one device
+        """
+        for input_type in self._bound_vjoys:
+            for bound_vjoy in self._bound_vjoys[input_type].values():
+                if device_guid == bound_vjoy.vjoy_guid:
+                    bound_vjoy.update_all_vjoy_items_from_binding()
+                    
     def empty(self):
         """Returns whether or not a profile is empty.
 
@@ -1624,29 +1793,37 @@ class Profile:
         is_empty &= len(self.merge_axes) == 0
 
         # Enumerate all input devices
-        all_input_types = [
-            InputType.JoystickAxis,
-            InputType.JoystickButton,
-            InputType.JoystickHat,
-            InputType.Keyboard
-        ]
+        all_input_types = self._empty_input_type_dict().keys()
 
         # Process all devices
         for dev in self.devices.values():
             for mode in dev.modes.values():
                 for input_type in all_input_types:
-                    for item in mode.config[input_type].values():
+                    for item in mode.all_input_items_of_type(input_type):
                         is_empty &= len(item.containers) == 0
 
         # Process all vJoy devices
         for dev in self.vjoy_devices.values():
             for mode in dev.modes.values():
                 for input_type in all_input_types:
-                    for item in mode.config[input_type].values():
+                    for item in mode.all_input_items_of_type(input_type):
                         is_empty &= len(item.containers) == 0
 
         return is_empty
 
+    def _empty_input_type_dict(self):
+        """Returns empty dictionary with all supported input types
+
+        Returns:
+            _type_: _empty_dict_
+        """
+        return {
+            InputType.JoystickAxis: {},
+            InputType.JoystickButton: {},
+            InputType.JoystickHat: {},
+            InputType.Keyboard: {}
+        }
+        
     def _parse_merge_axis(self, node):
         """Parses merge axis entries.
 
@@ -1673,7 +1850,106 @@ class Profile:
 
         return entry
 
+class BoundVJoy:
+    
+    """Stores a set VJoy InputItems of identical binding across modes"""
+    
+    def __init__(self, input_item, parent):
+        """Creates a new BoundVJoy instance
 
+        :param input_item an InputItem instance used to find equal InputItems
+        :param parent the parent Profile of this binding
+        """
+        
+        # create binding from passed input_item
+        self.parent = parent
+        self.__binding = input_item.binding
+        self.vjoy_guid = input_item.get_device().device_guid
+        self.vjoy_id = joystick_handling.vjoy_id_from_guid(self.vjoy_guid)
+        self.input_id = input_item.input_id
+        self.input_type = input_item.input_type
+        self.__description = input_item.description
+        self.input_items = None
+        
+        # clear overlapping bindings; sync equal inputs and store
+        if self.binding:
+            self.update_all_vjoy_items_from_binding()
+            self.input_items = self.get_all_vjoy_items_from_id()
+        
+    @property
+    def binding(self):
+        return self.__binding
+    
+    @binding.setter
+    def binding(self, binding):
+        """Set binding for all linked InputItems and clear overwritten bindings"""
+        self.__binding = binding
+        for item in self.input_items:
+            item.binding = binding
+        if binding: # only clear others if a binding is set
+            self.update_all_vjoy_items_from_binding()
+        
+    @property
+    def description(self):
+        return self.__description
+    
+    @description.setter
+    def description(self, description):
+        """Update description for all linked input items"""
+        self.__description = description
+        for item in self.input_items:
+            item.description = description
+            
+    def get_all_vjoy_items_from_binding(self):
+        """Find set of all vjoy input items with same binding as self"""
+        matching = set()
+        for dev in self.parent.vjoy_devices.values():
+            for mode in dev.modes.values():
+                for item in mode.all_input_items():
+                    if item.binding == self.binding:
+                        matching.add(item)
+        return matching
+    
+    def get_all_vjoy_items_from_id(self):
+        """Find set of all vjoy input items with same vjoy device, input_type, and input_id as self"""
+        matching = set()
+        for mode in self.parent.vjoy_devices[self.vjoy_guid].modes.values():
+            matching.add(mode.get_data(self.input_type,self.input_id))
+        return matching
+    
+    def update_all_vjoy_items_from_binding(self):
+        """Synchronize all vjoy InputItems such that:
+        
+                1. The current binding correlates to ONE InputItem across all modes
+                2. The each mode instance of the InputItem has the same binding
+            
+            We log a message for each overwritten InputItem binding
+        """
+        bound_items = self.get_all_vjoy_items_from_binding()
+        equal_items = self.get_all_vjoy_items_from_id()
+        
+        # clear binding for each InputItem that does not equal current binding assignment
+        # log warning for all duplicates cleared
+        for item in bound_items.difference(equal_items):
+            vjoy_name = "vJoy Device {:d}".format(joystick_handling.vjoy_id_from_guid(item.get_device().device_guid))
+            input_name = input_to_ui_string(item.input_type, item.input_id)
+            warn_str = "Duplicate binding found for '{}'! Cleared binding and description from {}: {} in mode '{}'"\
+                        .format(item.binding, vjoy_name, input_name, item.get_mode().name)
+            item.clear_binding()
+            logging.getLogger("system").info(warn_str)
+            
+        # set binding for all equal items that were not correctly bound
+        # log warning for all overwritten items
+        for item in equal_items.difference(bound_items):
+            if item.binding:
+                vjoy_name = "vJoy Device {:d}".format(joystick_handling.vjoy_id_from_guid(item.get_device().device_guid))
+                input_name = input_to_ui_string(item.input_type, item.input_id)
+                warn_str = "Existing binding overwritten for {}: {} in mode '{}'! Binding changed from '{}' to '{}'"\
+                            .format(vjoy_name, input_name, item.get_mode().name, item.binding, self.binding)
+                logging.getLogger("system").info(warn_str)
+            item.binding = self.binding
+            item.description = self.description
+    
 class Device:
 
     """Stores the information about a single device including it's modes."""
@@ -1702,6 +1978,7 @@ class Device:
             mode = Mode(self)
             mode.name = mode_name
             self.modes[mode.name] = mode
+            self.parent.sync_device_bindings(self.device_guid)
 
         if device is not None:
             for i in range(device.axis_count):
@@ -1752,7 +2029,6 @@ class Device:
         for mode in sorted(self.modes.values(), key=lambda x: x.name):
             node.append(mode.to_xml())
         return node
-
 
 class Mode:
 
@@ -1814,7 +2090,7 @@ class Mode:
         ]
         for input_type in input_types:
             item_list = sorted(
-                self.config[input_type].values(),
+                self.all_input_items_of_type(input_type),
                 key=lambda x: x.input_id
             )
             for item in item_list:
@@ -1873,7 +2149,10 @@ class Mode:
         for input_type in self.config.values():
             for input_item in input_type.values():
                 yield input_item
-
+                
+    def all_input_items_of_type(self, input_type):
+        assert(input_type in self.config)
+        return list(self.config[input_type].values())
 
 class InputItem:
 
@@ -1889,6 +2168,7 @@ class InputItem:
         self.input_id = None
         self.always_execute = False
         self.description = ""
+        self.binding = ""
         self.containers = []
 
     def from_xml(self, node):
@@ -1900,6 +2180,7 @@ class InputItem:
         self.input_type = InputType.to_enum(node.tag)
         self.input_id = safe_read(node, "id", int)
         self.description = safe_read(node, "description", str)
+        self.binding = safe_read(node, "binding", str).strip()
         self.always_execute = read_bool(node, "always-execute", False)
         if self.input_type == InputType.Keyboard:
             self.input_id = (self.input_id, read_bool(node, "extended"))
@@ -1933,6 +2214,11 @@ class InputItem:
             node.set("description", safe_format(self.description, str))
         else:
             node.set("description", "")
+            
+        if self.binding:
+            node.set("binding", safe_format(self.binding, str))
+        else:
+            node.set("binding", "")
 
         for entry in self.containers:
             if entry.is_valid():
@@ -1945,10 +2231,28 @@ class InputItem:
 
         :return DeviceType of this entry
         """
+        return self.get_device().type
+    
+    def get_profile(self):
+        """Returns parent Profile"""
+        item = self.parent
+        while not isinstance(item, Profile):
+            item = item.parent
+        return item
+    
+    def get_device(self):
+        """Returns parent Device"""
         item = self.parent
         while not isinstance(item, Device):
             item = item.parent
-        return item.type
+        return item
+    
+    def get_mode(self):
+        """Returns parent Mode"""
+        item = self.parent
+        while not isinstance(item, Mode):
+            item = item.parent
+        return item
 
     def get_input_type(self):
         """Returns the type of this input.
@@ -1956,6 +2260,11 @@ class InputItem:
         :return Type of this input
         """
         return self.input_type
+    
+    def clear_binding(self):
+        """Resets binding and description to empty strings"""
+        self.binding = ""
+        self.description = ""
 
     def __eq__(self, other):
         """Checks whether or not two InputItem instances are identical.
