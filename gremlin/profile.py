@@ -1225,6 +1225,11 @@ class Settings:
         self.vjoy_initial_values = {}
         self.startup_mode = None
         self.default_delay = 0.05
+        self.importer_path = ""
+        self.importer_arg_string = ""
+        self.exporter_path = ""
+        self.exporter_arg_string = ""
+        self.exporter_template_path = ""
 
     def to_xml(self):
         """Returns an XML node containing the settings.
@@ -1261,7 +1266,20 @@ class Settings:
                 axis_node.set("value", safe_format(value, float))
                 vjoy_node.append(axis_node)
             node.append(vjoy_node)
-
+            
+        # Exporter settings
+        exporter_node = ElementTree.Element("exporter")
+        exporter_node.set("script-path", safe_format(self.exporter_path, str))
+        exporter_node.set("args", safe_format(self.exporter_arg_string, str))
+        exporter_node.set("template-path", safe_format(self.exporter_template_path, str))
+        node.append(exporter_node)
+        
+        # Importer settings
+        importer_node = ElementTree.Element("importer")
+        importer_node.set("script-path", safe_format(self.importer_path, str))
+        importer_node.set("args", safe_format(self.importer_arg_string, str))
+        node.append(importer_node)
+        
         return node
 
     def from_xml(self, node):
@@ -1297,6 +1315,23 @@ class Settings:
                 aid = safe_read(axis_node, "id", int)
                 value = safe_read(axis_node, "value", float, 0.0)
                 self.vjoy_initial_values[vid][aid] = value
+            
+        # Exporter settings
+        self.exporter_path = ""
+        self.exporter_arg_string = ""
+        self.exporter_template_path = ""
+        for exporter_node in node.findall("exporter"):
+            self.exporter_path = safe_read(exporter_node, "script-path")
+            self.exporter_arg_string = safe_read(exporter_node, "args")
+            self.exporter_template_path = safe_read(exporter_node, "template-path")
+            
+        # Importer settings
+        self.importer_path = ""
+        self.importer_arg_string = ""
+        for importer_node in node.findall("importer"):
+            self.importer_path = safe_read(importer_node, "script-path")
+            self.importer_arg_string = safe_read(importer_node, "args")
+        
 
     def get_initial_vjoy_axis_value(self, vid, aid):
         """Returns the initial value a vJoy axis should use.
@@ -1772,6 +1807,127 @@ class Profile:
             bound_vjoy = self._bound_vjoys[input_item.input_type][input_item.binding]
             bound_vjoy.description = input_item.description
     
+    def update_bound_vjoy_registry(self, input_item):
+        """Updates Profile bindings from passed input item
+
+            Handles binding clears, new binding addition (across all modes), 
+            and overlapping binding conflict resolution.
+        
+        :param input_item new/modified InputItem to register
+        """
+        old_binding = self.get_binding_from_vjoy(input_item.get_device().device_guid, input_item.input_id, input_item.input_type)
+        new_binding = input_item.binding
+        
+        # update in place or create from new
+        # overlapping bindings handled by BoundVJoy class
+        if old_binding:
+            bound_vjoy = self._bound_vjoys[input_item.input_type][old_binding]
+            bound_vjoy.binding = new_binding
+        else:
+            bound_vjoy = BoundVJoy(input_item, self)
+        
+        # remove duplicates from bound_vjoy registry
+        for input_type in self._bound_vjoys:
+            self._bound_vjoys[input_type].pop(old_binding, None)
+            self._bound_vjoys[input_type].pop(new_binding, None)
+        
+        # add updated binding back to registry
+        if new_binding:
+            self._bound_vjoys[bound_vjoy.input_type][new_binding] = bound_vjoy
+            
+    def update_bound_vjoy_registry_from_dict(self, bindings):
+        """Update Profile bindings from binding dictionary
+        
+        bindings must be of the format:
+            bindings[input_type][binding]["description"]
+            bindings[input_type][binding]["device_id"]  (optional)
+            bindings[input_type][binding]["input_id"]   (optional)
+        
+        :param bindings Dictionary of binding entries
+        :return dict with number of warnings and errors thrown
+        """
+        # track number of warnings and errors
+        count = {}
+        count["warning"] = 0
+        count["error"] = 0
+        
+        # register bindings with assigned vjoy_id & input_id targets
+        for input_type in bindings:
+            assigned_bindings = [b for b,v in bindings[input_type].items() if all(k in v.keys() for k in ["device_id", "input_id"])]
+            for binding in assigned_bindings:
+                vjoy_id = bindings[input_type][binding]["device_id"]
+                input_id = bindings[input_type][binding]["input_id"]
+                description = bindings[input_type][binding]["description"]
+                
+                # check if vjoy assignment is valid; bind to first unbound if invalid
+                vjoy_guid = joystick_handling.guid_from_vjoy_id(vjoy_id)
+                if vjoy_guid is None:
+                    logging.getLogger("system").warning((
+                        "Could not bind to VJoy {:d}! "
+                        "Replacing assigned VJoy and input id with first unbound."
+                        ).format(vjoy_id)
+                    )
+                    count["warning"] += 1
+                    bindings[input_type][binding] = {"description":description}
+                    continue
+                dev = self.vjoy_devices[vjoy_guid]
+                
+                # check if input_id is valid; bind to first unbound if invalid
+                mode = next(iter(dev.modes.values()))
+                if not mode.has_data(input_type, input_id):
+                    logging.getLogger("system").warning((
+                        "VJoy {:d} has no {:s}! "
+                        "Replacing assigned VJoy and input id with first unbound."
+                        ).format(vjoy_id, input_to_ui_string(input_type, input_id))
+                    )
+                    count["warning"] += 1
+                    bindings[input_type][binding] = {"description":description}
+                    continue
+                
+                # update item; add to profile 
+                item = mode.get_data(input_type, input_id)
+                item.binding = binding
+                item.description = description
+                self.update_bound_vjoy_registry(item)
+               
+        # todo: preemptively remove bindings to add from profile if they are of different input type
+        # compile all unbound vjoy inputs to a dict by input_type
+        all_unbound_vjoy_inputs = self.get_unbound_vjoy_inputs()
+        available_items = {}
+        for input_type in self._empty_input_type_dict():
+            available_items[input_type] = []
+        for vjoy in all_unbound_vjoy_inputs.values():
+            for input_type,input_items in vjoy.items():
+                available_items[input_type] += input_items
+                
+        # add remaining (unassigned) bindings to unbound vjoy inputs
+        # skip new bindings if they already exist and have the right type
+        for input_type,input_items in available_items.items():
+            if input_type not in bindings.keys():
+                continue
+            unassigned_bindings = [b for b,v in bindings[input_type].items() if not all(k in v.keys() for k in ["device_id", "input_id"])]
+            for binding in unassigned_bindings:
+                description = bindings[input_type][binding]["description"]
+                if (self.get_vjoy_from_binding(binding) is None or
+                    self.get_all_bound_vjoys()[binding].input_type != input_type):
+                    try:
+                        item = input_items.pop(0)
+                        item.binding = binding
+                        item.description = description
+                        self.update_bound_vjoy_registry(item)
+                    except IndexError:
+                        logging.getLogger("system").error((
+                            "Cannot assign binding '{:s}'! "
+                            "Not enough unbound VJoy inputs of type '{:s}'. "
+                            "Skipping..."
+                            ).format(binding, input_type.to_string)
+                        )
+                        count["error"] += 1
+                elif description: # update description of skipped bindings if a new description was given
+                    self.get_all_bound_vjoys()[binding].description = description
+                
+        return count
+            
     def sync_device_bindings(self, device_guid=None):
         """Update bindings for given device
         

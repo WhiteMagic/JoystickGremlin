@@ -293,6 +293,25 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.modal_windows["swap_devices"].closed.connect(
             self._create_tabs
         )
+        
+    def export_bindings_dialog(self):
+        """Opens the export bindings display window."""
+        self.modal_windows["export_bindings"] = gremlin.ui.dialogs.BindingExportUi(self._profile)
+        self.modal_windows["export_bindings"].show()
+        self.modal_windows["export_bindings"].closed.connect(
+            lambda: self._remove_modal_window("export_bindings")
+        )
+        
+    def import_bindings_dialog(self):
+        """Opens the import bindings display window."""
+        self.modal_windows["import_bindings"] = gremlin.ui.dialogs.BindingImportUi(self._profile)
+        self.modal_windows["import_bindings"].bindings_changed.connect(
+            self._mode_configuration_changed
+        )
+        self.modal_windows["import_bindings"].show()
+        self.modal_windows["import_bindings"].closed.connect(
+            lambda: self._remove_modal_window("import_bindings")
+        )
 
     def _remove_modal_window(self, name):
         """Removes the modal window widget from the system.
@@ -526,6 +545,12 @@ class GremlinUi(QtWidgets.QMainWindow):
         self.ui.actionLogDisplay.triggered.connect(
             self.log_window
         )
+        self.ui.actionExportBindings.triggered.connect(
+            self.export_bindings_dialog
+        )
+        self.ui.actionImportBindings.triggered.connect(
+            self.import_bindings_dialog
+        )
         # About
         self.ui.actionAbout.triggered.connect(self.about)
 
@@ -664,6 +689,9 @@ class GremlinUi(QtWidgets.QMainWindow):
                 device_profile,
                 self._current_mode
             )
+            
+            # trigger mode change to update all tabs if bound vjoys are changed
+            widget.bound_vjoys_changed.connect(self._mode_changed_cb)
             self.tabs[device.device_guid] = widget
             self.ui.devices.addTab(
                 widget,
@@ -730,6 +758,12 @@ class GremlinUi(QtWidgets.QMainWindow):
         )
         self.ui.actionAbout.setIcon(
             QtGui.QIcon("gfx/about.svg")
+        )
+        self.ui.actionExportBindings.setIcon(
+            QtGui.QIcon("gfx/hat_ne.png")
+        )
+        self.ui.actionImportBindings.setIcon(
+            QtGui.QIcon("gfx/hat_sw.png")
         )
 
         # Toolbar actions
