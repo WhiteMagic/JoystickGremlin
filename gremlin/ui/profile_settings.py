@@ -339,6 +339,8 @@ class VJoyAsInputWidget(QtWidgets.QGroupBox):
         :param state the state of the checkbox
         """
         self.profile_data.vjoy_as_input[vid] = state == QtCore.Qt.Checked
+        self.profile_data.parent.clear_device_bindings(vid)
+        # TODO: this will lose all defined bindings when checked -- want a way to reinstate those bindings if unchecked?
         self.changed.emit()
 
     def _create_update_state_cb(self, vid):

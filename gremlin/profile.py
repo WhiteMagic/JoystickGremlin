@@ -1784,6 +1784,31 @@ class Profile:
                 if device_guid == bound_vjoy.vjoy_guid:
                     bound_vjoy.update_all_vjoy_items_from_binding()
                     
+    def clear_device_bindings(self, vjoy_id=None):
+        """Remove bindings for given device
+        
+        Used to clear vjoy-as-input devices from list. If no vjoy_id passed,
+        then all devices are cleared.
+        
+        A debug message is logged for each removed binding.
+        
+        :param device_guid device to match for updates on just one device
+        """
+        # TODO: currently binding removals are not ordered; sort by input id instead?
+        for input_type in self._bound_vjoys:
+            bindings_to_remove = list()
+            for binding,bound_vjoy in self._bound_vjoys[input_type].items():
+                if vjoy_id is None or vjoy_id == bound_vjoy.vjoy_id:
+                    bound_vjoy.binding = ""
+                    bound_vjoy.description = ""
+                    bindings_to_remove.append(binding)
+                    input_name = input_to_ui_string(input_type,bound_vjoy.input_id)
+                    msg = ("Removed binding from VJoy {} {} - was '{}'"
+                          ).format(bound_vjoy.vjoy_id, input_name, binding)
+                    logging.getLogger("system").debug(msg)
+            for binding in bindings_to_remove:
+                self._bound_vjoys[input_type].pop(binding, None)
+                    
     def empty(self):
         """Returns whether or not a profile is empty.
 
