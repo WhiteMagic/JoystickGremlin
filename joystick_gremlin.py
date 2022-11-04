@@ -55,6 +55,7 @@ import gremlin.signal
 import gremlin.util
 
 import gremlin.ui.backend
+import gremlin.ui.config
 import gremlin.ui.device
 import gremlin.ui.profile
 import gremlin.ui.util
