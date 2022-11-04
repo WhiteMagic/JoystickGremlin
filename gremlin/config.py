@@ -21,7 +21,7 @@ import time
 import os
 import re
 
-from typing import Any
+from typing import Any, Dict, List
 
 from PySide6 import QtCore
 
@@ -44,6 +44,14 @@ class Configuration:
 
         self.watcher = QtCore.QFileSystemWatcher([_config_file_path])
         self.watcher.fileChanged.connect(self.load)
+
+    def count(self) -> int:
+        """Returns the number of parameters stored.
+
+        Returns:
+            Number of parameters stored by the configuration.
+        """
+        return len(self._data)
 
     def load(self):
         """Loads the configuration file's content."""
@@ -155,6 +163,20 @@ class Configuration:
         }
         self.save()
 
+    def get(self, section: str, group: str, name: str, entry: str) -> Any:
+        """Gets the value of a specific parameter entry.
+
+        Args:
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
+            entry: name of the parameter's entry to return
+
+        Returns:
+            Value of the specified entry.
+        """
+        return self._retrieve_value(section, group, name, entry)
+
     def set(self, section: str, group: str, name: str, value: Any) -> None:
         """Sets the value of a specific parameter.
 
@@ -178,6 +200,42 @@ class Configuration:
                 f"'{data_type}' got '{type(value)}'"
             )
 
+    def sections(self) -> List[str]:
+        """Returns the list of all sections.
+
+        Returns:
+            List containing the name of all sections present.
+        """
+        return sorted(list(set([key[0] for key in self._data.keys()])))
+
+    def groups(self, section: str) -> List[str]:
+        """Returns the list of groups used within a section.
+
+        Args:
+            section: name of the section for which to return the groups
+
+        Returns:
+            The list of groups occurring within the given section.
+        """
+        return sorted(list(set(
+            [key[1] for key in self._data.keys() if key[0] == section]
+        )))
+
+    def entries(self, section: str, group: str) -> List[str]:
+        """Returns the list of entry names for a group within a section.
+
+        Args:
+            section: name of the section for which to return entries
+            group: name of the group for which to return entries
+
+        Returns:
+            The list of groups occurring within the given section.
+        """
+        return sorted(list(set(
+            [key[2] for key in self._data.keys() if
+                key[0] == section and key[1] == group]
+        )))
+
     def value(self, section: str, group: str, name: str) -> Any:
         """Returns the value associated with the given parameter.
 
@@ -189,11 +247,20 @@ class Configuration:
         Returns:
             Value associated with the given parameter
         """
-        key = (section, group, name)
-        if key not in self._data:
-            raise error.GremlinError(f"No parameter with key {key} exists")
+        return self._retrieve_value(section, group, name, "value")
 
-        return self._data[key]["value"]
+    def data_type(self, section: str, group: str, name: str) -> Any:
+        """Returns the data type of the specified entry.
+
+        Args:
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
+
+        Returns:
+            Value associated with the given parameter
+        """
+        return self._retrieve_value(section, group, name, "type")
 
     def description(self, section: str, group: str, name: str) -> str:
         """Returns the description associated with the given parameter.
@@ -206,11 +273,7 @@ class Configuration:
         Returns:
             Description associated with the given parameter
         """
-        key = (section, group, name)
-        if key not in self._data:
-            raise error.GremlinError(f"No parameter with key {key} exists")
-
-        return self._data[key]["description"]
+        return self._retrieve_value(section, group, name, "description")
 
     def expose(self, section: str, group: str, name: str) -> bool:
         """Returns whether to expose a parameter in the UI.
@@ -223,11 +286,31 @@ class Configuration:
         Returns:
             True if the parameter should be exposed via the UI.
         """
+        return self._retrieve_value(section, group, name, "expose")
+
+    def _retrieve_value(
+        self,
+        section: str,
+        group: str,
+        name: str,
+        entry: str
+    ) -> Any:
+        """Returns an entry from the storage..
+
+        Args:
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
+            entry: name of the parameter's entry to return
+
+        Returns:
+            Value of the specified entry.
+        """
         key = (section, group, name)
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key {key} exists")
 
-        return self._data[key]["expose"]
+        return self._data[key][entry]
 
     # def set_calibration(self, dev_id, limits):
     #     """Sets the calibration data for all axes of a device.
