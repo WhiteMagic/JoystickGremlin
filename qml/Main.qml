@@ -229,7 +229,7 @@ ApplicationWindow {
                 icon.source: "qrc:///icons/activate"
 
                 onClicked: {
-                    Helpers.createComponent("DialogInputViewer.qml")
+                    Helpers.createComponent("DialogOptions.qml")
                 }
             }
 
