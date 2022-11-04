@@ -54,6 +54,22 @@ Item {
 
 The above QML snippet populates the textfield with the value of the `variable` from the above model class. Any changes to the value of `variable` via Python code will notify the QML side and update the visual representation accordingly. To send changes back to the Python model instance the `onTextChanged` signal needs to added. To prevent a binding loop the `_set_variable` method needs to ensure the provided value is different from the currently stored one, as otherwise a event loop would be possible.
 
+## Property pass-through and aliasing
+
+Complex widgets are often composed of multiple QML types which have properties that one wants to set on the widget rather than the subcomponent level. To achieve this the main part of the widget has to expose those properties via an alias property. The property being exposed does not have to be specifically set in the child component if it is a property that is exposed by that component by default.
+
+```
+Item {
+	property alias text: _label.text
+	
+	RowLayout {
+		Label {
+			id: _label
+		}
+	}
+}
+```
+
 ## Python Function Return Values for QML
 
 It is possible to call Python functions which return a value from QML as long as these are defined as `Slot` in a `QtCore` derived class. The `gremlin.ui.backend` class is a good example of a class making use of this.
@@ -329,11 +345,11 @@ The above setup exploits the fact that when the plugin's UI code is dynamically 
 
 The `pyside6-rcc` programs converts the contents of a QRC file into a python module which can be loaded and used later on. When a venv is used the program resides within the scripts folder. Invoking the program takes the following form.
 
-```.\venv\Scripts\pyside6-rcc.exe .\resources.qrc -o .\resources.py```
-
+```bash
+.\venv\Scripts\pyside6-rcc.exe .\resources.qrc -o .\resources.py
 ```
 
-```
+
 
 ## Signal Inheritance
 
@@ -387,6 +403,9 @@ This scheme allows redefining the behvaiour by reimplementing the implementation
 
 ## Component vs. Item
 
-A `Component` is effectively a class, i.e. a template of what an instantiation will look like. As such a `Componen` does not represent a specific object but can be used to create them. This can happen via the use in a delegate which will create an instance for each entry in the model. Another option is for dynamic object creation via the `createObject()` function of the `Component`.
+A `Component` is effectively a class, i.e. a template of what an instantiation will look like. As such a `Component` does not represent a specific object but can be used to create them. This can happen via the use in a delegate which will create an instance for each entry in the model. Another option is for dynamic object creation via the `createObject()` function of the `Component`.
 
 An `Item` on the other hand is an explicitly existing object that is rendered and exists as defined. Its main purpose is the creation of complex user defined widgets that can be integrated to build up a custom UI.
+
+A typical use of `Component` definitions is to define a reusable component inside a QML file, rather than having to create an entirely new QML file that would implement the desired component.
+
