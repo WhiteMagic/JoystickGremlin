@@ -66,13 +66,19 @@ Window {
 
         anchors.fill: parent
 
-        ColumnLayout {
+        ScrollView {
             Layout.alignment: Qt.AlignTop
+            Layout.minimumWidth: 250
             Layout.fillWidth: false
+            Layout.fillHeight: true
 
-            Repeater {
-                model: _deviceData
-                delegate: _deviceDelegate
+            ColumnLayout {
+                anchors.fill: parent
+
+                Repeater {
+                    model: _deviceData
+                    delegate: _deviceDelegate
+                }
             }
         }
 
