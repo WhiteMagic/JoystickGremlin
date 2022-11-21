@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2015 - 2022 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,19 +23,22 @@ import QtQuick.Controls
 Item {
     id: _root
 
-    property real minValue
-    property real maxValue
-    property real stepSize
-    property real value
+    property real minValue: -10.0
+    property real maxValue: 10.0
+    property real stepSize: 0.1
+    property real realValue: 0.0
     property int decimals: 2
+
+    signal realValueModified
 
     implicitWidth: _spinbox.width
     implicitHeight: _spinbox.height
 
+
     SpinBox {
         id: _spinbox
 
-        value: _root.value * (10 ** _root.decimals)
+        value: _root.realValue * (10 ** _root.decimals)
         from: _root.minValue * (10 ** _root.decimals)
         to: _root.maxValue * (10 ** _root.decimals)
         stepSize: _root.stepSize * (10 ** _root.decimals)
@@ -68,8 +71,9 @@ Item {
             return Number.fromLocaleString(locale, text) * (10 ** _root.decimals)
         }
 
-        onValueChanged: {
-            _root.value = value / (10 ** _root.decimals)
+        onValueModified: {
+            _root.realValue = value / (10 ** _root.decimals)
+            _root.realValueModified()
         }
     }
 }
