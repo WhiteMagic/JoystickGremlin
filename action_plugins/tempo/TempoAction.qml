@@ -53,11 +53,11 @@ Item {
             FloatSpinBox {
                 minValue: 0
                 maxValue: 100
-                value: _root.action.threshold
+                realValue: _root.action.threshold
                 stepSize: 0.05
 
-                onValueChanged: {
-                    _root.action.threshold = value
+                onRealValueModified: function() {
+                    _root.action.threshold = realValue
                 }
             }
 
