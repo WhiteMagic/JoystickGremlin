@@ -24,6 +24,7 @@ from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 import gremlin.config
+from gremlin.types import PropertyType
 
 
 QML_IMPORT_NAME = "Gremlin.Config"
@@ -124,21 +125,43 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
         return len(self._config.entries(self._section_name, self._group_name))
 
     def data(self, index: QtCore.QModelIndex, role: int) -> Any:
-        if role not in ConfigEntryModel.roles:
+        entries = self._config.entries(self._section_name, self._group_name)
+        if not index.isValid() or index.row() >= len(entries):
             return None
+
+        if role in ConfigEntryModel.roles:
+            role_name = ConfigEntryModel.roles[role].data().decode()
+            value = self._config.get(
+                self._section_name,
+                self._group_name,
+                entries[index.row()],
+                role_name
+            )
+            if isinstance(value, PropertyType):
+                value = PropertyType.to_string(value)
+            return value
+        return None
+
+    def setData(self, index: QtCore.QModelIndex, value: Any, role: int) -> bool:
+        entries = self._config.entries(self._section_name, self._group_name)
+        if not index.isValid() or index.row() >= len(entries):
+            return False
 
         role_name = ConfigEntryModel.roles[role].data().decode()
-        entries = self._config.entries(self._section_name, self._group_name)
+        if role_name == "value":
+            self._config.set(
+                self._section_name,
+                self._group_name,
+                entries[index.row()],
+                value
+            )
 
-        if index.row() >= len(entries):
-            return None
+            self.dataChanged.emit(index, index, {role});
+            return True
+        return False
 
-        return self._config.get(
-            self._section_name,
-            self._group_name,
-            entries[index.row()],
-            role_name
-        )
+    def flags(self, index: QtCore.QModelIndex) -> QtCore.Qt.ItemFlags:
+        return super().flags(index) | QtCore.Qt.ItemIsEditable
 
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return ConfigEntryModel.roles

@@ -79,13 +79,13 @@ class Configuration:
         for section, sec_data in json_data.items():
             for group, grp_data in sec_data.items():
                for name, entry in grp_data.items():
-                    data_type = types.PropertyType.to_enum(entry["type"])
+                    data_type = types.PropertyType.to_enum(entry["data_type"])
                     self._data[(section, group, name)] = {
                         "value": util.property_from_string(
                             data_type,
                             entry["value"]
                         ),
-                        "type": data_type,
+                        "data_type": data_type,
                         "description": entry["description"],
                         "expose": entry["expose"]
                     }
@@ -108,10 +108,10 @@ class Configuration:
                 json_data[section][group] = {}
             json_data[section][group][name] = {
                 "value": util.property_to_string(
-                    entry["type"],
+                    entry["data_type"],
                     entry["value"],
                 ),
-                "type": types.PropertyType.to_string(entry["type"]),
+                "data_type": types.PropertyType.to_string(entry["data_type"]),
                 "description": entry["description"],
                 "expose": entry["expose"]
             }
@@ -147,7 +147,7 @@ class Configuration:
         """
         key = (section, group, name)
         if key in self._data:
-            old_data_type = self._data[key]["type"]
+            old_data_type = self._data[key]["data_type"]
             if data_type != old_data_type:
                 logging.warning(
                     f"Data type for parameter '{key}' changed, updating from " +
@@ -157,7 +157,7 @@ class Configuration:
 
         self._data[key] = {
             "value": initial_value,
-            "type": data_type,
+            "data_type": data_type,
             "description": description,
             "expose": expose
         }
@@ -190,11 +190,11 @@ class Configuration:
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key '{key}' exists")
 
-        if util.has_correct_type(value, self._data[key]["type"]):
+        if util.has_correct_type(value, self._data[key]["data_type"]):
             self._data[key]["value"] = value
             self.save()
         else:
-            data_type = self._data[key]["type"]
+            data_type = self._data[key]["data_type"]
             raise error.GremlinError(
                 f"Value has wrong data type, expted: " +
                 f"'{data_type}' got '{type(value)}'"
@@ -260,7 +260,7 @@ class Configuration:
         Returns:
             Value associated with the given parameter
         """
-        return self._retrieve_value(section, group, name, "type")
+        return self._retrieve_value(section, group, name, "data_type")
 
     def description(self, section: str, group: str, name: str) -> str:
         """Returns the description associated with the given parameter.
