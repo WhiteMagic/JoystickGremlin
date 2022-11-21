@@ -19,6 +19,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Qt.labs.qmlmodels
 
 import Gremlin.Config
 
@@ -28,7 +29,7 @@ Item {
 
     property ConfigGroupModel groupModel
 
-    ListView {
+    Repeater {
         id: _groupView
 
         width: parent.width
@@ -55,25 +56,72 @@ Item {
                     id: _entryView
 
                     model: entryModel
-                    delegate: _entryDelegate
+                    delegate: _entryDelegateChooser
                 }
-
             }
         }
     }
 
-    Component {
-        id: _entryDelegate
+    DelegateChooser {
+        id: _entryDelegateChooser
+        role: "data_type"
 
-        Label {
-            required property int index
-            required property string description
+        DelegateChoice {
+            roleValue: "bool"
 
-            height: 20
-            width: 500//ListView.view.width
+            Row {
+                Label {
+                    text: model.description
+                }
+                Switch {
+                    checked: model.value
 
-            text: description
-            color: "#008AD8"
+                    onToggled: function() {
+                        model.value = checked
+                    }
+                }
+            }
+        }
+        DelegateChoice {
+            roleValue: "string"
+
+            Row {
+                Label {
+                    text: model.description
+                }
+            }
+        }
+        DelegateChoice {
+            roleValue: "float"
+
+            Row {
+                Label {
+                    text: model.description
+                }
+                FloatSpinBox {
+                    realValue: model.value
+
+                    onRealValueModified: function() {
+                        model.value = realValue
+                    }
+                }
+            }
+        }
+        DelegateChoice {
+            roleValue: "int"
+
+            Row {
+                Label {
+                    text: model.description
+                }
+                SpinBox {
+                    value: model.value
+
+                    onValueModified: function() {
+                        model.value = value
+                    }
+                }
+            }
         }
     }
 }
