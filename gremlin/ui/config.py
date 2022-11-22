@@ -107,6 +107,7 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("data_type".encode()),
         QtCore.Qt.UserRole + 2: QtCore.QByteArray("value".encode()),
         QtCore.Qt.UserRole + 3: QtCore.QByteArray("description".encode()),
+        QtCore.Qt.UserRole + 4: QtCore.QByteArray("properties".encode()),
     }
 
     def __init__(

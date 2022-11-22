@@ -87,6 +87,7 @@ class Configuration:
                         ),
                         "data_type": data_type,
                         "description": entry["description"],
+                        "properties": entry["properties"],
                         "expose": entry["expose"]
                     }
 
@@ -113,6 +114,7 @@ class Configuration:
                 ),
                 "data_type": types.PropertyType.to_string(entry["data_type"]),
                 "description": entry["description"],
+                "properties": entry["properties"],
                 "expose": entry["expose"]
             }
 
@@ -132,6 +134,7 @@ class Configuration:
         data_type: types.PropertyType,
         initial_value: Any,
         description: str,
+        properties: Dict[str, Any],
         expose: bool=False
     ) -> None:
         """Registers a new configuration parameter.
@@ -143,11 +146,19 @@ class Configuration:
             data_type: type of data that is expected to be stored
             initial_value: initial value of the paramter
             description: description of the parameter's purpose
+            properties: dictionary of relevant properties
             expose: if True expose the parameter via the UI to the user
         """
         key = (section, group, name)
         if key in self._data:
             old_data_type = self._data[key]["data_type"]
+            if self._data[key]["properties"] != properties:
+                logging.warning(
+                    f"Properties for parameter '{key}' changed, updating"
+                )
+                self._data[key]["properties"] = properties
+                self.save()
+
             if data_type != old_data_type:
                 logging.warning(
                     f"Data type for parameter '{key}' changed, updating from " +
@@ -159,6 +170,7 @@ class Configuration:
             "value": initial_value,
             "data_type": data_type,
             "description": description,
+            "properties": properties,
             "expose": expose
         }
         self.save()
@@ -274,6 +286,19 @@ class Configuration:
             Description associated with the given parameter
         """
         return self._retrieve_value(section, group, name, "description")
+
+    def properties(self, section: str, group: str, name: str) -> Dict[str, Any]:
+        """Returns the properties associated with the given parameter.
+
+        Args:
+            section: overall section this parameter is associated with
+            group: grouping into which the parameter belongs
+            name: name by which the new parameter will be accessed
+
+        Returns:
+            Properties associated with the given parameter
+        """
+        return self._retrieve_value(section, group, name, "properties")
 
     def expose(self, section: str, group: str, name: str) -> bool:
         """Returns whether to expose a parameter in the UI.

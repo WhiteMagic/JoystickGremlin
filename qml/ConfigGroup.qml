@@ -70,15 +70,15 @@ Item {
             roleValue: "bool"
 
             Row {
-                Label {
-                    text: model.description
-                }
                 Switch {
                     checked: model.value
 
                     onToggled: function() {
                         model.value = checked
                     }
+                }
+                Label {
+                    text: model.description
                 }
             }
         }
@@ -95,15 +95,17 @@ Item {
             roleValue: "float"
 
             Row {
-                Label {
-                    text: model.description
-                }
                 FloatSpinBox {
                     realValue: model.value
+                    minValue: model.properties.min
+                    maxValue: model.properties.max
 
                     onRealValueModified: function() {
                         model.value = realValue
                     }
+                }
+                Label {
+                    text: model.description
                 }
             }
         }
@@ -111,15 +113,18 @@ Item {
             roleValue: "int"
 
             Row {
-                Label {
-                    text: model.description
-                }
                 SpinBox {
                     value: model.value
+                    from: model.properties.min
+                    to: model.properties.max
 
                     onValueModified: function() {
+                        console.log(model.properties)
                         model.value = value
                     }
+                }
+                Label {
+                    text: model.description
                 }
             }
         }
