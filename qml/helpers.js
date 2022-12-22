@@ -10,3 +10,8 @@ function pythonizePath(path)
     var tmp_path = path.toString()
     return tmp_path.replace(/^(file:\/{3})/, "");
 }
+
+function capitalize(value)
+{
+    return value.replace(/\b\w/g, l => l.toUpperCase())
+}
