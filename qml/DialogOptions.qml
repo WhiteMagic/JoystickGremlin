@@ -21,6 +21,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Gremlin.Config
+import "helpers.js" as Helpers
 
 
 Window {
@@ -49,13 +50,22 @@ Window {
         }
 
         ScrollView {
+            id: _bla
+
             Layout.fillHeight: true
             Layout.fillWidth: true
 
             ConfigGroup {
                 id: _configGroup
+
+                width: 500
+                height: 200
             }
         }
+    }
+
+    DebugBox {
+        target: _configGroup
     }
 
     Component {
@@ -94,7 +104,7 @@ Window {
             }
 
             contentItem: Text {
-                text: _text.text.replace(/\b\w/g, l => l.toUpperCase())
+                text: Helpers.capitalize(_text.text)
                 font: _text.font
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter

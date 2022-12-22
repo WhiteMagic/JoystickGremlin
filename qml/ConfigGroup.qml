@@ -22,6 +22,7 @@ import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
 import Gremlin.Config
+import "helpers.js" as Helpers
 
 
 Item {
@@ -29,11 +30,12 @@ Item {
 
     property ConfigGroupModel groupModel
 
+        // width: parent.width
+        // height: parent.height
+
     Repeater {
         id: _groupView
 
-        width: parent.width
-        height: parent.height
 
         model: groupModel
         delegate: _groupDelegate
@@ -44,14 +46,30 @@ Item {
 
         Item {
             required property int index
+            required property string groupName
             required property ConfigEntryModel entryModel
 
             width: _groupView.width
-            height: 200//_entryView.height
+            height: _groupView.height
 
-            // title: "Something" + index
+            ColumnLayout {
+                anchors.fill: parent
 
-            Column {
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    DisplayText {
+                        text: Helpers.capitalize(groupName)
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+
+                        height: 2
+                        color: Universal.baseLowColor
+                    }
+                }
                 Repeater {
                     id: _entryView
 
@@ -69,8 +87,10 @@ Item {
         DelegateChoice {
             roleValue: "bool"
 
-            Row {
+            RowLayout {
                 Switch {
+                    Layout.preferredWidth: 150
+
                     checked: model.value
 
                     onToggled: function() {
@@ -78,15 +98,8 @@ Item {
                     }
                 }
                 Label {
-                    text: model.description
-                }
-            }
-        }
-        DelegateChoice {
-            roleValue: "string"
+                    Layout.fillWidth: true
 
-            Row {
-                Label {
                     text: model.description
                 }
             }
@@ -94,8 +107,10 @@ Item {
         DelegateChoice {
             roleValue: "float"
 
-            Row {
+            RowLayout {
                 FloatSpinBox {
+                    Layout.preferredWidth: 150
+
                     realValue: model.value
                     minValue: model.properties.min
                     maxValue: model.properties.max
@@ -105,6 +120,8 @@ Item {
                     }
                 }
                 Label {
+                    Layout.fillWidth: true
+
                     text: model.description
                 }
             }
@@ -112,8 +129,10 @@ Item {
         DelegateChoice {
             roleValue: "int"
 
-            Row {
+            RowLayout {
                 SpinBox {
+                    Layout.preferredWidth: 150
+
                     value: model.value
                     from: model.properties.min
                     to: model.properties.max
@@ -124,9 +143,16 @@ Item {
                     }
                 }
                 Label {
+                    Layout.fillWidth: true
+
                     text: model.description
                 }
             }
         }
     }
+
+        DebugBox {
+            target: _groupView
+        }
+
 }

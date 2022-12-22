@@ -75,7 +75,8 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
     """
 
     roles = {
-        QtCore.Qt.UserRole + 1: QtCore.QByteArray("entryModel".encode()),
+        QtCore.Qt.UserRole + 1: QtCore.QByteArray("groupName".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("entryModel".encode()),
     }
 
     def __init__(self, section: str, parent: Optional[QtCore.QObject]=None) -> None:
@@ -90,7 +91,11 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
     def data(self, index: QtCore.QModelIndex, role: int) -> Any:
         groups = self._config.groups(self._section_name)
         if index.row() < len(groups):
-            return ConfigEntryModel(self._section_name, groups[index.row()])
+            role_name = ConfigGroupModel.roles[role].data().decode()
+            if role_name == "entryModel":
+                return ConfigEntryModel(self._section_name, groups[index.row()])
+            elif role_name == "groupName":
+                return groups[index.row()]
         else:
             return None
 
