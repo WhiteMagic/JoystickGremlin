@@ -563,7 +563,7 @@ def _process_property(
         The value of the given property element
     """
     if property_node is None:
-        raise error.ProfileError(f"No property named '{name}' exists.")
+        raise error.ProfileError(f"A property named '{name}' is missing.")
 
     v_node = property_node.find(f"./value")
     if v_node is None:

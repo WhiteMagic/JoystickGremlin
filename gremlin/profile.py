@@ -1507,12 +1507,12 @@ class InputItemBinding:
     def from_xml(self, node: ElementTree.Element) -> None:
         self.description = read_subelement(node, "description")
         reference_id = read_subelement(node, "library-reference")
-        if reference_id not in self.input_item.library:
+        if not self.input_item.library.has_tree(reference_id):
             raise error.ProfileError(
                 f"{self.input_item.descriptor()} links to an invalid library "
                 f"item {reference_id}"
             )
-        self.library_reference = self.input_item.library[reference_id]
+        self.library_reference = self.input_item.library.get_tree(reference_id)
         self.behavior = read_subelement(node, "behavior")
         self.virtual_button = self._parse_virtual_button(node)
 

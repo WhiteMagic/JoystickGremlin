@@ -49,44 +49,46 @@ xml_description = """
     </inputs>
 
     <library>
-        <library-item id="ac905a47-9ad3-4b65-b702-fbae1d133609">
-            <action-tree root="ec663ba4-264a-4c76-98c0-6054058cae9f">
-                <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-                    <property type="string">
-                        <name>description</name>
-                        <value>This is a test</value>
-                    </property>
-                </action>
-                <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-                    <property type="string">
-                        <name>description</name>
-                        <value>Feuer frei!</value>
-                    </property>
-                </action>
-                <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="map-to-vjoy">
-                    <property type="int">
-                        <name>vjoy-device-id</name>
-                        <value>2</value>
-                    </property>
-                    <property type="int">
-                        <name>vjoy-input-id</name>
-                        <value>6</value>
-                    </property>
-                    <property type="input_type">
-                        <name>vjoy-input-type</name>
-                        <value>axis</value>
-                    </property>
-                    <property type="axis_mode">
-                        <name>axis-mode</name>
-                        <value>relative</value>
-                    </property>
-                    <property type="float">
-                        <name>axis-scaling</name>
-                        <value>1.5</value>
-                    </property>
-                </action>
-            </action-tree>
-        </library-item>
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>This is a test</value>
+            </property>
+        </action>
+        <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Feuer frei!</value>
+            </property>
+        </action>
+        <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>2</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>6</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>relative</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.5</value>
+            </property>
+        </action>
+
+        <action-tree id="ac905a47-9ad3-4b65-b702-fbae1d133609">
+            <action-reference id="ac905a47-9ad3-4b65-b702-fbae1d133609"/>
+            <action-reference id="f6d6a7af-baef-4b42-ab93-44608dedc859"/>
+            <action-reference id="d67cbad2-da3f-4b59-b434-2d493e7e6185"/>
+        </action-tree>
     </library>
 </profile>
 """
@@ -108,34 +110,47 @@ xml_hierarchy = """
     </inputs>
 
     <library>
-        <library-item id="ac905a47-9ad3-4b65-b702-fbae1d133609">
-            <action-tree root="ec663ba4-264a-4c76-98c0-6054058cae9f">
-                <action id="0c905a47-9ad3-4b65-b702-fbae1d133600" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-                    <property type="string">
-                        <name>description</name>
-                        <value>Node 1</value>
-                    </property>
-                </action>
-                <action id="0c905a47-9ad3-4b65-b702-fbae1d133601" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-                    <property type="string">
-                        <name>description</name>
-                        <value>Node 2</value>
-                    </property>
-                </action>
-                <action id="0c905a47-9ad3-4b65-b702-fbae1d133602" parent="0c905a47-9ad3-4b65-b702-fbae1d133603" type="description">
-                    <property type="string">
-                        <name>description</name>
-                        <value>Node 4</value>
-                    </property>
-                </action>
-                <action id="0c905a47-9ad3-4b65-b702-fbae1d133603" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-                    <property type="string">
-                        <name>description</name>
-                        <value>Node 3</value>
-                    </property>
-                </action>
-            </action-tree>
-        </library-item>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133600" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Node 1</value>
+            </property>
+        </action>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133601" type="tempo">
+            <property type="float">
+                <name>threshold</name>
+                <value>0.5</value>
+            </property>
+            <property type="string">
+                <name>activate-on</name>
+                <value>release</value>
+            </property>
+            <short-actions>
+                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133602</action-id>
+            </short-actions>
+            <long-actions>
+                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133602</action-id>
+            </long-actions>
+        </action>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133602" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Node 4</value>
+            </property>
+        </action>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133603" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Node 3</value>
+            </property>
+        </action>
+
+
+        <action-tree id="ac905a47-9ad3-4b65-b702-fbae1d133609">
+            <action-reference id="0c905a47-9ad3-4b65-b702-fbae1d133600"/>
+            <action-reference id="0c905a47-9ad3-4b65-b702-fbae1d133601"/>
+            <action-reference id="0c905a47-9ad3-4b65-b702-fbae1d133603"/>
+        </action-tree>
     </library>
 </profile>
 """
@@ -195,7 +210,7 @@ def test_simple_action():
     assert len(action_configurations) == 1
     assert isinstance(action_configurations[0], gremlin.profile.InputItemBinding)
 
-    actions = action_configurations[0].library_reference.action_tree.root.children
+    actions = action_configurations[0].library_reference.root.children
     assert len(actions) == 3
     assert actions[0].value.tag == "description"
     assert actions[0].value.description == "This is a test"
@@ -222,23 +237,22 @@ def test_hierarchy():
     p.from_xml(fpath)
 
     item_uuid = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
-    root = p.library[item_uuid].action_tree.root
-    assert root.node_count == 5
+    root = p.library.get_tree(item_uuid).root
+    assert root.node_count == 4
 
     n1 = root.node_at_index(1)
     n2 = root.node_at_index(2)
     n3 = root.node_at_index(3)
-    n4 = root.node_at_index(4)
+    n4 = n2.node_at_index(1)
 
     assert n1.parent == root
     assert n2.parent == root
     assert n3.parent == root
-    assert n4.parent == n3
+    # assert n4.parent == n2
 
     assert n1.value.description == "Node 1"
-    assert n2.value.description == "Node 2"
+    # assert n2.value.description == "Node 2"
     assert n3.value.description == "Node 3"
-    assert n4.value.description == "Node 4"
 
     os.remove(fpath)
 

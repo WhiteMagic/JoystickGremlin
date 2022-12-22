@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2020 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 from xml.etree import ElementTree
 
 from gremlin import error, plugin_manager
@@ -25,13 +26,18 @@ from gremlin.tree import TreeNode
 from gremlin.util import safe_format, safe_read
 from gremlin.types import InputType
 
+if TYPE_CHECKING:
+    from gremlin.base_classes import AbstractActionModel
+
 
 class RootAction:
 
     """Represents the root node of any action tree.
 
     This class mimicks the behavior of base_classes.AbstractActionModel but
-    is not intended to be serialized.
+    is not intended to be serialized. This is mainly needed to simplify the
+    UI handling by providing a root-level container that holds all other
+    actions.
     """
 
     def __init__(self):
@@ -89,98 +95,17 @@ class ActionTree:
     when and which actions will be executed.
     """
 
-    def __init__(self):
-        """Creates a new instance."""
-        self.root = TreeNode()
-        self.root.value = RootAction()
-
-    def from_xml(self, action_tree_node: ElementTree) -> None:
-        """Populates the instance with the XML instance data.
+    def __init__(self, library: Library):
+        """Creates a new instance.
 
         Args:
-            action_tree_node: XML subtree which contains the information
+            library: reference to the Library instance this action tree is
+                part of
         """
-        self.root.value.id = safe_read(action_tree_node, "root", uuid.UUID)
-
-        # Create the action tree nodes corresponding to each <action> XML
-        # element
-        action_nodes = []
-        action_ids = {}
-        parent_ids = {}
-        for node in action_tree_node.findall("./action"):
-            # Ensure all required attributes are present
-            if not set(["id", "type", "parent"]).issubset(node.keys()):
-                raise error.ProfileError(
-                    f"Missing attribute in an action of tree with "
-                    f"root: '{self.root.value.id}'"
-                )
-
-            # Ensure the action type is known
-            type_key = node.get("type")
-            if type_key not in plugin_manager.ActionPlugins().tag_map:
-                action_id = safe_read(node, "id", uuid.UUID)
-                raise error.ProfileError(
-                    f"Unknown type '{type_key}' in action '{action_id}"
-                )
-
-            # Create action data object
-            action_data = plugin_manager.ActionPlugins().tag_map[type_key](self)
-            action_data.from_xml(node)
-
-            # Store node information
-            action_node = TreeNode(action_data)
-            action_nodes.append(action_node)
-            action_ids[action_data.id] = len(action_nodes) - 1
-            parent_ids[action_data.id] = safe_read(node, "parent", uuid.UUID)
-
-        # Reconstruct the action tree structure
-        for node in action_nodes:
-            parent_id = parent_ids[node.value.id]
-
-            parent_node = None
-            if parent_id in action_ids:
-                parent_node = action_nodes[action_ids[parent_id]]
-            elif parent_id == self.root.value.id:
-                parent_node = self.root
-            else:
-                raise error.ProfileError(
-                    f"Parent id '{parent_id}' of action "
-                    f"'{node.value.id}' is invalid"
-                )
-            node.set_parent(parent_node)
-
-    def to_xml(self) -> ElementTree:
-        """Returns an XML subtree representing the tree's information.
-
-        Returns:
-            XML element containing the object's information
-        """
-        node = ElementTree.Element("action-tree")
-        node.set("root", safe_format(self.root.value.id, uuid.UUID))
-        # Serialize very node in the tree and capture the tree structure
-        for i in range(1, self.root.node_count):
-            child = self.root.node_at_index(i)
-            child_node = child.value.to_xml()
-            parent_id = self.root.value.id
-            if child.parent.depth > 0:
-                parent_id = child.parent.value.id
-            child_node.set("parent", safe_format(parent_id, uuid.UUID))
-
-            node.append(child_node)
-        return node
-
-
-class LibraryItem:
-
-    """Stores information about an individual library item.
-
-    Contains the actual action configuration and the unique id associated
-    with the particular item.
-    """
-
-    def __init__(self):
-        self.action_tree = None
+        self._library = library
         self._id = uuid.uuid4()
+        self.root = TreeNode()
+        self.root.value = RootAction()
 
     @property
     def id(self) -> uuid.UUID:
@@ -191,27 +116,51 @@ class LibraryItem:
         """
         return self._id
 
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Parses an library item to populate this instance.
+    def from_xml(self, action_tree_node: ElementTree) -> None:
+        """Populates the instance with the XML instance data.
 
         Args:
-            node: XML node containing the library item information
+            action_tree_node: XML subtree which contains the information
         """
-        self._id = safe_read(node, "id", uuid.UUID)
-        at_node = node.find("action-tree")
-        self.action_tree = ActionTree()
-        self.action_tree.from_xml(at_node)
+        self._id = safe_read(action_tree_node, "id", uuid.UUID)
+        self.root.value.id = self._id
 
-    def to_xml(self) -> ElementTree.Element:
-        """Returns an XML node encoding the content of this library.
+        # Process each action reference entry
+        for node in action_tree_node.findall("./action-reference"):
+            # Ensure the required id attribute is present
+            if "id" not in node.keys():
+                raise error.ProfileError(
+                    f"Missing id attribute for an action of tree with "
+                    f"root: '{self.root.value.id}'"
+                )
+
+            # Grab the raw abstract action instance out of the library and
+            # wrap it in a TreeNode before adding it to the tree.
+            action_id = safe_read(node, "id", uuid.UUID)
+            if not self._library.has_action(action_id):
+                error.ProfileError(
+                    f"Invalid action {action_id} referenced in {self.id}"
+                )
+            self.root.add_child(TreeNode(self._library.get_action(action_id)))
+
+    def to_xml(self) -> ElementTree:
+        """Returns an XML subtree representing the tree's information.
 
         Returns:
-            XML node holding the instance's content
+            XML element containing the object's information
         """
-        node = ElementTree.Element("library-item")
+        node = ElementTree.Element("action-tree")
         node.set("id", safe_format(self._id, uuid.UUID))
-        node.append(self.action_tree.to_xml())
-        return node
+
+        # Serialize the information about the root-level action references
+        # used in this action tree instance
+        for i in range(1, self.root.node_count()):
+            child_node = ElementTree.Element("action-reference")
+            child_node.set(
+                "id",
+                safe_format( self.root.node_at_index(i).value.id, uuid.UUID)
+            )
+            node.append(child_node)
 
 
 class Library:
@@ -223,54 +172,94 @@ class Library:
     """
 
     def __init__(self):
-        """Creates a new library instance."""
+        """Creates a new library instance.
 
-        # Each entry is a container with it's action sets but without
-        # conditions or virtual button configuration
-        self._items = {}
+        The library contains both the individual action configurations as well
+        as the items composed of them.
+        """
+        self._actions = {}
+        self._trees = {}
 
-    def __contains__(self, key: uuid.UUID) -> bool:
-        """Checks if an item exists for the given key.
+    def add_action(self, action: AbstractActionModel) -> None:
+        self._actions[action.id] = action
+
+    def delete_action(self, key: int) -> None:
+        """Deletes the action with the given key from the library.
+
+        Args:
+            key: the key of the action to delete
+        """
+        if key in self._actions:
+            del self._actions[key]
+
+    def get_action(self, key: uuid.UUID) -> AbstractActionModel:
+        """Returns the action specified by the key.
+
+        If there is no action with the specified key an exception is throw.
+
+        Args:
+            key: the key to return an action for
+
+        Returns:
+            The  instance stored at the given key
+        """
+        if key not in self._actions:
+            raise error.GremlinError(f"Invalid key for library action: {key}")
+        return self._actions[key]
+
+    def has_action(self, key: uuid.UUID) -> bool:
+        """Checks if an action exists with the given key.
 
         Args:
             key: the key to check for
 
         Returns:
-            True if an item exists for the specific key, False otherwise
+            True if an action exists for the specific key, False otherwise
         """
-        return key in self._items
+        return key in self._actions
 
-    def __getitem__(self, key: uuid.UUID) -> LibraryItem:
-        """Returns the item stored at the specified key.
-
-        If there is no item with the specified key an exception is throw.
+    def add_tree(self, tree: ActionTree) -> None:
+        """Adds the provided tree to the library.
 
         Args:
-            key: the key to return an item for
+            tree: the tree to add
+        """
+        self._trees[tree.id] = tree
+
+    def delete_tree(self, uuid: uuid.UUID) -> None:
+        """Deletes the tree with the provided identifier from the library.
+
+        Args:
+            uuid: unique identifier of the tree to delete
+        """
+        if uuid in self._trees:
+            del self._trees[uuid]
+
+    def get_tree(self, key: uuid.UUID) -> ActionTree:
+        """Returns the tree stored at the specified key.
+
+        If there is no tree with the specified key an exception is throw.
+
+        Args:
+            key: the key of the tree to return
 
         Returns:
-            The LibraryItem instance stored at the given key
+            The ActionTree instance stored at the given key
         """
-        if key not in self._items:
-            raise error.GremlinError(f"Invalid uuid for library entry: {key}")
-        return self._items[key]
+        if key not in self._trees:
+            raise error.GremlinError(f"Invalid uuid for action tree: {key}")
+        return self._trees[key]
 
-    def add_item(self, item: LibraryItem) -> None:
-        """Adds the provided item to the library.
+    def has_tree(self, key: uuid.UUID) -> bool:
+        """Checks if a tree exists for the given key.
 
         Args:
-            item: the item to add
-        """
-        self._items[item.id] = item
+            key: the key to check for
 
-    def delete_item(self, uuid: uuid.UUID) -> None:
-        """Deletes the item with the provided identifier from the library.
-
-        Args:
-            uuid: unique identifier of the item to delete
+        Returns:
+            True if a tree exists for the specific key, False otherwise
         """
-        if uuid in self._items:
-            del self._items[uuid]
+        return key in self._trees
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Parses an library node to populate this instance.
@@ -278,16 +267,42 @@ class Library:
         Args:
             node: XML node containing the library information
         """
-        for item in node.findall("./library/library-item"):
-            library_item = LibraryItem()
-            library_item.from_xml(item)
-
-            if library_item.id in self._items:
+        # Parse all actions
+        for entry in node.findall("./library/action"):
+            # Ensure all required attributes are present
+            if not set(["id", "type"]).issubset(entry.keys()):
                 raise error.ProfileError(
-                    f"Duplicate library item guid: {library_item.id}"
+                    "Incomplete library action specification"
                 )
 
-            self._items[library_item.id] = library_item
+            # Ensure the action type is known
+            type_key = entry.get("type")
+            if type_key not in plugin_manager.ActionPlugins().tag_map:
+                action_id = safe_read(entry, "id", uuid.UUID)
+                raise error.ProfileError(
+                    f"Unknown type '{type_key}' in action with id '{action_id}'"
+                )
+
+            # Create action object, turn it into a tree node and store it
+            action_obj = plugin_manager.ActionPlugins().tag_map[type_key](self)
+            action_obj.from_xml(entry)
+            # FIXME: does this need to be a TreeNode?
+            if action_obj.id in self._actions:
+                raise error.ProfileError(
+                    f"Duplicate library action id: {action_obj.id}"
+                )
+            self._actions[action_obj.id] = action_obj
+
+        # Parse all trees 
+        for entry in node.findall("./library/action-tree"):
+            action_tree = ActionTree(self)
+            action_tree.from_xml(entry)
+
+            if action_tree.id in self._trees:
+                raise error.ProfileError(
+                    f"Duplicate library item guid: {action_tree.id}"
+                )
+            self._trees[action_tree.id] = action_tree
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the content of this library.
@@ -296,6 +311,8 @@ class Library:
             XML node holding the instance's content
         """
         node = ElementTree.Element("library")
-        for item in self._items.values():
+        for item in self._actions.values():
+            node.append(item.to_xml())
+        for item in self._trees.values():
             node.append(item.to_xml())
         return node
