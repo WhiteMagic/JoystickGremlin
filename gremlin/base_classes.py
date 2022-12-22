@@ -197,9 +197,16 @@ class AbstractActionModel(QtCore.QObject):
 
     def _create_node_list(self, action_ids):
         nodes = []
-        for node in self._action_tree.root.nodes_matching(lambda x: x.value.id in action_ids):
+        for node in self._action_tree.root.nodes_matching(
+            lambda x: x.value.id in action_ids
+        ):
             node.value.setParent(self)
-            nodes.append(ActionNodeModel(node, self.behavior_type, self._action_tree, parent=self))
+            nodes.append(ActionNodeModel(
+                node,
+                self.behavior_type,
+                self._action_tree,
+                parent=self
+            ))
         return nodes
 
     def _remove_from_list(self, storage: List[Any], value: Any) -> None:

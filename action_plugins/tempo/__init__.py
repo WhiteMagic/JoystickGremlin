@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2021 Lionel Ott
+# Copyright (C) 2015 - 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,11 +52,7 @@ class TempoFunctor(AbstractFunctor):
         self.long_actions = \
             [a.node.value.functor(a.node.value) for a in action.longActions]
 
-    def process_event(
-        self,
-        event: event_handler.Event,
-        value: Value
-    ) -> None:
+    def process_event(self, event: event_handler.Event, value: Value) -> None:
         # TODO: Currently this does not handle hat or axis events, however
         #       virtual buttons created on those inputs is supported
         if not isinstance(value.current, bool):
