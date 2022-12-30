@@ -552,3 +552,113 @@ class Configuration:
         """
         self._data["window_location"] = value
         self.save()
+
+    def get_exporter_list(self):
+        """Returns sorted list of user-defined exporter script paths
+        
+        :return list of custom exporters or None if no custom exporters exist
+        """
+        
+        exporters = self._data.get("custom_exporters", "")
+        if exporters:
+            exporters = list(sorted(
+                exporters,
+                key=lambda x: x.lower()
+            ))
+            
+        return exporters
+    
+    def add_exporter(self, exporter_path):
+        """Add exporter to config list
+        
+        :param exporter_path the path to the custom exporter to add
+        """
+        
+        # create custom_exporter list if it doesn't exist
+        if self._data.get("custom_exporters", ""):
+            self._data["custom_exporters"].append(exporter_path)
+        else:
+            self._data["custom_exporters"] = [exporter_path]
+        self.save()
+            
+    def remove_exporter(self, exporter_path):
+        """Remove exporter from config list
+        
+        :param exporter_path the path of the custom exporter script to remove
+        """
+        
+        self._data["custom_exporters"].remove(exporter_path)
+        self.save()
+        
+    @property
+    def overwrite_exporter_template(self):
+        """Returns whether or not to overwrite template on export.
+        
+        :return True is template overwrite is active, False otherwise
+        """
+        return self._data.get("overwrite_exporter_template", False)
+    
+    @overwrite_exporter_template.setter
+    def overwrite_exporter_template(self, value):
+        """Sets whether or not to overwrite template on export.
+
+        :param value Flag indicating whether or not to enable / disable the
+            feature
+        """
+        if type(value) == bool:
+            self._data["overwrite_exporter_template"] = value
+            self.save()
+
+    def get_importer_list(self):
+        """Returns sorted list of user-defined importer script paths
+        
+        :return list of custom importers or None if no custom importers exist
+        """
+        
+        importers = self._data.get("custom_importers", "")
+        if importers:
+            importers = list(sorted(
+                importers,
+                key=lambda x: x.lower()
+            ))
+            
+        return importers
+    
+    def add_importer(self, importer_path):
+        """Add importer to config list
+        
+        :param importer_path the path to the custom importer to add
+        """
+        
+        # create custom_importer list if it doesn't exist
+        if self._data.get("custom_importers", ""):
+            self._data["custom_importers"].append(importer_path)
+        else:
+            self._data["custom_importers"] = [importer_path]
+        self.save()
+            
+    def remove_importer(self, importer_path):
+        """Remove importer from config list
+        
+        :param importer_path the path of the custom importer script to remove
+        """
+        
+        self._data["custom_importers"].remove(importer_path)
+        self.save()
+        
+    @property
+    def overwrite_on_import(self):
+        """Returns importer overwrite flag for resolving conflicts during binding import.
+        
+        :return stored flag or empty if none defined
+        """
+        return self._data.get("overwrite_on_import", "")
+    
+    @overwrite_on_import.setter
+    def overwrite_on_import(self, value):
+        """Sets importer overwrite flag for resolving conflicts during binding import.
+
+        :param value Flag indicating resolution strategy
+        """
+        self._data["overwrite_on_import"] = value
+        self.save()

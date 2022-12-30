@@ -32,8 +32,9 @@ class InputItemConfiguration(QtWidgets.QFrame):
     input item such as an axis, button, hat, or key.
     """
 
-    # Signal emitted when the description changes
+    # Signal emitted when the description or binding changes
     description_changed = QtCore.pyqtSignal(str)
+    binding_changed = QtCore.pyqtSignal(str)
 
     def __init__(self, item_data, parent=None):
         """Creates a new object instance.
@@ -50,8 +51,13 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.widget_layout = QtWidgets.QVBoxLayout()
 
         self._create_description()
-        if self.item_data.parent.parent.type == gremlin.common.DeviceType.VJoy:
-            self._create_vjoy_dropdowns()
+        
+        # only create binding for vjoy outputs
+        # only create dropdowns for vjoy axes (since that was the original intention of this tab)
+        if self.item_data.get_device_type() == DeviceType.VJoy:
+            self._create_binding()
+            if self.item_data.input_type == InputType.JoystickAxis:
+                self._create_vjoy_dropdowns()
         else:
             self._create_dropdowns()
 
@@ -112,6 +118,19 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.description_layout.addWidget(self.description_field)
 
         self.main_layout.addLayout(self.description_layout)
+        
+    def _create_binding(self):
+        """Creates the binding input for the input item."""
+        self.binding_layout = QtWidgets.QHBoxLayout()
+        self.binding_layout.addWidget(
+            QtWidgets.QLabel("<b>Action Binding</b>")
+        )
+        self.binding_field = QtWidgets.QLineEdit()
+        self.binding_field.setText(self.item_data.binding)
+        self.binding_field.editingFinished.connect(self._edit_binding_cb)
+        self.binding_layout.addWidget(self.binding_field)
+
+        self.main_layout.addLayout(self.binding_layout)
 
     def _create_dropdowns(self):
         """Creates a drop down selection with actions that can be
@@ -153,7 +172,21 @@ class InputItemConfiguration(QtWidgets.QFrame):
         :param text the new contents of the text field
         """
         self.item_data.description = text
+        if self.item_data.get_device_type() == DeviceType.VJoy:
+            profile = self.item_data.get_profile()
+            profile.update_bound_vjoy_description(self.item_data)
         self.description_changed.emit(text)
+        
+    def _edit_binding_cb(self):
+        """Handles changes to the binding text field. Call when editing is finished.
+
+        """
+        text = self.binding_field.text().strip()
+        self.item_data.binding = text
+        if self.item_data.get_device_type() == DeviceType.VJoy:
+            profile = self.item_data.get_profile()
+            profile.update_bound_vjoy_registry(self.item_data)
+        self.binding_changed.emit(text)
 
     def _always_execute_cb(self, state):
         """Handles changes to the always execute checkbox.
@@ -290,6 +323,9 @@ class ActionContainerView(common.AbstractView):
 class JoystickDeviceTabWidget(QtWidgets.QWidget):
 
     """Widget used to configure a single device."""
+    
+    # emit signal if any bindings change to trigger mode redraw
+    bound_vjoys_changed = QtCore.pyqtSignal(str)
 
     def __init__(
             self,
@@ -329,9 +365,6 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         vjoy_as_input = self.device_profile.parent.settings.vjoy_as_input
 
         # For vJoy as output only show axes entries, for all others treat them
-        # as if they were physical input devices
-        if device.is_virtual and not vjoy_as_input.get(device.vjoy_id, False):
-            self.input_item_list_view.limit_input_types([InputType.JoystickAxis])
         self.input_item_list_view.set_model(self.input_item_list_model)
 
         # TODO: make this saner
@@ -359,10 +392,28 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
                 device.is_virtual and \
                 not vjoy_as_input.get(device.vjoy_id, False):
             label = QtWidgets.QLabel(
-                "This tab allows assigning a response curve to virtual axis. "
-                "The purpose of this is to enable split and merge axis to be "
-                "customized to a user's needs with regards to dead zone and "
-                "response curve."
+                "This tab allows the user to assign bindings to individual "
+                "virtual outputs. Each binding defined can then be selected "
+                "from remap actions instead of selecting the bound virtual "
+                "device and output manually. If the binding is transferred "
+                "to a different virtual output, the remap action will follow. "
+                "This allows the user to simply assign all bindings to "
+                "virtual outputs based on desired in-game mapping, then to "
+                "directly map from physical devices to those bindings.\n\n"
+                "Import bindings to profile using the import utility "
+                "under the 'Tools' menu. Similarly, export bindings to "
+                "program config files using the 'Tools' export utility.\n\n"
+                "Bindings are forced to be unique to a single virtual "
+                "device/output combination, but are available across all "
+                "modes. That is, each virtual output is mapped to a "
+                "single in-game binding, regardless of mode. The user can "
+                "still create mode-specific mappings of multiple physical "
+                "inputs to the same virtual output.\n\n"
+                "From this tab, the user can also provide a response curve to each "
+                "virtual axis. The purpose of this is to enable split and "
+                "merge axis to be customized to a user's needs with regards "
+                "to dead zone and response curve. These curves can be "
+                "individually tailored to each mode, regardless of binding."
             )
             label.setStyleSheet("QLabel { background-color : '#FFF4B0'; }")
             label.setWordWrap(True)
@@ -394,7 +445,9 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             change_cb = self._create_change_cb(index)
             widget.action_model.data_changed.connect(change_cb)
             widget.description_changed.connect(change_cb)
-
+            widget.binding_changed.connect(change_cb)
+            widget.binding_changed.connect(self._edit_bound_vjoys_cb)
+            
             self.main_layout.addWidget(widget)
 
     def mode_changed_cb(self, mode):
@@ -413,14 +466,19 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             item.widget().deleteLater()
         self.main_layout.removeItem(item)
 
-        # Select the first input item
-        self.input_item_list_view.select_item(0)
+        # maintain current selection between mode changes
+        self.input_item_list_view.select_item(self.input_item_list_view.current_index)
 
     def refresh(self):
         """Refreshes the current selection, ensuring proper synchronization."""
         if self.input_item_list_view.current_index is not None:
             self.input_item_selected_cb(self.input_item_list_view.current_index)
 
+    def _edit_bound_vjoys_cb(self):
+        """Emit current mode to trigger mode "change" if device vjoy bindings are changed"""
+        
+        self.bound_vjoys_changed.emit(self.current_mode)
+        
     def _create_change_cb(self, index):
         """Creates a callback handling content changes.
 
@@ -537,6 +595,7 @@ class KeyboardDeviceTabWidget(QtWidgets.QWidget):
         change_cb = self._create_change_cb(self._index_for_key(index_key))
         widget.action_model.data_changed.connect(change_cb)
         widget.description_changed.connect(change_cb)
+        widget.binding_changed.connect(change_cb)
 
         self.main_layout.addWidget(widget)
 

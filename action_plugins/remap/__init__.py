@@ -81,7 +81,8 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         self.vjoy_selector = gremlin.ui.common.VJoySelector(
             lambda x: self.save_changes(),
             input_types[self._get_input_type()],
-            self.action_data.get_settings().vjoy_as_input
+            self.action_data.get_settings().vjoy_as_input,
+            self.action_data.get_settings().parent
         )
         self.main_layout.addWidget(self.vjoy_selector)
 
@@ -113,14 +114,18 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
 
     def _populate_ui(self):
         """Populates the UI components."""
-        # Get the appropriate vjoy device identifier
-        vjoy_dev_id = 0
-        if self.action_data.vjoy_device_id not in [0, None]:
-            vjoy_dev_id = self.action_data.vjoy_device_id
-
+        
+        # Get existing vjoy input data 
+        # if binding is set, this will take precedence over other settings
+        binding = self.action_data.binding
+        vjoy_id = self.action_data.vjoy_device_id
+        input_id = self.action_data.vjoy_input_id
+        
         # Get the input type which can change depending on the container used
         input_type = self.action_data.input_type
         if self.action_data.parent.tag == "hat_buttons":
+            input_type = InputType.JoystickButton
+        if input_type == InputType.Keyboard:
             input_type = InputType.JoystickButton
 
         # Handle obscure bug which causes the action_data to contain no
@@ -128,30 +133,53 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
         if input_type is None:
             input_type = InputType.JoystickButton
             logging.getLogger("system").warning("None as input type encountered")
+            
+        # if no valid vjoy or input id given, pick first unused
+        # try to pick from given vjoy device, if applicable
+        if input_id in [0, None] or vjoy_id in [0, None]:
+            unused_inputs = self._get_profile_root().get_unused_vjoy_inputs()
+            device_list = sorted(unused_inputs.keys())
+            if vjoy_id in device_list:
+                device_list.remove(vjoy_id)
+                device_list.insert(0,vjoy_id)
+            for dev_id in device_list:
+                if input_type in unused_inputs[dev_id].keys() \
+                        and unused_inputs[dev_id][input_type]:
+                    input_id = unused_inputs[dev_id][input_type][0].input_id
+                    vjoy_id = dev_id
+                    break
+            
+        # if no valid pair found, get first available input device with req. input type
+        # again try to pick from given vjoy device, if applicable
+        if input_id in [0, None] or vjoy_id in [0, None]:
+            all_inputs = self._get_profile_root().get_all_vjoy_inputs()
+            device_list = sorted(all_inputs.keys())
+            if vjoy_id in device_list:
+                logging.getLogger("system").warning((
+                    "No unused inputs of correct type available for VJoy {:d}! "
+                    "Defaulting to first suitable input."
+                    ).format(vjoy_id))
+                device_list.remove(vjoy_id)
+                device_list.insert(0,vjoy_id)
+            for dev_id in device_list:
+                if input_type in all_inputs[dev_id].keys():
+                    vjoy_id = dev_id
+                    input_id = 1
+                    break
+        
+        # if no valid pair found, throw error
+        if input_id in [0, None] or vjoy_id in [0, None]:
+            raise gremlin.error.GremlinError((
+                "No VJoy device with '{}' type output found! "
+                "Cannot create remap.").format(input_type.to_string))
 
-        # If no valid input item is selected get the next unused one
-        if self.action_data.vjoy_input_id in [0, None]:
-            free_inputs = self._get_profile_root().list_unused_vjoy_inputs()
-
-            input_name = self.type_to_name_map[input_type].lower()
-            input_type = self.name_to_type_map[input_name.capitalize()]
-            if vjoy_dev_id == 0:
-                vjoy_dev_id = sorted(free_inputs.keys())[0]
-            input_list = free_inputs[vjoy_dev_id][input_name]
-            # If we have an unused item use it, otherwise use the first one
-            if len(input_list) > 0:
-                vjoy_input_id = input_list[0]
-            else:
-                vjoy_input_id = 1
-        # If a valid input item is present use it
-        else:
-            vjoy_input_id = self.action_data.vjoy_input_id
-
+        # assign to selector
         try:
             self.vjoy_selector.set_selection(
                 input_type,
-                vjoy_dev_id,
-                vjoy_input_id
+                vjoy_id,
+                input_id,
+                binding
             )
 
             if self.action_data.input_type == InputType.JoystickAxis:
@@ -185,6 +213,7 @@ class RemapWidget(gremlin.ui.input_item.AbstractActionWidget):
             self.action_data.vjoy_device_id = vjoy_data["device_id"]
             self.action_data.vjoy_input_id = vjoy_data["input_id"]
             self.action_data.input_type = vjoy_data["input_type"]
+            self.action_data.binding = vjoy_data["binding"]
 
             if self.action_data.input_type == InputType.JoystickAxis:
                 self.action_data.axis_mode = "absolute"
@@ -332,6 +361,7 @@ class Remap(gremlin.base_classes.AbstractAction):
         # automatically
         self.vjoy_device_id = None
         self.vjoy_input_id = None
+        self.binding = ''
         self.input_type = self.parent.parent.input_type
         self.axis_mode = "absolute"
         self.axis_scaling = 1.0
@@ -399,6 +429,7 @@ class Remap(gremlin.base_classes.AbstractAction):
                 )
 
             self.vjoy_device_id = safe_read(node, "vjoy", int)
+            self.binding = safe_read(node, "binding", str, '').strip()
 
             if self.get_input_type() == InputType.JoystickAxis and \
                     self.input_type == InputType.JoystickAxis:
@@ -407,6 +438,7 @@ class Remap(gremlin.base_classes.AbstractAction):
         except ProfileError:
             self.vjoy_input_id = None
             self.vjoy_device_id = None
+            self.binding = ''
 
     def _generate_xml(self):
         """Returns an XML node encoding this action's data.
@@ -414,6 +446,7 @@ class Remap(gremlin.base_classes.AbstractAction):
         :return XML node containing the action's data
         """
         node = ElementTree.Element("remap")
+        node.set("binding", safe_format(self.binding, str))
         node.set("vjoy", str(self.vjoy_device_id))
         if self.input_type == InputType.Keyboard:
             node.set(
