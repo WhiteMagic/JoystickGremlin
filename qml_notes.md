@@ -353,7 +353,7 @@ The `pyside6-rcc` programs converts the contents of a QRC file into a python mod
 
 ## Signal Inheritance
 
-Dealing with signals in an inheritance hierarchy is somewhat annoying, as defining a property in a derived class using a signal defined in a parent doesn't work. As such, signals and properties have to be defined in the same class. To make matters worse the definition of the property binds the setter and getter function of the class in which the property is defined, making it impossible to redirect to a derived class' implementation. A solution around this is to have the actual setter/getter implementation be relegated to an implementation method which can be overriden in a derived class.
+Dealing with signals in an inheritance hierarchy is somewhat annoying, as defining a property in a derived class using a signal defined in a parent doesn't work. As such, signals and properties have to be defined in the same class. To make matters worse the definition of the property binds the setter and getter function of the class in which the property is defined, making it impossible to redirect to a derived classes implementation. A solution around this is to have the actual setter/getter implementation be relegated to an implementation method which can be overridden in a derived class.
 
 ```python
 from PySide6 import QtCore
