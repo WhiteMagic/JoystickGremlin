@@ -24,13 +24,12 @@ import uuid
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import code_runner, common, config, error, plugin_manager, \
-    profile, profile_library, shared_state, types
+from gremlin import code_runner, common, config, error, \
+    profile, shared_state, types
 from gremlin.signal import signal
 
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import ActionNodeModel, InputItemBindingModel, \
-    InputItemModel
+from gremlin.ui.profile import InputItemModel
 
 
 config.Configuration().register(
@@ -223,54 +222,6 @@ class Backend(QtCore.QObject):
             fpath: Path to the file containing the profile to load
         """
         self._load_profile(fpath)
-        signal.reloadUi.emit()
-
-    @Slot(QtCore.QObject, result=list)
-    def actionList(self, action_node: ActionNodeModel) -> List[str]:
-        """Returns a list of valid action plugins for a particular configuration.
-
-        Args:
-            action_node: instance to use to determine valid actions
-
-        Returns:
-            List of valid actions for the given configuration
-        """
-        action_list = plugin_manager.ActionPlugins().type_action_map[
-            action_node.input_type
-        ]
-        return [a.name for a in sorted(action_list, key=lambda x: x.name)]
-
-    @Slot(InputIdentifier)
-    def newInputBinding(self, identifier: InputIdentifier) -> None:
-        """Creates a new action configuration.
-
-        Args:
-            identifier: Identifier of the InputItem to which to add the
-                action configuration
-        """
-        library_item = profile_library.LibraryItem()
-        library_item.action_tree = profile_library.ActionTree()
-        self.profile.library.add_item(library_item)
-        input_item = self.profile.get_input_item(
-            identifier.device_guid,
-            identifier.input_type,
-            identifier.input_id,
-            True
-        )
-        # TODO: automatically determine the mode
-        input_item.mode = "Default"
-        action_config = profile.InputItemBinding(input_item)
-        action_config.library_reference = library_item
-        action_config.behavior = identifier.input_type
-        input_item.action_configurations.append(action_config)
-        self.inputConfigurationChanged.emit()
-
-    @Slot(InputItemBindingModel)
-    def deleteInputBinding(self, input_binding: InputItemBindingModel) -> None:
-        input_binding.input_item_binding.input_item.remove_item_binding(
-            input_binding.input_item_binding
-        )
-        self.inputConfigurationChanged.emit()
         signal.reloadUi.emit()
 
     @Property(type=str, notify=windowTitleChanged)
