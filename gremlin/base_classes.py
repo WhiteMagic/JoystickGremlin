@@ -17,20 +17,16 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod, ABC
 
-from typing import Any, List, Optional
+from typing import Any, Callable, List, Optional
 import uuid
 from xml.etree import ElementTree
 
-from PySide6 import QtCore
-
-from gremlin import error
+from gremlin.error import MissingImplementationError
 from gremlin.event_handler import Event
-from gremlin.profile_library import ActionTree
+from gremlin.profile import Library
 from gremlin.types import InputType
-
-from gremlin.ui.profile import ActionNodeModel
 
 
 class Value:
@@ -70,22 +66,17 @@ class Value:
         self._current = current
 
 
-class AbstractActionModel(QtCore.QObject):
+class AbstractActionData(ABC):
 
-    """Base class for all action related data calsses."""
+    """Base class holding the data of all action related data classes."""
 
-    modelChanged = QtCore.Signal()
+    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
+        """Creates a new action data instance.
 
-    def __init__(
-            self,
-            action_tree: ActionTree,
-            behavior_type: InputType=InputType.JoystickButton,
-            parent: Optional[QtCore.QObject]=None
-    ):
-        super().__init__(parent)
-
+        Args:
+            behavior_type: type of behavior of this action
+        """
         self._id = uuid.uuid4()
-        self._action_tree = action_tree
         self._behavior_type = behavior_type
 
     @property
@@ -99,76 +90,114 @@ class AbstractActionModel(QtCore.QObject):
 
     @property
     def behavior_type(self) -> InputType:
+        """Returns the behavior type this action is configured for.
+        
+        Returns:
+            InputType corresponding to the action's behavior
+        """
         return self._behavior_type
 
-    def set_behavior_type(self, new_behavior: InputType):
+    def set_behavior_type(self, new_behavior: InputType) -> None:
+        """Sets the behavior type of the action.
+        
+        Args:
+            new_behavior: new InputType corresponding to the behavior type
+        """
         old_behavior = self._behavior_type
         self._behavior_type = new_behavior
         if old_behavior != new_behavior:
             self._handle_behavior_change(old_behavior, new_behavior)
 
-    def qml_path(self) -> str:
-        """Returns the path to the QML file visualizing the action.
+    # Interface that all actions have to support, even if only an empty noop
+    # implementation is provided.
 
-        Returns:
-            String representation of the QML file path
-        """
-        raise error.MissingImplementationError(
-            "AbstractActionModel.qml_path not implemented in subclass"
-        )
-
-    def from_xml(self, node: ElementTree.Element) -> None:
+    @abstractmethod
+    def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
         """Populates the instance's values with the content of the XML node.
 
         Args:
             node: the XML node to parse for content
         """
-        raise error.MissingImplementationError(
+        raise MissingImplementationError(
             "AbstractActionModel.from_xml not implemented in subclass"
         )
 
+    @abstractmethod
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node representing the instance's contents.
 
         Returns:
             XML node containing the instance's contents
         """
-        raise error.MissingImplementationError(
+        raise MissingImplementationError(
             "AbstractActionModel.to_xml not implemented in subclass"
         )
 
+    @abstractmethod
     def is_valid(self) -> bool:
         """Returns whether or not the instance is in a valid state.
 
         Returns:
             True if the instance is in a valid state, False otherwise
         """
-        raise error.MissingImplementationError(
+        raise MissingImplementationError(
             "AbstractActionModel.is_valid not implemented in subclass"
         )
 
-    def remove_action(self, action: AbstractActionModel) -> None:
-        """Removes the provided action from this action.
-
-        Args:
-            action: the action to remove
-        """
-        pass
-
-    def add_action_after(
+    @abstractmethod
+    def get_actions(
         self,
-        anchor: AbstractActionModel,
-        action: AbstractActionModel
-    ) -> None:
-        """Adds the provided action after the specified anchor.
+        selector: Optional[Any]=None
+    )  -> List[AbstractActionData]:
+        """Returns all actions matching the given selector.
+
+        The selector can be used by implementations to only return parts
+        of the actions present in an action. If no selector is provided all
+        child actions have to be returned.
 
         Args:
-            anchor: action after which to insert the given action
+            selector: information used by the implementation to select
+                actions
+        Returns:
+            List of action instances based on the provided selector
+        """
+        raise MissingImplementationError(
+            "AbstractActionModel.get_actions not implemented in subclass"
+        )
+
+    @abstractmethod
+    def add_action(
+        self,
+        action: AbstractActionData,
+        options: Optional[Any]=None
+    ) -> None:
+        """Adds a new action as a child of the current object.
+
+        The specific handling of adding the child action is dependant on the
+        particular action implementation. Additional information on how to
+        perform the addition is encoded in the options parameter.
+        
+        Args:
+            action: the action to insert as a child
+            options: additional options to consider when adding the child
+        """
+        raise MissingImplementationError(
+            "AbstractActionModel.add_child not implemented in subclass"
+        )
+
+    @abstractmethod
+    def remove_action(self, action: AbstractActionData) -> None:
+        """Removes the provided action from this action's children.
+
+        Args:
             action: the action to remove
         """
-        pass
+        raise MissingImplementationError(
+            "AbstractActionModel.remove_action not implemented in subclass"
+        )
 
-    def insert_action(self, container: str, action: AbstractActionModel) -> None:
+    @abstractmethod
+    def insert_action(self, container: str, action: AbstractActionData) -> None:
         """Inserts the action into a specific container.
 
         Args:
@@ -176,10 +205,27 @@ class AbstractActionModel(QtCore.QObject):
                 provided action
             action: the action to insert
         """
-        raise error.MissingImplementationError(
+        raise MissingImplementationError(
             "AbstractActionModel.insert_action not implemented in subclass"
         )
 
+    @abstractmethod
+    def add_action_after(
+        self,
+        anchor: AbstractActionData,
+        action: AbstractActionData
+    ) -> None:
+        """Adds the provided action after the specified anchor action.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        raise MissingImplementationError(
+            "AbstractActionModel.add_action_after not implemented in subclass"
+        )
+
+    @abstractmethod
     def _handle_behavior_change(
         self,
         old_behavior: InputType,
@@ -193,24 +239,50 @@ class AbstractActionModel(QtCore.QObject):
             old_behavior: type describing the old behavior
             new_behavior: type describing the new behavior
         """
-        pass
+        raise MissingImplementationError(
+            "AbstractActionModel._handle_behavior_change not implemented "
+            "in subclass"
+        )
 
-    def _create_node_list(self, action_ids):
-        nodes = []
-        for node in self._action_tree.root.nodes_matching(
-            lambda x: x.value.id in action_ids
-        ):
-            node.value.setParent(self)
-            nodes.append(ActionNodeModel(
-                node,
-                self.behavior_type,
-                self._action_tree,
-                parent=self
-            ))
-        return nodes
+    # General utility functions, supporting the implementation of actions.
 
-    def _remove_from_list(self, storage: List[Any], value: Any) -> None:
-        """Removes the provided value from the list storage.
+    # def _create_action_list(
+    #     self,
+    #     action_ids: List[uuid.UUID]
+    # ) -> List[ActionModel]:
+    #     """Returns a list containing actions with an id matching the provided
+    #     ones.
+        
+    #     Args:
+    #         action_ids: List of ids of actions to retrieve
+        
+    #     Returns:
+    #         List of actions corresponding to the provided ids
+    #     """
+    #     actions = []
+    #     # FIXME: this is outdated and needs replacing
+    #     # for action in self._action_tree.root.nodes_matching(
+    #     #     lambda x: x.value.id in action_ids
+    #     # ):
+    #     #     # Set parent relationship to handle object deletion properly
+    #     #     action.setParent(self)
+    #     #     # Create model instances representing the individual action
+    #     #     actions.append(ActionModel(
+    #     #         action,
+    #     #         self.behavior_type,
+    #     #         self._action_tree,
+    #     #         parent=self
+    #     #     ))
+    #    return actions
+
+    # def _find_actions_matching_predicate(
+    #     self,
+    #     predicate: Callable[[AbstractActionData], bool]
+    # ) -> List[AbstractActionData]:
+    #     pass
+
+    def _remove_entry_from_list(self, storage: List[Any], value: Any) -> None:
+        """Removes the provided value from the given container.
 
         Args:
             storage: list object from which to remove the value
@@ -219,17 +291,17 @@ class AbstractActionModel(QtCore.QObject):
         if value in storage:
             storage.remove(value)
 
-    def _insert_into_list(
+    def _insert_entry_into_list(
         self,
         storage: List[Any],
         anchor: Any,
         value: Any,
         append: bool=True
     ) -> None:
-        """Inserts the given value into the storage.
+        """Inserts the provided value into the given storage.
 
         Args:
-            storage: list object into which to insert the value
+            storage: list container into which to insert the value
             anchor: value around which to insert the new value
             value: new value to insert into the list
             append: append if True, prepend if False
@@ -240,7 +312,7 @@ class AbstractActionModel(QtCore.QObject):
             storage.insert(index, value)
 
 
-class AbstractFunctor(metaclass=ABCMeta):
+class AbstractFunctor(ABC):
 
     """Abstract base class defining the interface for functor like classes.
 
@@ -249,7 +321,7 @@ class AbstractFunctor(metaclass=ABCMeta):
     These classes are used in the internal code execution system.
     """
 
-    def __init__(self, instance: AbstractActionModel):
+    def __init__(self, instance: AbstractActionData):
         """Creates a new instance, extracting needed information.
 
         :param instance the object which contains the information needed to
