@@ -27,5 +27,7 @@ class Signal(QtCore.QObject):
 
     reloadUi = Signal()
 
+    reloadCurrentInputItem = Signal()
+
 
 signal = Signal()
