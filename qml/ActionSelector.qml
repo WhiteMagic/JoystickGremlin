@@ -27,14 +27,14 @@ import Gremlin.Profile
 Item {
     id: _root
 
-    property ActionNodeModel actionNode
+    property ActionModel actionNode
     property var callback: null
 
     implicitHeight: _content.height
     implicitWidth: _button.width + _combobox.width + 13
 
     onActionNodeChanged: {
-        _combobox.model = backend.actionList(actionNode)
+        _combobox.model = actionNode.compatibleActions
     }
 
     RowLayout {

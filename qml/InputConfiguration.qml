@@ -84,16 +84,15 @@ Item {
             Item {
                 id: _delegate
 
-                height: _actionTree.height + _dropArea.height
-                width: _actionTree.width
+                height: _binding.height + _dropArea.height
+                width: _binding.width
 
                 required property int index
                 required property var modelData
                 property ListView view: ListView.view
 
-
-                ActionTree {
-                    id: _actionTree
+                InputItemBinding {
+                    id: _binding
 
                     // Have to set the width here as Layout fields don't exist
                     // and we have to fill the view itself which will resize
@@ -103,12 +102,11 @@ Item {
                     inputBinding: modelData
                 }
 
-
                 // +------------------------------------------------------------
                 // | Drag & Drop support
                 // +------------------------------------------------------------
                 Connections {
-                    target: _actionTree.headerWidget.dragHandleArea
+                    target: _binding.headerWidget.dragHandleArea
                     function onPressed()
                     {
                         _delegate.grabToImage(function(result)
@@ -118,7 +116,7 @@ Item {
                     }
                 }
 
-                Drag.active: _actionTree.headerWidget.dragHandleArea.drag.active
+                Drag.active: _binding.headerWidget.dragHandleArea.drag.active
                 Drag.dragType: Drag.Automatic
                 Drag.supportedActions: Qt.MoveAction
                 Drag.proposedAction: Qt.MoveAction
@@ -139,7 +137,7 @@ Item {
                 DragDropArea {
                     id: _dropArea
 
-                    target: _actionTree
+                    target: _binding
                     dropCallback: function(drop) {
                         _root.inputItemModel.dropAction(
                             drop.text,
@@ -170,7 +168,7 @@ Item {
                 text: "New Action Sequence"
 
                 onClicked: {
-                    backend.newInputBinding(_root.inputIdentifier)
+                    _root.inputItemModel.createNewActionSequence()
                 }
             }
         }

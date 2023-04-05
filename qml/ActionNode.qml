@@ -27,10 +27,74 @@ import Gremlin.Profile
 Item {
     id: _root
 
-    property ActionNodeModel action
+    property ActionModel action
     property int itemSpacing : 10
 
     implicitHeight: _content.height
+
+    Connections {
+        target: action
+
+        function onActionChanged()
+        {
+            console.log("asdasdasdsa")
+        }
+    }
+
+    function loadDynamicItem()
+    {
+        var component = Qt.createComponent(
+            Qt.resolvedUrl(_root.action.qmlPath)
+        )
+
+        if(component.status == Component.Ready ||
+                component.status == Component.Error
+        )
+        {
+            finishCreation();
+        }
+        else
+        {
+            component.statusChanged.connect(finishCreation);   
+        }
+
+        function finishCreation()
+        {
+            if(component.status === Component.Ready)
+            {
+                destroyDynamicItem()
+                _action.dynamicItem = component.createObject(
+                    _action,
+                    {
+                        action: _root.action
+                    }
+                );
+
+                // As this object is created within a layout we can
+                // use the fillWidth property to ensure this object
+                // uses all available space. Height is controlled by
+                // the contents of the item and propagate up to the
+                // layout itself.
+                _action.dynamicItem.Layout.fillWidth = true
+            }
+            else if(component.status == Component.Error)
+            {
+                console.log(
+                    "Error loading component: ", component.errorString()
+                );
+            }
+
+            component.destroy()
+        }
+    }
+
+    function destroyDynamicItem()
+    {
+        if(_action.dynamicItem != null)
+        {
+            _action.dynamicItem.destroy()
+        }
+    }
 
     // +------------------------------------------------------------------------
     // | Rendering of the node's content
@@ -132,59 +196,10 @@ Item {
             }
 
             // Dynamically load the QML item
-            Component.onCompleted: function()
-            {
-                var component = Qt.createComponent(
-                    Qt.resolvedUrl(_root.action.qmlPath)
-                )
-
-                if(component.status == Component.Ready ||
-                        component.status == Component.Error
-                )
-                {
-                    finishCreation();
-                }
-                else
-                {
-                    component.statusChanged.connect(finishCreation);
-                }
-
-                function finishCreation()
-                {
-                    if(component.status === Component.Ready)
-                    {
-                        _action.dynamicItem = component.createObject(
-                            _action,
-                            {
-                                node: _root.action,
-                                action: _root.action.actionModel
-                            }
-                        );
-
-                        // As this object is created within a layout we can
-                        // use the fillWidth property to ensure this object
-                        // uses all available space. Height is controlled by
-                        // the contents of the item and propagate up to the
-                        // layout itself.
-                        _action.dynamicItem.Layout.fillWidth = true
-                    }
-                    else if(component.status == Component.Error)
-                    {
-                        console.log(
-                            "Error loading component: ",
-                            component.errorString()
-                        );
-                    }
-
-                    component.destroy()
-                }
-            }
+            Component.onCompleted: loadDynamicItem()
 
             // Destroy the dynamic object instance
-            Component.onDestruction: function()
-            {
-                _action.dynamicItem.destroy()
-            }
+            Component.onDestruction: destroyDynamicItem()
         }
     }
 

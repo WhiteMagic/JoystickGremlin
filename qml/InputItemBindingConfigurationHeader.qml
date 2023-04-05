@@ -87,8 +87,9 @@ Item {
             ActionSelector {
                 Layout.alignment: Qt.AlignRight
 
-                actionNode: _root.inputBinding.rootNode
-                callback: actionNode.appendNewAction
+                //actionNode: backend.actionSequenceRoot(_root.inputBinding)
+                actionNode: _root.inputBinding.rootAction
+                callback: function(x) { actionNode.addAction(x, ""); }
             }
 
             IconButton {

@@ -260,21 +260,18 @@ ApplicationWindow {
         id: _deviceModel
     }
 
-
-    // Trigger an update of the input list when the model's content changes
-    Connections {
-        target: backend
-        function onInputConfigurationChanged() {
-            _deviceModel.modelReset()
-        }
-    }
     Connections {
         target: signal
+
         function onReloadUi() {
             _deviceModel.modelReset()
             _deviceListModel.modelReset()
             _inputConfigurationPanel.reload()
         }
+
+        // function onReloadCurrentInputItem() {
+        //     _inputConfigurationPanel.reload()
+        // }
     }
 
     // Main window content

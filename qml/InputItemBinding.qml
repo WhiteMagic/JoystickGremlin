@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2022 Lionel Ott
+// Copyright (C) 2015 - 2023 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import QtQml.Models
 
 import QtQuick.Controls.Universal
 
+import Gremlin.ActionPlugins
 import Gremlin.Profile
 
 
@@ -34,6 +35,21 @@ Item {
     property InputItemBindingConfigurationHeader headerWidget: _header
 
     implicitHeight: _content.height
+
+    function reload()
+    {
+
+    }
+
+    Connections {
+        target: signal
+
+        function onReloadCurrentInputItem()
+        {
+            _action_node.action = inputBinding.rootAction
+        }
+    }
+    
 
     // Content
     ColumnLayout {
@@ -58,11 +74,15 @@ Item {
         // +--------------------------------------------------------------------
         // | Render the root action node
         // +--------------------------------------------------------------------
-        RootAction {
-            Layout.fillWidth: true
+        ActionNode {
+            id: _action_node
 
-            // Prevent overlap with scrollbar
+            Layout.fillWidth: true
             Layout.rightMargin: 20
+
+            action: _root.inputBinding.rootAction
+
+            onActionChanged: loadDynamicItem()
         }
 
         HorizontalDivider {
