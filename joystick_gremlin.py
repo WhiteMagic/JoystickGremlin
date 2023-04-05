@@ -55,10 +55,6 @@ import gremlin.signal
 import gremlin.util
 
 import gremlin.ui.backend
-import gremlin.ui.config
-import gremlin.ui.device
-import gremlin.ui.profile
-import gremlin.ui.util
 
 
 def configure_logger(config):
@@ -193,12 +189,13 @@ if __name__ == "__main__":
 
     # Create backend instance and register it in the engine
     backend = gremlin.ui.backend.Backend()
+    backend.newProfile()
     engine.rootContext().setContextProperty("backend", backend)
     engine.rootContext().setContextProperty("signal", gremlin.signal.signal)
 
     # Load plugin code and UI elements
     syslog.info("Initializing plugins")
-    gremlin.plugin_manager.ActionPlugins()
+    gremlin.plugin_manager.PluginManager()
 
     # Load icon fonts
     if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:

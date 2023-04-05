@@ -19,10 +19,8 @@
 from __future__ import annotations
 from ast import In
 
-from collections.abc import Callable
-from multiprocessing import Event
 import threading
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
