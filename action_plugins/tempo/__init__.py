@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2022 Lionel Ott
+# Copyright (C) 2015 - 2023 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,18 +28,19 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, event_handler, plugin_manager, \
-    profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
+from gremlin import error, event_handler, plugin_manager, util
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.config import Configuration
+from gremlin.profile import InputItemBinding
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
-from gremlin.ui.profile import ActionNodeModel
+
+from gremlin.ui.action_model import ActionModel
 
 
 class TempoFunctor(AbstractFunctor):
 
-    def __init__(self, action: TempoModel):
+    def __init__(self, action: TempoData):
         super().__init__(action)
 
         self.start_time = 0
@@ -144,27 +145,7 @@ class TempoFunctor(AbstractFunctor):
             action.process_event(event, value)
 
 
-class TempoModel(AbstractActionModel):
-
-    """A container with two actions which are triggered based on the duration
-    of the activation.
-
-    A short press will run the fist action while a longer press will run the
-    second action.
-    """
-
-    version = 1
-    name = "Tempo"
-    tag = "tempo"
-
-    functor = TempoFunctor
-
-    input_types = [
-        InputType.JoystickAxis,
-        InputType.JoystickButton,
-        InputType.JoystickHat,
-        InputType.Keyboard
-    ]
+class TempoModel(ActionModel):
 
     actionsChanged = Signal()
     activateOnChanged = Signal()
@@ -172,109 +153,25 @@ class TempoModel(AbstractActionModel):
 
     def __init__(
             self,
-            action_tree: profile_library.ActionTree,
-            input_type: InputType = InputType.JoystickButton,
-            parent: Optional[QtCore.QObject] = None
+            data: AbstractActionData,
+            binding: InputItemBinding,
+            parent: QtCore.QObject
     ):
-        """Creates a new instance.
+        super().__init__(data, binding, parent)
 
-        :param parent the InputItem this container is linked to
-        """
-        super().__init__(action_tree, input_type, parent)
-        self._short_action_ids = []
-        self._long_action_ids = []
-        self._threshold = Configuration().value("action", "tempo", "duration")
-        self._activate_on = "release"
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        self._id = util.read_action_id(node)
-        self._short_action_ids = util.read_action_ids(node.find("short-actions"))
-        self._long_action_ids = util.read_action_ids(node.find("long-actions"))
-        self._threshold = util.read_property(
-            node, "threshold", PropertyType.Float
-        )
-        self._activate_on = util.read_property(
-            node, "activate-on", PropertyType.String
-        )
-        if self._activate_on not in ["press", "release"]:
-            raise error.ProfileError(f"Invalid activat-on value present: {self._activate_on}")
-
-    def to_xml(self) -> ElementTree.Element:
-        """Returns an XML node representing this container's data.
-
-        :return XML node representing the data of this container
-        """
-        node = util.create_action_node(TempoModel.tag, self._id)
-        node.append(util.create_action_ids(
-            "short-actions", self._short_action_ids
-        ))
-        node.append(util.create_action_ids(
-            "long-actions", self._long_action_ids
-        ))
-        node.append(util.create_property_node(
-            "threshold", self._threshold, PropertyType.Float
-        ))
-        node.append(util.create_property_node(
-            "activate-on", self._activate_on, PropertyType.String
-        ))
-
-        return node
-
-    def qml_path(self) -> str:
+    def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(
             "core_plugins:tempo/TempoAction.qml"
         ).fileName()
 
-    def is_valid(self) -> True:
-        return True
-
-    def remove_action(self, action: AbstractActionModel) -> None:
-        """Removes the provided action from this action.
-
-        Args:
-            action: the action to remove
-        """
-        self._remove_from_list(self._short_action_ids, action.id)
-        self._remove_from_list(self._long_action_ids, action.id)
-
-    def add_action_after(
-        self,
-        anchor: AbstractActionModel,
-        action: AbstractActionModel
-    ) -> None:
-        """Adds the provided action after the specified anchor.
-
-        Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
-        """
-        self._insert_into_list(self._short_action_ids, anchor.id, action.id, True)
-        self._insert_into_list(self._long_action_ids, anchor.id, action.id, True)
-
-    def insert_action(self, container: str, action: AbstractActionModel) -> None:
-        if container == "short":
-            self._short_action_ids.insert(0, action.id)
-        elif container == "long":
-            self._long_action_ids.insert(0, action.id)
-        else:
-            raise error.GremlinError(
-                f"Invalid container for a Tempo action: '{container}`"
-            )
-
-    @Slot(str, str)
-    def addAction(self, action_name: str, activation: str) -> None:
+    def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
         """Adds a new action to one of the two condition branches.
 
         Args:
-            action_name: name of the action to add
-            activation: which of the two activation types to add the action two, valid
+            action: the action to add
+            options: which of the two activation types to add the action two, valid
                 options are [short, long]
         """
-        action = plugin_manager.ActionPlugins().get_class(action_name)(
-            self._action_tree,
-            self.behavior_type
-        )
-
         predicate = lambda x: True if x.value and x.value.id == self.id else False
         nodes = self._action_tree.root.nodes_matching(predicate)
         if len(nodes) != 1:
@@ -290,36 +187,171 @@ class TempoModel(AbstractActionModel):
         self.actionsChanged.emit()
 
     @Property(list, notify=actionsChanged)
-    def shortActions(self) -> List[ActionNodeModel]:
-        return self._create_node_list(self._short_action_ids)
+    def shortActions(self) -> List[ActionModel]:
+        return self._create_action_list(self._data._short_action_ids)
 
     @Property(list, notify=actionsChanged)
-    def longActions(self) -> List[ActionNodeModel]:
-        return self._create_node_list(self._long_action_ids)
+    def longActions(self) -> List[ActionModel]:
+        return self._create_action_list(self._data._long_action_ids)
 
     def _set_threshold(self, value: float) -> None:
-        if self._threshold != value:
-            self._threshold = value
+        if self._data._threshold != value:
+            self._data._threshold = value
             self.thresholdChanged.emit()
 
     @Property(float, fset=_set_threshold, notify=thresholdChanged)
     def threshold(self) -> float:
-        return self._threshold
+        return self._data._threshold
 
     def _set_activate_on(self, value: str) -> None:
         if value not in ["press", "release"]:
             raise error.GremlinError(f"Received invalid activateOn value {value}")
 
-        if self._activate_on != value:
-            self._activate_on = value
+        if self._data._activate_on != value:
+            self._data._activate_on = value
             self.activateOnChanged.emit()
 
     @Property(str, fset=_set_activate_on, notify=activateOnChanged)
     def activateOn(self) -> str:
-        return self._activate_on
+        return self._data._activate_on
 
 
-create = TempoModel
+class TempoData(AbstractActionData):
+
+    """A container with two actions which are triggered based on the duration
+    of the activation.
+
+    A short press will run the fist action while a longer press will run the
+    second action.
+    """
+
+    version = 1
+    name = "Tempo"
+    tag = "tempo"
+
+    functor = TempoFunctor
+    model  = TempoModel
+
+    input_types = [
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
+    ]
+
+    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
+        super().__init__(behavior_type)
+
+        self._short_actions = []
+        self._long_actions = []
+        self._threshold = Configuration().value("action", "tempo", "duration")
+        self._activate_on = "release"
+
+    def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
+        self._id = util.read_action_id(node)
+        short_ids = util.read_action_ids(node.find("short-actions"))
+        self._short_actions = [library.get_action(aid) for aid in short_ids]
+        long_ids = util.read_action_ids(node.find("long-actions"))
+        self._long_actions = [library.get_action(aid) for aid in long_ids]
+        self._threshold = util.read_property(
+            node, "threshold", PropertyType.Float
+        )
+        self._activate_on = util.read_property(
+            node, "activate-on", PropertyType.String
+        )
+        if self._activate_on not in ["press", "release"]:
+            raise error.ProfileError(
+                f"Invalid activat-on value present: {self._activate_on}"
+            )
+
+    def to_xml(self) -> ElementTree.Element:
+        """Returns an XML node representing this container's data.
+
+        :return XML node representing the data of this container
+        """
+        node = util.create_action_node(TempoData.tag, self._id)
+        node.append(util.create_action_ids(
+            "short-actions", [action.id for action in self._short_actions]
+        ))
+        node.append(util.create_action_ids(
+            "long-actions", [action.id for action in self._long_actions]
+        ))
+        node.append(util.create_property_node(
+            "threshold", self._threshold, PropertyType.Float
+        ))
+        node.append(util.create_property_node(
+            "activate-on", self._activate_on, PropertyType.String
+        ))
+
+        return node
+
+    def is_valid(self) -> bool:
+        return True
+
+    def get_actions(
+        self,
+        options: Optional[Any]=None
+    ) -> List[AbstractActionData]:
+        if options is None:
+            return self._short_actions + self._long_actions
+
+    def add_action(
+        self,
+        action: AbstractActionData,
+        options: Optional[Any]=None
+    ) -> None:
+        if options == "short":
+            self._short_actions.append(action)
+        elif options == "long":
+            self._long_actions.append(action)
+        else:
+            raise error.GremlinError(
+                f"Tempo: Unknown option provided: '{options}'"
+            )
+
+    def remove_action(self, action: AbstractActionData) -> None:
+        """Removes the provided action from this action.
+
+        Args:
+            action: the action to remove
+        """
+        self._remove_entry_from_list(self._short_action_ids, action.id)
+        self._remove_entry_from_list(self._long_action_ids, action.id)
+
+    def insert_action(self, container: str, action: AbstractActionData) -> None:
+        if container == "short":
+            self._short_actions.insert(0, action)
+        elif container == "long":
+            self._long_actions.insert(0, action)
+        else:
+            raise error.GremlinError(
+                f"Invalid container for a Tempo action: '{container}`"
+            )
+
+    def add_action_after(
+        self,
+        anchor: AbstractActionData,
+        action: AbstractActionData
+    ) -> None:
+        """Adds the provided action after the specified anchor.
+
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        self._insert_entry_into_list(self._short_action_ids, anchor.id, action.id, True)
+        self._insert_entry_into_list(self._long_action_ids, anchor.id, action.id, True)
+
+    def _handle_behavior_change(
+        self,
+        old_behavior: InputType,
+        new_behavior: InputType
+    ) -> None:
+        pass
+
+
+create = TempoData
+
 Configuration().register(
     "action",
     "tempo",

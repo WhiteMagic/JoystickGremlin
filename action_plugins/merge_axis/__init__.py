@@ -30,11 +30,12 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import error, event_handler, plugin_manager, \
     profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.config import Configuration
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
-from gremlin.ui.profile import ActionNodeModel
+
+from gremlin.ui.action_model import ActionModel
 
 
 class MergeAxisFunctor(AbstractFunctor):
@@ -46,13 +47,31 @@ class MergeAxisFunctor(AbstractFunctor):
         return super().process_event(event, value)
 
 
-class MergeAxisModel(AbstractActionModel):
+class MergeAxisModel(ActionModel):
+
+    def __init__(
+            self,
+            action_tree: profile_library.ActionTree,
+            input_type: InputType = InputType.JoystickButton,
+            parent: Optional[QtCore.QObject] = None
+    ):
+        super().__init__(action_tree, input_type, parent)
+
+
+    def _qml_path_impl(self) -> str:
+        return "file:///" + QtCore.QFile(
+            "core_plugins:merge_axis/MergeAxisAction.qml"
+        ).fileName()
+
+
+class MergeAxisData(AbstractActionData):
 
     version = 1
     name = "Merge Axis"
     tag = "merge-axis"
 
     functor = MergeAxisFunctor
+    model = MergeAxisModel
 
     input_types = {
         InputType.JoystickAxis
@@ -72,13 +91,8 @@ class MergeAxisModel(AbstractActionModel):
     def to_xml(self) -> ElementTree.Element:
         return super().to_xml()
 
-    def qml_path(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:merge_axis/MergeAxisAction.qml"
-        ).fileName()
-
     def is_valid(self) -> bool:
         return super().is_valid()
 
 
-create = MergeAxisModel
+create = MergeAxisData

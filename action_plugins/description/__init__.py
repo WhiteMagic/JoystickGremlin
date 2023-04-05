@@ -17,22 +17,25 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, List, Optional
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
-from gremlin import event_handler, profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
+from gremlin import event_handler, util
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
+
+from gremlin.ui.action_model import ActionModel
 
 
 class DescriptionFunctor(AbstractFunctor):
 
     """Implements the function executed of the Description action at runtime."""
 
-    def __init__(self, action: DescriptionModel):
+    def __init__(self, action: DescriptionData):
         super().__init__(action)
 
     def process_event(
@@ -49,66 +52,32 @@ class DescriptionFunctor(AbstractFunctor):
         pass
 
 
-class DescriptionModel(AbstractActionModel):
-
-    """Model of a description action."""
-
-    version = 1
-    name = "Description"
-    tag = "description"
-
-    functor = DescriptionFunctor
-
-    input_types = [
-        InputType.JoystickAxis,
-        InputType.JoystickButton,
-        InputType.JoystickHat,
-        InputType.Keyboard
-    ]
+class DescriptionModel(ActionModel):
 
     # Signal emitted when the description variable's content changes
     descriptionChanged = Signal()
 
     def __init__(
             self,
-            action_tree: profile_library.ActionTree,
-            input_type: InputType=InputType.JoystickButton,
-            parent: Optional[QtCore.QObject] = None
+            data: AbstractActionData,
+            binding: InputItemBinding,
+            parent: QtCore.QObject
     ):
-        super().__init__(action_tree, input_type, parent)
-
-        # Model variables
-        self._description = ""
-
-    def _get_description(self) -> str:
-        return self._description
-
-    def _set_description(self, value: str) -> None:
-        if str(value) == self._description:
-            return
-        self._description = str(value)
-        self.descriptionChanged.emit()
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        self._id = util.read_action_id(node)
-        self._description = util.read_property(
-            node, "description", PropertyType.String
-        )
-
-    def to_xml(self) -> ElementTree.Element:
-        node = util.create_action_node(DescriptionModel.tag, self._id)
-        node.append(util.create_property_node(
-            "description", self._description, PropertyType.String
-        ))
-        return node
-
-    def is_valid(self) -> True:
-        return True
-
-    def qml_path(self) -> str:
+        super().__init__(data, binding, parent)
+    
+    def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(
             "core_plugins:description/DescriptionAction.qml"
         ).fileName()
+    
+    def _get_description(self) -> str:
+        return self._data._description
+
+    def _set_description(self, value: str) -> None:
+        if str(value) == self._data._description:
+            return
+        self._data._description = str(value)
+        self.descriptionChanged.emit()
 
     description = Property(
         str,
@@ -118,4 +87,81 @@ class DescriptionModel(AbstractActionModel):
     )
 
 
-create = DescriptionModel
+class DescriptionData(AbstractActionData):
+
+    """Model of a description action."""
+
+    version = 1
+    name = "Description"
+    tag = "description"
+
+    functor = DescriptionFunctor
+    model = DescriptionModel
+
+    input_types = [
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
+    ]
+
+    def __init__(
+            self,
+            behavior_type: InputType=InputType.JoystickButton
+    ):
+        super().__init__(behavior_type)
+
+        # Model variables
+        self.description = ""
+
+    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
+        self._id = util.read_action_id(node)
+        self.description = util.read_property(
+            node, "description", PropertyType.String
+        )
+
+    def to_xml(self) -> ElementTree.Element:
+        node = util.create_action_node(DescriptionData.tag, self._id)
+        node.append(util.create_property_node(
+            "description", self.description, PropertyType.String
+        ))
+        return node
+
+    def is_valid(self) -> True:
+        return True
+    
+    def get_actions(
+        self,
+        selector: Optional[Any]=None
+    ) -> List[AbstractActionData]:
+        return []
+
+    def add_action(
+        self,
+        action: AbstractActionData,
+        options: Optional[Any]=None
+    ) -> None:
+        pass
+
+    def remove_action(self, action: AbstractActionData) -> None:
+        pass
+
+    def insert_action(self, container: str, action: AbstractActionData) -> None:
+        pass
+
+    def add_action_after(
+        self,
+        anchor: AbstractActionData,
+        action: AbstractActionData
+    ) -> None:
+        pass
+
+    def _handle_behavior_change(
+        self,
+        old_behavior: InputType,
+        new_behavior: InputType
+    ) -> None:
+        pass
+
+
+create = DescriptionData

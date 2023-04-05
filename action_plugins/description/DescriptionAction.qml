@@ -29,7 +29,7 @@ import "../../qml"
 
 
 Item {
-    property ActionNodeModel node
+    property ActionNode node
     property DescriptionModel action
 
     implicitHeight: _content.height
@@ -47,6 +47,7 @@ Item {
 
             text: "Description"
         }
+
         TextField {
             id: _description
 

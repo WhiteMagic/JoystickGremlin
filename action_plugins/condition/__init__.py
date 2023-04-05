@@ -26,15 +26,14 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from dill import GUID_Keyboard
 
-from gremlin import error, event_handler, plugin_manager, \
-    profile_library, util
-from gremlin.base_classes import AbstractActionModel, AbstractFunctor, Value
+from gremlin import error, event_handler, plugin_manager, util
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
-from gremlin.ui.profile import ActionNodeModel
+from gremlin.ui.action_model import ActionModel
 
 from . import comparator
 
@@ -447,20 +446,7 @@ class ConditionFunctor(AbstractFunctor):
             )
 
 
-@QtQml.QmlElement
-class ConditionModel(AbstractActionModel):
-
-    version = 1
-    name = "Condition"
-    tag = "condition"
-
-    functor = ConditionFunctor
-    input_types = [
-        InputType.JoystickAxis,
-        InputType.JoystickButton,
-        InputType.JoystickHat,
-        InputType.Keyboard
-    ]
+class ConditionModel(ActionModel):
 
     logicalOperatorChanged = Signal()
     conditionsChanged = Signal()
@@ -468,16 +454,16 @@ class ConditionModel(AbstractActionModel):
 
     def __init__(
             self,
-            action_tree: profile_library.ActionTree,
-            input_type: InputType = InputType.JoystickButton,
-            parent: Optional[QtCore.QObject] = None
+            data: AbstractActionData,
+            binding: InputItemBinding,
+            parent: QtCore.QObject
     ):
-        super().__init__(action_tree, input_type, parent)
+        super().__init__(data, binding, parent)
 
-        self._logical_operator = LogicalOperator.All
-        self._true_action_ids = []
-        self._false_action_ids = []
-        self._conditions = []
+    def _qml_path_impl(self) -> str:
+        return "file:///" + QtCore.QFile(
+            "core_plugins:condition/ConditionAction.qml"
+        ).fileName()
 
     @Slot(int)
     def addCondition(self, condition: int) -> None:
@@ -497,8 +483,8 @@ class ConditionModel(AbstractActionModel):
             cond = condition_lookup[condition_type](self)
             # If the condition is a CurrentInput one set the input type
             if condition_type == ConditionType.CurrentInput:
-                cond.set_input_type(self.behavior_type)
-            self._conditions.append(cond)
+                cond.set_input_type(self._data.behavior_type)
+            self._data._conditions.append(cond)
 
         self.conditionsChanged.emit()
 
@@ -511,7 +497,7 @@ class ConditionModel(AbstractActionModel):
             branch: which of the two branches to add the action two, valid
                 options are [if, else]
         """
-        action = plugin_manager.ActionPlugins().get_class(action_name)(
+        action = plugin_manager.PluginManager().get_class(action_name)(
             self._action_tree,
             self.behavior_type
         )
@@ -532,10 +518,10 @@ class ConditionModel(AbstractActionModel):
 
     @Slot(int)
     def removeCondition(self, index: int) -> None:
-        if index >= len(self._conditions):
+        if index >= len(self._data._conditions):
             raise error.GremlinError("Attempting to remove a non-existent condition.")
 
-        del self._conditions[index]
+        del self._data._conditions[index]
         self.conditionsChanged.emit()
 
     @Property(list, constant=True)
@@ -553,12 +539,12 @@ class ConditionModel(AbstractActionModel):
         ]
 
     @Property(list, notify=actionsChanged)
-    def trueActionNodes(self) -> List[ActionNodeModel]:
-        return self._create_node_list(self._true_action_ids)
+    def trueActionNodes(self) -> List[ActionModel]:
+        return self._create_action_list(self._true_action_ids)
 
     @Property(list, notify=actionsChanged)
-    def falseActionNodes(self) -> List[ActionNodeModel]:
-        return self._create_node_list(self._false_action_ids)
+    def falseActionNodes(self) -> List[ActionModel]:
+        return self._create_action_list(self._false_action_ids)
 
     @Property(list, notify=conditionsChanged)
     def conditions(self):
@@ -579,7 +565,39 @@ class ConditionModel(AbstractActionModel):
                 f"Invalid logical operator value obtained: \"{e}\"."
             )
 
-    def from_xml(self, node: ElementTree.Element ) -> None:
+    logicalOperator = Property(
+        str,
+        fget=_get_logical_operator,
+        fset=_set_logical_operator,
+        notify=logicalOperatorChanged
+    )
+
+
+class ConditionData(AbstractActionData):
+
+    version = 1
+    name = "Condition"
+    tag = "condition"
+
+    functor = ConditionFunctor
+    model = ConditionModel
+
+    input_types = [
+        InputType.JoystickAxis,
+        InputType.JoystickButton,
+        InputType.JoystickHat,
+        InputType.Keyboard
+    ]
+
+    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
+        super().__init__(behavior_type)
+
+        self._logical_operator = LogicalOperator.All
+        self._true_action_ids = []
+        self._false_action_ids = []
+        self._conditions = []
+
+    def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
         self._id = util.read_action_id(node)
         # Parse IF action ids
         self._true_action_ids = util.read_action_ids(node.find("if-actions"))
@@ -607,7 +625,7 @@ class ConditionModel(AbstractActionModel):
                 self._conditions.append(cond_obj)
 
     def to_xml(self) -> ElementTree:
-        node = util.create_action_node(ConditionModel.tag, self._id)
+        node = util.create_action_node(ConditionData.tag, self._id)
         node.append(util.create_property_node(
             "logical-operator",
             LogicalOperator.to_string(self._logical_operator),
@@ -627,30 +645,29 @@ class ConditionModel(AbstractActionModel):
     def is_valid(self) -> bool:
         return True
 
-    def remove_action(self, action: AbstractActionModel) -> None:
+    def get_actions(
+        self,
+        selector: Optional[Any]=None
+    )  -> List[AbstractActionData]:
+        return []
+
+    def add_action(
+        self,
+        action: AbstractActionData,
+        options: Optional[Any]=None
+    ) -> None:
+        pass
+
+    def remove_action(self, action: AbstractActionData) -> None:
         """Removes the provided action from this action.
 
         Args:
             action: the action to remove
         """
-        self._remove_from_list(self._true_action_ids, action.id)
-        self._remove_from_list(self._false_action_ids, action.id)
+        self._remove_entry_from_list(self._true_action_ids, action.id)
+        self._remove_entry_from_list(self._false_action_ids, action.id)
 
-    def add_action_after(
-        self,
-        anchor: AbstractActionModel,
-        action: AbstractActionModel
-    ) -> None:
-        """Adds the provided action after the specified anchor.
-
-        Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
-        """
-        self._insert_into_list(self._true_action_ids, anchor.id, action.id, True)
-        self._insert_into_list(self._false_action_ids, anchor.id, action.id, True)
-
-    def insert_action(self, container: str, action: AbstractActionModel) -> None:
+    def insert_action(self, container: str, action: AbstractActionData) -> None:
         if container == "true":
             self._true_action_ids.insert(0, action.id)
         elif container == "false":
@@ -660,17 +677,25 @@ class ConditionModel(AbstractActionModel):
                 f"Invalid container for a Condition action: '{container}`"
             )
 
-    def qml_path(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:condition/ConditionAction.qml"
-        ).fileName()
+    def add_action_after(
+        self,
+        anchor: AbstractActionData,
+        action: AbstractActionData
+    ) -> None:
+        """Adds the provided action after the specified anchor.
 
-    logicalOperator = Property(
-        str,
-        fget=_get_logical_operator,
-        fset=_set_logical_operator,
-        notify=logicalOperatorChanged
-    )
+        Args:
+            anchor: action after which to insert the given action
+            action: the action to remove
+        """
+        self._insert_entry_into_list(self._true_action_ids, anchor.id, action.id, True)
+        self._insert_entry_into_list(self._false_action_ids, anchor.id, action.id, True)
 
+    def _handle_behavior_change(
+        self,
+        old_behavior: InputType,
+        new_behavior: InputType
+    ) -> None:
+        pass
 
-create = ConditionModel
+create = ConditionData
