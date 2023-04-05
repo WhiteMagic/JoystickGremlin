@@ -1,0 +1,63 @@
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>af3d9175-30a7-4d77-aed5-e1b5e0b71efc</device-id>
+            <input-type>button</input-type>
+            <input-id>6</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>ac905a47-9ad3-4b65-b702-fbae1d133609</root-action>
+                <behavior>button</behavior>
+                <description></description>
+            </action-configuration>
+        </input>
+    </inputs>
+
+    <library>
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133608" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>This is a test</value>
+            </property>
+        </action>
+
+        <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Different test</value>
+            </property>
+        </action>
+
+
+        <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>2</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>6</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>relative</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.5</value>
+            </property>
+        </action>
+
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="root">
+            <actions>
+                <action-id>ac905a47-9ad3-4b65-b702-fbae1d133608</action-id>
+                <action-id>f6d6a7af-baef-4b42-ab93-44608dedc859</action-id>
+                <action-id>d67cbad2-da3f-4b59-b434-2d493e7e6185</action-id>
+            </actions>
+        </action>
+    </library>
+</profile>

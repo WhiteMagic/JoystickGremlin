@@ -1,0 +1,9 @@
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>{af3d9175-30a7-4d77-e1b5e0b71efc}</device-id>
+            <input-type>button34</input-type>
+            <mode>Default</mode>
+        </input>
+    </inputs>
+</profile>

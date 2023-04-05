@@ -23,22 +23,10 @@ import uuid
 from xml.etree import ElementTree
 
 import gremlin.error
-# import gremlin.plugin_manager
-# from gremlin.profile import Profile
-# import gremlin.types
-# import gremlin.util
+from gremlin.profile import Library, InputItem, InputItemBinding, Profile
 
-# import action_plugins.description as apd
+from action_plugins.description import DescriptionData, DescriptionModel
 
-
-xml = """
-    <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
-        <property type="string">
-            <name>description</name>
-            <value>This is a test</value>
-        </property>
-    </action>
-"""
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -50,45 +38,63 @@ def terminate_event_listener(request):
 
 
 def test_model_ctor():
-    # m = apd.DescriptionModel()
-    #
-    # assert m.description == ""
-    pass
+    a = DescriptionData()
+
+    assert a.description == ""
 
 
-# def test_model_setter_getter():
-#     m = apd.DescriptionModel()
-#
-#     assert m.description == ""
-#     m.description = "Test"
-#     assert m.description == "Test"
-#
-#
-# def test_model_from_xml():
-#     doc = ElementTree.fromstring(xml)
-#     m = apd.DescriptionModel()
-#     m.from_xml(doc)
-#
-#     assert m.description == "This is a test"
-#     assert m.id == uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
-#
-#
-# def test_model_to_xml():
-#     m = apd.DescriptionModel()
-#     m.description = "Test"
-#     m.to_xml()
-#
-#     # Should not raise an exception because we implicitely convert the value
-#     # to its string representation
-#     m.description = 42
-#     m.to_xml()
-#
-#     m.description = "This is a test"
-#     m._id = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
-#     node = m.to_xml()
-#     # ElementTree.dump(node)
-#     assert node.find("property/name").text == "description"
-#     assert node.find("property/value").text == "This is a test"
-#     assert node.find("property").attrib["type"] == "string"
-#     assert node.attrib["id"] == "ac905a47-9ad3-4b65-b702-fbae1d133609"
-#     assert node.attrib["type"] == "description"
+def test_model_setter_getter():
+    p = Profile()
+    ii = InputItem(p.library)
+    ib = InputItemBinding(ii)
+    a = DescriptionData()
+    m = DescriptionModel(a, ib, None)
+
+    assert a.description == ""
+    assert m.description == ""
+    m.description = "Test"
+    assert a.description == "Test"
+    assert m.description == "Test"
+    a.description = "Test 123"
+    assert a.description == "Test 123"
+    assert m.description == "Test 123"
+
+
+def test_model_from_xml():
+    l = Library()
+    a = DescriptionData()
+    a.from_xml(
+        ElementTree.fromstring(
+            open("test/xml/action_description_simple.xml").read(),
+        ),
+        l
+    )
+
+    assert a.description == "This is a test"
+    assert a._id == uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
+
+
+def test_model_to_xml():
+    p = Profile()
+    ii = InputItem(p.library)
+    ib = InputItemBinding(ii)
+    a = DescriptionData()
+    m = DescriptionModel(a, ib, None)
+
+    m.description = "Test"
+    a.to_xml()
+
+    # Should not raise an exception because we implicitely convert the value
+    # to its string representation
+    m.description = 42
+    a.to_xml()
+
+    m.description = "This is a test"
+    a._id = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
+    node = a.to_xml()
+    # ElementTree.dump(node)
+    assert node.find("property/name").text == "description"
+    assert node.find("property/value").text == "This is a test"
+    assert node.find("property").attrib["type"] == "string"
+    assert node.attrib["id"] == "ac905a47-9ad3-4b65-b702-fbae1d133609"
+    assert node.attrib["type"] == "description"

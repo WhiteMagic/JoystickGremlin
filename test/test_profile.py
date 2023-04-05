@@ -20,264 +20,83 @@ sys.path.append(".")
 
 import os
 import pytest
-import tempfile
 import uuid
 from xml.etree import ElementTree
 
-import gremlin.error
+
 import gremlin.plugin_manager
+from gremlin.error import GremlinError
+from gremlin.types import AxisMode, InputType
+from gremlin.util import parse_guid
+
 from gremlin.profile import Profile
-import gremlin.profile_library
-import gremlin.types
-import gremlin.util
-
-
-xml_description = """
-<profile version="14">
-    <inputs>
-        <input>
-            <device-id>af3d9175-30a7-4d77-aed5-e1b5e0b71efc</device-id>
-            <input-type>button</input-type>
-            <input-id>6</input-id>
-            <mode>Default</mode>
-            <action-configuration>
-                <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
-                <behavior>button</behavior>
-                <description></description>
-            </action-configuration>
-        </input>
-    </inputs>
-
-    <library>
-        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
-            <property type="string">
-                <name>description</name>
-                <value>This is a test</value>
-            </property>
-        </action>
-        <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" type="description">
-            <property type="string">
-                <name>description</name>
-                <value>Feuer frei!</value>
-            </property>
-        </action>
-        <action id="d67cbad2-da3f-4b59-b434-2d493e7e6185" type="map-to-vjoy">
-            <property type="int">
-                <name>vjoy-device-id</name>
-                <value>2</value>
-            </property>
-            <property type="int">
-                <name>vjoy-input-id</name>
-                <value>6</value>
-            </property>
-            <property type="input_type">
-                <name>vjoy-input-type</name>
-                <value>axis</value>
-            </property>
-            <property type="axis_mode">
-                <name>axis-mode</name>
-                <value>relative</value>
-            </property>
-            <property type="float">
-                <name>axis-scaling</name>
-                <value>1.5</value>
-            </property>
-        </action>
-
-        <action-tree id="ac905a47-9ad3-4b65-b702-fbae1d133609">
-            <action-reference id="ac905a47-9ad3-4b65-b702-fbae1d133609"/>
-            <action-reference id="f6d6a7af-baef-4b42-ab93-44608dedc859"/>
-            <action-reference id="d67cbad2-da3f-4b59-b434-2d493e7e6185"/>
-        </action-tree>
-    </library>
-</profile>
-"""
-
-xml_hierarchy = """
-<profile version="14">
-    <inputs>
-        <input>
-            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
-            <input-type>button</input-type>
-            <input-id>1</input-id>
-            <mode>Default</mode>
-            <action-configuration>
-                <library-reference>ac905a47-9ad3-4b65-b702-fbae1d133609</library-reference>
-                <behavior>button</behavior>
-                <description></description>
-            </action-configuration>
-        </input>
-    </inputs>
-
-    <library>
-        <action id="0c905a47-9ad3-4b65-b702-fbae1d133600" type="description">
-            <property type="string">
-                <name>description</name>
-                <value>Node 1</value>
-            </property>
-        </action>
-        <action id="0c905a47-9ad3-4b65-b702-fbae1d133601" type="tempo">
-            <property type="float">
-                <name>threshold</name>
-                <value>0.5</value>
-            </property>
-            <property type="string">
-                <name>activate-on</name>
-                <value>release</value>
-            </property>
-            <short-actions>
-                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133602</action-id>
-            </short-actions>
-            <long-actions>
-                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133602</action-id>
-            </long-actions>
-        </action>
-        <action id="0c905a47-9ad3-4b65-b702-fbae1d133602" type="description">
-            <property type="string">
-                <name>description</name>
-                <value>Node 4</value>
-            </property>
-        </action>
-        <action id="0c905a47-9ad3-4b65-b702-fbae1d133603" type="description">
-            <property type="string">
-                <name>description</name>
-                <value>Node 3</value>
-            </property>
-        </action>
-
-
-        <action-tree id="ac905a47-9ad3-4b65-b702-fbae1d133609">
-            <action-reference id="0c905a47-9ad3-4b65-b702-fbae1d133600"/>
-            <action-reference id="0c905a47-9ad3-4b65-b702-fbae1d133601"/>
-            <action-reference id="0c905a47-9ad3-4b65-b702-fbae1d133603"/>
-        </action-tree>
-    </library>
-</profile>
-"""
-
-xml_invalid = """
-<profile version="14">
-    <inputs>
-        <input>
-            <device-id>{af3d9175-30a7-4d77-e1b5e0b71efc}</device-id>
-            <input-type>button34</input-type>
-            <mode>Default</mode>
-            <actions>
-            </actions>
-        </input>
-    </inputs>
-</profile>
-"""
-
-
-def _store_in_tmpfile(text: str) -> str:
-    """Stores the provided text in a temporary file and returns the path.
-
-    Args:
-        text: the text to store in a temporary file
-
-    Returns:
-        Path to the temporary file
-    """
-    tmp = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    tmp.write(text)
-    fpath = tmp.name
-    tmp.close()
-    return fpath
-
 
 
 def test_constructor_invalid():
-    fpath = _store_in_tmpfile(xml_invalid)
-
     p = Profile()
-    with pytest.raises(gremlin.error.GremlinError, match=r".*Failed parsing GUID.*"):
-        p.from_xml(fpath)
-
-    os.remove(fpath)
+    with pytest.raises(GremlinError, match=r".*Failed parsing GUID.*"):
+        p.from_xml("test/xml/profile_invalid.xml")
 
 
 def test_simple_action():
-    gremlin.plugin_manager.ActionPlugins()
-    fpath = _store_in_tmpfile(xml_description)
+    gremlin.plugin_manager.PluginManager()
 
     p = Profile()
-    p.from_xml(fpath)
+    p.from_xml("test/xml/profile_simple.xml")
 
-    guid = gremlin.util.parse_guid("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
+    guid = parse_guid("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
 
-    action_configurations = p.inputs[guid][0].action_configurations
-    assert len(action_configurations) == 1
-    assert isinstance(action_configurations[0], gremlin.profile.InputItemBinding)
+    action_sequences = p.inputs[guid][0].action_sequences
+    assert len(action_sequences) == 1
+    assert isinstance(action_sequences[0], gremlin.profile.InputItemBinding)
 
-    actions = action_configurations[0].library_reference.root.children
+    actions = action_sequences[0].root_action.get_actions()
     assert len(actions) == 3
-    assert actions[0].value.tag == "description"
-    assert actions[0].value.description == "This is a test"
-    assert actions[0].value.id == uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
-    assert actions[1].value.tag == "description"
-    assert actions[1].value.description == "Feuer frei!"
-    assert actions[1].value.id == uuid.UUID("f6d6a7af-baef-4b42-ab93-44608dedc859")
-    assert actions[2].value.tag == "map-to-vjoy"
-    assert actions[2].value.vjoy_device_id == 2
-    assert actions[2].value.vjoy_input_id == 6
-    assert actions[2].value.vjoy_input_type == gremlin.types.InputType.JoystickAxis
-    assert actions[2].value.axis_mode == gremlin.types.AxisMode.Relative
-    assert actions[2].value.axis_scaling == 1.5
-    assert actions[2].value.id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")
+    assert actions[0].tag == "description"
+    assert actions[0].description == "This is a test"
+    assert actions[0].id == uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133608")
 
-    os.remove(fpath)
+    assert actions[1].tag == "description"
+    assert actions[1].description == "Different test"
+    assert actions[1].id == uuid.UUID("f6d6a7af-baef-4b42-ab93-44608dedc859")
+
+    assert actions[2].tag == "map-to-vjoy"
+    assert actions[2].vjoy_device_id == 2
+    assert actions[2].vjoy_input_id == 6
+    assert actions[2].vjoy_input_type == InputType.JoystickAxis
+    assert actions[2].axis_mode == AxisMode.Relative
+    assert actions[2].axis_scaling == 1.5
+    assert actions[2].id == uuid.UUID("d67cbad2-da3f-4b59-b434-2d493e7e6185")
 
 
 def test_hierarchy():
-    gremlin.plugin_manager.ActionPlugins()
-    fpath = _store_in_tmpfile(xml_hierarchy)
+    gremlin.plugin_manager.PluginManager()
 
     p = Profile()
-    p.from_xml(fpath)
+    p.from_xml("test/xml/profile_hierarchy.xml")
 
-    item_uuid = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
-    root = p.library.get_tree(item_uuid).root
-    assert root.node_count == 4
+    root = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+    assert len(root.get_actions()) == 3
 
-    n1 = root.node_at_index(1)
-    n2 = root.node_at_index(2)
-    n3 = root.node_at_index(3)
-    n4 = n2.node_at_index(1)
+    n1 = root.get_actions()[0]
+    n2 = root.get_actions()[1]
+    n3 = root.get_actions()[2]
 
-    assert n1.parent == root
-    assert n2.parent == root
-    assert n3.parent == root
-    # assert n4.parent == n2
+    assert n1.tag == "description"
+    assert n1.description == "Node 1"
+    assert n2.tag == "tempo"
+    assert n3.tag == "description"
+    assert n3.description == "Node 3"
 
-    assert n1.value.description == "Node 1"
-    # assert n2.value.description == "Node 2"
-    assert n3.value.description == "Node 3"
-
-    os.remove(fpath)
+    n4 = n2.get_actions()[0]
+    assert len(n2.get_actions()) == 2
+    assert n4.tag == "description"
+    assert n4.description == "Node 4"
 
 
 def test_mode_hierarchy():
-    xml = """
-    <profile>
-        <modes>
-            <mode>Default</mode>
-            <mode>Separate</mode>
-            <mode parent="Default">Child</mode>
-            <mode>Three</mode>
-            <mode parent="Three">Levels</mode>
-            <mode parent="Levels">Deep</mode>
-        </modes>
-    </profile>
-    """
-    fpath = _store_in_tmpfile(xml)
+    p = Profile()
+    p.from_xml("test/xml/profile_mode_hierarchy.xml")
 
-    tree = ElementTree.parse(fpath)
-    root = tree.getroot()
-
-
-    mh = gremlin.profile.ModeHierarchy()
-    mh.from_xml(root)
-
-    assert mh.mode_list() == ["Child", "Deep", "Default", "Levels", "Separate", "Three"]
-    assert mh.first_mode == "Default"
+    assert p.modes.mode_list() == ["Child", "Deep", "Default", "Levels", "Separate", "Three"]
+    assert p.modes.first_mode == "Default"

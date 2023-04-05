@@ -1,0 +1,60 @@
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>
+            <input-type>button</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>ac905a47-9ad3-4b65-b702-fbae1d133609</root-action>
+                <behavior>button</behavior>
+                <description></description>
+            </action-configuration>
+        </input>
+    </inputs>
+
+    <library>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133600" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Node 1</value>
+            </property>
+        </action>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133601" type="tempo">
+            <property type="float">
+                <name>threshold</name>
+                <value>0.5</value>
+            </property>
+            <property type="string">
+                <name>activate-on</name>
+                <value>release</value>
+            </property>
+            <short-actions>
+                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133602</action-id>
+            </short-actions>
+            <long-actions>
+                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133602</action-id>
+            </long-actions>
+        </action>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133602" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Node 4</value>
+            </property>
+        </action>
+        <action id="0c905a47-9ad3-4b65-b702-fbae1d133603" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>Node 3</value>
+            </property>
+        </action>
+
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="root">
+            <actions>
+                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133600</action-id>
+                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133601</action-id>
+                <action-id>0c905a47-9ad3-4b65-b702-fbae1d133603</action-id>
+            </actions>
+        </action>
+    </library>
+</profile>

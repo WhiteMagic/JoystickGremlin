@@ -24,114 +24,118 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
-import gremlin.error as error
-import gremlin.types as types
-import gremlin.profile_library as profile_library
-import gremlin.util as util
+# import gremlin.error as error
+# import gremlin.types as types
+# import gremlin.util as util
+from gremlin.event_handler import Event
+from gremlin.types import HatDirection, InputType
+from gremlin.util import parse_guid
 
+
+from gremlin.profile import Library, InputItem, InputItemBinding, Profile
+from action_plugins.condition import ConditionData, ConditionModel
 import action_plugins.condition as condition
 
 
 def test_from_xml():
-    c = condition.ConditionModel(
-        profile_library.ActionTree(),
-        types.InputType.JoystickButton
+    l = Library()
+    a = condition.ConditionData(InputType.JoystickButton)
+    a.from_xml(
+        ElementTree.fromstring(
+            open("test/xml/action_condition_simple.xml").read()
+        ),
+        l
     )
-    c.from_xml(ElementTree.fromstring(open("test/action_condition_simple.xml").read()))
 
-    assert len(c._conditions) == 1
-    assert c._logical_operator == condition.LogicalOperator.All
-    assert c.is_valid()
+    assert len(a._conditions) == 1
+    assert a._logical_operator == condition.LogicalOperator.All
+    assert a.is_valid()
 
-    assert len(c._conditions[0]._inputs) == 1
+    assert len(a._conditions[0]._inputs) == 1
 
-    cond = c._conditions[0]
+    cond = a._conditions[0]
     assert isinstance(cond, condition.JoystickCondition)
     assert isinstance(cond._comparator, condition.comparator.PressedComparator)
-    assert cond._inputs[0].event_type == types.InputType.JoystickButton
+    assert cond._inputs[0].event_type == InputType.JoystickButton
     assert cond._comparator.is_pressed == False
     assert cond.is_valid()
 
 
 def test_from_xml_complex():
-    c = condition.ConditionModel(
-        profile_library.ActionTree(),
-        types.InputType.JoystickButton
-    )
-    c.from_xml(ElementTree.fromstring(open("test/action_condition_complex.xml").read()))
+    p = Profile()
+    p.from_xml("test/xml/action_condition_complex.xml")
+
+    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
     # General information
-    assert len(c._conditions) == 4
-    assert c._logical_operator == condition.LogicalOperator.Any
-    assert c.is_valid()
+    assert len(a._conditions) == 4
+    assert a._logical_operator == condition.LogicalOperator.Any
+    assert a.is_valid()
 
     # Input item data
-    assert len(c._conditions[0]._inputs) == 2
-    in1 = c._conditions[0]._inputs[0]
-    assert in1.event_type == types.InputType.JoystickButton
+    assert len(a._conditions[0]._inputs) == 2
+    in1 = a._conditions[0]._inputs[0]
+    assert in1.event_type == InputType.JoystickButton
     assert in1.identifier == 2
-    assert in1.device_guid == util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
-    in2 = c._conditions[0]._inputs[1]
-    assert in2.event_type == types.InputType.JoystickButton
+    assert in1.device_guid == parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+    in2 = a._conditions[0]._inputs[1]
+    assert in2.event_type == InputType.JoystickButton
     assert in2.identifier == 42
-    assert in2.device_guid == util.parse_guid("4DCB3090-97EC-11EB-8003-444553540024")
-    in3 = c._conditions[2]._inputs[0]
-    assert in3.event_type == types.InputType.JoystickHat
+    assert in2.device_guid == parse_guid("4DCB3090-97EC-11EB-8003-444553540024")
+    in3 = a._conditions[2]._inputs[0]
+    assert in3.event_type == InputType.JoystickHat
     assert in3.identifier == 1
-    assert in3.device_guid == util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
-    in4 = c._conditions[3]._inputs[0]
+    assert in3.device_guid == parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+    in4 = a._conditions[3]._inputs[0]
     in4.scan_code = 42
     in4.is_extended = True
 
     # Condition data
-    assert len(c._conditions[0]._inputs) == 2
-    c1 = c._conditions[0]
+    assert len(a._conditions[0]._inputs) == 2
+    c1 = a._conditions[0]
     assert isinstance(c1, condition.JoystickCondition)
     assert isinstance(c1._comparator, condition.comparator.PressedComparator)
-    assert c1._inputs[0].event_type == types.InputType.JoystickButton
+    assert c1._inputs[0].event_type == InputType.JoystickButton
     assert c1._comparator.is_pressed == False
     assert c1.is_valid()
 
-    c2 = c._conditions[1]
+    c2 = a._conditions[1]
     assert isinstance(c2, condition.JoystickCondition)
     assert isinstance(c2._comparator, condition.comparator.RangeComparator)
-    assert c2._inputs[0].event_type == types.InputType.JoystickAxis
+    assert c2._inputs[0].event_type == InputType.JoystickAxis
     assert c2._comparator.lower == 0.2
     assert c2._comparator.upper == 0.9
     assert c2.is_valid()
 
-    c3 = c._conditions[2]
+    c3 = a._conditions[2]
     assert isinstance(c3, condition.JoystickCondition)
     assert isinstance(c3._comparator, condition.comparator.DirectionComparator)
-    assert c3._inputs[0].event_type == types.InputType.JoystickHat
+    assert c3._inputs[0].event_type == InputType.JoystickHat
     assert len(c3._comparator.directions) == 3
-    assert c3._comparator.directions[0] == types.HatDirection.North
-    assert c3._comparator.directions[1] == types.HatDirection.East
-    assert c3._comparator.directions[2] == types.HatDirection.NorthEast
+    assert c3._comparator.directions[0] == HatDirection.North
+    assert c3._comparator.directions[1] == HatDirection.East
+    assert c3._comparator.directions[2] == HatDirection.NorthEast
 
-    c4 = c._conditions[3]
+    c4 = a._conditions[3]
     assert isinstance(c4, condition.KeyboardCondition)
     assert isinstance(c4._comparator, condition.comparator.PressedComparator)
     assert c4._comparator.is_pressed == False
 
 
 def test_to_xml():
-    c = condition.ConditionModel(
-        profile_library.ActionTree(),
-        types.InputType.JoystickButton
-    )
+    a = condition.ConditionData(InputType.JoystickButton)
 
     cond = condition.JoystickCondition()
-    input_dev = event_handler.Event(
-        types.InputType.JoystickButton,
+    input_dev = Event(
+        InputType.JoystickButton,
         37,
-        util.parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+        parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
     )
     cond._inputs.append(input_dev)
     cond._comparator = condition.comparator.PressedComparator(True)
-    c._conditions.append(cond)
+    a._conditions.append(cond)
 
-    node = c.to_xml()
+    node = a.to_xml()
     assert node.find(
             "./property/name[.='logical-operator']/../value"
         ).text == "all"
@@ -147,11 +151,8 @@ def test_to_xml():
 
 
 def test_ctor():
-    c = condition.ConditionModel(
-        profile_library.ActionTree(),
-        types.InputType.JoystickButton
-    )
+    a = ConditionData(InputType.JoystickButton)
 
-    assert len(c._conditions) == 0
-    assert c._logical_operator == condition.LogicalOperator.All
-    assert c.is_valid() == True
+    assert len(a._conditions) == 0
+    assert a._logical_operator == condition.LogicalOperator.All
+    assert a.is_valid() == True

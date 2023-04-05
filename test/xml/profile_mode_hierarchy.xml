@@ -1,0 +1,10 @@
+<profile version="14">
+    <modes>
+        <mode>Default</mode>
+        <mode>Separate</mode>
+        <mode parent="Default">Child</mode>
+        <mode>Three</mode>
+        <mode parent="Three">Levels</mode>
+        <mode parent="Levels">Deep</mode>
+    </modes>
+</profile>
