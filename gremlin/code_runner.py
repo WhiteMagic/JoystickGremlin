@@ -265,7 +265,7 @@ class CallbackObject:
         virt_item.input_type = InputType.VirtualButton
         virt_item.input_id = self._virtual_identifier
         virt_item.mode = phys_item.mode
-        virt_item.action_configurations = phys_item.action_configurations
+        virt_item.action_sequences = phys_item.action_configurations
         virt_item.always_execute = phys_item.always_execute
         virt_item.is_active = phys_item.is_active
         # Create virtual InputItemBinding instance

@@ -128,7 +128,7 @@ class Backend(QtCore.QObject):
                 identifier.input_id,
                 False
             )
-            return len(item.action_configurations)
+            return len(item.action_sequences)
         except error.ProfileError as e:
             return 0
 
