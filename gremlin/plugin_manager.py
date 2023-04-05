@@ -16,18 +16,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import annotations
+
 import importlib
 import logging
 import os
+from typing import TYPE_CHECKING
 
 from PySide6 import QtQml
 
-from gremlin import common, error
+from gremlin import common, error, shared_state
 from gremlin.types import InputType
+
+if TYPE_CHECKING:
+    from gremlin.base_classes import AbstractActionData
 
 
 @common.SingletonDecorator
-class ActionPlugins:
+class PluginManager:
 
     """Handles discovery and handling of action plugins."""
 
@@ -89,6 +95,24 @@ class ActionPlugins:
         """
         return self._parameter_requirements.get(param_name, [])
 
+    def create_instance(
+        self,
+        name: str,
+        input_type: InputType
+    ) -> AbstractActionData:
+        """Creates an action instance which is stored in the library.
+
+        Args:
+            name: name of the action to create an instance of
+            input_type: the input type associated with the new instance
+
+        Returns:
+            The newly created action instance
+        """
+        instance = self.get_class(name)(input_type)
+        shared_state.current_profile.library.add_action(instance)
+        return instance
+
     def _create_type_action_map(self):
         """Creates a lookup table from input types to available actions."""
         self._type_to_action_map = {
@@ -138,11 +162,11 @@ class ActionPlugins:
 
                         # Register QML type
                         QtQml.qmlRegisterType(
-                            plugin.create,
+                            plugin.create.model,
                             "Gremlin.ActionPlugins",
                             1,
                             0,
-                            plugin.create.__name__
+                            plugin.create.model.__name__
                         )
                     else:
                         del plugin
