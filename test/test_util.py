@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2022 Lionel Ott
+# Copyright (C) 2015 - 2023 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ def test_read_property():
     ) == True
 
 
-    with pytest.raises(gremlin.error.ProfileError, match=r"No property name"):
+    with pytest.raises(gremlin.error.ProfileError, match=r"A property named"):
         gremlin.util.read_property(
             doc, "does not exist", gremlin.types.PropertyType.Bool
         )
