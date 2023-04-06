@@ -24,13 +24,10 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
-# import gremlin.error as error
-# import gremlin.types as types
-# import gremlin.util as util
+from gremlin.error import GremlinError
 from gremlin.event_handler import Event
 from gremlin.types import HatDirection, InputType
 from gremlin.util import parse_guid
-
 
 from gremlin.profile import Library, InputItem, InputItemBinding, Profile
 from action_plugins.condition import ConditionData, ConditionModel
@@ -144,6 +141,19 @@ def test_to_xml():
     assert node.find(
             "./condition/comparator/property/name[.='is-pressed']/../value"
         ).text == "True"
+
+
+def test_action_methods():
+    p = Profile()
+    p.from_xml("test/xml/action_condition_simple.xml")
+
+    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+
+    assert len(a.get_actions()) == 3
+    assert len(a.get_actions("true")) == 2
+    assert len(a.get_actions("false")) == 1
+    with pytest.raises(GremlinError):
+        a.get_actions("invalid options")
 
 
 def test_ctor():

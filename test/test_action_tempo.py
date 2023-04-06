@@ -22,7 +22,7 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
-import gremlin.error as error
+from gremlin.error import GremlinError
 import gremlin.types as types
 from gremlin.profile import Library, Profile
 
@@ -63,6 +63,20 @@ def test_to_xml():
     assert node.find(
             "./short-actions/action-id"
     ).text == "fbe6be7b-07c9-4400-94f2-caa245ebcc7e"
+
+
+def test_action_methods():
+    p = Profile()
+    p.from_xml("test/xml/action_tempo_simple.xml")
+
+    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+
+    # Get action testing
+    assert len(a.get_actions()) == 3
+    assert len(a.get_actions("short")) == 2
+    assert len(a.get_actions("long")) == 1
+    with pytest.raises(GremlinError):
+        assert a.get_actions("invalid options")
 
 
 def test_ctor():

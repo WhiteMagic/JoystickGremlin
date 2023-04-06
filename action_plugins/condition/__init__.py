@@ -26,8 +26,9 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from dill import GUID_Keyboard
 
-from gremlin import error, event_handler, plugin_manager, util
+from gremlin import event_handler, plugin_manager, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.error import GremlinError
 from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
 from gremlin.tree import TreeNode
@@ -124,7 +125,7 @@ class AbstractCondition(QtCore.QObject):
         self._set_condition_type_impl(condition_type)
 
     def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
-        raise error.GremlinError(
+        raise GremlinError(
             "AbstractCondition::_set_condition_type_impl implementation missing"
         )
 
@@ -165,7 +166,7 @@ class AbstractCondition(QtCore.QObject):
         return self._get_inputs_impl()
 
     def _get_inputs_impl(self) -> List[str]:
-        raise error.GremlinError(
+        raise GremlinError(
             "AbstractCondition::_get_inputs_impl implementation missing"
         )
 
@@ -173,7 +174,7 @@ class AbstractCondition(QtCore.QObject):
         self._set_inputs_impl(data)
 
     def _set_inputs_impl(self, data: List) -> None:
-        raise error.GremlinError(
+        raise GremlinError(
             "AbstractCondition::_set_inputs_impl implementation missing"
         )
 
@@ -263,11 +264,11 @@ class KeyboardCondition(AbstractCondition):
         input_types = [evt.event_type for evt in data]
         if len(set(input_types)) > 1:
             # Should never happen for a condition to make sense
-            raise error.GremlinError(
+            raise emlinError(
                 f"Multiple InputType types present in a single condition"
             )
         elif input_types[0] != InputType.Keyboard:
-            raise error.GremlinError(
+            raise GremlinError(
                 f"Found non Keyboard input type" + \
                 f"({InputType.to_string(input_types[0])}) " + \
                 f"in a keyboard condition."
@@ -360,7 +361,7 @@ class JoystickCondition(AbstractCondition):
         input_types = [evt.event_type for evt in data]
         if len(set(input_types)) > 1:
             # Should never happen for a condition to make sense
-            raise error.GremlinError(
+            raise GremlinError(
                 f"Multiple InputType types present in a single condition"
             )
 
@@ -441,7 +442,7 @@ class ConditionFunctor(AbstractFunctor):
         elif self.data._logical_operator == LogicalOperator.Any:
             return any(outcomes)
         else:
-            raise error.GremlinError(
+            raise GremlinError(
                 f"Invalid logical operator present {self.data._logical_operator}"
             )
 
@@ -505,21 +506,21 @@ class ConditionModel(ActionModel):
         predicate = lambda x: True if x.value and x.value.id == self.id else False
         nodes = self._action_tree.root.nodes_matching(predicate)
         if len(nodes) != 1:
-            raise error.GremlinError(f"Node with ID {self.id} has invalid state")
+            raise GremlinError(f"Node with ID {self.id} has invalid state")
         nodes[0].add_child(TreeNode(action))
         if branch == "if":
             self._true_action_ids.append(action.id)
         elif branch == "else":
             self._false_action_ids.append(action.id)
         else:
-            raise error.GremlinError(f"Invalid branch specification: {branch}")
+            raise GremlinError(f"Invalid branch specification: {branch}")
 
         self.actionsChanged.emit()
 
     @Slot(int)
     def removeCondition(self, index: int) -> None:
         if index >= len(self._data._conditions):
-            raise error.GremlinError("Attempting to remove a non-existent condition.")
+            raise GremlinError("Attempting to remove a non-existent condition.")
 
         del self._data._conditions[index]
         self.conditionsChanged.emit()
@@ -651,7 +652,16 @@ class ConditionData(AbstractActionData):
         self,
         selector: Optional[Any]=None
     )  -> List[AbstractActionData]:
-        return []
+        if selector is None:
+            return self.true_actions + self.false_actions
+        elif selector == "true":
+            return self.true_actions
+        elif selector == "false":
+            return self.false_actions
+        else:
+            raise GremlinError(
+                f"Condition: Invalid get_action option: '{selector}'"
+            )
 
     def add_action(
         self,
@@ -675,7 +685,7 @@ class ConditionData(AbstractActionData):
         elif container == "false":
             self.false_actions.insert(0, action.id)
         else:
-            raise error.GremlinError(
+            raise GremlinError(
                 f"Invalid container for a Condition action: '{container}`"
             )
 

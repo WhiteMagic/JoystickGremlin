@@ -28,7 +28,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, event_handler, plugin_manager, util
+from gremlin import event_handler, plugin_manager, util
+from gremlin.error import GremlinError
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.config import Configuration
 from gremlin.profile import InputItemBinding
@@ -175,14 +176,14 @@ class TempoModel(ActionModel):
         predicate = lambda x: True if x.value and x.value.id == self.id else False
         nodes = self._action_tree.root.nodes_matching(predicate)
         if len(nodes) != 1:
-            raise error.GremlinError(f"Node with ID {self.id} has invalid state")
+            raise GremlinError(f"Node with ID {self.id} has invalid state")
         nodes[0].add_child(TreeNode(action))
         if activation == "short":
             self._short_action_ids.append(action.id)
         elif activation == "long":
             self._long_action_ids.append(action.id)
         else:
-            raise error.GremlinError(f"Invalid branch specification: {activation}")
+            raise GremlinError(f"Invalid branch specification: {activation}")
 
         self.actionsChanged.emit()
 
@@ -205,7 +206,7 @@ class TempoModel(ActionModel):
 
     def _set_activate_on(self, value: str) -> None:
         if value not in ["press", "release"]:
-            raise error.GremlinError(f"Received invalid activateOn value {value}")
+            raise GremlinError(f"Received invalid activateOn value {value}")
 
         if self._data._activate_on != value:
             self._data._activate_on = value
@@ -290,10 +291,16 @@ class TempoData(AbstractActionData):
 
     def get_actions(
         self,
-        options: Optional[Any]=None
+        selector: Optional[Any]=None
     ) -> List[AbstractActionData]:
-        if options is None:
+        if selector is None:
             return self.short_actions + self.long_actions
+        elif selector == "short":
+            return self.short_actions
+        elif selector == "long":
+            return self.long_actions
+        else:
+            raise GremlinError(f"Tempo: Invalid get_action option: '{selector}'")
 
     def add_action(
         self,
@@ -305,9 +312,7 @@ class TempoData(AbstractActionData):
         elif options == "long":
             self.long_actions.append(action)
         else:
-            raise error.GremlinError(
-                f"Tempo: Unknown option provided: '{options}'"
-            )
+            raise GremlinError(f"Tempo: Unknown option provided: '{options}'")
 
     def remove_action(self, action: AbstractActionData) -> None:
         """Removes the provided action from this action.

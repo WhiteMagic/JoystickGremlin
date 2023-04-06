@@ -27,8 +27,9 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, event_handler, plugin_manager, util
+from gremlin import event_handler, plugin_manager, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.error import GremlinError
 from gremlin.config import Configuration
 from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
@@ -93,18 +94,18 @@ class RootData(AbstractActionData):
     ):
         super().__init__(behavior_type)
 
-        self._children = []
+        self.children = []
 
     def from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         child_ids = util.read_action_ids(node.find("actions"))
-        self._children = [library.get_action(aid) for aid in child_ids]
+        self.children = [library.get_action(aid) for aid in child_ids]
 
     def to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(RootModel.tag, self._id)
         node.append(util.create_action_ids(
             "actions",
-            [child.id for child in self._children]
+            [child.id for child in self.children]
         ))
         return node
 
@@ -116,10 +117,10 @@ class RootData(AbstractActionData):
         action: AbstractActionData,
         options: Optional[Any]=None
     ) -> None:
-        self._children.append(action)
+        self.children.append(action)
 
     def remove_action(self, action) -> None:
-        self._remove_entry_from_list(self._children, action)
+        self._remove_entry_from_list(self.children, action)
 
     def insert_action(self, container: str, action: AbstractActionData) -> None:
         pass
@@ -135,7 +136,12 @@ class RootData(AbstractActionData):
         self,
         selector: Optional[Any]=None
     ) -> List[AbstractActionData]:
-        return self._children
+        if selector is None:
+            return self.children
+        else:
+            raise GremlinError(
+                f"Root: invalid selector for get_actions: '{selector}'"
+            )
 
     def _handle_behavior_change(
             self,
