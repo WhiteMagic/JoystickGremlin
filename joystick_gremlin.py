@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     # Configure QSettings to keep QT happy
     app.setOrganizationName("H2IK")
-    app.setOrganizationDomain("http://whitemagic.github.io/JoystickGremlin/")
+    app.setOrganizationDomain("https://whitemagic.github.io/JoystickGremlin/")
     app.setApplicationName("Joystick Gremlin")
 
     # Ensure joystick devices are correctly setup
