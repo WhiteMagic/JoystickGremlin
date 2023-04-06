@@ -359,5 +359,6 @@ Configuration().register(
     PropertyType.Float,
     0.5,
     "Default time before triggering the long press action.",
+    {},
     True
 )
