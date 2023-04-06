@@ -592,23 +592,25 @@ class ConditionData(AbstractActionData):
     def __init__(self, behavior_type: InputType=InputType.JoystickButton):
         super().__init__(behavior_type)
 
-        self._logical_operator = LogicalOperator.All
-        self._true_action_ids = []
-        self._false_action_ids = []
-        self._conditions = []
+        self.logical_operator = LogicalOperator.All
+        self.true_actions = []
+        self.false_actions = []
+        self.conditions = []
 
     def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
         self._id = util.read_action_id(node)
         # Parse IF action ids
-        self._true_action_ids = util.read_action_ids(node.find("if-actions"))
+        true_ids = util.read_action_ids(node.find("if-actions"))
+        self.true_actions = [library.get_action(aid) for aid in true_ids]
         # Parse ELSE action ids
-        self._false_action_ids = util.read_action_ids(node.find("else-actions"))
+        false_ids = util.read_action_ids(node.find("else-actions"))
+        self.false_actions = [library.get_action(aid) for aid in false_ids]
 
-        self._logical_operator = LogicalOperator.to_enum(
+        self.logical_operator = LogicalOperator.to_enum(
             util.read_property(node, "logical-operator", PropertyType.String)
         )
 
-        self._conditions = []
+        self.conditions = []
         for entry in node.iter("condition"):
             condition_type = ConditionType.to_enum(
                 util.read_property(entry, "condition-type", PropertyType.String)
@@ -622,22 +624,22 @@ class ConditionData(AbstractActionData):
                 cond_obj = CurrentInputCondition()
             if cond_obj is not None:
                 cond_obj.from_xml(entry)
-                self._conditions.append(cond_obj)
+                self.conditions.append(cond_obj)
 
     def to_xml(self) -> ElementTree:
         node = util.create_action_node(ConditionData.tag, self._id)
         node.append(util.create_property_node(
             "logical-operator",
-            LogicalOperator.to_string(self._logical_operator),
+            LogicalOperator.to_string(self.logical_operator),
             PropertyType.String
         ))
-        for condition in self._conditions:
+        for condition in self.conditions:
             node.append(condition.to_xml())
         node.append(util.create_action_ids(
-            "if-actions", self._true_action_ids
+            "if-actions", [action.id for action in self.true_actions]
         ))
         node.append(util.create_action_ids(
-            "else-actions", self._false_action_ids
+            "else-actions", [action.id for action in self.false_actions]
         ))
 
         return node
@@ -664,14 +666,14 @@ class ConditionData(AbstractActionData):
         Args:
             action: the action to remove
         """
-        self._remove_entry_from_list(self._true_action_ids, action.id)
-        self._remove_entry_from_list(self._false_action_ids, action.id)
+        self._remove_entry_from_list(self.true_actions, action.id)
+        self._remove_entry_from_list(self.false_actions, action.id)
 
     def insert_action(self, container: str, action: AbstractActionData) -> None:
         if container == "true":
-            self._true_action_ids.insert(0, action.id)
+            self.true_actions.insert(0, action.id)
         elif container == "false":
-            self._false_action_ids.insert(0, action.id)
+            self.false_actions.insert(0, action.id)
         else:
             raise error.GremlinError(
                 f"Invalid container for a Condition action: '{container}`"
@@ -688,8 +690,8 @@ class ConditionData(AbstractActionData):
             anchor: action after which to insert the given action
             action: the action to remove
         """
-        self._insert_entry_into_list(self._true_action_ids, anchor.id, action.id, True)
-        self._insert_entry_into_list(self._false_action_ids, anchor.id, action.id, True)
+        self._insert_entry_into_list(self.true_actions, anchor.id, action.id, True)
+        self._insert_entry_into_list(self.false_actions, anchor.id, action.id, True)
 
     def _handle_behavior_change(
         self,
