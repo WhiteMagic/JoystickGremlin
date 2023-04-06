@@ -1,4 +1,4 @@
-<action id="ac905a47-9ad3-4b65-b702-fbae1d133609" parent="ec663ba4-264a-4c76-98c0-6054058cae9f" type="description">
+<action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
     <property type="string">
         <name>description</name>
         <value>This is a test</value>
