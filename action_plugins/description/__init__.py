@@ -71,12 +71,12 @@ class DescriptionModel(ActionModel):
         ).fileName()
     
     def _get_description(self) -> str:
-        return self._data._description
+        return self._data.description
 
     def _set_description(self, value: str) -> None:
-        if str(value) == self._data._description:
+        if str(value) == self._data.description:
             return
-        self._data._description = str(value)
+        self._data.description = str(value)
         self.descriptionChanged.emit()
 
     description = Property(
