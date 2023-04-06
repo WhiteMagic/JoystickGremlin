@@ -230,7 +230,7 @@ class TempoData(AbstractActionData):
     tag = "tempo"
 
     functor = TempoFunctor
-    model  = TempoModel
+    model = TempoModel
 
     input_types = [
         InputType.JoystickAxis,
@@ -242,26 +242,26 @@ class TempoData(AbstractActionData):
     def __init__(self, behavior_type: InputType=InputType.JoystickButton):
         super().__init__(behavior_type)
 
-        self._short_actions = []
-        self._long_actions = []
-        self._threshold = Configuration().value("action", "tempo", "duration")
-        self._activate_on = "release"
+        self.short_actions = []
+        self.long_actions = []
+        self.threshold = Configuration().value("action", "tempo", "duration")
+        self.activate_on = "release"
 
     def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
         self._id = util.read_action_id(node)
         short_ids = util.read_action_ids(node.find("short-actions"))
-        self._short_actions = [library.get_action(aid) for aid in short_ids]
+        self.short_actions = [library.get_action(aid) for aid in short_ids]
         long_ids = util.read_action_ids(node.find("long-actions"))
-        self._long_actions = [library.get_action(aid) for aid in long_ids]
-        self._threshold = util.read_property(
+        self.long_actions = [library.get_action(aid) for aid in long_ids]
+        self.threshold = util.read_property(
             node, "threshold", PropertyType.Float
         )
-        self._activate_on = util.read_property(
+        self.activate_on = util.read_property(
             node, "activate-on", PropertyType.String
         )
-        if self._activate_on not in ["press", "release"]:
+        if self.activate_on not in ["press", "release"]:
             raise error.ProfileError(
-                f"Invalid activat-on value present: {self._activate_on}"
+                f"Invalid activat-on value present: {self.activate_on}"
             )
 
     def to_xml(self) -> ElementTree.Element:
@@ -271,16 +271,16 @@ class TempoData(AbstractActionData):
         """
         node = util.create_action_node(TempoData.tag, self._id)
         node.append(util.create_action_ids(
-            "short-actions", [action.id for action in self._short_actions]
+            "short-actions", [action.id for action in self.short_actions]
         ))
         node.append(util.create_action_ids(
-            "long-actions", [action.id for action in self._long_actions]
+            "long-actions", [action.id for action in self.long_actions]
         ))
         node.append(util.create_property_node(
-            "threshold", self._threshold, PropertyType.Float
+            "threshold", self.threshold, PropertyType.Float
         ))
         node.append(util.create_property_node(
-            "activate-on", self._activate_on, PropertyType.String
+            "activate-on", self.activate_on, PropertyType.String
         ))
 
         return node
@@ -293,7 +293,7 @@ class TempoData(AbstractActionData):
         options: Optional[Any]=None
     ) -> List[AbstractActionData]:
         if options is None:
-            return self._short_actions + self._long_actions
+            return self.short_actions + self.long_actions
 
     def add_action(
         self,
@@ -301,9 +301,9 @@ class TempoData(AbstractActionData):
         options: Optional[Any]=None
     ) -> None:
         if options == "short":
-            self._short_actions.append(action)
+            self.short_actions.append(action)
         elif options == "long":
-            self._long_actions.append(action)
+            self.long_actions.append(action)
         else:
             raise error.GremlinError(
                 f"Tempo: Unknown option provided: '{options}'"
@@ -320,9 +320,9 @@ class TempoData(AbstractActionData):
 
     def insert_action(self, container: str, action: AbstractActionData) -> None:
         if container == "short":
-            self._short_actions.insert(0, action)
+            self.short_actions.insert(0, action)
         elif container == "long":
-            self._long_actions.insert(0, action)
+            self.long_actions.insert(0, action)
         else:
             raise error.GremlinError(
                 f"Invalid container for a Tempo action: '{container}`"

@@ -36,13 +36,13 @@ def test_from_xml():
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
-    assert len(a._short_actions) == 2
-    assert len(a._long_actions) == 1
-    assert a._activate_on == "press"
-    assert a._threshold == 0.123
-    assert a._short_actions[0].id == uuid.UUID("fbe6be7b-07c9-4400-94f2-caa245ebcc7e")
-    assert a._short_actions[1].id == uuid.UUID("80e29257-f2ad-43bf-b5ab-9229d01e64d7")
-    assert a._long_actions[0].id == uuid.UUID("2bf10c03-a9d3-4410-a56a-70643e2c05b8")
+    assert len(a.short_actions) == 2
+    assert len(a.long_actions) == 1
+    assert a.activate_on == "press"
+    assert a.threshold == 0.123
+    assert a.short_actions[0].id == uuid.UUID("fbe6be7b-07c9-4400-94f2-caa245ebcc7e")
+    assert a.short_actions[1].id == uuid.UUID("80e29257-f2ad-43bf-b5ab-9229d01e64d7")
+    assert a.long_actions[0].id == uuid.UUID("2bf10c03-a9d3-4410-a56a-70643e2c05b8")
 
 
 def test_to_xml():
@@ -51,7 +51,7 @@ def test_to_xml():
 
     a = tempo.TempoData(types.InputType.JoystickButton)
     a.add_action(d, "short")
-    a._threshold = 0.42
+    a.threshold = 0.42
 
     node = a.to_xml()
     assert node.find(
@@ -68,8 +68,8 @@ def test_to_xml():
 def test_ctor():
     a = tempo.TempoData(types.InputType.JoystickButton)
 
-    assert len(a._short_actions) == 0
-    assert len(a._long_actions) == 0
-    assert a._threshold == 0.5
-    assert a._activate_on == "release"
+    assert len(a.short_actions) == 0
+    assert len(a.long_actions) == 0
+    assert a.threshold == 0.5
+    assert a.activate_on == "release"
     assert a.is_valid() == True
