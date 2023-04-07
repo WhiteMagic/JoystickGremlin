@@ -21,6 +21,7 @@ import enum
 import logging
 import threading
 import time
+from typing import Any, Dict, List, Optional, Tuple
 import os
 
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
@@ -30,13 +31,16 @@ from gremlin.types import AxisNames
 import gremlin.spline
 
 
-def _error_string(vid, iid, value):
+def _error_string(vid: int, iid: int, value: Any) -> str:
     """Creates an error string for the given inputs.
 
-    :param vid vjoy device id
-    :param iid input id
-    :param value input value
-    :return string representing the error
+    Args:
+        vid: vjoy device id
+        iid: input id
+        value: input value
+
+    Returns:
+        string representing the error
     """
     return "vjoy: {} input: {} value: {}".format(vid, iid, value)
 
@@ -63,11 +67,14 @@ class HatType(enum.Enum):
     Continuous = 1
 
 
-def device_available(vjoy_id):
-    """Returns whether or not a device is available, i.e. can be acquired.
+def device_available(vjoy_id: int) -> bool:
+    """Returns whether a device is available, i.e. can be acquired.
 
-    :param vjoy_id id of the vjoy device to check
-    :return True if the device is available, False otherwise
+    Args:
+        vjoy_id: id of the vjoy device to check
+
+    Returns:
+        True if the device is available, False otherwise
     """
     dev_free = VJoyInterface.GetVJDStatus(vjoy_id) == VJoyState.Free.value
     dev_acquire = VJoyInterface.AcquireVJD(vjoy_id)
@@ -76,24 +83,30 @@ def device_available(vjoy_id):
     return dev_free & dev_acquire
 
 
-def device_exists(vjoy_id):
-    """Returns whether or not a device exists.
+def device_exists(vjoy_id: int) -> bool:
+    """Returns whether a device exists.
 
     A device that exists may be acquired by a different process and thus not
     usable by Gremlin.
 
-    :param vjoy_id id of the vjoy device to check
-    :return True if the device exists, False otherwise
+    Args:
+        vjoy_id: id of the vjoy device to check
+
+    Returns:
+        True if the device exists, False otherwise
     """
     state = VJoyInterface.GetVJDStatus(vjoy_id)
     return state not in [VJoyState.Missing.value, VJoyState.Unknown.value]
 
 
-def axis_count(vjoy_id):
+def axis_count(vjoy_id: int) -> int:
     """Returns the number of axes of the given vJoy device.
 
-    :param vjoy_id id of the vjoy device
-    :return number of axes
+    Args:
+        vjoy_id: id of the vjoy device
+
+    Returns:
+        The number of axes available on a device
     """
     count = 0
     for axis in AxisCode:
@@ -102,38 +115,40 @@ def axis_count(vjoy_id):
     return count
 
 
-def button_count(vjoy_id):
+def button_count(vjoy_id: int) -> int:
     """Returns the number of buttons of the given vJoy device.
 
-    :param vjoy_id id of the vjoy device
-    :return number of buttons
+    Args:
+        vjoy_id: id of the vjoy device
+
+    Returns:
+        The number of buttons available on a device
     """
     return VJoyInterface.GetVJDButtonNumber(vjoy_id)
 
 
-def hat_count(vjoy_id):
+def hat_count(vjoy_id: int) -> int:
     """Returns the number of hats of the given vJoy device.
 
-    :param vjoy_id id of the vjoy device
-    :return number of hats
+    Args:
+        vjoy_id: id of the vjoy device
+
+    Returns:
+        The number of hats available on a device
     """
     return VJoyInterface.GetVJDContPovNumber(vjoy_id)
 
 
-def hat_configuration_valid(vjoy_id):
+def hat_configuration_valid(vjoy_id: int) -> bool:
     """Returns if the hats are configured properly.
 
     In order for hats to work properly they have to be set as continous and
     not discrete.
 
-    Parameters
-    ==========
-    vjoy_id : int
-        Index of the vJoy device to query
+    Args:
+        vjoy_id: index of the vJoy device to query
 
-    Returns
-    =======
-    bool
+    Returns:
         True if the hats are configured properly, False otherwise
     """
     continuous_count = VJoyInterface.GetVJDContPovNumber(vjoy_id)
@@ -147,11 +162,12 @@ class Axis:
     """Represents an analog axis in vJoy, allows setting the value
     of the axis."""
 
-    def __init__(self, vjoy_dev, axis_id):
+    def __init__(self, vjoy_dev: VJoy, axis_id: int) -> None:
         """Creates a new object.
 
-        :param vjoy_dev the vJoy device this axis belongs to
-        :param axis_id the id of the axis this object controls
+        Args:
+            vjoy_dev: the vJoy device this axis belongs to
+            axis_id: the id of the axis this object controls
         """
         self.vjoy_dev = vjoy_dev
         self.vjoy_id = vjoy_dev.vjoy_id
@@ -183,11 +199,16 @@ class Axis:
                     _error_string(self.vjoy_id, self.axis_id, self._min_value)
             ))
 
-    def set_response_curve(self, spline_type, control_points):
+    def set_response_curve(
+            self,
+            spline_type: str,
+            control_points: List[Tuple[float, float]]
+    ) -> None:
         """Sets the response curve to use for the axis.
 
-        :param spline_type the type of spline to use
-        :param control_points the control points defining the spline
+        Args:
+            spline_type: the type of spline to use
+            control_points: the control points defining the spline
         """
         if spline_type == "cubic-spline":
             self._response_curve_fn = gremlin.spline.CubicSpline(control_points)
@@ -198,32 +219,41 @@ class Axis:
             logging.getLogger("system").error("Invalid spline type specified")
             self._response_curve_fn = lambda x: x
 
-    def set_deadzone(self, low, center_low, center_high, high):
+    def set_deadzone(
+            self,
+            low: float,
+            center_low: float,
+            center_high: float,
+            high: float
+    ) -> None:
         """Sets the deadzone for the axis.
 
-        :param low low deadzone limit
-        :param center_low lower center deadzone limit
-        :param center_high upper center deadzone limit
-        :param high high deadzone limit
+        Args:
+            low: low deadzone limit
+            center_low: lower center deadzone limit
+            center_high: upper center deadzone limit
+            high: high deadzone limit
         """
         self._deadzone_fn = lambda x: deadzone(
             x, low, center_low, center_high, high
         )
 
     @property
-    def value(self):
+    def value(self) -> float:
         """Returns the axis position as a value between [-1, 1]"
 
-        :return position of the axis as a value between [-1, 1]
+        Returns:
+            position of the axis as a value between [-1, 1]
         """
         self.vjoy_dev.used()
         return self._value
 
     @value.setter
-    def value(self, value):
+    def value(self, value: float) -> None:
         """Sets the position of the axis based on a value between [-1, 1].
 
-        :param value the position of the axis in the range [-1, 1]
+        Args:
+            value: the position of the axis in the range [-1, 1]
         """
         self.vjoy_dev.ensure_ownership()
 
@@ -253,13 +283,14 @@ class Axis:
             )
         self.vjoy_dev.used()
 
-    def set_absolute_value(self, value):
+    def set_absolute_value(self, value: float) -> None:
         """Sets the position of the axis based on a value between [-1, 1].
 
         In comparison to the value setter this function bypasses the
         deadzone and response curve settings.
 
-        :param value the position of the axis in the range [-1, 1]
+        Args:
+            value: the position of the axis in the range [-1, 1]
         """
         # Log an error on invalid data but continue processing by clamping
         # the values in the next step
@@ -290,11 +321,12 @@ class Button:
 
     """Represents a button in vJoy, allows pressing and releasing it."""
 
-    def __init__(self, vjoy_dev, button_id):
+    def __init__(self, vjoy_dev: VJoy, button_id: int) -> None:
         """Creates a new object.
 
-        :param vjoy_dev the vJoy device this button belongs to
-        :param button_id the id of the button this object controls
+        Args:
+            vjoy_dev: the vJoy device this button belongs to
+            button_id: the id of the button this object controls
         """
         self.vjoy_dev = vjoy_dev
         self.vjoy_id = vjoy_dev.vjoy_id
@@ -302,19 +334,21 @@ class Button:
         self._is_pressed = False
 
     @property
-    def is_pressed(self):
-        """Returns whether or not the button is pressed.
+    def is_pressed(self) -> bool:
+        """Returns whether the button is pressed.
 
-        :return True if the button is pressed, False otherwise
+        Returns:
+            True if the button is pressed, False otherwise
         """
         self.vjoy_dev.used()
         return self._is_pressed
 
     @is_pressed.setter
-    def is_pressed(self, is_pressed):
+    def is_pressed(self, is_pressed: bool) -> None:
         """Sets the state of the button.
 
-        :param is_pressed True if the button is pressed, False otherwise
+        Args:
+            is_pressed: True if the button is pressed, False otherwise
         """
         assert(isinstance(is_pressed, bool))
         self.vjoy_dev.ensure_ownership()
@@ -359,12 +393,13 @@ class Hat:
         (-1, 1): 31500
     }
 
-    def __init__(self, vjoy_dev, hat_id, hat_type):
+    def __init__(self, vjoy_dev: VJoy, hat_id: int, hat_type: HatType) -> None:
         """Creates a new object.
 
-        :param vjoy_dev the vJoy device this hat belongs to
-        :param hat_id the id of the hat this object controls
-        :param hat_type the type of hat being used, discrete or continuous
+        Args:
+            vjoy_dev: the vJoy device this hat belongs to
+            hat_id: the id of the hat this object controls
+            hat_type: the type of hat being used, discrete or continuous
         """
         self.vjoy_dev = vjoy_dev
         self.vjoy_id = vjoy_dev.vjoy_id
@@ -373,19 +408,21 @@ class Hat:
         self.hat_type = hat_type
 
     @property
-    def direction(self):
+    def direction(self) -> Tuple[int, int]:
         """Returns the current direction of the hat.
 
-        :return current direction of the hat encoded as a tuple (x, y)
+        Returns:
+            current direction of the hat encoded as a tuple (x, y)
         """
         self.vjoy_dev.used()
         return self._direction
 
     @direction.setter
-    def direction(self, direction):
+    def direction(self, direction: Tuple[int, int]) -> None:
         """Sets the direction of the hat.
 
-        :param direction the new direction of the hat
+        Args:
+            direction the new direction of the hat
         """
         self.vjoy_dev.ensure_ownership()
 
@@ -399,10 +436,11 @@ class Hat:
             ))
         self.vjoy_dev.used()
 
-    def _set_discrete_direction(self, direction):
+    def _set_discrete_direction(self, direction: Tuple[int, int]) -> None:
         """Sets the direction of a discrete hat.
 
-        :param direction the direction of the hat
+        Args:
+            direction: the direction of the hat
         """
         if direction not in Hat.to_discrete_direction:
             raise VJoyError(
@@ -423,10 +461,11 @@ class Hat:
                 )
             )
 
-    def _set_continuous_direction(self, direction):
+    def _set_continuous_direction(self, direction: Tuple[int, int]) -> None:
         """Sets the direction of a continuous hat.
 
-        :param direction the angle in degree of the hat
+        Args:
+            direction: the direction of the hat motion
         """
         if direction not in Hat.to_continuous_direction:
             raise VJoyError(
@@ -467,10 +506,11 @@ class VJoy:
         AxisCode.SL1: 8
     }
 
-    def __init__(self, vjoy_id):
+    def __init__(self, vjoy_id: int) -> None:
         """Creates a new object.
 
-        :param vjoy_id id of the vJoy device to initialize.
+        Args:
+            vjoy_id: id of the vJoy device to initialize.
         """
         self.vjoy_id = None
 
@@ -518,8 +558,8 @@ class VJoy:
         # Reset all controls
         self.reset()
 
-    def ensure_ownership(self):
-        """Ensure this devices is still owned by the process.
+    def ensure_ownership(self) -> None:
+        """Ensure this device is still owned by the process.
 
         This object can only be constructed if it successfully acquires the
         vjoy device and destroys itself when relinquishing control. Therefore,
@@ -554,30 +594,37 @@ class VJoy:
             return False
 
     @property
-    def axis_count(self):
+    def axis_count(self) -> int:
         """Returns the number of axes present in this device.
 
-        :return number of axes on this device
+        Returns:
+            number of axes on this device
         """
         return int(len(self._axis))
 
     @property
-    def button_count(self):
+    def button_count(self) -> int:
         """Returns the number of buttons present in this device.
 
-        :return number of buttons on this device
+        Returns:
+            number of buttons on this device
         """
         return len(self._button)
 
     @property
-    def hat_count(self):
+    def hat_count(self) -> int:
         """Returns the number of hats present in this device.
 
-        :return number of hats on this device
+        Returns:
+            number of hats on this device
         """
         return len(self._hat)
 
-    def axis_name(self, axis_id=None, linear_index=None):
+    def axis_name(
+            self,
+            axis_id: Optional[int]=None,
+            linear_index: Optional[int]=None
+    ) -> str:
         """Returns the textual name of the requested axis.
 
         As there are two ways to refer to an axis, absolute in terms of the
@@ -585,9 +632,12 @@ class VJoy:
         axes present. This method deals with both methods and the user
         needs to request the correct one.
 
-        :param axis_id absolute index of the axis whose name to return
-        :param linear_index relative index of the axis whose name to return
-        :return name of the provided axis
+        Args:
+            axis_id: absolute index of the axis whose name to return
+            linear_index: relative index of the axis whose name to return
+
+        Returns:
+            name of the provided axis
         """
         if axis_id is not None:
             axis_id = VJoy.axis_equivalence.get(axis_id, axis_id)
@@ -609,11 +659,14 @@ class VJoy:
         else:
             raise VJoyError("No vjoy_id or linear_index provided")
 
-    def axis_id(self, linear_index):
+    def axis_id(self, linear_index: int) -> int:
         """Returns the absolute axis id corresponding to the relative one.
 
-        :param linear_index the relative index of the desired axis
-        :return absolute id of the axis
+        Args:
+            linear_index: the relative index of the desired axis
+
+        Returns:
+            absolute id of the axis
         """
         if not self.is_axis_valid(linear_index=linear_index):
             raise VJoyError(
@@ -624,12 +677,19 @@ class VJoy:
 
         return self._axis_lookup[linear_index]
 
-    def axis(self, axis_id=None, linear_index=None):
+    def axis(
+            self,
+            axis_id: Optional[int]=None,
+            linear_index: Optional[int]=None
+    ) -> Axis:
         """Returns the axis object associated with the provided index.
 
-        :param axis_id actual id of the axis which may not be contiguous
-        :param linear_index linear index of the axis independent of true ids
-        :return Axis object corresponding to the provided index
+        Args:
+            axis_id: actual id of the axis which may not be contiguous
+            linear_index: linear index of the axis independent of true ids
+
+        Returns:
+            Axis object corresponding to the provided index
         """
         if axis_id is not None:
             axis_id = VJoy.axis_equivalence.get(axis_id, axis_id)
@@ -651,11 +711,14 @@ class VJoy:
         else:
             raise VJoyError("No vjoy_id or linear_index provided")
 
-    def button(self, index):
+    def button(self, index: int) -> Button:
         """Returns the axis object associated with the provided index.
 
-        :param index the index of the button to return
-        :return Button object corresponding to the provided index
+        Args:
+            index: the index of the button to return
+
+        Returns:
+            Button object corresponding to the provided index
         """
         if index not in self._button:
             raise VJoyError(
@@ -665,11 +728,14 @@ class VJoy:
             )
         return self._button[index]
 
-    def hat(self, index):
+    def hat(self, index: int) -> Hat:
         """Returns the hat object associated with the provided index.
 
-        :param index the index of the hat to return
-        :return Hat object corresponding to the provided index
+        Args:
+            index: the index of the hat to return
+
+        Returns:
+            Hat object corresponding to the provided index
         """
         if index not in self._hat:
             raise VJoyError(
@@ -679,12 +745,19 @@ class VJoy:
             )
         return self._hat[index]
 
-    def is_axis_valid(self, axis_id=None, linear_index=None):
-        """Returns whether or not an axis is valid.
+    def is_axis_valid(
+            self,
+            axis_id: Optional[int]=None,
+            linear_index: Optional[int]=None
+    ) -> bool:
+        """Returns whether an axis is valid.
 
-        :param axis_id actual id of the axis which may not be contiguous
-        :param linear_index linear index of the axis independent of true ids
-        :return True if the axis is valid, False otherwise
+        Args:
+            axis_id: actual id of the axis which may not be contiguous
+            linear_index: linear index of the axis independent of true ids
+
+        Returns:
+            True if the axis is valid, False otherwise
         """
         if axis_id is not None:
             return axis_id in self._axis
@@ -693,23 +766,29 @@ class VJoy:
         else:
             raise VJoyError("No vjoy_id or linear_index provided")
 
-    def is_button_valid(self, index):
-        """Returns whether or not the provided button index is valid.
+    def is_button_valid(self, index: int) -> bool:
+        """Returns whether the provided button index is valid.
 
-        :param index button index to check
-        :return True if the button is valid, False otherwise
+        Args:
+            index: button index to check
+
+        Returns:
+            True if the button is valid, False otherwise
         """
         return index in self._button
 
-    def is_hat_valid(self, index):
-        """Returns whether or not the provided hat index is valid.
+    def is_hat_valid(self, index: int) -> bool:
+        """Returns whether the provided hat index is valid.
 
-        :param index hat index to check
-        :return True if the hat is valid, False otherwise
+        Args:
+            index: hat index to check
+
+        Returns:
+            True if the hat is valid, False otherwise
         """
         return index in self._hat
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets the state of all inputs to their default state."""
         # Obtain the current state of all inputs
         axis_states = {}
@@ -739,11 +818,11 @@ class VJoy:
                 "Could not reset vJoy device, are we using it?"
             )
 
-    def used(self):
+    def used(self) -> None:
         """Updates the timestamp of the last time the device has been used."""
         self._last_active = time.time()
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         """Releases all resources claimed by this instance.
 
         Releases the lock on the vjoy device instance as well as terminating
@@ -755,7 +834,7 @@ class VJoy:
             self.vjoy_id = None
             self._keep_alive_timer.cancel()
 
-    def _keep_alive(self):
+    def _keep_alive(self) -> None:
         """Timer callback ensuring the vJoy device stays active.
 
         If the device hasn't been used in the last 60 seconds the device will
@@ -769,11 +848,12 @@ class VJoy:
         )
         self._keep_alive_timer.start()
 
-    def _init_axes(self):
+    def _init_axes(self) -> Dict[int, Axis]:
         """Retrieves all axes present on the vJoy device and creates their
         control objects.
 
-        :returns dictionary of Axis objects
+        Returns:
+            dictionary of Axis objects
         """
         axes = {}
         for i, axis in enumerate(AxisCode):
@@ -784,25 +864,27 @@ class VJoy:
                 self._axis_lookup[axis] = i+1
         return axes
 
-    def _init_buttons(self):
+    def _init_buttons(self) -> Dict[int, Button]:
         """Retrieves all buttons present on the vJoy device and creates their
         control objects.
 
-        :returns list of Button objects
+        Returns:
+            dictionary of Button objects
         """
         buttons = {}
         for btn_id in range(1, VJoyInterface.GetVJDButtonNumber(self.vjoy_id)+1):
             buttons[btn_id] = Button(self, btn_id)
         return buttons
 
-    def _init_hats(self):
+    def _init_hats(self) -> Dict[int, Hat]:
         """Retrieves all hats present on the vJoy device and creates their
         control objects.
 
         A single device can either have continuous or discrete hats, but
         not both at the same time.
 
-        :returns list of Hat objects
+        Returns:
+            dictionary of Hat objects
         """
         hats = {}
         # We can't use discrete hats as such their existence is considered
@@ -819,34 +901,38 @@ class VJoy:
             hats[hat_id] = Hat(self, hat_id, HatType.Continuous)
         return hats
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Print information about the vJoy device we're holding.
 
-        :returns string representation of the vJoy device information
+        Returns:
+            string representation of the vJoy device information
         """
         return "vJoyId={0:d} axis={1:d} buttons={2:d} hats={3:d}".format(
             self.vjoy_id,
-            len(self.axis),
-            len(self.button),
-            len(self.hat)
+            len(self._axis),
+            len(self._button),
+            len(self._hat)
         )
 
 
-def deadzone(value, low, low_center, high_center, high):
+def deadzone(value: float, low: float, low_center: float, high_center: float, high: float) -> float:
     """Returns the mapped value taking the provided deadzone into
     account.
 
     The following relationship between the limits has to hold.
     -1 <= low < low_center <= 0 <= high_center < high <= 1
 
-    :param value the raw input value
-    :param low low deadzone limit
-    :param low_center lower center deadzone limit
-    :param high_center upper center deadzone limit
-    :param high high deadzone limit
-    :return corrected value
+    Args:
+        value: the raw input value
+        low: low deadzone limit
+        low_center: lower center deadzone limit
+        high_center: upper center deadzone limit
+        high: high deadzone limit
+
+    Returns:
+        corrected value
     """
     if value >= 0:
-        return min(1, max(0, (value - high_center) / abs(high - high_center)))
+        return min(1.0, max(0.0, (value - high_center) / abs(high - high_center)))
     else:
-        return max(-1, min(0, (value - low_center) / abs(low - low_center)))
+        return max(-1.0, min(0.0, (value - low_center) / abs(low - low_center)))
