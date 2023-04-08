@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Optional
+from typing import Optional, List
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -349,31 +349,11 @@ class MapToVjoyData(AbstractActionData):
     def is_valid(self) -> bool:
         return True
 
-    def get_actions(
-        self,
-        selector: Optional[Any]=None
-    )  -> List[AbstractActionData]:
-        return []
+    def _valid_selectors(self) -> List[str]:
+        raise GremlinError(f"{self.name}: has no containers")
 
-    def add_action(
-        self,
-        action: AbstractActionData,
-        options: Optional[Any]=None
-    ) -> None:
-        pass
-
-    def remove_action(self, action: AbstractActionData) -> None:
-        pass
-
-    def insert_action(self, container: str, action: AbstractActionData) -> None:
-        pass
-
-    def add_action_after(
-        self,
-        anchor: AbstractActionData,
-        action: AbstractActionData
-    ) -> None:
-        pass
+    def _get_container(self, selector: str) -> List[AbstractActionData]:
+        raise GremlinError(f"{self.name}: has no containers")
 
     def _handle_behavior_change(
         self,

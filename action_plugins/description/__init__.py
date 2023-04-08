@@ -25,6 +25,7 @@ from PySide6.QtCore import Property, Signal
 
 from gremlin import event_handler, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.error import GremlinError
 from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
 
@@ -129,32 +130,12 @@ class DescriptionData(AbstractActionData):
 
     def is_valid(self) -> True:
         return True
-    
-    def get_actions(
-        self,
-        selector: Optional[Any]=None
-    ) -> List[AbstractActionData]:
-        return []
 
-    def add_action(
-        self,
-        action: AbstractActionData,
-        options: Optional[Any]=None
-    ) -> None:
-        pass
+    def _valid_selectors(self) -> List[str]:
+        raise GremlinError(f"{self.name}: has no containers")
 
-    def remove_action(self, action: AbstractActionData) -> None:
-        pass
-
-    def insert_action(self, container: str, action: AbstractActionData) -> None:
-        pass
-
-    def add_action_after(
-        self,
-        anchor: AbstractActionData,
-        action: AbstractActionData
-    ) -> None:
-        pass
+    def _get_container(self, selector: str) -> List[AbstractActionData]:
+        raise GremlinError(f"{self.name}: has no containers")
 
     def _handle_behavior_change(
         self,

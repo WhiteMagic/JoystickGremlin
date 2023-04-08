@@ -648,60 +648,14 @@ class ConditionData(AbstractActionData):
     def is_valid(self) -> bool:
         return True
 
-    def get_actions(
-        self,
-        selector: Optional[Any]=None
-    )  -> List[AbstractActionData]:
-        if selector is None:
-            return self.true_actions + self.false_actions
-        elif selector == "true":
+    def _valid_selectors(self) -> List[str]:
+        return ["true", "false"]
+
+    def _get_container(self, selector: str) -> List[AbstractActionData]:
+        if selector == "true":
             return self.true_actions
         elif selector == "false":
             return self.false_actions
-        else:
-            raise GremlinError(
-                f"Condition: Invalid get_action option: '{selector}'"
-            )
-
-    def add_action(
-        self,
-        action: AbstractActionData,
-        options: Optional[Any]=None
-    ) -> None:
-        pass
-
-    def remove_action(self, action: AbstractActionData) -> None:
-        """Removes the provided action from this action.
-
-        Args:
-            action: the action to remove
-        """
-        self._remove_entry_from_list(self.true_actions, action.id)
-        self._remove_entry_from_list(self.false_actions, action.id)
-
-    def insert_action(self, container: str, action: AbstractActionData) -> None:
-        if container == "true":
-            self.true_actions.insert(0, action.id)
-        elif container == "false":
-            self.false_actions.insert(0, action.id)
-        else:
-            raise GremlinError(
-                f"Invalid container for a Condition action: '{container}`"
-            )
-
-    def add_action_after(
-        self,
-        anchor: AbstractActionData,
-        action: AbstractActionData
-    ) -> None:
-        """Adds the provided action after the specified anchor.
-
-        Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
-        """
-        self._insert_entry_into_list(self.true_actions, anchor.id, action.id, True)
-        self._insert_entry_into_list(self.false_actions, anchor.id, action.id, True)
 
     def _handle_behavior_change(
         self,

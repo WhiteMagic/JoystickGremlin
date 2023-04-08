@@ -30,7 +30,8 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import event_handler, plugin_manager, util
 from gremlin.error import GremlinError
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataInsertionMode, Value
 from gremlin.config import Configuration
 from gremlin.profile import InputItemBinding
 from gremlin.tree import TreeNode
@@ -289,63 +290,17 @@ class TempoData(AbstractActionData):
     def is_valid(self) -> bool:
         return True
 
-    def get_actions(
-        self,
-        selector: Optional[Any]=None
-    ) -> List[AbstractActionData]:
-        if selector is None:
-            return self.short_actions + self.long_actions
-        elif selector == "short":
+    def _valid_selectors(self) -> List[str]:
+        return ["short", "long"]
+
+    def _get_container(
+            self,
+            selector: Optional[str] = None
+    ) -> Union[List[AbstractActionData], List[List[AbstractActionData]]]:
+        if selector == "short":
             return self.short_actions
         elif selector == "long":
             return self.long_actions
-        else:
-            raise GremlinError(f"Tempo: Invalid get_action option: '{selector}'")
-
-    def add_action(
-        self,
-        action: AbstractActionData,
-        options: Optional[Any]=None
-    ) -> None:
-        if options == "short":
-            self.short_actions.append(action)
-        elif options == "long":
-            self.long_actions.append(action)
-        else:
-            raise GremlinError(f"Tempo: Unknown option provided: '{options}'")
-
-    def remove_action(self, action: AbstractActionData) -> None:
-        """Removes the provided action from this action.
-
-        Args:
-            action: the action to remove
-        """
-        self._remove_entry_from_list(self._short_action_ids, action.id)
-        self._remove_entry_from_list(self._long_action_ids, action.id)
-
-    def insert_action(self, container: str, action: AbstractActionData) -> None:
-        if container == "short":
-            self.short_actions.insert(0, action)
-        elif container == "long":
-            self.long_actions.insert(0, action)
-        else:
-            raise error.GremlinError(
-                f"Invalid container for a Tempo action: '{container}`"
-            )
-
-    def add_action_after(
-        self,
-        anchor: AbstractActionData,
-        action: AbstractActionData
-    ) -> None:
-        """Adds the provided action after the specified anchor.
-
-        Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
-        """
-        self._insert_entry_into_list(self._short_action_ids, anchor.id, action.id, True)
-        self._insert_entry_into_list(self._long_action_ids, anchor.id, action.id, True)
 
     def _handle_behavior_change(
         self,

@@ -50,7 +50,7 @@ def test_to_xml():
     d._id = uuid.UUID("fbe6be7b-07c9-4400-94f2-caa245ebcc7e")
 
     a = tempo.TempoData(types.InputType.JoystickButton)
-    a.add_action(d, "short")
+    a.insert_action(d, "short")
     a.threshold = 0.42
 
     node = a.to_xml()

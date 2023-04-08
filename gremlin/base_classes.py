@@ -18,15 +18,23 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
-
+from enum import Enum
 from typing import Any, Callable, List, Optional
 import uuid
 from xml.etree import ElementTree
 
-from gremlin.error import MissingImplementationError
+from gremlin.error import GremlinError
 from gremlin.event_handler import Event
 from gremlin.profile import Library
 from gremlin.types import InputType
+
+
+class DataInsertionMode(Enum):
+
+    """Specifies to insertion type to be performed."""
+
+    Append = 0
+    Prepend = 1
 
 
 class Value:
@@ -70,7 +78,7 @@ class AbstractActionData(ABC):
 
     """Base class holding the data of all action related data classes."""
 
-    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
+    def __init__(self, behavior_type: InputType=InputType.JoystickButton) -> None:
         """Creates a new action data instance.
 
         Args:
@@ -112,15 +120,18 @@ class AbstractActionData(ABC):
     # implementation is provided.
 
     @abstractmethod
-    def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
+    def from_xml(
+            self,
+            node: ElementTree.Element,
+            library: profile.Library
+    ) -> None:
         """Populates the instance's values with the content of the XML node.
 
         Args:
             node: the XML node to parse for content
+            library: Library instance containing all actions
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.from_xml not implemented in subclass"
-        )
+        pass
 
     @abstractmethod
     def to_xml(self) -> ElementTree.Element:
@@ -129,101 +140,109 @@ class AbstractActionData(ABC):
         Returns:
             XML node containing the instance's contents
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.to_xml not implemented in subclass"
-        )
+        pass
 
     @abstractmethod
     def is_valid(self) -> bool:
-        """Returns whether or not the instance is in a valid state.
+        """Returns whether the instance is in a valid state.
 
         Returns:
             True if the instance is in a valid state, False otherwise
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.is_valid not implemented in subclass"
-        )
+        pass
 
-    @abstractmethod
     def get_actions(
-        self,
-        selector: Optional[Any]=None
+            self,
+            selector: Optional[str]=None
     )  -> List[AbstractActionData]:
         """Returns all actions matching the given selector.
 
-        The selector can be used by implementations to only return parts
-        of the actions present in an action. If no selector is provided all
-        child actions have to be returned.
+        The selector indicates the container from which to return actions. If
+        no selector, or None, is provided all child actions are returned.
 
         Args:
-            selector: information used by the implementation to select
-                actions
+            selector: name of the container to return actions from
         Returns:
             List of action instances based on the provided selector
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.get_actions not implemented in subclass"
-        )
+        self._validate_selector(selector)
 
-    @abstractmethod
-    def add_action(
-        self,
-        action: AbstractActionData,
-        options: Optional[Any]=None
+        actions = []
+        if selector is None:
+            for entry in self._valid_selectors():
+                actions.extend(self._get_container(entry))
+        else:
+            actions = self._get_container(selector)
+        return actions
+
+    def insert_action(
+            self,
+            action: AbstractActionData,
+            selector: str,
+            mode: DataInsertionMode=DataInsertionMode.Append,
+            anchor: Optional[AbstractActionData]=None
     ) -> None:
-        """Adds a new action as a child of the current object.
+        """Inserts an action as a child of the current object.
 
-        The specific handling of adding the child action is dependant on the
-        particular action implementation. Additional information on how to
-        perform the addition is encoded in the options parameter.
+        Inserts the given action into the container specified by the selector
+        parameter. When no anchor is provided, appending inserts the action
+        at the end of the container while prepending inserts it as the first
+        element. If an anchor action is provided, appending inserts it after
+        the anchor while prepending inserts it before.
         
         Args:
             action: the action to insert as a child
-            options: additional options to consider when adding the child
+            selector: name of the container into which to insert the action
+            mode: insertion mode to use when adding the action
+            anchor: the action specifying the position at which the insertion
+                is performed
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.add_child not implemented in subclass"
-        )
+        self._validate_selector(selector, False)
 
-    @abstractmethod
-    def remove_action(self, action: AbstractActionData) -> None:
+        container = self._get_container(selector)
+        if anchor is None:
+            index = 0 if mode == DataInsertionMode.Prepend else len(container)
+        else:
+            if anchor not in container:
+                raise GremlinError(
+                    f"{self.name}: specified anchor with id '{anchor.id}' is " +
+                    f"not present in container '{selector}'"
+                )
+            index = container.index(anchor)
+            if mode == DataInsertionMode.Append:
+                index += 1
+
+        container.insert(index, action)
+
+    def remove_action(self, action: AbstractActionData, selector: str) -> None:
         """Removes the provided action from this action's children.
 
         Args:
             action: the action to remove
+            selector: the container in which the action is located
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.remove_action not implemented in subclass"
-        )
+        pass
 
     @abstractmethod
-    def insert_action(self, container: str, action: AbstractActionData) -> None:
-        """Inserts the action into a specific container.
+    def _valid_selectors(self) -> List[str]:
+        """Returns the list of valid selectors.
 
-        Args:
-            container: label of the container into which to insert the
-                provided action
-            action: the action to insert
+        Returns:
+            List of valid selectors
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.insert_action not implemented in subclass"
-        )
+        pass
 
     @abstractmethod
-    def add_action_after(
-        self,
-        anchor: AbstractActionData,
-        action: AbstractActionData
-    ) -> None:
-        """Adds the provided action after the specified anchor action.
+    def _get_container(self, selector: str) -> List[AbstractActionData]:
+        """Returns the list corresponding to the selector.
 
         Args:
-            anchor: action after which to insert the given action
-            action: the action to remove
+            selector: string representing the container to return
+
+        Returns:
+            List container with actions referenced by the selector
         """
-        raise MissingImplementationError(
-            "AbstractActionModel.add_action_after not implemented in subclass"
-        )
+        pass
 
     @abstractmethod
     def _handle_behavior_change(
@@ -239,12 +258,31 @@ class AbstractActionData(ABC):
             old_behavior: type describing the old behavior
             new_behavior: type describing the new behavior
         """
-        raise MissingImplementationError(
-            "AbstractActionModel._handle_behavior_change not implemented "
-            "in subclass"
-        )
+        pass
 
     # General utility functions, supporting the implementation of actions.
+
+    def _validate_selector(
+            self,
+            selector: Optional[str],
+            none_is_valid: bool=True
+    ) -> None:
+        """Verifies that a provided selector is valid.
+
+        If the provided selector is not supported by the action then an
+        exception is raised. A selector of None is valid as it implies that
+        all valid selectors should be used.
+
+        Args:
+            selector: string representing the selector
+            none_is_valid: if True, None selector values are accepted
+        """
+        valid_selector = selector in self._valid_selectors()
+        valid_none = selector is None if none_is_valid else False
+        if not (valid_selector or valid_none):
+            raise GremlinError(
+                f"{self.name}: provided selector '{selector}' is invalid"
+            )
 
     # def _create_action_list(
     #     self,
@@ -286,7 +324,7 @@ class AbstractActionData(ABC):
 
         Args:
             storage: list object from which to remove the value
-            value: value to remove
+            value: the value to remove
         """
         if value in storage:
             storage.remove(value)
@@ -321,10 +359,11 @@ class AbstractFunctor(ABC):
     These classes are used in the internal code execution system.
     """
 
-    def __init__(self, instance: AbstractActionData):
+    def __init__(self, instance: AbstractActionData) -> None:
         """Creates a new instance, extracting needed information.
 
-        :param instance the object which contains the information needed to
+        Args:
+            instance the object which contains the information needed to
             execute it later on
         """
         self.data = instance
@@ -333,7 +372,8 @@ class AbstractFunctor(ABC):
     def process_event(self, event: Event, value: Value) -> None:
         """Processes the functor using the provided event and value data.
 
-        :param event the raw event that caused the functor to be executed
-        :param value the possibly modified value
+        Args:
+            event: the raw event that caused the functor to be executed
+            value: the possibly modified value
         """
         pass

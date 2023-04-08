@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 from __future__ import annotations
 
 import copy
@@ -28,7 +29,8 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import event_handler, plugin_manager, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataInsertionMode, Value
 from gremlin.error import GremlinError
 from gremlin.config import Configuration
 from gremlin.profile import InputItemBinding, Library
@@ -56,7 +58,7 @@ class RootModel(ActionModel):
         super().__init__(data, binding, parent)
     
     def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
-        self._data.add_action(action, options)
+        self._data.insert_action(action, options)
 
     def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(
@@ -112,36 +114,12 @@ class RootData(AbstractActionData):
     def is_valid(self) -> bool:
         return True
 
-    def add_action(
-        self,
-        action: AbstractActionData,
-        options: Optional[Any]=None
-    ) -> None:
-        self.children.append(action)
+    def _valid_selectors(self) -> List[str]:
+        return ["children"]
 
-    def remove_action(self, action) -> None:
-        self._remove_entry_from_list(self.children, action)
-
-    def insert_action(self, container: str, action: AbstractActionData) -> None:
-        pass
-
-    def add_action_after(
-        self,
-        anchor: AbstractActionData,
-        action: AbstractActionData
-    ) -> None:
-        pass
-
-    def get_actions(
-        self,
-        selector: Optional[Any]=None
-    ) -> List[AbstractActionData]:
-        if selector is None:
+    def _get_container(self, selector: str) -> List[AbstractActionData]:
+        if selector == "children":
             return self.children
-        else:
-            raise GremlinError(
-                f"Root: invalid selector for get_actions: '{selector}'"
-            )
 
     def _handle_behavior_change(
             self,
