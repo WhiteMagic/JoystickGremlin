@@ -94,7 +94,7 @@ class ActionModel(QtCore.QObject):
 
     @Slot(str, result=list)
     def getActions(self, selector: Optional[Any]=None) -> List[ActionModel]:
-        action_list = self._data.get_actions(selector)
+        action_list = self._data.get_actions(None if selector == "" else selector)
         action_models = [a.model(a, self._binding, self) for a in action_list]
         return action_models
 

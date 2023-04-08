@@ -43,7 +43,7 @@ Item {
         anchors.right: parent.right
 
         Repeater {
-            model: _root.action.getActions("")
+            model: _root.action.getActions(null)
 
             delegate: ActionNode {
                 action: modelData
