@@ -22,6 +22,7 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
+from gremlin.base_classes import DataInsertionMode
 from gremlin.error import GremlinError
 import gremlin.types as types
 from gremlin.profile import Library, Profile
@@ -77,6 +78,14 @@ def test_action_methods():
     assert len(a.get_actions("long")) == 1
     with pytest.raises(GremlinError):
         assert a.get_actions("invalid options")
+
+    # Remove and insert testing
+    a1 = a.get_actions("short")[0]
+    a.remove_action(a1, "short")
+    assert len(a.get_actions("short")) == 1
+    a.insert_action(a1, "long", DataInsertionMode.Prepend)
+    assert len(a.get_actions("long")) == 2
+    assert a.get_actions("long")[0].id == a1.id
 
 
 def test_ctor():

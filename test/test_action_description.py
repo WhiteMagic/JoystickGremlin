@@ -22,7 +22,7 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
-import gremlin.error
+from gremlin.error import GremlinError
 from gremlin.profile import Library, InputItem, InputItemBinding, Profile
 
 from action_plugins.description import DescriptionData, DescriptionModel
@@ -42,6 +42,25 @@ def test_model_ctor():
 
     assert a.description == ""
 
+
+def test_actions():
+    l = Library()
+    a = DescriptionData()
+    a.from_xml(
+        ElementTree.fromstring(
+            open("test/xml/action_description_simple.xml").read(),
+        ),
+        l
+    )
+
+    with pytest.raises(GremlinError):
+        a.get_actions()
+    with pytest.raises(GremlinError):
+        d = DescriptionData()
+        a.insert_action(d, "something")
+    with pytest.raises(GremlinError):
+        d = DescriptionData()
+        a.remove_action(d, "something")
 
 def test_model_setter_getter():
     p = Profile()

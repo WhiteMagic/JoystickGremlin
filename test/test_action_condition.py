@@ -24,6 +24,7 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
+from gremlin.base_classes import DataInsertionMode
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
 from gremlin.types import HatDirection, InputType
@@ -31,6 +32,8 @@ from gremlin.util import parse_guid
 
 from gremlin.profile import Library, InputItem, InputItemBinding, Profile
 from action_plugins.condition import ConditionData, ConditionModel
+
+from action_plugins.description import DescriptionData
 import action_plugins.condition as condition
 
 
@@ -154,6 +157,20 @@ def test_action_methods():
     assert len(a.get_actions("false")) == 1
     with pytest.raises(GremlinError):
         a.get_actions("invalid options")
+
+    d1 = DescriptionData()
+    d2 = DescriptionData()
+    a.insert_action(d1, "false", DataInsertionMode.Prepend)
+    a.insert_action(d2, "false", DataInsertionMode.Append, d1)
+    assert len(a.get_actions("false")) == 3
+    assert a.get_actions("false")[0] == d1
+    assert a.get_actions("false")[1] == d2
+
+    with pytest.raises(GremlinError):
+        a.remove_action(d1, "true")
+    a.remove_action(d1, "false")
+    assert len(a.get_actions("false")) == 2
+    assert a.get_actions("false")[0] == d2
 
 
 def test_ctor():

@@ -225,7 +225,16 @@ class AbstractActionData(ABC):
             action: the action to remove
             selector: the container in which the action is located
         """
-        pass
+        self._validate_selector(selector)
+
+        container = self._get_container(selector)
+        if action in container:
+            container.remove(action)
+        else:
+            raise GremlinError(
+                f"{self.name}: attempting to remove non-existent action " +
+                f"'{action.id}' from container '{selector}'"
+            )
 
     @abstractmethod
     def _valid_selectors(self) -> List[str]:

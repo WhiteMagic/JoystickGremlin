@@ -22,11 +22,14 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
+from gremlin.base_classes import DataInsertionMode
 from gremlin.error import GremlinError
 from gremlin.profile import Library, Profile
 from gremlin.types import InputType
 
+from action_plugins.description import DescriptionData
 from action_plugins.root import RootData, RootModel
+
 
 
 def test_ctor():
@@ -57,3 +60,12 @@ def test_action_methods():
     assert len(a.get_actions()) == 3
     with pytest.raises(GremlinError):
         a.get_actions("invalid")
+    assert len(a.get_actions("children")) == 3
+
+    d = DescriptionData()
+    a.insert_action(d, "children", DataInsertionMode.Prepend)
+    assert len(a.get_actions("children")) == 4
+    assert a.get_actions()[0].id == d.id
+    a.remove_action(d, "children")
+    assert len(a.get_actions("children")) == 3
+    assert d not in a.get_actions()
