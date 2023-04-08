@@ -41,35 +41,39 @@ class Value:
 
     """Represents an input value, keeping track of raw and "seen" value."""
 
-    def __init__(self, raw):
+    def __init__(self, raw: Any) -> None:
         """Creates a new value and initializes it.
 
-        :param raw the initial raw data
+        Args:
+            raw: the initial raw data
         """
         self._raw = raw
         self._current = raw
 
     @property
-    def raw(self):
+    def raw(self) -> Any:
         """Returns the raw unmodified value.
 
-        :return raw unmodified value
+        Returns:
+            raw unmodified value
         """
         return self._raw
 
     @property
-    def current(self):
+    def current(self) -> Any:
         """Returns the current, potentially, modified value.
 
-        :return current and potentially modified value
+        Returns:
+            current and potentially modified value
         """
         return self._current
 
     @current.setter
-    def current(self, current):
+    def current(self, current: Any) -> None:
         """Sets the current value which may differ from the raw one.
 
-        :param current the new current value
+        Args:
+            current: the new current value
         """
         self._current = current
 
