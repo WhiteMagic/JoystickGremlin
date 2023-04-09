@@ -155,6 +155,8 @@ Item {
 
             delegate: ActionNode {
                 action: modelData
+                parentAction: _root.action
+                containerName: "true"
 
                 Layout.fillWidth: true
             }
@@ -195,6 +197,8 @@ Item {
 
             delegate: ActionNode {
                 action: modelData
+                parentAction: _root.action
+                containerName: "false"
 
                 Layout.fillWidth: true
             }

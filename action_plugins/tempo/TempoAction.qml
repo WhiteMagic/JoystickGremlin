@@ -114,6 +114,8 @@ Item {
 
             delegate: ActionNode {
                 action: modelData
+                parentAction: _root.action
+                containerName: "short"
 
                 Layout.fillWidth: true
             }
@@ -149,6 +151,8 @@ Item {
 
             delegate: ActionNode {
                 action: modelData
+                parentAction: _root.action
+                containerName: "long"
 
                 Layout.fillWidth: true
             }
