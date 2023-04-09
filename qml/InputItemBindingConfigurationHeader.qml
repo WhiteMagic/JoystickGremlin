@@ -89,7 +89,7 @@ Item {
 
                 //actionNode: backend.actionSequenceRoot(_root.inputBinding)
                 actionNode: _root.inputBinding.rootAction
-                callback: function(x) { actionNode.addAction(x, ""); }
+                callback: function(x) { actionNode.appendAction(x, "children"); }
             }
 
             IconButton {

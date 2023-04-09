@@ -136,7 +136,7 @@ Item {
 
             ActionSelector {
                 actionNode: _root.node
-                callback: function(x) { _root.action.addAction(x, "if"); }
+                callback: function(x) { _root.action.appendAction(x, "if"); }
             }
         }
 
@@ -176,7 +176,7 @@ Item {
 
             ActionSelector {
                 actionNode: _root.node
-                callback: function(x) { _root.action.addAction(x, "else"); }
+                callback: function(x) { _root.action.appendAction(x, "else"); }
             }
         }
 

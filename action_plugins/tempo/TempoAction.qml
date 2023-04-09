@@ -98,7 +98,7 @@ Item {
 
             ActionSelector {
                 actionNode: _root.node
-                callback: function(x) { _root.action.addAction(x, "short"); }
+                callback: function(x) { _root.action.appendAction(x, "short"); }
             }
         }
 
@@ -133,7 +133,7 @@ Item {
 
             ActionSelector {
                 actionNode: _root.node
-                callback: function(x) { _root.action.addAction(x, "long"); }
+                callback: function(x) { _root.action.appendAction(x, "long"); }
             }
         }
 

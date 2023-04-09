@@ -99,8 +99,8 @@ class ActionModel(QtCore.QObject):
         return action_models
 
     @Slot(str, str)
-    def addAction(self, action_name: str, options: Optional[Any]=None):
-        """Adds a new action to the action of this model.
+    def appendAction(self, action_name: str, selector: Optional[str]=None):
+        """Adds a new action to the end of the specified container.
 
         Args:
             action_name: name of the action to add
@@ -243,11 +243,3 @@ class ActionModel(QtCore.QObject):
     #         uuid: uuid of the node to retrieve
 
     #     Returns:
-    #         The TreeNode corresponding to the given uuid
-    #     """
-    #     predicate = lambda x: True if x.value and x.value.id == uuid else False
-    #     nodes = self._action_tree.root.nodes_matching(predicate)
-
-    #     if len(nodes) != 1:
-    #         raise error.GremlinError(f"Unable to retrieve node with id {uuid}")
-    #     return nodes[0]
