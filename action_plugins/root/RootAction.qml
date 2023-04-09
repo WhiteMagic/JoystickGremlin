@@ -43,10 +43,12 @@ Item {
         anchors.right: parent.right
 
         Repeater {
-            model: _root.action.getActions(null)
+            model: _root.action.getActions("children")
 
             delegate: ActionNode {
                 action: modelData
+                parentAction: _root.action
+                containerName: "children"
 
                 Layout.fillWidth: true
             }

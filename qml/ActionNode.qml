@@ -27,7 +27,12 @@ import Gremlin.Profile
 Item {
     id: _root
 
+    // Data to render
     property ActionModel action
+    // Information about the hierarchy of the action sequence
+    property ActionModel parentAction
+    property string containerName
+    // Item rendering information
     property int itemSpacing : 10
 
     implicitHeight: _content.height
@@ -168,7 +173,10 @@ Item {
                 text: "\uF5DD"
 
                 onClicked: {
-                   modelData.remove()
+                    parentAction.removeAction(
+                        _root.action.actionData,
+                        containerName
+                    )
                 }
             }
         }

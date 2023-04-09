@@ -184,23 +184,21 @@ class ActionModel(QtCore.QObject):
         except GremlinError:
             signal.reloadUi.emit()
 
-    @Slot()
-    def remove(self) -> None:
-        shared_state.current_profile.remove_action(self._data, self._binding)
-        self._signal_change()
+    @Slot("QVariant", str)
+    def removeAction(self, action: AbstractActionData, selector: str) -> None:
+        """Removes the given action from the specified container.
 
-    # @Property(type=bool, notify=actionChanged)
-    # def hasChildren(self) -> bool:
-    #     return len(self._data.children) > 0
+        Args:
+            action: the action to remove
+            selector: specifies the container from which to remove the action
+        """
+        self._data.remove_action(action, selector)
+        self._signal_change()
 
     @Property(type=list, notify=actionChanged)
     def compatibleActions(self) -> List[str]:
         action_list = PluginManager().type_action_map[self._binding.behavior]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
-
-    # @Property(type=bool, notify=actionChanged)
-    # def isRootNode(self) -> bool:
-    #     return isinstance(self._action, RootAction)
 
     def _signal_change(self) -> None:
         """Emits signals causing a refresh of the actin's input binding."""
