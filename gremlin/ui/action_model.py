@@ -58,11 +58,6 @@ class ActionModel(QtCore.QObject):
         self._data = data
         self._binding = binding
 
-    def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
-        raise MissingImplementationError(
-            "ActionModel._add_action_impl not implemented in subclass"
-        )
-
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
             "ActionModel._qml_path_impl not implemented in subclass"
@@ -93,7 +88,15 @@ class ActionModel(QtCore.QObject):
         return str(self._data.id)
 
     @Slot(str, result=list)
-    def getActions(self, selector: Optional[Any]=None) -> List[ActionModel]:
+    def getActions(self, selector: Optional[str]=None) -> List[ActionModel]:
+        """Returns the collection of actions corresponding to the selector.
+
+        Args:
+            selector: name of the container to return
+
+        Returns:
+            List of actions corresponding to the given container
+        """
         action_list = self._data.get_actions(None if selector == "" else selector)
         action_models = [a.model(a, self._binding, self) for a in action_list]
         return action_models
@@ -104,14 +107,13 @@ class ActionModel(QtCore.QObject):
 
         Args:
             action_name: name of the action to add
-            options: optional information used to manage action addition
+            selector: name of the container into which to add the action
         """
         action = PluginManager().create_instance(
             action_name,
             self._binding.behavior
         )
-
-        self._add_action_impl(action, options)
+        self._data.insert_action(action, selector)
         self._signal_change()
 
     @Slot(str, str, str)
@@ -182,45 +184,14 @@ class ActionModel(QtCore.QObject):
         except GremlinError:
             signal.reloadUi.emit()
 
-    # @Slot(str)
-    # def createChildAction(self, action_name: str) -> None:
-    #     """Creates a new action as a child of the current action.
-
-    #     Args:
-    #         action_name: name of the action to add
-    #     """
-    #     action = plugin_manager.ActionPlugins().get_class(action_name)(
-    #         self._binding.behavior
-    #     )
-    #     if self._action.parent is None:
-    #         TreeNode(action, self._action)
-    #     else:
-    #         TreeNode(action, self._action.parent)
-
-    #     self._signal_change()
-
     @Slot()
     def remove(self) -> None:
         shared_state.current_profile.remove_action(self._data, self._binding)
         self._signal_change()
 
     # @Property(type=bool, notify=actionChanged)
-    # def isFirstSibling(self) -> bool:
-    #     if self._action.parent is None:
-    #         return True
-    #     else:
-    #         return self._action.parent.children[0] == self._action
-
-    # @Property(type=bool, notify=actionChanged)
-    # def isLastSibling(self) -> bool:
-    #     if self._action.parent is None:
-    #         return True
-    #     else:
-    #         return self._action.parent.children[-1] == self._action
-
-    @Property(type=bool, notify=actionChanged)
-    def hasChildren(self) -> bool:
-        return len(self._data.children) > 0
+    # def hasChildren(self) -> bool:
+    #     return len(self._data.children) > 0
 
     @Property(type=list, notify=actionChanged)
     def compatibleActions(self) -> List[str]:
@@ -235,11 +206,3 @@ class ActionModel(QtCore.QObject):
         """Emits signals causing a refresh of the actin's input binding."""
         self.actionChanged.emit()
         signal.reloadCurrentInputItem.emit()
-
-    # def _find_node_with_id(self, uuid: uuid.UUID) -> tree.TreeNode:
-    #     """Returns the node with the desired id from the action tree.
-
-    #     Args:
-    #         uuid: uuid of the node to retrieve
-
-    #     Returns:

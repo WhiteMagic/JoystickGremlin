@@ -605,12 +605,18 @@ class Profile:
                 f"No data for input {InputType.to_string(input_type)} "
                 f"{input_id} of device {device_guid}"
             )
-    
+
     def remove_action(
         self,
         action: AbstractActionData,
         binding: InputItemBinding
     ) -> None:
+        """Removes an action from the specified InputBinding instance.
+
+        Args:
+            action: the action instance to remove
+            binding: the InputBinding instance from which to remove the action
+        """
         # Remove action from its parent
         all_actions = [
             (binding.root_action, child) for child in binding.root_action.get_actions()
