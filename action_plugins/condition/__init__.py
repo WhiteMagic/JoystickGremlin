@@ -485,7 +485,7 @@ class ConditionModel(ActionModel):
             # If the condition is a CurrentInput one set the input type
             if condition_type == ConditionType.CurrentInput:
                 cond.set_input_type(self._data.behavior_type)
-            self._data._conditions.append(cond)
+            self._data.conditions.append(cond)
 
         self.conditionsChanged.emit()
 
@@ -519,10 +519,10 @@ class ConditionModel(ActionModel):
 
     @Slot(int)
     def removeCondition(self, index: int) -> None:
-        if index >= len(self._data._conditions):
+        if index >= len(self._data.conditions):
             raise GremlinError("Attempting to remove a non-existent condition.")
 
-        del self._data._conditions[index]
+        del self._data.conditions[index]
         self.conditionsChanged.emit()
 
     @Property(list, constant=True)
@@ -539,31 +539,23 @@ class ConditionModel(ActionModel):
             for e in ConditionType
         ]
 
-    @Property(list, notify=actionsChanged)
-    def trueActionNodes(self) -> List[ActionModel]:
-        return self._create_action_list(self._true_action_ids)
-
-    @Property(list, notify=actionsChanged)
-    def falseActionNodes(self) -> List[ActionModel]:
-        return self._create_action_list(self._false_action_ids)
-
     @Property(list, notify=conditionsChanged)
     def conditions(self):
-        return self._conditions
+        return self._data.conditions
 
     def _get_logical_operator(self) -> str:
-        return str(self._logical_operator.value)
+        return str(self._data.logical_operator.value)
 
     def _set_logical_operator(self, value: str) -> None:
         try:
             operator = LogicalOperator(int(value))
-            if operator == self._logical_operator:
+            if operator == self._data.logical_operator:
                 return
-            self._logical_operator = operator
+            self._data.logical_operator = operator
             self.logicalOperatorChanged.emit()
         except ValueError as e:
             logging.getLogger("system").error(
-                f"Invalid logical operator value obtained: \"{e}\"."
+                f"Condition: Invalid logical operator value obtained: \"{e}\"."
             )
 
     logicalOperator = Property(
@@ -601,10 +593,10 @@ class ConditionData(AbstractActionData):
     def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
         self._id = util.read_action_id(node)
         # Parse IF action ids
-        true_ids = util.read_action_ids(node.find("if-actions"))
+        true_ids = util.read_action_ids(node.find("true-actions"))
         self.true_actions = [library.get_action(aid) for aid in true_ids]
         # Parse ELSE action ids
-        false_ids = util.read_action_ids(node.find("else-actions"))
+        false_ids = util.read_action_ids(node.find("false-actions"))
         self.false_actions = [library.get_action(aid) for aid in false_ids]
 
         self.logical_operator = LogicalOperator.to_enum(
@@ -637,10 +629,10 @@ class ConditionData(AbstractActionData):
         for condition in self.conditions:
             node.append(condition.to_xml())
         node.append(util.create_action_ids(
-            "if-actions", [action.id for action in self.true_actions]
+            "true-actions", [action.id for action in self.true_actions]
         ))
         node.append(util.create_action_ids(
-            "else-actions", [action.id for action in self.false_actions]
+            "false-actions", [action.id for action in self.false_actions]
         ))
 
         return node

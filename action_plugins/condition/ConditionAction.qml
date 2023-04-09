@@ -32,7 +32,6 @@ import "../../qml"
 Item {
     id: _root
 
-    property ActionNodeModel node
     property ConditionModel action
 
     implicitHeight: _content.height
@@ -135,8 +134,8 @@ Item {
             }
 
             ActionSelector {
-                actionNode: _root.node
-                callback: function(x) { _root.action.appendAction(x, "if"); }
+                actionNode: _root.action
+                callback: function(x) { _root.action.appendAction(x, "true"); }
             }
         }
 
@@ -151,7 +150,7 @@ Item {
         }
 
         Repeater {
-            model: _root.action.trueActionNodes
+            model: _root.action.getActions("true")
 
             delegate: ActionNode {
                 action: modelData
@@ -177,8 +176,8 @@ Item {
             }
 
             ActionSelector {
-                actionNode: _root.node
-                callback: function(x) { _root.action.appendAction(x, "else"); }
+                actionNode: _root.action
+                callback: function(x) { _root.action.appendAction(x, "false"); }
             }
         }
 
@@ -193,7 +192,7 @@ Item {
         }
 
         Repeater {
-            model: _root.action.falseActionNodes
+            model: _root.action.getActions("false")
 
             delegate: ActionNode {
                 action: modelData

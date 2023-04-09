@@ -30,7 +30,6 @@ import "../../qml"
 Item {
     id: _root
 
-    property ActionNodeModel node
     property TempoModel action
 
     implicitHeight: _content.height
@@ -97,7 +96,7 @@ Item {
             }
 
             ActionSelector {
-                actionNode: _root.node
+                actionNode: _root.action
                 callback: function(x) { _root.action.appendAction(x, "short"); }
             }
         }
@@ -110,7 +109,7 @@ Item {
         }
 
         Repeater {
-            model: _root.action.shortActions
+            model: _root.action.getActions("short")
 
             delegate: ActionNode {
                 action: modelData
@@ -134,7 +133,7 @@ Item {
             }
 
             ActionSelector {
-                actionNode: _root.node
+                actionNode: _root.action
                 callback: function(x) { _root.action.appendAction(x, "long"); }
             }
         }
@@ -147,7 +146,7 @@ Item {
         }
 
         Repeater {
-            model: _root.action.longActions
+            model: _root.action.getActions("long")
 
             delegate: ActionNode {
                 action: modelData

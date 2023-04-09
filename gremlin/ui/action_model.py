@@ -88,7 +88,7 @@ class ActionModel(QtCore.QObject):
         return str(self._data.id)
 
     @Slot(str, result=list)
-    def getActions(self, selector: Optional[str]=None) -> List[ActionModel]:
+    def getActions(self, selector: str) -> List[ActionModel]:
         """Returns the collection of actions corresponding to the selector.
 
         Args:
@@ -97,7 +97,7 @@ class ActionModel(QtCore.QObject):
         Returns:
             List of actions corresponding to the given container
         """
-        action_list = self._data.get_actions(None if selector == "" else selector)
+        action_list = self._data.get_actions(selector)
         action_models = [a.model(a, self._binding, self) for a in action_list]
         return action_models
 

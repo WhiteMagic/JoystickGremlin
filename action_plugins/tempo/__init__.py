@@ -188,34 +188,26 @@ class TempoModel(ActionModel):
 
         self.actionsChanged.emit()
 
-    @Property(list, notify=actionsChanged)
-    def shortActions(self) -> List[ActionModel]:
-        return self._create_action_list(self._data._short_action_ids)
-
-    @Property(list, notify=actionsChanged)
-    def longActions(self) -> List[ActionModel]:
-        return self._create_action_list(self._data._long_action_ids)
-
     def _set_threshold(self, value: float) -> None:
-        if self._data._threshold != value:
-            self._data._threshold = value
+        if self._data.threshold != value:
+            self._data.threshold = value
             self.thresholdChanged.emit()
 
     @Property(float, fset=_set_threshold, notify=thresholdChanged)
     def threshold(self) -> float:
-        return self._data._threshold
+        return self._data.threshold
 
     def _set_activate_on(self, value: str) -> None:
         if value not in ["press", "release"]:
             raise GremlinError(f"Received invalid activateOn value {value}")
 
-        if self._data._activate_on != value:
-            self._data._activate_on = value
+        if self._data.activate_on != value:
+            self._data.activate_on = value
             self.activateOnChanged.emit()
 
     @Property(str, fset=_set_activate_on, notify=activateOnChanged)
     def activateOn(self) -> str:
-        return self._data._activate_on
+        return self._data.activate_on
 
 
 class TempoData(AbstractActionData):
