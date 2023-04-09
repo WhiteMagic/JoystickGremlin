@@ -132,7 +132,7 @@ class DescriptionData(AbstractActionData):
         return True
 
     def _valid_selectors(self) -> List[str]:
-        raise GremlinError(f"{self.name}: has no containers")
+        return []
 
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")

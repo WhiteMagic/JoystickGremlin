@@ -350,7 +350,7 @@ class MapToVjoyData(AbstractActionData):
         return True
 
     def _valid_selectors(self) -> List[str]:
-        raise error.GremlinError(f"{self.name}: has no containers")
+        return []
 
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise error.GremlinError(f"{self.name}: has no containers")
