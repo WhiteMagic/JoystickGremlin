@@ -29,7 +29,6 @@ import "../../qml"
 Item {
     id: _root
 
-    property ActionNodeModel node
     property MergeAxisModel action
 
     implicitHeight: _content.height

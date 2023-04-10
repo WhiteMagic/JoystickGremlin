@@ -42,7 +42,7 @@ Item {
 
         function onActionChanged()
         {
-            console.log("asdasdasdsa")
+            console.log("Action changed")
         }
     }
 

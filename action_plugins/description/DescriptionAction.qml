@@ -29,7 +29,6 @@ import "../../qml"
 
 
 Item {
-    property ActionNode node
     property DescriptionModel action
 
     implicitHeight: _content.height
