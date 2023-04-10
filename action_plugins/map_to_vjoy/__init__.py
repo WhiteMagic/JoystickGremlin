@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Optional, List
+from typing import List
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -28,6 +28,7 @@ from PySide6.QtCore import Property, Signal
 
 from gremlin import error, event_handler, input_devices, joystick_handling, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.profile import InputItemBinding, Library
 from gremlin.types import AxisMode, InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel
@@ -260,9 +261,10 @@ class MapToVjoyModel(ActionModel):
         notify=buttonInvertedChanged
     )
 
+
 class MapToVjoyData(AbstractActionData):
 
-    """Action feeding a vJoy input."""
+    """Action feeding a vJoy device."""
 
     version = 1
     name = "Map to vJoy"
@@ -284,7 +286,7 @@ class MapToVjoyData(AbstractActionData):
     ):
         super().__init__(behavior_type)
 
-        # Determine a valid vjoy input
+        # Select an initially valid vJoy input
         device = joystick_handling.vjoy_devices()[0]
         vjoy_id = device.vjoy_id
         input_id = 1
@@ -299,7 +301,7 @@ class MapToVjoyData(AbstractActionData):
         self.axis_scaling = 1.0
         self.button_inverted = False
 
-    def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
+    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.vjoy_device_id = util.read_property(
             node, "vjoy-device-id", PropertyType.Int
