@@ -424,6 +424,19 @@ def create_property_node(
     return p_node
 
 
+def append_property_nodes(
+        root_node: ElementTree.Element,
+        properties: List[TypeVar("PropertyData", str, Any, PropertyType)]
+):
+    """Creates and adds property nodes to the given root node.
+    
+    Args:
+        root_node: XML node to which to append the newly created property nodes
+        properties: data from which to create property nodes
+    """
+    for entry in properties:
+        root_node.append(create_property_node(entry[0], entry[1], entry[2]))
+
 def create_action_node(
         action_type: str,
         action_id: uuid.UUID
