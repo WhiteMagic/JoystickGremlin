@@ -158,6 +158,8 @@ Item {
             }
 
             Label {
+                id: _headerLabel
+
                 text: `<b>${_root.action.name}</b>`
             }
 
@@ -190,6 +192,7 @@ Item {
             property var dynamicItem: null
 
             Layout.fillWidth: true
+            Layout.leftMargin: _headerLabel.x
 
             visible: _foldButton.checked
 
