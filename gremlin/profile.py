@@ -448,8 +448,6 @@ class Library:
         node = ElementTree.Element("library")
         for item in self._actions.values():
             node.append(item.to_xml())
-        for item in self._trees.values():
-            node.append(item.to_xml())
         return node
 
     def _parse_xml_action(self, action: ElementTree.Element) -> None:
