@@ -38,7 +38,7 @@ Item {
 
     function reload()
     {
-
+        console.log("InputItemBinding::reload")
     }
 
     Connections {
@@ -74,15 +74,13 @@ Item {
         // +--------------------------------------------------------------------
         // | Render the root action node
         // +--------------------------------------------------------------------
-        ActionNode {
+        RootActionNode {
             id: _action_node
 
             Layout.fillWidth: true
             Layout.rightMargin: 20
 
             action: _root.inputBinding.rootAction
-
-            onActionChanged: loadDynamicItem()
         }
 
         HorizontalDivider {
