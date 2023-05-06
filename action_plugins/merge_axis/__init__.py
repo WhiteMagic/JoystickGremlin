@@ -131,12 +131,14 @@ class MergeAxisData(AbstractActionData):
         super().__init__(behavior_type)
 
         # Merge action information
+        self.label = ""
         self.axis_1 = AxisIdentifier()
         self.axis_2 = AxisIdentifier()
         self.operation = MergeOperation.Average
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
+        self.label = util.read_property(node, "label", PropertyType.String)
         self.axis_1.guid = util.read_property(
             node, "axis1-guid", PropertyType.GUID
         )
@@ -156,6 +158,7 @@ class MergeAxisData(AbstractActionData):
     def to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MergeAxisData.tag, self._id)
         entries = [
+            ["label", self.label, PropertyType.String],
             ["axis1-guid", self.axis_1.guid, PropertyType.GUID],
             ["axis1-axis", self.axis_1.axis_id, PropertyType.Int],
             ["axis2-guid", self.axis_2.guid, PropertyType.GUID],
