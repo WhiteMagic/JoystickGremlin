@@ -198,6 +198,7 @@ class ActionModel(QtCore.QObject):
     @Property(type=list, notify=actionChanged)
     def compatibleActions(self) -> List[str]:
         action_list = PluginManager().type_action_map[self._binding.behavior]
+        action_list = [entry for entry in action_list if entry.tag != "root"]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
     def _signal_change(self) -> None:
