@@ -118,9 +118,9 @@ Item {
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
         Drag.mimeData: {
-            "text/plain": _root.action.id,
+            "text/plain": _root.action.sid,
             "type": "action",
-            "root": _root.action.rootId
+            "root": _root.action.rootActionId
         }
         Drag.onDragFinished: function(action)
         {
@@ -253,10 +253,11 @@ Item {
             target: _header
             validationCallback: function(drag) {
                 return drag.getDataAsString("type") == "action" &&
-                    drag.getDataAsString("root") == _root.action.rootId
+                    drag.getDataAsString("root") == _root.action.rootActionId
             }
             dropCallback: function(drop) {
-                modelData.dropAction(drop.text, modelData.id, "append");
+                console.log(modelData)
+                modelData.dropAction(drop.text, modelData.sid, "append");
             }
         }
     }

@@ -24,6 +24,7 @@ from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import shared_state
+from gremlin.base_classes import DataInsertionMode
 from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
 from gremlin.profile import InputItemBinding
@@ -57,6 +58,7 @@ class ActionModel(QtCore.QObject):
 
         self._data = data
         self._binding = binding
+        self._sequence_id = self._binding.next_sid()
 
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
@@ -87,6 +89,14 @@ class ActionModel(QtCore.QObject):
     def id(self) -> str:
         return str(self._data.id)
 
+    @Property(type=int, notify=actionChanged)
+    def sid(self) -> int:
+        return self._sequence_id
+
+    @Property(type=str, notify=actionChanged)
+    def rootActionId(self) -> str:
+        return str(self._binding.root_action.id)
+
     @Slot(str, result=list)
     def getActions(self, selector: str) -> List[ActionModel]:
         """Returns the collection of actions corresponding to the selector.
@@ -97,7 +107,7 @@ class ActionModel(QtCore.QObject):
         Returns:
             List of actions corresponding to the given container
         """
-        action_list = self._data.get_actions(selector)
+        action_list, _ = self._data.get_actions(selector)
         action_models = [a.model(a, self._binding, self) for a in action_list]
         return action_models
 
@@ -117,14 +127,16 @@ class ActionModel(QtCore.QObject):
         self._signal_change()
 
     @Slot(str, str, str)
-    def dropAction(self, source: str, target: str, method: str) -> None:
+    def dropAction(self, source: int, target: int, method: str) -> None:
         """Handles dropping an action on an UI item.
 
         Args:
-            source: identifier of the acion being dropped
-            target: identifier of the location on which the source is dropped
+            source: sequence id of the acion being dropped
+            target: sequence id of the action on which the source is dropped
             method: type of drop action to perform
         """
+        print(source, target, method)
+
         # Force a UI refresh without performing any model changes if both
         # source and target item are identical, i.e. an invalid drag&drop
         if source == target:
@@ -154,30 +166,33 @@ class ActionModel(QtCore.QObject):
             except GremlinError:
                 signal.reloadUi.emit()
 
-    def _append_drop_action(self, source: str, target: str) -> None:
+    def _append_drop_action(self, source: int, target: int) -> None:
         """Positions the source node after the target node.
 
         Args:
-            source: string uuid value of the source node
-            target: string uuid valiue of the target node
+            source: sequence id of the source action
+            target: sequence id of the target action
         """
         try:
-            # Retrieve nodes
-            source_node = self._find_node_with_id(uuid.UUID(source))
-            target_node = self._find_node_with_id(uuid.UUID(target))
+            # Find parent actions of the source and target actions
+            s_container, s_action, s_parent = \
+                self._binding.find_action(int(source))
+            t_container, t_action, t_parent = \
+                self._binding.find_action(int(target))
 
-            # Reorder nodes, first action level then profile level
-            if source_node != target_node:
-                # Perform reordering on the parent node level if needed
-                source_node.parent.value.remove_action(source_node.value)
-                target_node.parent.value.add_action_after(
-                    target_node.value,
-                    source_node.value
-                )
+            print(s_container, s_parent, s_action)
+            print(t_container, t_parent, t_action)
 
-                # Perform reordering on the logical tree level
-                source_node.detach()
-                target_node.insert_sibling_after(source_node)
+            # Remove source from it's current parent
+            s_parent.remove_action(s_action, s_container)
+
+            # Insert source in the target's parent after the target action
+            t_parent.insert_action(
+                s_action,
+                t_container,
+                DataInsertionMode.Append,
+                t_action
+            )
 
             self.actionChanged.emit()
             self._signal_change()

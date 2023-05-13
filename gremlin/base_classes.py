@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from enum import Enum
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Tuple, Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -155,10 +155,44 @@ class AbstractActionData(ABC):
         """
         pass
 
+    def dfs_traversal(
+            self,
+            next_id: int,
+            target_id: int,
+            parent_action: AbstractActionData
+    ) -> Tuple[int, AbstractActionData]:
+        """Traverses the action in depth first order.
+
+        The traversal also keeps track on the id implicitly associated
+        with each action in a pre-order enumeration scheme.
+
+        Args:
+            next_id: next id to use for the action enumeration
+            target_id: id of the target action
+            parent_action: parent action of this action
+
+        Returns:
+            Tuple of the next id to use as well as the target action instance
+            if found
+        """
+        next_id += 1
+        # Termination criteria
+        if next_id == target_id:
+            return (next_id, self, parent_action)
+
+        # Recursively process all child actions
+        for action, container in zip(*self.get_actions()):
+            res = action.dfs_traversal(next_id, target_id, self)
+            next_id = res[0]
+            if res[1] is not None:
+                return (container, res[1], res[2])
+
+        return (next_id, None, None)
+
     def get_actions(
             self,
             selector: Optional[str]=None
-    )  -> List[AbstractActionData]:
+    )  -> Tuple[List[AbstractActionData], List[str]]:
         """Returns all actions matching the given selector.
 
         The selector indicates the container from which to return actions. If
@@ -172,12 +206,16 @@ class AbstractActionData(ABC):
         self._validate_selector(selector)
 
         actions = []
+        selectors = []
         if selector is None:
             for entry in self._valid_selectors():
-                actions.extend(self._get_container(entry))
+                new_actions = self._get_container(entry)
+                actions.extend(new_actions)
+                selectors.extend([entry] * len(new_actions))
         else:
             actions = self._get_container(selector)
-        return actions
+            selectors = [selector]  * len(actions)
+        return (actions, selectors)
 
     def insert_action(
             self,

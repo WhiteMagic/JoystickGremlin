@@ -371,6 +371,10 @@ class InputItemBindingModel(QtCore.QObject):
         )
         return self.obj
 
+    @Slot()
+    def resetSID(self):
+        self._input_item_binding.reset_sid()
+
     @property
     def input_item_binding(self) -> gremlin.profile.InputItemBinding:
         return self._input_item_binding

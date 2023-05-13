@@ -46,6 +46,7 @@ Item {
 
         function onReloadCurrentInputItem()
         {
+            inputBinding.resetSID()
             _action_node.action = inputBinding.rootAction
         }
     }

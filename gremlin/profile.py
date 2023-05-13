@@ -20,7 +20,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABCMeta
 import codecs
 import logging
-from typing import List, Optional, Set, TYPE_CHECKING
+from typing import List, Optional, Set, Tuple, TYPE_CHECKING
 import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -720,6 +720,9 @@ class InputItemBinding:
         self.behavior = None
         self.virtual_button = None
 
+        # Sequence id used to uniquely identify actions in this binding
+        self._next_sequence_id = 0
+
     def from_xml(self, node: ElementTree.Element) -> None:
         self.description = read_subelement(node, "description")
         root_id = read_subelement(node, "root-action")
@@ -744,6 +747,40 @@ class InputItemBinding:
             node.append(vb_node)
 
         return node
+
+    def reset_sid(self) -> None:
+        """Resets the sequence id to zero."""
+        self._next_sequence_id = 0
+
+    def next_sid(self) -> int:
+        """Returns the next available sequence ID.
+        
+        This returns an ID to use for actions that are part of this binding
+        and enumerate them in the creation order, i.e. depth first traversal.
+
+        Returns:
+            next sequence id to use
+        """
+        self._next_sequence_id += 1
+        return self._next_sequence_id
+
+    def find_action(
+            self,
+            sequence_id: int
+        ) -> Tuple[str, AbstractActionData, AbstractActionData]:
+        """
+        Returns the container name, action, and its parent for the specified
+        sequence id.
+
+        Args:
+            sequence_id: sequence id of the action to find
+
+        Returns:
+            Tuple containing the action corresponding to the sequence id, the
+            parent action, and the parent's container name that contains the
+            desired action.
+        """
+        return self.root_action.dfs_traversal(0, sequence_id, self.root_action)
 
     def _parse_virtual_button(
         self,
