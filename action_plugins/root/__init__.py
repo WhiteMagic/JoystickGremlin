@@ -104,7 +104,7 @@ class RootData(AbstractActionData):
         self.children = [library.get_action(aid) for aid in child_ids]
 
     def to_xml(self) -> ElementTree.Element:
-        node = util.create_action_node(RootModel.tag, self._id)
+        node = util.create_action_node(RootData.tag, self._id)
         node.append(util.create_action_ids(
             "actions",
             [child.id for child in self.children]
