@@ -65,12 +65,12 @@ class DescriptionModel(ActionModel):
             parent: QtCore.QObject
     ):
         super().__init__(data, binding, parent)
-    
+
     def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(
             "core_plugins:description/DescriptionAction.qml"
         ).fileName()
-    
+
     def _get_description(self) -> str:
         return self._data.description
 

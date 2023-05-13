@@ -103,7 +103,7 @@ class AbstractActionData(ABC):
     @property
     def behavior_type(self) -> InputType:
         """Returns the behavior type this action is configured for.
-        
+
         Returns:
             InputType corresponding to the action's behavior
         """
@@ -111,7 +111,7 @@ class AbstractActionData(ABC):
 
     def set_behavior_type(self, new_behavior: InputType) -> None:
         """Sets the behavior type of the action.
-        
+
         Args:
             new_behavior: new InputType corresponding to the behavior type
         """
@@ -231,7 +231,7 @@ class AbstractActionData(ABC):
         at the end of the container while prepending inserts it as the first
         element. If an anchor action is provided, appending inserts it after
         the anchor while prepending inserts it before.
-        
+
         Args:
             action: the action to insert as a child
             selector: name of the container into which to insert the action
@@ -341,10 +341,10 @@ class AbstractActionData(ABC):
     # ) -> List[ActionModel]:
     #     """Returns a list containing actions with an id matching the provided
     #     ones.
-        
+
     #     Args:
     #         action_ids: List of ids of actions to retrieve
-        
+
     #     Returns:
     #         List of actions corresponding to the provided ids
     #     """

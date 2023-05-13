@@ -50,7 +50,7 @@ Item {
             _action_node.action = inputBinding.rootAction
         }
     }
-    
+
 
     // Content
     ColumnLayout {

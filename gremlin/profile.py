@@ -346,7 +346,7 @@ class Library:
         recursive: bool=True
     ) -> None:
         """Removes the provided action and all its children if unsued.
-        
+
         Args:
             action: the action to remove
             recursive: if true all children of the action will be subjected
@@ -357,7 +357,7 @@ class Library:
         for entry in self._actions.values():
             if action in entry.get_actions():
                 return
-        
+
         # Build a list of all actions linked to the provided action and then
         # attempt to remove them one after the other
         if recursive:
@@ -367,12 +367,11 @@ class Library:
                 all_actions.extend(all_actions[index].get_actions())
                 index += 1
             all_actions.pop(0)
-        
+
             for entry in reversed(all_actions):
                 self.remove_unused(entry, True)
-        
+
         del self._actions[action.id]
-        
 
     def get_action(self, key: uuid.UUID) -> AbstractActionData:
         """Returns the action specified by the key.
@@ -628,7 +627,7 @@ class Profile:
             if entry[1] == action:
                 entry[0].remove_action(action)
                 break
-        
+
         # Remove the action and its children from the library if they are
         # unused
         self.library.remove_unused(action, recursive=True)
@@ -754,7 +753,7 @@ class InputItemBinding:
 
     def next_sid(self) -> int:
         """Returns the next available sequence ID.
-        
+
         This returns an ID to use for actions that are part of this binding
         and enumerate them in the creation order, i.e. depth first traversal.
 

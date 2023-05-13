@@ -60,7 +60,7 @@ Item {
         }
         else
         {
-            component.statusChanged.connect(finishCreation);   
+            component.statusChanged.connect(finishCreation);
         }
 
         function finishCreation()

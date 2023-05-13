@@ -56,7 +56,7 @@ class RootModel(ActionModel):
             parent: QtCore.QObject
     ):
         super().__init__(data, binding, parent)
-    
+
     def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
         self._data.insert_action(action, options)
 

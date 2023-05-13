@@ -75,7 +75,7 @@ class MergeOperation(Enum):
             raise GremlinError(
                 "MergeOperation: invalid value in lookup '{value}'"
             )
-    
+
     @staticmethod
     def to_enum(value: str) -> MergeOperation:
         try:
@@ -175,7 +175,7 @@ class MergeAxisData(AbstractActionData):
 
     def is_valid(self) -> bool:
         return super().is_valid()
-    
+
     def _valid_selectors(self) -> List[str]:
         return []
 

@@ -429,7 +429,7 @@ def append_property_nodes(
         properties: List[TypeVar("PropertyData", str, Any, PropertyType)]
 ):
     """Creates and adds property nodes to the given root node.
-    
+
     Args:
         root_node: XML node to which to append the newly created property nodes
         properties: data from which to create property nodes
