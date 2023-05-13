@@ -172,6 +172,8 @@ Item {
             }
 
             IconButton {
+                id: _removeButton
+
                 text: "\uF5DD"
 
                 onClicked: {
@@ -226,7 +228,7 @@ Item {
         x: _header.x
         y: _header.y
         z: -1
-        width: _header.width
+        width: _header.width + 20
         height: _header.height
 
         drag.target: _content

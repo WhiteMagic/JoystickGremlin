@@ -87,7 +87,6 @@ Item {
             ActionSelector {
                 Layout.alignment: Qt.AlignRight
 
-                //actionNode: backend.actionSequenceRoot(_root.inputBinding)
                 actionNode: _root.inputBinding.rootAction
                 callback: function(x) { actionNode.appendAction(x, "children"); }
             }

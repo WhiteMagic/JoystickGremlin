@@ -279,8 +279,8 @@ class InputItemModel(QtCore.QObject):
             "Root",
             self._input_item.input_type
         )
-        
-        # Create binding instance and add it to the input item        
+
+        # Create binding instance and add it to the input item
         binding = gremlin.profile.InputItemBinding(self._input_item)
         binding.root_action = action
         binding.behavior = self._input_item.input_type
@@ -340,6 +340,7 @@ class InputItemBindingModel(QtCore.QObject):
         super().__init__(parent)
 
         self._input_item_binding = input_item_binding
+        self._input_item_binding.reset_sid()
         self._virtual_button_model = VirtualButtonModel(
             self._input_item_binding.virtual_button
         )
@@ -353,14 +354,6 @@ class InputItemBindingModel(QtCore.QObject):
     @Property(type=VirtualButtonModel, notify=virtualButtonChanged)
     def virtualButton(self) -> VirtualButtonModel:
         return self._virtual_button_model
-
-    @Property(type=int, notify=actionCountChanged)
-    def actionCount(self) -> int:
-        return self._action_tree.root.node_count
-
-    @Property(str, constant=True)
-    def actionTreeId(self) -> str:
-        return str(self._input_item_binding.root_action.id)
 
     @Property(type=ActionModel, notify=rootActionChanged)
     def rootAction(self) -> RootModel:
