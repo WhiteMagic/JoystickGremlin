@@ -288,7 +288,7 @@ class TempoData(AbstractActionData):
     def _get_container(
             self,
             selector: Optional[str] = None
-    ) -> Union[List[AbstractActionData], List[List[AbstractActionData]]]:
+    ) -> List[AbstractActionData]:
         if selector == "short":
             return self.short_actions
         elif selector == "long":
