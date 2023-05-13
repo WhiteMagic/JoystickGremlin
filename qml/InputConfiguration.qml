@@ -121,8 +121,8 @@ Item {
                 Drag.supportedActions: Qt.MoveAction
                 Drag.proposedAction: Qt.MoveAction
                 Drag.mimeData: {
-                    "text/plain": modelData.actionTreeId,
-                    "type": "actiontree"
+                    "text/plain": modelData.rootAction.id,
+                    "type": "binding"
                 }
 
                 Drag.onDragFinished: function(drop)
@@ -141,12 +141,12 @@ Item {
                     dropCallback: function(drop) {
                         _root.inputItemModel.dropAction(
                             drop.text,
-                            modelData.actionTreeId,
+                            modelData.rootAction.id,
                             "append"
                         )
                     }
                     validationCallback: function(drop) {
-                        return drag.getDataAsString("type") == "actiontree"
+                        return drop.getDataAsString("type") == "binding"
                     }
                 }
             }

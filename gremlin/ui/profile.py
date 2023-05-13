@@ -307,13 +307,11 @@ class InputItemModel(QtCore.QObject):
         target_id = uuid.UUID(target)
         source_entry = None
         for idx, entry in enumerate(self._input_item.action_sequences):
-            entry_id = entry.library_reference.action_tree.root.value.id
-            if entry_id == source_id:
+            if entry.root_action.id == source_id:
                 source_entry = self._input_item.action_sequences.pop(idx)
         if source_entry is not None:
             for idx, entry in enumerate(self._input_item.action_sequences):
-                entry_id = entry.library_reference.action_tree.root.value.id
-                if entry_id == target_id:
+                if entry.root_action.id == target_id:
                     self._input_item.action_sequences.insert(idx+1, source_entry)
 
         self.bindingsChanged.emit()
