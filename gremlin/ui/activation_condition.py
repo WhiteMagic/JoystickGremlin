@@ -624,14 +624,6 @@ class VJoyConditionWidget(AbstractConditionWidget):
         self.condition_data.vjoy_id = data["device_id"]
         self.condition_data.input_type = data["input_type"]
         self.condition_data.input_id = data["input_id"]
-
-        if data["input_type"] == InputType.JoystickAxis:
-            self.condition_data.comparison = "inside"
-        elif data["input_type"] == InputType.JoystickButton:
-            self.condition_data.comparison = "pressed"
-        elif data["input_type"] == InputType.JoystickHat:
-            self.condition_data.comparison = \
-                util.hat_tuple_to_direction((0, 0))
         self._create_ui()
 
     def _range_lower_changed_cb(self, value):
