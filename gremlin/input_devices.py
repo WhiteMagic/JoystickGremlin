@@ -584,7 +584,7 @@ class ButtonReleaseActions(QtCore.QObject):
         self._current_mode = eh.active_mode
         eh.mode_changed.connect(self._mode_changed_cb)
 
-    def register_callback(self, callback, physical_event):
+    def register_callback(self, callback, physical_event, mode_name = None):
         """Registers a callback with the system.
 
         :param callback the function to run when the corresponding button is
@@ -596,9 +596,11 @@ class ButtonReleaseActions(QtCore.QObject):
 
         if release_evt not in self._registry:
             self._registry[release_evt] = []
-        # Do not record the mode since we may want to run the release action
-        # independent of a mode
-        self._registry[release_evt].append((callback, None))
+
+        # hack: keep a track of mode for temporary switch back, so that
+        # the temporary mode that might not be at the top of the
+        # mode stack is removed
+        self._registry[release_evt].append((callback, None, mode_name))
 
     def register_button_release(self, vjoy_input, physical_event):
         """Registers a physical and vjoy button pair for tracking.
@@ -647,7 +649,11 @@ class ButtonReleaseActions(QtCore.QObject):
         """
         if evt in self._registry and not evt.is_pressed:
             for entry in self._registry[evt]:
-                entry[0]()
+                # hack around switch_to_previous with mode_name, see register_callback() hack note
+                if len(entry) > 2 and entry[2] is not None:
+                    entry[0](entry[2])
+                else:
+                    entry[0]()
             self._registry[evt] = []
 
     def _mode_changed_cb(self, mode):

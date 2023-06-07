@@ -863,10 +863,11 @@ class GremlinUi(QtWidgets.QMainWindow):
 
         :param mode the now current mode
         """
-        self.status_bar_mode.setText("<b>Mode:</b> {}".format(mode))
+        mode_stack_len = len(gremlin.control_action.mode_stack) - 1
+        self.status_bar_mode.setText("<b>Mode:</b> {} &#91;{}&#93;".format(mode, mode_stack_len))
         if self.config.mode_change_message:
             self.ui.tray_icon.showMessage(
-                "Mode: {}".format(mode),
+                "Mode: {} [{}]".format(mode, mode_stack_len),
                 "",
                 0,
                 250
@@ -1244,6 +1245,13 @@ if __name__ == "__main__":
         "logfile": os.path.join(gremlin.util.userprofile_path(), "user.log"),
         "format": "%(asctime)s %(message)s"
     })
+    configure_logger({
+        "name": "mode_stack",
+        "level": logging.DEBUG,
+        "logfile": os.path.join(gremlin.util.userprofile_path(), "mode_stack.log"),
+        "format": "%(asctime)s %(message)s"
+    })
+
 
     syslog = logging.getLogger("system")
 
