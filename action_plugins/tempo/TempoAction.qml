@@ -162,7 +162,7 @@ Item {
     ActionDragDropArea {
         target: _shortDivider
         dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.id, "short");
+            modelData.dropAction(drop.text, modelData.sid, "short");
         }
     }
 
@@ -170,7 +170,7 @@ Item {
     ActionDragDropArea {
         target: _longDivider
         dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.id, "long");
+            modelData.dropAction(drop.text, modelData.sid, "long");
         }
     }
 }

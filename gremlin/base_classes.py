@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from enum import Enum
-from typing import Any, Callable, List, Tuple, Optional
+from typing import Any, List, Tuple, Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -127,7 +127,7 @@ class AbstractActionData(ABC):
     def from_xml(
             self,
             node: ElementTree.Element,
-            library: profile.Library
+            library: Library
     ) -> None:
         """Populates the instance's values with the content of the XML node.
 
@@ -160,7 +160,7 @@ class AbstractActionData(ABC):
             next_id: int,
             target_id: int,
             parent_action: AbstractActionData
-    ) -> Tuple[int, AbstractActionData]:
+    ) -> Tuple[int, AbstractActionData, AbstractActionData]:
         """Traverses the action in depth first order.
 
         The traversal also keeps track on the id implicitly associated
@@ -175,19 +175,26 @@ class AbstractActionData(ABC):
             Tuple of the next id to use as well as the target action instance
             if found
         """
-        next_id += 1
         # Termination criteria
         if next_id == target_id:
             return (next_id, self, parent_action)
 
         # Recursively process all child actions
         for action, container in zip(*self.get_actions()):
-            res = action.dfs_traversal(next_id, target_id, self)
-            next_id = res[0]
+            res = action.dfs_traversal(next_id+1, target_id, self)
             if res[1] is not None:
-                return (container, res[1], res[2])
+                if not isinstance(res[0], int):
+                    return res
+                else:
+                    return (container, res[1], res[2])
+            next_id = res[0]
 
         return (next_id, None, None)
+
+    def dfs_callback(self, cur_id, parent, container) -> None:
+        container[(self.id, parent.id)] = cur_id
+        for action, container_name in zip(*self.get_actions()):
+            action.dfs_callback(cur_id+1, self, container)
 
     def get_actions(
             self,

@@ -22,18 +22,17 @@ import copy
 import logging
 import threading
 import time
-from typing import List, Optional
+from typing import Any, List, Optional
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import event_handler, plugin_manager, util
-from gremlin.error import GremlinError
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
-    DataInsertionMode, Value
+from gremlin import event_handler, util
+from gremlin.error import GremlinError, ProfileError
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.config import Configuration
-from gremlin.profile import InputItemBinding
+from gremlin.profile import InputItemBinding, Library
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
 
@@ -179,12 +178,12 @@ class TempoModel(ActionModel):
         if len(nodes) != 1:
             raise GremlinError(f"Node with ID {self.id} has invalid state")
         nodes[0].add_child(TreeNode(action))
-        if activation == "short":
+        if options == "short":
             self._short_action_ids.append(action.id)
-        elif activation == "long":
+        elif options == "long":
             self._long_action_ids.append(action.id)
         else:
-            raise GremlinError(f"Invalid branch specification: {activation}")
+            raise GremlinError(f"Invalid branch specification: {options}")
 
         self.actionsChanged.emit()
 
@@ -241,7 +240,7 @@ class TempoData(AbstractActionData):
         self.threshold = Configuration().value("action", "tempo", "duration")
         self.activate_on = "release"
 
-    def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
+    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         short_ids = util.read_action_ids(node.find("short-actions"))
         self.short_actions = [library.get_action(aid) for aid in short_ids]
@@ -254,7 +253,7 @@ class TempoData(AbstractActionData):
             node, "activate-on", PropertyType.String
         )
         if self.activate_on not in ["press", "release"]:
-            raise error.ProfileError(
+            raise ProfileError(
                 f"Invalid activat-on value present: {self.activate_on}"
             )
 
@@ -283,7 +282,7 @@ class TempoData(AbstractActionData):
         return True
 
     def _valid_selectors(self) -> List[str]:
-        return ["short", "long"]
+        return ["long", "short"]
 
     def _get_container(
             self,

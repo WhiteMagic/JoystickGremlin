@@ -58,7 +58,20 @@ class ActionModel(QtCore.QObject):
 
         self._data = data
         self._binding = binding
-        self._sequence_id = self._binding.next_sid()
+
+        if hasattr(parent, "_data"):
+            self._sequence_id = self._binding.sequence_id(
+                self._data.id,
+                parent._data.id
+            )
+        elif hasattr(parent, "root_action"):
+            self._sequence_id = self._binding.sequence_id(
+                self._data.id,
+                parent.root_action.id
+            )
+        else:
+            raise GremlinError(f"Invalid parent type {str(parent)}")
+        print()
 
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
@@ -126,7 +139,7 @@ class ActionModel(QtCore.QObject):
         self._data.insert_action(action, selector)
         self._signal_change()
 
-    @Slot(str, str, str)
+    @Slot(int, int, str)
     def dropAction(self, source: int, target: int, method: str) -> None:
         """Handles dropping an action on an UI item.
 
@@ -147,38 +160,25 @@ class ActionModel(QtCore.QObject):
         if method == "append":
             self._append_drop_action(source, target)
         else:
-            try:
-                # Retrieve tree nodes corresponding to the actions
-                source_node = self._find_node_with_id(uuid.UUID(source))
-                target_node = self._find_node_with_id(uuid.UUID(target))
+            self._append_drop_action(source, target, method)
 
-                # Handle action level reordering
-                source_node.parent.value.remove_action(source_node.value)
-                target_node.value.insert_action(method, source_node.value)
-
-                # Handle tree level reodering
-                source_node.detach()
-                target_node.insert_child(source_node, 0)
-
-                # Redraw UI
-                self.actionChanged.emit()
-                self._signal_change()
-            except GremlinError:
-                signal.reloadUi.emit()
-
-    def _append_drop_action(self, source: int, target: int) -> None:
+    def _append_drop_action(
+            self,
+            source: int,
+            target: int,
+            container: Optional[str]=None
+        ) -> None:
         """Positions the source node after the target node.
 
         Args:
             source: sequence id of the source action
             target: sequence id of the target action
+            container: name of the container to insert the action into
         """
         try:
             # Find parent actions of the source and target actions
-            s_container, s_action, s_parent = \
-                self._binding.find_action(int(source))
-            t_container, t_action, t_parent = \
-                self._binding.find_action(int(target))
+            s_container, s_action, s_parent = self._binding.find_action(source)
+            t_container, t_action, t_parent = self._binding.find_action(target)
 
             print(s_container, s_parent, s_action)
             print(t_container, t_parent, t_action)
@@ -187,12 +187,20 @@ class ActionModel(QtCore.QObject):
             s_parent.remove_action(s_action, s_container)
 
             # Insert source in the target's parent after the target action
-            t_parent.insert_action(
-                s_action,
-                t_container,
-                DataInsertionMode.Append,
-                t_action
-            )
+            if container is None:
+                t_parent.insert_action(
+                    s_action,
+                    t_container,
+                    DataInsertionMode.Append,
+                    t_action
+                )
+            else:
+                t_parent.insert_action(
+                    s_action,
+                    container,
+                    DataInsertionMode.Prepend,
+                    t_action
+                )
 
             self.actionChanged.emit()
             self._signal_change()

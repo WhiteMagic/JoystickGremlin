@@ -160,7 +160,7 @@ Item {
             Label {
                 id: _headerLabel
 
-                text: `<b>${_root.action.name}</b>`
+                text: `<b>${_root.action.name} (${_root.action.sid})</b>`
             }
 
             Rectangle {

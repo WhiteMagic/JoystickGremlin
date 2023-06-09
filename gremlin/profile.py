@@ -720,7 +720,7 @@ class InputItemBinding:
         self.virtual_button = None
 
         # Sequence id used to uniquely identify actions in this binding
-        self._next_sequence_id = 0
+        self._sequence_ids = self._build_sequence_ids()
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.description = read_subelement(node, "description")
@@ -749,9 +749,13 @@ class InputItemBinding:
 
     def reset_sid(self) -> None:
         """Resets the sequence id to zero."""
-        self._next_sequence_id = 0
+        self._sequence_ids = self._build_sequence_ids()
 
-    def next_sid(self) -> int:
+    def sequence_id(
+            self,
+            action_id: uuid.UUID,
+            parent_id: uuid.UUID
+        ) -> int:
         """Returns the next available sequence ID.
 
         This returns an ID to use for actions that are part of this binding
@@ -760,8 +764,14 @@ class InputItemBinding:
         Returns:
             next sequence id to use
         """
-        self._next_sequence_id += 1
-        return self._next_sequence_id
+        return self._sequence_ids[(parent_id, action_id)]
+
+    def _build_sequence_ids(self) -> None:
+        data = {}
+        if self.root_action is not None:
+            self.root_action.dfs_callback(0, self.root_action, data)
+        return data
+
 
     def find_action(
             self,
@@ -779,7 +789,11 @@ class InputItemBinding:
             parent action, and the parent's container name that contains the
             desired action.
         """
-        return self.root_action.dfs_traversal(0, sequence_id, self.root_action)
+        return self.root_action.dfs_traversal(
+            0,
+            sequence_id,
+            self.root_action,
+        )
 
     def _parse_virtual_button(
         self,

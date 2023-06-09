@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import uuid
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
@@ -34,6 +34,9 @@ from gremlin.util import clamp
 from gremlin.plugin_manager import PluginManager
 
 from gremlin.ui.action_model import ActionModel
+
+if TYPE_CHECKING:
+    from gremlin.base_classes import AbstractActionData
 
 
 QML_IMPORT_NAME = "Gremlin.Profile"
@@ -361,6 +364,10 @@ class InputItemBindingModel(QtCore.QObject):
             parent=self
         )
         return self.obj
+
+    @property
+    def root_action(self) -> AbstractActionData:
+        return self._input_item_binding.root_action
 
     @Slot()
     def resetSID(self):
