@@ -29,6 +29,7 @@ from action_plugins.root import RootModel
 
 import gremlin.profile
 import gremlin.signal
+from gremlin.profile import ActionIndex
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 from gremlin.util import clamp
 from gremlin.plugin_manager import PluginManager
@@ -341,10 +342,54 @@ class InputItemBindingModel(QtCore.QObject):
         super().__init__(parent)
 
         self._input_item_binding = input_item_binding
-        self._input_item_binding.reset_sid()
         self._virtual_button_model = VirtualButtonModel(
             self._input_item_binding.virtual_button
         )
+
+        self._action_models = {}
+        self._index_lookup = {}
+        self._child_lookup = {}
+        self._create_action_models()
+
+    def _create_action_models(self) -> None:
+        # Reset storage
+        self._action_models = {}
+        self._index_lookup = {}
+        self._child_lookup = {}
+
+        # Initialize action queue
+        actions = [(self.root_action, None), ]
+        parent_indices = [ActionIndex(None, None, None),]
+        count = 0
+
+        while len(actions) > 0:
+            # Grab first item from the queue
+            action, container = actions.pop(0)
+            parent_index = parent_indices.pop(0)
+
+            # Create model for the action and store it
+            index = ActionIndex(parent_index.index, container, count)
+            model = action.model(action, self, index, parent_index, self)
+            self._action_models[index] = model
+            self._index_lookup[index.index] = model
+            key = (index.parent_index, index.container_name)
+            if key not in self._child_lookup:
+                self._child_lookup[key] = []
+            self._child_lookup[key].append(model)
+
+            # Add all children to the list of items to process
+            c_actions, c_containers = action.get_actions()
+            actions.extend(zip(c_actions, c_containers))
+            parent_indices.extend([index,] * len(c_actions))
+
+            count += 1
+
+    def get_action_models(
+            self,
+            index: ActionIndex,
+            container: str
+    ) -> List[ActionModel]:
+        return self._child_lookup.get((index.index, container), [])
 
     @Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
@@ -358,12 +403,7 @@ class InputItemBindingModel(QtCore.QObject):
 
     @Property(type=ActionModel, notify=rootActionChanged)
     def rootAction(self) -> RootModel:
-        self.obj = RootModel(
-            self._input_item_binding.root_action,
-            self._input_item_binding,
-            parent=self
-        )
-        return self.obj
+        return self._index_lookup[0]
 
     @property
     def root_action(self) -> AbstractActionData:

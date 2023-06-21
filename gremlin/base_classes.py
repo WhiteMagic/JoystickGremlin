@@ -19,13 +19,13 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 from enum import Enum
-from typing import Any, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional
 import uuid
 from xml.etree import ElementTree
 
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
-from gremlin.profile import Library
+from gremlin.profile import ActionIndex, Library
 from gremlin.types import InputType
 
 
@@ -154,47 +154,6 @@ class AbstractActionData(ABC):
             True if the instance is in a valid state, False otherwise
         """
         pass
-
-    def dfs_traversal(
-            self,
-            next_id: int,
-            target_id: int,
-            parent_action: AbstractActionData
-    ) -> Tuple[int, AbstractActionData, AbstractActionData]:
-        """Traverses the action in depth first order.
-
-        The traversal also keeps track on the id implicitly associated
-        with each action in a pre-order enumeration scheme.
-
-        Args:
-            next_id: next id to use for the action enumeration
-            target_id: id of the target action
-            parent_action: parent action of this action
-
-        Returns:
-            Tuple of the next id to use as well as the target action instance
-            if found
-        """
-        # Termination criteria
-        if next_id == target_id:
-            return (next_id, self, parent_action)
-
-        # Recursively process all child actions
-        for action, container in zip(*self.get_actions()):
-            res = action.dfs_traversal(next_id+1, target_id, self)
-            if res[1] is not None:
-                if not isinstance(res[0], int):
-                    return res
-                else:
-                    return (container, res[1], res[2])
-            next_id = res[0]
-
-        return (next_id, None, None)
-
-    def dfs_callback(self, cur_id, parent, container) -> None:
-        container[(self.id, parent.id)] = cur_id
-        for action, container_name in zip(*self.get_actions()):
-            action.dfs_callback(cur_id+1, self, container)
 
     def get_actions(
             self,

@@ -73,6 +73,40 @@ def extract_remap_actions(action_sets):
     return remap_actions
 
 
+class ActionIndex:
+
+    def __init__(
+            self,
+            parent_index: int | None,
+            container_name: str | None,
+            index: int,
+    ):
+        """Creates a new action index instance.
+
+        This models the QModelIndex class.
+
+        Args:
+            parent_index: index assigned to the parent action
+            container_name: name of the parent's container
+            index: index assigned to this action
+        """
+        self._parent_index = parent_index
+        self._container_name = container_name
+        self._index = index
+
+    @property
+    def index(self) -> int:
+        return self._index
+
+    @property
+    def parent_index(self) -> int:
+        return self._parent_index
+
+    @property
+    def container_name(self) -> str:
+        return self._container_name
+
+
 class AbstractVirtualButton(metaclass=ABCMeta):
 
     """Base class of all virtual buttons."""
@@ -719,9 +753,6 @@ class InputItemBinding:
         self.behavior = None
         self.virtual_button = None
 
-        # Sequence id used to uniquely identify actions in this binding
-        self._sequence_ids = self._build_sequence_ids()
-
     def from_xml(self, node: ElementTree.Element) -> None:
         self.description = read_subelement(node, "description")
         root_id = read_subelement(node, "root-action")
@@ -746,54 +777,6 @@ class InputItemBinding:
             node.append(vb_node)
 
         return node
-
-    def reset_sid(self) -> None:
-        """Resets the sequence id to zero."""
-        self._sequence_ids = self._build_sequence_ids()
-
-    def sequence_id(
-            self,
-            action_id: uuid.UUID,
-            parent_id: uuid.UUID
-        ) -> int:
-        """Returns the next available sequence ID.
-
-        This returns an ID to use for actions that are part of this binding
-        and enumerate them in the creation order, i.e. depth first traversal.
-
-        Returns:
-            next sequence id to use
-        """
-        return self._sequence_ids[(parent_id, action_id)]
-
-    def _build_sequence_ids(self) -> None:
-        data = {}
-        if self.root_action is not None:
-            self.root_action.dfs_callback(0, self.root_action, data)
-        return data
-
-
-    def find_action(
-            self,
-            sequence_id: int
-        ) -> Tuple[str, AbstractActionData, AbstractActionData]:
-        """
-        Returns the container name, action, and its parent for the specified
-        sequence id.
-
-        Args:
-            sequence_id: sequence id of the action to find
-
-        Returns:
-            Tuple containing the action corresponding to the sequence id, the
-            parent action, and the parent's container name that contains the
-            desired action.
-        """
-        return self.root_action.dfs_traversal(
-            0,
-            sequence_id,
-            self.root_action,
-        )
 
     def _parse_virtual_button(
         self,

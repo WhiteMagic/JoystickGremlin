@@ -17,28 +17,25 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, TYPE_CHECKING
-import uuid
+from typing import List, Optional, TYPE_CHECKING
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import shared_state
 from gremlin.base_classes import DataInsertionMode
 from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
-from gremlin.profile import InputItemBinding
+from gremlin.profile import ActionIndex
 from gremlin.signal import signal
 from gremlin.types import InputType
 
-
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
+    from gremlin.ui.profile import InputItemBindingModel
 
 
 QML_IMPORT_NAME = "Gremlin.Profile"
 QML_IMPORT_MAJOR_VERSION = 1
-
 
 
 @QtQml.QmlElement
@@ -51,27 +48,17 @@ class ActionModel(QtCore.QObject):
     def __init__(
             self,
             data: AbstractActionData,
-            binding: InputItemBinding,
+            binding_model: InputItemBindingModel,
+            action_index: ActionIndex,
+            parent_index: ActionIndex,
             parent: QtCore.QObject
     ):
         super().__init__(parent)
 
         self._data = data
-        self._binding = binding
-
-        if hasattr(parent, "_data"):
-            self._sequence_id = self._binding.sequence_id(
-                self._data.id,
-                parent._data.id
-            )
-        elif hasattr(parent, "root_action"):
-            self._sequence_id = self._binding.sequence_id(
-                self._data.id,
-                parent.root_action.id
-            )
-        else:
-            raise GremlinError(f"Invalid parent type {str(parent)}")
-        print()
+        self._binding_model = binding_model
+        self._action_index = action_index
+        self._parent_index = parent_index
 
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
@@ -80,11 +67,11 @@ class ActionModel(QtCore.QObject):
 
     @property
     def input_type(self) -> InputType:
-        return self._binding.behavior
+        return self._binding_model.behavior_type
 
     @Property(type=InputType, notify=actionChanged)
     def inputType(self) -> InputType:
-        return self._binding.behavior
+        return self._binding_model.behavior_type
 
     @Property(type="QVariant", notify=actionChanged)
     def actionData(self) -> AbstractActionData:
@@ -103,12 +90,12 @@ class ActionModel(QtCore.QObject):
         return str(self._data.id)
 
     @Property(type=int, notify=actionChanged)
-    def sid(self) -> int:
-        return self._sequence_id
+    def actionId(self) -> int:
+        return self._action_index.index
 
     @Property(type=str, notify=actionChanged)
     def rootActionId(self) -> str:
-        return str(self._binding.root_action.id)
+        return str(self._binding_model.root_action.id)
 
     @Slot(str, result=list)
     def getActions(self, selector: str) -> List[ActionModel]:
@@ -120,9 +107,10 @@ class ActionModel(QtCore.QObject):
         Returns:
             List of actions corresponding to the given container
         """
-        action_list, _ = self._data.get_actions(selector)
-        action_models = [a.model(a, self._binding, self) for a in action_list]
-        return action_models
+        return self._binding_model.get_action_models(
+            self._action_index,
+            selector
+        )
 
     @Slot(str, str)
     def appendAction(self, action_name: str, selector: Optional[str]=None):
@@ -220,7 +208,9 @@ class ActionModel(QtCore.QObject):
 
     @Property(type=list, notify=actionChanged)
     def compatibleActions(self) -> List[str]:
-        action_list = PluginManager().type_action_map[self._binding.behavior]
+        action_list = PluginManager().type_action_map[
+            self._binding_model.behavior_type
+        ]
         action_list = [entry for entry in action_list if entry.tag != "root"]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
