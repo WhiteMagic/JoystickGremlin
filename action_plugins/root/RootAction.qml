@@ -42,7 +42,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        Repeater {
+        ListView {
             model: _root.action.getActions("children")
 
             delegate: ActionNode {
