@@ -33,10 +33,13 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataInsertionMode, Value
 from gremlin.error import GremlinError
 from gremlin.config import Configuration
-from gremlin.profile import InputItemBinding, Library
+from gremlin.profile import ActionIndex, Library
 from gremlin.types import InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel
+
+if TYPE_CHECKING:
+    from gremlin.ui.profile import InputItemBindingModel
 
 
 class RootFunctor(AbstractFunctor):
@@ -47,15 +50,15 @@ class RootFunctor(AbstractFunctor):
 
 class RootModel(ActionModel):
 
-    #actionsChanged = Signal()
-
     def __init__(
             self,
             data: AbstractActionData,
-            binding: InputItemBinding,
+            binding_model: InputItemBindingModel,
+            action_index: ActionIndex,
+            parent_index: ActionIndex,
             parent: QtCore.QObject
     ):
-        super().__init__(data, binding, parent)
+        super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
         self._data.insert_action(action, options)

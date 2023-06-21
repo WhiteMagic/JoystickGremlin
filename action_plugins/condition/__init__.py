@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
@@ -31,12 +31,17 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError
 from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
+from gremlin.profile import ActionIndex
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
 from gremlin.ui.action_model import ActionModel
 
 from . import comparator
+
+
+if TYPE_CHECKING:
+    from gremlin.ui.profile import InputItemBindingModel
 
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -456,10 +461,12 @@ class ConditionModel(ActionModel):
     def __init__(
             self,
             data: AbstractActionData,
-            binding: InputItemBinding,
+            binding_model: InputItemBindingModel,
+            action_index: ActionIndex,
+            parent_index: ActionIndex,
             parent: QtCore.QObject
     ):
-        super().__init__(data, binding, parent)
+        super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(

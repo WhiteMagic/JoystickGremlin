@@ -22,7 +22,7 @@ import copy
 import logging
 import threading
 import time
-from typing import Any, List, Optional
+from typing import Any, List, Optional, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -32,11 +32,14 @@ from gremlin import event_handler, util
 from gremlin.error import GremlinError, ProfileError
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.config import Configuration
-from gremlin.profile import InputItemBinding, Library
+from gremlin.profile import ActionIndex, Library
 from gremlin.tree import TreeNode
 from gremlin.types import InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel
+
+if TYPE_CHECKING:
+    from gremlin.ui.profile import InputItemBindingModel
 
 
 class TempoFunctor(AbstractFunctor):
@@ -155,10 +158,12 @@ class TempoModel(ActionModel):
     def __init__(
             self,
             data: AbstractActionData,
-            binding: InputItemBinding,
+            binding_model: InputItemBindingModel,
+            action_index: ActionIndex,
+            parent_index: ActionIndex,
             parent: QtCore.QObject
     ):
-        super().__init__(data, binding, parent)
+        super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(

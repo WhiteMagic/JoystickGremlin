@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import List
+from typing import List, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -28,10 +28,13 @@ from PySide6.QtCore import Property, Signal
 
 from gremlin import error, event_handler, input_devices, joystick_handling, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
-from gremlin.profile import InputItemBinding, Library
+from gremlin.profile import ActionIndex, Library
 from gremlin.types import AxisMode, InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel
+
+if TYPE_CHECKING:
+    from gremlin.ui.profile import InputItemBindingModel
 
 
 class MapToVjoyFunctor(AbstractFunctor):
@@ -157,10 +160,12 @@ class MapToVjoyModel(ActionModel):
     def __init__(
             self,
             data: AbstractActionData,
-            binding: InputItemBinding,
+            binding_model: InputItemBindingModel,
+            action_index: ActionIndex,
+            parent_index: ActionIndex,
             parent: QtCore.QObject
     ):
-        super().__init__(data, binding, parent)
+        super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(
