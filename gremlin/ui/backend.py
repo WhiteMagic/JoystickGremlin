@@ -154,27 +154,34 @@ class Backend(QtCore.QObject):
         except error.ProfileError as e:
             print(e)
 
-    @Slot(str, result=bool)
-    def isActionExpanded(self, uuid_str: str) -> bool:
+    @Slot(str, int, result=bool)
+    def isActionExpanded(self, uuid_str: str, index: int) -> bool:
         """Returns whether or not a specific action is expanded in the UI.
 
         Args:
-            uuid_str: UUUID of the action in question represented as a string
+            uuid: uuid of the action
+            index: index of the particular action
 
         Returns:
             True if the action is expanded, False otherwise
         """
-        return self._action_state.get(uuid.UUID(uuid_str), True)
+        return self._action_state.get((uuid.UUID(uuid_str), index), True)
 
-    @Slot(str, bool)
-    def setIsActionExpanded(self, uuid_str, is_expanded) -> None:
+    @Slot(str, int, bool)
+    def setIsActionExpanded(
+        self,
+        uuid_str: str,
+        index: int,
+        is_expanded: bool
+    ) -> None:
         """Sets a specific action's expanded state.
 
         Args:
-            uuid_str: UUID of the action in question represented as a string
+            uuid: uuid of the action
+            index: index of the particular action
             is_expanded: True if the action is expanded, False otherwise
         """
-        self._action_state[uuid.UUID(uuid_str)] = bool(is_expanded)
+        self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
 
     @Property(type=list, notify=recentProfilesChanged)
     def recentProfiles(self) -> List[str]:

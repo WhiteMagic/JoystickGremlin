@@ -146,21 +146,28 @@ Item {
                 id: _foldButton
 
                 checkable: true
-                checked: backend.isActionExpanded(_root.action.id)
+                checked: backend.isActionExpanded(
+                    _root.action.id,
+                    _root.action.actionId
+                )
                 text: checked ? Constants.folded : Constants.unfolded
 
                 Layout.alignment: Qt.AlignBaseline
                 Layout.leftMargin: -10
 
                 onClicked: {
-                    backend.setIsActionExpanded(_root.action.id, checked)
+                    backend.setIsActionExpanded(
+                        _root.action.id,
+                        _root.action.actionId,
+                        checked
+                    )
                 }
             }
 
             Label {
                 id: _headerLabel
 
-                text: `<b>${_root.action.name} (${_root.action.sid})</b>`
+                text: `<b>${_root.action.name} (${_root.action.actionId})</b>`
             }
 
             Rectangle {
