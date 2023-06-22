@@ -148,7 +148,7 @@ Item {
                 checkable: true
                 checked: backend.isActionExpanded(
                     _root.action.id,
-                    _root.action.actionId
+                    _root.action.sequenceIndex
                 )
                 text: checked ? Constants.folded : Constants.unfolded
 
@@ -158,7 +158,7 @@ Item {
                 onClicked: {
                     backend.setIsActionExpanded(
                         _root.action.id,
-                        _root.action.actionId,
+                        _root.action.sequenceIndex,
                         checked
                     )
                 }
@@ -167,7 +167,7 @@ Item {
             Label {
                 id: _headerLabel
 
-                text: `<b>${_root.action.name} (${_root.action.actionId})</b>`
+                text: `<b>${_root.action.name} (${_root.action.sequenceIndex})</b>`
             }
 
             Rectangle {

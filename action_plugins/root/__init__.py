@@ -33,10 +33,10 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataInsertionMode, Value
 from gremlin.error import GremlinError
 from gremlin.config import Configuration
-from gremlin.profile import ActionIndex, Library
+from gremlin.profile import Library
 from gremlin.types import InputType, PropertyType
 
-from gremlin.ui.action_model import ActionModel
+from gremlin.ui.action_model import SequenceIndex, ActionModel
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -54,8 +54,8 @@ class RootModel(ActionModel):
             self,
             data: AbstractActionData,
             binding_model: InputItemBindingModel,
-            action_index: ActionIndex,
-            parent_index: ActionIndex,
+            action_index: SequenceIndex,
+            parent_index: SequenceIndex,
             parent: QtCore.QObject
     ):
         super().__init__(data, binding_model, action_index, parent_index, parent)

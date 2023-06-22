@@ -25,7 +25,7 @@ from xml.etree import ElementTree
 
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
-from gremlin.profile import ActionIndex, Library
+from gremlin.profile import Library
 from gremlin.types import InputType
 
 

@@ -25,7 +25,6 @@ from PySide6.QtCore import Property, Signal, Slot
 from gremlin.base_classes import DataInsertionMode
 from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
-from gremlin.profile import ActionIndex
 from gremlin.signal import signal
 from gremlin.types import InputType
 
@@ -36,6 +35,38 @@ if TYPE_CHECKING:
 
 QML_IMPORT_NAME = "Gremlin.Profile"
 QML_IMPORT_MAJOR_VERSION = 1
+
+
+class SequenceIndex:
+
+    def __init__(
+            self,
+            parent_index: int | None,
+            container_name: str | None,
+            index: int,
+    ):
+        """Creates a new action index instance.
+        This models the QModelIndex class.
+        Args:
+            parent_index: index assigned to the parent action
+            container_name: name of the parent's container
+            index: index assigned to this action
+        """
+        self._parent_index = parent_index
+        self._container_name = container_name
+        self._index = index
+
+    @property
+    def index(self) -> int:
+        return self._index
+
+    @property
+    def parent_index(self) -> int:
+        return self._parent_index
+
+    @property
+    def container_name(self) -> str:
+        return self._container_name
 
 
 @QtQml.QmlElement
@@ -49,16 +80,16 @@ class ActionModel(QtCore.QObject):
             self,
             data: AbstractActionData,
             binding_model: InputItemBindingModel,
-            action_index: ActionIndex,
-            parent_index: ActionIndex,
+            action_index: SequenceIndex,
+            parent_index: SequenceIndex,
             parent: QtCore.QObject
     ):
         super().__init__(parent)
 
         self._data = data
         self._binding_model = binding_model
-        self._action_index = action_index
-        self._parent_index = parent_index
+        self._sequence_index = action_index
+        self._parent_sequence_index = parent_index
 
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
@@ -90,8 +121,8 @@ class ActionModel(QtCore.QObject):
         return str(self._data.id)
 
     @Property(type=int, notify=actionChanged)
-    def actionId(self) -> int:
-        return self._action_index.index
+    def sequenceIndex(self) -> int:
+        return self._sequence_index.index
 
     @Property(type=str, notify=actionChanged)
     def rootActionId(self) -> str:
@@ -108,7 +139,7 @@ class ActionModel(QtCore.QObject):
             List of actions corresponding to the given container
         """
         return self._binding_model.get_action_models(
-            self._action_index,
+            self._sequence_index,
             selector
         )
 

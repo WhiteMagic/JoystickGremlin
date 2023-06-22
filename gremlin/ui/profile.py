@@ -29,7 +29,7 @@ from action_plugins.root import RootModel
 
 import gremlin.profile
 import gremlin.signal
-from gremlin.profile import ActionIndex
+from gremlin.ui.action_model import SequenceIndex
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 from gremlin.util import clamp
 from gremlin.plugin_manager import PluginManager
@@ -359,7 +359,7 @@ class InputItemBindingModel(QtCore.QObject):
 
         # Initialize action queue
         actions = [(self.root_action, None), ]
-        parent_indices = [ActionIndex(None, None, None),]
+        parent_indices = [SequenceIndex(None, None, None),]
         count = 0
 
         while len(actions) > 0:
@@ -368,7 +368,7 @@ class InputItemBindingModel(QtCore.QObject):
             parent_index = parent_indices.pop(0)
 
             # Create model for the action and store it
-            index = ActionIndex(parent_index.index, container, count)
+            index = SequenceIndex(parent_index.index, container, count)
             model = action.model(action, self, index, parent_index, self)
             self._action_models[index] = model
             self._index_lookup[index.index] = model
@@ -386,7 +386,7 @@ class InputItemBindingModel(QtCore.QObject):
 
     def get_action_models(
             self,
-            index: ActionIndex,
+            index: SequenceIndex,
             container: str
     ) -> List[ActionModel]:
         return self._child_lookup.get((index.index, container), [])
@@ -408,10 +408,6 @@ class InputItemBindingModel(QtCore.QObject):
     @property
     def root_action(self) -> AbstractActionData:
         return self._input_item_binding.root_action
-
-    @Slot()
-    def resetSID(self):
-        self._input_item_binding.reset_sid()
 
     @property
     def input_item_binding(self) -> gremlin.profile.InputItemBinding:

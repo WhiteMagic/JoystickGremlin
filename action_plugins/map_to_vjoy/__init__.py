@@ -28,10 +28,10 @@ from PySide6.QtCore import Property, Signal
 
 from gremlin import error, event_handler, input_devices, joystick_handling, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
-from gremlin.profile import ActionIndex, Library
+from gremlin.profile import Library
 from gremlin.types import AxisMode, InputType, PropertyType
 
-from gremlin.ui.action_model import ActionModel
+from gremlin.ui.action_model import SequenceIndex, ActionModel
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -161,8 +161,8 @@ class MapToVjoyModel(ActionModel):
             self,
             data: AbstractActionData,
             binding_model: InputItemBindingModel,
-            action_index: ActionIndex,
-            parent_index: ActionIndex,
+            action_index: SequenceIndex,
+            parent_index: SequenceIndex,
             parent: QtCore.QObject
     ):
         super().__init__(data, binding_model, action_index, parent_index, parent)

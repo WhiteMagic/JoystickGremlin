@@ -73,40 +73,6 @@ def extract_remap_actions(action_sets):
     return remap_actions
 
 
-class ActionIndex:
-
-    def __init__(
-            self,
-            parent_index: int | None,
-            container_name: str | None,
-            index: int,
-    ):
-        """Creates a new action index instance.
-
-        This models the QModelIndex class.
-
-        Args:
-            parent_index: index assigned to the parent action
-            container_name: name of the parent's container
-            index: index assigned to this action
-        """
-        self._parent_index = parent_index
-        self._container_name = container_name
-        self._index = index
-
-    @property
-    def index(self) -> int:
-        return self._index
-
-    @property
-    def parent_index(self) -> int:
-        return self._parent_index
-
-    @property
-    def container_name(self) -> str:
-        return self._container_name
-
-
 class AbstractVirtualButton(metaclass=ABCMeta):
 
     """Base class of all virtual buttons."""

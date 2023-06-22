@@ -31,11 +31,10 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError
 from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
-from gremlin.profile import ActionIndex
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
-from gremlin.ui.action_model import ActionModel
+from gremlin.ui.action_model import ActionModel, SequenceIndex
 
 from . import comparator
 
@@ -462,8 +461,8 @@ class ConditionModel(ActionModel):
             self,
             data: AbstractActionData,
             binding_model: InputItemBindingModel,
-            action_index: ActionIndex,
-            parent_index: ActionIndex,
+            action_index: SequenceIndex,
+            parent_index: SequenceIndex,
             parent: QtCore.QObject
     ):
         super().__init__(data, binding_model, action_index, parent_index, parent)
