@@ -33,12 +33,13 @@ Item {
     property InputIdentifier inputIdentifier
     property InputItemModel inputItemModel
 
-    function reload() {
+    function reload()
+    {
         _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
     }
 
     onInputIdentifierChanged: {
-        _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
+        reload()
     }
 
     // Reload UI when the model to display changes
@@ -47,7 +48,7 @@ Item {
 
         function onInputConfigurationChanged()
         {
-            _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
+            reload()
         }
     }
 

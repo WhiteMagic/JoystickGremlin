@@ -118,7 +118,7 @@ Item {
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
         Drag.mimeData: {
-            "text/plain": _root.action.sid,
+            "text/plain": _root.action.sequenceIndex,
             "type": "action",
             "root": _root.action.rootActionId
         }
@@ -265,8 +265,7 @@ Item {
                     drag.getDataAsString("root") == _root.action.rootActionId
             }
             dropCallback: function(drop) {
-                console.log(modelData)
-                modelData.dropAction(drop.text, modelData.sid, "append");
+                modelData.dropAction(drop.text, modelData.sequenceIndex, "append");
             }
         }
     }

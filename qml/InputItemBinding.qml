@@ -36,18 +36,12 @@ Item {
 
     implicitHeight: _content.height
 
-    function reload()
-    {
-        console.log("InputItemBinding::reload")
-    }
-
     Connections {
         target: signal
 
         function onReloadCurrentInputItem()
         {
-            inputBinding.resetSID()
-            _action_node.action = inputBinding.rootAction
+            // Currently unused
         }
     }
 
