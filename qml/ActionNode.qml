@@ -181,7 +181,7 @@ Item {
             IconButton {
                 id: _removeButton
 
-                text: "\uF5DD"
+                text: Constants.remove
 
                 onClicked: {
                     parentAction.removeAction(

@@ -51,7 +51,7 @@ Item {
 
                 font.pixelSize: 24
                 horizontalPadding: -5
-                text: "\uF3FE"
+                text: Constants.verticalDrag
 
                 // Drag handle mouse interaction area
                 MouseArea {
@@ -94,7 +94,7 @@ Item {
             IconButton {
                 id: _headerRemove
 
-                text: "\uF628"
+                text: Constants.remove
                 font.pixelSize: 24
 
                 onClicked: function()
