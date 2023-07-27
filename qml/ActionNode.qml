@@ -42,7 +42,7 @@ Item {
 
         function onActionChanged()
         {
-            console.log("Action changed")
+            // Not used currently
         }
     }
 

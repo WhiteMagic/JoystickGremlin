@@ -19,7 +19,6 @@
 import QtQuick
 import QtQuick.Controls
 
-
 Button {
     font.family: "BootstrapIcons"
     font.pixelSize: 16
