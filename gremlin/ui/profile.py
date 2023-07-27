@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import uuid
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
@@ -29,12 +29,13 @@ from action_plugins.root import RootModel
 
 import gremlin.profile
 import gremlin.signal
-from gremlin.ui.action_model import SequenceIndex
+from gremlin.base_classes import DataInsertionMode
+from gremlin.error import GremlinError
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 from gremlin.util import clamp
 from gremlin.plugin_manager import PluginManager
 
-from gremlin.ui.action_model import ActionModel
+from gremlin.ui.action_model import ActionModel, SequenceIndex
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
@@ -349,6 +350,7 @@ class InputItemBindingModel(QtCore.QObject):
         self._action_models = {}
         self._index_lookup = {}
         self._child_lookup = {}
+        self._container_index_lookup = {}
         self._create_action_models()
 
     def _create_action_models(self) -> None:
@@ -356,22 +358,26 @@ class InputItemBindingModel(QtCore.QObject):
         self._action_models = {}
         self._index_lookup = {}
         self._child_lookup = {}
+        self._container_index_lookup = {}
 
         # Initialize action queue
         actions = [(self.root_action, None), ]
         parent_indices = [SequenceIndex(None, None, None),]
+        container_indices = [0, ]
         count = 0
 
         while len(actions) > 0:
             # Grab first item from the queue
             action, container = actions.pop(0)
             parent_index = parent_indices.pop(0)
+            container_index = container_indices.pop(0)
 
             # Create model for the action and store it
             index = SequenceIndex(parent_index.index, container, count)
             model = action.model(action, self, index, parent_index, self)
             self._action_models[index] = model
-            self._index_lookup[index.index] = model
+            self._index_lookup[index.index] = index
+            self._container_index_lookup[index] = container_index
             key = (index.parent_index, index.container_name)
             if key not in self._child_lookup:
                 self._child_lookup[key] = []
@@ -379,17 +385,144 @@ class InputItemBindingModel(QtCore.QObject):
 
             # Add all children to the list of items to process
             c_actions, c_containers = action.get_actions()
-            actions.extend(zip(c_actions, c_containers))
-            parent_indices.extend([index,] * len(c_actions))
+            c_index = 0
+            for i in range(len(c_actions)):
+                actions.append((c_actions[i], c_containers[i]))
+                parent_indices.append(index)
+                if i > 0:
+                    if c_containers[i] != c_containers[i-1]:
+                        c_index = 0
+                container_indices.append(c_index)
+                c_index += 1
 
             count += 1
 
-    def get_action_models(
+    def get_child_actions(
             self,
             index: SequenceIndex,
             container: str
     ) -> List[ActionModel]:
         return self._child_lookup.get((index.index, container), [])
+
+    def get_action_model_by_sidx(self, sidx: int) -> ActionModel:
+        if sidx not in self._index_lookup:
+            raise GremlinError(f"No action with sequence index {sidx} exists")
+        return self._action_models[self._index_lookup[sidx]]
+
+    def get_action_container_index(self, index: SequenceIndex) -> int:
+        """Returns the linear index into the container storing the action.
+
+        Args:
+            index: sequence index of the action
+
+        Returns:
+            Linear index into the container holding the action
+        """
+        return self._container_index_lookup[index]
+
+    def action_information(
+            self,
+            index: int
+    ) -> Tuple[str, AbstractActionData, AbstractActionData]:
+        """Returns the action model corresponding to the given index.
+
+        Args:
+            index: sequence index of the action to return
+
+        Returns:
+            ActionModel corresponding to the given index
+        """
+        if index not in self._index_lookup:
+            raise GremlinError(f"No action with provided index: {index}")
+        return self._action_models[self._index_lookup[index]].data
+
+    def move_action(self, source_idx: int, target_idx: int) -> None:
+        """Moves the source action to the spot after the target action.
+
+        Args:
+            source_idx: sequence index of the action to move
+            target_idx: sequence index of the action after which to place the
+                moved action
+        """
+        s_model = self.get_action_model_by_sidx(source_idx)
+        t_model = self.get_action_model_by_sidx(target_idx)
+        s_parent = self.get_action_model_by_sidx(
+            s_model.sequence_index.parent_index
+        )
+        t_parent = self.get_action_model_by_sidx(
+            t_model.sequence_index.parent_index
+        )
+
+        s_parent_identifier = (
+            s_model.sequence_index.parent_index,
+            s_model.sequence_index.container_name
+        )
+        t_parent_identifier = (
+            t_model.sequence_index.parent_index,
+            t_model.sequence_index.container_name
+        )
+
+        # If source and target are in the same container special care has to
+        # be taken to ensure removal and insertion happen in a valid order
+        move_performed = False
+        if s_parent_identifier == t_parent_identifier:
+            # Determine container indices of the source and target actions
+            s_lid = self.get_action_container_index(s_model.sequence_index)
+            t_lid = self.get_action_container_index(t_model.sequence_index)
+
+            # Perform the action that affects a change in the rear part
+            # of the container
+            if s_lid < t_lid:
+                move_performed = True
+                self.append_action(s_model.action_data, t_model.sequence_index)
+                self.remove_action(s_model.sequence_index)
+
+        # This is the default case if the source and target actions are part
+        # of different parent actions or containers. Also if the source action
+        # is after the target action, performing the removal first is safe.
+        if not move_performed:
+            self.remove_action(s_model.sequence_index)
+            self.append_action(s_model.action_data, t_model.sequence_index)
+
+        self._create_action_models()
+        self.rootActionChanged.emit()
+
+    def remove_action(self, action_index: SequenceIndex) -> None:
+        """Removes the specified action from its parent.
+
+        Args:
+            action_index: sequence index identifying the action to remove
+        """
+        parent_data = \
+            self.get_action_model_by_sidx(action_index.parent_index).action_data
+        parent_data.remove_action(
+            self.get_action_container_index(action_index),
+            action_index.container_name
+        )
+
+    def append_action(
+            self,
+            action_data: AbstractActionData,
+            target_index: SequenceIndex
+    ) -> None:
+        """Appends the provided action data after the specified action.
+
+        Args:
+            action_data: data of the action to append
+            target_index: sequence index of the action after which to insert
+                the new action's data
+        """
+        parent_data = \
+            self.get_action_model_by_sidx(target_index.parent_index).action_data
+        parent_data.insert_action(
+            action_data,
+            target_index.container_name,
+            DataInsertionMode.Append,
+            self.get_action_container_index(target_index)
+        )
+
+    def refresh(self) -> None:
+        self._create_action_models()
 
     @Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
@@ -403,7 +536,7 @@ class InputItemBindingModel(QtCore.QObject):
 
     @Property(type=ActionModel, notify=rootActionChanged)
     def rootAction(self) -> RootModel:
-        return self._index_lookup[0]
+        return self._action_models[self._index_lookup[0]]
 
     @property
     def root_action(self) -> AbstractActionData:

@@ -188,7 +188,7 @@ class AbstractActionData(ABC):
             action: AbstractActionData,
             selector: str,
             mode: DataInsertionMode=DataInsertionMode.Append,
-            anchor: Optional[AbstractActionData]=None
+            anchor: Optional[int]=None
     ) -> None:
         """Inserts an action as a child of the current object.
 
@@ -202,42 +202,41 @@ class AbstractActionData(ABC):
             action: the action to insert as a child
             selector: name of the container into which to insert the action
             mode: insertion mode to use when adding the action
-            anchor: the action specifying the position at which the insertion
-                is performed
+            anchor: offset into the container that specifies where to perform
+                the insertion
         """
         self._validate_selector(selector, False)
 
         container = self._get_container(selector)
         if anchor is None:
-            index = 0 if mode == DataInsertionMode.Prepend else len(container)
+            anchor = 0 if mode == DataInsertionMode.Prepend else len(container)
         else:
-            if anchor not in container:
+            if not (0 <= anchor <= len(container)):
                 raise GremlinError(
-                    f"{self.name}: specified anchor with id '{anchor.id}' is " +
+                    f"{self.name}: specified anchor index '{anchor.id}' is " +
                     f"not present in container '{selector}'"
                 )
-            index = container.index(anchor)
             if mode == DataInsertionMode.Append:
-                index += 1
+                anchor += 1
 
-        container.insert(index, action)
+        container.insert(anchor, action)
 
-    def remove_action(self, action: AbstractActionData, selector: str) -> None:
+    def remove_action(self, index: int, selector: str) -> None:
         """Removes the provided action from this action's children.
 
         Args:
-            action: the action to remove
+            index: index of the action in the container to remove
             selector: the container in which the action is located
         """
         self._validate_selector(selector)
 
         container = self._get_container(selector)
-        if action in container:
-            container.remove(action)
+        if 0 <= index <= len(container):
+            del container[index]
         else:
             raise GremlinError(
-                f"{self.name}: attempting to remove non-existent action " +
-                f"'{action.id}' from container '{selector}'"
+                f"{self.name}: attempting to remove action with invalid " +
+                f"index ({index}) from container '{selector}'"
             )
 
     @abstractmethod

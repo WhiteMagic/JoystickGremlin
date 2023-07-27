@@ -138,7 +138,7 @@ class ActionModel(QtCore.QObject):
         Returns:
             List of actions corresponding to the given container
         """
-        return self._binding_model.get_action_models(
+        return self._binding_model.get_child_actions(
             self._sequence_index,
             selector
         )
@@ -167,8 +167,6 @@ class ActionModel(QtCore.QObject):
             target: sequence id of the action on which the source is dropped
             method: type of drop action to perform
         """
-        print(source, target, method)
-
         # Force a UI refresh without performing any model changes if both
         # source and target item are identical, i.e. an invalid drag&drop
         if source == target:
@@ -181,48 +179,33 @@ class ActionModel(QtCore.QObject):
         else:
             self._append_drop_action(source, target, method)
 
+    @property
+    def action_data(self) -> AbstractActionData:
+        return self._data
+
+    @property
+    def sequence_index(self) -> SequenceIndex:
+        return self._sequence_index
+
+    @property
+    def parent_sequence_index(self) -> SequenceIndex:
+        return self._parent_sequence_index
+
     def _append_drop_action(
             self,
-            source: int,
-            target: int,
+            source_sidx: int,
+            target_sidx: int,
             container: Optional[str]=None
         ) -> None:
         """Positions the source node after the target node.
 
         Args:
-            source: sequence id of the source action
-            target: sequence id of the target action
+            source_sidx: sequence index of the source action
+            target_sidx: sequence index of the target action
             container: name of the container to insert the action into
         """
         try:
-            # Find parent actions of the source and target actions
-            s_container, s_action, s_parent = self._binding.find_action(source)
-            t_container, t_action, t_parent = self._binding.find_action(target)
-
-            print(s_container, s_parent, s_action)
-            print(t_container, t_parent, t_action)
-
-            # Remove source from it's current parent
-            s_parent.remove_action(s_action, s_container)
-
-            # Insert source in the target's parent after the target action
-            if container is None:
-                t_parent.insert_action(
-                    s_action,
-                    t_container,
-                    DataInsertionMode.Append,
-                    t_action
-                )
-            else:
-                t_parent.insert_action(
-                    s_action,
-                    container,
-                    DataInsertionMode.Prepend,
-                    t_action
-                )
-
-            self.actionChanged.emit()
-            self._signal_change()
+            self._binding_model.move_action(source_sidx, target_sidx)
         except GremlinError:
             signal.reloadUi.emit()
 
@@ -246,6 +229,5 @@ class ActionModel(QtCore.QObject):
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
     def _signal_change(self) -> None:
-        """Emits signals causing a refresh of the actin's input binding."""
-        self.actionChanged.emit()
+        """Emits signals causing a refresh of the action's input binding."""
         signal.reloadCurrentInputItem.emit()
