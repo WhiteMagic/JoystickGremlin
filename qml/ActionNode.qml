@@ -184,10 +184,7 @@ Item {
                 text: Constants.remove
 
                 onClicked: {
-                    parentAction.removeAction(
-                        _root.action.actionData,
-                        containerName
-                    )
+                    parentAction.removeAction(_root.action.sequenceIndex)
                 }
             }
         }

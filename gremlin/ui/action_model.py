@@ -170,14 +170,22 @@ class ActionModel(QtCore.QObject):
         # Force a UI refresh without performing any model changes if both
         # source and target item are identical, i.e. an invalid drag&drop
         if source == target:
-            self.actionChanged.emit()
-            self._signal_change()
+            self._binding_model.rootActionChanged()
             return
 
         if method == "append":
             self._append_drop_action(source, target)
         else:
             self._append_drop_action(source, target, method)
+
+    @Slot(int)
+    def removeAction(self, index: int) -> None:
+        """Removes the given action from the specified container.
+
+        Args:
+            index: sequence index corresponding to the action to remove
+        """
+        self._binding_model.remove_action(index)
 
     @property
     def action_data(self) -> AbstractActionData:
@@ -209,17 +217,6 @@ class ActionModel(QtCore.QObject):
         except GremlinError:
             signal.reloadUi.emit()
 
-    @Slot("QVariant", str)
-    def removeAction(self, action: AbstractActionData, selector: str) -> None:
-        """Removes the given action from the specified container.
-
-        Args:
-            action: the action to remove
-            selector: specifies the container from which to remove the action
-        """
-        self._data.remove_action(action, selector)
-        self._signal_change()
-
     @Property(type=list, notify=actionChanged)
     def compatibleActions(self) -> List[str]:
         action_list = PluginManager().type_action_map[
@@ -228,6 +225,3 @@ class ActionModel(QtCore.QObject):
         action_list = [entry for entry in action_list if entry.tag != "root"]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
-    def _signal_change(self) -> None:
-        """Emits signals causing a refresh of the action's input binding."""
-        signal.reloadCurrentInputItem.emit()
