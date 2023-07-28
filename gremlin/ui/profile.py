@@ -440,13 +440,22 @@ class InputItemBindingModel(QtCore.QObject):
             raise GremlinError(f"No action with provided index: {index}")
         return self._action_models[self._index_lookup[index]].data
 
-    def move_action(self, source_idx: int, target_idx: int) -> None:
+    def move_action(
+            self,
+            source_idx: int,
+            target_idx: int,
+            container: Optional[str]=None
+    ) -> None:
         """Moves the source action to the spot after the target action.
+
+        If a container name is given then the source action will be appended to
+        the container with the given name of the target action.
 
         Args:
             source_idx: sequence index of the action to move
             target_idx: sequence index of the action after which to place the
                 moved action
+            container: name of the container to insert the action into
         """
         s_model = self.get_action_model_by_sidx(source_idx)
         t_model = self.get_action_model_by_sidx(target_idx)
@@ -535,7 +544,8 @@ class InputItemBindingModel(QtCore.QObject):
     def append_action(
             self,
             action_data: AbstractActionData,
-            target_index: SequenceIndex
+            target_index: SequenceIndex,
+            container: Optional[str]=None
     ) -> None:
         """Appends the provided action data after the specified action.
 

@@ -213,7 +213,10 @@ class ActionModel(QtCore.QObject):
             container: name of the container to insert the action into
         """
         try:
-            self._binding_model.move_action(source_sidx, target_sidx)
+            if container is None:
+                self._binding_model.move_action(source_sidx, target_sidx)
+            else:
+                self._binding_model.move_action(source_sidx, target_sidx, container)
         except GremlinError:
             signal.reloadUi.emit()
 
