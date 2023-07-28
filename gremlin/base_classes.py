@@ -300,41 +300,6 @@ class AbstractActionData(ABC):
                 f"{self.name}: provided selector '{selector}' is invalid"
             )
 
-    # def _create_action_list(
-    #     self,
-    #     action_ids: List[uuid.UUID]
-    # ) -> List[ActionModel]:
-    #     """Returns a list containing actions with an id matching the provided
-    #     ones.
-
-    #     Args:
-    #         action_ids: List of ids of actions to retrieve
-
-    #     Returns:
-    #         List of actions corresponding to the provided ids
-    #     """
-    #     actions = []
-    #     # FIXME: this is outdated and needs replacing
-    #     # for action in self._action_tree.root.nodes_matching(
-    #     #     lambda x: x.value.id in action_ids
-    #     # ):
-    #     #     # Set parent relationship to handle object deletion properly
-    #     #     action.setParent(self)
-    #     #     # Create model instances representing the individual action
-    #     #     actions.append(ActionModel(
-    #     #         action,
-    #     #         self.behavior_type,
-    #     #         self._action_tree,
-    #     #         parent=self
-    #     #     ))
-    #    return actions
-
-    # def _find_actions_matching_predicate(
-    #     self,
-    #     predicate: Callable[[AbstractActionData], bool]
-    # ) -> List[AbstractActionData]:
-    #     pass
-
     def _remove_entry_from_list(self, storage: List[Any], value: Any) -> None:
         """Removes the provided value from the given container.
 

@@ -466,27 +466,39 @@ class InputItemBindingModel(QtCore.QObject):
             t_model.sequence_index.container_name
         )
 
-        # If source and target are in the same container special care has to
-        # be taken to ensure removal and insertion happen in a valid order
-        move_performed = False
-        if s_parent_identifier == t_parent_identifier:
-            # Determine container indices of the source and target actions
-            s_lid = self.get_action_container_index(s_model.sequence_index)
-            t_lid = self.get_action_container_index(t_model.sequence_index)
-
-            # Perform the action that affects a change in the rear part
-            # of the container
-            if s_lid < t_lid:
-                move_performed = True
-                self.append_action(s_model.action_data, t_model.sequence_index)
-                self.remove_action(s_model.sequence_index, False)
-
-        # This is the default case if the source and target actions are part
-        # of different parent actions or containers. Also if the source action
-        # is after the target action, performing the removal first is safe.
-        if not move_performed:
+        if container is not None:
             self.remove_action(s_model.sequence_index, False)
-            self.append_action(s_model.action_data, t_model.sequence_index)
+            self.append_action(
+                s_model.action_data,
+                t_model.sequence_index,
+                container
+            )
+        else:
+            # If source and target are in the same container special care has to
+            # be taken to ensure removal and insertion happen in a valid order
+            move_performed = False
+            if s_parent_identifier == t_parent_identifier:
+                # Determine container indices of the source and target actions
+                s_lid = self.get_action_container_index(s_model.sequence_index)
+                t_lid = self.get_action_container_index(t_model.sequence_index)
+
+                # Perform the action that affects a change in the rear part
+                # of the container
+                if s_lid < t_lid:
+                    move_performed = True
+                    self.append_action(
+                        s_model.action_data,
+                        t_model.sequence_index
+                    )
+                    self.remove_action(s_model.sequence_index, False)
+
+            # This is the default case if the source and target actions are part
+            # of different parent actions or containers. Also if the source
+            # action is after the target action, performing the removal first
+            # is safe.
+            if not move_performed:
+                self.remove_action(s_model.sequence_index, False)
+                self.append_action(s_model.action_data, t_model.sequence_index)
 
         self._create_action_models()
         self.rootActionChanged.emit()
@@ -532,14 +544,23 @@ class InputItemBindingModel(QtCore.QObject):
             target_index: sequence index of the action after which to insert
                 the new action's data
         """
-        parent_data = \
-            self.get_action_model_by_sidx(target_index.parent_index).action_data
-        parent_data.insert_action(
-            action_data,
-            target_index.container_name,
-            DataInsertionMode.Append,
-            self.get_action_container_index(target_index)
-        )
+        
+        if container is None:
+            parent_data = self.get_action_model_by_sidx(
+                target_index.parent_index
+            ).action_data
+            parent_data.insert_action(
+                action_data,
+                target_index.container_name,
+                DataInsertionMode.Append,
+                self.get_action_container_index(target_index)
+            )
+        else:
+            target_data = self.get_action_model_by_sidx(
+                target_index.index
+            ).action_data
+            target_data.insert_action(action_data, container)
+
 
     def refresh(self) -> None:
         self._create_action_models()
