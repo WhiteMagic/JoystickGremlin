@@ -153,10 +153,10 @@ class ActionModel(QtCore.QObject):
         """
         action = PluginManager().create_instance(
             action_name,
-            self._binding.behavior
+            self._binding_model.behavior
         )
         self._data.insert_action(action, selector)
-        self._signal_change()
+        self._binding_model.sync_data()
 
     @Slot(int, int, str)
     def dropAction(self, source: int, target: int, method: str) -> None:
