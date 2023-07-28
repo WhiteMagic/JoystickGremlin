@@ -218,6 +218,13 @@ Item {
             // Destroy the dynamic object instance
             Component.onDestruction: destroyDynamicItem()
         }
+
+        Rectangle {
+            color: "transparent"
+            z: -1
+            height: _root.action.lastInContainer ? 15 : 0
+            Layout.fillWidth: true
+        }
     }
 
     // +------------------------------------------------------------------------
@@ -250,7 +257,7 @@ Item {
 
     // Drop area below every non-root action
     Loader {
-        active: !_root.action.isRootNode
+        active: _root.action.name != "Root"
 
         sourceComponent: DragDropArea {
             y: (_action.visible ? _action.y + _action.height : _header.y +

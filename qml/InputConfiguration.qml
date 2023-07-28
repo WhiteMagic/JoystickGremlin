@@ -85,7 +85,7 @@ Item {
             Item {
                 id: _delegate
 
-                height: _binding.height + _dropArea.height
+                height: _binding.height
                 width: _binding.width
 
                 required property int index
@@ -101,54 +101,6 @@ Item {
                     implicitWidth: view.width
 
                     inputBinding: modelData
-                }
-
-                // +------------------------------------------------------------
-                // | Drag & Drop support
-                // +------------------------------------------------------------
-                Connections {
-                    target: _binding.headerWidget.dragHandleArea
-                    function onPressed()
-                    {
-                        _delegate.grabToImage(function(result)
-                        {
-                            _delegate.Drag.imageSource = result.url
-                        })
-                    }
-                }
-
-                Drag.active: _binding.headerWidget.dragHandleArea.drag.active
-                Drag.dragType: Drag.Automatic
-                Drag.supportedActions: Qt.MoveAction
-                Drag.proposedAction: Qt.MoveAction
-                Drag.mimeData: {
-                    "text/plain": modelData.rootAction.id,
-                    "type": "binding"
-                }
-
-                Drag.onDragFinished: function(drop)
-                {
-                    // If the drop action ought to be ignore reset the ui
-                    if(drop == Qt.IgnoreAction) {
-                        reload();
-                    }
-                }
-
-                // Drag & Drop drop area
-                DragDropArea {
-                    id: _dropArea
-
-                    target: _binding
-                    dropCallback: function(drop) {
-                        _root.inputItemModel.dropAction(
-                            drop.text,
-                            modelData.rootAction.id,
-                            "append"
-                        )
-                    }
-                    validationCallback: function(drop) {
-                        return drop.getDataAsString("type") == "binding"
-                    }
                 }
             }
         }

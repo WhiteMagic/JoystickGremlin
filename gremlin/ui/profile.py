@@ -322,7 +322,6 @@ class InputItemModel(QtCore.QObject):
         self.bindingsChanged.emit()
 
 
-
 @QtQml.QmlElement
 class InputItemBindingModel(QtCore.QObject):
 
@@ -399,9 +398,11 @@ class InputItemBindingModel(QtCore.QObject):
 
     def get_child_actions(
             self,
-            index: SequenceIndex,
+            index: SequenceIndex | int,
             container: str
     ) -> List[ActionModel]:
+        if isinstance(index, int):
+            index = self._index_lookup[index]
         return self._child_lookup.get((index.index, container), [])
 
     def get_action_model_by_sidx(self, sidx: int) -> ActionModel:
@@ -459,12 +460,6 @@ class InputItemBindingModel(QtCore.QObject):
         """
         s_model = self.get_action_model_by_sidx(source_idx)
         t_model = self.get_action_model_by_sidx(target_idx)
-        s_parent = self.get_action_model_by_sidx(
-            s_model.sequence_index.parent_index
-        )
-        t_parent = self.get_action_model_by_sidx(
-            t_model.sequence_index.parent_index
-        )
 
         s_parent_identifier = (
             s_model.sequence_index.parent_index,
@@ -554,8 +549,17 @@ class InputItemBindingModel(QtCore.QObject):
             target_index: sequence index of the action after which to insert
                 the new action's data
         """
-        
-        if container is None:
+        # If the parent index of the target is None the target is the single
+        # RootAction and thus should be used to insert into directly.
+        if target_index.parent_index is None:
+            data = self.get_action_model_by_sidx(target_index.index).action_data
+            data.insert_action(
+                action_data,
+                "children",
+                DataInsertionMode.Prepend,
+                0
+            )
+        elif container is None:
             parent_data = self.get_action_model_by_sidx(
                 target_index.parent_index
             ).action_data
@@ -569,11 +573,32 @@ class InputItemBindingModel(QtCore.QObject):
             target_data = self.get_action_model_by_sidx(
                 target_index.index
             ).action_data
-            target_data.insert_action(action_data, container)
+            target_data.insert_action(
+                action_data,
+                container,
+                DataInsertionMode.Prepend,
+                0
+            )
 
+    def is_last_action_in_container(self, index: SequenceIndex) -> bool:
+        """Returns whether the specified action is the last one in a container.
+        
+        Args:
+            index: SequenceIndex corresponding to an action
+        
+        Returns:
+            True if the specified action is the last one in its container, False
+            otherwise.
+        """
+        indices = sorted([
+            self._container_index_lookup[m.sequence_index]
+            for m in self.get_child_actions(
+                index.parent_index,
+                index.container_name
+            )
+        ])
+        return self._container_index_lookup[index] >= indices[-1]
 
-    def refresh(self) -> None:
-        self._create_action_models()
 
     @Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:

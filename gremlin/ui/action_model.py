@@ -28,6 +28,8 @@ from gremlin.plugin_manager import PluginManager
 from gremlin.signal import signal
 from gremlin.types import InputType
 
+from gremlin.ui import backend
+
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
     from gremlin.ui.profile import InputItemBindingModel
@@ -128,6 +130,12 @@ class ActionModel(QtCore.QObject):
     def rootActionId(self) -> str:
         return str(self._binding_model.root_action.id)
 
+    @Property(type=bool, notify=actionChanged)
+    def lastInContainer(self) -> bool:
+        return self._binding_model.is_last_action_in_container(
+            self._sequence_index
+        )
+
     @Slot(str, result=list)
     def getActions(self, selector: str) -> List[ActionModel]:
         """Returns the collection of actions corresponding to the selector.
@@ -170,13 +178,16 @@ class ActionModel(QtCore.QObject):
         # Force a UI refresh without performing any model changes if both
         # source and target item are identical, i.e. an invalid drag&drop
         if source == target:
-            self._binding_model.rootActionChanged()
+            self._binding_model.sync_data()
             return
 
         if method == "append":
             self._append_drop_action(source, target)
         else:
             self._append_drop_action(source, target, method)
+
+        if target == 0:
+            backend.Backend().inputConfigurationChanged.emit()
 
     @Slot(int)
     def removeAction(self, index: int) -> None:

@@ -41,6 +41,14 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        Rectangle {
+            id: _topRule
+            
+            Layout.fillWidth: true
+            height: 0
+            color: "transparent"
+        }
+
         Repeater {
             model: _root.action.getActions("children")
 
@@ -51,6 +59,13 @@ Item {
 
                 Layout.fillWidth: true
             }
+        }
+    }
+
+    ActionDragDropArea {
+        target: _topRule
+        dropCallback: function(drop) {
+            action.dropAction(drop.text, action.sequenceIndex, "append");
         }
     }
 
