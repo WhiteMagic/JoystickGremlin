@@ -50,7 +50,7 @@ def test_simple_action():
     assert len(action_sequences) == 1
     assert isinstance(action_sequences[0], gremlin.profile.InputItemBinding)
 
-    actions = action_sequences[0].root_action.get_actions()
+    actions = action_sequences[0].root_action.get_actions()[0]
     assert len(actions) == 3
     assert actions[0].tag == "description"
     assert actions[0].description == "This is a test"
@@ -76,11 +76,11 @@ def test_hierarchy():
     p.from_xml("test/xml/profile_hierarchy.xml")
 
     root = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
-    assert len(root.get_actions()) == 3
+    assert len(root.get_actions()[0]) == 3
 
-    n1 = root.get_actions()[0]
-    n2 = root.get_actions()[1]
-    n3 = root.get_actions()[2]
+    n1 = root.get_actions()[0][0]
+    n2 = root.get_actions()[0][1]
+    n3 = root.get_actions()[0][2]
 
     assert n1.tag == "description"
     assert n1.description == "Node 1"
@@ -88,7 +88,7 @@ def test_hierarchy():
     assert n3.tag == "description"
     assert n3.description == "Node 3"
 
-    n4 = n2.get_actions()[0]
+    n4 = n2.get_actions()[0][0]
     assert len(n2.get_actions()) == 2
     assert n4.tag == "description"
     assert n4.description == "Node 4"

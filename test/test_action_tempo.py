@@ -73,19 +73,19 @@ def test_action_methods():
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
     # Get action testing
-    assert len(a.get_actions()) == 3
-    assert len(a.get_actions("short")) == 2
-    assert len(a.get_actions("long")) == 1
+    assert len(a.get_actions()[0]) == 3
+    assert len(a.get_actions("short")[0]) == 2
+    assert len(a.get_actions("long")[0]) == 1
     with pytest.raises(GremlinError):
         assert a.get_actions("invalid options")
 
     # Remove and insert testing
-    a1 = a.get_actions("short")[0]
-    a.remove_action(a1, "short")
-    assert len(a.get_actions("short")) == 1
+    a1 = a.get_actions("short")[0][0]
+    a.remove_action(0, "short")
+    assert len(a.get_actions("short")[0]) == 1
     a.insert_action(a1, "long", DataInsertionMode.Prepend)
-    assert len(a.get_actions("long")) == 2
-    assert a.get_actions("long")[0].id == a1.id
+    assert len(a.get_actions("long")[0]) == 2
+    assert a.get_actions("long")[0][0].id == a1.id
 
 
 def test_ctor():

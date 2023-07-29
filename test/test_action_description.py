@@ -24,9 +24,11 @@ from xml.etree import ElementTree
 
 from gremlin.error import GremlinError
 from gremlin.profile import Library, InputItem, InputItemBinding, Profile
+from gremlin.ui.profile import InputItemBindingModel
+from gremlin.ui.action_model import SequenceIndex
 
 from action_plugins.description import DescriptionData, DescriptionModel
-
+from action_plugins.root import RootData
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -53,21 +55,27 @@ def test_actions():
         l
     )
 
-    with pytest.raises(GremlinError):
-        a.get_actions()
+    assert len(a.get_actions()[0]) == 0
     with pytest.raises(GremlinError):
         d = DescriptionData()
         a.insert_action(d, "something")
     with pytest.raises(GremlinError):
-        d = DescriptionData()
-        a.remove_action(d, "something")
+        a.remove_action(0, "something")
 
 def test_model_setter_getter():
     p = Profile()
     ii = InputItem(p.library)
-    ib = InputItemBinding(ii)
+    iib = InputItemBinding(ii)
+    iib.root_action = RootData()
+    iibm = InputItemBindingModel(iib)
     a = DescriptionData()
-    m = DescriptionModel(a, ib, None)
+    m = DescriptionModel(
+        a,
+        iibm,
+        SequenceIndex(None, None, 0),
+        SequenceIndex(None, None,  1),
+        None
+    )
 
     assert a.description == ""
     assert m.description == ""
@@ -96,9 +104,17 @@ def test_model_from_xml():
 def test_model_to_xml():
     p = Profile()
     ii = InputItem(p.library)
-    ib = InputItemBinding(ii)
+    iib = InputItemBinding(ii)
+    iib.root_action = RootData()
+    iibm = InputItemBindingModel(iib)
     a = DescriptionData()
-    m = DescriptionModel(a, ib, None)
+    m = DescriptionModel(
+        a,
+        iibm,
+        SequenceIndex(None, None, 0),
+        SequenceIndex(None, None,  1),
+        None
+    )
 
     m.description = "Test"
     a.to_xml()

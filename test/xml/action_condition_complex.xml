@@ -3,13 +3,13 @@
     <library>
 
         <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="condition">
-            <if-actions>
+            <true-actions>
                 <action-id>fbe6be7b-07c9-4400-94f2-caa245ebcc7e</action-id>
                 <action-id>80e29257-f2ad-43bf-b5ab-9229d01e64d7</action-id>
-            </if-actions>
-            <else-actions>
+            </true-actions>
+            <false-actions>
                 <action-id>2bf10c03-a9d3-4410-a56a-70643e2c05b8</action-id>
-            </else-actions>
+            </false-actions>
             <property type="string">
                 <name>logical-operator</name>
                 <value>any</value>

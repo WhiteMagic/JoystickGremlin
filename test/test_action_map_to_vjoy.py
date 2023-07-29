@@ -51,14 +51,12 @@ def test_actions():
         l
     )
 
-    with pytest.raises(GremlinError):
-        a.get_actions()
+    assert len(a.get_actions()[0]) == 0
     with pytest.raises(GremlinError):
         d = DescriptionData()
         a.insert_action(d, "something")
     with pytest.raises(GremlinError):
-        d = DescriptionData()
-        a.remove_action(d, "something")
+        a.remove_action(0, "something")
 
 
 def test_from_xml():

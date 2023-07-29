@@ -33,6 +33,7 @@ from gremlin.util import parse_guid
 from gremlin.profile import Library, InputItem, InputItemBinding, Profile
 from action_plugins.condition import ConditionData, ConditionModel
 
+from action_plugins.root import RootData
 from action_plugins.description import DescriptionData
 import action_plugins.condition as condition
 
@@ -152,25 +153,23 @@ def test_action_methods():
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
-    assert len(a.get_actions()) == 3
-    assert len(a.get_actions("true")) == 2
-    assert len(a.get_actions("false")) == 1
+    assert len(a.get_actions()[0]) == 3
+    assert len(a.get_actions("true")[0]) == 2
+    assert len(a.get_actions("false")[0]) == 1
     with pytest.raises(GremlinError):
         a.get_actions("invalid options")
 
     d1 = DescriptionData()
     d2 = DescriptionData()
     a.insert_action(d1, "false", DataInsertionMode.Prepend)
-    a.insert_action(d2, "false", DataInsertionMode.Append, d1)
-    assert len(a.get_actions("false")) == 3
-    assert a.get_actions("false")[0] == d1
-    assert a.get_actions("false")[1] == d2
+    a.insert_action(d2, "false", DataInsertionMode.Append, 0)
+    assert len(a.get_actions("false")[0]) == 3
+    assert a.get_actions("false")[0][0] == d1
+    assert a.get_actions("false")[0][1] == d2
 
-    with pytest.raises(GremlinError):
-        a.remove_action(d1, "true")
-    a.remove_action(d1, "false")
-    assert len(a.get_actions("false")) == 2
-    assert a.get_actions("false")[0] == d2
+    a.remove_action(0, "false")
+    assert len(a.get_actions("false")[0]) == 2
+    assert a.get_actions("false")[0][0] == d2
 
 
 def test_ctor():

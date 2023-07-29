@@ -57,15 +57,17 @@ def test_action_methods():
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
-    assert len(a.get_actions()) == 3
+    assert len(a.get_actions()[0]) == 3
     with pytest.raises(GremlinError):
         a.get_actions("invalid")
-    assert len(a.get_actions("children")) == 3
+    assert len(a.get_actions("children")[0]) == 3
 
     d = DescriptionData()
     a.insert_action(d, "children", DataInsertionMode.Prepend)
-    assert len(a.get_actions("children")) == 4
-    assert a.get_actions()[0].id == d.id
-    a.remove_action(d, "children")
-    assert len(a.get_actions("children")) == 3
+    assert len(a.get_actions("children")[0]) == 4
+    assert a.get_actions()[0][0].id == d.id
+    with pytest.raises(GremlinError):
+        a.remove_action(4, "children")
+    a.remove_action(3, "children")
+    assert len(a.get_actions("children")[0]) == 3
     assert d not in a.get_actions()
