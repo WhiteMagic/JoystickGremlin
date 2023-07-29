@@ -231,7 +231,7 @@ class AbstractActionData(ABC):
         self._validate_selector(selector)
 
         container = self._get_container(selector)
-        if 0 <= index <= len(container):
+        if 0 <= index < len(container):
             del container[index]
         else:
             raise GremlinError(
