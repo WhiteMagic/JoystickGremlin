@@ -184,7 +184,7 @@ class ActionModel(QtCore.QObject):
             self._append_drop_action(source, target, method)
 
         if target == 0:
-            backend.Backend().inputConfigurationChanged.emit()
+            signal.reloadCurrentInputItem.emit()
 
     @Slot(int)
     def removeAction(self, index: int) -> None:

@@ -52,6 +52,15 @@ Item {
         }
     }
 
+    Connections {
+        target: signal
+
+        function onReloadCurrentInputItem()
+        {
+            reload()
+        }
+    }
+
     // Widget content
     ColumnLayout {
         id: _content
