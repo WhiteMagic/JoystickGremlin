@@ -36,10 +36,11 @@ from gremlin.config import Configuration
 from gremlin.profile import Library
 from gremlin.types import InputType, PropertyType
 
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.ui.action_model import ActionModel
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.action_model import SequenceIndex
 
 
 class RootFunctor(AbstractFunctor):

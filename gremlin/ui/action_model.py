@@ -22,13 +22,10 @@ from typing import List, Optional, TYPE_CHECKING
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin.base_classes import DataInsertionMode
 from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
 from gremlin.signal import signal
 from gremlin.types import InputType
-
-from gremlin.ui import backend
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData

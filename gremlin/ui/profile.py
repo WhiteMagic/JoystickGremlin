@@ -25,8 +25,6 @@ from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from action_plugins.root import RootModel
-
 import gremlin.profile
 import gremlin.signal
 from gremlin.base_classes import DataInsertionMode
@@ -38,6 +36,7 @@ from gremlin.plugin_manager import PluginManager
 from gremlin.ui.action_model import ActionModel, SequenceIndex
 
 if TYPE_CHECKING:
+    from action_plugins.root import RootModel
     from gremlin.base_classes import AbstractActionData
 
 

@@ -31,16 +31,18 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError
 from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
+from gremlin.profile import Library
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
-from gremlin.ui.action_model import ActionModel, SequenceIndex
+from gremlin.ui.action_model import ActionModel
 
 from . import comparator
 
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
+    from gremlin.ui.action_model import SequenceIndex
 
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -596,7 +598,7 @@ class ConditionData(AbstractActionData):
         self.false_actions = []
         self.conditions = []
 
-    def from_xml(self, node: ElementTree.Element, library: profile.Library) -> None:
+    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         # Parse IF action ids
         true_ids = util.read_action_ids(node.find("true-actions"))
