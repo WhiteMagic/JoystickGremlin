@@ -57,7 +57,7 @@ class InputType(enum.Enum):
     @staticmethod
     def to_enum(value: str) -> InputType:
         try:
-            return _InputType_to_enum_lookup[value]
+            return _InputType_to_enum_lookup[value.lower()]
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
