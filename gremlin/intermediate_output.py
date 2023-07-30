@@ -24,9 +24,21 @@ from gremlin.common import InputType, SingletonDecorator
 @SingletonDecorator
 class IntermediateOutput:
 
+    """Implements a device like system for arbitrary amonuts of intermediate
+    outputs that can be used to combine and further modify inputs before
+    ultimately feeding them to a vJoy device."""
+
     class Input:
 
+        """General input class, base class for all other inputs."""
+
         def __init__(self, label: str, index: int):
+            """Creates a new Input instance.
+            
+            Args:
+                label: textual label associated with this input
+                index: per InputType unique index
+            """
             self._label = label
             self._index = index
         
@@ -67,6 +79,12 @@ class IntermediateOutput:
         self._index_lookup = {}
 
     def set_label(self, old_label: str, new_label: str) -> None:
+        """Changes the label of an existing input instance.
+        
+        Args:
+            old_label: label of the instance to change the label of
+            new_label: new label to use
+        """
         if old_label not in self._label_lookup:
             raise GremlinError(f"No input with label '{old_label}' exists")
         if new_label in self._label_lookup:
@@ -84,6 +102,12 @@ class IntermediateOutput:
         del self._label_lookup[old_label]
 
     def create(self, type: InputType, label: Optional[str]=None) -> None:
+        """Creates a new input instance of the given type.
+        
+        Args:
+            type: the type of input to create
+            label: if given will be used as the label of the new input
+        """
         if label in self.all_keys():
             raise GremlinError(f"An input named {label} already exists")
         
@@ -99,6 +123,12 @@ class IntermediateOutput:
         self._label_lookup[label] = (type, index)
 
     def delete_by_index(self, type: InputType, index: int) -> None:
+        """Deletes an input based on the type and index information.
+        
+        Args:
+            type: the type of the input to delete
+            index: indexo of the input to delete
+        """
         key = (type, index)
         if key not in self._index_lookup:
             raise GremlinError(
@@ -107,27 +137,70 @@ class IntermediateOutput:
         self.delete_by_label(self._index_lookup[key])
 
     def delete_by_label(self, label: str) -> None:
+        """Deletes an input based on the label.
+        
+        Args:
+            label: the label of the input to delete
+        """
         if label not in self._label_lookup:
             raise GremlinError(f"No input with label '{label}' exists")
         
         del self._inputs[self._label_lookup[label][0]][label]
 
     def all_keys(self) -> List[str]:
+        """Returns the list of all labels in use.
+        
+        Returns:
+            List of all labels of the existing inputs
+        """
         keys = []
         for container in self._inputs.values():
             keys.extend(container.keys())
         return keys
     
     def axis(self, key: int | str) -> Axis:
+        """Returns an axis instance.
+        
+        Args:
+            key: either the index or label of the axis to return
+        
+        Returns:
+            Axis instance corresponding to the given key
+        """
         return self._get_input(InputType.JoystickAxis, key)
 
     def button(self, key: int | str) -> Button:
+        """Returns a button instance.
+        
+        Args:
+            key: either the index or label of the button to return
+        
+        Returns:
+            Button instance corresponding to the given key
+        """
         return self._get_input(InputType.JoystickButton, key)
 
     def hat(self, key: int | str) -> Hat:
+        """Returns a hat instance.
+        
+        Args:
+            key: either the index or label of the hat to return
+        
+        Returns:
+            Hat instance corresponding to the given key
+        """
         return self._get_input(InputType.JoystickHat, key)
 
     def _get_input(self, type: InputType, key: int | str) -> Input:
+        """Returns the input instance corresponding to the given type and key.
+        
+        Args:
+            type: InputType of the input to return
+            key: the index or label associated with the input to return
+        
+        Returns:
+            Input instance matching the type and key specification
+        """
         try:
             if isinstance(key, int):
                 key = self._index_lookup[(type, key)]
@@ -138,6 +211,14 @@ class IntermediateOutput:
             )
 
     def _next_index(self, type: InputType) -> int:
+        """Determines the next free index for a given input type.
+        
+        Args:
+            type: InputType for which to determine the next free index
+        
+        Returns:
+            Next free index for the given InputType
+        """
         indices = sorted([dev.index for dev in self._inputs[type].values()])
         start_index = 0
         for idx in indices:
