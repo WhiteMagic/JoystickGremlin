@@ -20,12 +20,16 @@ import QtQuick
 import QtQuick.Controls
 
 Button {
+    property alias backgroundColor: _bg.color
+
     font.family: "BootstrapIcons"
     font.pixelSize: 16
 
     topPadding: 10
 
     background: Rectangle {
+        id: _bg
+        
         anchors.fill: parent
         color: "transparent"
     }
