@@ -28,7 +28,7 @@ from gremlin import code_runner, common, config, error, \
     profile, shared_state, types
 from gremlin.signal import signal
 
-from gremlin.ui.device import InputIdentifier
+from gremlin.ui.device import InputIdentifier, IODevice
 from gremlin.ui.profile import InputItemModel
 
 
@@ -153,6 +153,10 @@ class Backend(QtCore.QObject):
             return InputItemModel(item, self)
         except error.ProfileError as e:
             print(e)
+
+    @Slot(result=IODevice)
+    def getIODevice(self) -> IODevice:
+        return IODevice(self)
 
     @Slot(str, int, result=bool)
     def isActionExpanded(self, uuid_str: str, index: int) -> bool:

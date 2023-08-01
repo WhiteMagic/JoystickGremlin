@@ -16,9 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import List, Optional
+import uuid
 
-from gremlin.error import GremlinError
-from gremlin.common import InputType, SingletonDecorator
+from gremlin.error import GremlinError, MissingImplementationError
+from gremlin.common import SingletonDecorator
+from gremlin.types import InputType
 
 
 @SingletonDecorator
@@ -27,6 +29,8 @@ class IntermediateOutput:
     """Implements a device like system for arbitrary amonuts of intermediate
     outputs that can be used to combine and further modify inputs before
     ultimately feeding them to a vJoy device."""
+
+    guid = uuid.UUID("f0af472f-8e17-493b-a1eb-7333ee8543f2")
 
     class Input:
 
@@ -50,23 +54,37 @@ class IntermediateOutput:
         def index(self) -> str:
             return self._index
 
+        @property
+        def type(self) -> InputType:
+            return self._input_type()
+
+        def _input_type(self):
+            raise MissingImplementationError("Input._input_type not implemented")
+
 
     class Axis(Input):
 
         def __init__(self, label: str, index: int):
             super().__init__(label, index)
 
+        def _input_type(self):
+            return InputType.JoystickAxis
 
     class Button(Input):
 
         def __init__(self, label: str, index: int):
             super().__init__(label, index)
 
+        def _input_type(self):
+            return InputType.JoystickButton
 
     class Hat(Input):
 
         def __init__(self, label: str, index: int):
             super().__init__(label, index)
+
+        def _input_type(self):
+            return InputType.JoystickHat
 
 
     def __init__(self):
@@ -78,6 +96,8 @@ class IntermediateOutput:
         self._label_lookup = {}
         self._index_lookup = {}
 
+        self.create(InputType.JoystickButton, "Test 123")
+
     def set_label(self, old_label: str, new_label: str) -> None:
         """Changes the label of an existing input instance.
 
@@ -85,6 +105,9 @@ class IntermediateOutput:
             old_label: label of the instance to change the label of
             new_label: new label to use
         """
+        if old_label == new_label:
+            return
+
         if old_label not in self._label_lookup:
             raise GremlinError(f"No input with label '{old_label}' exists")
         if new_label in self._label_lookup:
@@ -118,6 +141,8 @@ class IntermediateOutput:
         }
 
         index = self._next_index(type)
+        if label == None:
+            label = f"{InputType.to_string(type).capitalize()} {index+1}"
         self._inputs[type][label] = do_create[type](label, index)
         self._index_lookup[(type, index)] = label
         self._label_lookup[label] = (type, index)
@@ -157,7 +182,27 @@ class IntermediateOutput:
         for container in self._inputs.values():
             keys.extend(container.keys())
         return keys
-    
+
+    def input_by_offset(self, type: InputType, offset: int) -> Input:
+        """Returns an input item based on the input type and the offset.
+
+        The offset is the index an input instance has based on a linear internal
+        index-based ordering of the inputs of the specified type.
+
+        Args:
+            type: the InputType to perform the lookup over
+            offset: linear offset into the ordered list of inputs
+
+        Returns:
+            Input instance of the correct type with the specified offset
+        """
+        if len(self._inputs[type]) <= offset:
+            raise GremlinError(
+                f"Attempting to access an input item of type " +
+                f"{InputType.to_string(type)} with invalid offset {offset}"
+            )
+        return sorted(self._inputs[type].values(), key=lambda x: x.index)[offset]
+
     def axis(self, key: int | str) -> Axis:
         """Returns an axis instance.
 
@@ -190,6 +235,18 @@ class IntermediateOutput:
             Hat instance corresponding to the given key
         """
         return self._get_input(InputType.JoystickHat, key)
+
+    @property
+    def axis_count(self) -> int:
+        return len(self._inputs[InputType.JoystickAxis])
+
+    @property
+    def button_count(self) -> int:
+        return len(self._inputs[InputType.JoystickButton])
+
+    @property
+    def hat_count(self) -> int:
+        return len(self._inputs[InputType.JoystickHat])
 
     def _get_input(self, type: InputType, key: int | str) -> Input:
         """Returns the input instance corresponding to the given type and key.

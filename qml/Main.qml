@@ -282,21 +282,60 @@ ApplicationWindow {
 
         property InputConfiguration inputConfigurationWidget
 
-        // Horizonbtal list of "tabs" listing all detected devices
-        DeviceList {
-            id: _devicePanel
-
-            Layout.preferredHeight: 50
+        RowLayout {
             Layout.fillWidth: true
-            z: 1
 
-            deviceListModel: _deviceListModel
+            // Horizonbtal list of "tabs" listing all detected devices
+            DeviceList {
+                id: _devicePanel
 
-            // Trigger a model update on the DeviceInputList
-            onDeviceGuidChanged: {
-                _deviceModel.guid = deviceGuid
+                Layout.preferredHeight: 50
+                Layout.fillWidth: true
+                z: 1
+
+                deviceListModel: _deviceListModel
+
+                // Trigger a model update on the DeviceInputList
+                onDeviceGuidChanged: {
+                    _deviceModel.guid = deviceGuid
+
+                    // Ensure the input panel is showing the physical device
+                    _deviceInputList.visible = true
+                    _ioDeviceList.visible = false
+                }
+            }
+
+            // Intermediate output entry
+            Label {
+                text: "Intermediate Output"
+
+                leftPadding: 20
+                rightPadding: 20
+                topPadding: 10
+                bottomPadding: 10
+
+                background: Rectangle {
+                    color: _ioDeviceList.visible ?
+                        Universal.chromeMediumColor : Universal.background
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        _ioDeviceList.device = backend.getIODevice()
+
+                        // Deselect everything in the input device panel and
+                        // hide it before showing the IO content
+                        _devicePanel.deviceGuid =
+                            "{00000000-0000-0000-0000-000000000000}"
+                        _deviceInputList.visible = false
+                        _ioDeviceList.visible = true
+                        _devicePanel.selectedIndex = -1
+                    }
+                }
             }
         }
+
 
         // Main UI which contains the active device's inputs on the left and
         // actions assigned to the currently selected input on the right.
@@ -313,9 +352,30 @@ ApplicationWindow {
             DeviceInputList {
                 id: _deviceInputList
 
-                SplitView.minimumWidth: minimumWidth
+                visible: false
+                SplitView.minimumWidth: 150
 
                 device: _deviceModel
+
+                // Trigger a model update on the InputConfiguration
+                onInputIdentifierChanged: {
+                    _inputConfigurationPanel.inputIdentifier = inputIdentifier
+                }
+
+                // Ensure initial state of input list and input configuration is
+                // synchronized
+                Component.onCompleted: {
+                    inputIdentifier = device.inputIdentifier(inputIndex)
+                }
+            }
+
+            IntermediateOutputDevice {
+                id: _ioDeviceList
+
+                visible: true
+                SplitView.minimumWidth: 150
+
+                device: backend.getIODevice()
 
                 // Trigger a model update on the InputConfiguration
                 onInputIdentifierChanged: {

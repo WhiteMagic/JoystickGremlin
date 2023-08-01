@@ -25,10 +25,8 @@ from PySide6.QtCore import Property, Signal, Slot
 
 import dill
 
-from gremlin import common
-from gremlin import error
-from gremlin import event_handler
-from gremlin import joystick_handling
+from gremlin import common, error, event_handler, joystick_handling
+from gremlin.intermediate_output import IntermediateOutput
 from gremlin.types import InputType
 from gremlin.util import parse_guid
 
@@ -55,7 +53,7 @@ class InputIdentifier(QtCore.QObject):
 @QtQml.QmlElement
 class DeviceListModel(QtCore.QAbstractListModel):
 
-    """Model containing absic information about all connected devices."""
+    """Model containing basic information about all connected devices."""
 
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
@@ -238,6 +236,125 @@ class Device(QtCore.QAbstractListModel):
         fget=_get_guid,
         fset=_set_guid
     )
+
+
+
+@QtQml.QmlElement
+class IODevice(QtCore.QAbstractListModel):
+
+    """Model providing information about the intermedia output device."""
+
+    roles = {
+        QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("actionCount".encode()),
+        QtCore.Qt.UserRole + 3: QtCore.QByteArray("label".encode()),
+    }
+
+    deviceChanged = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._io = IntermediateOutput()
+
+    @Slot(str)
+    def createInput(self, type_str: str) -> None:
+        self._io.create(InputType.to_enum(type_str))
+        self.modelReset.emit()
+
+    @Slot(str, str)
+    def changeName(self, old_labele: str, new_label: str) -> None:
+        self._io.set_label(old_labele, new_label)
+
+    @Slot(str)
+    def deleteInput(self, label: str) -> None:
+        self._io.delete_by_label(label)
+        self.modelReset.emit()
+
+    def _get_guid(self) -> str:
+        return str(self._io.guid)
+
+    def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
+        return len(self._io.all_keys())
+
+    def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
+        if role not in IODevice.roles:
+            return "Unknown"
+
+        role_name = IODevice.roles[role].data().decode()
+        input = self._index_to_input(index.row())
+        if role_name == "name":
+            return f"{InputType.to_string(input.type).capitalize()} " \
+                f"{input.index+1}"
+        elif role_name == "actionCount":
+            return backend.Backend().profile.get_input_count(
+                self._io.guid,
+                input.type,
+                input.index
+            )
+        elif role_name == "label":
+            return input.label
+
+    @Slot(int, result=InputIdentifier)
+    def inputIdentifier(self, index: int) -> InputIdentifier:
+        """Returns the InputIdentifier for input with the specified index.
+
+        Args:
+            index: the index of the input for which to generate the
+                InpuIdentifier instance
+
+        Returns:
+            An InputIdentifier instance referring to the input item with
+            the given index.
+        """
+        input = self._index_to_input(index)
+        identifier = InputIdentifier(self)
+        identifier.device_guid = self._io.guid
+        identifier.input_type = input.type
+        identifier.input_id = input.index
+
+        return identifier
+
+    def _name(self, identifier: typing.Tuple[InputType, int]) -> str:
+        return "{} {:d}".format(
+            InputType.to_string(identifier[0]).capitalize(),
+            identifier[1]
+        )
+
+    def _index_to_input(self, index: int) -> IntermediateOutput.Input:
+        """Returns the label corresponding to the provided linear index.
+
+        Args:
+            index: the linear index into the list of inputs
+
+        Returns:
+            The label corresponding to the input with the given index
+        """
+        axis_count = self._io.axis_count
+        button_count = self._io.button_count
+
+        # Determine the input type based on the index as the sequence of inputs
+        # is axes, buttons, hats. The inputs within those are then oredered
+        # by their own internal index
+        input = None
+        if index < axis_count:
+            input = self._io.input_by_offset(InputType.JoystickAxis, index)
+        elif index < axis_count + button_count:
+            input = self._io.input_by_offset(
+                InputType.JoystickButton,
+                index - axis_count
+            )
+        else:
+            input = self._io.input_by_offset(
+                InputType.JoystickHat,
+                index - axis_count - button_count
+            )
+        return input
+
+    def roleNames(self) -> typing.Dict:
+        return IODevice.roles
+
+    guid = Property(str, fget=_get_guid)
 
 
 @QtQml.QmlElement
