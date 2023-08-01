@@ -34,25 +34,25 @@ class IntermediateOutput:
 
         def __init__(self, label: str, index: int):
             """Creates a new Input instance.
-            
+
             Args:
                 label: textual label associated with this input
                 index: per InputType unique index
             """
             self._label = label
             self._index = index
-        
+
         @property
         def label(self) -> str:
             return self._label
-        
+
         @property
         def index(self) -> str:
             return self._index
 
 
     class Axis(Input):
-        
+
         def __init__(self, label: str, index: int):
             super().__init__(label, index)
 
@@ -80,7 +80,7 @@ class IntermediateOutput:
 
     def set_label(self, old_label: str, new_label: str) -> None:
         """Changes the label of an existing input instance.
-        
+
         Args:
             old_label: label of the instance to change the label of
             new_label: new label to use
@@ -97,20 +97,20 @@ class IntermediateOutput:
         self._inputs[type][new_label] = input
         self._index_lookup[(type, input.index)] = new_label
         self._label_lookup[new_label] = self._label_lookup[old_label]
-        
+
         del self._inputs[type][old_label]
         del self._label_lookup[old_label]
 
     def create(self, type: InputType, label: Optional[str]=None) -> None:
         """Creates a new input instance of the given type.
-        
+
         Args:
             type: the type of input to create
             label: if given will be used as the label of the new input
         """
         if label in self.all_keys():
             raise GremlinError(f"An input named {label} already exists")
-        
+
         do_create = {
             InputType.JoystickAxis: self.Axis,
             InputType.JoystickButton: self.Button,
@@ -124,7 +124,7 @@ class IntermediateOutput:
 
     def delete_by_index(self, type: InputType, index: int) -> None:
         """Deletes an input based on the type and index information.
-        
+
         Args:
             type: the type of the input to delete
             index: indexo of the input to delete
@@ -138,18 +138,18 @@ class IntermediateOutput:
 
     def delete_by_label(self, label: str) -> None:
         """Deletes an input based on the label.
-        
+
         Args:
             label: the label of the input to delete
         """
         if label not in self._label_lookup:
             raise GremlinError(f"No input with label '{label}' exists")
-        
+
         del self._inputs[self._label_lookup[label][0]][label]
 
     def all_keys(self) -> List[str]:
         """Returns the list of all labels in use.
-        
+
         Returns:
             List of all labels of the existing inputs
         """
@@ -160,10 +160,10 @@ class IntermediateOutput:
     
     def axis(self, key: int | str) -> Axis:
         """Returns an axis instance.
-        
+
         Args:
             key: either the index or label of the axis to return
-        
+
         Returns:
             Axis instance corresponding to the given key
         """
@@ -171,10 +171,10 @@ class IntermediateOutput:
 
     def button(self, key: int | str) -> Button:
         """Returns a button instance.
-        
+
         Args:
             key: either the index or label of the button to return
-        
+
         Returns:
             Button instance corresponding to the given key
         """
@@ -182,10 +182,10 @@ class IntermediateOutput:
 
     def hat(self, key: int | str) -> Hat:
         """Returns a hat instance.
-        
+
         Args:
             key: either the index or label of the hat to return
-        
+
         Returns:
             Hat instance corresponding to the given key
         """
@@ -193,11 +193,11 @@ class IntermediateOutput:
 
     def _get_input(self, type: InputType, key: int | str) -> Input:
         """Returns the input instance corresponding to the given type and key.
-        
+
         Args:
             type: InputType of the input to return
             key: the index or label associated with the input to return
-        
+
         Returns:
             Input instance matching the type and key specification
         """
@@ -212,10 +212,10 @@ class IntermediateOutput:
 
     def _next_index(self, type: InputType) -> int:
         """Determines the next free index for a given input type.
-        
+
         Args:
             type: InputType for which to determine the next free index
-        
+
         Returns:
             Next free index for the given InputType
         """

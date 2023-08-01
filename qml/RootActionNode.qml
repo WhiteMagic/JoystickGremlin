@@ -43,7 +43,7 @@ Item {
 
         Rectangle {
             id: _topRule
-            
+
             Layout.fillWidth: true
             height: 0
             color: "transparent"

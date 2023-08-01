@@ -29,7 +29,7 @@ Button {
 
     background: Rectangle {
         id: _bg
-        
+
         anchors.fill: parent
         color: "transparent"
     }

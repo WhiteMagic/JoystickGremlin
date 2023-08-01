@@ -515,7 +515,7 @@ class InputItemBindingModel(QtCore.QObject):
 
         The provided action_index can be either a SequenceIndex instance or an
         integer corresponding to the unique index of the action.
-        
+
         Args:
             action_index: index identifying the action to remove
             perform_sync: if True data will be resynchronized and a change
@@ -581,10 +581,10 @@ class InputItemBindingModel(QtCore.QObject):
 
     def is_last_action_in_container(self, index: SequenceIndex) -> bool:
         """Returns whether the specified action is the last one in a container.
-        
+
         Args:
             index: SequenceIndex corresponding to an action
-        
+
         Returns:
             True if the specified action is the last one in its container, False
             otherwise.

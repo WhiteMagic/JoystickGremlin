@@ -55,14 +55,14 @@ def test_delete():
     io.create(InputType.JoystickButton, "TB 1")
     io.create(InputType.JoystickButton, "TB 2")
     io.create(InputType.JoystickButton, "TB 3")
-    
+
     assert len(io.all_keys()) == 3
     io.delete_by_label("TB 3")
     assert len(io.all_keys()) == 2
 
     with pytest.raises(GremlinError):
         assert io.button("TB 3")
-    
+
     io.delete_by_index(InputType.JoystickButton, 0)
     assert len(io.all_keys()) == 1
     with pytest.raises(GremlinError):
