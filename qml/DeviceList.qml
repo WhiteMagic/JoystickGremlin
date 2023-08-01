@@ -30,10 +30,11 @@ import Gremlin.Profile
 // ListView item customized to render DeviceListModel instances as a set
 // of horizontal tabs
 Item {
-    id: root
+    id: _root
 
     property DeviceListModel deviceListModel
     property string deviceGuid: deviceListModel.guidAtIndex(0)
+    property alias selectedIndex: _deviceList.currentIndex
 
     // List view of all inputs present on the currently active device
     ListView {
@@ -73,7 +74,7 @@ Item {
                 anchors.fill: parent
                 onClicked: {
                     _deviceList.currentIndex = model.index
-                    root.deviceGuid = model.guid
+                    _root.deviceGuid = model.guid
                 }
             }
         }
