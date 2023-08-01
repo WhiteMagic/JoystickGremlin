@@ -99,7 +99,7 @@ Item {
 
                 onClicked: function()
                 {
-                    backend.deleteInputBinding(inputBinding)
+                    inputBinding.deleteActionSequence()
                 }
             }
         }

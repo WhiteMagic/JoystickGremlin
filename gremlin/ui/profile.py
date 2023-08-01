@@ -26,7 +26,7 @@ from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 import gremlin.profile
-import gremlin.signal
+from gremlin.signal import signal
 from gremlin.base_classes import DataInsertionMode
 from gremlin.error import GremlinError
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
@@ -598,6 +598,12 @@ class InputItemBindingModel(QtCore.QObject):
         ])
         return self._container_index_lookup[index] >= indices[-1]
 
+    @Slot()
+    def deleteActionSequence(self) -> None:
+        self._input_item_binding.input_item.remove_item_binding(
+            self._input_item_binding
+        )
+        signal.reloadUi.emit()
 
     @Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
@@ -665,7 +671,7 @@ class InputItemBindingModel(QtCore.QObject):
             self.behaviorChanged.emit()
             self.rootActionChanged.emit()
             # This one might be overkill
-            gremlin.signal.reloadUi.emit()
+            signal.reloadUi.emit()
 
     def _get_description(self) -> str:
         return self._input_item_binding.description
