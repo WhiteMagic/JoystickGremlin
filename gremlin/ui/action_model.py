@@ -158,7 +158,7 @@ class ActionModel(QtCore.QObject):
         """
         action = PluginManager().create_instance(
             action_name,
-            self._binding_model.behavior
+            self._binding_model.behavior_type
         )
         self._data.insert_action(action, selector)
         self._binding_model.sync_data()
