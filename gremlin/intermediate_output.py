@@ -21,6 +21,7 @@ import uuid
 from gremlin.error import GremlinError, MissingImplementationError
 from gremlin.common import SingletonDecorator
 from gremlin.types import InputType
+from gremlin.util import parse_guid
 
 
 @SingletonDecorator
@@ -30,7 +31,7 @@ class IntermediateOutput:
     outputs that can be used to combine and further modify inputs before
     ultimately feeding them to a vJoy device."""
 
-    guid = uuid.UUID("f0af472f-8e17-493b-a1eb-7333ee8543f2")
+    guid = parse_guid("f0af472f-8e17-493b-a1eb-7333ee8543f2")
 
     class Input:
 
