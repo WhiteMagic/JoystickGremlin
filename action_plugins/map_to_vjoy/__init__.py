@@ -367,7 +367,7 @@ class MapToVjoyData(AbstractActionData):
         old_behavior: InputType,
         new_behavior: InputType
     ) -> None:
-        self._set_vjoy_input_type(InputType.to_string(new_behavior))
+        self._vjoy_input_type = new_behavior
 
 
 create = MapToVjoyData

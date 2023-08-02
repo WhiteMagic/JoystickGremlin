@@ -663,9 +663,8 @@ class InputItemBindingModel(QtCore.QObject):
                     )
 
             # Update input type of all actions
-            # node_list = self._action_tree.root.nodes_matching(lambda x: True)
-            for node in self._action_tree.root.nodes_matching(lambda x: True):
-                node.value.set_behavior_type(behavior)
+            for model in self._action_models.values():
+                model.action_data.set_behavior_type(behavior)
 
             # Force full redraw of the action
             self.behaviorChanged.emit()
