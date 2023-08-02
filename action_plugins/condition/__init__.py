@@ -35,7 +35,9 @@ from gremlin.profile import Library
 from gremlin.tree import TreeNode
 from gremlin.types import ConditionType, InputType, LogicalOperator, \
     PropertyType
+
 from gremlin.ui.action_model import ActionModel
+import gremlin.ui.util
 
 from . import comparator
 
