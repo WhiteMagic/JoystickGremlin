@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 from typing import List, Optional
-import uuid
 
 from gremlin.error import GremlinError, MissingImplementationError
 from gremlin.common import SingletonDecorator
@@ -143,7 +143,10 @@ class IntermediateOutput:
 
         index = self._next_index(type)
         if label == None:
+            # Create a key and check it is valid and if not, make it valid
             label = f"{InputType.to_string(type).capitalize()} {index+1}"
+            if label in self.all_keys():
+                label = f"{label} - {time.time()}"
         self._inputs[type][label] = do_create[type](label, index)
         self._index_lookup[(type, index)] = label
         self._label_lookup[label] = (type, index)
