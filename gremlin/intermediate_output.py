@@ -17,6 +17,7 @@
 
 import time
 from typing import List, Optional
+import uuid
 
 from gremlin.error import GremlinError, MissingImplementationError
 from gremlin.common import SingletonDecorator
@@ -31,13 +32,13 @@ class IntermediateOutput:
     outputs that can be used to combine and further modify inputs before
     ultimately feeding them to a vJoy device."""
 
-    guid = parse_guid("f0af472f-8e17-493b-a1eb-7333ee8543f2")
+    device_guid = parse_guid("f0af472f-8e17-493b-a1eb-7333ee8543f2")
 
     class Input:
 
         """General input class, base class for all other inputs."""
 
-        def __init__(self, label: str, index: int):
+        def __init__(self, label: str, index: uuid.UUID):
             """Creates a new Input instance.
 
             Args:
@@ -52,7 +53,7 @@ class IntermediateOutput:
             return self._label
 
         @property
-        def index(self) -> str:
+        def index(self) -> uuid.UUID:
             return self._index
 
         @property
@@ -65,7 +66,7 @@ class IntermediateOutput:
 
     class Axis(Input):
 
-        def __init__(self, label: str, index: int):
+        def __init__(self, label: str, index: uuid.UUID):
             super().__init__(label, index)
 
         def _input_type(self):
@@ -73,7 +74,7 @@ class IntermediateOutput:
 
     class Button(Input):
 
-        def __init__(self, label: str, index: int):
+        def __init__(self, label: str, index: uuid.UUID):
             super().__init__(label, index)
 
         def _input_type(self):
@@ -81,7 +82,7 @@ class IntermediateOutput:
 
     class Hat(Input):
 
-        def __init__(self, label: str, index: int):
+        def __init__(self, label: str, index: uuid.UUID):
             super().__init__(label, index)
 
         def _input_type(self):
@@ -97,7 +98,15 @@ class IntermediateOutput:
         self._label_lookup = {}
         self._index_lookup = {}
 
-        self.create(InputType.JoystickButton, "Test 123")
+    def reset(self):
+        """Resets the IO system to contain no entries."""
+        self._inputs = {
+            InputType.JoystickAxis: {},
+            InputType.JoystickButton: {},
+            InputType.JoystickHat: {}
+        }
+        self._label_lookup = {}
+        self._index_lookup = {}
 
     def set_label(self, old_label: str, new_label: str) -> None:
         """Changes the label of an existing input instance.
@@ -141,17 +150,18 @@ class IntermediateOutput:
             InputType.JoystickHat: self.Hat
         }
 
-        index = self._next_index(type)
+        index = uuid.uuid4()
         if label == None:
             # Create a key and check it is valid and if not, make it valid
-            label = f"{InputType.to_string(type).capitalize()} {index+1}"
+            suffix = str(index).split("-")[0]
+            label = f"{InputType.to_string(type).capitalize()} {suffix}"
             if label in self.all_keys():
                 label = f"{label} - {time.time()}"
         self._inputs[type][label] = do_create[type](label, index)
         self._index_lookup[(type, index)] = label
         self._label_lookup[label] = (type, index)
 
-    def delete_by_index(self, type: InputType, index: int) -> None:
+    def delete_by_index(self, type: InputType, index: uuid.UUID) -> None:
         """Deletes an input based on the type and index information.
 
         Args:
@@ -187,6 +197,17 @@ class IntermediateOutput:
             keys.extend(container.keys())
         return keys
 
+    def keys_of_type(self, type: InputType) -> List[str]:
+        """Returns all labels corresponding to a particular input type.
+
+        Args:
+            type: the InputType for which to return labels
+
+        Returns:
+            List of all labels for the specified input type
+        """
+        return list(self._inputs[type].keys())
+
     def input_by_offset(self, type: InputType, offset: int) -> Input:
         """Returns an input item based on the input type and the offset.
 
@@ -207,7 +228,7 @@ class IntermediateOutput:
             )
         return sorted(self._inputs[type].values(), key=lambda x: x.index)[offset]
 
-    def axis(self, key: int | str) -> Axis:
+    def axis(self, key: uuid.UUID | str) -> Axis:
         """Returns an axis instance.
 
         Args:
@@ -218,7 +239,7 @@ class IntermediateOutput:
         """
         return self._get_input(InputType.JoystickAxis, key)
 
-    def button(self, key: int | str) -> Button:
+    def button(self, key: uuid.UUID | str) -> Button:
         """Returns a button instance.
 
         Args:
@@ -229,7 +250,7 @@ class IntermediateOutput:
         """
         return self._get_input(InputType.JoystickButton, key)
 
-    def hat(self, key: int | str) -> Hat:
+    def hat(self, key: uuid.UUID | str) -> Hat:
         """Returns a hat instance.
 
         Args:
@@ -252,7 +273,11 @@ class IntermediateOutput:
     def hat_count(self) -> int:
         return len(self._inputs[InputType.JoystickHat])
 
-    def _get_input(self, type: InputType, key: int | str) -> Input:
+    def _get_input(
+            self,
+            type: InputType,
+            key: uuid.UUID | str
+    ) -> Axis | Button | Hat:
         """Returns the input instance corresponding to the given type and key.
 
         Args:
@@ -263,27 +288,10 @@ class IntermediateOutput:
             Input instance matching the type and key specification
         """
         try:
-            if isinstance(key, int):
+            if isinstance(key, uuid.UUID):
                 key = self._index_lookup[(type, key)]
             return self._inputs[type][key]
         except KeyError:
             raise GremlinError(
                 f"No input with key '{key} for type {InputType.to_string(type)}"
             )
-
-    def _next_index(self, type: InputType) -> int:
-        """Determines the next free index for a given input type.
-
-        Args:
-            type: InputType for which to determine the next free index
-
-        Returns:
-            Next free index for the given InputType
-        """
-        indices = sorted([dev.index for dev in self._inputs[type].values()])
-        start_index = 0
-        for idx in indices:
-            if start_index < idx:
-                return start_index
-            start_index += 1
-        return start_index
