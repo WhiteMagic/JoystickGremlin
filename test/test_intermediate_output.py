@@ -37,20 +37,21 @@ def test_creation():
     io = IntermediateOutput()
 
     io.create(InputType.JoystickButton, "TB 1")
-    assert io.button("TB 1").label == "TB 1"
-    assert isinstance(io.button("TB 1").index, uuid.UUID)
+    assert io["TB 1"].label == "TB 1"
+    assert io["TB 1"].type == InputType.JoystickButton
+    assert isinstance(io["TB 1"].guid, uuid.UUID)
 
     io.create(InputType.JoystickButton, "TB 2")
     io.create(InputType.JoystickButton, "TB 3")
 
     for key in ["TB 1", "TB 2", "TB 3"]:
-        assert key in io.keys_of_type(InputType.JoystickButton)
+        assert key in io.labels_of_type([InputType.JoystickButton])
 
     io.create(InputType.JoystickAxis, "TA 1")
     io.create(InputType.JoystickButton, "TB 4")
 
-    assert len(io.keys_of_type(InputType.JoystickButton)) == 4
-    assert len(io.keys_of_type(InputType.JoystickAxis)) == 1
+    assert len(io.labels_of_type([InputType.JoystickButton])) == 4
+    assert len(io.labels_of_type([InputType.JoystickAxis])) == 1
 
 
 def test_delete():
@@ -58,35 +59,35 @@ def test_delete():
 
     io.create(InputType.JoystickButton, "TB 1")
     io.create(InputType.JoystickButton, "TB 2")
-    tb2_index = io.button("TB 2").index
+    tb2_guid = io["TB 2"].guid
     io.create(InputType.JoystickButton, "TB 3")
 
-    assert len(io.all_keys()) == 3
-    io.delete_by_label("TB 3")
-    assert len(io.all_keys()) == 2
+    assert len(io.labels_of_type()) == 3
+    io.delete("TB 3")
+    assert len(io.labels_of_type()) == 2
 
     with pytest.raises(GremlinError):
-        assert io.button("TB 3")
+        assert io["TB 3"]
 
-    io.delete_by_index(InputType.JoystickButton, io.button("TB 1").index)
-    assert len(io.all_keys()) == 1
+    io.delete(io["TB 1"].guid)
+    assert len(io.labels_of_type()) == 1
     with pytest.raises(GremlinError):
-        assert io.button("TB 1")
-    assert io.button("TB 2").index == tb2_index
+        assert io["TB 1"]
+    assert io["TB 2"].guid == tb2_guid
 
 
 def test_index_reuse():
     io = IntermediateOutput()
 
     io.create(InputType.JoystickButton, "TB 1")
-    tb1_index = io.button("TB 1")
+    tb1_guid = io["TB 1"]
     io.create(InputType.JoystickButton, "TB 2")
     io.create(InputType.JoystickButton, "TB 3")
 
-    io.delete_by_label("TB 1")
+    io.delete("TB 1")
 
     io.create(InputType.JoystickButton, "NEW")
-    io.button("NEW").index != tb1_index
+    io["NEW"].guid != tb1_guid
 
 
 def test_relabel():
@@ -94,17 +95,17 @@ def test_relabel():
 
     io.create(InputType.JoystickButton, "TB 1")
     io.create(InputType.JoystickButton, "TB 2")
-    tb2_index = io.button("TB 2").index
+    tb2_guid = io["TB 2"].guid
     io.create(InputType.JoystickButton, "TB 3")
 
     io.set_label("TB 2", "NEW")
-    assert io.button(tb2_index).label == "NEW"
-    assert io.button("NEW").index == tb2_index
+    assert io[tb2_guid].label == "NEW"
+    assert io["NEW"].guid == tb2_guid
 
-    assert "NEW" in io.all_keys()
-    assert "TB 2" not in io.all_keys()
-    assert len(io.all_keys()) == 3
+    assert "NEW" in io.labels_of_type()
+    assert "TB 2" not in io.labels_of_type()
+    assert len(io.labels_of_type()) == 3
 
-    io.delete_by_label("NEW")
-    assert len(io.all_keys()) == 2
-    assert "NEW" not in io.all_keys()
+    io.delete("NEW")
+    assert len(io.labels_of_type()) == 2
+    assert "NEW" not in io.labels_of_type()

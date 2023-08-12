@@ -46,19 +46,23 @@ class IntermediateOutput:
                 index: per InputType unique index
             """
             self._label = label
-            self._index = index
+            self._guid = index
 
         @property
         def label(self) -> str:
             return self._label
 
         @property
-        def index(self) -> uuid.UUID:
-            return self._index
+        def guid(self) -> uuid.UUID:
+            return self._guid
 
         @property
         def type(self) -> InputType:
             return self._input_type()
+
+        @property
+        def suffix(self):
+            return str(self._guid).split("-")[0]
 
         def _input_type(self):
             raise MissingImplementationError("Input._input_type not implemented")
@@ -90,23 +94,47 @@ class IntermediateOutput:
 
 
     def __init__(self):
-        self._inputs = {
-            InputType.JoystickAxis: {},
-            InputType.JoystickButton: {},
-            InputType.JoystickHat: {}
-        }
+        self._inputs = {}
         self._label_lookup = {}
-        self._index_lookup = {}
+
+        self.create(InputType.JoystickButton, "A")
+        self.create(InputType.JoystickButton, "B")
+        self.create(InputType.JoystickButton, "C")
+
+    def __getitem__(self, identifier: uuid.UUID | str):
+        return self._inputs[self._identifier_to_guid(identifier)]
+
+    def create(self, type: InputType, label: Optional[str]=None) -> None:
+        """Creates a new input instance of the given type.
+
+        Args:
+            type: the type of input to create
+            label: if given will be used as the label of the new input
+        """
+        if label in self.labels_of_type():
+            raise GremlinError(f"An input named {label} already exists")
+
+        do_create = {
+            InputType.JoystickAxis: self.Axis,
+            InputType.JoystickButton: self.Button,
+            InputType.JoystickHat: self.Hat
+        }
+
+        # Geberate a valid label if none has been provided
+        guid = uuid.uuid4()
+        if label == None:
+            # Create a key and check it is valid and if not, make it valid
+            suffix = str(guid).split("-")[0]
+            label = f"{InputType.to_string(type).capitalize()} {suffix}"
+            if label in self.labels_of_type():
+                label = f"{label} - {time.time()}"
+        self._inputs[guid] = do_create[type](label, guid)
+        self._label_lookup[label] = guid
 
     def reset(self):
         """Resets the IO system to contain no entries."""
-        self._inputs = {
-            InputType.JoystickAxis: {},
-            InputType.JoystickButton: {},
-            InputType.JoystickHat: {}
-        }
+        self._inputs = {}
         self._label_lookup = {}
-        self._index_lookup = {}
 
     def set_label(self, old_label: str, new_label: str) -> None:
         """Changes the label of an existing input instance.
@@ -123,90 +151,66 @@ class IntermediateOutput:
         if new_label in self._label_lookup:
             raise GremlinError(f"Input with label '{new_label}' already exists")
 
-        input = self._get_input(self._label_lookup[old_label][0], old_label)
-        type = self._label_lookup[old_label][0]
-
+        input = self._inputs[self._label_lookup[old_label]]
         input._label = new_label
-        self._inputs[type][new_label] = input
-        self._index_lookup[(type, input.index)] = new_label
-        self._label_lookup[new_label] = self._label_lookup[old_label]
-
-        del self._inputs[type][old_label]
+        self._label_lookup[new_label] = input.guid
         del self._label_lookup[old_label]
 
-    def create(self, type: InputType, label: Optional[str]=None) -> None:
-        """Creates a new input instance of the given type.
+    # def delete_by_index(self, type: InputType, index: uuid.UUID) -> None:
+    #     """Deletes an input based on the type and index information.
+    #
+    #     Args:
+    #         type: the type of the input to delete
+    #         index: indexo of the input to delete
+    #     """
+    #     key = (type, index)
+    #     if key not in self._index_lookup:
+    #         raise GremlinError(
+    #             f"No input of type {InputType.to_string(type)} with index {index}"
+    #         )
+    #     self.delete_by_label(self._index_lookup[key])
+
+    def delete(self, identifier: str | uuid.UUID) -> None:
+        """Deletes an input based on the given identifier.
 
         Args:
-            type: the type of input to create
-            label: if given will be used as the label of the new input
+            identifier: The label or guid of the input to delete
         """
-        if label in self.all_keys():
-            raise GremlinError(f"An input named {label} already exists")
+        input = self._inputs[self._identifier_to_guid(identifier)]
+        del self._inputs[input.guid]
+        del self._label_lookup[input.label]
 
-        do_create = {
-            InputType.JoystickAxis: self.Axis,
-            InputType.JoystickButton: self.Button,
-            InputType.JoystickHat: self.Hat
-        }
-
-        index = uuid.uuid4()
-        if label == None:
-            # Create a key and check it is valid and if not, make it valid
-            suffix = str(index).split("-")[0]
-            label = f"{InputType.to_string(type).capitalize()} {suffix}"
-            if label in self.all_keys():
-                label = f"{label} - {time.time()}"
-        self._inputs[type][label] = do_create[type](label, index)
-        self._index_lookup[(type, index)] = label
-        self._label_lookup[label] = (type, index)
-
-    def delete_by_index(self, type: InputType, index: uuid.UUID) -> None:
-        """Deletes an input based on the type and index information.
+    def labels_of_type(self, type_list: None | List[InputType]=None) -> List[str]:
+        """Returns all labels for inputs of the matching types.
 
         Args:
-            type: the type of the input to delete
-            index: indexo of the input to delete
-        """
-        key = (type, index)
-        if key not in self._index_lookup:
-            raise GremlinError(
-                f"No input of type {InputType.to_string(type)} with index {index}"
-            )
-        self.delete_by_label(self._index_lookup[key])
-
-    def delete_by_label(self, label: str) -> None:
-        """Deletes an input based on the label.
-
-        Args:
-            label: the label of the input to delete
-        """
-        if label not in self._label_lookup:
-            raise GremlinError(f"No input with label '{label}' exists")
-
-        del self._inputs[self._label_lookup[label][0]][label]
-
-    def all_keys(self) -> List[str]:
-        """Returns the list of all labels in use.
+            type_list: List of input types to match against
 
         Returns:
-            List of all labels of the existing inputs
+            List of all labels matching the specified inputs types
         """
-        keys = []
-        for container in self._inputs.values():
-            keys.extend(container.keys())
-        return keys
+        if type_list is None:
+            type_list = [
+                InputType.JoystickAxis,
+                InputType.JoystickButton,
+                InputType.JoystickHat
+            ]
+        return [e.label for e in self.inputs_of_type(type_list)]
 
-    def keys_of_type(self, type: InputType) -> List[str]:
-        """Returns all labels corresponding to a particular input type.
+    def inputs_of_type(self, type_list: List[InputType]) -> List[Input]:
+        """Returns input corresponding to the specified types.
 
         Args:
-            type: the InputType for which to return labels
+            type_list: List of types for which to return inputs
 
         Returns:
-            List of all labels for the specified input type
+            List of inputs that have the specified type
         """
-        return list(self._inputs[type].keys())
+        return [
+            e for e in
+            sorted(self._inputs.values(), key=lambda x: (x.type.name, x.label))
+            if e.type in type_list
+        ]
 
     def input_by_offset(self, type: InputType, offset: int) -> Input:
         """Returns an input item based on the input type and the offset.
@@ -221,57 +225,25 @@ class IntermediateOutput:
         Returns:
             Input instance of the correct type with the specified offset
         """
-        if len(self._inputs[type]) <= offset:
+        inputs = self.inputs_of_type([type])
+        if len(inputs) <= offset:
             raise GremlinError(
                 f"Attempting to access an input item of type " +
                 f"{InputType.to_string(type)} with invalid offset {offset}"
             )
-        return sorted(self._inputs[type].values(), key=lambda x: x.index)[offset]
-
-    def axis(self, key: uuid.UUID | str) -> Axis:
-        """Returns an axis instance.
-
-        Args:
-            key: either the index or label of the axis to return
-
-        Returns:
-            Axis instance corresponding to the given key
-        """
-        return self._get_input(InputType.JoystickAxis, key)
-
-    def button(self, key: uuid.UUID | str) -> Button:
-        """Returns a button instance.
-
-        Args:
-            key: either the index or label of the button to return
-
-        Returns:
-            Button instance corresponding to the given key
-        """
-        return self._get_input(InputType.JoystickButton, key)
-
-    def hat(self, key: uuid.UUID | str) -> Hat:
-        """Returns a hat instance.
-
-        Args:
-            key: either the index or label of the hat to return
-
-        Returns:
-            Hat instance corresponding to the given key
-        """
-        return self._get_input(InputType.JoystickHat, key)
+        return inputs[offset]
 
     @property
     def axis_count(self) -> int:
-        return len(self._inputs[InputType.JoystickAxis])
+        return len(self.inputs_of_type([InputType.JoystickAxis]))
 
     @property
     def button_count(self) -> int:
-        return len(self._inputs[InputType.JoystickButton])
+        return len(self.inputs_of_type([InputType.JoystickButton]))
 
     @property
     def hat_count(self) -> int:
-        return len(self._inputs[InputType.JoystickHat])
+        return len(self.inputs_of_type([InputType.JoystickHat]))
 
     def _get_input(
             self,
@@ -294,4 +266,29 @@ class IntermediateOutput:
         except KeyError:
             raise GremlinError(
                 f"No input with key '{key} for type {InputType.to_string(type)}"
+            )
+
+    def _identifier_to_guid(self, identifier: str | uuid.UUID) -> uuid.UUID:
+        """Returns the guid for the provided identifier.
+
+        This will perform a lookup if necessary.
+
+        Args:
+            identifier: The identifier to transform into a guid
+
+        Returns:
+            Guid corresponding to the provided identifier
+        """
+        try:
+            if isinstance(identifier, str):
+                return self._label_lookup[identifier]
+            elif isinstance(identifier, uuid.UUID):
+                return identifier
+            else:
+                raise GremlinError(
+                    f"Provided identifier '{identifier}' is invalid"
+            )
+        except KeyError:
+            raise GremlinError(
+                f"No input with identifier '{identifier}' exists"
             )
