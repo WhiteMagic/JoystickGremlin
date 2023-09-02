@@ -170,6 +170,23 @@ def listData():
 
 This model can now be used by any QML element that can handle a list model.
 
+## ComboBox & Models
+
+A ComboBox widget can use a custom model class to display content or have access to more information. However, once such a model is used both the `delegate` and `textRole` fields have to be defined. The `delegate` should be based on a `ItemDelegate` to work properly while the `textRole` needs to specify the role of the model to use for the general display of items, even if the standard `displayRole` is provided by the model.
+
+```qml
+ComboBox {
+	model: _model 					// Specify the model to use
+    textRole: "display"				// Model role to use when displaying drop down content
+	width: parent.width				// Ensure the entry spans the drop down width
+    delegate: ItemDelegate {		// Visualization of the actual entries
+        Label {
+            text: modelData.label
+        }
+    }
+}
+```
+
 ## Drag & Drop
 
 To implement drag & drop with QML three components are needed.
