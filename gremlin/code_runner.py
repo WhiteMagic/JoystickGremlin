@@ -209,8 +209,8 @@ class CallbackObject:
 
     def _physical_event_setup(self) -> None:
         """Configures the callback object for traditional physical events."""
-        for node in self._binding.library_reference.action_tree.root.children:
-            self._functors.append(node.value.functor(node.value))
+        for node in self._binding.root_action.get_actions()[0]:
+            self._functors.append(node.functor(node))
 
     def _virtual_event_setup(self) -> None:
         """Configures the callback object for virtual button handling.
@@ -540,10 +540,10 @@ class CodeRunner:
 
     def _setup_profile(self):
         item_list = sum(self._profile.inputs.values(), [])
-        action_list = sum([e.action_configurations for e in item_list], [])
+        action_sequences = sum([e.action_sequences for e in item_list], [])
 
         # Create executable unit for each action
-        for action in action_list:
+        for action in action_sequences:
             # Event on which to trigger this action
             event = event_handler.Event(
                 event_type=action.input_item.input_type,
