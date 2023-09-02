@@ -97,10 +97,6 @@ class IntermediateOutput:
         self._inputs = {}
         self._label_lookup = {}
 
-        self.create(InputType.JoystickButton, "A")
-        self.create(InputType.JoystickButton, "B")
-        self.create(InputType.JoystickButton, "C")
-
     def __getitem__(self, identifier: uuid.UUID | str):
         return self._inputs[self._identifier_to_guid(identifier)]
 
@@ -156,20 +152,6 @@ class IntermediateOutput:
         self._label_lookup[new_label] = input.guid
         del self._label_lookup[old_label]
 
-    # def delete_by_index(self, type: InputType, index: uuid.UUID) -> None:
-    #     """Deletes an input based on the type and index information.
-    #
-    #     Args:
-    #         type: the type of the input to delete
-    #         index: indexo of the input to delete
-    #     """
-    #     key = (type, index)
-    #     if key not in self._index_lookup:
-    #         raise GremlinError(
-    #             f"No input of type {InputType.to_string(type)} with index {index}"
-    #         )
-    #     self.delete_by_label(self._index_lookup[key])
-
     def delete(self, identifier: str | uuid.UUID) -> None:
         """Deletes an input based on the given identifier.
 
@@ -189,15 +171,10 @@ class IntermediateOutput:
         Returns:
             List of all labels matching the specified inputs types
         """
-        if type_list is None:
-            type_list = [
-                InputType.JoystickAxis,
-                InputType.JoystickButton,
-                InputType.JoystickHat
-            ]
-        return [e.label for e in self.inputs_of_type(type_list)]
+        x = [e.label for e in self.inputs_of_type(type_list)]
+        return x
 
-    def inputs_of_type(self, type_list: List[InputType]) -> List[Input]:
+    def inputs_of_type(self, type_list: None | List[InputType]) -> List[Input]:
         """Returns input corresponding to the specified types.
 
         Args:
@@ -206,6 +183,12 @@ class IntermediateOutput:
         Returns:
             List of inputs that have the specified type
         """
+        if type_list is None:
+            type_list = [
+                InputType.JoystickAxis,
+                InputType.JoystickButton,
+                InputType.JoystickHat
+            ]
         return [
             e for e in
             sorted(self._inputs.values(), key=lambda x: (x.type.name, x.label))
