@@ -31,7 +31,7 @@ import Gremlin.Device
 Item {
     id: _root
 
-    property IODevice device
+    property IODeviceManagementModel device
     property int inputIndex
     property InputIdentifier inputIdentifier
 

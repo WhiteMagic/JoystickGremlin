@@ -18,14 +18,16 @@
 from __future__ import annotations
 
 import time
-import typing
+import uuid
+from typing import Any, Dict, List, Tuple
 
 from PySide6 import QtCharts, QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 import dill
 
-from gremlin import common, error, event_handler, joystick_handling
+from gremlin import common, event_handler, joystick_handling
+from gremlin.error import GremlinError
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.types import InputType
 from gremlin.util import parse_guid
@@ -104,7 +106,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
     def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
         return len(self._devices)
 
-    def data(self, index:QtCore.QModelIndex, role:int=...) -> typing.Any:
+    def data(self, index:QtCore.QModelIndex, role:int=...) -> Any:
         if role in DeviceListModel.roles:
             role_name = DeviceListModel.roles[role].data().decode()
             return DeviceListModel.role_query[role_name](
@@ -113,13 +115,13 @@ class DeviceListModel(QtCore.QAbstractListModel):
         else:
             return "Unknown"
 
-    def roleNames(self) -> typing.Dict:
+    def roleNames(self) -> Dict:
         return DeviceListModel.roles
 
     @Slot(int, result=str)
     def guidAtIndex(self, index: int) -> str:
         if not(0 <= index < len(self._devices)):
-            raise error.GremlinError("Provided index out of range")
+            raise GremlinError("Provided index out of range")
 
         return str(self._devices[index].device_guid)
 
@@ -165,7 +167,7 @@ class Device(QtCore.QAbstractListModel):
                self._device.button_count + \
                self._device.hat_count
 
-    def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
+    def data(self, index: QtCore.QModelIndex, role:int=...) -> Any:
         if role not in Device.roles:
             return "Unknown"
 
@@ -201,13 +203,13 @@ class Device(QtCore.QAbstractListModel):
 
         return identifier
 
-    def _name(self, identifier: typing.Tuple[InputType, int]) -> str:
+    def _name(self, identifier: Tuple[InputType, int]) -> str:
         return "{} {:d}".format(
             InputType.to_string(identifier[0]).capitalize(),
             identifier[1]
         )
 
-    def _convert_index(self, index: int) -> typing.Tuple[InputType, int]:
+    def _convert_index(self, index: int) -> Tuple[InputType, int]:
         axis_count = self._device.axis_count
         button_count = self._device.button_count
         hat_count = self._device.hat_count
@@ -228,7 +230,7 @@ class Device(QtCore.QAbstractListModel):
                 index + 1 - axis_count - button_count
             )
 
-    def roleNames(self) -> typing.Dict:
+    def roleNames(self) -> Dict:
         return Device.roles
 
     guid = Property(
@@ -238,9 +240,8 @@ class Device(QtCore.QAbstractListModel):
     )
 
 
-
 @QtQml.QmlElement
-class IODevice(QtCore.QAbstractListModel):
+class IODeviceManagementModel(QtCore.QAbstractListModel):
 
     """Model providing information about the intermedia output device."""
 
@@ -264,36 +265,48 @@ class IODevice(QtCore.QAbstractListModel):
 
     @Slot(str, str)
     def changeName(self, old_labele: str, new_label: str) -> None:
-        self._io.set_label(old_labele, new_label)
+        try:
+            self._io.set_label(old_labele, new_label)
+        except GremlinError:
+            # FIXME: Somehow needs to reset the text field to the previous value
+            pass
 
     @Slot(str)
     def deleteInput(self, label: str) -> None:
-        self._io.delete_by_label(label)
+        self._io.delete(label)
         self.modelReset.emit()
 
     def _get_guid(self) -> str:
-        return str(self._io.guid)
+        return str(self._io.device_guid)
 
     def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
-        return len(self._io.all_keys())
+        return len(self._io.labels_of_type())
 
-    def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
-        if role not in IODevice.roles:
+    def data(self, index: QtCore.QModelIndex, role:int=...) -> Any:
+        if role not in IODeviceManagementModel.roles:
             return "Unknown"
 
-        role_name = IODevice.roles[role].data().decode()
+        role_name = IODeviceManagementModel.roles[role].data().decode()
         input = self._index_to_input(index.row())
         if role_name == "name":
             return f"{InputType.to_string(input.type).capitalize()} " \
-                f"{input.index+1}"
+                f"{input.suffix}"
         elif role_name == "actionCount":
             return backend.Backend().profile.get_input_count(
-                self._io.guid,
+                self._io.device_guid,
                 input.type,
-                input.index
+                input.guid
             )
         elif role_name == "label":
             return input.label
+
+    @Slot(str, result=List[str])
+    def validLabels(self, type_str: str) -> List[str]:
+        """Returns a list of valid labels for a given input."""
+        type = InputType.to_enum(type_str)
+        if len(self._io.keys_of_type([type])) == 0:
+            self._io.create(type)
+        return self._io.keys_of_type([type])
 
     @Slot(int, result=InputIdentifier)
     def inputIdentifier(self, index: int) -> InputIdentifier:
@@ -307,15 +320,18 @@ class IODevice(QtCore.QAbstractListModel):
             An InputIdentifier instance referring to the input item with
             the given index.
         """
+        if index < 0:
+            return InputIdentifier(self)
+
         input = self._index_to_input(index)
         identifier = InputIdentifier(self)
-        identifier.device_guid = self._io.guid
+        identifier.device_guid = self._io.device_guid
         identifier.input_type = input.type
-        identifier.input_id = input.index
+        identifier.input_id = input.guid
 
         return identifier
 
-    def _name(self, identifier: typing.Tuple[InputType, int]) -> str:
+    def _name(self, identifier: Tuple[InputType, int]) -> str:
         return "{} {:d}".format(
             InputType.to_string(identifier[0]).capitalize(),
             identifier[1]
@@ -328,33 +344,95 @@ class IODevice(QtCore.QAbstractListModel):
             index: the linear index into the list of inputs
 
         Returns:
-            The label corresponding to the input with the given index
+            The input corresponding to the given index
         """
-        axis_count = self._io.axis_count
-        button_count = self._io.button_count
+        return self._io[self._io.labels_of_type()[index]]
 
-        # Determine the input type based on the index as the sequence of inputs
-        # is axes, buttons, hats. The inputs within those are then oredered
-        # by their own internal index
-        input = None
-        if index < axis_count:
-            input = self._io.input_by_offset(InputType.JoystickAxis, index)
-        elif index < axis_count + button_count:
-            input = self._io.input_by_offset(
-                InputType.JoystickButton,
-                index - axis_count
-            )
-        else:
-            input = self._io.input_by_offset(
-                InputType.JoystickHat,
-                index - axis_count - button_count
-            )
-        return input
-
-    def roleNames(self) -> typing.Dict:
-        return IODevice.roles
+    def roleNames(self) -> Dict:
+        return IODeviceManagementModel.roles
 
     guid = Property(str, fget=_get_guid)
+
+
+@QtQml.QmlElement
+class IODeviceInputsModel(QtCore.QAbstractListModel):
+
+    inputsChanged = Signal()
+    selectionChanged = Signal()
+
+    roles = {
+        QtCore.Qt.UserRole + 1: QtCore.QByteArray("label".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("guid".encode())
+    }
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self._io = IntermediateOutput()
+        self._valid_types = None
+        self._current_index = 0
+        self._current_guid = None
+
+    def rowCount(self, parent) -> int:
+        return len(self._io.labels_of_type(self._valid_types))
+
+    def data(
+            self,
+            index: PySide6.QtCore.QModelIndex,
+            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if role not in self.roleNames():
+            raise GremlinError(f"Invalid role {role} in IODeviceInputsModel")
+
+        input = self._io.inputs_of_type(self._valid_types)[index.row()]
+        if role == QtCore.Qt.UserRole + 1:
+            return input.label
+        elif role == QtCore.Qt.UserRole + 2:
+            return str(input.guid)
+
+    def roleNames(self) -> Dict:
+        return IODeviceInputsModel.roles
+
+    def _set_valid_types(self, valid_types: List[str]) -> None:
+        type_list = sorted([InputType.to_enum(entry) for entry in valid_types])
+        if type_list != self._valid_types:
+            self._valid_types = type_list
+            self.inputsChanged.emit()
+
+    def _get_current_selection_index(self) -> int:
+        return self._current_index
+
+    def _get_current_guid(self) -> str:
+        return str(self._current_guid)
+
+    def _set_current_guid(self, guid_str: str) -> None:
+        guid = uuid.UUID(guid_str)
+        if guid != self._current_guid:
+            self._current_guid = guid
+            self._current_index = 0
+            for i, input in enumerate(self._io.inputs_of_type(self._valid_types)):
+                if input.guid == guid:
+                    self._current_index = i
+            self.selectionChanged.emit()
+
+    validTypes = Property(
+        "QVariantList",
+        fset=_set_valid_types,
+        notify=inputsChanged
+    )
+
+    currentSelectionIndex = Property(
+        int,
+        fget=_get_current_selection_index,
+        notify=selectionChanged
+    )
+
+    currentGuid = Property(
+        str,
+        fget=_get_current_guid,
+        fset=_set_current_guid,
+        notify=selectionChanged
+    )
 
 
 @QtQml.QmlElement
@@ -404,9 +482,6 @@ class VJoyDevices(QtCore.QObject):
 
         self._is_initialized = False
 
-    def _format_input(self) -> str:
-        pass
-
     def _device_name(self, device) -> str:
         return "vJoy Device {:d}".format(device.vjoy_id)
 
@@ -437,9 +512,7 @@ class VJoyDevices(QtCore.QObject):
                 self._set_vjoy_index(i)
 
         if vjoy_index == -1:
-            raise error.GremlinError(
-                f"Could not find vJoy device with id {vjoy_id}"
-            )
+            raise GremlinError(f"Could not find vJoy device with id {vjoy_id}")
 
         # Find the index corresponding to the provided input_type and input_id
         input_label = common.input_to_ui_string(
@@ -449,7 +522,7 @@ class VJoyDevices(QtCore.QObject):
         try:
             self._set_input_index(self._input_items.index(input_label))
         except ValueError:
-            raise error.GremlinError(f"No input named \"{input_label}\" present")
+            raise GremlinError(f"No input named \"{input_label}\" present")
 
     @Property(type="QVariantList", notify=deviceModelChanged)
     def deviceModel(self):
@@ -481,10 +554,10 @@ class VJoyDevices(QtCore.QObject):
 
         return self._input_items
 
-    def _get_valid_types(self) -> typing.List[str]:
+    def _get_valid_types(self) -> List[str]:
         return [InputType.to_string(entry) for entry in self._valid_types]
 
-    def _set_valid_types(self, valid_types: typing.List[str]) -> None:
+    def _set_valid_types(self, valid_types: List[str]) -> None:
         type_list = sorted([InputType.to_enum(entry) for entry in valid_types])
         if type_list != self._valid_types:
             self._valid_types = type_list
@@ -525,14 +598,14 @@ class VJoyDevices(QtCore.QObject):
 
     def _get_vjoy_id(self) -> int:
         if not self._is_state_valid():
-            raise error.GremlinError(
+            raise GremlinError(
                 "Attempted to read from invalid VJoyDevices instance."
             )
         return self._devices[self._current_vjoy_index].vjoy_id
 
     def _get_vjoy_index(self) -> int:
         if not self._is_state_valid():
-            raise error.GremlinError(
+            raise GremlinError(
                 "Attempted to read from invalid VJoyDevices instance."
             )
         return self._current_vjoy_index
@@ -540,7 +613,7 @@ class VJoyDevices(QtCore.QObject):
     def _set_vjoy_index(self, index: int) -> None:
         if index != self._current_vjoy_index:
             if index >= len(self._devices):
-                raise error.GremlinError(
+                raise GremlinError(
                     f"Invalid device index used device with index {index} "
                     f"does not exist"
                 )
@@ -550,14 +623,14 @@ class VJoyDevices(QtCore.QObject):
 
     def _get_input_id(self) -> int:
         if not self._is_state_valid():
-            raise error.GremlinError(
+            raise GremlinError(
                 "Attempted to read from invalid VJoyDevices instance."
             )
         return self._input_data[self._current_input_index][1]
 
     def _get_input_index(self) -> int:
         if not self._is_state_valid():
-            raise error.GremlinError(
+            raise GremlinError(
                 "Attempted to read from invalid VJoyDevices instance."
             )
         return self._current_input_index
@@ -636,7 +709,7 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         self._event_handler_impl(event)
 
     def _event_handler_impl(self, event: event_handler.Event) -> None:
-        raise error.GremlinError(
+        raise GremlinError(
             "AbstractDeviceState._event_handler_impl not implemented"
         )
 
@@ -650,7 +723,7 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         self.deviceChanged.emit()
 
     def _initilize_state(self) -> None:
-        raise error.GremlinError(
+        raise GremlinError(
             "AbstractDeviceState._initialize_state not implemented"
         )
 
@@ -660,14 +733,14 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
 
         return len(self._state)
 
-    def data(self, index: QtCore.QModelIndex, role:int=...) -> typing.Any:
+    def data(self, index: QtCore.QModelIndex, role:int=...) -> Any:
         if role not in AbstractDeviceState.roles:
             return False
 
         role_name = DeviceButtonState.roles[role].data().decode()
         return self._state[index.row()][role_name]
 
-    def roleNames(self) -> typing.Dict:
+    def roleNames(self) -> Dict:
         return DeviceButtonState.roles
 
     guid = Property(

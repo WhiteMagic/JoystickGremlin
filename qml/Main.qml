@@ -322,7 +322,7 @@ ApplicationWindow {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        _ioDeviceList.device = backend.getIODevice()
+                        _ioDeviceList.device = backend.getIODeviceManagementModel()
 
                         // Deselect everything in the input device panel and
                         // hide it before showing the IO content
@@ -365,7 +365,8 @@ ApplicationWindow {
                 // Ensure initial state of input list and input configuration is
                 // synchronized
                 Component.onCompleted: {
-                    inputIdentifier = device.inputIdentifier(inputIndex)
+                    // FIXME: Where does this inputIndex variable come from?
+                    //inputIdentifier = device.inputIdentifier(inputIndex)
                 }
             }
 
@@ -375,7 +376,7 @@ ApplicationWindow {
                 visible: true
                 SplitView.minimumWidth: 150
 
-                device: backend.getIODevice()
+                device: backend.getIODeviceManagementModel()
 
                 // Trigger a model update on the InputConfiguration
                 onInputIdentifierChanged: {
@@ -385,7 +386,8 @@ ApplicationWindow {
                 // Ensure initial state of input list and input configuration is
                 // synchronized
                 Component.onCompleted: {
-                    inputIdentifier = device.inputIdentifier(inputIndex)
+                    // FIXME: Where does this inputIndex variable come from?
+                    //inputIdentifier = device.inputIdentifier(inputIndex)
                 }
             }
 
