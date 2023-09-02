@@ -97,7 +97,7 @@ class IntermediateOutput:
         self._inputs = {}
         self._label_lookup = {}
 
-    def __getitem__(self, identifier: uuid.UUID | str):
+    def __getitem__(self, identifier: uuid.UUID | str) -> Input:
         return self._inputs[self._identifier_to_guid(identifier)]
 
     def create(self, type: InputType, label: Optional[str]=None) -> None:

@@ -28,6 +28,7 @@ from PySide6.QtCore import Property, Signal
 from gremlin import util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError
+from gremlin.event_handler import Event, EventListener
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.profile import Library
 from gremlin.types import AxisMode, InputType, PropertyType
@@ -41,7 +42,29 @@ if TYPE_CHECKING:
 
 class MapToIOFunctor(AbstractFunctor):
 
-    pass
+    def __init__(self, instance: MapToIOData):
+        super().__init__(instance)
+        self._io = IntermediateOutput()
+        self._event_listener = EventListener()
+
+    def process_event(self, event: Event, value: Value) -> None:
+        # Emit an event with the IO guid and the rest of the system will
+        # then take core of executing it
+        io_input = self._io[self.data.io_input_guid]
+        is_pressed = value.current \
+            if io_input.type == InputType.JoystickButton else None
+        value = value.current \
+            if io_input.type != InputType.JoystickButton else None
+        self._event_listener.joystick_event.emit(
+            Event(
+                io_input.type,
+                io_input.label,
+                self._io.device_guid,
+                value,
+                is_pressed,
+                value.raw
+            )
+        )
 
 
 class MapToIOModel(ActionModel):
