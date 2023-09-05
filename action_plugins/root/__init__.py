@@ -48,6 +48,10 @@ class RootFunctor(AbstractFunctor):
     def __init__(self, action: RootData) -> None:
         super().__init__(action)
 
+    def __call__(self, event: Event, value: Value) -> None:
+        for functor in self.functors["children"]:
+            functor(event, value)
+
 
 class RootModel(ActionModel):
 

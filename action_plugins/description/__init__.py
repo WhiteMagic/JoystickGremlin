@@ -42,7 +42,7 @@ class DescriptionFunctor(AbstractFunctor):
     def __init__(self, action: DescriptionData):
         super().__init__(action)
 
-    def process_event(
+    def __call__(
         self,
         event: event_handler.Event,
         value: Value

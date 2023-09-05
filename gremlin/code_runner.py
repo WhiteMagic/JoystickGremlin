@@ -59,7 +59,7 @@ class VirtualButton(metaclass=ABCMeta):
         return gremlin.fsm.FiniteStateMachine("up", states, actions, transitions)
 
     @abstractmethod
-    def process_event(self, event: event_handler.Event) -> List[bool]:
+    def __call__(self, event: event_handler.Event) -> List[bool]:
         """Process the input event and updates the value as needed.
 
         Args:
@@ -97,7 +97,7 @@ class VirtualAxisButton(VirtualButton):
         self._direction = direction
         self._last_value = None
 
-    def process_event(self, event: event_handler.Event) -> List[bool]:
+    def __call__(self, event: event_handler.Event) -> List[bool]:
         forced_activation = False
         direction = AxisButtonDirection.Anywhere
         if self._last_value is None:
@@ -146,7 +146,7 @@ class VirtualHatButton(VirtualButton):
         super().__init__()
         self._directions = directions
 
-    def process_event(self, event: event_handler.Event) -> List[bool]:
+    def __call__(self, event: event_handler.Event) -> List[bool]:
         is_pressed = HatDirection.to_enum(event.value) in self._directions
         action = "press" if is_pressed else "release"
         has_changed = self._fsm.perform(action)
@@ -185,7 +185,7 @@ class CallbackObject:
             action: actions bound to a single input item
         """
         self._binding = binding
-        self._functors = []
+        self._functor = None
         self._virtual_identifier = 0
 
         # Differentiate between bindings utilizing virtual buttons and those
@@ -200,8 +200,7 @@ class CallbackObject:
     def __call__(self, event: event_handler.Event) -> None:
         values = self._generate_values(event)
         for i, value in enumerate(values):
-            for func in self._functors:
-                func.process_event(event, value)
+            self._functor(event, value)
 
             # Pause between the execution of subsequent bindings
             if i < len(values)-1:
@@ -209,8 +208,9 @@ class CallbackObject:
 
     def _physical_event_setup(self) -> None:
         """Configures the callback object for traditional physical events."""
-        for node in self._binding.root_action.get_actions()[0]:
-            self._functors.append(node.functor(node))
+        self._functor = self._binding.root_action.functor(
+            self._binding.root_action
+        )
 
     def _virtual_event_setup(self) -> None:
         """Configures the callback object for virtual button handling.
@@ -231,23 +231,19 @@ class CallbackObject:
         # Create virtual button instance and virtual event generator
         vb_instance = self._binding.virtual_button
         if isinstance(vb_instance, gremlin.profile.VirtualAxisButton):
-            self._functors = [
-                VirtualButtonFunctor(
-                    VirtualAxisButton(
-                        vb_instance.lower_limit,
-                        vb_instance.upper_limit,
-                        vb_instance.direction
-                    ),
-                    virtual_event
-                )
-            ]
+            self._functor = VirtualButtonFunctor(
+                VirtualAxisButton(
+                    vb_instance.lower_limit,
+                    vb_instance.upper_limit,
+                    vb_instance.direction
+                ),
+                virtual_event
+            )
         elif isinstance(vb_instance, gremlin.profile.VirtualHatButton):
-            self._functors = [
-                VirtualButtonFunctor(
-                    VirtualHatButton(vb_instance.directions),
-                    virtual_event
-                )
-            ]
+            self._functors = VirtualButtonFunctor(
+                VirtualHatButton(vb_instance.directions),
+                virtual_event
+            )
         else:
             raise error.GremlinError(
                 "Attempting to create virtual event setup when no virtual " +

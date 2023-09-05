@@ -167,7 +167,8 @@ class AbstractActionData(ABC):
         Args:
             selector: name of the container to return actions from
         Returns:
-            List of action instances based on the provided selector
+            Tuple containing a list of action instances and their
+            corresponding selector.
         """
         self._validate_selector(selector)
 
@@ -348,9 +349,16 @@ class AbstractFunctor(ABC):
             execute it later on
         """
         self.data = instance
+        self.functors = {}
+
+        # Recursively generate all functors
+        for selector in instance._valid_selectors():
+            self.functors[selector] = []
+        for action, selector in zip(*instance.get_actions()):
+            self.functors[selector].append(action.functor(action))
 
     @abstractmethod
-    def process_event(self, event: Event, value: Value) -> None:
+    def __call__(self, event: Event, value: Value) -> None:
         """Processes the functor using the provided event and value data.
 
         Args:

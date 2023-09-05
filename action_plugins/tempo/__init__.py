@@ -52,14 +52,7 @@ class TempoFunctor(AbstractFunctor):
         self.value_press = None
         self.event_press = None
 
-        self.short_actions = \
-            [a.node.value.functor(a.node.value) for a in action.shortActions]
-        self.long_actions = \
-            [a.node.value.functor(a.node.value) for a in action.longActions]
-
-    def process_event(self, event: event_handler.Event, value: Value) -> None:
-        # TODO: Currently this does not handle hat or axis events, however
-        #       virtual buttons created on those inputs is supported
+    def __call__(self, event: event_handler.Event, value: Value) -> None:
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
                 f"Invalid data type received in Tempo container: "
@@ -78,9 +71,9 @@ class TempoFunctor(AbstractFunctor):
             self.timer = threading.Timer(self.data.threshold, self._long_press)
             self.timer.start()
 
-            if self.data.activateOn == "press":
+            if self.data.activate_on == "press":
                 self._process_event(
-                    self.short_actions,
+                    self.functors["short"],
                     self.event_press,
                     self.value_press
                 )
@@ -89,7 +82,7 @@ class TempoFunctor(AbstractFunctor):
             if (self.start_time + self.data.threshold) > time.time():
                 self.timer.cancel()
 
-                if self.data.activateOn == "release":
+                if self.data.activate_on == "release":
                     threading.Thread(target=lambda: self._short_press(
                         self.event_press,
                         self.value_press,
@@ -97,12 +90,12 @@ class TempoFunctor(AbstractFunctor):
                         value
                     )).start()
                 else:
-                    self._process_event(self.short_actions, event, value)
+                    self._process_event(self.functors["short"], event, value)
             # Long press
             else:
-                self._process_event(self.long_actions, event, value)
-                if self.data.activateOn == "press":
-                    self._process_event(self.short_actions, event, value)
+                self._process_event(self.functors["long"], event, value)
+                if self.data.activate_on == "press":
+                    self._process_event(self.functors["short"], event, value)
 
             self.timer = None
 
@@ -120,14 +113,14 @@ class TempoFunctor(AbstractFunctor):
         :param event_r event to release the action
         :param value_r value to release the action
         """
-        self._process_event(self.short_actions, event_p, value_p)
+        self._process_event(self.functors["short"], event_p, value_p)
         time.sleep(0.05)
-        self._process_event(self.short_actions, event_r, value_r)
+        self._process_event(self.functors["short"], event_r, value_r)
 
     def _long_press(self):
         """Callback executed, when the delay expires."""
         self._process_event(
-            self.long_actions,
+            self.functors["long"],
             self.event_press,
             self.value_press
         )
@@ -146,7 +139,7 @@ class TempoFunctor(AbstractFunctor):
             value: value of the event
         """
         for action in actions:
-            action.process_event(event, value)
+            action(event, value)
 
 
 class TempoModel(ActionModel):

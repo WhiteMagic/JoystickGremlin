@@ -424,16 +424,11 @@ class ConditionFunctor(AbstractFunctor):
     def __init__(self, action: ConditionModel):
         super().__init__(action)
 
-        self.true_actions = \
-            [a.node.value.functor(a.node.value) for a in action.trueActionNodes]
-        self.false_actions = \
-            [a.node.value.functor(a.node.value) for a in action.falseActionNodes]
-
-    def process_event(self, event: event_handler.Event, value: Value) -> None:
-        actions = self.true_actions if \
-            self._condition_truth_state(value) else self.false_actions
+    def __call__(self, event: event_handler.Event, value: Value) -> None:
+        actions = self.functors["true"] if \
+            self._condition_truth_state(value) else self.functors["false"]
         for action in actions:
-            action.process_event(event, value)
+            action(event, value)
 
     def _condition_truth_state(self, value: Value) -> bool:
         """Returns the truth value of the condition.
@@ -445,9 +440,9 @@ class ConditionFunctor(AbstractFunctor):
             True if the condition evaluates to True, False otherwise
         """
         outcomes = [cond(value) for cond in self.data.conditions]
-        if self.data._logical_operator == LogicalOperator.All:
+        if self.data.logical_operator == LogicalOperator.All:
             return all(outcomes)
-        elif self.data._logical_operator == LogicalOperator.Any:
+        elif self.data.logical_operator == LogicalOperator.Any:
             return any(outcomes)
         else:
             raise GremlinError(

@@ -52,7 +52,7 @@ class MapToVjoyFunctor(AbstractFunctor):
         self.axis_delta_value = 0.0
         self.axis_value = 0.0
 
-    def process_event(
+    def __call__(
         self,
         event: event_handler.Event,
         value: Value

@@ -47,20 +47,20 @@ class MapToIOFunctor(AbstractFunctor):
         self._io = IntermediateOutput()
         self._event_listener = EventListener()
 
-    def process_event(self, event: Event, value: Value) -> None:
+    def __call__(self, event: Event, value: Value) -> None:
         # Emit an event with the IO guid and the rest of the system will
         # then take core of executing it
         io_input = self._io[self.data.io_input_guid]
         is_pressed = value.current \
             if io_input.type == InputType.JoystickButton else None
-        value = value.current \
+        input_value = value.current \
             if io_input.type != InputType.JoystickButton else None
         self._event_listener.joystick_event.emit(
             Event(
                 io_input.type,
                 io_input.label,
                 self._io.device_guid,
-                value,
+                input_value,
                 is_pressed,
                 value.raw
             )
