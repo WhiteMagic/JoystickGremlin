@@ -103,6 +103,27 @@ def read_bool(node: ElementTree.Element, key: str, default_value: bool = False) 
         return default_value
 
 
+def parse_id_or_uuid(value: str) -> int | UUID:
+    """Attempts to parse an identifier value.
+
+    Exects the string to represent either an integer or UUID value.
+
+    Args:
+        value: the string to parse
+
+    Returns:
+        The integer or UUID representation of the provided string
+    """
+    if value.isdigit():
+        return int(value)
+    else:
+        try:
+            return UUID(value)
+        except ValueError:
+            raise error.ProfileError(f"Invalid type for value '{value}'")
+
+
+
 def parse_bool(value: str, default_value: bool = False) -> bool:
     """Returns the boolean representation of the provided value.
 
@@ -310,7 +331,7 @@ _type_lookup = {
 _element_parsers = {
     "device-id": lambda x: parse_guid(x.text),
     "input-type": lambda x: InputType.to_enum(x.text),
-    "input-id": lambda x: int(x.text),
+    "input-id": lambda x: parse_id_or_uuid(x.text),
     "mode": lambda x: str(x.text),
     "description": lambda x: str(x.text) if x.text else "",
     "behavior": lambda x: InputType.to_enum(x.text),
@@ -322,17 +343,17 @@ _element_parsers = {
 }
 
 _element_types = {
-    "device-id": dill.GUID,
-    "input-type": InputType,
-    "input-id": int,
-    "mode": str,
-    "description": str,
-    "behavior": InputType,
-    "root-action": uuid.UUID,
-    "lower-limit": float,
-    "upper-limit": float,
-    "axis-button-direction": AxisButtonDirection,
-    "hat-direction": HatDirection,
+    "device-id": [dill.GUID],
+    "input-type": [InputType],
+    "input-id": [int],
+    "mode": [str],
+    "description": [str],
+    "behavior": [InputType],
+    "root-action": [uuid.UUID],
+    "lower-limit": [float],
+    "upper-limit": [float],
+    "axis-button-direction": [AxisButtonDirection],
+    "hat-direction": [HatDirection],
 }
 
 _element_to_string = {
@@ -363,7 +384,7 @@ def create_subelement_node(
         raise error.ProfileError(
             f"No input subelement with name '{name} exists"
         )
-    if not isinstance(value, _element_types[name]):
+    if not type(value) in _element_types[name]:
         raise error.ProfileError(
             f"Incorrect value type for subelement with name '{name}"
         )
