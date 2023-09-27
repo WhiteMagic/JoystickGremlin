@@ -260,7 +260,8 @@ _property_from_string = {
     PropertyType.AxisMode: lambda x: AxisMode.to_enum(x),
     PropertyType.HatDirection: lambda x: HatDirection.to_enum(x),
     PropertyType.GUID: lambda x: uuid.UUID(x),
-    PropertyType.List: lambda x: x.split("|")
+    PropertyType.List: lambda x: x.split("|"),
+    PropertyType.UUID: lambda x: uuid.UUID(x),
 }
 
 def property_from_string(data_type: PropertyType, value: str) -> Any:
@@ -290,6 +291,7 @@ _property_to_string = {
     PropertyType.HatDirection: lambda x: HatDirection.to_string(x),
     PropertyType.GUID: lambda x: str(x),
     PropertyType.List: lambda x: "|".join([str(v) for v in x]),
+    PropertyType.UUID: str,
 }
 
 def property_to_string(data_type: PropertyType, value: Any) -> str:
@@ -439,7 +441,7 @@ def create_property_node(
     n_node = ElementTree.Element("name")
     n_node.text = name
     v_node = ElementTree.Element("value")
-    v_node.text = _property_to_string[property_type](value)
+    v_node.text = property_to_string(property_type, value)
     p_node.append(n_node)
     p_node.append(v_node)
     return p_node
