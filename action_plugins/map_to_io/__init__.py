@@ -58,7 +58,7 @@ class MapToIOFunctor(AbstractFunctor):
         self._event_listener.joystick_event.emit(
             Event(
                 io_input.type,
-                io_input.label,
+                io_input.guid,
                 self._io.device_guid,
                 input_value,
                 is_pressed,
