@@ -342,12 +342,13 @@ _element_parsers = {
     "upper-limit": lambda x: float(x.text),
     "axis-button-direction": lambda x: AxisButtonDirection.to_enum(x.text),
     "hat-direction": lambda x: HatDirection.to_enum(x.text),
+    "label": lambda x: str(x.text),
 }
 
 _element_types = {
     "device-id": [dill.GUID],
     "input-type": [InputType],
-    "input-id": [int],
+    "input-id": [int, UUID],
     "mode": [str],
     "description": [str],
     "behavior": [InputType],
@@ -356,6 +357,7 @@ _element_types = {
     "upper-limit": [float],
     "axis-button-direction": [AxisButtonDirection],
     "hat-direction": [HatDirection],
+    "label": [str],
 }
 
 _element_to_string = {
@@ -370,6 +372,7 @@ _element_to_string = {
     "upper-limit": str,
     "axis-button-direction": lambda x: AxisButtonDirection.to_string(x),
     "hat-direction": lambda x: HatDirection.to_string(x),
+    "label": str,
 }
 
 def create_subelement_node(

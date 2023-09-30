@@ -31,6 +31,7 @@ import action_plugins
 from gremlin.types import AxisButtonDirection, InputType, HatDirection, \
     PluginVariableType
 from gremlin import error, plugin_manager
+from gremlin.intermediate_output import IntermediateOutput
 from gremlin.tree import TreeNode
 from gremlin.util import safe_read, safe_format, read_action_ids, read_bool, \
     read_subelement, parse_guid, create_subelement_node
@@ -427,10 +428,13 @@ class Library:
             if not all([aid in self._actions for aid in read_action_ids(entry)]):
                 parse_later.append(entry)
 
-            # Create action object, turn it into a tree node and store it
+            # Create action object and store it in the library
             if entry not in parse_later:
                 self._parse_xml_action(entry)
 
+        # Parse all actions that have missing child actions and repeat this
+        # until no action with missing child actions remains.
+        # FIXME: Detect when this gets stuck because a child simply doesn't exist
         while len(parse_later) > 0:
             entry = parse_later.pop(0)
             if not all([aid in self._actions for aid in read_action_ids(entry)]):
@@ -490,17 +494,17 @@ class Profile:
         tree = ElementTree.parse(fpath)
         root = tree.getroot()
 
+        # Process all intermediate output system inputs
+        for node in root.findall("./inputs/input[device-id='F0AF472F-8E17-493B-A1EB-7333EE8543F2']"):
+            self._create_io_input(node)
+
+        # Create library entries and modes
         self.library.from_xml(root)
         self.modes.from_xml(root)
 
         # Parse individual inputs
         for node in root.findall("./inputs/input"):
-            item = InputItem(self.library)
-            item.from_xml(node)
-
-            if item.device_id not in self.inputs:
-                self.inputs[item.device_id] = []
-            self.inputs[item.device_id].append(item)
+            self._process_input(node)
 
     def to_xml(self, fpath: str) -> None:
         """Writes the profile's content to an XML file.
@@ -562,7 +566,7 @@ class Profile:
             self,
             device_guid: dill.GUID,
             input_type: InputType,
-            input_id: int,
+            input_id: int | uuid.UUID,
             create_if_missing: bool=False
     ) -> InputItem:
         """Returns the InputItem corresponding to the provided information.
@@ -577,6 +581,14 @@ class Profile:
         Returns:
             InputItem corresponding to the given information
         """
+        # Verify provided information has correct type information
+        if not (
+                isinstance(device_guid, dill.GUID) and
+                isinstance(input_type, InputType) and
+                type(input_id) in [int, uuid.UUID]
+        ):
+            raise error.ProfileError(f"Invalid input specification provided.")
+
         if device_guid not in self.inputs:
             if create_if_missing:
                 self.inputs[device_guid] = []
@@ -632,6 +644,32 @@ class Profile:
         # unused
         self.library.remove_unused(action, recursive=True)
 
+    def _process_input(self, node: ElementTree) -> None:
+        """Processes an InputItem XML node and stores it.
+
+        Args:
+            node: XML node containing InputItem data
+        """
+        item = InputItem(self.library)
+        item.from_xml(node)
+
+        if item.device_id not in self.inputs:
+            self.inputs[item.device_id] = []
+        self.inputs[item.device_id].append(item)
+
+    def _create_io_input(self, node: ElementTree) -> None:
+        """Creates an intermediate output input for the givern node.
+
+        Args:
+            node: XML node corresponding to an IO input
+        """
+        io = IntermediateOutput()
+        io.create(
+            read_subelement(node, "input-type"),
+            input_id=read_subelement(node, "input-id"),
+            label=read_subelement(node, "label")
+        )
+
 
 class InputItem:
 
@@ -677,11 +715,20 @@ class InputItem:
         node.append(create_subelement_node("input-type", self.input_type))
         node.append(create_subelement_node("mode", self.mode))
         input_id = self.input_id
+
         # To convert keyboard input tuples (scan_code, extended_bit) to integer:
         # input_id = extended_bit << 8 | scan_code
         if self.input_type == InputType.Keyboard:
             input_id = self.input_id[1] << 8 | self.input_id[0]
         node.append(create_subelement_node("input-id", input_id))
+
+        # Write label if an intermediate output item is serialized
+        if self.device_id == dill.GUID_IntermediateOutput:
+            io = IntermediateOutput()
+            node.append(create_subelement_node(
+                "label",
+                io[self.input_id].label
+            ))
 
         # Action configurations
         for entry in self.action_sequences:
