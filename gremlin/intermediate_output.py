@@ -100,11 +100,17 @@ class IntermediateOutput:
     def __getitem__(self, identifier: uuid.UUID | str) -> Input:
         return self._inputs[self._identifier_to_guid(identifier)]
 
-    def create(self, type: InputType, label: Optional[str]=None) -> None:
+    def create(
+            self,
+            type: InputType,
+            input_id: Optional[uuid.UUID]=None,
+            label: Optional[str]=None
+    ) -> None:
         """Creates a new input instance of the given type.
 
         Args:
             type: the type of input to create
+            input_id: unique id identifying this input
             label: if given will be used as the label of the new input
         """
         if label in self.labels_of_type():
@@ -116,14 +122,22 @@ class IntermediateOutput:
             InputType.JoystickHat: self.Hat
         }
 
-        # Geberate a valid label if none has been provided
+        # Use provided input id and verify it is unique otherwise generte one
         guid = uuid.uuid4()
+        if input_id != None:
+            if input_id in self._inputs:
+                raise GremlinError(f"IO item with duplicate id {input_id}.")
+            else:
+                guid = input_id
+
+        # Generate a valid label if none has been provided
         if label == None:
             # Create a key and check it is valid and if not, make it valid
             suffix = str(guid).split("-")[0]
             label = f"{InputType.to_string(type).capitalize()} {suffix}"
             if label in self.labels_of_type():
                 label = f"{label} - {time.time()}"
+
         self._inputs[guid] = do_create[type](label, guid)
         self._label_lookup[label] = guid
 
