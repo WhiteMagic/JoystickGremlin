@@ -312,14 +312,15 @@ class CodeRunner:
         self._merge_axes = []
         self._running = False
 
-    def is_running(self):
-        """Returns whether or not the code runner is executing code.
+    def is_running(self) -> bool:
+        """Returns whether the code runner is executing code.
 
-        :return True if code is being executed, False otherwise
+        Returns:
+            True if code is being executed, False otherwise
         """
         return self._running
 
-    def start(self, profile: gremlin.profile.Profile, start_mode: str):
+    def start(self, profile: gremlin.profile.Profile, start_mode: str) -> None:
         """Starts listening to events and loads all existing callbacks.
 
         Args:

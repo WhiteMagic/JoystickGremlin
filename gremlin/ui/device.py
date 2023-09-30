@@ -125,6 +125,34 @@ class DeviceListModel(QtCore.QAbstractListModel):
 
         return str(self._devices[index].device_guid)
 
+    def _change_device_type(self, types: str) -> None:
+        """Sets which device types are going to be used.
+
+        Valid options are:
+        - physical
+        - virtual
+        - all
+
+        Args:
+            types: the type of devices to list
+        """
+        if types == "physical":
+            self._devices = joystick_handling.physical_devices()
+        elif types == "virtual":
+            self._devices = joystick_handling.vjoy_devices()
+        elif types == "all":
+            self._devices = joystick_handling.joystick_devices()
+
+        # Remove everything and then add it back to force a model update
+        new_count = len(self._devices)
+        self.rowsRemoved.emit(self.parent(), 0, new_count)
+        self.rowsInserted.emit(self.parent(), 0, new_count)
+
+    deviceType = Property(
+        str,
+        fset=_change_device_type
+    )
+
 
 @QtQml.QmlElement
 class Device(QtCore.QAbstractListModel):
