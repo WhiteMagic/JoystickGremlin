@@ -274,6 +274,12 @@ ApplicationWindow {
         // }
     }
 
+    function showIntermediateOutput(state)
+    {
+        _ioDeviceList.visible = state
+        _deviceInputList.visible = !state
+    }
+
     // Main window content
     ColumnLayout {
         id: _columnLayout
@@ -285,7 +291,7 @@ ApplicationWindow {
         RowLayout {
             Layout.fillWidth: true
 
-            // Horizonbtal list of "tabs" listing all detected devices
+            // Horizontal list of "tabs" listing all detected devices
             DeviceList {
                 id: _devicePanel
 
@@ -296,13 +302,29 @@ ApplicationWindow {
                 deviceListModel: _deviceListModel
 
                 // Trigger a model update on the DeviceInputList
-                onDeviceGuidChanged: {
+                onDeviceGuidChanged: function()
+                {
                     _deviceModel.guid = deviceGuid
 
                     // Ensure the input panel is showing the physical device
-                    _deviceInputList.visible = true
-                    _ioDeviceList.visible = false
+                    showIntermediateOutput(false)
                 }
+
+                MouseArea {
+                    anchors.fill: parent
+                    propagateComposedEvents: true
+                    onClicked: function(mouse)
+                    {
+                        showIntermediateOutput(false)
+                        mouse.accepted = false
+                        // Force selection of the previously selected item in
+                        // the input list
+                        let old_index = _deviceInputList.inputIndex
+                        _deviceInputList.currentIndex = 0
+                        _deviceInputList.currentIndex = old_index
+                    }
+                }
+
             }
 
             // Intermediate output entry
@@ -322,15 +344,8 @@ ApplicationWindow {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
+                        showIntermediateOutput(true)
                         _ioDeviceList.device = backend.getIODeviceManagementModel()
-
-                        // Deselect everything in the input device panel and
-                        // hide it before showing the IO content
-                        _devicePanel.deviceGuid =
-                            "{00000000-0000-0000-0000-000000000000}"
-                        _deviceInputList.visible = false
-                        _ioDeviceList.visible = true
-                        _devicePanel.selectedIndex = -1
                     }
                 }
             }

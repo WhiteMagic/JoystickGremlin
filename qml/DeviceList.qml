@@ -43,7 +43,7 @@ Item {
         orientation: ListView.Horizontal
 
         model: deviceListModel
-        delegate: idDeviceDelegate
+        delegate: _deviceDelegate
 
         // Make it behave like a sensible scrolling container
         ScrollBar.vertical: ScrollBar {}
@@ -54,11 +54,9 @@ Item {
     // Display name of the device and change background based on the
     // selection state of the device
     Component {
-        id: idDeviceDelegate
+        id: _deviceDelegate
 
         Label {
-            id: idDeviceName
-
             text: name
             leftPadding: 20
             rightPadding: 20

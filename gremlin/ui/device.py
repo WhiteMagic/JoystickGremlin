@@ -51,6 +51,12 @@ class InputIdentifier(QtCore.QObject):
         self.input_type = None
         self.input_id = None
 
+    @Property(bool)
+    def isValid(self) -> bool:
+        return self.device_guid is not None \
+            and self.input_type is not None \
+            and self.input_id is not None
+
 
 @QtQml.QmlElement
 class DeviceListModel(QtCore.QAbstractListModel):
@@ -93,15 +99,9 @@ class DeviceListModel(QtCore.QAbstractListModel):
         self._devices = joystick_handling.joystick_devices()
         new_count = len(self._devices)
 
-        # Remove everything and then add it back
+        # Remove everything and then add it back to force a model update
         self.rowsRemoved.emit(self.parent(), 0, new_count)
         self.rowsInserted.emit(self.parent(), 0, new_count)
-
-        # self.dataChanged.emit(
-        #     self.index(0, 0),
-        #     self.index(len(self._devices), 1),
-        #     list(DeviceData.roles.keys())
-        # )
 
     def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
         return len(self._devices)

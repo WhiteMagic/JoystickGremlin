@@ -35,6 +35,7 @@ Item {
     property int inputIndex
     property InputIdentifier inputIdentifier
     property int minimumWidth: _inputList.minimumWidth
+    property alias currentIndex: _inputList.currentIndex
 
     // Sychronize input selection when the underlying device changes
     Connections {
@@ -77,13 +78,17 @@ Item {
             id: _inputDisplay
 
             width: _inputList.width
-            implicitWidth: _input_label.width + _input_overview.width + 50
+            implicitWidth: _inputLabel.width + _inputOverview.width + 50
             height: 50
 
-            // Dynamically compute the minimum width required to fully display the input
-            // information. This is used to properly configure the SplitView component.
+            // Dynamically compute the minimum width required to fully display
+            // the input information. This is used to properly configure the
+            // SplitView component.
             Component.onCompleted: {
-                _inputList.minimumWidth = Math.max(_inputList.minimumWidth, implicitWidth)
+                _inputList.minimumWidth = Math.max(
+                    _inputList.minimumWidth,
+                    implicitWidth
+                )
             }
 
             color: model.index == _inputList.currentIndex
@@ -97,14 +102,14 @@ Item {
             }
 
             Label {
-                id: _input_label
+                id: _inputLabel
                 text: name
 
                 anchors.verticalCenter: parent.verticalCenter
             }
 
             Label {
-                id: _input_overview
+                id: _inputOverview
                 text: actionCount ? actionCount : ""
 
                 anchors.verticalCenter: parent.verticalCenter

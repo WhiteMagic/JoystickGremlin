@@ -35,7 +35,9 @@ Item {
 
     function reload()
     {
-        _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
+        if(_root.inputIdentifier.isValid) {
+            _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
+        }
     }
 
     onInputIdentifierChanged: {
