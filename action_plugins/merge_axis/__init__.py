@@ -44,7 +44,7 @@ class AxisIdentifier(NamedTuple):
     """Identifies a single axis that is used in an axis merge."""
 
     guid: uuid.UUID4 = dill.GUID_Invalid
-    axis_id: int = -1
+    axis_id: int | uuid.UUID = -1
 
 
 class MergeOperation(Enum):
@@ -92,7 +92,7 @@ class MergeAxisFunctor(AbstractFunctor):
         super().__init__(action)
 
     def process_event(self, event: Event, value: Value) -> None:
-        return super().process_event(event, value)
+        pass
 
 
 class MergeAxisModel(ActionModel):
@@ -100,10 +100,12 @@ class MergeAxisModel(ActionModel):
     def __init__(
             self,
             data: AbstractActionData,
-            binding: InputItemBinding,
+            binding_model: InputItemBindingModel,
+            action_index: SequenceIndex,
+            parent_index: SequenceIndex,
             parent: QtCore.QObject
     ):
-        super().__init__(data, binding, parent)
+        super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(
@@ -134,6 +136,7 @@ class MergeAxisData(AbstractActionData):
         self.label = ""
         self.axis_1 = AxisIdentifier()
         self.axis_2 = AxisIdentifier()
+        self.output = AxisIdentifier()
         self.operation = MergeOperation.Average
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -143,13 +146,19 @@ class MergeAxisData(AbstractActionData):
             node, "axis1-guid", PropertyType.GUID
         )
         self.axis_1.axis_id = util.read_property(
-            node, "axis1-axis", PropertyType.Int
+            node, "axis1-axis", [PropertyType.Int, PropertyType.UUID]
         )
         self.axis_2.guid = util.read_property(
             node, "axis2-guid", PropertyType.GUID
         )
         self.axis_2.axis_id = util.read_property(
-            node, "axis2-axis", PropertyType.Int
+            node, "axis2-axis", [PropertyType.Int, PropertyType.UUID]
+        )
+        self.output.guid = util.read_property(
+            node, "output-guid", PropertyType.GUID
+        )
+        self.output.axis_id = util.read_property(
+            node, "output-axis", PropertyType.UUID
         )
         self.operation = MergeOperation.to_enum(util.read_property(
             node, "operation", PropertyType.String
@@ -160,9 +169,11 @@ class MergeAxisData(AbstractActionData):
         entries = [
             ["label", self.label, PropertyType.String],
             ["axis1-guid", self.axis_1.guid, PropertyType.GUID],
-            ["axis1-axis", self.axis_1.axis_id, PropertyType.Int],
+            ["axis1-axis", self.axis_1.axis_id, [PropertyType.Int, PropertyType.UUID]],
             ["axis2-guid", self.axis_2.guid, PropertyType.GUID],
-            ["axis2-axis", self.axis_2.axis_id, PropertyType.Int],
+            ["axis2-axis", self.axis_2.axis_id, [PropertyType.Int, PropertyType.UUID]],
+            ["output-guid", self.output.guid, PropertyType.GUID],
+            ["output-axis", self.output.axis_id, PropertyType.UUID],
             [
                 "operation",
                 MergeOperation.to_string(self.operation),

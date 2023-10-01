@@ -421,14 +421,14 @@ def create_node_from_data(
 def create_property_node(
         name: str,
         value: Any,
-        property_type: PropertyType
+        property_type: PropertyType | List[PropertyType]
 ) -> ElementTree.Element:
     """Creates a <property> profile element.
 
     Args:
         name: content of the name element
         value: content of the value element
-        property_type: type of the property being created
+        property_type: type or list of types the property value should be of
 
     Returns:
         A property element containing the provided name and value data.
@@ -546,19 +546,21 @@ def read_subelement(node: ElementTree.Element, name: str) -> Any:
 def read_property(
         action_node: ElementTree.Element,
         name: str,
-        property_type: PropertyType
+        property_type: PropertyType | List[PropertyType]
 ) -> Any:
     """Returns the value of the property with the given name.
 
     Args:
         action_node: element from which to extract the property value
         name: name of the property element to return the value of
-        property_type: PropertyType the value should have
+        property_type: valid PropertyType or list of valid types of the value
 
     Returns:
         The value of the property element of the given name
     """
     # Retrieve the individual elements
+    if isinstance(property_type, PropertyType):
+        property_type = [property_type]
     return _process_property(
         action_node.find(f"./property/name[.='{name}']/.."),
         name,
@@ -569,34 +571,36 @@ def read_property(
 def read_properties(
         action_node: ElementTree.Element,
         name: str,
-        property_type: PropertyType
+        property_type: PropertyType | List[PropertyType]
 ) -> List[Any]:
     """Returns the values of all properties with the given name.
 
     Args:
         action_node: element from which to extract the property values
         name: name of the property element to return the values for
-        property_type: PropertyType the values should have
+        property_type: valid PropertyType or list of valid types of the value
 
     Returns:
         List of values corresponding to the property element of the given name
     """
     # Retrieve the individual elements
     p_nodes = action_node.findall(f"./property/name[.='{name}']/..")
+    if isinstance(property_type, PropertyType):
+        property_type = [property_type]
     return [_process_property(node, name, property_type) for node in p_nodes]
 
 
 def _process_property(
         property_node: ElementTree.Element,
         name: str,
-        property_type: PropertyType
+        property_types: List[PropertyType]
 ) -> Any:
     """Processes a single XML node corresponding to a specific property.
 
     Args:
         property_node: element which contains the value to extract
         name: name of the property element to return the value of
-        property_type: PropertyType the value should have
+        property_types: List of acceptable PropertyType for the value
 
     Returns:
         The value of the given property element
@@ -615,7 +619,7 @@ def _process_property(
         )
 
     p_type = PropertyType.to_enum(property_node.get("type"))
-    if p_type != property_type:
+    if p_type not in [property_types]:
         raise error.ProfileError(
             f"Property type mismatch, got '{p_type}' expected '{property_type}'"
         )
@@ -660,17 +664,23 @@ def create_action_ids(name: str, action_ids: List[uuid.UUID]) -> ElementTree.Ele
     return node
 
 
-def has_correct_type(value: Any, property_type: PropertyType) -> bool:
-    """Returns whether or not a value is of the correct type.
+def has_correct_type(
+        value: Any,
+        property_type: PropertyType | List[PropertyType]
+) -> bool:
+    """Returns whether a value is of the correct type.
 
     Args:
         value: the value to check for type correctness
-        property_type: the type the value should have
+        property_type: the type or list of types valid for the given value
 
     Returns:
         True if the value type is correct, False otherwise
     """
-    return type(value) == _type_lookup[property_type]
+    if isinstance(property_type, PropertyType):
+        return type(value) == _type_lookup[property_type]
+    else:
+        return type(value) in property_type
 
 
 def all_properties_present(keys: List[str], properties: Dict[str, Any]) -> bool:
