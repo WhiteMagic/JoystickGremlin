@@ -182,31 +182,31 @@ callback_registry = CallbackRegistry()
 periodic_registry = PeriodicRegistry()
 
 
-def register_callback(callback, device, input_type, input_id):
-    """Adds a callback to the registry.
-
-    This function adds the provided callback to the global callback_registry
-    for the specified event and mode combination.
-
-    Parameters
-    ==========
-    callback : callable
-        The callable object to execute when the event with the specified
-        conditions occurs
-    device : JoystickDecorator
-        Joystick decorator specifying the device and mode in which to execute
-        the callback
-    input_type : gremlin.types.InputType
-        Type of input on which to execute the callback
-    input_id : int
-        Index of the input on which to execute the callback
-    """
-    event = event_handler.Event(
-        event_type=input_type,
-        device_guid=device.device_guid,
-        identifier=input_id
-    )
-    callback_registry.add(callback, event, device.mode, False)
+# def register_callback(callback, device, input_type, input_id):
+#     """Adds a callback to the registry.
+#
+#     This function adds the provided callback to the global callback_registry
+#     for the specified event and mode combination.
+#
+#     Parameters
+#     ==========
+#     callback : callable
+#         The callable object to execute when the event with the specified
+#         conditions occurs
+#     device : JoystickDecorator
+#         Joystick decorator specifying the device and mode in which to execute
+#         the callback
+#     input_type : gremlin.types.InputType
+#         Type of input on which to execute the callback
+#     input_id : int
+#         Index of the input on which to execute the callback
+#     """
+#     event = event_handler.Event(
+#         event_type=input_type,
+#         device_guid=device.device_guid,
+#         identifier=input_id
+#     )
+#     callback_registry.add(callback, event, device.mode, False)
 
 
 class JoystickWrapper:

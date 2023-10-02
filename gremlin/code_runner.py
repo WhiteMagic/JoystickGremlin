@@ -341,9 +341,12 @@ class CodeRunner:
         gremlin.macro.MacroManager().default_delay = settings.default_delay
 
         try:
+            # Process actions define in user plugins
             self._setup_plugins()
 
             # Create callbacks fom the user code
+            # FIXME: This seems like it's no longer actively used and should
+            #        be removed in its entirety
             callback_count = 0
             for dev_id, modes in input_devices.callback_registry.registry.items():
                 for mode, events in modes.items():
@@ -369,50 +372,8 @@ class CodeRunner:
                     False
                 )
 
+            # Process action sequences defined via the UI
             self._setup_profile()
-
-            # Create merge axis callbacks
-            # for entry in profile.merge_axes:
-            #     merge_axis = MergeAxis(
-            #         entry["vjoy"]["vjoy_id"],
-            #         entry["vjoy"]["axis_id"],
-            #         entry["operation"]
-            #     )
-            #     self._merge_axes.append(merge_axis)
-            #
-            #     # Lower axis callback
-            #     event = event_handler.Event(
-            #         event_type=gremlin.common.InputType.JoystickAxis,
-            #         device_guid=entry["lower"]["device_guid"],
-            #         identifier=entry["lower"]["axis_id"]
-            #     )
-            #     self.event_handler.add_callback(
-            #         event.device_guid,
-            #         entry["mode"],
-            #         event,
-            #         merge_axis.update_axis1,
-            #         False
-            #     )
-            #
-            #     # Upper axis callback
-            #     event = event_handler.Event(
-            #         event_type=gremlin.common.InputType.JoystickAxis,
-            #         device_guid=entry["upper"]["device_guid"],
-            #         identifier=entry["upper"]["axis_id"]
-            #     )
-            #     self.event_handler.add_callback(
-            #         event.device_guid,
-            #         entry["mode"],
-            #         event,
-            #         merge_axis.update_axis2,
-            #         False
-            #     )
-
-            # Create vJoy response curve setups
-            # self._vjoy_curves.profile_data = profile.vjoy_devices
-            # self.event_handler.mode_changed.connect(
-            #     self._vjoy_curves.mode_changed
-            # )
 
             # Use inheritance to build duplicate parent actions in children
             # if the child mode does not override the parent's action
@@ -536,6 +497,8 @@ class CodeRunner:
         sys.path = system_paths
 
     def _setup_profile(self):
+        # Collect action sequences from physical inputs and intermediate
+        # output entries
         item_list = sum(self._profile.inputs.values(), [])
         action_sequences = sum([e.action_sequences for e in item_list], [])
 
