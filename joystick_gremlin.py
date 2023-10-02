@@ -48,6 +48,7 @@ os.environ["QT_QUICK_CONTROLS_UNIVERSAL_THEME"] = "Light"
 # os.environ["QML_IMPORT_TRACE"] = "1"
 # os.environ["QSG_RHI"] = "1"
 
+import gremlin.config
 import gremlin.error
 import gremlin.plugin_manager
 import gremlin.types
@@ -103,6 +104,10 @@ def shutdown_cleanup():
     gremlin.joystick_handling.VJoyProxy.reset()
 
 
+def register_config_options():
+    cfg = gremlin.config.Configuration()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -138,6 +143,7 @@ if __name__ == "__main__":
         "logfile": os.path.join(gremlin.util.userprofile_path(), "user.log"),
         "format": "%(asctime)s %(message)s"
     })
+    register_config_options()
 
     syslog = logging.getLogger("system")
 
