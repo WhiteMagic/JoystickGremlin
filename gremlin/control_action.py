@@ -95,10 +95,20 @@ def mode_stack_is_last_mode(mode, temporary=None):
 def mode_stack_get_prev():
     return mode_stack[-2] if len(mode_stack) > 1 else mode_stack[0]
 
+def mode_stack_get_last(ignore_temp=False):
+    # return last mode, if ignore_temp is true, temporary modes are skipped.
+    log.debug(f"mode_stack_get_last(ignore_temp={ignore_temp}) {mode_stack}")
+    if not ignore_temp:
+        log.debug(f"mode_stack_get_last(ignore_temp={ignore_temp}) returning {mode_stack[-1]}")
+        return mode_stack[-1]
 
-def mode_stack_get_last():
-    return mode_stack[-1]
+    for mode in range(len(mode_stack) - 1, -1, -1):
+        if mode_stack[mode].is_temp:
+            continue
+        log.debug(f"mode_stack_get_last(ignore_temp={ignore_temp}) returning {mode_stack[mode]}")
+        return mode_stack[mode]
 
+    # we should never reach here since at least 1 mode has to be non-temp
 
 def mode_stack_remove(mode, temporary=None):
     global mode_stack  
@@ -161,19 +171,21 @@ def switch_to_previous_mode(mode_name=None):
 
     temporary = None
 
+    remove_mode = mode_name
     # switch_to_previous_mode w/o mode_name gets called when non-temporary switch to previous mode is called
-    # therefore we can safely the last mode used from the stack
+    # therefore we can safely remove the last mode used from the stack
     if not mode_name:
-        mode_name = mode_stack_get_last().mode_name
+        remove_mode = mode_stack_get_last(ignore_temp=True).mode_name
+        log.debug(f"switch_to_previous_mode({mode_name}): mode to be removed from stack is {remove_mode}")
 
     eh = gremlin.event_handler.EventHandler()   
-    if mode_stack_is_last_mode(mode_name):
+    if mode_stack_is_last_mode(remove_mode):
         prev_mode = mode_stack_get_prev().mode_name;
-        mode_stack_remove(mode_name)
+        mode_stack_remove(remove_mode)
         eh.change_mode(prev_mode)
         log.debug(f"switch_to_previous_mode({mode_name}) performed.")
     else:
-        mode_stack_remove(mode_name, temporary=True)
+        mode_stack_remove(remove_mode, temporary=True)
         eh.change_mode(mode_stack_get_last().mode_name) # update status bar (mode count)
         log.debug(f"switch_to_previous_mode({mode_name}) ignored.")
         
