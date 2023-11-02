@@ -646,9 +646,15 @@ class LogWindowUi(common.BaseDialogUi):
             os.path.join(gremlin.util.userprofile_path(), "user.log"),
             "User"
         )
+        self._create_log_display(
+            os.path.join(gremlin.util.userprofile_path(), "mode_stack.log"),
+            "Mode Stack"
+        )
+
         self.watcher = gremlin.util.FileWatcher([
             os.path.join(gremlin.util.userprofile_path(), "system.log"),
-            os.path.join(gremlin.util.userprofile_path(), "user.log")
+            os.path.join(gremlin.util.userprofile_path(), "user.log"),
+            os.path.join(gremlin.util.userprofile_path(), "mode_stack.log")
         ])
         self.watcher.file_changed.connect(self._reload)
 

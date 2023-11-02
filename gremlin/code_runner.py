@@ -27,7 +27,7 @@ import dill
 
 import gremlin
 from gremlin import event_handler, input_devices, \
-    joystick_handling, macro, sendinput, user_plugin, util
+    joystick_handling, macro, sendinput, user_plugin, util, control_action
 import vjoy as vjoy_module
 
 
@@ -262,6 +262,7 @@ class CodeRunner:
             input_devices.periodic_registry.start()
             macro.MacroManager().start()
 
+            control_action.mode_stack_reset(start_mode)
             self.event_handler.change_mode(start_mode)
             self.event_handler.resume()
             self._running = True
