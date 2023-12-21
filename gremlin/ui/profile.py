@@ -730,3 +730,67 @@ class InputItemBindingListModel(QtCore.QAbstractListModel):
 
     def roleNames(self) -> Dict:
         return InputItemBindingListModel.roles
+
+
+@QtQml.QmlElement
+class LabelValueSelectionModel(QtCore.QAbstractListModel):
+
+    """Generic class presenting an interface for use with Comboboxes."""
+
+    selectionChanged = Signal()
+
+    roles = {
+        QtCore.Qt.UserRole + 1: QtCore.QByteArray("label".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("value".encode())
+    }
+
+    def __init__(self, labels: List[Any], values: List[Any], parent=None):
+        super().__init__(parent)
+
+        assert len(values) == len(labels)
+
+        self._labels = labels
+        self._values = values
+        self._current_index = 0
+
+    def rowCount(self, parent: QtCore.QModelIndex) -> int:
+        return len(self._labels)
+
+    def data(self, index: QtCore.QModelIndex, role: int) -> Any:
+        if role not in self.roleNames():
+            raise GremlinError(f"Invalid role {role} in LabelValueSelectionModel")
+
+        index = index.row()
+        if role == QtCore.Qt.UserRole + 1:
+            return self._labels[index]
+        elif role == QtCore.Qt.UserRole + 2:
+            return str(self._values[index])
+
+    def roleNames(self) -> Dict:
+        return LabelValueSelectionModel.roles
+
+    def _get_current_value(self) -> str:
+        return str(self._values[self._current_index])
+
+    def _set_current_value(self, value_str: str) -> None:
+        value = value_str
+        index = self._values.index(value)
+        if index != self._current_index:
+            self._current_index = index
+            self.selectionChanged.emit()
+
+    def _get_current_selection_index(self) -> int:
+        return self._current_index
+
+    currentValue = Property(
+        str,
+        fget=_get_current_value,
+        fset=_set_current_value,
+        notify=selectionChanged
+    )
+
+    currentSelectionIndex = Property(
+        int,
+        fget=_get_current_selection_index,
+        notify=selectionChanged
+    )

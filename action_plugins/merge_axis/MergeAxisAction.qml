@@ -39,8 +39,53 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        Label {
-            text: "Just a test"
+        // Display the configuration options for the merging operation
+        ColumnLayout {
+            Row {
+                Label {
+                    text: "Selector for merge axis instances"
+                }
+
+                // ComboBox {
+                //     model: _root.action.mergeActions
+                // }
+                LabelValueComboBox
+                {
+                    model: _root.action.mergeActions
+                }
+            }
+            Label {
+                text: "First axis"
+            }
+            Label {
+                text: "Second axis"
+            }
+            Label {
+                text: "Merge operation"
+            }
+            Row {
+                Label {
+                    text: "Operation"
+                }
+                ComboBox {
+                    model: _root.action.operationList
+                }
+            }
+
+        }
+
+
+        // Display the actions operating on the merged axis output
+        ListView {
+            model: _root.action.getActions("children")
+
+            delegate: ActionNode {
+                action: modelData
+                parentAction: _root.action
+                containerName: "children"
+
+                Layout.fillWidth: true
+            }
         }
     }
 }

@@ -37,6 +37,7 @@ from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel
+from gremlin.ui.profile import LabelValueSelectionModel
 
 
 class AxisIdentifier(NamedTuple):
@@ -92,10 +93,13 @@ class MergeAxisFunctor(AbstractFunctor):
         super().__init__(action)
 
     def process_event(self, event: Event, value: Value) -> None:
-        pass
+        for functor in self.functors["children"]:
+            functor(event, value)
 
 
 class MergeAxisModel(ActionModel):
+
+    modelChanged = Signal()
 
     def __init__(
             self,
@@ -106,6 +110,34 @@ class MergeAxisModel(ActionModel):
             parent: QtCore.QObject
     ):
         super().__init__(data, binding_model, action_index, parent_index, parent)
+
+    @Property(list, notify=modelChanged)
+    def operationList(self) -> List[str]:
+        """Returns the list of all valid operation names.
+
+        Returns:
+            List of valid operation names
+        """
+        return sorted(
+            [e.name for e in MergeOperation
+             if not e.name.startswith("_MergeOperation")]
+        )
+
+    @Property(list, notify=modelChanged)
+    def actionList(self) -> List[str]:
+        """Returns the list of all existing MergeAction instances of a provile.
+
+        Returns:
+            List of all existing actions
+        """
+        all_actions = self._binding_model.input_item_binding.libary.actions_of_type(MergeAxisData)
+
+    @Property(LabelValueSelectionModel, notify=modelChanged)
+    def mergeActions(self) -> LabelValueSelectionModel:
+        return LabelValueSelectionModel([1,2,3], ["One", "Two", "Three"])
+
+    def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
+        self._data.insert_action(action, options)
 
     def _qml_path_impl(self) -> str:
         return "file:///" + QtCore.QFile(
@@ -134,46 +166,41 @@ class MergeAxisData(AbstractActionData):
 
         # Merge action information
         self.label = ""
-        self.axis_1 = AxisIdentifier()
-        self.axis_2 = AxisIdentifier()
-        self.output = AxisIdentifier()
+        self.axis_in1 = AxisIdentifier()
+        self.axis_in2 = AxisIdentifier()
         self.operation = MergeOperation.Average
+
+        self.children = []
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._id = util.read_action_id(node)
         self.label = util.read_property(node, "label", PropertyType.String)
-        self.axis_1.guid = util.read_property(
+        self.axis_in1.guid = util.read_property(
             node, "axis1-guid", PropertyType.GUID
         )
-        self.axis_1.axis_id = util.read_property(
+        self.axis_in1.axis_id = util.read_property(
             node, "axis1-axis", [PropertyType.Int, PropertyType.UUID]
         )
-        self.axis_2.guid = util.read_property(
+        self.axis_in2.guid = util.read_property(
             node, "axis2-guid", PropertyType.GUID
         )
-        self.axis_2.axis_id = util.read_property(
+        self.axis_in2.axis_id = util.read_property(
             node, "axis2-axis", [PropertyType.Int, PropertyType.UUID]
-        )
-        self.output.guid = util.read_property(
-            node, "output-guid", PropertyType.GUID
-        )
-        self.output.axis_id = util.read_property(
-            node, "output-axis", PropertyType.UUID
         )
         self.operation = MergeOperation.to_enum(util.read_property(
             node, "operation", PropertyType.String
         ))
+        child_ids = util.read_action_ids(node.find("actions"))
+        self.children = [library.get_action(aid) for aid in child_ids]
 
     def to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MergeAxisData.tag, self._id)
         entries = [
             ["label", self.label, PropertyType.String],
-            ["axis1-guid", self.axis_1.guid, PropertyType.GUID],
-            ["axis1-axis", self.axis_1.axis_id, [PropertyType.Int, PropertyType.UUID]],
-            ["axis2-guid", self.axis_2.guid, PropertyType.GUID],
-            ["axis2-axis", self.axis_2.axis_id, [PropertyType.Int, PropertyType.UUID]],
-            ["output-guid", self.output.guid, PropertyType.GUID],
-            ["output-axis", self.output.axis_id, PropertyType.UUID],
+            ["axis1-guid", self.axis_in1.guid, PropertyType.GUID],
+            ["axis1-axis", self.axis_in1.axis_id, [PropertyType.Int, PropertyType.UUID]],
+            ["axis2-guid", self.axis_in2.guid, PropertyType.GUID],
+            ["axis2-axis", self.axis_in2.axis_id, [PropertyType.Int, PropertyType.UUID]],
             [
                 "operation",
                 MergeOperation.to_string(self.operation),
@@ -181,6 +208,10 @@ class MergeAxisData(AbstractActionData):
             ],
         ]
         util.append_property_nodes(node, entries)
+        node.append(util.create_action_ids(
+            "actions",
+            [child.id for child in self.children]
+        ))
 
         return node
 
@@ -188,10 +219,11 @@ class MergeAxisData(AbstractActionData):
         return super().is_valid()
 
     def _valid_selectors(self) -> List[str]:
-        return []
+        return ["children"]
 
     def _get_container(self, selector: str) -> List[AbstractActionData]:
-        raise GremlinError(f"{self.name}: has no containers")
+        if selector == "children":
+            return self.children
 
     def _handle_behavior_change(
         self,
