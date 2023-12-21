@@ -26,6 +26,7 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import code_runner, common, config, error, \
     profile, shared_state, types
+from gremlin.intermediate_output import IntermediateOutput
 from gremlin.signal import signal
 
 from gremlin.ui.device import InputIdentifier, IODeviceManagementModel
@@ -288,7 +289,7 @@ class Backend(QtCore.QObject):
         try:
             # self.profile = profile.Profile()
             # self.profile.from_xml(fpath)
-
+            IntermediateOutput().reset()
             new_profile = profile.Profile()
             profile_was_converted = new_profile.from_xml(fpath)
 

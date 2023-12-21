@@ -319,7 +319,7 @@ class Library:
         The library contains both the individual action configurations as well
         as the items composed of them.
         """
-        self._actions = {}
+        self._actions: Dict[uuid.UUID, AbstractActionData] = {}
 
     def add_action(self, action: AbstractActionData) -> None:
         if action.id in self._actions:
@@ -373,6 +373,20 @@ class Library:
                 self.remove_unused(entry, True)
 
         del self._actions[action.id]
+
+    def actions_by_type(
+            self,
+            action_type: AbstractActionData
+    ) -> List[AbstractActionData]:
+        """Returns all actions in the library matching the given type.
+
+        Args:
+            action_type: type of the action to return
+
+        Returns:
+            All actions of the given type
+        """
+        return [a for a in self._actions.values() if isinstance(a, action_type)]
 
     def get_action(self, key: uuid.UUID) -> AbstractActionData:
         """Returns the action specified by the key.
@@ -790,6 +804,15 @@ class InputItemBinding:
             node.append(vb_node)
 
         return node
+
+    @property
+    def library(self) -> Library:
+        """Returns the profile's library instance.
+
+        Returns:
+            Library instance of the profile
+        """
+        return self.input_item.library
 
     def _parse_virtual_button(
         self,

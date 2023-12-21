@@ -619,9 +619,13 @@ def _process_property(
         )
 
     p_type = PropertyType.to_enum(property_node.get("type"))
+    # FIXME: FUCKED UP
+    0 / 0
+    print(type(p_type), type(property_types[0]))
     if p_type not in [property_types]:
         raise error.ProfileError(
-            f"Property type mismatch, got '{p_type}' expected '{property_type}'"
+            f"Property type mismatch, got '{p_type}' expected on of: " +
+            f"{', '.join(property_types)}'"
         )
     try:
         return _property_from_string[p_type](v_node.text)
