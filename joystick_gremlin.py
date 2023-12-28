@@ -44,9 +44,10 @@ os.chdir(install_path)
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Universal"
 # os.environ["QT_QUICK_CONTROLS_MATERIAL_VARIANT"] = "Normal"
 os.environ["QT_QUICK_CONTROLS_UNIVERSAL_THEME"] = "Light"
-#os.environ["QT_QUICK_CONTROLS_HOVER_ENABLED"] = "true"
+# os.environ["QT_QUICK_CONTROLS_HOVER_ENABLED"] = "true"
 # os.environ["QML_IMPORT_TRACE"] = "1"
 # os.environ["QSG_RHI"] = "1"
+
 
 import gremlin.config
 import gremlin.error
@@ -109,6 +110,7 @@ def register_config_options():
 
 
 if __name__ == "__main__":
+    # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--profile",
@@ -126,7 +128,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Path manging to ensure Gremlin starts independent of the CWD
+    # Path mangling to ensure Gremlin can run indepent of the CWD
     sys.path.insert(0, gremlin.util.userprofile_path())
     gremlin.util.setup_userprofile()
 
@@ -143,15 +145,21 @@ if __name__ == "__main__":
         "logfile": os.path.join(gremlin.util.userprofile_path(), "user.log"),
         "format": "%(asctime)s %(message)s"
     })
-    register_config_options()
-
     syslog = logging.getLogger("system")
+
+    # Setup the configuration system
+    register_config_options()
 
     # Show unhandled exceptions to the user when running a compiled version
     # of Joystick Gremlin
     executable_name = os.path.split(sys.executable)[-1]
     if executable_name == "joystick_gremlin.exe":
         sys.excepthook = exception_hook
+
+
+    # +-------------------------------------------------------------------------
+    # | Initialize QT system
+    # +-------------------------------------------------------------------------
 
     # Initialize QT components
     #QtWebEngine.QtWebEngine.initialize()
@@ -193,7 +201,7 @@ if __name__ == "__main__":
     # | Register data types for use in QML
     # +-------------------------------------------------------------------------
 
-    # Create backend instance and register it in the engine
+    # Create and register backend and signal objects
     backend = gremlin.ui.backend.Backend()
     backend.newProfile()
     engine.rootContext().setContextProperty("backend", backend)
@@ -202,6 +210,11 @@ if __name__ == "__main__":
     # Load plugin code and UI elements
     syslog.info("Initializing plugins")
     gremlin.plugin_manager.PluginManager()
+
+
+    # +-------------------------------------------------------------------------
+    # | Start Gremlin UI
+    # +-------------------------------------------------------------------------
 
     # Load icon fonts
     if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:

@@ -309,7 +309,7 @@ class Library:
 
     """Stores actions in order to be reference by input binding instances.
 
-    Each item is a self contained entry with a UUID assigned to it which
+    Each item is a self-contained entry with a UUID assigned to it which
     is used by the input items to reference the actual content.
     """
 
@@ -415,7 +415,7 @@ class Library:
         return key in self._actions
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        """Parses an library node to populate this instance.
+        """Parses a library node to populate this instance.
 
         Args:
             node: XML node containing the library information

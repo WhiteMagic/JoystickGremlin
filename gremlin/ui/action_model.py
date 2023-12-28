@@ -170,7 +170,7 @@ class ActionModel(QtCore.QObject):
 
     @Slot(int, int, str)
     def dropAction(self, source: int, target: int, method: str) -> None:
-        """Handles dropping an action on an UI item.
+        """Handles dropping an action on a UI item.
 
         Args:
             source: sequence id of the acion being dropped

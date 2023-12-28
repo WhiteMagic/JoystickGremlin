@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
@@ -424,10 +425,7 @@ class InputItemBindingModel(QtCore.QObject):
         self._create_action_models()
         self.rootActionChanged.emit()
 
-    def action_information(
-            self,
-            index: int
-    ) -> Tuple[str, AbstractActionData, AbstractActionData]:
+    def action_information(self, index: int) -> ActionModel:
         """Returns the action model corresponding to the given index.
 
         Args:
@@ -496,7 +494,7 @@ class InputItemBindingModel(QtCore.QObject):
                     self.remove_action(s_model.sequence_index, False)
 
             # This is the default case if the source and target actions are part
-            # of different parent actions or containers. Also if the source
+            # of different parent actions or containers. Also, if the source
             # action is after the target action, performing the removal first
             # is safe.
             if not move_performed:
@@ -774,10 +772,16 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
 
     def _set_current_value(self, value_str: str) -> None:
         value = value_str
-        index = self._values.index(value)
-        if index != self._current_index:
-            self._current_index = index
-            self.selectionChanged.emit()
+        try:
+            index = self._values.index(value)
+            if index != self._current_index:
+                self._current_index = index
+                self.selectionChanged.emit()
+        except ValueError as e:
+            logging.error(
+                f"LabelValueSelectionModel: Attempting to set invalid "
+                f"value {value_str}"
+            )
 
     def _get_current_selection_index(self) -> int:
         return self._current_index
