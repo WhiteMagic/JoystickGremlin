@@ -150,7 +150,7 @@ Item {
                     _root.action.id,
                     _root.action.sequenceIndex
                 )
-                text: checked ? Constants.folded : Constants.unfolded
+                text: checked ? bsi.icons.folded : bsi.icons.unfolded
 
                 Layout.alignment: Qt.AlignBaseline
                 Layout.leftMargin: -10
@@ -181,7 +181,7 @@ Item {
             IconButton {
                 id: _removeButton
 
-                text: Constants.remove
+                text: bsi.icons.remove
 
                 onClicked: {
                     parentAction.removeAction(_root.action.sequenceIndex)

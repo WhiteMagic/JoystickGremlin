@@ -260,6 +260,11 @@ ApplicationWindow {
         id: _deviceModel
     }
 
+    BootstrapIcons {
+        id: bsi
+        resource: "qrc:///BootstrapIcons"
+    }
+
     Connections {
         target: signal
 

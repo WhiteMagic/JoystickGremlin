@@ -22,7 +22,7 @@ import QtQuick.Controls
 Button {
     property alias backgroundColor: _bg.color
 
-    font.family: "BootstrapIcons"
+    font.family: "bootstrap-icons"
     font.pixelSize: 16
 
     topPadding: 10
