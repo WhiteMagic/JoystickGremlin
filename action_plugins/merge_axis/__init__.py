@@ -33,6 +33,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
+from gremlin.plugin_manager import PluginManager
 from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
 
@@ -130,11 +131,43 @@ class MergeAxisModel(ActionModel):
         Returns:
             List of all existing actions
         """
-        all_actions = self._binding_model.input_item_binding.libary.actions_of_type(MergeAxisData)
+        library = self._binding_model.input_item_binding.library
+        all_actions = library.actions_by_type(MergeAxisData)
+        return all_actions
 
     @Property(LabelValueSelectionModel, notify=modelChanged)
     def mergeActions(self) -> LabelValueSelectionModel:
-        return LabelValueSelectionModel([1,2,3], ["One", "Two", "Three"])
+        library = self._binding_model.input_item_binding.library
+        merge_actions = library.actions_by_type(MergeAxisData)
+
+        return LabelValueSelectionModel(
+            [ma.label for ma in merge_actions],
+            [str(ma.id) for ma in merge_actions],
+            self
+        )
+
+    @Slot(str)
+    def setMergeAction(self, uuid_str: str) -> None:
+        """Sets the action data being configured by this model.
+
+        Args:
+            uuid_str: string representation of an action UUID
+        """
+        uuid = util.parse_id_or_uuid(uuid_str)
+        self._binding_model.append_action(
+            self.library.get_action(uuid),
+            self.sequence_index
+        )
+        self._binding_model.remove_action(self.sequence_index)
+        self._binding_model.rootActionChanged.emit()
+
+    @Slot()
+    def newMergeAxis(self) -> None:
+        action = MergeAxisData(self._binding_model.behavior_type)
+        action.label = "New Merge Axis 123"
+
+        library = self._binding_model.input_item_binding.library
+        library.add_action(action)
 
     def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
         self._data.insert_action(action, options)

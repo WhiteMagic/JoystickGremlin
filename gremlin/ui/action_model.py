@@ -24,6 +24,7 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
+from gremlin.profile import Library
 from gremlin.signal import signal
 from gremlin.types import InputType
 
@@ -98,6 +99,10 @@ class ActionModel(QtCore.QObject):
     @property
     def input_type(self) -> InputType:
         return self._binding_model.behavior_type
+
+    @property
+    def library(self) -> Library:
+        return self._binding_model.input_item_binding.library
 
     @Property(type=InputType, notify=actionChanged)
     def inputType(self) -> InputType:

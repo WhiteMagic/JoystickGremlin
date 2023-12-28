@@ -40,38 +40,85 @@ Item {
         anchors.right: parent.right
 
         // Display the configuration options for the merging operation
-        ColumnLayout {
-            Row {
-                Label {
-                    text: "Selector for merge axis instances"
-                }
+        GridLayout {
+            rows: 4
+            columns: 3
 
-                // ComboBox {
-                //     model: _root.action.mergeActions
-                // }
-                LabelValueComboBox
+            // Row 1
+            Label {
+                text: "Selector for merge axis instances"
+            }
+            LabelValueComboBox
+            {
+                model: _root.action.mergeActions
+
+                onSelectionChanged: function()
                 {
-                    model: _root.action.mergeActions
+                    console.log(model.currentValue)
+                    _root.action.setMergeAction(model.currentValue)
                 }
             }
+
+            Row {
+                IconButton {
+                    text: bsi.icons.add_new
+                    font.pixelSize: 24
+
+                    onClicked: function () {
+                        _root.action.newMergeAxis()
+                    }
+                }
+
+                IconButton {
+                    text: bsi.icons.rename
+                    font.pixelSize: 24
+
+                    onClicked: function () {
+
+                    }
+                }
+            }
+
+            // Row 2
             Label {
                 text: "First axis"
             }
             Label {
-                text: "Second axis"
+                text: "Current input"
             }
-            Label {
-                text: "Merge operation"
-            }
-            Row {
-                Label {
-                    text: "Operation"
-                }
-                ComboBox {
-                    model: _root.action.operationList
+            IconButton {
+                text: bsi.icons.replace
+
+                onClicked: function()
+                {
+
                 }
             }
 
+            // Row 3
+            Label {
+                text: "Second axis"
+            }
+            Label {
+                text: "Current input"
+            }
+            IconButton {
+                text: bsi.icons.replace
+
+                onClicked: function()
+                {
+
+                }
+            }
+
+            // Row 4
+            Label {
+                text: "Merge operation"
+            }
+            ComboBox {
+                model: _root.action.operationList
+                Layout.columnSpan: 2
+            }
         }
 
 

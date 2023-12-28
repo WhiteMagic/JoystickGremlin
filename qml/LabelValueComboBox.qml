@@ -29,6 +29,7 @@ Item {
     id: _root
 
     property LabelValueSelectionModel model
+    signal selectionChanged()
 
     implicitHeight: _content.height
     implicitWidth: _content.implicitWidth
@@ -51,7 +52,7 @@ Item {
         }
     }
 
-    // Delegate rendering the selection item using it's label but using the
+    // Delegate rendering the selection item using its label but using the
     // associated value for storage
     component OptionDelegate : ItemDelegate {
         required property string label
@@ -62,7 +63,8 @@ Item {
 
         onClicked: function()
         {
-            _model.currentValue = value
+            _root.model.currentValue = value
+            selectionChanged()
         }
     }
 
