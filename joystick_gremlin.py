@@ -100,6 +100,8 @@ class GremlinUi(QtWidgets.QMainWindow):
         self._profile = gremlin.profile.Profile()
         self._profile_fname = None
         self._profile_auto_activated = False
+        self.clipboard = gremlin.clipboard.Clipboard()
+
         # Input selection storage
         self._last_input_timestamp = time.time()
         self._last_input_event = None
@@ -606,7 +608,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
                 device,
                 device_profile,
-                self._current_mode
+                self._current_mode,
+                clipboard = self.clipboard
             )
             self.tabs[device.device_guid] = widget
             tab_label = device.name.strip()
@@ -627,7 +630,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
                 device,
                 device_profile,
-                self._current_mode
+                self._current_mode,
+                clipboard = self.clipboard
             )
             self.tabs[device.device_guid] = widget
             tab_label = device.name.strip()
@@ -662,7 +666,8 @@ class GremlinUi(QtWidgets.QMainWindow):
             widget = gremlin.ui.device_tab.JoystickDeviceTabWidget(
                 device,
                 device_profile,
-                self._current_mode
+                self._current_mode,
+                clipboard = self.clipboard
             )
             self.tabs[device.device_guid] = widget
             self.ui.devices.addTab(
