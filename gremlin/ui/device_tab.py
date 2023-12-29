@@ -18,7 +18,7 @@
 
 import logging
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 import container_plugins.basic
 import gremlin
@@ -35,7 +35,7 @@ class InputItemConfiguration(QtWidgets.QFrame):
     # Signal emitted when the description changes
     description_changed = QtCore.pyqtSignal(str)
 
-    def __init__(self, item_data, parent=None):
+    def __init__(self, item_data, parent=None, clipboard=None):
         """Creates a new object instance.
 
         :param item_data profile data associated with the item
@@ -61,6 +61,21 @@ class InputItemConfiguration(QtWidgets.QFrame):
         self.action_view.redraw()
 
         self.main_layout.addWidget(self.action_view)
+
+        self.clipboard = clipboard
+        self.copy_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence('Ctrl+C'), self)
+        self.copy_shortcut.activated.connect(self._copy_actions)
+        self.paste_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence('Ctrl+V'), self)
+        self.paste_shortcut.activated.connect(self._paste_actions)
+
+    def update_item_data(self, item_data):
+        # delete old data containers, add new ones
+        for container_id in reversed(range(0, self.action_model.rows())):
+            container_data = self.action_model.data(container_id)
+            self.action_model.remove_container(container_data)
+        for container in item_data.containers:
+            self.action_model.add_container(container)
+        self.item_data = item_data
 
     def _add_action(self, action_name):
         """Adds a new action to the input item.
@@ -185,6 +200,15 @@ class InputItemConfiguration(QtWidgets.QFrame):
                     action_names.append(entry.name)
         return sorted(action_names)
 
+    def _copy_actions(self):
+        """ Copies current actions and makes them available for pasting """
+        self.clipboard.copy(self.item_data)
+
+    def _paste_actions(self):
+        """ Pastes copied actions into currently selected item """
+        data = self.clipboard.paste()
+        if data and data is not self.item_data:
+            self.update_item_data(data)
 
 class ActionContainerModel(common.AbstractModel):
 
@@ -296,7 +320,8 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             device,
             device_profile,
             current_mode,
-            parent=None
+            parent=None,
+            clipboard = None
     ):
         """Creates a new object instance.
 
@@ -371,6 +396,7 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
             self.left_panel_layout.addWidget(label)
 
         self.main_layout.addLayout(self.left_panel_layout)
+        self.clipboard = clipboard
 
     def input_item_selected_cb(self, index):
         """Handles the selection of an input item.
@@ -390,7 +416,7 @@ class JoystickDeviceTabWidget(QtWidgets.QWidget):
         self.main_layout.removeItem(item)
 
         if item_data is not None:
-            widget = InputItemConfiguration(item_data)
+            widget = InputItemConfiguration(item_data, clipboard=self.clipboard)
             change_cb = self._create_change_cb(index)
             widget.action_model.data_changed.connect(change_cb)
             widget.description_changed.connect(change_cb)
