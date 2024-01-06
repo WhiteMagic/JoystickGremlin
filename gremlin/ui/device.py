@@ -44,18 +44,38 @@ class InputIdentifier(QtCore.QObject):
 
     """Stores the identifier of a single input item."""
 
-    def __init__(self, parent=None):
+    changed = Signal()
+
+    def __init__(
+            self,
+            device_guid: dill.GUID | None=None,
+            input_type: InputType | None=None,
+            input_id: int | None=None,
+            parent=None
+    ):
         super().__init__(parent)
 
-        self.device_guid = None
-        self.input_type = None
-        self.input_id = None
+        self.device_guid = device_guid
+        self.input_type = input_type
+        self.input_id = input_id
 
-    @Property(bool)
+    @Property(str, notify=changed)
+    def label(self) -> str:
+        if self.isValid:
+            return f"{self.device_guid} - {InputType.to_string(self.input_type)} {self.input_id}"
+        else:
+            return "No input"
+
+    @Property(bool, notify=changed)
     def isValid(self) -> bool:
         return self.device_guid is not None \
             and self.input_type is not None \
             and self.input_id is not None
+
+    def __eq__(self, other: InputIdentifier) -> bool:
+        return self.device_guid == other.device_guid and \
+            self.input_type == other.input_type and \
+            self.input_id == other.input_id
 
 
 @QtQml.QmlElement
@@ -223,7 +243,7 @@ class Device(QtCore.QAbstractListModel):
             An InputIdentifier instance referring to the input item with
             the given index.
         """
-        identifier = InputIdentifier(self)
+        identifier = InputIdentifier(parent=self)
         identifier.device_guid = self._device.device_guid
         input_info = self._convert_index(index)
         identifier.input_type = input_info[0]
@@ -349,10 +369,10 @@ class IODeviceManagementModel(QtCore.QAbstractListModel):
             the given index.
         """
         if index < 0:
-            return InputIdentifier(self)
+            return InputIdentifier(parent=self)
 
         input = self._index_to_input(index)
-        identifier = InputIdentifier(self)
+        identifier = InputIdentifier(parent=self)
         identifier.device_guid = self._io.device_guid
         identifier.input_type = input.type
         identifier.input_id = input.guid
