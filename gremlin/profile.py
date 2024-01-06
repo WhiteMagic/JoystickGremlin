@@ -376,7 +376,7 @@ class Library:
 
     def actions_by_type(
             self,
-            action_type: AbstractActionData
+            action_type: type[AbstractActionData]
     ) -> List[AbstractActionData]:
         """Returns all actions in the library matching the given type.
 

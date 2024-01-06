@@ -742,7 +742,7 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 2: QtCore.QByteArray("value".encode())
     }
 
-    def __init__(self, labels: List[Any], values: List[Any], parent=None):
+    def __init__(self, labels: List[Any], values: List[str], parent=None):
         super().__init__(parent)
 
         assert len(values) == len(labels)
