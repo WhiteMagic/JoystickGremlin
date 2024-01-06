@@ -26,12 +26,63 @@ import Gremlin.Profile
 import Gremlin.ActionPlugins
 import "../../qml"
 
+
 Item {
     id: _root
 
     property MergeAxisModel action
 
+    property LabelValueSelectionModel model: action.mergeActionList
+
     implicitHeight: _content.height
+
+    Connections {
+        target: action
+
+        function onModelChanged()
+        {
+            model.currentValue = _root.action.mergeAction
+        }
+    }
+
+    Dialog {
+        id: _dialog
+
+        anchors.centerIn: Overlay.overlay
+
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        modal: true
+        focus: true
+
+        title: "Rename action"
+
+        Row
+        {
+            anchors.fill: parent
+
+            TextField {
+                id: _action_label
+
+                width: 400
+                focus: true
+
+                text: action.label
+                placeholderText: "Action label"
+
+                onAccepted: function()
+                {
+                    _dialog.accept()
+                }
+            }
+        }
+
+
+
+        onAccepted: function()
+        {
+            action.label = _action_label.text
+        }
+    }
 
     ColumnLayout {
         id: _content
@@ -46,16 +97,23 @@ Item {
 
             // Row 1
             Label {
-                text: "Selector for merge axis instances"
+                text: "Action"
             }
             LabelValueComboBox
             {
-                model: _root.action.mergeActions
+                id: _action_selection
+
+                model: _root.model
+
+                Component.onCompleted: function()
+                {
+                    _root.model.currentValue = _root.action.mergeAction
+                }
+
 
                 onSelectionChanged: function()
                 {
-                    console.log(model.currentValue)
-                    _root.action.setMergeAction(model.currentValue)
+                    _root.action.mergeAction = _root.model.currentValue
                 }
             }
 
@@ -74,7 +132,7 @@ Item {
                     font.pixelSize: 24
 
                     onClicked: function () {
-
+                        _dialog.open()
                     }
                 }
             }
@@ -84,14 +142,14 @@ Item {
                 text: "First axis"
             }
             Label {
-                text: "Current input"
+                text: _root.action.firstAxis.label
             }
             IconButton {
                 text: bsi.icons.replace
 
                 onClicked: function()
                 {
-
+                    _root.action.firstAxis = inputIdentifier
                 }
             }
 
@@ -100,14 +158,14 @@ Item {
                 text: "Second axis"
             }
             Label {
-                text: "Current input"
+                text: _root.action.secondAxis.label
             }
             IconButton {
                 text: bsi.icons.replace
 
                 onClicked: function()
                 {
-
+                    _root.action.secondAxis = inputIdentifier
                 }
             }
 

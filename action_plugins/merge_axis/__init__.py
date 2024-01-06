@@ -38,15 +38,8 @@ from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel
+from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import LabelValueSelectionModel
-
-
-class AxisIdentifier(NamedTuple):
-
-    """Identifies a single axis that is used in an axis merge."""
-
-    guid: uuid.UUID4 = dill.GUID_Invalid
-    axis_id: int | uuid.UUID = -1
 
 
 class MergeOperation(Enum):
@@ -124,21 +117,13 @@ class MergeAxisModel(ActionModel):
              if not e.name.startswith("_MergeOperation")]
         )
 
-    @Property(list, notify=modelChanged)
-    def actionList(self) -> List[str]:
-        """Returns the list of all existing MergeAction instances of a provile.
-
-        Returns:
-            List of all existing actions
-        """
-        library = self._binding_model.input_item_binding.library
-        all_actions = library.actions_by_type(MergeAxisData)
-        return all_actions
-
     @Property(LabelValueSelectionModel, notify=modelChanged)
-    def mergeActions(self) -> LabelValueSelectionModel:
+    def mergeActionList(self) -> LabelValueSelectionModel:
         library = self._binding_model.input_item_binding.library
-        merge_actions = library.actions_by_type(MergeAxisData)
+        merge_actions = sorted(
+            library.actions_by_type(MergeAxisData),
+            key=lambda x: x.label
+        )
 
         return LabelValueSelectionModel(
             [ma.label for ma in merge_actions],
@@ -146,20 +131,65 @@ class MergeAxisModel(ActionModel):
             self
         )
 
-    @Slot(str)
-    def setMergeAction(self, uuid_str: str) -> None:
-        """Sets the action data being configured by this model.
+    def _get_label(self) -> str:
+        return self._data.label
+
+    def _set_label(self, label: str) -> None:
+        if label != self._data.label:
+            self._data.label = label
+            self.modelChanged.emit()
+
+    def _get_merge_action(self) -> str:
+        """Returns the UUID of the emrge action being configured.
+
+        Returns:
+            string representation of an action UUID
+        """
+        return str(self._data.id)
+
+    def _set_merge_action(self, uuid_str: str) -> None:
+        """Sets the merge action to be configured..
 
         Args:
             uuid_str: string representation of an action UUID
         """
-        uuid = util.parse_id_or_uuid(uuid_str)
+        # Do not process selecting the already active action
+        if util.parse_id_or_uuid(uuid_str) == self._data.id:
+            return
+
+        # Remove current input item assignments from the action being deselected
+        item = self._binding_model.input_item_binding.input_item
+        identifier = InputIdentifier(
+            item.device_id,
+            item.input_type,
+            item.input_id
+        )
+
+        if self._data.axis_in1 == identifier:
+            self._data.axis_in1 = InputIdentifier()
+        if self._data.axis_in2 == identifier:
+            self._data.axis_in2 = InputIdentifier()
+
+        # Update the library and action entries
         self._binding_model.append_action(
-            self.library.get_action(uuid),
+            self.library.get_action(util.parse_id_or_uuid(uuid_str)),
             self.sequence_index
         )
         self._binding_model.remove_action(self.sequence_index)
         self._binding_model.rootActionChanged.emit()
+
+    def _get_axis(self, idx: int) -> InputIdentifier:
+        return self._data.axis_in1 if idx == 1 else self._data.axis_in2
+
+    def _set_axis(self, idx: int, value: InputIdentifier) -> None:
+        if idx == 1:
+            if value != self._data.axis_in1:
+                self._data.axis_in1 = value
+                self.modelChanged.emit()
+        else:
+            if value != self._data.axis_in2:
+                self._data.axis_in2 = value
+                self.modelChanged.emit()
 
     @Slot()
     def newMergeAxis(self) -> None:
@@ -168,6 +198,19 @@ class MergeAxisModel(ActionModel):
 
         library = self._binding_model.input_item_binding.library
         library.add_action(action)
+        self.modelChanged.emit()
+
+    @Slot(str)
+    def renameMergeAxis(self, name: str) -> None:
+        """Changes the name of the current action.
+
+        Args:
+            name: new name for this action
+        """
+        if self._data.label != name:
+            self._data.label = name
+            self.modelChanged.emit()
+
 
     def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
         self._data.insert_action(action, options)
@@ -176,6 +219,34 @@ class MergeAxisModel(ActionModel):
         return "file:///" + QtCore.QFile(
             "core_plugins:merge_axis/MergeAxisAction.qml"
         ).fileName()
+
+    label = Property(
+        str,
+        fget=_get_label,
+        fset=_set_label,
+        notify=modelChanged
+    )
+
+    mergeAction = Property(
+        str,
+        fget=_get_merge_action,
+        fset=_set_merge_action,
+        notify=modelChanged
+    )
+
+    firstAxis = Property(
+        InputIdentifier,
+        fget=lambda c: MergeAxisModel._get_axis(c, 1),
+        fset=lambda c, x: MergeAxisModel._set_axis(c, 1, x),
+        notify=modelChanged
+    )
+
+    secondAxis = Property(
+        InputIdentifier,
+        fget=lambda c: MergeAxisModel._get_axis(c, 2),
+        fset=lambda c, x: MergeAxisModel._set_axis(c, 2, x),
+        notify=modelChanged
+    )
 
 
 class MergeAxisData(AbstractActionData):
@@ -199,8 +270,8 @@ class MergeAxisData(AbstractActionData):
 
         # Merge action information
         self.label = ""
-        self.axis_in1 = AxisIdentifier()
-        self.axis_in2 = AxisIdentifier()
+        self.axis_in1 = InputIdentifier()
+        self.axis_in2 = InputIdentifier()
         self.operation = MergeOperation.Average
 
         self.children = []
