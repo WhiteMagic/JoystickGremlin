@@ -29,6 +29,7 @@ Item {
     id: _root
 
     property LabelValueSelectionModel model
+    property alias value: _selection.currentValue
     signal selectionChanged()
 
     implicitHeight: _content.height
@@ -42,6 +43,8 @@ Item {
         spacing: 10
 
         ComboBox {
+            id: _selection
+
             Layout.minimumWidth: 250
             Layout.fillWidth: true
 
