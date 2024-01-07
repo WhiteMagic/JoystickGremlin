@@ -45,6 +45,7 @@ Item {
         }
     }
 
+    // Dialog to change the label of the current action
     Dialog {
         id: _dialog
 
@@ -75,8 +76,6 @@ Item {
                 }
             }
         }
-
-
 
         onAccepted: function()
         {
@@ -109,7 +108,6 @@ Item {
                 {
                     _root.model.currentValue = _root.action.mergeAction
                 }
-
 
                 onSelectionChanged: function()
                 {
@@ -179,9 +177,32 @@ Item {
             }
         }
 
+        // Actions processing the merge result
+        RowLayout {
+            Label {
+                text: "Actions"
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+            }
+
+            ActionSelector {
+                actionNode: _root.action
+                callback: function (x) {
+                    _root.action.appendAction(x, "children");
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            height: 2
+            color: Universal.baseLowColor
+        }
 
         // Display the actions operating on the merged axis output
-        ListView {
+        Repeater {
             model: _root.action.getActions("children")
 
             delegate: ActionNode {
