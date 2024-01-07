@@ -62,7 +62,9 @@ class InputIdentifier(QtCore.QObject):
     @Property(str, notify=changed)
     def label(self) -> str:
         if self.isValid:
-            return f"{self.device_guid} - {InputType.to_string(self.input_type)} {self.input_id}"
+            return f"{dill.DILL.get_device_name(self.device_guid)} - " + \
+                   f"{InputType.to_string(self.input_type).capitalize()} " + \
+                   f"{self.input_id}"
         else:
             return "No input"
 
