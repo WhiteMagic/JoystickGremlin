@@ -37,6 +37,14 @@ class DataInsertionMode(Enum):
     Prepend = 1
 
 
+class DataCreationMode(Enum):
+
+    """Specifies how a new AbstractActionData instance is created."""
+
+    Create = 0
+    Reuse = 1
+
+
 class Value:
 
     """Represents an input value, keeping track of raw and "seen" value."""
@@ -90,6 +98,29 @@ class AbstractActionData(ABC):
         """
         self._id = uuid.uuid4()
         self._behavior_type = behavior_type
+
+    @classmethod
+    def create(
+            cls,
+            mode: DataCreationMode,
+            behavior_type: InputType=InputType.JoystickButton
+    ) -> AbstractActionData:
+        """Creates a new instance with the given creation mode.
+
+        Args:
+            mode: defines how to create the new instance
+            behavior_type: type of behavior of this action
+
+        Returns:
+            The newly created instance
+        """
+        if mode == DataCreationMode.Create:
+            return cls(behavior_type)
+        else:
+            obj =  cls._do_create(mode, behavior_type)
+            if obj is None:
+                raise GremlinError(f"Unable to create an object")
+            return obj
 
     @property
     def id(self) -> uuid.UUID:
@@ -239,6 +270,23 @@ class AbstractActionData(ABC):
                 f"{self.name}: attempting to remove action with invalid " +
                 f"index ({index}) from container '{selector}'"
             )
+
+    @classmethod
+    def _do_create(
+            cls,
+            mode: DataCreationMode,
+            behavior_type: InputType
+    ) -> AbstractActionData:
+        """Allows customization of instance creation in derived classes.
+
+        Args:
+            mode: mode to use when creating the new instance
+            behavior_type: type of behavior of this action
+
+        Returns:
+            Newly created instance
+        """
+        pass
 
     @abstractmethod
     def _valid_selectors(self) -> List[str]:

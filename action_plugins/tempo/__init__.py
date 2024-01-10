@@ -30,7 +30,7 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import event_handler, util
 from gremlin.error import GremlinError, ProfileError
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.config import Configuration
 from gremlin.profile import Library
 from gremlin.tree import TreeNode
@@ -222,6 +222,7 @@ class TempoData(AbstractActionData):
 
     functor = TempoFunctor
     model = TempoModel
+    default_creation = DataCreationMode.Create
 
     input_types = [
         InputType.JoystickAxis,

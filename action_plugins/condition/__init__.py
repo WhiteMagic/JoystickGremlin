@@ -27,7 +27,7 @@ from PySide6.QtCore import Property, Signal, Slot
 from dill import GUID_Keyboard
 
 from gremlin import event_handler, plugin_manager, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.error import GremlinError
 from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
@@ -579,6 +579,7 @@ class ConditionData(AbstractActionData):
 
     functor = ConditionFunctor
     model = ConditionModel
+    default_creation = DataCreationMode.Create
 
     input_types = [
         InputType.JoystickAxis,

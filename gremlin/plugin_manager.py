@@ -109,7 +109,8 @@ class PluginManager:
         Returns:
             The newly created action instance
         """
-        instance = self.get_class(name)(input_type)
+        cls = self.get_class(name)
+        instance = cls.create(cls.default_creation, input_type)
         shared_state.current_profile.library.add_action(instance)
         return instance
 

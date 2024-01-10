@@ -24,7 +24,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.error import GremlinError
 from gremlin.profile import Library
 from gremlin.types import InputType, PropertyType
@@ -103,6 +103,7 @@ class DescriptionData(AbstractActionData):
 
     functor = DescriptionFunctor
     model = DescriptionModel
+    default_creation = DataCreationMode.Create
 
     input_types = [
         InputType.JoystickAxis,

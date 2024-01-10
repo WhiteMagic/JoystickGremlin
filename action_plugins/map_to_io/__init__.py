@@ -26,7 +26,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event, EventListener
 from gremlin.intermediate_output import IntermediateOutput
@@ -181,6 +181,7 @@ class MapToIOData(AbstractActionData):
 
     functor = MapToIOFunctor
     model = MapToIOModel
+    default_creation = DataCreationMode.Create
 
     input_types = [
         InputType.JoystickAxis,

@@ -27,7 +27,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import error, event_handler, input_devices, joystick_handling, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.profile import Library
 from gremlin.types import AxisMode, InputType, PropertyType
 
@@ -277,6 +277,7 @@ class MapToVjoyData(AbstractActionData):
 
     functor = MapToVjoyFunctor
     model = MapToVjoyModel
+    default_creation = DataCreationMode.Create
 
     input_types = [
         InputType.JoystickAxis,

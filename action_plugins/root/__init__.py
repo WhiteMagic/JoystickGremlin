@@ -30,7 +30,7 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import event_handler, plugin_manager, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
-    DataInsertionMode, Value
+    DataInsertionMode, Value, DataCreationMode
 from gremlin.error import GremlinError
 from gremlin.config import Configuration
 from gremlin.profile import Library
@@ -90,6 +90,7 @@ class RootData(AbstractActionData):
 
     functor = RootFunctor
     model = RootModel
+    default_creation = DataCreationMode.Create
 
     input_types = [
         InputType.JoystickAxis,
