@@ -84,10 +84,11 @@ class MergeOperation(Enum):
 
 class MergeAxisFunctor(AbstractFunctor):
 
-    def __init__(self, action: MergeAxisModel):
+    def __init__(self, action: MergeAxisData):
         super().__init__(action)
 
     def process_event(self, event: Event, value: Value) -> None:
+        # TODO: Implement merging action
         for functor in self.functors["children"]:
             functor(event, value)
 

@@ -154,7 +154,7 @@ class ActionModel(QtCore.QObject):
         )
 
     @Slot(str, str)
-    def appendAction(self, action_name: str, selector: Optional[str]=None):
+    def appendAction(self, action_name: str, selector: str) -> None:
         """Adds a new action to the end of the specified container.
 
         Args:
