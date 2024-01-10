@@ -28,8 +28,9 @@ from PySide6.QtCore import Property, Signal, Slot
 
 import dill
 
-from gremlin import util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin import shared_state, util
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataCreationMode, Value
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
@@ -193,7 +194,10 @@ class MergeAxisModel(ActionModel):
 
     @Slot()
     def newMergeAxis(self) -> None:
-        action = MergeAxisData(self._binding_model.behavior_type)
+        action = MergeAxisData.create(
+            DataCreationMode.Create,
+            self._binding_model.behavior_type
+        )
         action.label = "New Merge Axis 123"
 
         library = self._binding_model.input_item_binding.library
@@ -257,18 +261,15 @@ class MergeAxisData(AbstractActionData):
 
     functor = MergeAxisFunctor
     model = MergeAxisModel
+    default_creation = DataCreationMode.Reuse
 
     input_types = {
         InputType.JoystickAxis
     }
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ):
+    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
         super().__init__(behavior_type)
 
-        # Merge action information
         self.label = ""
         self.axis_in1 = InputIdentifier()
         self.axis_in2 = InputIdentifier()
@@ -321,6 +322,21 @@ class MergeAxisData(AbstractActionData):
 
     def is_valid(self) -> bool:
         return super().is_valid()
+
+    @classmethod
+    def _do_create(
+            cls,
+            mode: DataCreationMode,
+            behavior_type: InputType
+    ) -> AbstractActionData:
+        if mode == DataCreationMode.Reuse:
+            all_actions = shared_state.current_profile.library.actions_by_type(
+            PluginManager().get_class(MergeAxisData.name)
+            )
+            if len(all_actions) == 0:
+                return MergeAxisData(behavior_type)
+            else:
+                return all_actions[0]
 
     def _valid_selectors(self) -> List[str]:
         return ["children"]
