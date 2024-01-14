@@ -1,0 +1,40 @@
+<profile version="14">
+    <library>
+        <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="merge-axis">
+            <property type="string">
+                <name>label</name>
+                <value>test axis merge</value>
+            </property>
+            <property type="string">
+                <name>operation</name>
+                <value>minimum</value>
+            </property>
+            <property type="guid">
+                <name>axis1-guid</name>
+                <value>4DCB3090-97EC-11EB-8003-444553540001</value>
+            </property>
+            <property type="int">
+                <name>axis1-axis</name>
+                <value>1</value>
+            </property>
+            <property type="guid">
+                <name>axis2-guid</name>
+                <value>4DCB3090-97EC-11EB-8003-444553540002</value>
+            </property>
+            <property type="int">
+                <name>axis2-axis</name>
+                <value>2</value>
+            </property>
+            <actions>
+                <action-id>80e29257-f2ad-43bf-b5ab-9229d01e64d7</action-id>
+            </actions>
+        </action>
+
+        <action id="80e29257-f2ad-43bf-b5ab-9229d01e64d7" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>This is a test</value>
+            </property>
+        </action>
+    </library>
+</profile>
