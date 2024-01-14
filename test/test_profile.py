@@ -31,6 +31,9 @@ from gremlin.util import parse_guid
 
 from gremlin.profile import Profile
 
+# Ensure config entries are generated
+import action_plugins.tempo
+
 
 def test_constructor_invalid():
     p = Profile()
