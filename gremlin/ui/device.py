@@ -26,13 +26,11 @@ from PySide6.QtCore import Property, Signal, Slot
 
 import dill
 
-from gremlin import common, event_handler, joystick_handling
+from gremlin import common, event_handler, joystick_handling, shared_state
 from gremlin.error import GremlinError
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.types import InputType
 from gremlin.util import parse_guid
-
-from gremlin.ui import backend
 
 
 QML_IMPORT_NAME = "Gremlin.Device"
@@ -225,9 +223,8 @@ class Device(QtCore.QAbstractListModel):
         if role_name == "name":
             return self._name(self._convert_index(index.row()))
         elif role_name == "actionCount":
-            profile = backend.Backend().profile
             input_info = self._convert_index(index.row())
-            return profile.get_input_count(
+            return shared_state.current_profile.get_input_count(
                 self._device.device_guid,
                 input_info[0],
                 input_info[1],
@@ -342,7 +339,7 @@ class IODeviceManagementModel(QtCore.QAbstractListModel):
             return f"{InputType.to_string(input.type).capitalize()} " \
                 f"{input.suffix}"
         elif role_name == "actionCount":
-            return backend.Backend().profile.get_input_count(
+            return shared_state.current_profile.get_input_count(
                 self._io.device_guid,
                 input.type,
                 input.guid
