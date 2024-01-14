@@ -51,35 +51,34 @@ class MergeOperation(Enum):
     Minimum = 1
     Maximum = 2
 
-    __enum_to_string = {
-        Average: "average",
-        Minimum: "minimum",
-        Maximum: "maximum"
-    }
+    @classmethod
+    def to_string(cls, value: MergeOperation) -> str:
+        lookup = {
+            MergeOperation.Average: "average",
+            MergeOperation.Minimum: "minimum",
+            MergeOperation.Maximum: "maximum"
+        }
 
-    __string_to_enum = {
-        "average": Average,
-        "minimum": Minimum,
-        "maximum": Maximum
-    }
-
-    @staticmethod
-    def to_string(value: MergeOperation) -> str:
-        try:
-            return MergeOperation.__enum_to_string[value]
-        except KeyError:
+        res = lookup.get(value, None)
+        if res is None:
             raise GremlinError(
                 "MergeOperation: invalid value in lookup '{value}'"
             )
+        return res
 
-    @staticmethod
-    def to_enum(value: str) -> MergeOperation:
-        try:
-            return MergeOperation.__string_to_enum[value]
-        except KeyError:
+    @classmethod
+    def to_enum(cls, value: str) -> MergeOperation:
+        lookup = {
+            "average": MergeOperation.Average,
+            "minimum": MergeOperation.Minimum,
+            "maximum": MergeOperation.Maximum
+        }
+        res = lookup.get(value.lower(), None)
+        if res is None:
             raise GremlinError(
-                "MergeOperation: invalid value in lookup '{value}'"
+                "MergeOperation: invalid value in lookup '{value.lower()}'"
             )
+        return res
 
 
 class MergeAxisFunctor(AbstractFunctor):
