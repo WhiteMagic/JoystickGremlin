@@ -202,7 +202,8 @@ class Configuration:
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key '{key}' exists")
 
-        if util.has_correct_type(value, self._data[key]["data_type"]):
+        _, is_valid = determine_value_type(value, self._data[key]["data_type"])
+        if is_valid:
             self._data[key]["value"] = value
             self.save()
         else:

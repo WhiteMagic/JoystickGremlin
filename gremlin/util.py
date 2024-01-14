@@ -433,18 +433,19 @@ def create_property_node(
     Returns:
         A property element containing the provided name and value data.
     """
-    if not has_correct_type(value, property_type):
+    value_type, is_valid = determine_value_type(value, property_type)
+    if not is_valid:
         raise error.ProfileError(
             f"Property '{name}' has wrong type, got '{type(value)}' "
             f"for '{property_type}'."
         )
 
     p_node = ElementTree.Element("property")
-    p_node.set("type", PropertyType.to_string(property_type))
+    p_node.set("type", PropertyType.to_string(value_type))
     n_node = ElementTree.Element("name")
     n_node.text = name
     v_node = ElementTree.Element("value")
-    v_node.text = property_to_string(property_type, value)
+    v_node.text = property_to_string(value_type, value)
     p_node.append(n_node)
     p_node.append(v_node)
     return p_node
@@ -619,13 +620,10 @@ def _process_property(
         )
 
     p_type = PropertyType.to_enum(property_node.get("type"))
-    # FIXME: FUCKED UP
-    0 / 0
-    print(type(p_type), type(property_types[0]))
-    if p_type not in [property_types]:
+    if p_type not in property_types:
         raise error.ProfileError(
             f"Property type mismatch, got '{p_type}' expected on of: " +
-            f"{', '.join(property_types)}'"
+            f"[{', '.join([str(v) for v in property_types])}]"
         )
     try:
         return _property_from_string[p_type](v_node.text)
@@ -668,23 +666,33 @@ def create_action_ids(name: str, action_ids: List[uuid.UUID]) -> ElementTree.Ele
     return node
 
 
-def has_correct_type(
+def determine_value_type(
         value: Any,
         property_type: PropertyType | List[PropertyType]
-) -> bool:
-    """Returns whether a value is of the correct type.
+) -> [PropertyType, bool]:
+    """Returns whether a value is of the correct type and the type..
 
     Args:
         value: the value to check for type correctness
         property_type: the type or list of types valid for the given value
 
     Returns:
-        True if the value type is correct, False otherwise
+        The property type of the value from the list of properties and if
+        a valid value type was present.
     """
+    is_valid = False
+    value_type = None
     if isinstance(property_type, PropertyType):
-        return type(value) == _type_lookup[property_type]
+        is_valid = type(value) == _type_lookup[property_type]
+        if is_valid:
+            value_type = property_type
     else:
-        return type(value) in property_type
+        for pt in property_type:
+            if type(value) == _type_lookup[pt]:
+                is_valid = True
+                value_type = pt
+                break
+    return value_type, is_valid
 
 
 def all_properties_present(keys: List[str], properties: Dict[str, Any]) -> bool:
