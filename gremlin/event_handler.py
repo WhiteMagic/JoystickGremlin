@@ -15,20 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import functools
 import inspect
 import logging
 import time
 from threading import Thread, Timer
+from typing import Any, Callable, TYPE_CHECKING
+import uuid
 
 from PySide6 import QtCore
 
 import dill
 
 import gremlin.keyboard
-import gremlin.types
-from gremlin import common, config, error, joystick_handling, util, \
-    windows_event_hook
+from gremlin import common, config, error, joystick_handling, profile, \
+    util, windows_event_hook
+from gremlin.types import InputType
+
+
+if TYPE_CHECKING:
+    from gremlin.base_classes import Value
 
 
 class Event:
@@ -52,23 +60,22 @@ class Event:
 
     def __init__(
             self,
-            event_type,
-            identifier,
-            device_guid,
-            value=None,
-            is_pressed=None,
-            raw_value=None
+            event_type: InputType,
+            identifier: Any,
+            device_guid: uuid.UUID,
+            value: Any | None=None,
+            is_pressed: bool | None=None,
+            raw_value: Any | None=None
     ):
         """Creates a new Event object.
 
-        :param event_type the type of the event, one of the EventType
-            values
-        :param identifier the identifier of the event source
-        :param device_guid Device GUID identifying the device causing this event
-        :param value the value of a joystick axis or hat
-        :param is_pressed boolean flag indicating if a button or key
-        :param raw_value the raw SDL value of the axis
-            is pressed
+        Args:
+            event_type: the type of input causing the event
+            identifier: the identifier of the event source
+            device_guid: uuid identifying the device causing this event
+            value: the value of the input
+            is_pressed: boolean flag indicating if a button or key is pressed
+            raw_value: the raw value of the axis being moved
         """
         self.event_type = event_type
         self.identifier = identifier
@@ -77,10 +84,11 @@ class Event:
         self.value = value
         self.raw_value = raw_value
 
-    def clone(self):
+    def clone(self) -> Event:
         """Returns a clone of the event.
 
-        :return cloned copy of this event
+        Returns:
+            Cloned copy of this event.
         """
         return Event(
             self.event_type,
@@ -91,13 +99,13 @@ class Event:
             self.raw_value
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Event) -> bool:
         return self.__hash__() == other.__hash__()
 
-    def __ne__(self, other):
+    def __ne__(self, other: Event) -> bool:
         return not (self == other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Computes the hash value of this event.
 
         The hash is comprised of the events type, identifier of the
@@ -105,9 +113,10 @@ class Event:
         input, e.g. axis, button, hat, key, with different values / states
         shall have the same hash.
 
-        :return integer hash value of this event
+        Returns:
+            Integer hash value of this event
         """
-        if self.event_type == gremlin.types.InputType.Keyboard:
+        if self.event_type == InputType.Keyboard:
             return hash((
                 self.device_guid,
                 self.event_type.value,
@@ -123,15 +132,18 @@ class Event:
             ))
 
     @staticmethod
-    def from_key(key):
+    def from_key(key: gremlin.keyboard.Key) -> Event:
         """Creates an event object corresponding to the provided key.
 
-        :param key the Key object from which to create the Event
-        :return Event object corresponding to the provided key
+        Args:
+            key: the Key object from which to create the Event
+
+        Returns:
+            Event object corresponding to the provided key
         """
         assert isinstance(key, gremlin.keyboard.Key)
         return Event(
-            event_type=gremlin.types.InputType.Keyboard,
+            event_type=InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
             device_guid=dill.GUID_Keyboard
         )
@@ -178,12 +190,12 @@ class EventListener(QtCore.QObject):
 
         Thread(target=self._run).start()
 
-    def terminate(self):
+    def terminate(self) -> None:
         """Stops the loop from running."""
         self._running = False
         self.keyboard_hook.stop()
 
-    def reload_calibrations(self):
+    def reload_calibrations(self) -> None:
         """Reloads the calibration data from the configuration file."""
         cfg = config.Configuration()
         for key in self._calibrations:
@@ -195,7 +207,7 @@ class EventListener(QtCore.QObject):
                     limits[2]
                 )
 
-    def _run(self):
+    def _run(self) -> None:
         """Starts the event loop."""
         dill.DILL.set_device_change_callback(self._joystick_device_handler)
         dill.DILL.set_input_event_callback(self._joystick_event_handler)
@@ -203,39 +215,44 @@ class EventListener(QtCore.QObject):
             # Keep this thread alive until we are done
             time.sleep(0.1)
 
-    def _joystick_event_handler(self, data):
+    def _joystick_event_handler(self, data: dill.InputEvent) -> None:
         """Callback for joystick events.
 
         The handler converts the event data into a signal which is then
         emitted.
 
-        :param data the joystick event
+        Args:
+            data: the joystick event information
         """
         event = dill.InputEvent(data)
         if event.input_type == dill.InputType.Axis:
             self.joystick_event.emit(Event(
-                event_type=gremlin.types.InputType.JoystickAxis,
-                device_guid=event.device_guid,
+                event_type=InputType.JoystickAxis,
+                device_guid=event.device_guid.uuid,
                 identifier=event.input_index,
                 value=self._apply_calibration(event),
                 raw_value=event.value
             ))
         elif event.input_type == dill.InputType.Button:
             self.joystick_event.emit(Event(
-                event_type=gremlin.types.InputType.JoystickButton,
-                device_guid=event.device_guid,
+                event_type=InputType.JoystickButton,
+                device_guid=event.device_guid.uuid,
                 identifier=event.input_index,
                 is_pressed=event.value == 1
             ))
         elif event.input_type == dill.InputType.Hat:
             self.joystick_event.emit(Event(
-                event_type=gremlin.types.InputType.JoystickHat,
-                device_guid=event.device_guid,
+                event_type=InputType.JoystickHat,
+                device_guid=event.device_guid.uuid,
                 identifier=event.input_index,
                 value=util.dill_hat_lookup(event.value)
             ))
 
-    def _joystick_device_handler(self, data, action):
+    def _joystick_device_handler(
+            self,
+            data: dill.DeviceSummary,
+            action: dill.DeviceActionType
+    ) -> None:
         """Callback for device change events.
 
         This is called when a device is added or removed from the system. This
@@ -243,27 +260,32 @@ class EventListener(QtCore.QObject):
         the addition or removal of a multiple devices at the same time to
         cause repeat updates.
 
-        :param data information about the device changing state
-        :param action whether the device was added or removed
+        Args:
+            data: information about the device changing state
+            action: whether the device was added or removed
         """
         if self._device_update_timer is not None:
             self._device_update_timer.cancel()
         self._device_update_timer = Timer(0.2, self._run_device_list_update)
         self._device_update_timer.start()
 
-    def _run_device_list_update(self):
+    def _run_device_list_update(self) -> None:
         """Performs the update of the devices connected."""
         joystick_handling.joystick_devices_initialization()
         self._init_joysticks()
         self.device_change_event.emit()
 
-    def _keyboard_handler(self, event):
+    def _keyboard_handler(self, event: Event) -> bool:
         """Callback for keyboard events.
 
         The handler converts the event data into a signal which is then
         emitted.
 
-        :param event the keyboard event
+        Args:
+            event: the keyboard event
+
+        Returns:
+            True to enable the event to propagate up further
         """
         # Ignore injected keyboard events while Gremlin is active
         # if self.gremlin_active and event.is_injected:
@@ -277,8 +299,8 @@ class EventListener(QtCore.QObject):
         if not is_repeat:
             self._keyboard_state[key_id] = is_pressed
             self.keyboard_event.emit(Event(
-                event_type=gremlin.types.InputType.Keyboard,
-                device_guid=dill.GUID_Keyboard,
+                event_type=InputType.Keyboard,
+                device_guid=dill.GUID_Keyboard.uuid,
                 identifier=key_id,
                 is_pressed=is_pressed,
             ))
@@ -286,26 +308,41 @@ class EventListener(QtCore.QObject):
         # Allow the windows event to propagate further
         return True
 
-    def _mouse_handler(self, event):
+    def _mouse_handler(self, event: Event) -> bool:
         """Callback for mouse events.
 
         The handler converts the event data into a signal which is then
         emitted.
 
-        :param event the mouse event
+        Args:
+            event: the mouse event
+
+        Returns:
+            True to enable the event to propagate up further
         """
         # Ignore events we created via the macro system
         if not event.is_injected:
             self.mouse_event.emit(Event(
-                event_type=gremlin.types.InputType.Mouse,
+                event_type=InputType.Mouse,
                 device_guid=dill.GUID_Keyboard,
                 identifier=event.button_id,
                 is_pressed=event.is_pressed,
             ))
+
         # Allow the windows event to propagate further
         return True
 
-    def _apply_calibration(self, event):
+    def _apply_calibration(self, event: Event) -> float:
+        """Applies a calibration to raw input values.
+
+        The resulting value will be in the range [-1, 1].
+
+        Args:
+            event: the event containing the data to be calibrated
+
+        Returns:
+            Value with applied calibration and scaling
+        """
         key = (event.device_guid, event.input_index)
         if key in self._calibrations:
             return self._calibrations[key](event.value)
@@ -317,23 +354,21 @@ class EventListener(QtCore.QObject):
         for dev_info in joystick_handling.joystick_devices():
             self._load_calibrations(dev_info)
 
-    def _load_calibrations(self, device_info):
+    def _load_calibrations(self, device_info: dill.DeviceSummary):
         """Loads the calibration data for the given joystick.
 
-        :param device_info information about the device
+        Args:
+            device_info: information about the device
         """
         cfg = config.Configuration()
         for entry in device_info.axis_map:
-            limits = cfg.get_calibration(
-                device_info.device_guid,
-                entry.axis_index
+            key = (device_info.device_guid.uuid, entry.axis_index)
+            limits = cfg.get_calibration(key[0], key[1])
+            self._calibrations[key] = util.create_calibration_function(
+                limits[0],
+                limits[1],
+                limits[2]
             )
-            self._calibrations[(device_info.device_guid, entry.axis_index)] = \
-                util.create_calibration_function(
-                    limits[0],
-                    limits[1],
-                    limits[2]
-                )
 
 
 @common.SingletonDecorator
@@ -357,41 +392,50 @@ class EventHandler(QtCore.QObject):
         self._previous_mode = None
 
     @property
-    def active_mode(self):
+    def active_mode(self) -> str:
         """Returns the currently active mode.
 
-        :return name of the currently active mode
+        Returns:
+            Name of the currently active mode
         """
         return self._active_mode
 
     @property
-    def previous_mode(self):
+    def previous_mode(self) -> str:
         """Returns the previously active mode.
 
-        :return name of the previously active mode
+        Returns:
+            Name of the previously active mode
         """
         return self._previous_mode
 
-    def add_plugin(self, plugin):
+    def add_plugin(self, plugin: Any) -> None:
         """Adds a new plugin to be attached to event callbacks.
 
-        :param plugin the plugin to add
+        Params:
+            plugin: Instance of the plugin to add
         """
         # Do not add the same type of plugin multiple times
         if plugin.keyword not in self.plugins:
             self.plugins[plugin.keyword] = plugin
 
-    def add_callback(self, device_guid, mode, event, callback, permanent=False):
+    def add_callback(
+            self,
+            device_guid: uuid.UUID,
+            mode: str,
+            event: Event,
+            callback: Callable[[Event, Value], None],
+            permanent: bool=False
+    ) -> None:
         """Installs the provided callback for the given event.
 
-        :param device_guid the GUID of the device the callback is
-            associated with
-        :param mode the mode the callback belongs to
-        :param event the event for which to install the callback
-        :param callback the callback function to link to the provided
-            event
-        :param permanent if True the callback is always active even
-            if the system is paused
+        Args:
+            device_guid: the GUID of the device the callback is associated with
+            mode: the mode the callback belongs to
+            event: the event for which to install the callback
+            callback: the callback function to link to the provided event
+            permanent: if True the callback is always active even if the
+                system is paused
         """
         if device_guid not in self.callbacks:
             self.callbacks[device_guid] = {}
@@ -404,7 +448,7 @@ class EventHandler(QtCore.QObject):
             permanent
         ))
 
-    def build_event_lookup(self, modes):
+    def build_event_lookup(self, modes: profile.ModeHierarchy) -> None:
         """Builds the lookup table linking events to callbacks.
 
         This takes mode inheritance into account to create items in children
@@ -436,10 +480,11 @@ class EventHandler(QtCore.QObject):
                             if event not in device_cb[child]:
                                 device_cb[child][event] = callbacks
 
-    def change_mode(self, new_mode):
+    def change_mode(self, new_mode: str) -> None:
         """Changes the currently active mode.
 
-        :param new_mode the new mode to use
+        Args:
+            new_mode: name of the new mode to use
         """
         mode_exists = False
         for device in self.callbacks.values():
@@ -447,8 +492,8 @@ class EventHandler(QtCore.QObject):
                 mode_exists = True
         if not mode_exists:
             logging.getLogger("system").error(
-                "The mode \"{}\" does not exist or has no"
-                " associated callbacks".format(new_mode)
+                f"The mode '{new_mode}' does not exist or has no " +
+                f"associated callbacks"
             )
 
         # FIXME: rework with new config system
@@ -462,50 +507,53 @@ class EventHandler(QtCore.QObject):
         #     self._active_mode = new_mode
         #     self.mode_changed.emit(self._active_mode)
 
-    def resume(self):
+    def resume(self) -> None:
         """Resumes the processing of callbacks."""
         self.process_callbacks = True
         self.is_active.emit(self.process_callbacks)
 
-    def pause(self):
+    def pause(self) -> None:
         """Stops the processing of callbacks."""
         self.process_callbacks = False
         self.is_active.emit(self.process_callbacks)
 
-    def toggle_active(self):
+    def toggle_active(self) -> None:
         """Toggles the processing of callbacks on or off."""
         self.process_callbacks = not self.process_callbacks
         self.is_active.emit(self.process_callbacks)
 
-    def clear(self):
+    def clear(self) -> None:
         """Removes all attached callbacks."""
         self.callbacks = {}
 
     @QtCore.Slot(Event)
-    def process_event(self, event):
+    def process_event(self, event: Event) -> None:
         """Processes a single event by passing it to all callbacks
         registered for this event.
 
-        :param event the event to process
+        Args:
+            event: the event to process
         """
         for cb in self._matching_callbacks(event):
             try:
                 cb(event)
             except error.VJoyError as e:
                 util.display_error(str(e))
-                logging.getLogger("system").exception(
-                    "VJoy related error: {}".format(e)
-                )
+                logging.getLogger("system").exception(f"VJoy error: '{e}'")
                 self.pause()
 
-    def _matching_callbacks(self, event):
+    def _matching_callbacks(
+            self,
+            event: Event
+    ) -> List[Callable[[Event, Value], None]]:
         """Returns the list of callbacks to execute in response to
         the provided event.
 
-        :param event the event for which to search the matching
-            callbacks
-        :return a list of all callbacks registered and valid for the
-            given event
+        Args:
+            event: the event for which to search the matching callbacks
+
+        Returns:
+            A list of all callbacks registered and valid for the given event.
         """
         # Obtain callbacks matching the event
         callback_list = []
@@ -520,11 +568,17 @@ class EventHandler(QtCore.QObject):
         else:
             return [c[0] for c in callback_list]
 
-    def _install_plugins(self, callback):
+    def _install_plugins(
+            self,
+            callback: Callable[[Event, Value], None]
+    ) -> Callable[[Event, Value], None]:
         """Installs the current plugins into the given callback.
 
-        :param callback the callback function to install the plugins into
-        :return new callback with plugins installed
+        Args:
+            callback: the callback function to install the plugins into
+
+        Returns:
+            New callback with plugins installed
         """
         signature = inspect.signature(callback).parameters
         for keyword, plugin in self.plugins.items():
