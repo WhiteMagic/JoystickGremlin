@@ -26,7 +26,6 @@ import threading
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
 import uuid
-from uuid import UUID
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtWidgets
@@ -103,7 +102,7 @@ def read_bool(node: ElementTree.Element, key: str, default_value: bool = False) 
         return default_value
 
 
-def parse_id_or_uuid(value: str) -> int | UUID:
+def parse_id_or_uuid(value: str) -> int | uuid.UUID:
     """Attempts to parse an identifier value.
 
     Exects the string to represent either an integer or UUID value.
@@ -118,7 +117,7 @@ def parse_id_or_uuid(value: str) -> int | UUID:
         return int(value)
     else:
         try:
-            return UUID(value)
+            return uuid.UUID(value)
         except ValueError:
             raise error.ProfileError(f"Invalid type for value '{value}'")
 
@@ -152,32 +151,6 @@ def parse_bool(value: str, default_value: bool = False) -> bool:
         raise error.ProfileError(
             f"Invalid bool type/value used: {type(value)}/{value}"
         )
-
-
-def parse_guid(value: str) -> dill.GUID:
-    """Reads a string GUID representation into the internal data format.
-
-    This transforms a GUID of the form {B4CA5720-11D0-11E9-8002-444553540000}
-    into the underlying raw and exposed objects used within Gremlin.
-
-    Args:
-        value: the string representation of the GUID
-
-    Returns:
-        dill.GUID object representing the provided value
-    """
-    try:
-        tmp = uuid.UUID(value)
-        raw_guid = dill._GUID()
-        raw_guid.Data1 = int.from_bytes(tmp.bytes[0:4], "big")
-        raw_guid.Data2 = int.from_bytes(tmp.bytes[4:6], "big")
-        raw_guid.Data3 = int.from_bytes(tmp.bytes[6:8], "big")
-        for i in range(8):
-            raw_guid.Data4[i] = tmp.bytes[8 + i]
-
-        return dill.GUID(raw_guid)
-    except (ValueError, AttributeError) as _:
-        raise error.GremlinError(f"Failed parsing GUID from value '{value}'")
 
 
 def safe_read(
@@ -259,7 +232,6 @@ _property_from_string = {
     PropertyType.InputType: lambda x: InputType.to_enum(x),
     PropertyType.AxisMode: lambda x: AxisMode.to_enum(x),
     PropertyType.HatDirection: lambda x: HatDirection.to_enum(x),
-    PropertyType.GUID: lambda x: uuid.UUID(x),
     PropertyType.List: lambda x: x.split("|"),
     PropertyType.UUID: lambda x: uuid.UUID(x),
 }
@@ -289,7 +261,6 @@ _property_to_string = {
     PropertyType.InputType: lambda x: InputType.to_string(x),
     PropertyType.AxisMode: lambda x: AxisMode.to_string(x),
     PropertyType.HatDirection: lambda x: HatDirection.to_string(x),
-    PropertyType.GUID: lambda x: str(x),
     PropertyType.List: lambda x: "|".join([str(v) for v in x]),
     PropertyType.UUID: str,
 }
@@ -324,14 +295,13 @@ _type_lookup = {
     PropertyType.InputType: InputType,
     PropertyType.KeyboardKey: None,
     PropertyType.MouseInput: None,
-    PropertyType.GUID: dill.GUID,
     PropertyType.UUID: uuid.UUID,
     PropertyType.AxisMode: AxisMode,
     PropertyType.HatDirection: HatDirection
 }
 
 _element_parsers = {
-    "device-id": lambda x: parse_guid(x.text),
+    "device-id": lambda x: uuid.UUID(x.text),
     "input-type": lambda x: InputType.to_enum(x.text),
     "input-id": lambda x: parse_id_or_uuid(x.text),
     "mode": lambda x: str(x.text),
@@ -346,9 +316,9 @@ _element_parsers = {
 }
 
 _element_types = {
-    "device-id": [dill.GUID],
+    "device-id": [uuid.UUID],
     "input-type": [InputType],
-    "input-id": [int, UUID],
+    "input-id": [int, uuid.UUID],
     "mode": [str],
     "description": [str],
     "behavior": [InputType],

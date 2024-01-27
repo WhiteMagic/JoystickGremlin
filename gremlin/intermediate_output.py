@@ -24,7 +24,6 @@ import dill
 from gremlin.error import GremlinError, MissingImplementationError
 from gremlin.common import SingletonDecorator
 from gremlin.types import InputType
-from gremlin.util import parse_guid
 
 
 @SingletonDecorator
@@ -34,7 +33,7 @@ class IntermediateOutput:
     outputs that can be used to combine and further modify inputs before
     ultimately feeding them to a vJoy device."""
 
-    device_guid = dill.GUID_IntermediateOutput
+    device_guid = dill.UUID_IntermediateOutput
 
     class Input:
 

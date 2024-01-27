@@ -363,11 +363,10 @@ class PropertyType(enum.Enum):
     InputType = 9
     KeyboardKey = 10
     MouseInput = 11
-    GUID = 12
-    UUID = 13
-    AxisMode = 14
-    HatDirection = 15
-    List = 16
+    UUID = 12
+    AxisMode = 13
+    HatDirection = 14
+    List = 15
 
     @staticmethod
     def to_string(value: PropertyType) -> str:
@@ -399,7 +398,6 @@ _PropertyType_to_string_lookup = {
     PropertyType.InputType: "input_type",
     PropertyType.KeyboardKey: "keyboard_key",
     PropertyType.MouseInput: "mouse_input",
-    PropertyType.GUID: "guid",
     PropertyType.UUID: "uuid",
     PropertyType.AxisMode: "axis_mode",
     PropertyType.HatDirection: "hat_direction",
@@ -417,7 +415,6 @@ _PropertyType_to_enum_lookup = {
     "input_type": PropertyType.InputType,
     "keyboard_key": PropertyType.KeyboardKey,
     "mouse_input": PropertyType.MouseInput,
-    "guid": PropertyType.GUID,
     "uuid": PropertyType.UUID,
     "axis_mode": PropertyType.AxisMode,
     "hat_direction": PropertyType.HatDirection,

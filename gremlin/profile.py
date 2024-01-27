@@ -34,7 +34,7 @@ from gremlin import error, plugin_manager
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.tree import TreeNode
 from gremlin.util import safe_read, safe_format, read_action_ids, read_bool, \
-    read_subelement, parse_guid, create_subelement_node
+    read_subelement, create_subelement_node
 
 
 if TYPE_CHECKING:
@@ -552,7 +552,7 @@ class Profile:
 
     def get_input_count(
             self,
-            device_guid: dill.GUID,
+            device_guid: uuid.UUID,
             input_type: InputType,
             input_id: int
     ) -> int:
@@ -578,7 +578,7 @@ class Profile:
 
     def get_input_item(
             self,
-            device_guid: dill.GUID,
+            device_guid: uuid.UUID,
             input_type: InputType,
             input_id: int | uuid.UUID,
             create_if_missing: bool=False
@@ -597,7 +597,7 @@ class Profile:
         """
         # Verify provided information has correct type information
         if not (
-                isinstance(device_guid, dill.GUID) and
+                isinstance(device_guid, uuid.UUID) and
                 isinstance(input_type, InputType) and
                 type(input_id) in [int, uuid.UUID]
         ):
@@ -737,7 +737,7 @@ class InputItem:
         node.append(create_subelement_node("input-id", input_id))
 
         # Write label if an intermediate output item is serialized
-        if self.device_id == dill.GUID_IntermediateOutput:
+        if self.device_id == dill.UUID_IntermediateOutput:
             io = IntermediateOutput()
             node.append(create_subelement_node(
                 "label",
@@ -1134,7 +1134,12 @@ class PluginVariable:
             self.value = safe_read(node, "value", str, "")
         elif self.type == PluginVariableType.PhysicalInput:
             self.value = {
-                "device_id": parse_guid(node.attrib["device-guid"]),
+                "device_id": safe_read(
+                    node,
+                    "device-guid",
+                    uuid.UUID,
+                    dill.UUID_Invalid
+                ),
                 "device_name": safe_read(node, "device-name", str, ""),
                 "input_id": safe_read(node, "input-id", int, None),
                 "input_type": InputType.to_enum(

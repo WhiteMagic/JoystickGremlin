@@ -30,7 +30,7 @@ from PySide6 import QtCore
 import gremlin.common
 import gremlin.keyboard
 import gremlin.types
-from dill import DILL, GUID, GUID_Invalid
+from dill import DILL, GUID, UUID_Invalid
 
 from . import common, error, event_handler, joystick_handling, util
 
@@ -558,7 +558,7 @@ class JoystickDecorator:
 
     """Creates customized decorators for physical joystick devices."""
 
-    def __init__(self, name, device_guid, mode):
+    def __init__(self, name: str, device_guid: str, mode: str):
         """Creates a new instance with customized decorators.
 
         :param name the name of the device
@@ -570,12 +570,12 @@ class JoystickDecorator:
         self.mode = mode
         # Convert string based GUID to the actual GUID object
         try:
-            self.device_guid = util.parse_guid(device_guid)
+            self.device_guid = uuid.UUID(device_guid)
         except error.ProfileError:
             logging.getLogger("system").error(
-                "Invalid guid value '' received".format(device_guid)
+                f"Invalid guid value '{device_guid}' received."
             )
-            self.device_guid = GUID_Invalid
+            self.device_guid = UUID_Invalid
 
         self.axis = functools.partial(
             _axis, device_guid=self.device_guid, mode=mode

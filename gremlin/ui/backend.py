@@ -133,7 +133,7 @@ class Backend(QtCore.QObject):
             return 0
 
     @Slot(InputIdentifier, result=InputItemModel)
-    def getInputItem(self, identifier: InputIdentifier) -> InputItemModel:
+    def getInputItem(self, identifier: InputIdentifier) -> InputItemModel | None:
         """Returns a model for a specified InputItem.
 
         Args:

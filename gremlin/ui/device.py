@@ -30,7 +30,6 @@ from gremlin import common, event_handler, joystick_handling, shared_state
 from gremlin.error import GremlinError
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.types import InputType
-from gremlin.util import parse_guid
 
 
 QML_IMPORT_NAME = "Gremlin.Device"
@@ -46,7 +45,7 @@ class InputIdentifier(QtCore.QObject):
 
     def __init__(
             self,
-            device_guid: dill.GUID | None=None,
+            device_guid: uuid.UUID | None=None,
             input_type: InputType | None=None,
             input_id: int | None=None,
             parent=None
@@ -60,7 +59,10 @@ class InputIdentifier(QtCore.QObject):
     @Property(str, notify=changed)
     def label(self) -> str:
         if self.isValid:
-            return f"{dill.DILL.get_device_name(self.device_guid)} - " + \
+            dev_name = dill.DILL.get_device_name(
+                dill.GUID.from_uuid(self.device_guid)
+            )
+            return f"{dev_name} - " + \
                    f"{InputType.to_string(self.input_type).capitalize()} " + \
                    f"{self.input_id}"
         else:
@@ -189,7 +191,7 @@ class Device(QtCore.QAbstractListModel):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self._device = None
+        self._device: dill.DeviceSummary | None = None
 
     def _get_guid(self) -> str:
         if self._device is None:
@@ -202,7 +204,7 @@ class Device(QtCore.QAbstractListModel):
             return
 
         self._device = dill.DILL.get_device_information_by_guid(
-            parse_guid(guid)
+            dill.GUID.from_str(guid)
         )
         self.deviceChanged.emit()
         self.layoutChanged.emit()
@@ -243,7 +245,7 @@ class Device(QtCore.QAbstractListModel):
             the given index.
         """
         identifier = InputIdentifier(parent=self)
-        identifier.device_guid = self._device.device_guid
+        identifier.device_guid = self._device.device_guid.uuid
         input_info = self._convert_index(index)
         identifier.input_type = input_info[0]
         identifier.input_id = input_info[1]
@@ -764,7 +766,9 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         if self._device is not None and guid == str(self._device.device_guid):
             return
 
-        self._device = dill.DILL.get_device_information_by_guid(parse_guid(guid))
+        self._device = dill.DILL.get_device_information_by_guid(
+            dill.GUID.from_str(guid)
+        )
         self._state = []
         self._initialize_state()
         self.deviceChanged.emit()
@@ -884,7 +888,9 @@ class DeviceAxisSeries(QtCore.QObject):
         if self._device is not None and guid == str(self._device.device_guid):
             return
 
-        self._device = dill.DILL.get_device_information_by_guid(parse_guid(guid))
+        self._device = dill.DILL.get_device_information_by_guid(
+            dill.GUID.from_str(guid)
+        )
 
         self._state = []
         for i in range(self._device.axis_count):

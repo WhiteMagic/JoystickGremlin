@@ -15,16 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 from __future__ import annotations
 
 import copy
 import ctypes
 import ctypes.wintypes as ctwt
-import uuid
 from enum import Enum
 import os
 import time
 from typing import Callable
+import uuid
 
 
 class DILLError(Exception):
@@ -166,6 +167,43 @@ class GUID:
             (guid.Data4[6] << 8) + guid.Data4[7]
         )
 
+    @staticmethod
+    def from_str(value: str) -> GUID:
+        """Reads a string GUID representation into the internal data format.
+
+        This transforms a GUID of the form {B4CA5720-11D0-11E9-8002-444553540000}
+        into the underlying raw and exposed objects used within DILL.
+
+        Args:
+            value: the string representation of the GUID
+
+        Returns:
+            GUID object representing the provided value
+        """
+        return GUID.from_uuid(uuid.UUID(value))
+
+    @staticmethod
+    def from_uuid(value: uuid.UUID) -> GUID:
+        """Converts a unique identifier from the UUID type to the GUID type.
+
+        Args:
+            value: unique identifier to be converted
+
+        Returns:
+            Unique identifier in GUID format
+        """
+        try:
+            raw_guid = _GUID()
+            raw_guid.Data1 = int.from_bytes(value.bytes[0:4], "big")
+            raw_guid.Data2 = int.from_bytes(value.bytes[4:6], "big")
+            raw_guid.Data3 = int.from_bytes(value.bytes[6:8], "big")
+            for i in range(8):
+                raw_guid.Data4[i] = value.bytes[8 + i]
+
+            return GUID(raw_guid)
+        except (ValueError, AttributeError) as _:
+            raise DILLError(f"Failed parsing GUID from value '{value}'")
+
     @property
     def ctypes(self) -> _GUID:
         """Returns the object mapping the C structure.
@@ -243,9 +281,13 @@ class GUID:
 
 # Expose set of pre-defined GUID instances
 GUID_Keyboard = GUID(_GUID_SysKeyboard)
+UUID_Keyboard = GUID_Keyboard.uuid
 GUID_Virtual = GUID(_GUID_Virtual)
+UUID_Virtual = GUID_Virtual.uuid
 GUID_IntermediateOutput = GUID(_GUID_IntermediateOutput)
+UUID_IntermediateOutput = GUID_IntermediateOutput.uuid
 GUID_Invalid = GUID(_GUID_Invalid)
+UUID_Invalid = GUID_Invalid.uuid
 
 
 class InputType(Enum):

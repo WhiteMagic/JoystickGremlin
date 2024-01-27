@@ -282,14 +282,14 @@ class MergeAxisData(AbstractActionData):
         self.label = util.read_property(node, "label", PropertyType.String)
         self.axis_in1.input_type = InputType.JoystickAxis
         self.axis_in1.device_guid = util.read_property(
-            node, "axis1-guid", PropertyType.GUID
+            node, "axis1-guid", PropertyType.UUID
         )
         self.axis_in1.input_id = util.read_property(
             node, "axis1-axis", [PropertyType.Int, PropertyType.UUID]
         )
         self.axis_in2.input_type = InputType.JoystickAxis
         self.axis_in2.device_guid = util.read_property(
-            node, "axis2-guid", PropertyType.GUID
+            node, "axis2-guid", PropertyType.UUID
         )
         self.axis_in2.input_id = util.read_property(
             node, "axis2-axis", [PropertyType.Int, PropertyType.UUID]
@@ -304,9 +304,9 @@ class MergeAxisData(AbstractActionData):
         node = util.create_action_node(MergeAxisData.tag, self._id)
         entries = [
             ["label", self.label, PropertyType.String],
-            ["axis1-guid", self.axis_in1.device_guid, PropertyType.GUID],
+            ["axis1-guid", self.axis_in1.device_guid, PropertyType.UUID],
             ["axis1-axis", self.axis_in1.input_id, [PropertyType.Int, PropertyType.UUID]],
-            ["axis2-guid", self.axis_in2.device_guid, PropertyType.GUID],
+            ["axis2-guid", self.axis_in2.device_guid, PropertyType.UUID],
             ["axis2-axis", self.axis_in2.input_id, [PropertyType.Int, PropertyType.UUID]],
             [
                 "operation",

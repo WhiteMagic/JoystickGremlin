@@ -23,11 +23,9 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
-
 import gremlin.plugin_manager
 from gremlin.error import GremlinError
 from gremlin.types import AxisMode, InputType
-from gremlin.util import parse_guid
 
 from gremlin.profile import Profile
 
@@ -47,7 +45,7 @@ def test_simple_action():
     p = Profile()
     p.from_xml("test/xml/profile_simple.xml")
 
-    guid = parse_guid("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
+    guid = uuid.UUID("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
 
     action_sequences = p.inputs[guid][0].action_sequences
     assert len(action_sequences) == 1

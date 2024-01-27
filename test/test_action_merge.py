@@ -26,7 +26,6 @@ from gremlin.base_classes import DataInsertionMode
 from gremlin.error import GremlinError
 from gremlin.profile import Library, Profile
 import gremlin.types as types
-from gremlin.util import parse_guid
 from gremlin.ui.device import InputIdentifier
 
 import action_plugins.merge_axis as merge_axis
@@ -69,9 +68,9 @@ def test_to_xml():
     a.operation = merge_axis.MergeOperation.Maximum
     a.insert_action(d, "children")
 
-    a.axis_in1.device_guid = parse_guid("4DCB3090-97EC-11EB-8003-444553540001")
+    a.axis_in1.device_guid = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540001")
     a.axis_in1.input_type = types.InputType.JoystickAxis
-    a.axis_in2.device_guid = parse_guid("4DCB3090-97EC-11EB-8003-444553540002")
+    a.axis_in2.device_guid = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540002")
     a.axis_in1.input_id = 1
     a.axis_in2.input_type = types.InputType.JoystickAxis
     a.axis_in2.input_id =  2

@@ -28,7 +28,6 @@ from gremlin.base_classes import DataInsertionMode
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
 from gremlin.types import HatDirection, InputType
-from gremlin.util import parse_guid
 
 from gremlin.profile import Library, InputItem, InputItemBinding, Profile
 from action_plugins.condition import ConditionData, ConditionModel
@@ -74,15 +73,15 @@ def test_from_xml_complex():
     in1 = a.conditions[0]._inputs[0]
     assert in1.event_type == InputType.JoystickButton
     assert in1.identifier == 2
-    assert in1.device_guid == parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+    assert in1.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
     in2 = a.conditions[0]._inputs[1]
     assert in2.event_type == InputType.JoystickButton
     assert in2.identifier == 42
-    assert in2.device_guid == parse_guid("4DCB3090-97EC-11EB-8003-444553540024")
+    assert in2.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540024")
     in3 = a.conditions[2]._inputs[0]
     assert in3.event_type == InputType.JoystickHat
     assert in3.identifier == 1
-    assert in3.device_guid == parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+    assert in3.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
     in4 = a.conditions[3]._inputs[0]
     in4.scan_code = 42
     in4.is_extended = True
@@ -126,7 +125,7 @@ def test_to_xml():
     input_dev = Event(
         InputType.JoystickButton,
         37,
-        parse_guid("4DCB3090-97EC-11EB-8003-444553540000")
+        uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
     )
     cond._inputs.append(input_dev)
     cond._comparator = condition.comparator.PressedComparator(True)

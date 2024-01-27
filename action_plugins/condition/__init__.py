@@ -317,9 +317,7 @@ class JoystickCondition(AbstractCondition):
             event = event_handler.Event(
                 util.read_property(entry, "input-type", PropertyType.InputType),
                 util.read_property(entry, "input-id", PropertyType.Int),
-                util.parse_guid(str(
-                    util.read_property(entry, "device-guid", PropertyType.GUID)
-                ))
+                util.read_property(entry, "device-guid", PropertyType.UUID)
             )
             self._inputs.append(event)
 
@@ -343,7 +341,7 @@ class JoystickCondition(AbstractCondition):
             node.append(util.create_node_from_data(
                 "input",
                 [
-                    ("device-guid", event.device_guid, PropertyType.GUID),
+                    ("device-guid", event.device_guid, PropertyType.UUID),
                     ("input-type", event.event_type, PropertyType.InputType),
                     ("input-id", event.identifier, PropertyType.Int)
                 ]
