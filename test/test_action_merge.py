@@ -87,4 +87,4 @@ def test_to_xml():
         ).text == "1"
     assert node.find(
         "./property/name[.='axis1-guid']/../value"
-    ).text == "4DCB3090-97EC-11EB-8003-444553540001"
+    ).text.upper() == "4DCB3090-97EC-11EB-8003-444553540001"

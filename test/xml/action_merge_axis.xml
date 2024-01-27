@@ -9,7 +9,7 @@
                 <name>operation</name>
                 <value>minimum</value>
             </property>
-            <property type="guid">
+            <property type="uuid">
                 <name>axis1-guid</name>
                 <value>4DCB3090-97EC-11EB-8003-444553540001</value>
             </property>
@@ -17,7 +17,7 @@
                 <name>axis1-axis</name>
                 <value>1</value>
             </property>
-            <property type="guid">
+            <property type="uuid">
                 <name>axis2-guid</name>
                 <value>4DCB3090-97EC-11EB-8003-444553540002</value>
             </property>

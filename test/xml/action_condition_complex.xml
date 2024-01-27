@@ -20,7 +20,7 @@
                     <value>joystick</value>
                 </property>
                 <input>
-                    <property type="guid">
+                    <property type="uuid">
                         <name>device-guid</name>
                         <value>4DCB3090-97EC-11EB-8003-444553540000</value>
                     </property>
@@ -38,7 +38,7 @@
                     </property>
                 </input>
                 <input>
-                    <property type="guid">
+                    <property type="uuid">
                         <name>device-guid</name>
                         <value>4DCB3090-97EC-11EB-8003-444553540024</value>
                     </property>
@@ -73,7 +73,7 @@
                     <value>joystick</value>
                 </property>
                 <input>
-                    <property type="guid">
+                    <property type="uuid">
                         <name>device-guid</name>
                         <value>4DCB3090-97EC-11EB-8003-444553540000</value>
                     </property>
@@ -112,7 +112,7 @@
                     <value>joystick</value>
                 </property>
                 <input>
-                    <property type="guid">
+                    <property type="uuid">
                         <name>device-guid</name>
                         <value>4DCB3090-97EC-11EB-8003-444553540000</value>
                     </property>

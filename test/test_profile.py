@@ -35,7 +35,7 @@ import action_plugins.tempo
 
 def test_constructor_invalid():
     p = Profile()
-    with pytest.raises(GremlinError, match=r".*Failed parsing GUID.*"):
+    with pytest.raises(ValueError):
         p.from_xml("test/xml/profile_invalid.xml")
 
 
