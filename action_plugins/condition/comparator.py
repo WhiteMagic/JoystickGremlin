@@ -24,6 +24,7 @@ from PySide6.QtCore import Property, Signal
 
 from gremlin import error, event_handler, input_devices, keyboard, util
 from gremlin.base_classes import Value
+from gremlin.input_cache import Keyboard
 from gremlin.types import HatDirection, InputType, PropertyType
 from gremlin.ui.profile import HatDirectionModel
 
@@ -303,8 +304,7 @@ class PressedComparator(AbstractComparator):
                 event.identifier[0],
                 event.identifier[1]
             )
-            is_pressed &= input_devices.Keyboard().is_pressed(key) \
-                == self.is_pressed
+            is_pressed &= Keyboard().is_pressed(key) == self.is_pressed
         return is_pressed
 
 

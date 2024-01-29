@@ -383,7 +383,6 @@ class CodeRunner:
 
             # Connect signals
             evt_listener = event_handler.EventListener()
-            kb = input_devices.Keyboard()
             evt_listener.keyboard_event.connect(
                 self.event_handler.process_event
             )
@@ -393,7 +392,6 @@ class CodeRunner:
             evt_listener.virtual_event.connect(
                 self.event_handler.process_event
             )
-            evt_listener.keyboard_event.connect(kb.keyboard_event)
             evt_listener.gremlin_active = True
 
             input_devices.periodic_registry.start()
@@ -415,11 +413,9 @@ class CodeRunner:
         # Disconnect all signals
         if self._running:
             evt_lst = event_handler.EventListener()
-            kb = input_devices.Keyboard()
             evt_lst.keyboard_event.disconnect(self.event_handler.process_event)
             evt_lst.joystick_event.disconnect(self.event_handler.process_event)
             evt_lst.virtual_event.disconnect(self.event_handler.process_event)
-            evt_lst.keyboard_event.disconnect(kb.keyboard_event)
             evt_lst.gremlin_active = False
         self._running = False
 

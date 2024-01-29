@@ -18,9 +18,11 @@
 
 import uuid
 
+from PySide6 import QtCore
+
 from dill import DILL, GUID
 from gremlin.common import SingletonDecorator
-from gremlin import types
+from gremlin import types, keyboard
 
 
 class JoystickWrapper:
@@ -281,3 +283,35 @@ class Joystick:
                 )
 
         return self.devices[device_guid]
+
+
+@SingletonDecorator
+class Keyboard:
+
+    """Provides access to the keyboard state."""
+
+    def __init__(self):
+        """Initialises a new object."""
+        self._keyboard_state = {}
+
+    def update(self, key: keyboard.Key, is_pressed: bool) -> None:
+        """Updates the state of a key.
+
+        Args:
+            key: input being changed
+            is_pressed: whether the key is pressed
+        """
+        self._keyboard_state[key] = is_pressed
+
+    def is_pressed(self, key: keyboard.Key | str) -> bool:
+        """Returns whether or not the key is pressed.
+
+        Args:
+            key: input whose state to return
+
+        Returns:
+            True if the key is pressed, False otherwise
+        """
+        if isinstance(key, str):
+            key = gremlin.keyboard.key_from_name(key)
+        return self._keyboard_state.get(key, False)

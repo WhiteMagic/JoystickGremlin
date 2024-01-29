@@ -31,10 +31,10 @@ from PySide6 import QtCore
 import gremlin.common
 import gremlin.keyboard
 import gremlin.types
-from dill import DILL, GUID, UUID_Invalid
+from dill import UUID_Invalid
 
-from . import common, error, event_handler, joystick_handling, util
-from gremlin.input_cache import Joystick
+from . import common, error, event_handler, joystick_handling
+from gremlin.input_cache import Joystick, Keyboard
 
 
 class CallbackRegistry:
@@ -263,41 +263,6 @@ class JoystickPlugin:
         :return callback with the plugin parameter bound
         """
         return partial_fn(callback, joy=JoystickPlugin.joystick)
-
-
-@common.SingletonDecorator
-class Keyboard(QtCore.QObject):
-
-    """Provides access to the keyboard state."""
-
-    def __init__(self):
-        """Initialises a new object."""
-        QtCore.QObject.__init__(self)
-        self._keyboard_state = {}
-
-    @QtCore.Slot(event_handler.Event)
-    def keyboard_event(self, event):
-        """Handles keyboard events and updates state.
-
-        :param event the keyboard event to use to update state
-        """
-        key = gremlin.keyboard.key_from_code(
-            event.identifier[0],
-            event.identifier[1]
-        )
-        self._keyboard_state[key] = event.is_pressed
-
-    def is_pressed(self, key):
-        """Returns whether or not the key is pressed.
-
-        :param key the key to check
-        :return True if the key is pressed, False otherwise
-        """
-        if isinstance(key, str):
-            key = gremlin.keyboard.key_from_name(key)
-        elif isinstance(key, gremlin.keyboard.Key):
-            pass
-        return self._keyboard_state.get(key, False)
 
 
 class KeyboardPlugin:

@@ -32,7 +32,7 @@ import dill
 import gremlin.keyboard
 from gremlin import common, config, error, joystick_handling, profile, \
     util, windows_event_hook
-from gremlin.input_cache import Joystick
+from gremlin.input_cache import Joystick, Keyboard
 from gremlin.types import InputType
 
 
@@ -182,6 +182,7 @@ class EventListener(QtCore.QObject):
         # Joystick device change update timeout timer
         self._device_update_timer = None
         self._joystick = Joystick()
+        self._keyboard = Keyboard()
 
         self._running = True
         self._keyboard_state = {}
@@ -311,10 +312,14 @@ class EventListener(QtCore.QObject):
         # Only emit an event if they key is pressed for the first
         # time or released but not when it's being held down
         if not is_repeat:
+            self._keyboard.update(
+                gremlin.keyboard.key_from_code(key_id[0], key_id[1]),
+                is_pressed
+            )
             self._keyboard_state[key_id] = is_pressed
             self.keyboard_event.emit(Event(
                 event_type=InputType.Keyboard,
-                device_guid=dill.GUID_Keyboard.uuid,
+                device_guid=dill.UUID_Keyboard,
                 identifier=key_id,
                 is_pressed=is_pressed,
             ))
