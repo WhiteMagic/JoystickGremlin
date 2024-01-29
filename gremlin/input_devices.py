@@ -24,6 +24,7 @@ import logging
 import time
 import threading
 from typing import Callable
+import uuid
 
 from PySide6 import QtCore
 
@@ -33,6 +34,7 @@ import gremlin.types
 from dill import DILL, GUID, UUID_Invalid
 
 from . import common, error, event_handler, joystick_handling, util
+from gremlin.input_cache import Joystick
 
 
 class CallbackRegistry:
@@ -209,238 +211,6 @@ periodic_registry = PeriodicRegistry()
 #     callback_registry.add(callback, event, device.mode, False)
 
 
-class JoystickWrapper:
-
-    """Wraps joysticks and presents an API similar to vjoy."""
-
-    class Input:
-
-        """Represents a joystick input."""
-
-        def __init__(self, joystick_guid, index):
-            """Creates a new instance.
-
-            :param joystick_guid the GUID of the device instance
-            :param index the index of the input
-            """
-            self._joystick_guid = joystick_guid
-            self._index = index
-
-    class Axis(Input):
-
-        """Represents a single axis of a joystick."""
-
-        def __init__(self, joystick_guid, index):
-            super().__init__(joystick_guid, index)
-
-        @property
-        def value(self):
-            # FIXME: This bypasses calibration and any other possible
-            #        mappings we might do in the future
-            return DILL.get_axis(self._joystick_guid, self._index) / float(32768)
-
-    class Button(Input):
-
-        """Represents a single button of a joystick."""
-
-        def __init__(self, joystick_guid, index):
-            super().__init__(joystick_guid, index)
-
-        @property
-        def is_pressed(self):
-            return DILL.get_button(self._joystick_guid, self._index)
-
-    class Hat(Input):
-
-        """Represents a single hat of a joystick,"""
-
-        def __init__(self, joystick_guid, index):
-            super().__init__(joystick_guid, index)
-
-        @property
-        def direction(self):
-            return util.dill_hat_lookup(
-                DILL.get_hat(self._joystick_guid, self._index)
-            )
-
-    def __init__(self, device_guid):
-        """Creates a new wrapper object for the given object id.
-
-        :param device_guid the GUID of the joystick instance to wrap
-        """
-        if DILL.device_exists(device_guid) is False:
-            raise error.GremlinError(
-                "No device with the provided GUID {} exist".format(device_guid)
-            )
-        self._device_guid = device_guid
-        self._info = DILL.get_device_information_by_guid(self._device_guid)
-        self._axis = self._init_axes()
-        self._buttons = self._init_buttons()
-        self._hats = self._init_hats()
-
-    @property
-    def device_guid(self):
-        """Returns the GUID of the joystick.
-
-        :return GUID for this joystick
-        """
-        return self._device_guid
-
-    @property
-    def name(self):
-        """Returns the name of the joystick.
-
-        :return name of the joystick
-        """
-        return self._info.name
-
-    def is_axis_valid(self, axis_index):
-        """Returns whether or not the specified axis exists for this device.
-
-        :param axis_index the index of the axis in the AxisNames enum
-        :return True the specified axis exists, False otherwise
-        """
-        for i in range(self._info.axis_count):
-            if self._info.axis_map[i].axis_index == axis_index:
-                return True
-        return False
-
-    def axis(self, index):
-        """Returns the current value of the axis with the given index.
-
-        The index is 1 based, i.e. the first axis starts with index 1.
-
-        :param index the index of the axis to return to value of
-        :return the current value of the axis
-        """
-        if index not in self._axis:
-            raise error.GremlinError(
-                "Invalid axis {} specified for device {}".format(
-                    index,
-                    self._device_guid
-            ))
-        return self._axis[index]
-
-    def button(self, index):
-        """Returns the current state of the button with the given index.
-
-        The index is 1 based, i.e. the first button starts with index 1.
-
-        :param index the index of the axis to return to value of
-        :return the current state of the button
-        """
-        if not (0 < index < len(self._buttons)):
-            raise error.GremlinError(
-                "Invalid button {} specified for device {}".format(
-                    index,
-                    self._device_guid
-                )
-            )
-        return self._buttons[index]
-
-    def hat(self, index):
-        """Returns the current state of the hat with the given index.
-
-        The index is 1 based, i.e. the first hat starts with index 1.
-
-        :param index the index of the hat to return to value of
-        :return the current state of the hat
-        """
-        if not (0 < index < len(self._hats)):
-            raise error.GremlinError(
-                "Invalid hat {} specified for device {}".format(
-                    index,
-                    self._device_guid
-                )
-            )
-        return self._hats[index]
-
-    def axis_count(self) -> int:
-        """Returns the number of axis of the joystick.
-
-        Returns:
-            Number of axes
-        """
-        return self._info.axis_count
-
-    def button_count(self) -> int:
-        """Returns the number of buttons on the joystick.
-
-        Returns:
-            Number of buttons
-        """
-        return self._info.button_count
-
-    def hat_count(self) -> int:
-        """Returns the number of hats on the joystick.
-
-        Returns:
-            Number of hats
-        """
-        return self._info.hat_count
-
-    def _init_axes(self):
-        """Initializes the axes of the joystick.
-
-        :return list of JoystickWrapper.Axis objects
-        """
-        axes = {}
-        for i in range(self._info.axis_count):
-            aid = self._info.axis_map[i].axis_index
-            axes[aid] = JoystickWrapper.Axis(self._device_guid, aid)
-        return axes
-
-    def _init_buttons(self):
-        """Initializes the buttons of the joystick.
-
-        :return list of JoystickWrapper.Button objects
-        """
-        buttons = [None,]
-        for i in range(self._info.button_count):
-            buttons.append(JoystickWrapper.Button(self._device_guid, i+1))
-        return buttons
-
-    def _init_hats(self):
-        """Initializes the hats of the joystick.
-
-        :return list of JoystickWrapper.Hat objects
-        """
-        hats = [None,]
-        for i in range(self._info.hat_count):
-            hats.append(JoystickWrapper.Hat(self._device_guid, i+1))
-        return hats
-
-
-class JoystickProxy:
-
-    """Allows read access to joystick state information."""
-
-    # Dictionary of initialized joystick devices
-    joystick_devices = {}
-
-    def __getitem__(self, device_guid):
-        """Returns the requested joystick instance.
-
-        If the joystick instance exists it is returned directly, otherwise
-        it is first created and then returned.
-
-        :param device_guid GUID of the joystick device
-        :return the corresponding joystick device
-        """
-        if device_guid not in JoystickProxy.joystick_devices:
-            # If the device exists add process it and add it, otherwise throw
-            # an exception
-            if DILL.device_exists(device_guid):
-                joy = JoystickWrapper(device_guid)
-                JoystickProxy.joystick_devices[device_guid] = joy
-            else:
-                raise error.GremlinError(
-                    "No device with guid {} exists".format(device_guid)
-                )
-
-        return JoystickProxy.joystick_devices[device_guid]
-
-
 class VJoyPlugin:
 
     """Plugin providing automatic access to the VJoyProxy object.
@@ -470,20 +240,20 @@ class VJoyPlugin:
 
 class JoystickPlugin:
 
-    """Plugin providing automatic access to the JoystickProxy object.
+    """Plugin providing automatic access to the Joystick object.
 
     For a function to use this plugin it requires one of its parameters
     to be named "joy".
     """
 
-    joystick = JoystickProxy()
+    joystick = Joystick()
 
     def __init__(self):
         self.keyword = "joy"
 
     def install(self, callback, partial_fn):
         """Decorates the given callback function to provide access
-        to the JoystickProxy object.
+        to the Joystick object.
 
         Only if the signature contains the plugin's keyword is the
         decorator applied.

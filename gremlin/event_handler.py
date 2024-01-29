@@ -32,6 +32,7 @@ import dill
 import gremlin.keyboard
 from gremlin import common, config, error, joystick_handling, profile, \
     util, windows_event_hook
+from gremlin.input_cache import Joystick
 from gremlin.types import InputType
 
 
@@ -180,6 +181,7 @@ class EventListener(QtCore.QObject):
 
         # Joystick device change update timeout timer
         self._device_update_timer = None
+        self._joystick = Joystick()
 
         self._running = True
         self._keyboard_state = {}
@@ -226,6 +228,10 @@ class EventListener(QtCore.QObject):
         """
         event = dill.InputEvent(data)
         if event.input_type == dill.InputType.Axis:
+            self._joystick[event.device_guid.uuid].axis(event.input_index).update(
+                self._apply_calibration(event)
+            )
+
             self.joystick_event.emit(Event(
                 event_type=InputType.JoystickAxis,
                 device_guid=event.device_guid.uuid,
@@ -234,6 +240,10 @@ class EventListener(QtCore.QObject):
                 raw_value=event.value
             ))
         elif event.input_type == dill.InputType.Button:
+            self._joystick[event.device_guid.uuid].button(event.input_index).update(
+                event.value == 1
+            )
+
             self.joystick_event.emit(Event(
                 event_type=InputType.JoystickButton,
                 device_guid=event.device_guid.uuid,
@@ -241,6 +251,10 @@ class EventListener(QtCore.QObject):
                 is_pressed=event.value == 1
             ))
         elif event.input_type == dill.InputType.Hat:
+            self._joystick[event.device_guid.uuid].hat(event.input_index).update(
+                util.dill_hat_lookup(event.value)
+            )
+
             self.joystick_event.emit(Event(
                 event_type=InputType.JoystickHat,
                 device_guid=event.device_guid.uuid,

@@ -148,7 +148,7 @@ class RangeComparator(AbstractComparator):
                 f"Received type other than an axis in a range comparator."
             )
 
-        axis = input_devices.JoystickProxy()[events[0].device_guid].axis(
+        axis = input_devices.Joystick()[events[0].device_guid].axis(
             events[0].identifier
         )
         return self.lower <= axis.value <= self.upper
@@ -280,10 +280,10 @@ class PressedComparator(AbstractComparator):
             True if the comparator holds for all buttons, False if at least one
             button fails the comparator
         """
-        proxy = input_devices.JoystickProxy()
+        joystick = input_devices.Joystick()
         is_pressed = True
         for event in events:
-            button = proxy[event.device_guid].button(event.identifier)
+            button = joystick[event.device_guid].button(event.identifier)
             is_pressed &= button.is_pressed == self.is_pressed
         return is_pressed
 
