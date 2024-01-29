@@ -34,6 +34,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
+from gremlin.input_cache import Joystick
 from gremlin.plugin_manager import PluginManager
 from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
@@ -50,13 +51,15 @@ class MergeOperation(Enum):
     Average = 0
     Minimum = 1
     Maximum = 2
+    Sum = 3
 
     @classmethod
     def to_string(cls, value: MergeOperation) -> str:
         lookup = {
-            MergeOperation.Average: "average",
-            MergeOperation.Minimum: "minimum",
-            MergeOperation.Maximum: "maximum"
+            MergeOperation.Average: "Average",
+            MergeOperation.Minimum: "Minimum",
+            MergeOperation.Maximum: "Maximum",
+            MergeOperation.Sum: "Sum",
         }
 
         res = lookup.get(value, None)
@@ -69,9 +72,10 @@ class MergeOperation(Enum):
     @classmethod
     def to_enum(cls, value: str) -> MergeOperation:
         lookup = {
-            "average": MergeOperation.Average,
-            "minimum": MergeOperation.Minimum,
-            "maximum": MergeOperation.Maximum
+            "Average": MergeOperation.Average,
+            "Minimum": MergeOperation.Minimum,
+            "Maximum": MergeOperation.Maximum,
+            "Sum": MergeOperation.Sum,
         }
         res = lookup.get(value.lower(), None)
         if res is None:
@@ -86,10 +90,42 @@ class MergeAxisFunctor(AbstractFunctor):
     def __init__(self, action: MergeAxisData):
         super().__init__(action)
 
-    def process_event(self, event: Event, value: Value) -> None:
-        # TODO: Implement merging action
+    def __call__(self, event: Event, value: Value) -> None:
+        joy = Joystick()
+        axis1 = joy[self.data.axis_in1.device_guid].axis(
+            self.data.axis_in1.input_id
+        ).value
+        axis2 = joy[self.data.axis_in2.device_guid].axis(
+            self.data.axis_in2.input_id
+        ).value
+
+        value.current = MergeAxisFunctor.actions[self.data.operation](axis1, axis2)
+
         for functor in self.functors["children"]:
             functor(event, value)
+
+    @staticmethod
+    def _average(value1: float, value2: float) -> float:
+        return (value1 + value2) / 2.0
+
+    @staticmethod
+    def _minimum(value1: float, value2: float) -> float:
+        return min(value1, value2)
+
+    @staticmethod
+    def _maximum(value1: float, value2: float) -> float:
+        return max(value1, value2)
+
+    @staticmethod
+    def _sum(value1: float, value2: float) -> float:
+        return util.clamp(value1 + value2, -1.0, 1.0)
+
+    actions = {
+        MergeOperation.Average: _average,
+        MergeOperation.Minimum: _minimum,
+        MergeOperation.Maximum: _maximum,
+        MergeOperation.Sum: _sum,
+    }
 
 
 class MergeAxisModel(ActionModel):
@@ -106,16 +142,21 @@ class MergeAxisModel(ActionModel):
     ):
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
-    @Property(list, notify=modelChanged)
-    def operationList(self) -> List[str]:
+    @Property(LabelValueSelectionModel, notify=modelChanged)
+    def operationList(self) -> LabelValueSelectionModel:
         """Returns the list of all valid operation names.
 
         Returns:
             List of valid operation names
         """
-        return sorted(
+        operations = sorted(
             [e.name for e in MergeOperation
-             if not e.name.startswith("_MergeOperation")]
+                if not e.name.startswith("_MergeOperation")]
+        )
+        return LabelValueSelectionModel(
+            operations,
+            [str(i) for i in range(len(operations))],
+            self
         )
 
     @Property(LabelValueSelectionModel, notify=modelChanged)
@@ -123,7 +164,7 @@ class MergeAxisModel(ActionModel):
         library = self._binding_model.input_item_binding.library
         merge_actions = sorted(
             library.actions_by_type(MergeAxisData),
-            key=lambda x: x.label
+            key=lambda x: x.label,
         )
 
         return LabelValueSelectionModel(
@@ -192,6 +233,15 @@ class MergeAxisModel(ActionModel):
                 self._data.axis_in2 = value
                 self.modelChanged.emit()
 
+    def _get_operation(self) -> str:
+        return MergeOperation.to_string(self._data.operation)
+
+    def _set_operation(self, value: str) -> None:
+        operation = MergeOperation.to_enum(value)
+        if operation != self._data.operation:
+            self._data.operation = operation
+            self.modelChanged.emit()
+
     @Slot()
     def newMergeAxis(self) -> None:
         action = MergeAxisData.create(
@@ -249,6 +299,13 @@ class MergeAxisModel(ActionModel):
         InputIdentifier,
         fget=lambda c: MergeAxisModel._get_axis(c, 2),
         fset=lambda c, x: MergeAxisModel._set_axis(c, 2, x),
+        notify=modelChanged
+    )
+
+    operation = Property(
+        str,
+        fget=_get_operation,
+        fset=_set_operation,
         notify=modelChanged
     )
 

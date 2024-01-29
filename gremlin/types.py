@@ -306,48 +306,6 @@ _PluginVariableType_to_enum_lookup = {
 }
 
 
-class MergeAxisOperation(enum.Enum):
-
-    """Possible merge axis operation modes."""
-
-    Average = 1
-    Minimum = 2
-    Maximum = 3
-    Sum = 4
-
-    @staticmethod
-    def to_string(value: MergeAxisOperation) -> str:
-        try:
-            return _MergeAxisOperation_to_string_lookup[value]
-        except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid MergeAxisOperation in lookup"
-            )
-
-    @staticmethod
-    def to_enum(value: str) -> MergeAxisOperation:
-        try:
-            return _MergeAxisOperation_to_enum_lookup[value.lower()]
-        except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid MergeAxisOperation in lookup"
-            )
-
-
-_MergeAxisOperation_to_string_lookup = {
-    MergeAxisOperation.Average: "average",
-    MergeAxisOperation.Minimum: "minimum",
-    MergeAxisOperation.Maximum: "maximum",
-    MergeAxisOperation.Sum: "sum"
-}
-_MergeAxisOperation_to_enum_lookup = {
-    "average": MergeAxisOperation.Average,
-    "minimum": MergeAxisOperation.Minimum,
-    "maximum": MergeAxisOperation.Maximum,
-    "sum": MergeAxisOperation.Sum
-}
-
-
 class PropertyType(enum.Enum):
 
     """Enumeration of all known property types."""

@@ -32,7 +32,8 @@ Item {
 
     property MergeAxisModel action
 
-    property LabelValueSelectionModel model: action.mergeActionList
+    property LabelValueSelectionModel actionModel: action.mergeActionList
+    property LabelValueSelectionModel operationModel: action.operationList
 
     implicitHeight: _content.height
 
@@ -41,7 +42,8 @@ Item {
 
         function onModelChanged()
         {
-            model.currentValue = _root.action.mergeAction
+            actionModel.currentValue = _root.action.mergeAction
+            operationModel.currentValue = _root.action.operation
         }
     }
 
@@ -102,16 +104,16 @@ Item {
             {
                 id: _action_selection
 
-                model: _root.model
+                model: _root.actionModel
 
                 Component.onCompleted: function()
                 {
-                    _root.model.currentValue = _root.action.mergeAction
+                    _root.actionModel.currentValue = _root.action.mergeAction
                 }
 
                 onSelectionChanged: function()
                 {
-                    _root.action.mergeAction = _root.model.currentValue
+                    _root.action.mergeAction = _root.actionModel.currentValue
                 }
             }
 
@@ -171,9 +173,21 @@ Item {
             Label {
                 text: "Merge operation"
             }
-            ComboBox {
-                model: _root.action.operationList
-                Layout.columnSpan: 2
+            LabelValueComboBox
+            {
+                id: _operation_selection
+
+                model: _root.operationModel
+
+                Component.onCompleted: function()
+                {
+                    _root.operationModel.currentValue = _root.action.operation
+                }
+
+                onSelectionChanged: function()
+                {
+                    _root.action.operation = _root.operationModel.currentValue
+                }
             }
         }
 
