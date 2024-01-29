@@ -33,9 +33,7 @@ from gremlin.base_classes import Value
 import gremlin.fsm
 from gremlin import error, event_handler, input_devices, joystick_handling, \
     macro, profile, sendinput, user_plugin, util
-from gremlin.types import AxisButtonDirection, HatDirection, InputType, \
-    MergeAxisOperation
-import vjoy as vjoy_module
+from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
 
 class VirtualButton(metaclass=ABCMeta):
@@ -308,8 +306,6 @@ class CodeRunner:
         self.event_handler.add_plugin(input_devices.KeyboardPlugin())
 
         self._profile = None
-        self._vjoy_curves = VJoyCurves()
-        self._merge_axes = []
         self._running = False
 
     def is_running(self) -> bool:
@@ -425,9 +421,6 @@ class CodeRunner:
             evt_lst.virtual_event.disconnect(self.event_handler.process_event)
             evt_lst.keyboard_event.disconnect(kb.keyboard_event)
             evt_lst.gremlin_active = False
-            # self.event_handler.mode_changed.disconnect(
-            #     self._vjoy_curves.mode_changed
-            # )
         self._running = False
 
         # Empty callback registry
@@ -519,97 +512,3 @@ class CodeRunner:
                 CallbackObject(action),
                 action.input_item.always_execute
             )
-
-class VJoyCurves:
-
-    """Handles setting response curves on vJoy devices."""
-
-    def __init__(self):
-        """Creates a new instance"""
-        self.profile_data = None
-
-    def mode_changed(self, mode_name):
-        """Called when the mode changes and updates vJoy response curves.
-
-        :param mode_name the name of the new mode
-        """
-        if not self.profile_data:
-            return
-
-        vjoy = gremlin.joystick_handling.VJoyProxy()
-        for guid, device in self.profile_data.items():
-            if mode_name in device.modes:
-                for aid, data in device.modes[mode_name].config[
-                        gremlin.common.InputType.JoystickAxis
-                ].items():
-                    # Get integer axis id in case an axis enum was used
-                    axis_id = vjoy_module.vjoy.VJoy.axis_equivalence.get(aid, aid)
-                    vjoy_id = joystick_handling.vjoy_id_from_guid(guid)
-
-                    if len(data.containers) > 0 and \
-                            vjoy[vjoy_id].is_axis_valid(axis_id):
-                        action = data.containers[0].action_sets[0][0]
-                        vjoy[vjoy_id].axis(aid).set_deadzone(*action.deadzone)
-                        vjoy[vjoy_id].axis(aid).set_response_curve(
-                            action.mapping_type,
-                            action.control_points
-                        )
-
-
-class MergeAxis:
-
-    """Merges inputs from two distinct axes into a single one."""
-
-    def __init__(
-            self,
-            vjoy_id: int,
-            input_id: int,
-            operation: MergeAxisOperation
-    ):
-        self.axis_values = [0.0, 0.0]
-        self.vjoy_id = vjoy_id
-        self.input_id = input_id
-        self.operation = operation
-
-    def _update(self):
-        """Updates the merged axis value."""
-        value = 0.0
-        if self.operation == MergeAxisOperation.Average:
-            value = (self.axis_values[0] - self.axis_values[1]) / 2.0
-        elif self.operation == MergeAxisOperation.Minimum:
-            value = min(self.axis_values[0], self.axis_values[1])
-        elif self.operation == MergeAxisOperation.Maximum:
-            value = max(self.axis_values[0], self.axis_values[1])
-        elif self.operation == MergeAxisOperation.Sum:
-            value = gremlin.util.clamp(
-                self.axis_values[0] + self.axis_values[1],
-                -1.0,
-                1.0
-            )
-        else:
-            raise gremlin.error.GremlinError(
-                "Invalid merge axis operation detected, \"{}\"".format(
-                    str(self.operation)
-                )
-            )
-
-        gremlin.joystick_handling.VJoyProxy()[self.vjoy_id]\
-            .axis(self.input_id).value = value
-
-    def update_axis1(self, event: gremlin.event_handler.Event):
-        """Updates information for the first axis.
-
-        Args:
-            event: data event for the first axis
-        """
-        self.axis_values[0] = event.value
-        self._update()
-
-    def update_axis2(self, event: gremlin.event_handler.Event):
-        """Updates information for the second axis.
-
-        Args:
-            event: data event for the second axis
-        """
-        self.axis_values[1] = event.value
-        self._update()

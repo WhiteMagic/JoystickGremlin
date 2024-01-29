@@ -341,7 +341,7 @@ class DirectionComparator(AbstractComparator):
                 f"Received type other than a hat in a direction comparator."
             )
 
-        hat = input_devices.JoystickProxy()[events[0].device_guid].hat(
+        hat = input_devices.Joystick()[events[0].device_guid].hat(
             events[0].identifier
         )
         return HatDirection.to_enum(hat.direction) in self.directions

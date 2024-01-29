@@ -331,18 +331,14 @@ class PropertyType(enum.Enum):
         try:
             return _PropertyType_to_string_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid PropertyType in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid PropertyType in lookup")
 
     @staticmethod
     def to_enum(value: str) -> PropertyType:
         try:
             return _PropertyType_to_enum_lookup[value.lower()]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid PropertyType in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid PropertyType in lookup")
 
 _PropertyType_to_string_lookup = {
     PropertyType.String: "string",
