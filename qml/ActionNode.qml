@@ -164,10 +164,24 @@ Item {
                 }
             }
 
-            Label {
+            Image {
+                source: _root.action.iconPath
+            }
+
+            TextField {
                 id: _headerLabel
 
-                text: `<b>${_root.action.name} (${_root.action.sequenceIndex})</b>`
+                text: _root.action.actionLabel
+
+                background: Rectangle {
+                    anchors.fill: parent
+                    border.color: Universal.accent
+                }
+
+                onTextEdited: function()
+                {
+                    _root.action.actionLabel = text
+                }
             }
 
             Rectangle {

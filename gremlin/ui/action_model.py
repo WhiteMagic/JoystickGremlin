@@ -212,6 +212,14 @@ class ActionModel(QtCore.QObject):
     def parent_sequence_index(self) -> SequenceIndex:
         return self._parent_sequence_index
 
+    def _get_action_label(self) -> str:
+        return self._data.action_label
+
+    def _set_action_label(self, value: str) -> None:
+        if value != self._data.action_label:
+            self._data.action_label = value
+            self.actionChanged.emit()
+
     def _append_drop_action(
             self,
             source_sidx: int,
@@ -241,3 +249,9 @@ class ActionModel(QtCore.QObject):
         action_list = [entry for entry in action_list if entry.tag != "root"]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
+    actionLabel = Property(
+        str,
+        fget=_get_action_label,
+        fset=_set_action_label,
+        notify=actionChanged
+    )

@@ -98,6 +98,7 @@ class AbstractActionData(ABC):
         """
         self._id = uuid.uuid4()
         self._behavior_type = behavior_type
+        self._action_label = ""
 
     @classmethod
     def create(
@@ -115,9 +116,12 @@ class AbstractActionData(ABC):
             The newly created instance
         """
         if mode == DataCreationMode.Create:
-            return cls(behavior_type)
+            obj = cls(behavior_type)
+            obj.action_label = cls.name
+            return obj
         else:
             obj =  cls._do_create(mode, behavior_type)
+            obj.action_label = cls.name
             if obj is None:
                 raise GremlinError(f"Unable to create an object")
             return obj
@@ -150,6 +154,14 @@ class AbstractActionData(ABC):
         self._behavior_type = new_behavior
         if old_behavior != new_behavior:
             self._handle_behavior_change(old_behavior, new_behavior)
+
+    @property
+    def action_label(self) -> str:
+        return self._action_label
+
+    @action_label.setter
+    def action_label(self, value: str) -> None:
+        self._action_label = value
 
     # Interface that all actions have to support, even if only an empty noop
     # implementation is provided.
