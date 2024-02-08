@@ -25,8 +25,6 @@ Button {
     font.family: "bootstrap-icons"
     font.pixelSize: 16
 
-    topPadding: 10
-
     background: Rectangle {
         id: _bg
 

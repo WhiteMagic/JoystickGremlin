@@ -140,6 +140,7 @@ Item {
 
             Layout.fillWidth: true
             Layout.preferredHeight: _foldButton.height
+            Layout.bottomMargin: 10
             spacing: 10
 
             IconButton {
@@ -152,7 +153,7 @@ Item {
                 )
                 text: checked ? bsi.icons.folded : bsi.icons.unfolded
 
-                Layout.alignment: Qt.AlignBaseline
+                Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: -10
 
                 onClicked: {
@@ -164,8 +165,11 @@ Item {
                 }
             }
 
-            Image {
-                source: _root.action.iconPath
+            Label {
+                font.family: "bootstrap-icons"
+                font.pixelSize: 24
+
+                text: _root.action.iconString
             }
 
             TextField {
@@ -175,7 +179,7 @@ Item {
 
                 background: Rectangle {
                     anchors.fill: parent
-                    border.color: Universal.accent
+                    border.color: Universal.baseLowColor
                 }
 
                 onTextEdited: function()

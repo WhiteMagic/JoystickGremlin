@@ -76,6 +76,9 @@ class DescriptionModel(ActionModel):
             "core_plugins:description/DescriptionAction.qml"
         ).fileName()
 
+    def _icon_string_impl(self) -> str:
+        return "\uF3B9"
+
     def _get_description(self) -> str:
         return self._data.description
 

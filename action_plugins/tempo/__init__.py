@@ -163,6 +163,9 @@ class TempoModel(ActionModel):
             "core_plugins:tempo/TempoAction.qml"
         ).fileName()
 
+    def _icon_string_impl(self) -> str:
+        return "\uF580"
+
     def _add_action_impl(self, action: AbstractActionData, options: Any) -> None:
         """Adds a new action to one of the two condition branches.
 

@@ -90,6 +90,9 @@ class MapToIOModel(ActionModel):
             "core_plugins:map_to_io/MapToIOAction.qml"
         ).fileName()
 
+    def _icon_string_impl(self) -> str:
+        return "\uF6E7"
+
     def _get_io_input_guid(self) -> str:
         return str(self._data.io_input_guid)
 
