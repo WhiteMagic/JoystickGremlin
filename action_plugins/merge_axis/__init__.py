@@ -56,10 +56,10 @@ class MergeOperation(Enum):
     @classmethod
     def to_string(cls, value: MergeOperation) -> str:
         lookup = {
-            MergeOperation.Average: "Average",
-            MergeOperation.Minimum: "Minimum",
-            MergeOperation.Maximum: "Maximum",
-            MergeOperation.Sum: "Sum",
+            MergeOperation.Average: "average",
+            MergeOperation.Minimum: "minimum",
+            MergeOperation.Maximum: "maximum",
+            MergeOperation.Sum: "sum",
         }
 
         res = lookup.get(value, None)
@@ -72,10 +72,10 @@ class MergeOperation(Enum):
     @classmethod
     def to_enum(cls, value: str) -> MergeOperation:
         lookup = {
-            "Average": MergeOperation.Average,
-            "Minimum": MergeOperation.Minimum,
-            "Maximum": MergeOperation.Maximum,
-            "Sum": MergeOperation.Sum,
+            "average": MergeOperation.Average,
+            "minimum": MergeOperation.Minimum,
+            "maximum": MergeOperation.Maximum,
+            "sum": MergeOperation.Sum,
         }
         res = lookup.get(value.lower(), None)
         if res is None:
@@ -150,20 +150,19 @@ class MergeAxisModel(ActionModel):
             List of valid operation names
         """
         operations = sorted(
-            [e.name for e in MergeOperation
+            [e.name.capitalize() for e in MergeOperation
                 if not e.name.startswith("_MergeOperation")]
         )
         return LabelValueSelectionModel(
             operations,
-            [str(i) for i in range(len(operations))],
+            operations,
             self
         )
 
     @Property(LabelValueSelectionModel, notify=modelChanged)
     def mergeActionList(self) -> LabelValueSelectionModel:
-        library = self._binding_model.input_item_binding.library
         merge_actions = sorted(
-            library.actions_by_type(MergeAxisData),
+            self.library.actions_by_type(MergeAxisData),
             key=lambda x: x.label,
         )
 
@@ -234,7 +233,7 @@ class MergeAxisModel(ActionModel):
                 self.modelChanged.emit()
 
     def _get_operation(self) -> str:
-        return MergeOperation.to_string(self._data.operation)
+        return MergeOperation.to_string(self._data.operation).capitalize()
 
     def _set_operation(self, value: str) -> None:
         operation = MergeOperation.to_enum(value)
@@ -250,8 +249,7 @@ class MergeAxisModel(ActionModel):
         )
         action.label = "New Merge Axis 123"
 
-        library = self._binding_model.input_item_binding.library
-        library.add_action(action)
+        self.library.add_action(action)
         self.modelChanged.emit()
 
     @Slot(str)
