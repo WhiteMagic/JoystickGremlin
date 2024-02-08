@@ -775,13 +775,11 @@ class InputItemBinding:
 
     def __init__(self, input_item: InputItem):
         self.input_item = input_item
-        self.description = ""
         self.root_action = None
         self.behavior = None
         self.virtual_button = None
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        self.description = read_subelement(node, "description")
         root_id = read_subelement(node, "root-action")
         if not self.input_item.library.has_action(root_id):
             raise error.ProfileError(
@@ -794,7 +792,6 @@ class InputItemBinding:
 
     def to_xml(self) -> ElementTree.Element:
         node = ElementTree.Element("action-configuration")
-        node.append(create_subelement_node("description", self.description))
         node.append(
             create_subelement_node("root-action", self.root_action.id)
         )

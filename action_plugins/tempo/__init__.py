@@ -239,7 +239,7 @@ class TempoData(AbstractActionData):
         self.threshold = Configuration().value("action", "tempo", "duration")
         self.activate_on = "release"
 
-    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
+    def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         short_ids = util.read_action_ids(node.find("short-actions"))
         self.short_actions = [library.get_action(aid) for aid in short_ids]
@@ -256,7 +256,7 @@ class TempoData(AbstractActionData):
                 f"Invalid activat-on value present: {self.activate_on}"
             )
 
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml(self) -> ElementTree.Element:
         """Returns an XML node representing this container's data.
 
         :return XML node representing the data of this container

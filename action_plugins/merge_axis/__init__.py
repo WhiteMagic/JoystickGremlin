@@ -334,7 +334,7 @@ class MergeAxisData(AbstractActionData):
 
         self.children = []
 
-    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
+    def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.label = util.read_property(node, "label", PropertyType.String)
         self.axis_in1.input_type = InputType.JoystickAxis
@@ -357,7 +357,7 @@ class MergeAxisData(AbstractActionData):
         child_ids = util.read_action_ids(node.find("actions"))
         self.children = [library.get_action(aid) for aid in child_ids]
 
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MergeAxisData.tag, self._id)
         entries = [
             ["label", self.label, PropertyType.String],

@@ -594,7 +594,7 @@ class ConditionData(AbstractActionData):
         self.false_actions = []
         self.conditions = []
 
-    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
+    def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         # Parse IF action ids
         true_ids = util.read_action_ids(node.find("true-actions"))
@@ -623,7 +623,7 @@ class ConditionData(AbstractActionData):
                 cond_obj.from_xml(entry)
                 self.conditions.append(cond_obj)
 
-    def to_xml(self) -> ElementTree:
+    def _to_xml(self) -> ElementTree:
         node = util.create_action_node(ConditionData.tag, self._id)
         node.append(util.create_property_node(
             "logical-operator",

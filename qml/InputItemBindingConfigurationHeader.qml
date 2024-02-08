@@ -70,11 +70,11 @@ Item {
                 Layout.fillWidth: true
 
                 placeholderText: "Description"
-                text: "" != _root.inputBinding.description ?
-                    _root.inputBinding.description : null
+                text: _root.inputBinding.rootAction ?
+                    _root.inputBinding.rootAction.actionLabel : "Description"
 
-                onTextChanged: {
-                    _root.inputBinding.description = text
+                onTextEdited: {
+                    _root.inputBinding.rootAction.actionLabel = text
                 }
             }
 

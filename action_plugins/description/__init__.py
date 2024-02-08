@@ -121,13 +121,13 @@ class DescriptionData(AbstractActionData):
         # Model variables
         self.description = ""
 
-    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
+    def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.description = util.read_property(
             node, "description", PropertyType.String
         )
 
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(DescriptionData.tag, self._id)
         node.append(util.create_property_node(
             "description", self.description, PropertyType.String

@@ -23,10 +23,11 @@ from typing import Any, Dict, List, Tuple, Optional
 import uuid
 from xml.etree import ElementTree
 
+from gremlin import util
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
 from gremlin.profile import Library
-from gremlin.types import InputType
+from gremlin.types import InputType, PropertyType
 
 
 class DataInsertionMode(Enum):
@@ -163,11 +164,43 @@ class AbstractActionData(ABC):
     def action_label(self, value: str) -> None:
         self._action_label = value
 
+    def from_xml(
+            self,
+            node: ElementTree.Element,
+            library: Library
+    ) -> None:
+        """Populates the instance's values with the content of the XML node.
+
+        Calls the implementation specific serialization routine.
+
+        Args:
+            node: the XML node to parse for content
+            library: Library instance containing all actions
+        """
+        self.action_label = util.read_property(
+            node, "action-label", PropertyType.String
+        )
+        self._from_xml(node, library)
+
+    def to_xml(self) -> ElementTree.Element:
+        """Returns an XML node representing the instance's contents.
+
+        Calls the implementation specific serialization routine.
+
+        Returns:
+            XML node containing the instance's contents
+        """
+        node = self._to_xml()
+        node.append(util.create_property_node(
+            "action-label", self.action_label, PropertyType.String
+        ))
+        return node
+
     # Interface that all actions have to support, even if only an empty noop
     # implementation is provided.
 
     @abstractmethod
-    def from_xml(
+    def _from_xml(
             self,
             node: ElementTree.Element,
             library: Library
@@ -181,7 +214,7 @@ class AbstractActionData(ABC):
         pass
 
     @abstractmethod
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml(self) -> ElementTree.Element:
         """Returns an XML node representing the instance's contents.
 
         Returns:

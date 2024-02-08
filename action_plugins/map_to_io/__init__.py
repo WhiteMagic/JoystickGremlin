@@ -211,7 +211,7 @@ class MapToIOData(AbstractActionData):
         self.axis_scaling = 1.0
         self.button_inverted = False
 
-    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
+    def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.io_input_guid = util.read_property(
             node, "io-input-guid", PropertyType.UUID
@@ -231,7 +231,7 @@ class MapToIOData(AbstractActionData):
                 node, "button-inverted", PropertyType.Bool
             )
 
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToIOData.tag, self._id)
         node.append(util.create_property_node(
             "io-input-guid", self.io_input_guid, PropertyType.UUID
