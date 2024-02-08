@@ -92,7 +92,7 @@ def test_to_xml():
     r.vjoy_input_id = 14
     r.vjoy_input_type = types.InputType.JoystickButton
 
-    node = r.to_xml()
+    node = r._to_xml()
     assert node.find(
             "./property/name[.='vjoy-device-id']/../value"
         ).text == "2"
@@ -109,7 +109,7 @@ def test_to_xml():
     r.axis_mode = types.AxisMode.Absolute
     r.axis_scaling = 0.75
 
-    node = r.to_xml()
+    node = r._to_xml()
     assert node.find(
         "./property/name[.='vjoy-device-id']/../value"
     ).text == "2"

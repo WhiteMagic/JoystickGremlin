@@ -8,7 +8,6 @@
             <action-configuration>
                 <root-action>ac905a47-9ad3-4b65-b702-fbae1d133609</root-action>
                 <behavior>button</behavior>
-                <description></description>
             </action-configuration>
         </input>
     </inputs>
@@ -19,12 +18,20 @@
                 <name>description</name>
                 <value>This is a test</value>
             </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
 
         <action id="f6d6a7af-baef-4b42-ab93-44608dedc859" type="description">
             <property type="string">
                 <name>description</name>
                 <value>Different test</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
             </property>
         </action>
 
@@ -50,6 +57,10 @@
                 <name>axis-scaling</name>
                 <value>1.5</value>
             </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
 
         <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="root">
@@ -58,6 +69,10 @@
                 <action-id>f6d6a7af-baef-4b42-ab93-44608dedc859</action-id>
                 <action-id>d67cbad2-da3f-4b59-b434-2d493e7e6185</action-id>
             </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
     </library>
 </profile>

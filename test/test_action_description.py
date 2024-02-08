@@ -117,16 +117,16 @@ def test_model_to_xml():
     )
 
     m.description = "Test"
-    a.to_xml()
+    a._to_xml()
 
     # Should not raise an exception because we implicitely convert the value
     # to its string representation
     m.description = 42
-    a.to_xml()
+    a._to_xml()
 
     m.description = "This is a test"
     a._id = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
-    node = a.to_xml()
+    node = a._to_xml()
     # ElementTree.dump(node)
     assert node.find("property/name").text == "description"
     assert node.find("property/value").text == "This is a test"

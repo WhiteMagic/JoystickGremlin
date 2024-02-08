@@ -175,12 +175,20 @@
                     </property>
                 </comparator>
             </condition>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
 
         <action id="fbe6be7b-07c9-4400-94f2-caa245ebcc7e" type="description">
             <property type="string">
                 <name>description</name>
                 <value>German</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
             </property>
         </action>
 
@@ -189,12 +197,20 @@
                 <name>description</name>
                 <value>French</value>
             </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
 
         <action id="2bf10c03-a9d3-4410-a56a-70643e2c05b8" type="description">
             <property type="string">
                 <name>description</name>
                 <value>English</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
             </property>
         </action>
 

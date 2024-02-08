@@ -75,7 +75,7 @@ def test_to_xml():
     a.axis_in2.input_type = types.InputType.JoystickAxis
     a.axis_in2.input_id =  2
 
-    node = a.to_xml()
+    node = a._to_xml()
     assert node.find(
             "./property/name[.='label']/../value"
         ).text == "This is a test"

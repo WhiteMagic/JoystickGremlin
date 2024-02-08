@@ -3,4 +3,8 @@
         <name>description</name>
         <value>This is a test</value>
     </property>
+    <property type="string">
+        <name>action-label</name>
+        <value></value>
+    </property>
 </action>

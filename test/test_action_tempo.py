@@ -54,7 +54,7 @@ def test_to_xml():
     a.insert_action(d, "short")
     a.threshold = 0.42
 
-    node = a.to_xml()
+    node = a._to_xml()
     assert node.find(
             "./property/name[.='activate-on']/../value"
         ).text == "release"

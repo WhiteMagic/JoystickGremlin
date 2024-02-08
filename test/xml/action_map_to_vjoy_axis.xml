@@ -19,4 +19,8 @@
         <name>axis-scaling</name>
         <value>1.5</value>
     </property>
+    <property type="string">
+        <name>action-label</name>
+        <value></value>
+    </property>
 </action>

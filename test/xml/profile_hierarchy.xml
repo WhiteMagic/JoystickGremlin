@@ -8,7 +8,6 @@
             <action-configuration>
                 <root-action>ac905a47-9ad3-4b65-b702-fbae1d133609</root-action>
                 <behavior>button</behavior>
-                <description></description>
             </action-configuration>
         </input>
     </inputs>
@@ -18,6 +17,10 @@
             <property type="string">
                 <name>description</name>
                 <value>Node 1</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
             </property>
         </action>
         <action id="0c905a47-9ad3-4b65-b702-fbae1d133601" type="tempo">
@@ -35,11 +38,19 @@
             <long-actions>
                 <action-id>0c905a47-9ad3-4b65-b702-fbae1d133602</action-id>
             </long-actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
         <action id="0c905a47-9ad3-4b65-b702-fbae1d133602" type="description">
             <property type="string">
                 <name>description</name>
                 <value>Node 4</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
             </property>
         </action>
         <action id="0c905a47-9ad3-4b65-b702-fbae1d133603" type="description">
@@ -47,14 +58,21 @@
                 <name>description</name>
                 <value>Node 3</value>
             </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
-
         <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="root">
             <actions>
                 <action-id>0c905a47-9ad3-4b65-b702-fbae1d133600</action-id>
                 <action-id>0c905a47-9ad3-4b65-b702-fbae1d133601</action-id>
                 <action-id>0c905a47-9ad3-4b65-b702-fbae1d133603</action-id>
             </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
     </library>
 </profile>

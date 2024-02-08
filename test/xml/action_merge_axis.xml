@@ -28,12 +28,20 @@
             <actions>
                 <action-id>80e29257-f2ad-43bf-b5ab-9229d01e64d7</action-id>
             </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
 
         <action id="80e29257-f2ad-43bf-b5ab-9229d01e64d7" type="description">
             <property type="string">
                 <name>description</name>
                 <value>This is a test</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
             </property>
         </action>
     </library>

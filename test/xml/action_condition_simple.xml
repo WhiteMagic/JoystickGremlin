@@ -46,6 +46,10 @@
                     </property>
                 </comparator>
             </condition>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
 
         <action id="fbe6be7b-07c9-4400-94f2-caa245ebcc7e" type="description">
@@ -53,17 +57,29 @@
                 <name>description</name>
                 <value>This is a test</value>
             </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
         <action id="80e29257-f2ad-43bf-b5ab-9229d01e64d7" type="description">
             <property type="string">
                 <name>description</name>
                 <value>This is a test</value>
             </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
         </action>
         <action id="2bf10c03-a9d3-4410-a56a-70643e2c05b8" type="description">
             <property type="string">
                 <name>description</name>
                 <value>This is a test</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
             </property>
         </action>
     </library>

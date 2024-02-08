@@ -15,4 +15,8 @@
         <name>button-inverted</name>
         <value>false</value>
     </property>
+    <property type="string">
+        <name>action-label</name>
+        <value></value>
+    </property>
 </action>
