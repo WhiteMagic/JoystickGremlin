@@ -469,9 +469,6 @@ class ConditionModel(ActionModel):
             "core_plugins:condition/ConditionAction.qml"
         ).fileName()
 
-    def _icon_string_impl(self) -> str:
-        return "\uF109"
-
     @Slot(int)
     def addCondition(self, condition: int) -> None:
         """Adds a new condition.
@@ -577,6 +574,7 @@ class ConditionData(AbstractActionData):
     version = 1
     name = "Condition"
     tag = "condition"
+    icon = "\uF109"
 
     functor = ConditionFunctor
     model = ConditionModel

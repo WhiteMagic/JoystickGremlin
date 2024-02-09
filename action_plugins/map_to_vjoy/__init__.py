@@ -172,9 +172,6 @@ class MapToVjoyModel(ActionModel):
             "core_plugins:map_to_vjoy/MapToVjoyAction.qml"
         ).fileName()
 
-    def _icon_string_impl(self) -> str:
-        return "\uF448"
-
     def _get_vjoy_device_id(self) -> int:
         return self._data.vjoy_device_id
 
@@ -277,6 +274,7 @@ class MapToVjoyData(AbstractActionData):
     version = 1
     name = "Map to vJoy"
     tag = "map-to-vjoy"
+    icon = "\uF448"
 
     functor = MapToVjoyFunctor
     model = MapToVjoyModel

@@ -103,6 +103,7 @@ class DescriptionData(AbstractActionData):
     version = 1
     name = "Description"
     tag = "description"
+    icon = "\uF3B9"
 
     functor = DescriptionFunctor
     model = DescriptionModel

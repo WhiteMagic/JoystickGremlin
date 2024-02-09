@@ -169,12 +169,13 @@ Item {
                 font.family: "bootstrap-icons"
                 font.pixelSize: 24
 
-                text: _root.action.iconString
+                text: _root.action.icon
             }
 
             TextField {
                 id: _headerLabel
 
+                font.family: "bootstrap-icons"
                 text: _root.action.actionLabel
 
                 background: Rectangle {

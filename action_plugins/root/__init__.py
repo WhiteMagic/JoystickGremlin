@@ -73,9 +73,6 @@ class RootModel(ActionModel):
             "core_plugins:root/RootAction.qml"
         ).fileName()
 
-    def _icon_string_impl(self) -> str:
-        return "\uF5E2"
-
 
 class RootData(AbstractActionData):
 
@@ -90,6 +87,7 @@ class RootData(AbstractActionData):
     version = 1
     name = "Root"
     tag = "root"
+    icon = "\uF5E2"
 
     functor = RootFunctor
     model = RootModel

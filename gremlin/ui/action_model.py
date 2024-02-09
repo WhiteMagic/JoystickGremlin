@@ -96,11 +96,6 @@ class ActionModel(QtCore.QObject):
             "ActionModel._qml_path_impl not implemented in subclass"
         )
 
-    def _icon_string_impl(self) -> str:
-        raise MissingImplementationError(
-            "ActionModel._icon_string_impl not implemented in subclass"
-        )
-
     @property
     def input_type(self) -> InputType:
         return self._binding_model.behavior_type
@@ -125,9 +120,9 @@ class ActionModel(QtCore.QObject):
     def qmlPath(self) -> str:
         return self._qml_path_impl()
 
-    @Property(type=str, notify=actionChanged)
-    def iconString(self) -> str:
-        return self._icon_string_impl()
+    @Property(type=str, constant=True)
+    def icon(self) -> str:
+        return self._data.icon
 
     @Property(type=str, notify=actionChanged)
     def id(self) -> str:

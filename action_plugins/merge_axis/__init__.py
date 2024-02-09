@@ -272,9 +272,6 @@ class MergeAxisModel(ActionModel):
             "core_plugins:merge_axis/MergeAxisAction.qml"
         ).fileName()
 
-    def _icon_string_impl(self) -> str:
-        return "\uF859"
-
     label = Property(
         str,
         fget=_get_label,
@@ -316,6 +313,7 @@ class MergeAxisData(AbstractActionData):
     version = 1
     name = "Merge Axis"
     tag = "merge-axis"
+    icon = "\uF859"
 
     functor = MergeAxisFunctor
     model = MergeAxisModel
