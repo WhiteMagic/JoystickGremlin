@@ -156,7 +156,7 @@ class MergeAxisModel(ActionModel):
         return LabelValueSelectionModel(
             operations,
             operations,
-            self
+            parent=self
         )
 
     @Property(LabelValueSelectionModel, notify=modelChanged)
@@ -169,7 +169,7 @@ class MergeAxisModel(ActionModel):
         return LabelValueSelectionModel(
             [ma.label for ma in merge_actions],
             [str(ma.id) for ma in merge_actions],
-            self
+            parent=self
         )
 
     def _get_label(self) -> str:

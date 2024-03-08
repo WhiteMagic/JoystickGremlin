@@ -20,7 +20,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABCMeta
 import codecs
 import logging
-from typing import List, Optional, Set, Tuple, TYPE_CHECKING
+from typing import List, Optional, Set, Tuple, TYPE_CHECKING, Callable
 import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -387,6 +387,25 @@ class Library:
             All actions of the given type
         """
         return [a for a in self._actions.values() if isinstance(a, action_type)]
+
+    def actions_by_predicate(
+            self,
+            predicate: Callable[[AbstractActionData], bool]
+    ) -> List[AbstractActionData]:
+        """Returns the list of actions fulfilling the given predicate.
+
+        Args:
+            predicate: the predicate to evaluate on each action
+
+        Returns:
+            List of all actions fulfilling the given predicate
+        """
+        actions = []
+        for action in self._actions.values():
+            if predicate(action):
+                actions.append(action)
+        return actions
+
 
     def get_action(self, key: uuid.UUID) -> AbstractActionData:
         """Returns the action specified by the key.

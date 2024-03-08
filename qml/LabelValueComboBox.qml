@@ -60,9 +60,24 @@ Item {
     component OptionDelegate : ItemDelegate {
         required property string label
         required property string value
+        required property string bootstrap
+        required property string imageIcon
 
         width: parent.width
-        text: label
+        contentItem: Row {
+             Label {
+                 text: bootstrap
+
+                 width: bootstrap.length > 0 ? 30 : 0
+                 verticalAlignment: Text.AlignBottom
+
+                 font.family: "bootstrap-icons"
+                 font.pixelSize: 20
+             }
+             Label {
+                text: label
+             }
+        }
 
         onClicked: function()
         {

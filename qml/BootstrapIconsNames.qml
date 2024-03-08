@@ -11,5 +11,6 @@ QtObject {
     readonly property string add_new: "\uF37D"
     readonly property string replace: "\uF130"
     readonly property string rename: "\uF4CB"
-
+    readonly property string share: "\uF52E"
+    readonly property string duplicate: "\uF759"
 }

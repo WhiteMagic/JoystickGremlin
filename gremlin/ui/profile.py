@@ -739,16 +739,27 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
 
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("label".encode()),
-        QtCore.Qt.UserRole + 2: QtCore.QByteArray("value".encode())
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("value".encode()),
+        QtCore.Qt.UserRole + 3: QtCore.QByteArray("bootstrap".encode()),
+        QtCore.Qt.UserRole + 4: QtCore.QByteArray("imageIcon".encode())
     }
 
-    def __init__(self, labels: List[Any], values: List[str], parent=None):
+    def __init__(
+            self,
+            labels: List[Any],
+            values: List[str],
+            bootstrap: List[str]=[],
+            icons: List[str]=[],
+            parent=None
+    ):
         super().__init__(parent)
 
         assert len(values) == len(labels)
 
         self._labels = labels
         self._values = values
+        self._bootstrap = bootstrap
+        self._icons = icons
         self._current_index = 0
 
     def rowCount(self, parent: QtCore.QModelIndex) -> int:
@@ -763,6 +774,10 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
             return self._labels[index]
         elif role == QtCore.Qt.UserRole + 2:
             return str(self._values[index])
+        elif role == QtCore.Qt.UserRole + 3:
+            return "" if index >= len(self._bootstrap) else self._bootstrap[index]
+        elif role == QtCore.Qt.UserRole + 4:
+            return "" if index >= len(self._icons) else self._icons[index]
 
     def roleNames(self) -> Dict:
         return LabelValueSelectionModel.roles
