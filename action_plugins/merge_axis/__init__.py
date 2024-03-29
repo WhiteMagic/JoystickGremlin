@@ -106,7 +106,18 @@ class MergeAxisFunctor(AbstractFunctor):
 
     @staticmethod
     def _average(value1: float, value2: float) -> float:
-        return (value1 + value2) / 2.0
+        # Computes the average between two half axes:
+        #   - a lower half axis with values in [-100, 0%]
+        #   - a upper half axis with values in [0, 100%]
+        # However the values of axis1 and axis2 have a range of [-100%, 100%]
+        # Therefore we convert them as follows:
+        #   value_lower = (- value1 - 1.0) / 2.0
+        #   value_upper = (value2 + 1.0) / 2.0
+        # Hence:
+        #   value_average = (value_upper + value_lower) / 2.0
+        #                 = (value2 + 1.0 - value1 - 1.0) / 2.0
+        #                 = (value2 - value1) / 2.0
+        return (value2 - value1) / 2.0
 
     @staticmethod
     def _minimum(value1: float, value2: float) -> float:
