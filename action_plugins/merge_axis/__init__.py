@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple, Optional, Any
 import uuid
 from xml.etree import ElementTree
 
@@ -39,9 +39,9 @@ from gremlin.plugin_manager import PluginManager
 from gremlin.profile import InputItemBinding, Library
 from gremlin.types import InputType, PropertyType
 
-from gremlin.ui.action_model import ActionModel
+from gremlin.ui.action_model import ActionModel, SequenceIndex
 from gremlin.ui.device import InputIdentifier
-from gremlin.ui.profile import LabelValueSelectionModel
+from gremlin.ui.profile import LabelValueSelectionModel, InputItemBindingModel
 
 
 class MergeOperation(Enum):
@@ -52,6 +52,7 @@ class MergeOperation(Enum):
     Minimum = 1
     Maximum = 2
     Sum = 3
+    Bidirectional = 4
 
     @classmethod
     def to_string(cls, value: MergeOperation) -> str:
@@ -60,6 +61,7 @@ class MergeOperation(Enum):
             MergeOperation.Minimum: "minimum",
             MergeOperation.Maximum: "maximum",
             MergeOperation.Sum: "sum",
+            MergeOperation.Bidirectional: "bidirectional",
         }
 
         res = lookup.get(value, None)
@@ -76,6 +78,7 @@ class MergeOperation(Enum):
             "minimum": MergeOperation.Minimum,
             "maximum": MergeOperation.Maximum,
             "sum": MergeOperation.Sum,
+            "bidirectional": MergeOperation.Bidirectional,
         }
         res = lookup.get(value.lower(), None)
         if res is None:
@@ -106,7 +109,7 @@ class MergeAxisFunctor(AbstractFunctor):
 
     @staticmethod
     def _average(value1: float, value2: float) -> float:
-        return (value1 + value2) / 2.0
+        return (value2 + value1) / 2.0
 
     @staticmethod
     def _minimum(value1: float, value2: float) -> float:
@@ -120,11 +123,25 @@ class MergeAxisFunctor(AbstractFunctor):
     def _sum(value1: float, value2: float) -> float:
         return util.clamp(value1 + value2, -1.0, 1.0)
 
+    @staticmethod
+    def _bidirectional(value1: float, value2: float) -> float:
+        """Merges two axes into one:
+            - the 1st axis controls the lower half of the value range
+            - the 2nd axis controls the upper half
+        
+        Allows full deflection either way if only one axis is used.
+        Performs differential mixing if both are used.
+
+        Use case example: merging two pedal axes into a single left/right axis.
+        """
+        return (value2 - value1) / 2.0
+
     actions = {
         MergeOperation.Average: _average,
         MergeOperation.Minimum: _minimum,
         MergeOperation.Maximum: _maximum,
         MergeOperation.Sum: _sum,
+        MergeOperation.Bidirectional: _bidirectional,
     }
 
 
