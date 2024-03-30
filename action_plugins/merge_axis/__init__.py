@@ -52,6 +52,7 @@ class MergeOperation(Enum):
     Minimum = 1
     Maximum = 2
     Sum = 3
+    Bidirectional = 4
 
     @classmethod
     def to_string(cls, value: MergeOperation) -> str:
@@ -60,6 +61,7 @@ class MergeOperation(Enum):
             MergeOperation.Minimum: "minimum",
             MergeOperation.Maximum: "maximum",
             MergeOperation.Sum: "sum",
+            MergeOperation.Bidirectional: "bidirectional",
         }
 
         res = lookup.get(value, None)
@@ -73,6 +75,7 @@ class MergeOperation(Enum):
     def to_enum(cls, value: str) -> MergeOperation:
         lookup = {
             "average": MergeOperation.Average,
+            "bidirectional": MergeOperation.Bidirectional,
             "minimum": MergeOperation.Minimum,
             "maximum": MergeOperation.Maximum,
             "sum": MergeOperation.Sum,
@@ -106,18 +109,7 @@ class MergeAxisFunctor(AbstractFunctor):
 
     @staticmethod
     def _average(value1: float, value2: float) -> float:
-        # Computes the average between two half axes:
-        #   - a lower half axis with values in [-100, 0%]
-        #   - a upper half axis with values in [0, 100%]
-        # However the values of axis1 and axis2 have a range of [-100%, 100%]
-        # Therefore we convert them as follows:
-        #   value_lower = (- value1 - 1.0) / 2.0
-        #   value_upper = (value2 + 1.0) / 2.0
-        # Hence:
-        #   value_average = (value_upper + value_lower) / 2.0
-        #                 = (value2 + 1.0 - value1 - 1.0) / 2.0
-        #                 = (value2 - value1) / 2.0
-        return (value2 - value1) / 2.0
+        return (value2 + value1) / 2.0
 
     @staticmethod
     def _minimum(value1: float, value2: float) -> float:
@@ -131,11 +123,27 @@ class MergeAxisFunctor(AbstractFunctor):
     def _sum(value1: float, value2: float) -> float:
         return util.clamp(value1 + value2, -1.0, 1.0)
 
+    @staticmethod
+    def _bidirectional(value1: float, value2: float) -> float:
+        # Computes the average between two half axes:
+        #   - a lower half axis with values in [-100, 0%]
+        #   - a upper half axis with values in [0, 100%]
+        # However the values of axis1 and axis2 have a range of [-100%, 100%]
+        # Therefore we convert them as follows:
+        #   value_lower = (- value1 - 1.0) / 2.0
+        #   value_upper = (value2 + 1.0) / 2.0
+        # Hence:
+        #   value_average = (value_upper + value_lower) / 2.0
+        #                 = (value2 + 1.0 - value1 - 1.0) / 2.0
+        #                 = (value2 - value1) / 2.0
+        return (value2 - value1) / 2.0
+
     actions = {
         MergeOperation.Average: _average,
         MergeOperation.Minimum: _minimum,
         MergeOperation.Maximum: _maximum,
         MergeOperation.Sum: _sum,
+        MergeOperation.Bidirectional: _bidirectional,
     }
 
 
