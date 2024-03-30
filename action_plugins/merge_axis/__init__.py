@@ -75,10 +75,10 @@ class MergeOperation(Enum):
     def to_enum(cls, value: str) -> MergeOperation:
         lookup = {
             "average": MergeOperation.Average,
-            "bidirectional": MergeOperation.Bidirectional,
             "minimum": MergeOperation.Minimum,
             "maximum": MergeOperation.Maximum,
             "sum": MergeOperation.Sum,
+            "bidirectional": MergeOperation.Bidirectional,
         }
         res = lookup.get(value.lower(), None)
         if res is None:
