@@ -482,7 +482,7 @@ class Library:
             XML node holding the instance's content
         """
         node = ElementTree.Element("library")
-        for item in self._actions.values():
+        for item in [n for n in self._actions.values() if n.is_valid()]:
             node.append(item.to_xml())
         return node
 
