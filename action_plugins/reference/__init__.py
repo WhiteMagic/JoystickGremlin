@@ -27,6 +27,7 @@ from PySide6.QtCore import Property, Signal, Slot
 from gremlin import event_handler, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.error import GremlinError
+from gremlin.macro import AbstractAction
 from gremlin.profile import Library
 from gremlin.types import InputType, PropertyType
 
@@ -57,14 +58,22 @@ class ReferenceModel(ActionModel):
         ).fileName()
 
     def _get_actions(self) -> LabelValueSelectionModel:
-        parent_action_ids = []
-        for pa in self.library.actions_by_predicate(
-                lambda x: x.behavior_type == self.input_type
-        ):
-            for a in pa.get_actions()[0]:
-                if a.id == self._data.id:
-                    parent_action_ids.append(pa.id)
+        # Discover all actions that are an ancestor of the present action
+        ancestor_action_ids = []
+        queue = [self._data.id]
+        while len(queue) > 0:
+            aid = queue.pop(0)
+            action_ids = [a.id for a in self.library.actions_by_predicate(
+                lambda x: aid in [v.id for v in x.get_actions()[0]]
+            )]
+            ancestor_action_ids.extend(action_ids)
+            queue.extend(action_ids)
 
+        # Predicate to select only valid actions to show in the reference
+        # list. Excludes all actions that:
+        # - result in circular inclusions
+        # - are of an incompatible input type
+        # - are a reference action
         def selector(action) -> bool:
             # Only consider actions that are of a valid type
             if action.tag in ["reference"]:
@@ -73,14 +82,12 @@ class ReferenceModel(ActionModel):
                 return False
 
             # Reject all actions that would result in a loop
-            if action.id in parent_action_ids:
+            if action.id in ancestor_action_ids:
                 return False
-
             return True
 
         # Grab library and get all actions that fit with the given input modality
         actions = self.library.actions_by_predicate(selector)
-        # print(actions)
         return LabelValueSelectionModel(
             [a.action_label for a in actions],
             [str(a.id) for a in actions],
@@ -90,15 +97,22 @@ class ReferenceModel(ActionModel):
 
     @Slot(str)
     def referenceAction(self, value: str) -> None:
-        action = self.library.get_action(uuid.UUID(value))
-        print(value)
-        self._binding_model.append_action(action, self.sequence_index)
-        self._binding_model.remove_action(self.sequence_index)
+        self._replace_reference(self.library.get_action(uuid.UUID(value)))
 
     @Slot(str)
     def duplicateAction(self, value: str) -> None:
-        action = self.library.get_action(uuid.UUID(value))
-        print(value)
+        # Retrieve action and duplicate it before adding it to the tree
+        action = self.library.get_action(uuid.UUID(value)).clone()
+        self.library.add_action(action)
+        self._replace_reference(action)
+
+    def _replace_reference(self, action: AbstractActionData) -> None:
+        # Replace reference action with the provided action
+        self._binding_model.append_action(action, self.sequence_index)
+        self._binding_model.remove_action(self.sequence_index)
+
+        # Delete the reference action itself
+        self.library.delete_action(self._data.id)
 
     actions = Property(
         LabelValueSelectionModel,
