@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
+import copy
 from enum import Enum
 from typing import Any, Dict, List, Tuple, Optional
 import uuid
@@ -315,6 +316,16 @@ class AbstractActionData(ABC):
                 f"{self.name}: attempting to remove action with invalid " +
                 f"index ({index}) from container '{selector}'"
             )
+
+    def clone(self) -> AbstractActionData:
+        """Returns a copy of this action with a novel unique id.
+
+        Returns:
+            Copy of the action with a new unique id
+        """
+        clone = copy.deepcopy(self)
+        clone._id = uuid.uuid4()
+        return clone
 
     @classmethod
     def _do_create(
