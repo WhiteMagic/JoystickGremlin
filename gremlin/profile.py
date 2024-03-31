@@ -328,7 +328,7 @@ class Library:
             )
         self._actions[action.id] = action
 
-    def delete_action(self, key: int) -> None:
+    def delete_action(self, key: uuid.UUID) -> None:
         """Deletes the action with the given key from the library.
 
         Args:
