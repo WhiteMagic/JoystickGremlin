@@ -143,7 +143,7 @@ class TreeNode:
             self.parent.remove_child(self)
         self.parent = None
 
-    def is_descendant(self, other: None) -> bool:
+    def is_descendant(self, other: TreeNode | None) -> bool:
         """Returns whether or not other is a descendant of this node.
 
         Args:
