@@ -897,7 +897,7 @@ class ModeHierarchy:
         """
         return self._hierarchy.children[0].value
 
-    def mode_list(self) -> List[str]:
+    def mode_names(self) -> List[str]:
         """Returns a list containing the names of all modes.
 
         Returns:
@@ -906,6 +906,14 @@ class ModeHierarchy:
         all_modes = self._hierarchy.nodes_matching(lambda x: True)
         all_modes.remove(self._hierarchy)
         return sorted([node.value for node in all_modes])
+
+    def mode_list(self) -> List[TreeNode]:
+        """Returns a list of all mode nodes.
+
+        Returns:
+            List containing TreeNodes of all modes
+        """
+        return self._hierarchy.nodes_matching(lambda x: True)
 
     def valid_parents(self, mode_name: str) -> List[str]:
         """Returns the list of parents that are valid for the given mode.
@@ -949,7 +957,7 @@ class ModeHierarchy:
         Args:
             mode_name: name of the new mode to add
         """
-        if mode_name in self.mode_list():
+        if mode_name in self.mode_names():
             raise error.GremlinError(
                 f"Attempting to add an already existing mode '{mode_name}'."
             )
@@ -961,7 +969,7 @@ class ModeHierarchy:
         Args:
             mode_name: name of the mode to delete
         """
-        if mode_name not in self.mode_list():
+        if mode_name not in self.mode_names():
             raise error.GremlinError(
                 f"Attempting to delete a non-existant mode '{mode_name}'."
             )
@@ -984,7 +992,7 @@ class ModeHierarchy:
             return
 
         # Handle missing mode to rename
-        mode_names = self.mode_list()
+        mode_names = self.mode_names()
         if old_name not in mode_names:
             raise error.GremlinError(
                 f"Attempting to rename non-existant mode '{old_name}'"

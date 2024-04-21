@@ -330,7 +330,7 @@ class CodeRunner:
         # heuristic
         settings = self._profile.settings
         if settings.startup_mode is not None:
-            if settings.startup_mode in self._profile.modes.mode_list():
+            if settings.startup_mode in self._profile.modes.mode_names():
                 start_mode = settings.startup_mode
 
         # Set default macro action delay
@@ -359,7 +359,7 @@ class CodeRunner:
 
             # Add a fake keyboard action which does nothing to the callbacks
             # in every mode in order to have empty modes be "present"
-            for mode_name in self._profile.modes.mode_list():
+            for mode_name in self._profile.modes.mode_names():
                 self.event_handler.add_callback(
                     0,
                     mode_name,

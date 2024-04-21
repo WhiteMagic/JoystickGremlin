@@ -744,7 +744,7 @@ class ModeListModel(QtCore.QAbstractListModel):
     def __init__(self, modes: gremlin.profile.ModeHierarchy, parent=None):
         super().__init__(parent)
 
-        self._modes = modes.mode_list()
+        self._modes = modes.mode_names()
         self._parent_modes = []
         for mode in self._modes:
             node = modes.find_mode(mode)
@@ -787,7 +787,7 @@ class ModeHierarchyModel(QtCore.QAbstractListModel):
 
     @Slot(str)
     def newMode(self, name: str) -> None:
-        if name not in self._modes.mode_list():
+        if name not in self._modes.mode_names():
             self._modes.add_mode(name)
         self.modesChanged.emit()
 
@@ -818,7 +818,7 @@ class ModeHierarchyModel(QtCore.QAbstractListModel):
 
     @Slot(result=list)
     def modeStringList(self) -> List[str]:
-        return self._modes.mode_list()
+        return self._modes.mode_names()
 
 
 @QtQml.QmlElement

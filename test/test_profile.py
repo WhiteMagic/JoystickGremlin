@@ -99,7 +99,7 @@ def test_mode_hierarchy():
     p = Profile()
     p.from_xml("test/xml/profile_mode_hierarchy.xml")
 
-    assert p.modes.mode_list() == ["Child", "Deep", "Default", "Levels", "Separate", "Three"]
+    assert p.modes.mode_names() == ["Child", "Deep", "Default", "Levels", "Separate", "Three"]
     assert p.modes.first_mode == "Default"
 
     assert p.modes.find_mode("Levels").value == "Levels"
