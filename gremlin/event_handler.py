@@ -476,26 +476,20 @@ class EventHandler(QtCore.QObject):
         Args:
             modes: information about the mode hierarchy
         """
-        stack = modes.hierarchy[:]
-        while len(stack) > 0:
-            node = stack.pop()
-            stack.extend(node.children[:])
-
+        for mode in modes.mode_list():
             # Each device is treated separately
-            parent = node.value
-            children = [e.value for e in node.children]
             for device_guid in self.callbacks:
-                # Only attempt to copy handlers if we have any available in
-                # the parent mode
-                if parent in self.callbacks[device_guid]:
+                # Only attempt to copy handlers into child modes if the current
+                # mode has any available
+                if mode.value in self.callbacks[device_guid]:
                     device_cb = self.callbacks[device_guid]
-                    parent_cb = device_cb[parent]
+                    mode_cb = device_cb[mode.value]
                     # Copy the handlers into each child mode, unless they
                     # have their own handlers already defined
-                    for child in children:
+                    for child in [e.value for e in mode.children]:
                         if child not in device_cb:
                             device_cb[child] = {}
-                        for event, callbacks in parent_cb.items():
+                        for event, callbacks in mode_cb.items():
                             if event not in device_cb[child]:
                                 device_cb[child][event] = callbacks
 
