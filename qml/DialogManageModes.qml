@@ -149,13 +149,11 @@ Window {
 
                 onActivated: function(index)
                 {
-                    console.log("valueChanged: '" + name + "' '" + currentValue + "'")
                     mode.setParent(name, currentValue)
                 }
 
                 Component.onCompleted: function()
                 {
-                    console.log("onCompleted : " + indexOfValue(parentName) + " '" + name + "' '" + parentName + "'")
                     currentIndex = indexOfValue(parentName)
                 }
             }
