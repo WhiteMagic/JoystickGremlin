@@ -27,12 +27,13 @@ from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 import gremlin.profile
-from gremlin.signal import signal
 from gremlin.base_classes import DataInsertionMode
+from gremlin.control_action import ModeList
 from gremlin.error import GremlinError
+from gremlin.plugin_manager import PluginManager
+from gremlin.signal import signal
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 from gremlin.util import clamp
-from gremlin.plugin_manager import PluginManager
 
 from gremlin.ui.action_model import ActionModel, SequenceIndex
 
@@ -728,6 +729,96 @@ class InputItemBindingListModel(QtCore.QAbstractListModel):
 
     def roleNames(self) -> Dict:
         return InputItemBindingListModel.roles
+
+
+@QtQml.QmlElement
+class ModeListModel(QtCore.QAbstractListModel):
+
+    """List containing model instances for each mode."""
+
+    roles = {
+        QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("parentName".encode()),
+    }
+
+    def __init__(self, modes: gremlin.profile.ModeHierarchy, parent=None):
+        super().__init__(parent)
+
+        self._modes = modes.mode_list()
+        self._parent_modes = []
+        for mode in self._modes:
+            node = modes.find_mode(mode)
+            self._parent_modes.append(
+                "" if node.parent is None else node.parent.value
+            )
+
+    def rowCount(self, parent: QtCore.QModelIndex) -> int:
+        return len(self._modes)
+
+    def data(self, index: QtCore.QModelIndex, role: int=...) -> Any:
+        if role not in self.roleNames():
+            raise GremlinError(f"Invalid role {role} in ModeListModel")
+
+        index = index.row()
+        if role == QtCore.Qt.UserRole + 1:
+            return self._modes[index]
+        elif role == QtCore.Qt.UserRole + 2:
+            return self._parent_modes[index]
+
+    def roleNames(self) -> Dict:
+        return ModeListModel.roles
+
+
+@QtQml.QmlElement
+class ModeHierarchyModel(QtCore.QAbstractListModel):
+
+    """Model exposing the mode hierarchy and allows managing it."""
+
+    modesChanged = Signal()
+
+    def __init__(self, modes: gremlin.profile.ModeHierarchy, parent=None):
+        super().__init__(parent)
+
+        self._modes = modes
+
+    @Property(type=ModeListModel, notify=modesChanged)
+    def modeList(self) -> ModeListModel:
+        return ModeListModel(self._modes, self)
+
+    @Slot(str)
+    def newMode(self, name: str) -> None:
+        if name not in self._modes.mode_list():
+            self._modes.add_mode(name)
+        self.modesChanged.emit()
+
+    @Slot(str, str)
+    def renameMode(self, old_name: str, new_name: str) -> None:
+        if old_name != new_name:
+            self._modes.rename_mode(old_name, new_name)
+            self.modesChanged.emit()
+
+    @Slot(str)
+    def deleteMode(self, name: str) -> None:
+        self._modes.delete_mode(name)
+        self.modesChanged.emit()
+
+    @Slot(str, str)
+    def setParent(self, mode_name: str, parent_name: str) -> None:
+        node = self._modes.find_mode(mode_name)
+        if parent_name != node.parent.value:
+            self._modes.set_parent(mode_name, parent_name)
+            self.modesChanged.emit()
+
+    @Slot(str, result=list)
+    def validParents(self, name: str) -> List[str]:
+        options = []
+        for entry in self._modes.valid_parents(name):
+            options.append({"value": entry})
+        return options
+
+    @Slot(result=list)
+    def modeStringList(self) -> List[str]:
+        return self._modes.mode_list()
 
 
 @QtQml.QmlElement
