@@ -1,8 +1,14 @@
 function createComponent(componentSpec)
 {
-    var component = Qt.createComponent(componentSpec);
-    var window = component.createObject(_root, {"x": 100, "y": 300});
-    window.show();
+    let component = Qt.createComponent(componentSpec);
+    if(component.status == Component.Error) {
+        console.log(component.errorString())
+    }
+    else if((component.status == Component.Ready))
+    {
+        let window = component.createObject(_root, {"x": 100, "y": 300});
+        window.show();
+    }
 }
 
 function pythonizePath(path)

@@ -30,7 +30,7 @@ from gremlin.intermediate_output import IntermediateOutput
 from gremlin.signal import signal
 
 from gremlin.ui.device import InputIdentifier, IODeviceManagementModel
-from gremlin.ui.profile import InputItemModel
+from gremlin.ui.profile import InputItemModel, ModeHierarchyModel
 
 
 config.Configuration().register(
@@ -50,6 +50,7 @@ class Backend(QtCore.QObject):
     """Allows interfacing between the QML frontend and the Python backend."""
 
     windowTitleChanged = Signal()
+    profileChanged = Signal()
     recentProfilesChanged = Signal()
     lastErrorChanged = Signal()
     inputConfigurationChanged = Signal()
@@ -204,6 +205,7 @@ class Backend(QtCore.QObject):
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
         self.windowTitleChanged.emit()
+        self.profileChanged.emit()
         signal.reloadUi.emit()
 
     @Slot(str)
@@ -234,7 +236,12 @@ class Backend(QtCore.QObject):
             fpath: Path to the file containing the profile to load
         """
         self._load_profile(fpath)
+        self.profileChanged.emit()
         signal.reloadUi.emit()
+
+    @Property(type=ModeHierarchyModel, notify=profileChanged)
+    def modeHierarchy(self) -> ModeHierarchyModel:
+        return ModeHierarchyModel(self.profile.modes, self)
 
     @Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:
