@@ -101,3 +101,9 @@ def test_mode_hierarchy():
 
     assert p.modes.mode_list() == ["Child", "Deep", "Default", "Levels", "Separate", "Three"]
     assert p.modes.first_mode == "Default"
+
+    assert p.modes.find_mode("Levels").value == "Levels"
+    assert p.modes.find_mode("Levels").parent.value == "Three"
+
+    assert p.modes.find_mode("Default").parent.value == ""
+    assert p.modes.find_mode("Default").parent == p.modes._hierarchy

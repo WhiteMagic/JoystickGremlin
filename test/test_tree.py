@@ -268,6 +268,7 @@ def test_nodes_matching():
     n3 = TreeNode(6, n1)
     n4 = TreeNode(8, n1)
 
+    assert n1.nodes_matching(lambda x: x.value == 2) == [n1]
     assert n1.nodes_matching(lambda x: x.value % 2 == 0) == [n1, n2, n3, n4]
     assert n1.nodes_matching(lambda x: x.value / 5 == 0) == []
     assert n1.nodes_matching(lambda x: x.value % 3 == 0) == [n3]
