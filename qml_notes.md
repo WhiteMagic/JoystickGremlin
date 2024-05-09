@@ -187,6 +187,8 @@ ComboBox {
 }
 ```
 
+With elements that are driven by a modifiable model it is important to use the `onActivated` signal rather than the `onChanged` as the latter will cause a model update, overwriting the correct value and resulting in an endless modification loop.
+
 ## Drag & Drop
 
 To implement drag & drop with QML three components are needed.
