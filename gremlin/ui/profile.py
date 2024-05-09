@@ -820,6 +820,11 @@ class ModeHierarchyModel(QtCore.QAbstractListModel):
     def modeStringList(self) -> List[str]:
         return self._modes.mode_names()
 
+    @Property(type=list, notify=modesChanged)
+    def modeHierarchy(self) -> List[str]:
+        bla = self._modes.mode_names()
+        print(bla)
+        return bla
 
 @QtQml.QmlElement
 class LabelValueSelectionModel(QtCore.QAbstractListModel):

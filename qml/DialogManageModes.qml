@@ -77,6 +77,7 @@ Window {
 
             onClicked: function()
             {
+                //let validNames = mode.modeStringList()
                 let validNames = mode.modeStringList()
 
                 _textInput.title = "Add new mode"

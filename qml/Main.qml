@@ -23,6 +23,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Gremlin.Profile
 
 import "helpers.js" as Helpers
 
@@ -185,6 +186,10 @@ ApplicationWindow {
     }
 
     header: ToolBar {
+        id: _toolbar
+
+        property ModeHierarchyModel modes : backend.modeHierarchy
+
         RowLayout {
             anchors.fill: parent
 
@@ -246,11 +251,17 @@ ApplicationWindow {
             }
 
             ComboBox {
-                model: ["Default", "  Alternative"]
+                id: _modeSelector
+                //model: ["Default", "  Alternative"]
+                //model: _toolbar.modes.modeList
+                model: _toolbar.modes.modeHierarchy
+
+                // delegate: Label {
+                //     text: name
+                // }
             }
         }
     }
-
 
     DeviceListModel {
         id: _deviceListModel
@@ -278,6 +289,15 @@ ApplicationWindow {
         //     _inputConfigurationPanel.reload()
         // }
     }
+
+    // Connections {
+    //     target: modes
+    //
+    //     function onModesChanged() {
+    //         console.log("XXX")
+    //         _modeSelector.model = modes.modeStringList()
+    //     }
+    // }
 
     function showIntermediateOutput(state)
     {
