@@ -903,9 +903,7 @@ class ModeHierarchy:
         Returns:
             List of all mode names
         """
-        all_modes = self._hierarchy.nodes_matching(lambda x: True)
-        all_modes.remove(self._hierarchy)
-        return sorted([node.value for node in all_modes])
+        return sorted([node.value for node in self.mode_list()])
 
     def mode_list(self) -> List[TreeNode]:
         """Returns a list of all mode nodes.
@@ -913,7 +911,9 @@ class ModeHierarchy:
         Returns:
             List containing TreeNodes of all modes
         """
-        return self._hierarchy.nodes_matching(lambda x: True)
+        modes = self._hierarchy.nodes_matching(lambda x: True)
+        modes.remove(self._hierarchy)
+        return modes
 
     def valid_parents(self, mode_name: str) -> List[str]:
         """Returns the list of parents that are valid for the given mode.
@@ -926,7 +926,7 @@ class ModeHierarchy:
         """
         parent_candidates = []
         mode_node = self.find_mode(mode_name)
-        for node in self._hierarchy.nodes_matching(lambda x: True):
+        for node in self.mode_list():
             if not mode_node.is_descendant(node) and node != mode_node:
                 parent_candidates.append(node.value)
         return sorted(parent_candidates)
@@ -957,7 +957,7 @@ class ModeHierarchy:
         Args:
             mode_name: name of the new mode to add
         """
-        if mode_name in self.mode_names():
+        if self.mode_exists(mode_name):
             raise error.GremlinError(
                 f"Attempting to add an already existing mode '{mode_name}'."
             )
@@ -969,11 +969,13 @@ class ModeHierarchy:
         Args:
             mode_name: name of the mode to delete
         """
-        if mode_name not in self.mode_names():
+        if not self.mode_exists(mode_name):
             raise error.GremlinError(
                 f"Attempting to delete a non-existant mode '{mode_name}'."
             )
 
+        # Find node and remove it from the hierarchy tree but reconnect its
+        # children to their grandparent.
         node = self.find_mode(mode_name)
         parent_node = node.parent
         node.detach()
@@ -992,13 +994,12 @@ class ModeHierarchy:
             return
 
         # Handle missing mode to rename
-        mode_names = self.mode_names()
-        if old_name not in mode_names:
+        if not self.mode_exists(old_name):
             raise error.GremlinError(
                 f"Attempting to rename non-existant mode '{old_name}'"
             )
         # Raise an error if renaming to an existing name
-        elif new_name in mode_names:
+        elif self.mode_exists(new_name):
             raise error.GremlinError(
                 f"Unable to rename '{old_name}' to '{new_name}' as a mode "
                 f"with that name already exists"
@@ -1017,13 +1018,25 @@ class ModeHierarchy:
         """
         mode_node = self.find_mode(mode_name)
         parent_node = self.find_mode(parent_name)
+        # Detach node before setting new parent to avoid cycle detection
         mode_node.detach()
         mode_node.set_parent(parent_node)
 
+    def mode_exists(self, name: str) -> bool:
+        """Checks if a mode with a given name already exists.
+
+        Args:
+            name: name of the mode to check for existence
+
+        Returns:
+            True if the mode exists, False otherwise
+        """
+        return len(self._hierarchy.nodes_matching(lambda x: name == x.value)) > 0
+
     def from_xml(self, root: ElementTree.Element) -> None:
+        # Parse individual nodes
         nodes = {}
         node_parents = {}
-        # Parse individual nodes
         for node in root.findall("./modes/mode"):
             if "parent" in node.attrib:
                 node_parents[node.text] = node.get("parent")
@@ -1041,7 +1054,7 @@ class ModeHierarchy:
     def to_xml(self) -> ElementTree.Element:
         node = ElementTree.Element("modes")
         for mode in self._hierarchy.nodes_matching(lambda x: True):
-            if mode == self._hierarchy:
+            if mode.parent is None:
                 continue
 
             n_mode = ElementTree.Element("mode")

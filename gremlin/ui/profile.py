@@ -787,7 +787,7 @@ class ModeHierarchyModel(QtCore.QAbstractListModel):
 
     @Slot(str)
     def newMode(self, name: str) -> None:
-        if name not in self._modes.mode_names():
+        if not self._modes.mode_exists(name):
             self._modes.add_mode(name)
         self.modesChanged.emit()
 
@@ -811,7 +811,7 @@ class ModeHierarchyModel(QtCore.QAbstractListModel):
 
     @Slot(str, result=list)
     def validParents(self, name: str) -> List[str]:
-        options = []
+        options = [{"value": ""}]
         for entry in self._modes.valid_parents(name):
             options.append({"value": entry})
         return options
