@@ -739,31 +739,37 @@ class ModeListModel(QtCore.QAbstractListModel):
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
         QtCore.Qt.UserRole + 2: QtCore.QByteArray("parentName".encode()),
+        QtCore.Qt.UserRole + 3: QtCore.QByteArray("depth".encode()),
     }
 
     def __init__(self, modes: gremlin.profile.ModeHierarchy, parent=None):
         super().__init__(parent)
 
-        self._modes = modes.mode_names()
-        self._parent_modes = []
-        for mode in self._modes:
-            node = modes.find_mode(mode)
-            self._parent_modes.append(
-                "" if node.parent is None else node.parent.value
-            )
+        self._modes = modes
+        self._lookup = {}
+        self._names = []
+        for mode in self._modes.mode_list():
+            self._names.append(mode.value)
+            self._lookup[mode.value] = mode
+        self._names = sorted(self._names)
 
     def rowCount(self, parent: QtCore.QModelIndex) -> int:
-        return len(self._modes)
+        return len(self._lookup)
 
     def data(self, index: QtCore.QModelIndex, role: int=...) -> Any:
         if role not in self.roleNames():
             raise GremlinError(f"Invalid role {role} in ModeListModel")
 
-        index = index.row()
+        node = self._lookup[self._names[index.row()]]
         if role == QtCore.Qt.UserRole + 1:
-            return self._modes[index]
+            return node.value
         elif role == QtCore.Qt.UserRole + 2:
-            return self._parent_modes[index]
+            if node.parent is None:
+                return ""
+            else:
+                return node.parent.value
+        elif role == QtCore.Qt.UserRole + 3:
+            return node.depth
 
     def roleNames(self) -> Dict:
         return ModeListModel.roles
@@ -820,11 +826,6 @@ class ModeHierarchyModel(QtCore.QAbstractListModel):
     def modeStringList(self) -> List[str]:
         return self._modes.mode_names()
 
-    @Property(type=list, notify=modesChanged)
-    def modeHierarchy(self) -> List[str]:
-        bla = self._modes.mode_names()
-        print(bla)
-        return bla
 
 @QtQml.QmlElement
 class LabelValueSelectionModel(QtCore.QAbstractListModel):

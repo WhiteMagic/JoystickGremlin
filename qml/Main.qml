@@ -252,13 +252,31 @@ ApplicationWindow {
 
             ComboBox {
                 id: _modeSelector
-                //model: ["Default", "  Alternative"]
-                //model: _toolbar.modes.modeList
-                model: _toolbar.modes.modeHierarchy
+                model: _toolbar.modes.modeList
+                textRole: "name"
 
-                // delegate: Label {
-                //     text: name
+                // TODO: Complete this to have modes show hierarchy information
+                // delegate: ItemDelegate {
+                //     required property var model
+                //     required property int index
+                //     required property string name
+                //     required property int depth
+                //
+                //     width: _modeSelector.width
+                //     contentItem: Text {
+                //         text: "  ".repeat(depth) + name
+                //
+                //         font: _modeSelector.font
+                //         elide: Text.ElideRight
+                //         verticalAlignment: Text.AlignVCenter
+                //     }
+                //     highlighted: _modeSelector.highlightedIndex === index
                 // }
+
+                onActivated: function(index) {
+                    backend.uiMode = textAt(index)
+                }
+
             }
         }
     }
@@ -290,14 +308,14 @@ ApplicationWindow {
         // }
     }
 
-    // Connections {
-    //     target: modes
-    //
-    //     function onModesChanged() {
-    //         console.log("XXX")
-    //         _modeSelector.model = modes.modeStringList()
-    //     }
-    // }
+    Connections {
+        target: backend
+
+        function onUiModeChanged() {
+            _deviceModel.modelReset()
+            _inputConfigurationPanel.reload()
+        }
+    }
 
     function showIntermediateOutput(state)
     {

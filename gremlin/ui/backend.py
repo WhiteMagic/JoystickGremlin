@@ -51,6 +51,7 @@ class Backend(QtCore.QObject):
 
     windowTitleChanged = Signal()
     profileChanged = Signal()
+    uiModeChanged = Signal()
     recentProfilesChanged = Signal()
     lastErrorChanged = Signal()
     inputConfigurationChanged = Signal()
@@ -63,6 +64,8 @@ class Backend(QtCore.QObject):
         self.profile = profile.Profile()
         self._last_error = ""
         self._action_state = {}
+        self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
+        self._ui_mode = self.profile.modes.first_mode
         self.runner = code_runner.CodeRunner()
 
     @Property(bool, notify=activityChanged)
@@ -205,6 +208,7 @@ class Backend(QtCore.QObject):
         """Creates a new profile."""
         self.activate_gremlin(False)
         self.profile = profile.Profile()
+        self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
         shared_state.current_profile = self.profile
         self.windowTitleChanged.emit()
         self.profileChanged.emit()
@@ -238,12 +242,13 @@ class Backend(QtCore.QObject):
             fpath: Path to the file containing the profile to load
         """
         self._load_profile(fpath)
+        self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
         self.profileChanged.emit()
         signal.reloadUi.emit()
 
     @Property(type=ModeHierarchyModel, notify=profileChanged)
     def modeHierarchy(self) -> ModeHierarchyModel:
-        return ModeHierarchyModel(self.profile.modes, self)
+        return self._mode_hierarchy
 
     @Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:
@@ -334,3 +339,19 @@ class Backend(QtCore.QObject):
             self.display_error(
                 f"Failed to load the profile {fpath} due to:\n\n{e}"
             )
+
+    def _get_ui_mode(self) -> str:
+        return self._ui_mode
+
+    def _set_ui_mode(self, mode: str) -> None:
+        if mode != self._ui_mode:
+            self._ui_mode = mode
+            self.uiModeChanged.emit()
+            #signal.reloadUi.emit()
+
+    uiMode = Property(
+        str,
+        fget=_get_ui_mode,
+        fset=_set_ui_mode,
+        notify=uiModeChanged
+    )
