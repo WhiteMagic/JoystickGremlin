@@ -91,7 +91,7 @@ class Backend(QtCore.QObject):
             # self._profile_auto_activated = False
             self.runner.start(
                 self.profile,
-                "Default"
+                self.profile.modes.first_mode
             )
             #self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon_active.ico"))
         else:
@@ -127,6 +127,7 @@ class Backend(QtCore.QObject):
                 identifier.device_guid,
                 identifier.input_type,
                 identifier.input_id,
+                self._ui_mode,
                 False
             )
             return len(item.action_sequences)
@@ -150,6 +151,7 @@ class Backend(QtCore.QObject):
                 identifier.device_guid,
                 identifier.input_type,
                 identifier.input_id,
+                self._ui_mode,
                 True
             )
             return InputItemModel(item, self)

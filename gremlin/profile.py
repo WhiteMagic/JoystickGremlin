@@ -600,6 +600,7 @@ class Profile:
             device_guid: uuid.UUID,
             input_type: InputType,
             input_id: int | uuid.UUID,
+            mode: str,
             create_if_missing: bool=False
     ) -> InputItem:
         """Returns the InputItem corresponding to the provided information.
@@ -608,6 +609,7 @@ class Profile:
             device_guid: GUID of the device
             input_type: type of the input
             input_id: id of the input
+            mode: name of the mode of the input item
             create_if_missing: If True will create an empty InputItem if none
                 exists
 
@@ -618,9 +620,10 @@ class Profile:
         if not (
                 isinstance(device_guid, uuid.UUID) and
                 isinstance(input_type, InputType) and
-                type(input_id) in [int, uuid.UUID]
+                type(input_id) in [int, uuid.UUID] and
+                isinstance(mode, str)
         ):
-            raise error.ProfileError(f"Invalid input specification provided.")
+            raise error.ProfileError("Invalid input specification provided.")
 
         if device_guid not in self.inputs:
             if create_if_missing:
@@ -631,7 +634,9 @@ class Profile:
                 )
 
         for item in self.inputs[device_guid]:
-            if item.input_type == input_type and item.input_id == input_id:
+            if item.input_type == input_type and \
+                    item.input_id == input_id and \
+                    item.mode == mode:
                 return item
 
         if create_if_missing:
@@ -639,7 +644,7 @@ class Profile:
             item.device_id = device_guid
             item.input_type = input_type
             item.input_id = input_id
-            item.mode = self.modes.first_mode
+            item.mode = mode
             self.inputs[device_guid].append(item)
             return item
         else:
