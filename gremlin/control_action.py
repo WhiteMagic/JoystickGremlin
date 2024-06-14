@@ -15,30 +15,103 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Collection of actions that allow controlling JoystickGremlin."""
 
+from typing import List
+
+from gremlin.common import SingletonDecorator
+from gremlin.error import GremlinError
 import gremlin.event_handler
 
 
-class ModeList:
+class Mode:
 
-    """Represents a list of modes to cycle through."""
+    """Simple containiner holding a mode's name and its identifier."""
 
-    def __init__(self, modes):
-        """Creates a new instance with the provided modes.
+    def __init__(self, name: str, identifier: str):
+        """Creates a new Mode instance.
 
-        :param modes list of mode names to cycle through
+        Args:
+            name: The name of the mode
+            identifier: The identifier of the mode
         """
-        self._modes = modes
+        self._name = name
+        self._identifier = identifier
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def identifier(self) -> str:
+        return self._identifier
+
+    def __eq__(self, other) -> bool:
+        return self.identifier == other.identifier
+
+
+class ModeSequence:
+
+    def __init__(self, modes: List[Mode]):
+        """Creates a new ModeSequence instance.
+
+        Args:
+            modes: List of modes making up the sequence.
+        """
+        self.modes = modes
         self._current_index = 0
 
-    def next(self):
+    def next(self) -> Mode:
         """Returns the next mode in the sequence.
 
-        :return name of the next mode in sequence
+        Returns:
+            Next mode in the sequence, wrapping around at the end.
         """
-        self._current_index = (self._current_index + 1) % len(self._modes)
-        return self._modes[self._current_index]
+        self._current_index = (self._current_index + 1) % len(self.modes)
+        return self.modes[self._current_index]
+
+
+@SingletonDecorator
+class ModeManager:
+
+    """Manages the mode change history."""
+
+    def __init__(self):
+        self._mode_stack = []
+
+    def _exists(self, mode: Mode) -> bool:
+        return mode in self._mode_stack
+
+    # def cycle(self) -> None:
+    #     pass
+
+    def previous(self) -> None:
+        if len(self._mode_stack) < 2:
+            raise GremlinError(
+                "Attempting to switch to previous mode with less than two"
+                "modes on the stack."
+            )
+
+        gremlin.event_handler.EventHandler().change_mode(
+            self._mode_stack[-2].name
+        )
+
+    def unwind(self) -> None:
+        if len(self._mode_stack) < 2:
+            raise GremlinError(
+                "Attempting to unwind the mode stack with less than two modes."
+            )
+
+        mode = self._mode_stack.pop()
+        gremlin.event_handler.EventHandler().change_mode(mode.name)
+
+    def switch_to(self, mode: Mode) -> None:
+        if self._exists(mode):
+            self._mode_stack.remove(mode)
+        self._mode_stack.append(mode)
+        gremlin.event_handler.EventHandler().change_mode(mode.name)
+
+    # def temporary(self, mode: Mode) -> None:
+    #     pass
 
 
 def switch_mode(mode):
