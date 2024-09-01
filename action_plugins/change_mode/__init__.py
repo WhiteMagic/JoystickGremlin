@@ -25,9 +25,9 @@ from typing import List, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal
+from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, event_handler, input_devices, joystick_handling, util
+from gremlin import error, event_handler, input_devices, joystick_handling, shared_state, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.config import Configuration
 from gremlin.control_action import ModeManager, Mode
@@ -47,6 +47,22 @@ class ChangeType(enum.Enum):
     Previous = 3
     Unwind = 4
     Temporary = 5
+
+    @staticmethod
+    def lookup(value: str) -> ChangeType:
+        match value:
+            case "Switch":
+                return ChangeType.Switch
+            case "Cycle":
+                return ChangeType.Cycle
+            case "Previous":
+                return ChangeType.Previous
+            case "Unwind":
+                return ChangeType.Unwind
+            case "Temporary":
+                return ChangeType.Temporary
+            case _:
+                return ChangeType.Switch
 
 
 class ChangeModeFunctor(AbstractFunctor):
@@ -71,6 +87,9 @@ class ChangeModeFunctor(AbstractFunctor):
 
 class ChangeModeModel(ActionModel):
 
+    modeChangeChanged = Signal()
+    modelChanged = Signal()
+
     def __init__(
             self,
             data: AbstractActionData,
@@ -85,6 +104,68 @@ class ChangeModeModel(ActionModel):
         return "file:///" + QtCore.QFile(
             "core_plugins:change_mode/ChangeModeAction.qml"
         ).fileName()
+
+    def _get_change_type(self) -> str:
+        return self._data.change_type.name
+
+    def _set_change_type(self, value: str) -> None:
+        if value != self._data.change_type.name:
+            self._data.change_type = ChangeType.lookup(value)
+            self.modelChanged.emit()
+
+    def _get_target_modes(self) -> List[str]:
+        return self._data.target_modes
+
+    def _set_target_modes(self, values: List[str]) -> None:
+        if values != self._data.target_modes:
+            self._data.target_modes = values
+            self.modelChanged.emit()
+
+    @Slot()
+    def addTargetMode(self) -> None:
+        modes = self._data.target_modes
+        modes.append(shared_state.current_profile.modes.first_mode)
+        self._data.target_modes = modes
+        self.modelChanged.emit()
+
+    @Slot(int)
+    def deleteTargetMode(self, index: int) -> None:
+        modes = self._data.target_modes
+        if index >= len(modes):
+            raise error.GremlinError(
+                f"Attempting to remove mode at index {index} when only "
+                f"{len(modes)} entries exist."
+            )
+        del modes[index]
+        self._data.target_modes = modes
+        self.modelChanged.emit()
+
+    @Slot(str, int)
+    def setTargetMode(self, mode: str, index: int) -> None:
+        modes = self._data.target_modes
+        if index >= len(modes):
+            raise error.GremlinError(
+                f"Attempting to change the value of mode at index {index} "
+                f"when only {len(modes)} entries exist."
+            )
+        if modes[index] != mode:
+            modes[index] = mode
+            self._data.target_modes = modes
+            self.modelChanged.emit()
+
+    changeType = Property(
+        str,
+        fget=_get_change_type,
+        fset=_set_change_type,
+        notify=modelChanged
+    )
+
+    targetModes = Property(
+        list,
+        fget=_get_target_modes,
+        fset=_set_target_modes,
+        notify=modelChanged
+    )
 
 
 class ChangeModeData(AbstractActionData):
@@ -111,8 +192,41 @@ class ChangeModeData(AbstractActionData):
     ):
         super().__init__(behavior_type)
 
-        self.change_type = ChangeType.Switch
-        self.target_mode = []
+        self._change_type = ChangeType.Switch
+        self._target_modes = [shared_state.current_profile.modes.first_mode]
+
+    @property
+    def change_type(self) -> ChangeType:
+        return self._change_type
+
+    @change_type.setter
+    def change_type(self, value: ChangeType) -> None:
+        if value == self._change_type:
+            return
+
+        self._change_type = value
+        match value:
+            case ChangeType.Switch | ChangeType.Temporary:
+                self._target_modes = [
+                    shared_state.current_profile.modes.first_mode
+                ]
+            case ChangeType.Previous | ChangeType.Unwind | ChangeType.Cycle:
+                self._target_modes = []
+
+    @property
+    def target_modes(self) -> List[str]:
+        return self._target_modes
+
+    @target_modes.setter
+    def target_modes(self, value: List[str]) -> None:
+        if len(value) > 0 and \
+                self._change_type in [ChangeType.Previous, ChangeType.Unwind]:
+            raise error.GremlinError("Too many modes for change type")
+        elif len(value) != 1 and \
+                self._change_type in [ChangeType.Switch, ChangeType.Temporary]:
+            raise error.GremlinError("Incorrect number of modes for change type")
+
+        self._target_modes = value
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         pass

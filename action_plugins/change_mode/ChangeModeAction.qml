@@ -45,44 +45,173 @@ Item {
 
         ComboBox {
             id: _changeType
-            model: ["Switch to", "Previous", "Unwind", "Cycle", "Temporary"]
-        }
 
-        Loader {
-            active: _changeType.currentText === "Switch to"
-            sourceComponent: _changeSwitchTo
-        }
+            Layout.alignment: Qt.AlignTop
 
-        Loader {
-            active: _changeType.currentText === "Cycle"
-            sourceComponent: _changeCycle
-        }
-    }
+            model: ["Switch", "Previous", "Unwind", "Cycle", "Temporary"]
 
-    // UI Components for the different change types
+            Component.onCompleted: function() {
+                currentIndex = find(_root.action.changeType)
+            }
 
-    Component {
-        id: _changeSwitchTo
-
-        RowLayout {
-            Layout.fillWidth: true
-
-            ComboBox {
-                Layout.fillWidth: true
-                model: _root.modes.modeList
-                textRole: "name"
+            onActivated: function() {
+                _root.action.changeType = currentValue
             }
         }
-    }
 
-    Component {
-        id: _changeCycle
 
+        // Mode switch selection UI
         RowLayout {
             Layout.fillWidth: true
+            visible: _changeType.currentValue === "Switch"
 
-            Text {
-                text: "Cycle"
+            Label {
+                text: "Switch to mode"
+            }
+
+            ComboBox {
+                id: _switch_combo
+
+                Layout.fillWidth: true
+
+                model: _root.modes.modeList
+                textRole: "name"
+                valueRole: "name"
+
+                Component.onCompleted: function() {
+                    currentIndex = find(_root.action.targetModes[0])
+                }
+
+                onActivated: function() {
+                    _root.action.setTargetMode(currentValue, 0)
+                }
+
+                Connections {
+                    target: _changeType
+                    function onActivated() {
+                        if(visible)
+                        {
+                            _switch_combo.currentIndex = _switch_combo.find(
+                                _root.action.targetModes[0]
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Switch to previous mode UI
+        RowLayout {
+            Layout.fillWidth: true
+            visible: _changeType.currentValue === "Previous"
+
+            Label {
+                text: "Change to the previously active mode"
+            }
+        }
+
+        // Unwind one mode from the stack UI
+        RowLayout {
+            Layout.fillWidth: true
+            visible: _changeType.currentValue === "Unwind"
+
+            Label {
+                text: "Unwind one mode in the stack"
+            }
+        }
+
+        // Mode cycle setup UI
+        RowLayout {
+            Layout.fillWidth: true
+            visible: _changeType.currentValue === "Cycle"
+
+            Label {
+                Layout.alignment: Qt.AlignTop
+
+                text: "Cycle through these modes"
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+
+                Repeater {
+                    model: _root.action.targetModes
+
+                    RowLayout {
+                        required property int index
+
+                        ComboBox {
+                            model: _root.modes.modeList
+                            textRole: "name"
+                            valueRole: "name"
+
+                            Component.onCompleted: function() {
+                                currentIndex = find(_root.action.targetModes[index])
+                            }
+
+                            onActivated: function() {
+                                _root.action.setTargetMode(currentValue, index)
+                            }
+                        }
+
+                        IconButton {
+                            text: bsi.icons.remove
+
+                            onClicked: {
+                                _root.action.deleteTargetMode(index)
+                            }
+                        }
+                    }
+                }
+
+                Button {
+                    text: "Add mode"
+
+                    onClicked: function() {
+                        _root.action.addTargetMode()
+                    }
+                }
+
+            }
+        }
+
+        // Temporary mode switch UI
+        RowLayout {
+            Layout.fillWidth: true
+            visible: _changeType.currentValue === "Temporary"
+
+            Label {
+                text: "Temporarily switch to mode"
+            }
+
+            ComboBox {
+                id: temporary_combo
+
+                Layout.fillWidth: true
+
+                model: _root.modes.modeList
+                textRole: "name"
+                valueRole: "name"
+
+                Component.onCompleted: function() {
+                    currentIndex = find(_root.action.targetModes[0])
+                }
+
+                onActivated: function() {
+                    _root.action.setTargetMode(currentValue, 0)
+                }
+
+                Connections {
+                    target: _changeType
+                    function onActivated() {
+                        if(visible)
+                        {
+                            temporary_combo.currentIndex = temporary_combo.find(
+                                _root.action.targetModes[0]
+                            )
+                        }
+                    }
+                }
             }
         }
     }

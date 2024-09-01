@@ -28,7 +28,6 @@ from PySide6.QtCore import Property, Signal, Slot
 
 import gremlin.profile
 from gremlin.base_classes import DataInsertionMode
-from gremlin.control_action import ModeList
 from gremlin.error import GremlinError
 from gremlin.plugin_manager import PluginManager
 from gremlin.signal import signal
