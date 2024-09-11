@@ -551,7 +551,8 @@ class Profile:
         inputs = ElementTree.Element("inputs")
         for device_data in self.inputs.values():
             for input_data in device_data:
-                inputs.append(input_data.to_xml())
+                if len(input_data.action_sequences) > 0:
+                    inputs.append(input_data.to_xml())
         root.append(inputs)
         root.append(self.settings.to_xml())
         root.append(self.library.to_xml())
