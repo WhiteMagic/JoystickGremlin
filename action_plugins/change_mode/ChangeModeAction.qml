@@ -59,10 +59,8 @@ Item {
             }
         }
 
-
         // Mode switch selection UI
         RowLayout {
-            Layout.fillWidth: true
             visible: _changeType.currentValue === "Switch"
 
             Label {
@@ -71,8 +69,6 @@ Item {
 
             ComboBox {
                 id: _switch_combo
-
-                Layout.fillWidth: true
 
                 model: _root.modes.modeList
                 textRole: "name"
@@ -102,7 +98,6 @@ Item {
 
         // Switch to previous mode UI
         RowLayout {
-            Layout.fillWidth: true
             visible: _changeType.currentValue === "Previous"
 
             Label {
@@ -112,7 +107,6 @@ Item {
 
         // Unwind one mode from the stack UI
         RowLayout {
-            Layout.fillWidth: true
             visible: _changeType.currentValue === "Unwind"
 
             Label {
@@ -122,7 +116,6 @@ Item {
 
         // Mode cycle setup UI
         RowLayout {
-            Layout.fillWidth: true
             visible: _changeType.currentValue === "Cycle"
 
             Label {
@@ -177,7 +170,6 @@ Item {
 
         // Temporary mode switch UI
         RowLayout {
-            Layout.fillWidth: true
             visible: _changeType.currentValue === "Temporary"
 
             Label {
@@ -186,8 +178,6 @@ Item {
 
             ComboBox {
                 id: temporary_combo
-
-                Layout.fillWidth: true
 
                 model: _root.modes.modeList
                 textRole: "name"
@@ -214,5 +204,7 @@ Item {
                 }
             }
         }
+
+        LayoutSpacer {}
     }
 }
