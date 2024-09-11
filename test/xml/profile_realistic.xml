@@ -1,0 +1,139 @@
+<?xml version="1.0" ?>
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>684e9af0-03c4-11ef-8005-444553540000</device-id>
+            <input-type>button</input-type>
+            <mode>Child</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>5c59550c-6649-450f-b973-8f7367262546</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>684e9af0-03c4-11ef-8005-444553540000</device-id>
+            <input-type>button</input-type>
+            <mode>Default</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>d4238c30-374c-47a6-8c54-cb988d6c42e1</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+        <input>
+            <device-id>684e9af0-03c4-11ef-8005-444553540000</device-id>
+            <input-type>button</input-type>
+            <mode>Second</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>e7d8d8cd-03f8-4a3f-81c8-66a6dae61b1b</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+    <settings>
+        <default-delay>0.05</default-delay>
+    </settings>
+    <library>
+        <action id="d4238c30-374c-47a6-8c54-cb988d6c42e1" type="root">
+            <actions>
+                <action-id>837322a1-9c25-42d1-ad1a-d134e692885a</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+        </action>
+        <action id="837322a1-9c25-42d1-ad1a-d134e692885a" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>1</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>1</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to vJoy</value>
+            </property>
+        </action>
+        <action id="e7d8d8cd-03f8-4a3f-81c8-66a6dae61b1b" type="root">
+            <actions>
+                <action-id>6dda063c-b1b5-44b5-a628-6981dff84429</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+        </action>
+        <action id="6dda063c-b1b5-44b5-a628-6981dff84429" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>1</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>2</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to vJoy</value>
+            </property>
+        </action>
+        <action id="5c59550c-6649-450f-b973-8f7367262546" type="root">
+            <actions>
+                <action-id>fa609603-a357-4292-86e7-17c212128186</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+        </action>
+        <action id="fa609603-a357-4292-86e7-17c212128186" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>1</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>3</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to vJoy</value>
+            </property>
+        </action>
+    </library>
+    <modes>
+        <mode>Default</mode>
+        <mode parent="Default">Child</mode>
+        <mode>Second</mode>
+    </modes>
+    <plugins/>
+</profile>

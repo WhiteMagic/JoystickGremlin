@@ -16,9 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
-
-from numpy.lib.index_tricks import mgrid
-
 sys.path.append(".")
 
 import os
@@ -104,3 +101,22 @@ def test_parent():
     assert mh.first_mode == "Second"
     assert mh.find_mode("Default").parent.value == "Second"
     assert mh.find_mode("Default").parent == mh.find_mode("Second")
+
+
+def test_complex_modifications():
+    p = Profile()
+    p.from_xml("test/xml/profile_realistic.xml")
+    mh = p.modes
+
+    assert set(mh.mode_names()) == set(["Default", "Second", "Child"])
+    assert mh.find_mode("Child").parent == mh.find_mode("Default")
+
+    child_input = p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")][0]
+    assert child_input.mode == "Child"
+    assert len(p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")]) == 3
+
+    mh.rename_mode("Child", "Zeta")
+    assert child_input.mode == "Zeta"
+
+    mh.delete_mode("Zeta")
+    assert len(p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")]) == 2
