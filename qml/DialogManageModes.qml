@@ -41,6 +41,7 @@ Window {
         id: _textInput
 
         visible: false
+        width: 500
 
         property var callback: null
 
@@ -57,7 +58,6 @@ Window {
         anchors.fill: parent
 
         ListView  {
-            id: _blalist
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -77,7 +77,6 @@ Window {
 
             onClicked: function()
             {
-                //let validNames = mode.modeStringList()
                 let validNames = mode.modeStringList()
 
                 _textInput.title = "Add new mode"
