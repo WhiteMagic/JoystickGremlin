@@ -36,6 +36,11 @@ Window {
     property string text : "New text"
     property var validator: function(value) { return true }
 
+    onTextChanged: function() {
+        _input.focus = true
+    }
+
+
     title: "Text Input Field"
 
     RowLayout {
@@ -84,6 +89,5 @@ Window {
             }
         }
     }
-
 
 }
