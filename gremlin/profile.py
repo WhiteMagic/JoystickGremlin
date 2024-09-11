@@ -512,7 +512,7 @@ class Profile:
         self.inputs = {}
         self.library = Library()
         self.settings = Settings(self)
-        self.modes = ModeHierarchy()
+        self.modes = ModeHierarchy(self)
         self.plugins = []
         self.fpath = None
 
@@ -890,7 +890,13 @@ class ModeHierarchy:
 
     """Contains all the modes and their hierarchical information."""
 
-    def __init__(self):
+    def __init__(self, parent_profile: Profile):
+        """Creates a new mode hierarchy.
+
+        Args:
+            parent_profile: the profile this mode hierarchy is associated with
+        """
+        self._profile = parent_profile
         self._hierarchy = TreeNode("")
         self._hierarchy.add_child(TreeNode("Default"))
 
@@ -988,6 +994,13 @@ class ModeHierarchy:
         for child in node.children:
             child.set_parent(parent_node)
 
+        # Find all InputItem actions using the mode being deleted and remove
+        # them as well.
+        for device_id, input_items in self._profile.inputs.items():
+            self._profile.inputs[device_id] = [
+                x for x in input_items if x.mode != mode_name
+            ]
+
     def rename_mode(self, old_name: str, new_name: str) -> None:
         """Changes the name of an existing mode.
 
@@ -1014,6 +1027,10 @@ class ModeHierarchy:
         # Perform renaming of the mode
         node = self.find_mode(old_name)
         node.value = new_name
+
+        # Find all actions associated to the old mode name
+        for action in self._actions_with_mode(old_name):
+            action.mode = new_name
 
     def set_parent(self, mode_name: str, parent_name: str | None) -> None:
         """Sets the parent of the specified mode.
@@ -1072,6 +1089,17 @@ class ModeHierarchy:
                 )
             node.append(n_mode)
         return node
+
+    def _actions_with_mode(self, mode: str) -> List[AbstractActionData]:
+        """Returns all actions belonging to the given mode.
+
+        Args:
+            mode: name of the mode for which to return all actions
+        """
+        actions = []
+        for action_list in self._profile.inputs.values():
+            actions.extend([x for x in action_list if x.mode == mode])
+        return actions
 
 
 class Plugin:
