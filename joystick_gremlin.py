@@ -61,7 +61,7 @@ import gremlin.util
 import gremlin.ui.backend
 
 
-def configure_logger(config: Dict[string, Any]) -> None:
+def configure_logger(config: Dict[str, Any]) -> None:
     """Creates a new logger instance.
 
     Args:
