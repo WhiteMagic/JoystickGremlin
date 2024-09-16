@@ -27,6 +27,8 @@ import sys
 import time
 import traceback
 
+from typing import Any, Dict
+
 
 # Import QtMultimedia so pyinstaller doesn't miss it
 from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
@@ -59,10 +61,11 @@ import gremlin.util
 import gremlin.ui.backend
 
 
-def configure_logger(config):
+def configure_logger(config: Dict[string, Any]) -> None:
     """Creates a new logger instance.
 
-    :param config configuration information for the new logger
+    Args:
+        config configuration information for the new logger
     """
     logger = logging.getLogger(config["name"])
     logger.setLevel(config["level"])
@@ -78,12 +81,13 @@ def configure_logger(config):
     logger.debug("-" * 80)
 
 
-def exception_hook(exception_type, value, trace):
+def exception_hook(exception_type, value, trace) -> None:
     """Logs any uncaught exceptions.
 
-    :param exception_type type of exception being caught
-    :param value content of the exception
-    :param trace the stack trace which produced the exception
+    Args:
+        exception_type: type of exception being caught
+        value: content of the exception
+        trace: the stack trace which produced the exception
     """
     msg = "Uncaught exception:\n"
     msg += " ".join(traceback.format_exception(exception_type, value, trace))
@@ -91,7 +95,7 @@ def exception_hook(exception_type, value, trace):
     gremlin.util.display_error(msg)
 
 
-def shutdown_cleanup():
+def shutdown_cleanup() -> None:
     """Handles cleanup before terminating Gremlin."""
     # Terminate potentially running EventListener loop
     event_listener = gremlin.event_handler.EventListener()
@@ -105,7 +109,7 @@ def shutdown_cleanup():
     gremlin.joystick_handling.VJoyProxy.reset()
 
 
-def register_config_options():
+def register_config_options() -> None:
     cfg = gremlin.config.Configuration()
 
 
