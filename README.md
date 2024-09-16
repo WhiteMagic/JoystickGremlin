@@ -33,6 +33,11 @@ performed tasks, such as input remapping, axis response curve setups, and macro
 recording to be performed easily. Functionality that is not accessible via the
 UI can be implemented through custom modules.
 
+Getting Starget
+---------------
+
+For a list of dependencies and an overview of how to install and use Gremlin take a look at the [Manual](https://whitemagic.github.io/JoystickGremlin/overview).
+
 
 Used Software & Other Sources
 -----------------------------
