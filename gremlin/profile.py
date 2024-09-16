@@ -440,6 +440,10 @@ class Library:
             node: XML node containing the library information
         """
         parse_later = []
+        can_parse = lambda entry: all([
+            aid in self._actions for aid in read_action_ids(entry)
+        ])
+
         # Parse all actions
         for entry in node.findall("./library/action"):
             # Ensure all required attributes are present
@@ -457,23 +461,25 @@ class Library:
                 )
 
             # Check if all actions referenced by this action have already
-            # been parsed, if not process this action later
-            if not all([aid in self._actions for aid in read_action_ids(entry)]):
+            # been parsed, if yes parse it otherwise attempt to process it
+            # again at a later stage.
+            if can_parse(entry):
+                self._parse_xml_action(entry)
+            else:
                 parse_later.append(entry)
 
-            # Create action object and store it in the library
-            if entry not in parse_later:
-                self._parse_xml_action(entry)
 
         # Parse all actions that have missing child actions and repeat this
         # until no action with missing child actions remains.
         # FIXME: Detect when this gets stuck because a child simply doesn't exist
         while len(parse_later) > 0:
             entry = parse_later.pop(0)
-            if not all([aid in self._actions for aid in read_action_ids(entry)]):
-                parse_later.append(entry)
-            else:
+            if can_parse(entry):
                 self._parse_xml_action(entry)
+            else:
+                print(self._actions.keys())
+                parse_later.append(entry)
+
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the content of this library.
@@ -497,7 +503,7 @@ class Library:
         action_obj.from_xml(action, self)
         if action_obj.id in self._actions:
             raise error.ProfileError(
-                f"Duplicate library action id: {action_obj.id}"
+                f"Duplicate library action entry with id '{action_obj.id}'"
             )
         self._actions[action_obj.id] = action_obj
 
