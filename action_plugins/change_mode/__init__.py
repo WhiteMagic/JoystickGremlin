@@ -229,11 +229,25 @@ class ChangeModeData(AbstractActionData):
         self._target_modes = value
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
-        pass
+        self._id = util.read_action_id(node)
+        self._change_type = ChangeType.lookup(util.read_property(
+            node, "change-type", PropertyType.String
+        ))
+        self._target_modes = []
+        for entry in node.iter("target-mode"):
+            self._target_modes.append(util.read_property(
+                entry, "name", PropertyType.String
+            ))
 
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(ChangeModeData.tag, self._id)
-
+        node.append(util.create_property_node(
+            "change-type", self._change_type.name, PropertyType.String
+        ))
+        for mode_name in self._target_modes:
+            node.append(util.create_node_from_data(
+                "target-mode", [("name", mode_name, PropertyType.String)]
+            ))
         return node
 
     def is_valid(self) -> bool:
