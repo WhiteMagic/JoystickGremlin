@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2022 Lionel Ott
+// Copyright (C) 2015 - 2024 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
+
+import QtQuick.Controls.Universal
 
 import Gremlin.Config
 import "helpers.js" as Helpers
@@ -50,22 +53,15 @@ Window {
         }
 
         ScrollView {
-            id: _bla
+            id: _configScroll
 
             Layout.fillHeight: true
             Layout.fillWidth: true
 
             ConfigGroup {
                 id: _configGroup
-
-                width: 500
-                height: 200
             }
         }
-    }
-
-    DebugBox {
-        target: _configGroup
     }
 
     Component {

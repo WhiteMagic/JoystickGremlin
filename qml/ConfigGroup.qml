@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2022 Lionel Ott
+// Copyright (C) 2015 - 2024 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,19 +26,24 @@ import "helpers.js" as Helpers
 
 
 Item {
-    id: _root
-
     property ConfigGroupModel groupModel
 
-        // width: parent.width
-        // height: parent.height
+    implicitHeight: _content.height
 
-    Repeater {
-        id: _groupView
+    ColumnLayout {
+        id: _content
 
+        anchors.left: parent.left
+        anchors.right: parent.right
 
-        model: groupModel
-        delegate: _groupDelegate
+        Repeater {
+            id: _groupView
+
+            Layout.fillWidth: true
+
+            model: groupModel
+            delegate: _groupDelegate
+        }
     }
 
     Component {
@@ -49,11 +54,13 @@ Item {
             required property string groupName
             required property ConfigEntryModel entryModel
 
-            width: _groupView.width
-            height: _groupView.height
+            implicitHeight: _groupItem.height
 
             ColumnLayout {
-                anchors.fill: parent
+                id: _groupItem
+
+                anchors.left: parent.left
+                anchors.right: parent.right
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -70,6 +77,7 @@ Item {
                         color: Universal.baseLowColor
                     }
                 }
+
                 Repeater {
                     id: _entryView
 
@@ -150,9 +158,4 @@ Item {
             }
         }
     }
-
-        DebugBox {
-            target: _groupView
-        }
-
 }

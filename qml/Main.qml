@@ -22,6 +22,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQuick.Window
 
+import Gremlin.Config
 import Gremlin.Device
 import Gremlin.Profile
 
