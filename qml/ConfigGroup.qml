@@ -146,7 +146,6 @@ Item {
                     to: model.properties.max
 
                     onValueModified: function() {
-                        console.log(model.properties)
                         model.value = value
                     }
                 }

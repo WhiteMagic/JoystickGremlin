@@ -25,10 +25,16 @@ from typing import Any, Dict, List
 
 from PySide6 import QtCore
 
-from gremlin import common, error, util, types
-
+from gremlin import common, error, util
+from gremlin.types import PropertyType
 
 _config_file_path = os.path.join(util.userprofile_path(), "configuration.json")
+
+
+_required_properties = {
+    PropertyType.Int: {"min": int, "max": int},
+    PropertyType.Float: {"min": float, "max": float},
+}
 
 
 @common.SingletonDecorator
@@ -79,7 +85,7 @@ class Configuration:
         for section, sec_data in json_data.items():
             for group, grp_data in sec_data.items():
                for name, entry in grp_data.items():
-                    data_type = types.PropertyType.to_enum(entry["data_type"])
+                    data_type = PropertyType.to_enum(entry["data_type"])
                     self._data[(section, group, name)] = {
                         "value": util.property_from_string(
                             data_type,
@@ -112,7 +118,7 @@ class Configuration:
                     entry["data_type"],
                     entry["value"],
                 ),
-                "data_type": types.PropertyType.to_string(entry["data_type"]),
+                "data_type": PropertyType.to_string(entry["data_type"]),
                 "description": entry["description"],
                 "properties": entry["properties"],
                 "expose": entry["expose"]
@@ -131,7 +137,7 @@ class Configuration:
         section: str,
         group: str,
         name: str,
-        data_type: types.PropertyType,
+        data_type: PropertyType,
         initial_value: Any,
         description: str,
         properties: Dict[str, Any],
@@ -150,6 +156,23 @@ class Configuration:
             expose: if True expose the parameter via the UI to the user
         """
         key = (section, group, name)
+
+        # Ensure all required properties are present
+        if data_type in _required_properties:
+            for req_prop, req_type in _required_properties[data_type].items():
+                if req_prop not in properties:
+                    raise error.GremlinError(
+                        f"Missing property '{req_prop}' of type "
+                        f"{str(req_type)} in entry '{key}'"
+                    )
+                elif not isinstance(properties[req_prop], req_type):
+                    raise error.GremlinError(
+                        f"Incorrect type for property '{req_prop}', expected " +
+                        f"'{req_type}' but got '{type(properties[req_prop])}' " +
+                        f"in entry {key}"
+                    )
+
+        # Handle pre-existing entries
         if key in self._data:
             old_data_type = self._data[key]["data_type"]
             if self._data[key]["properties"] != properties:
@@ -166,6 +189,7 @@ class Configuration:
             else:
                 return
 
+        # Store new entry
         self._data[key] = {
             "value": initial_value,
             "data_type": data_type,
