@@ -59,6 +59,7 @@ import gremlin.signal
 import gremlin.util
 
 import gremlin.ui.backend
+import gremlin.ui.config
 
 
 def configure_logger(config: Dict[str, Any]) -> None:
