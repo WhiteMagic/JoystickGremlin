@@ -1,0 +1,21 @@
+[tool.poetry]
+package-mode = false
+name = "JoystickGremlin"
+version = "14.0rc1"
+description = "A tool for configuring and managing joystick devices."
+authors = ["WhiteMagic <white.magic@gmx.de>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+homepage = "https://whitemagic.github.io/JoystickGremlin/"
+repository = "https://github.com/WhiteMagic/JoystickGremlin"
+
+[tool.poetry.dependencies]
+python = ">=3.10, <3.13"
+PySide6 = "^6.7"
+PyInstaller = "^6.6"
+pywin32 = "^306"
+pytest = "^8.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
