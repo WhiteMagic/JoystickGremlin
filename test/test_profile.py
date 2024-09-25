@@ -24,6 +24,7 @@ import uuid
 from xml.etree import ElementTree
 
 import gremlin.plugin_manager
+from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.types import AxisMode, InputType
 
@@ -73,6 +74,7 @@ def test_simple_action():
 def test_hierarchy():
     gremlin.plugin_manager.PluginManager()
 
+    c = Configuration()
     p = Profile()
     p.from_xml("test/xml/profile_hierarchy.xml")
 

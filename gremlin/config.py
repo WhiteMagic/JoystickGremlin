@@ -37,7 +37,8 @@ _required_properties = {
     PropertyType.Float: {"min": float, "max": float},
     PropertyType.List: {},
     PropertyType.String: {},
-    PropertyType.Selection: {"valid_options": list}
+    PropertyType.Selection: {"valid_options": list},
+    PropertyType.HatDirection: {},
 }
 
 

@@ -23,6 +23,7 @@ import uuid
 from xml.etree import ElementTree
 
 from gremlin.base_classes import DataInsertionMode
+from gremlin.config import Configuration
 from gremlin.error import GremlinError
 import gremlin.types as types
 from gremlin.profile import Library, Profile
@@ -90,9 +91,10 @@ def test_action_methods():
 
 def test_ctor():
     a = tempo.TempoData(types.InputType.JoystickButton)
+    c = Configuration()
 
     assert len(a.short_actions) == 0
     assert len(a.long_actions) == 0
-    assert a.threshold == 0.5
+    assert a.threshold == c.value("action", "tempo", "duration")
     assert a.activate_on == "release"
     assert a.is_valid() == True

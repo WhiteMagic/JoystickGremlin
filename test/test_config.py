@@ -41,7 +41,7 @@ def modify_config():
 def test_simple(modify_config):
     c = gremlin.config.Configuration()
 
-    c.register("test", "case", "1", PropertyType.Int, 42, "", {})
+    c.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
     c.register("test", "case", "2", PropertyType.Bool, False, "", {})
     c.register(
         "test",
@@ -66,7 +66,7 @@ def test_simple(modify_config):
 def test_load_save(modify_config):
     c = gremlin.config.Configuration()
 
-    c.register("test", "case", "1", PropertyType.Int, 42, "one", {})
+    c.register("test", "case", "1", PropertyType.Int, 42, "one", {"min": 1, "max": 20})
     c.register("test", "case", "2", PropertyType.Bool, False, "two", {}, True)
     c.register(
         "test",
@@ -116,7 +116,7 @@ def test_load_save(modify_config):
 def test_exceptions():
     c = gremlin.config.Configuration()
 
-    c.register("test", "case", "1", PropertyType.Int, 42, "", {})
+    c.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
     with pytest.raises(gremlin.error.GremlinError):
         c.set("test", "case", "1", 3.14)
 

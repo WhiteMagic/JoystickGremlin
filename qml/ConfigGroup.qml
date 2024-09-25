@@ -182,7 +182,7 @@ Item {
         }
         DelegateChoice {
             roleValue: "selection"
-            
+
             RowLayout {
                 ComboBox {
                     Layout.preferredWidth: _entryDelegateChooser.controlWidth
