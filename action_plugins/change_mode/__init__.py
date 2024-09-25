@@ -274,9 +274,11 @@ Configuration().register(
     "action",
     ChangeModeData.tag,
     "identifier-mode",
-    PropertyType.String,
+    PropertyType.Selection,
     "name",
     "Defines how mode cycles are defined.",
-    {},
+    {
+        "valid_options": ["global", "action"]
+    },
     True
 )

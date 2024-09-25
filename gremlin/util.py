@@ -234,6 +234,7 @@ _property_from_string = {
     PropertyType.HatDirection: lambda x: HatDirection.to_enum(x),
     PropertyType.List: lambda x: x.split("|"),
     PropertyType.UUID: lambda x: uuid.UUID(x),
+    PropertyType.Selection: str,
 }
 
 def property_from_string(data_type: PropertyType, value: str) -> Any:
@@ -263,6 +264,7 @@ _property_to_string = {
     PropertyType.HatDirection: lambda x: HatDirection.to_string(x),
     PropertyType.List: lambda x: "|".join([str(v) for v in x]),
     PropertyType.UUID: str,
+    PropertyType.Selection: str,
 }
 
 def property_to_string(data_type: PropertyType, value: Any) -> str:
@@ -297,7 +299,8 @@ _type_lookup = {
     PropertyType.MouseInput: None,
     PropertyType.UUID: uuid.UUID,
     PropertyType.AxisMode: AxisMode,
-    PropertyType.HatDirection: HatDirection
+    PropertyType.HatDirection: HatDirection,
+    PropertyType.Selection: str,
 }
 
 _element_parsers = {

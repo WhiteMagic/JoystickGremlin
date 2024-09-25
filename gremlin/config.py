@@ -32,8 +32,12 @@ _config_file_path = os.path.join(util.userprofile_path(), "configuration.json")
 
 
 _required_properties = {
+    PropertyType.Bool: {},
     PropertyType.Int: {"min": int, "max": int},
     PropertyType.Float: {"min": float, "max": float},
+    PropertyType.List: {},
+    PropertyType.String: {},
+    PropertyType.Selection: {"valid_options": list}
 }
 
 
@@ -156,6 +160,13 @@ class Configuration:
             expose: if True expose the parameter via the UI to the user
         """
         key = (section, group, name)
+
+        # Check the data type is a known one
+        if data_type not in _required_properties:
+            raise error.GremlinError(
+                f"Attempting to register an entry with unsupported data type: " +
+                f"{str(data_type)} in {key}"
+            )
 
         # Ensure all required properties are present
         if data_type in _required_properties:

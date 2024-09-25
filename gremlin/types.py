@@ -325,6 +325,7 @@ class PropertyType(enum.Enum):
     AxisMode = 13
     HatDirection = 14
     List = 15
+    Selection = 16
 
     @staticmethod
     def to_string(value: PropertyType) -> str:
@@ -356,6 +357,7 @@ _PropertyType_to_string_lookup = {
     PropertyType.AxisMode: "axis_mode",
     PropertyType.HatDirection: "hat_direction",
     PropertyType.List: "list",
+    PropertyType.Selection: "selection",
 }
 _PropertyType_to_enum_lookup = {
     "string": PropertyType.String,
@@ -372,7 +374,8 @@ _PropertyType_to_enum_lookup = {
     "uuid": PropertyType.UUID,
     "axis_mode": PropertyType.AxisMode,
     "hat_direction": PropertyType.HatDirection,
-    "list": PropertyType.List
+    "list": PropertyType.List,
+    "selection": PropertyType.Selection,
 }
 
 

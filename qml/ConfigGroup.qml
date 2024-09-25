@@ -102,16 +102,16 @@ Item {
                 Switch {
                     Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
-                    checked: model.value
+                    checked: value
 
                     onToggled: function () {
-                        model.value = checked
+                        value = checked
                     }
                 }
                 Label {
                     Layout.fillWidth: true
 
-                    text: model.description
+                    text: description
                 }
             }
         }
@@ -122,18 +122,18 @@ Item {
                 FloatSpinBox {
                     Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
-                    realValue: model.value
-                    minValue: model.properties.min
-                    maxValue: model.properties.max
+                    realValue: value
+                    minValue: properties.min
+                    maxValue: properties.max
 
                     onRealValueModified: function() {
-                        model.value = realValue
+                        value = realValue
                     }
                 }
                 Label {
                     Layout.fillWidth: true
 
-                    text: model.description
+                    text: description
                 }
             }
         }
@@ -145,8 +145,8 @@ Item {
                     Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
                     value: model.value
-                    from: model.properties.min
-                    to: model.properties.max
+                    from: properties.min
+                    to: properties.max
 
                     onValueModified: function() {
                         model.value = value
@@ -155,7 +155,7 @@ Item {
                 Label {
                     Layout.fillWidth: true
 
-                    text: model.description
+                    text: description
                 }
             }
         }
@@ -166,34 +166,43 @@ Item {
                 TextInput {
                     Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
-                    text: model.value
+                    text: value
 
                     onTextEdited: function() {
-                        model.value = text
+                        value = text
                     }
                 }
 
                 Label {
                     Layout.fillWidth: true
 
-                    text: model.description
+                    text: description
                 }
             }
         }
         DelegateChoice {
             roleValue: "selection"
-
+            
             RowLayout {
                 ComboBox {
                     Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
-                    model: model.properties.valid-options
+                    model: properties.valid_options
+
+                    Component.onCompleted: function() {
+                        currentIndex = find(value)
+                    }
+
+                    onActivated: function(index) {
+                        value = currentValue
+                    }
+
                 }
 
                 Label {
                     Layout.fillWidth: true
 
-                    text: model.description
+                    text: description
                 }
             }
         }
