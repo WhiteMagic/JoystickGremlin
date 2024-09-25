@@ -28,45 +28,43 @@ import "helpers.js" as Helpers
 Item {
     property ConfigGroupModel groupModel
 
-    implicitHeight: _content.height
-
-    ColumnLayout {
+    ListView {
         id: _content
 
+        implicitHeight: contentItem.childrenRect.height
         anchors.left: parent.left
         anchors.right: parent.right
 
-        Repeater {
-            id: _groupView
-
-            Layout.fillWidth: true
-
-            model: groupModel
-            delegate: _groupDelegate
-        }
+        model: groupModel
+        delegate: _groupComponent
     }
 
     Component {
-        id: _groupDelegate
+        id: _groupComponent
 
         Item {
             required property int index
             required property string groupName
             required property ConfigEntryModel entryModel
 
-            implicitHeight: _groupItem.height
+            width: parent.width
+            height: _groupItem.childrenRect.height
 
-            ColumnLayout {
+            Column {
                 id: _groupItem
 
                 anchors.left: parent.left
                 anchors.right: parent.right
 
+                // Group header
                 RowLayout {
-                    Layout.fillWidth: true
+                    anchors.left: parent.left
+                    anchors.right: parent.right
 
                     DisplayText {
                         text: Helpers.capitalize(groupName)
+
+                        font.pointSize: 12
                     }
 
                     Rectangle {
@@ -78,8 +76,11 @@ Item {
                     }
                 }
 
-                Repeater {
-                    id: _entryView
+                // Group entries
+                ListView {
+                    implicitHeight: contentItem.childrenRect.height
+                    anchors.left: parent.left
+                    anchors.right: parent.right
 
                     model: entryModel
                     delegate: _entryDelegateChooser
@@ -92,16 +93,18 @@ Item {
         id: _entryDelegateChooser
         role: "data_type"
 
+        property int controlWidth: 200
+
         DelegateChoice {
             roleValue: "bool"
 
             RowLayout {
                 Switch {
-                    Layout.preferredWidth: 150
+                    Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
                     checked: model.value
 
-                    onToggled: function() {
+                    onToggled: function () {
                         model.value = checked
                     }
                 }
@@ -117,7 +120,7 @@ Item {
 
             RowLayout {
                 FloatSpinBox {
-                    Layout.preferredWidth: 150
+                    Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
                     realValue: model.value
                     minValue: model.properties.min
@@ -139,7 +142,7 @@ Item {
 
             RowLayout {
                 SpinBox {
-                    Layout.preferredWidth: 150
+                    Layout.preferredWidth: _entryDelegateChooser.controlWidth
 
                     value: model.value
                     from: model.properties.min
@@ -149,6 +152,44 @@ Item {
                         model.value = value
                     }
                 }
+                Label {
+                    Layout.fillWidth: true
+
+                    text: model.description
+                }
+            }
+        }
+        DelegateChoice {
+            roleValue: "string"
+
+            RowLayout {
+                TextInput {
+                    Layout.preferredWidth: _entryDelegateChooser.controlWidth
+
+                    text: model.value
+
+                    onTextEdited: function() {
+                        model.value = text
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+
+                    text: model.description
+                }
+            }
+        }
+        DelegateChoice {
+            roleValue: "selection"
+
+            RowLayout {
+                ComboBox {
+                    Layout.preferredWidth: _entryDelegateChooser.controlWidth
+
+                    model: model.properties.valid-options
+                }
+
                 Label {
                     Layout.fillWidth: true
 

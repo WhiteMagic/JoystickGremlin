@@ -52,15 +52,11 @@ Window {
             delegate: _sectionDelegate
         }
 
-        ScrollView {
-            id: _configScroll
+        ConfigGroup {
+            id: _configGroup
 
             Layout.fillHeight: true
             Layout.fillWidth: true
-
-            ConfigGroup {
-                id: _configGroup
-            }
         }
     }
 
