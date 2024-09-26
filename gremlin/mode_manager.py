@@ -84,14 +84,18 @@ class ModeManager(QtCore.QObject):
     def __init__(self):
         QtCore.QObject.__init__(self)
 
-        self._mode_stack = [
-            Mode(shared_state.current_profile.modes.first_mode, "global")
-        ]
+        self._mode_stack = [Mode("None", "None")]
         self._config = Configuration()
 
     @property
     def current(self) -> Mode:
         return self._mode_stack[-1]
+
+    def reset(self) -> None:
+        self._mode_stack = [
+            Mode(shared_state.current_profile.modes.first_mode, "global")
+        ]
+        self._config.set("global", "internal", "last_mode", self.current.name)
 
     def _exists(self, mode: Mode) -> bool:
         return mode in self._mode_stack

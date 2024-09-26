@@ -21,3 +21,8 @@ function capitalize(value)
 {
     return value.replace(/\b\w/g, l => l.toUpperCase())
 }
+
+function selectText(value, text1, text2)
+{
+    return value ? text1 : text2
+}

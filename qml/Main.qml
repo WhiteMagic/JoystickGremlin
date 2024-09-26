@@ -282,6 +282,33 @@ ApplicationWindow {
         }
     }
 
+    footer: Rectangle {
+        id: _footer
+
+        height: 30
+        color: "#e6e6e6"
+
+        RowLayout {
+            anchors.fill: parent
+
+            Label {
+                Layout.preferredWidth: 200
+                padding: 5
+
+                text: "Status: " + Helpers.selectText(
+                    backend.gremlinActive, "Active", "Not Running"
+                )
+            }
+
+            Label {
+                Layout.fillWidth: true
+                padding: 5
+
+                text: "Current mode: " + backend.currentMode
+            }
+        }
+    }
+
     DeviceListModel {
         id: _deviceListModel
     }

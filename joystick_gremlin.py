@@ -119,6 +119,11 @@ def register_config_options() -> None:
         PropertyType.String, "Default",
         "Name of the last active mode", {}
     )
+    cfg.register(
+        "global", "internal", "recent_profiles",
+        PropertyType.List, [],
+        "List of recently opened profiles", {}
+    )
 
 
 if __name__ == "__main__":

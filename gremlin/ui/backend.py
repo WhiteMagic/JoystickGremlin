@@ -24,24 +24,13 @@ import uuid
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import code_runner, common, config, error, \
+from gremlin import code_runner, common, config, error, mode_manager, \
     profile, shared_state, types
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.signal import signal
 
 from gremlin.ui.device import InputIdentifier, IODeviceManagementModel
 from gremlin.ui.profile import InputItemModel, ModeHierarchyModel
-
-
-config.Configuration().register(
-    "global",
-    "common",
-    "recent_profiles",
-    types.PropertyType.List,
-    [],
-    "List of recently opened profiles",
-    False
-)
 
 
 @common.SingletonDecorator
@@ -56,7 +45,7 @@ class Backend(QtCore.QObject):
     lastErrorChanged = Signal()
     inputConfigurationChanged = Signal()
     activityChanged = Signal()
-
+    propertyChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -67,6 +56,13 @@ class Backend(QtCore.QObject):
         self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
         self._ui_mode = self.profile.modes.first_mode
         self.runner = code_runner.CodeRunner()
+
+        mode_manager.ModeManager().mode_changed.connect(self._emit_change)
+        self.profileChanged.connect(mode_manager.ModeManager().reset)
+
+    def _emit_change(self) -> None:
+        """Emits the signal required for property changes to propagate."""
+        self.propertyChanged.emit()
 
     @Property(bool, notify=activityChanged)
     def gremlinActive(self) -> bool:
@@ -201,7 +197,7 @@ class Backend(QtCore.QObject):
         Returns:
             List of recently used profiles
         """
-        return config.Configuration().value("global", "common", "recent_profiles")
+        return config.Configuration().value("global", "internal", "recent_profiles")
 
     @Slot()
     def newProfile(self) -> None:
@@ -249,6 +245,10 @@ class Backend(QtCore.QObject):
     @Property(type=ModeHierarchyModel, notify=profileChanged)
     def modeHierarchy(self) -> ModeHierarchyModel:
         return self._mode_hierarchy
+
+    @Property(type=str, notify=propertyChanged)
+    def currentMode(self) -> str:
+        return mode_manager.ModeManager().current.name
 
     @Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:
