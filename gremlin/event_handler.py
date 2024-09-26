@@ -30,8 +30,8 @@ from PySide6 import QtCore
 import dill
 
 import gremlin.keyboard
-from gremlin import common, config, error, joystick_handling, profile, \
-    util, windows_event_hook
+from gremlin import common, config, error, joystick_handling, mode_manager, \
+    profile, util, shared_state, windows_event_hook
 from gremlin.input_cache import Joystick, Keyboard
 from gremlin.types import InputType
 
@@ -64,6 +64,7 @@ class Event:
             event_type: InputType,
             identifier: Any,
             device_guid: uuid.UUID,
+            mode: str,
             value: Any | None=None,
             is_pressed: bool | None=None,
             raw_value: Any | None=None
@@ -74,6 +75,7 @@ class Event:
             event_type: the type of input causing the event
             identifier: the identifier of the event source
             device_guid: uuid identifying the device causing this event
+            mode: name of the mode the system was in when the even was received
             value: the value of the input
             is_pressed: boolean flag indicating if a button or key is pressed
             raw_value: the raw value of the axis being moved
@@ -81,6 +83,7 @@ class Event:
         self.event_type = event_type
         self.identifier = identifier
         self.device_guid = device_guid
+        self.mode = mode
         self.is_pressed = is_pressed
         self.value = value
         self.raw_value = raw_value
@@ -95,6 +98,7 @@ class Event:
             self.event_type,
             self.identifier,
             self.device_guid,
+            self.mode,
             self.value,
             self.is_pressed,
             self.raw_value
@@ -146,7 +150,8 @@ class Event:
         return Event(
             event_type=InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
-            device_guid=dill.GUID_Keyboard
+            device_guid=dill.GUID_Keyboard,
+            mode=mode_manager.ModeManager().current.name
         )
 
 
@@ -178,6 +183,7 @@ class EventListener(QtCore.QObject):
 
         # Calibration function for each axis of all devices
         self._calibrations = {}
+        self._modes = mode_manager.ModeManager()
 
         # Joystick device change update timeout timer
         self._device_update_timer = None
@@ -237,6 +243,7 @@ class EventListener(QtCore.QObject):
                 event_type=InputType.JoystickAxis,
                 device_guid=event.device_guid.uuid,
                 identifier=event.input_index,
+                mode=self._modes.current.name,
                 value=self._apply_calibration(event),
                 raw_value=event.value
             ))
@@ -249,6 +256,7 @@ class EventListener(QtCore.QObject):
                 event_type=InputType.JoystickButton,
                 device_guid=event.device_guid.uuid,
                 identifier=event.input_index,
+                mode=self._modes.current.name,
                 is_pressed=event.value == 1
             ))
         elif event.input_type == dill.InputType.Hat:
@@ -260,6 +268,7 @@ class EventListener(QtCore.QObject):
                 event_type=InputType.JoystickHat,
                 device_guid=event.device_guid.uuid,
                 identifier=event.input_index,
+                mode=self._modes.current.name,
                 value=util.dill_hat_lookup(event.value)
             ))
 
@@ -321,6 +330,7 @@ class EventListener(QtCore.QObject):
                 event_type=InputType.Keyboard,
                 device_guid=dill.UUID_Keyboard,
                 identifier=key_id,
+                mode=self._modes.current.name,
                 is_pressed=is_pressed,
             ))
 
@@ -345,6 +355,7 @@ class EventListener(QtCore.QObject):
                 event_type=InputType.Mouse,
                 device_guid=dill.GUID_Keyboard,
                 identifier=event.button_id,
+                mode=self._modes.current.name,
                 is_pressed=event.is_pressed,
             ))
 
@@ -407,26 +418,6 @@ class EventHandler(QtCore.QObject):
         self.plugins = {}
         self.callbacks = {}
         self._event_lookup = {}
-        self._active_mode = None
-        self._previous_mode = None
-
-    @property
-    def active_mode(self) -> str:
-        """Returns the currently active mode.
-
-        Returns:
-            Name of the currently active mode
-        """
-        return self._active_mode
-
-    @property
-    def previous_mode(self) -> str:
-        """Returns the previously active mode.
-
-        Returns:
-            Name of the previously active mode
-        """
-        return self._previous_mode
 
     def add_plugin(self, plugin: Any) -> None:
         """Adds a new plugin to be attached to event callbacks.
@@ -493,33 +484,6 @@ class EventHandler(QtCore.QObject):
                             if event not in device_cb[child]:
                                 device_cb[child][event] = callbacks
 
-    def change_mode(self, new_mode: str) -> None:
-        """Changes the currently active mode.
-
-        Args:
-            new_mode: name of the new mode to use
-        """
-        mode_exists = False
-        for device in self.callbacks.values():
-            if new_mode in device:
-                mode_exists = True
-        if not mode_exists:
-            logging.getLogger("system").error(
-                f"The mode '{new_mode}' does not exist or has no " +
-                f"associated callbacks"
-            )
-
-        # FIXME: rework with new config system
-        # if mode_exists:
-        #     if self._active_mode != new_mode:
-        #         self._previous_mode = self._active_mode
-        #
-        #     cfg = config.Configuration()
-        #     cfg.set_last_mode(cfg.last_profile, new_mode)
-        #
-        #     self._active_mode = new_mode
-        #     self.mode_changed.emit(self._active_mode)
-
     def resume(self) -> None:
         """Resumes the processing of callbacks."""
         self.process_callbacks = True
@@ -571,9 +535,11 @@ class EventHandler(QtCore.QObject):
         # Obtain callbacks matching the event
         callback_list = []
         if event.device_guid in self.callbacks:
-            callback_list = self.callbacks[event.device_guid].get(
-                self._active_mode, {}
-            ).get(event, [])
+            callback_list = (
+                self.callbacks[event.device_guid]
+                    .get(event.mode, {})
+                    .get(event, [])
+            )
 
         # Filter events when the system is paused
         if not self.process_callbacks:

@@ -23,7 +23,8 @@ from threading import Event, Lock, Thread
 from xml.etree import ElementTree
 
 import gremlin
-import gremlin.common
+from gremlin import mode_manager
+from gremlin.common import SingletonDecorator
 from gremlin.keyboard import send_key_down, send_key_up, key_from_name, Key
 from gremlin.types import InputType, MouseButton
 
@@ -34,7 +35,7 @@ MacroEntry = collections.namedtuple(
 )
 
 
-@gremlin.common.SingletonDecorator
+@SingletonDecorator
 class MacroManager:
 
     """Manages the proper dispatching and scheduling of macros."""
@@ -350,6 +351,7 @@ class JoystickAction(AbstractAction):
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
+                mode=mode_manager.ModeManager().current,
                 value=self.value
             )
         elif self.input_type == InputType.JoystickButton:
@@ -357,6 +359,7 @@ class JoystickAction(AbstractAction):
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
+                mode=mode_manager.ModeManager().current,
                 is_pressed=self.value
             )
         elif self.input_type == InputType.JoystickHat:
@@ -364,6 +367,7 @@ class JoystickAction(AbstractAction):
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
+                mode=mode_manager.ModeManager().current,
                 value=self.value
             )
 

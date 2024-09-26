@@ -223,7 +223,8 @@ class KeyboardCondition(AbstractCondition):
             event = event_handler.Event(
                 InputType.Keyboard,
                 key_id,
-                GUID_Keyboard
+                GUID_Keyboard,
+                "None"
             )
             self._inputs.append(event)
 
@@ -317,7 +318,8 @@ class JoystickCondition(AbstractCondition):
             event = event_handler.Event(
                 util.read_property(entry, "input-type", PropertyType.InputType),
                 util.read_property(entry, "input-id", PropertyType.Int),
-                util.read_property(entry, "device-guid", PropertyType.UUID)
+                util.read_property(entry, "device-guid", PropertyType.UUID),
+                "None"
             )
             self._inputs.append(event)
 

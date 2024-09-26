@@ -125,7 +125,8 @@ def test_to_xml():
     input_dev = Event(
         InputType.JoystickButton,
         37,
-        uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+        uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000"),
+        "Default"
     )
     cond._inputs.append(input_dev)
     cond._comparator = condition.comparator.PressedComparator(True)

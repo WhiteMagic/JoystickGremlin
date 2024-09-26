@@ -36,6 +36,7 @@ from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
 import resources
 
 import dill
+from gremlin.types import PropertyType
 
 # Figure out the location of the code / executable and change the working
 # directory accordingly
@@ -112,6 +113,12 @@ def shutdown_cleanup() -> None:
 
 def register_config_options() -> None:
     cfg = gremlin.config.Configuration()
+
+    cfg.register(
+        "global", "internal", "last_mode",
+        PropertyType.String, "Default",
+        "Name of the last active mode", {}
+    )
 
 
 if __name__ == "__main__":

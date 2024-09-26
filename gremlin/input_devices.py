@@ -33,7 +33,8 @@ import gremlin.keyboard
 import gremlin.types
 from dill import UUID_Invalid
 
-from . import common, error, event_handler, joystick_handling
+from gremlin import common, error, event_handler, joystick_handling, \
+    mode_manager
 from gremlin.input_cache import Joystick, Keyboard
 
 
@@ -342,9 +343,9 @@ class ButtonReleaseActions(QtCore.QObject):
         el.joystick_event.connect(self._input_event_cb)
         el.keyboard_event.connect(self._input_event_cb)
         el.virtual_event.connect(self._input_event_cb)
-        eh = event_handler.EventHandler()
-        self._current_mode = eh.active_mode
-        eh.mode_changed.connect(self._mode_changed_cb)
+        mm = mode_manager.ModeManager()
+        self._current_mode = mm.current.name
+        mm.mode_changed.connect(self._mode_changed_cb)
 
     def register_callback(
         self,
@@ -432,10 +433,11 @@ class ButtonReleaseActions(QtCore.QObject):
                     new_list.append(entry)
             self._registry[event] = new_list
 
-    def _mode_changed_cb(self, mode):
+    def _mode_changed_cb(self, mode: str) -> None:
         """Updates the current mode variable.
 
-        :param mode the new mode
+        Args:
+            mode: name of the now active mode
         """
         self._current_mode = mode
 

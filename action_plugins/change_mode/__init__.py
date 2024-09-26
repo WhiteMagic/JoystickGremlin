@@ -27,10 +27,11 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, event_handler, input_devices, joystick_handling, shared_state, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
+from gremlin import error, event_handler, input_devices, \
+    joystick_handling, mode_manager, shared_state, util
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, \
+    DataCreationMode
 from gremlin.config import Configuration
-from gremlin.control_action import ModeManager, Mode
 from gremlin.profile import Library
 from gremlin.types import AxisMode, InputType, PropertyType
 
@@ -82,12 +83,17 @@ class ChangeModeFunctor(AbstractFunctor):
             ChangeModeData.tag,
             "identifier-mode",
         )
-        # identifier = self.data.
+
+        mm = mode_manager.ModeManager()
+        if self.data.change_type == ChangeType.Switch:
+            mm.switch_to(mode_manager.Mode(
+                self.data.target_modes[0],
+                self.data.target_modes[0]
+            ))
 
 
 class ChangeModeModel(ActionModel):
 
-    modeChangeChanged = Signal()
     modelChanged = Signal()
 
     def __init__(

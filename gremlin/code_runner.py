@@ -32,7 +32,7 @@ import gremlin
 from gremlin.base_classes import Value
 import gremlin.fsm
 from gremlin import error, event_handler, input_devices, joystick_handling, \
-    macro, profile, sendinput, user_plugin, util
+    macro, mode_manager, profile, sendinput, user_plugin, util
 from gremlin.types import AxisButtonDirection, HatDirection, InputType
 
 
@@ -219,9 +219,10 @@ class CallbackObject:
         """
         # Create template virtual event
         virtual_event = event_handler.Event(
-            InputType.VirtualButton,
-            self._virtual_identifier,
-            dill.GUID_Virtual,
+            event_type=InputType.VirtualButton,
+            identifier=self._virtual_identifier,
+            device_guid=dill.GUID_Virtual,
+            mode=mode_manager.ModeManager().current.name,
             is_pressed=False,
             raw_value=False
         )
@@ -397,7 +398,9 @@ class CodeRunner:
             input_devices.periodic_registry.start()
             macro.MacroManager().start()
 
-            self.event_handler.change_mode(start_mode)
+            mode_manager.ModeManager().switch_to(
+                mode_manager.Mode(start_mode, "global")
+            )
             self.event_handler.resume()
             self._running = True
 
@@ -497,7 +500,8 @@ class CodeRunner:
             event = event_handler.Event(
                 event_type=action.input_item.input_type,
                 device_guid=action.input_item.device_id,
-                identifier=action.input_item.input_id
+                identifier=action.input_item.input_id,
+                mode=action.input_item.mode
             )
 
             # Generate executable unit for the linked library item

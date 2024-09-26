@@ -18,9 +18,13 @@
 
 from typing import List
 
+from PySide6 import QtCore
+
+from gremlin import shared_state
 from gremlin.common import SingletonDecorator
+from gremlin.config import Configuration
 from gremlin.error import GremlinError
-import gremlin.event_handler
+# from gremlin.event_handler import EventHandler
 
 
 class Mode:
@@ -71,15 +75,30 @@ class ModeSequence:
 
 
 @SingletonDecorator
-class ModeManager:
+class ModeManager(QtCore.QObject):
 
     """Manages the mode change history."""
 
+    mode_changed = QtCore.Signal(str)
+
     def __init__(self):
-        self._mode_stack = []
+        QtCore.QObject.__init__(self)
+
+        self._mode_stack = [
+            Mode(shared_state.current_profile.modes.first_mode, "global")
+        ]
+        self._config = Configuration()
+
+    @property
+    def current(self) -> Mode:
+        return self._mode_stack[-1]
 
     def _exists(self, mode: Mode) -> bool:
         return mode in self._mode_stack
+
+    def _update_mode(self) -> None:
+        self._config.set("global", "internal", "last_mode", self.current.name)
+        self.mode_changed.emit(self.current.name)
 
     # def cycle(self) -> None:
     #     pass
@@ -91,9 +110,10 @@ class ModeManager:
                 "modes on the stack."
             )
 
-        gremlin.event_handler.EventHandler().change_mode(
-            self._mode_stack[-2].name
-        )
+        # Swap the two top-most elements of the mode stack
+        self._mode_stack[-1], self._mode_stack[-2] = \
+            self._mode_stack[-2], self._mode_stack[-1]
+        self._update_mode()
 
     def unwind(self) -> None:
         if len(self._mode_stack) < 2:
@@ -101,58 +121,15 @@ class ModeManager:
                 "Attempting to unwind the mode stack with less than two modes."
             )
 
-        mode = self._mode_stack.pop()
-        gremlin.event_handler.EventHandler().change_mode(mode.name)
+        # Remove top mode in stack
+        self._mode_stack.pop()
+        self._update_mode()
 
     def switch_to(self, mode: Mode) -> None:
         if self._exists(mode):
             self._mode_stack.remove(mode)
         self._mode_stack.append(mode)
-        gremlin.event_handler.EventHandler().change_mode(mode.name)
+        self._update_mode()
 
     # def temporary(self, mode: Mode) -> None:
     #     pass
-
-
-def switch_mode(mode):
-    """Switches the currently active mode to the one provided.
-
-    :param mode the mode to switch to
-    """
-    gremlin.event_handler.EventHandler().change_mode(mode)
-
-
-def switch_to_previous_mode():
-    """Switches to the previously active mode."""
-    eh = gremlin.event_handler.EventHandler()
-    eh.change_mode(eh.previous_mode)
-
-
-def cycle_modes(mode_list):
-    """Cycles to the next mode in the provided mode list.
-
-    If the currently active mode is not in the provided list of modes
-    the first mode in the list is activated.
-
-    :param mode_list list of mode names to cycle through
-    """
-    gremlin.event_handler.EventHandler().change_mode(mode_list.next())
-
-
-def pause():
-    """Pauses the execution of all callbacks.
-
-    Only callbacks that are marked to be executed all the time will
-    run when the program is paused.
-    """
-    gremlin.event_handler.EventHandler().pause()
-
-
-def resume():
-    """Resumes the execution of callbacks."""
-    gremlin.event_handler.EventHandler().resume()
-
-
-def toggle_pause_resume():
-    """Toggles between executing and not executing callbacks."""
-    gremlin.event_handler.EventHandler().toggle_active()

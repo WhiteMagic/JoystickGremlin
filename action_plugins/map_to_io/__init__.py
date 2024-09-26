@@ -25,7 +25,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
-from gremlin import util
+from gremlin import mode_manager, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event, EventListener
@@ -57,12 +57,13 @@ class MapToIOFunctor(AbstractFunctor):
             if io_input.type != InputType.JoystickButton else None
         self._event_listener.joystick_event.emit(
             Event(
-                io_input.type,
-                io_input.guid,
-                self._io.device_guid,
-                input_value,
-                is_pressed,
-                value.raw
+                event_type=io_input.type,
+                identifier=io_input.guid,
+                device_guid=self._io.device_guid,
+                mode=mode_manager.ModeManager().current.name,
+                value=input_value,
+                is_pressed=is_pressed,
+                raw_value=value.raw
             )
         )
 
