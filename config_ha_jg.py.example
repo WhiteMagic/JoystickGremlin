@@ -1,0 +1,10 @@
+# Home Assistent
+HA_SENSOR_URL = "https://xxx.duckdns.org:xxx/api/states/sensor.xxxx"
+TOKEN = "xxx.xxx.xxx"
+
+HA_URL = "https://xxxx.duckdns.org:xxxx"
+# Entity Name : Friendly_Name
+light_entities = {"light.desk_segment_2": "Cockpit Unterbodenlicht",
+                  "light.desk_segment_1": "Haus Aussen",
+                  "light.desk": "Haus Innen"
+                  }
