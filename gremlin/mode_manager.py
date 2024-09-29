@@ -24,33 +24,33 @@ from gremlin import shared_state
 from gremlin.common import SingletonDecorator
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
-# from gremlin.event_handler import EventHandler
+from gremlin.types import PropertyType
 
 
 class Mode:
 
     """Simple containiner holding a mode's name and its identifier."""
 
-    def __init__(self, name: str, identifier: str):
+    def __init__(self, name: str, previous: str | None):
         """Creates a new Mode instance.
 
         Args:
-            name: The name of the mode
-            identifier: The identifier of the mode
+            name: name of the mode
+            previous: name of the previous mode
         """
         self._name = name
-        self._identifier = identifier
+        self._previous = previous
 
     @property
     def name(self) -> str:
         return self._name
 
     @property
-    def identifier(self) -> str:
-        return self._identifier
+    def previous(self) -> str | None:
+        return self._previous
 
     def __eq__(self, other) -> bool:
-        return self.identifier == other.identifier
+        return self.name == other.name and self.previous == other.previous
 
 
 class ModeSequence:
@@ -84,7 +84,7 @@ class ModeManager(QtCore.QObject):
     def __init__(self):
         QtCore.QObject.__init__(self)
 
-        self._mode_stack = [Mode("None", "None")]
+        self._mode_stack = [Mode("Invalid", None)]
         self._config = Configuration()
 
     @property
@@ -93,7 +93,7 @@ class ModeManager(QtCore.QObject):
 
     def reset(self) -> None:
         self._mode_stack = [
-            Mode(shared_state.current_profile.modes.first_mode, "global")
+            Mode(shared_state.current_profile.modes.first_mode, None)
         ]
         self._config.set("global", "internal", "last_mode", self.current.name)
 
@@ -109,10 +109,7 @@ class ModeManager(QtCore.QObject):
 
     def previous(self) -> None:
         if len(self._mode_stack) < 2:
-            raise GremlinError(
-                "Attempting to switch to previous mode with less than two"
-                "modes on the stack."
-            )
+            return
 
         # Swap the two top-most elements of the mode stack
         self._mode_stack[-1], self._mode_stack[-2] = \
@@ -121,19 +118,43 @@ class ModeManager(QtCore.QObject):
 
     def unwind(self) -> None:
         if len(self._mode_stack) < 2:
-            raise GremlinError(
-                "Attempting to unwind the mode stack with less than two modes."
-            )
+            return
 
         # Remove top mode in stack
         self._mode_stack.pop()
         self._update_mode()
 
     def switch_to(self, mode: Mode) -> None:
+        # Detect cycle in the mode stack and resolve it
         if self._exists(mode):
-            self._mode_stack.remove(mode)
+            resolution_mode = Configuration().value(
+                "profile", "mode-change", "resolution-mode"
+            )
+            idx = self._mode_stack.index(mode)
+            if resolution_mode == "oldest":
+                self._mode_stack = self._mode_stack[:idx]
+            elif resolution_mode == "newest":
+                self._mode_stack = self._mode_stack[idx+1:]
+
+            else:
+                GremlinError(f"Invalid behavior mode in mode change {mode}")
+
         self._mode_stack.append(mode)
         self._update_mode()
 
     # def temporary(self, mode: Mode) -> None:
     #     pass
+
+
+Configuration().register(
+    "profile",
+    "mode-change",
+    "resolution-mode",
+    PropertyType.Selection,
+    "oldest",
+    "Defines how a mode cycle is resolved.",
+    {
+        "valid_options": ["oldest", "newest"]
+    },
+    True
+)

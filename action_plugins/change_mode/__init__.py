@@ -274,17 +274,3 @@ class ChangeModeData(AbstractActionData):
 
 
 create = ChangeModeData
-
-
-Configuration().register(
-    "action",
-    ChangeModeData.tag,
-    "identifier-mode",
-    PropertyType.Selection,
-    "name",
-    "Defines how mode cycles are defined.",
-    {
-        "valid_options": ["global", "action"]
-    },
-    True
-)

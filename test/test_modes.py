@@ -24,7 +24,10 @@ import uuid
 from xml.etree import ElementTree
 
 import gremlin.plugin_manager
+import gremlin.shared_state
+from gremlin.config import Configuration
 from gremlin.error import GremlinError
+from gremlin.mode_manager import Mode, ModeManager
 from gremlin.types import AxisMode, InputType
 
 from gremlin.profile import Profile, ModeHierarchy
@@ -120,3 +123,37 @@ def test_complex_modifications():
 
     mh.delete_mode("Zeta")
     assert len(p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")]) == 2
+
+
+def test_cycling():
+    p = Profile()
+    gremlin.shared_state.current_profile = p
+
+    mm = ModeManager()
+
+    cfg = Configuration().set("profile", "mode-change", "resolution-mode", "oldest")
+    mm.reset()
+    del mm._mode_stack[0]
+    mm.switch_to(Mode("A", None))
+    mm.switch_to(Mode("B", "A"))
+    mm.switch_to(Mode("C", "B"))
+    mm.switch_to(Mode("A", "C"))
+    mm.switch_to(Mode("B", "A"))
+
+    ml = mm._mode_stack
+    assert ml[0].name == "A"
+    assert ml[1].name == "B"
+
+    cfg = Configuration().set("profile", "mode-change", "resolution-mode", "newest")
+    mm.reset()
+    del mm._mode_stack[0]
+    mm.switch_to(Mode("A", None))
+    mm.switch_to(Mode("B", "A"))
+    mm.switch_to(Mode("C", "B"))
+    mm.switch_to(Mode("A", "C"))
+    mm.switch_to(Mode("B", "A"))
+
+    ml = mm._mode_stack
+    assert ml[0].name == "C"
+    assert ml[1].name == "A"
+    assert ml[2].name == "B"
