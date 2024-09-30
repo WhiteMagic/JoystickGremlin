@@ -33,127 +33,175 @@ from gremlin.types import AxisMode, InputType
 from gremlin.profile import Profile, ModeHierarchy
 
 
-def test_ctor():
-    p = Profile()
-    mh = ModeHierarchy(p)
+class TestModeHierarchy:
 
-    assert mh.first_mode == "Default"
-    assert mh.mode_names() == ["Default"]
-    assert mh.mode_list()[0].value == "Default"
-    assert mh.valid_parents("Default") == []
-    assert mh.find_mode("Default") == mh.mode_list()[0]
-    with pytest.raises(GremlinError):
-        mh.find_mode("not there")
+    def test_ctor(self):
+        p = Profile()
+        mh = ModeHierarchy(p)
 
+        assert mh.first_mode == "Default"
+        assert mh.mode_names() == ["Default"]
+        assert mh.mode_list()[0].value == "Default"
+        assert mh.valid_parents("Default") == []
+        assert mh.find_mode("Default") == mh.mode_list()[0]
+        with pytest.raises(GremlinError):
+            mh.find_mode("not there")
 
-def test_add():
-    p = Profile()
-    mh = ModeHierarchy(p)
+    def test_add(self):
+        p = Profile()
+        mh = ModeHierarchy(p)
 
-    mh.add_mode("Second")
-    mh.add_mode("Third")
-    with pytest.raises(GremlinError):
         mh.add_mode("Second")
+        mh.add_mode("Third")
+        with pytest.raises(GremlinError):
+            mh.add_mode("Second")
 
-    assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
-    assert mh.find_mode("Second").value == "Second"
-    with pytest.raises(GremlinError):
-        mh.find_mode("not there")
+        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        assert mh.find_mode("Second").value == "Second"
+        with pytest.raises(GremlinError):
+            mh.find_mode("not there")
 
-    assert mh.mode_exists("Second") == True
-    assert mh.mode_exists("Other") == False
+        assert mh.mode_exists("Second") == True
+        assert mh.mode_exists("Other") == False
 
+    def test_delete(self):
+        p = Profile()
+        mh = ModeHierarchy(p)
 
-def test_delete():
-    p = Profile()
-    mh = ModeHierarchy(p)
+        mh.add_mode("Second")
+        mh.add_mode("Third")
+        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
 
-    mh.add_mode("Second")
-    mh.add_mode("Third")
-    assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        mh.delete_mode("Second")
+        assert set(mh.mode_names()) == set(["Default", "Third"])
 
-    mh.delete_mode("Second")
-    assert set(mh.mode_names()) == set(["Default", "Third"])
+        mh.add_mode("Second")
+        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
 
-    mh.add_mode("Second")
-    assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+    def test_rename(self):
+        p = Profile()
+        mh = ModeHierarchy(p)
 
+        mh.add_mode("Second")
+        mh.add_mode("Third")
+        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
 
-def test_rename():
-    p = Profile()
-    mh = ModeHierarchy(p)
+        mh.rename_mode("Default", "Zeta")
+        assert set(mh.mode_names()) == set(["Zeta", "Second", "Third"])
+        assert mh.first_mode == "Zeta"
 
-    mh.add_mode("Second")
-    mh.add_mode("Third")
-    assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+    def test_parent(self):
+        p = Profile()
+        mh = ModeHierarchy(p)
 
-    mh.rename_mode("Default", "Zeta")
-    assert set(mh.mode_names()) == set(["Zeta", "Second", "Third"])
-    assert mh.first_mode == "Zeta"
+        mh.add_mode("Second")
+        mh.add_mode("Third")
+        assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
 
+        mh.set_parent("Default", "Second")
+        assert mh.first_mode == "Second"
+        assert mh.find_mode("Default").parent.value == "Second"
+        assert mh.find_mode("Default").parent == mh.find_mode("Second")
 
-def test_parent():
-    p = Profile()
-    mh = ModeHierarchy(p)
+    def test_complex_modifications(self):
+        p = Profile()
+        p.from_xml("test/xml/profile_realistic.xml")
+        mh = p.modes
 
-    mh.add_mode("Second")
-    mh.add_mode("Third")
-    assert set(mh.mode_names()) == set(["Default", "Second", "Third"])
+        assert set(mh.mode_names()) == set(["Default", "Second", "Child"])
+        assert mh.find_mode("Child").parent == mh.find_mode("Default")
 
-    mh.set_parent("Default", "Second")
-    assert mh.first_mode == "Second"
-    assert mh.find_mode("Default").parent.value == "Second"
-    assert mh.find_mode("Default").parent == mh.find_mode("Second")
+        child_input = p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")][0]
+        assert child_input.mode == "Child"
+        assert len(p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")]) == 3
 
+        mh.rename_mode("Child", "Zeta")
+        assert child_input.mode == "Zeta"
 
-def test_complex_modifications():
-    p = Profile()
-    p.from_xml("test/xml/profile_realistic.xml")
-    mh = p.modes
-
-    assert set(mh.mode_names()) == set(["Default", "Second", "Child"])
-    assert mh.find_mode("Child").parent == mh.find_mode("Default")
-
-    child_input = p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")][0]
-    assert child_input.mode == "Child"
-    assert len(p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")]) == 3
-
-    mh.rename_mode("Child", "Zeta")
-    assert child_input.mode == "Zeta"
-
-    mh.delete_mode("Zeta")
-    assert len(p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")]) == 2
+        mh.delete_mode("Zeta")
+        assert len(p.inputs[uuid.UUID("684e9af0-03c4-11ef-8005-444553540000")]) == 2
 
 
-def test_cycling():
-    p = Profile()
-    gremlin.shared_state.current_profile = p
+class TestModeManager:
 
-    mm = ModeManager()
+    def test_cycling(self):
+        p = Profile()
+        gremlin.shared_state.current_profile = p
 
-    cfg = Configuration().set("profile", "mode-change", "resolution-mode", "oldest")
-    mm.reset()
-    del mm._mode_stack[0]
-    mm.switch_to(Mode("A", None))
-    mm.switch_to(Mode("B", "A"))
-    mm.switch_to(Mode("C", "B"))
-    mm.switch_to(Mode("A", "C"))
-    mm.switch_to(Mode("B", "A"))
+        mm = ModeManager()
 
-    ml = mm._mode_stack
-    assert ml[0].name == "A"
-    assert ml[1].name == "B"
+        cfg = Configuration().set("profile", "mode-change", "resolution-mode", "oldest")
+        mm.reset()
+        del mm._mode_stack[0]
+        mm.switch_to(Mode("A", None))
+        mm.switch_to(Mode("B", "A"))
+        mm.switch_to(Mode("C", "B"))
+        mm.switch_to(Mode("A", "C"))
+        mm.switch_to(Mode("B", "A"))
 
-    cfg = Configuration().set("profile", "mode-change", "resolution-mode", "newest")
-    mm.reset()
-    del mm._mode_stack[0]
-    mm.switch_to(Mode("A", None))
-    mm.switch_to(Mode("B", "A"))
-    mm.switch_to(Mode("C", "B"))
-    mm.switch_to(Mode("A", "C"))
-    mm.switch_to(Mode("B", "A"))
+        ml = mm._mode_stack
+        assert ml[0].name == "A"
+        assert ml[1].name == "B"
 
-    ml = mm._mode_stack
-    assert ml[0].name == "C"
-    assert ml[1].name == "A"
-    assert ml[2].name == "B"
+        cfg = Configuration().set("profile", "mode-change", "resolution-mode", "newest")
+        mm.reset()
+        del mm._mode_stack[0]
+        mm.switch_to(Mode("A", None))
+        mm.switch_to(Mode("B", "A"))
+        mm.switch_to(Mode("C", "B"))
+        mm.switch_to(Mode("A", "C"))
+        mm.switch_to(Mode("B", "A"))
+
+        ml = mm._mode_stack
+        assert ml[0].name == "C"
+        assert ml[1].name == "A"
+        assert ml[2].name == "B"
+
+    def test_temporaries(self):
+        p = Profile()
+        gremlin.shared_state.current_profile = p
+
+        mm = ModeManager()
+
+        cfg = Configuration().set("profile", "mode-change", "resolution-mode", "oldest")
+        mm.reset()
+        del mm._mode_stack[0]
+        mm.switch_to(Mode("A", None))
+        mm.switch_to(Mode("B", "A"))
+        mm.switch_to(Mode("C", "B", True))
+        mm.switch_to(Mode("D", "C", True))
+        mm.switch_to(Mode("E", "D", True))
+        mm.switch_to(Mode("C", "E", True))
+        mm.switch_to(Mode("D", "C", True))
+
+        ml = mm._mode_stack
+        assert len(ml) == 4
+        assert ml[0].name == "A"
+        assert ml[1].name == "B"
+        assert ml[2].name == "C"
+        assert ml[3].name == "D"
+        assert ml[2].is_temporary
+        assert ml[3].is_temporary
+
+        cfg = Configuration().set("profile", "mode-change", "resolution-mode", "newest")
+        mm.reset()
+        del mm._mode_stack[0]
+        mm.switch_to(Mode("A", None))
+        mm.switch_to(Mode("B", "A"))
+        mm.switch_to(Mode("C", "B", True))
+        mm.switch_to(Mode("D", "C", True))
+        mm.switch_to(Mode("E", "D", True))
+        mm.switch_to(Mode("C", "E", True))
+        mm.switch_to(Mode("D", "C", True))
+
+        ml = mm._mode_stack
+        assert len(ml) == 5
+        assert ml[0].name == "B"
+        assert ml[1].name == "C"
+        assert ml[2].name == "E"
+        assert ml[3].name == "C"
+        assert ml[4].name == "D"
+        assert ml[1].is_temporary
+        assert ml[2].is_temporary
+        assert ml[3].is_temporary
+        assert ml[4].is_temporary

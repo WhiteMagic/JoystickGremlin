@@ -31,15 +31,22 @@ class Mode:
 
     """Simple containiner holding a mode's name and its identifier."""
 
-    def __init__(self, name: str, previous: str | None):
+    def __init__(
+            self,
+            name: str,
+            previous: str | None,
+            is_temporary: bool=False
+    ):
         """Creates a new Mode instance.
 
         Args:
             name: name of the mode
             previous: name of the previous mode
+            is_temporary: True if the mode is temporary, False otherwise
         """
         self._name = name
         self._previous = previous
+        self._is_temporary = is_temporary
 
     @property
     def name(self) -> str:
@@ -49,8 +56,22 @@ class Mode:
     def previous(self) -> str | None:
         return self._previous
 
+    @previous.setter
+    def previous(self, value: str | None) -> None:
+        self._previous = value
+
+    @property
+    def is_temporary(self) -> bool:
+        return self._is_temporary
+
+    @is_temporary.setter
+    def is_temporary(self, value: bool) -> None:
+        self._is_temporary = value
+
     def __eq__(self, other) -> bool:
-        return self.name == other.name and self.previous == other.previous
+        return (self.name == other.name and
+                self.previous == other.previous and
+                self.is_temporary == other.is_temporary)
 
 
 class ModeSequence:
@@ -131,19 +152,48 @@ class ModeManager(QtCore.QObject):
                 "profile", "mode-change", "resolution-mode"
             )
             idx = self._mode_stack.index(mode)
-            if resolution_mode == "oldest":
-                self._mode_stack = self._mode_stack[:idx]
-            elif resolution_mode == "newest":
-                self._mode_stack = self._mode_stack[idx+1:]
 
+            if not mode.is_temporary:
+                if resolution_mode == "oldest":
+                    self._mode_stack = self._mode_stack[:idx]
+                elif resolution_mode == "newest":
+                    self._mode_stack = self._mode_stack[idx+1:]
+            # Special handling if the loop is caused by a temporary mode
             else:
-                GremlinError(f"Invalid behavior mode in mode change {mode}")
+                if resolution_mode == "oldest":
+                    self._mode_stack = self._mode_stack[:idx]
+                if resolution_mode == "newest":
+                    # 1. Find the index corresponding to the first non-temporary
+                    #    mode entry in the stack before the idx mode
+                    idx2 = idx
+                    while idx2 > 0 and self._mode_stack[idx2].is_temporary:
+                        idx2 -= 1
+                    assert not self._mode_stack[idx2].is_temporary
+                    # 2. Create new stack that contains no longer contains the
+                    #    old temporary mode instance but retains all previous
+                    #    modes until the first non-temporary entry
+                    self._mode_stack = [
+                        m for m in self._mode_stack[idx2:] if m != mode
+                    ]
+                    # 3. Fix inconsistent stack entry transitions
+                    for a, b in zip(self._mode_stack[:-1], self._mode_stack[1:]):
+                        if a.name != b.previous:
+                            b.previous = a.name
+        else:
+            GremlinError(f"Invalid behavior mode in mode change {mode}")
 
         self._mode_stack.append(mode)
         self._update_mode()
 
-    # def temporary(self, mode: Mode) -> None:
-    #     pass
+    def temporary(self, mode: Mode) -> None:
+        mode.is_temporary = True
+        self.switch_to(mode)
+
+    def leave_temporary(self, mode) -> None:
+        mode.is_temporary = True
+        if self._mode_stack[-1] == mode:
+            self.unwind()
+        self._mode_stack = [m for m in self._mode_stack if m != mode]
 
 
 Configuration().register(
