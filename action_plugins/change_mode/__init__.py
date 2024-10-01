@@ -73,22 +73,36 @@ class ChangeModeFunctor(AbstractFunctor):
     def __init__(self, action: ChangeModeData):
         super().__init__(action)
 
+        self._mode_sequence = None
+        if self.data.change_type == ChangeType.Cycle:
+            self._mode_sequence = \
+                mode_manager.ModeSequence(self.data._target_modes)
+
     def __call__(
         self,
         event: event_handler.Event,
         value: Value
     ) -> None:
-        mode = Configuration().value(
-            "action",
-            ChangeModeData.tag,
-            "identifier-mode",
-        )
+        if not value.current:
+            return
 
         mm = mode_manager.ModeManager()
         if self.data.change_type == ChangeType.Switch:
             mm.switch_to(mode_manager.Mode(
                 self.data.target_modes[0],
-                self.data.target_modes[0]
+                mm.current.name
+            ))
+        elif self.data.change_type == ChangeType.Previous:
+            mm.previous()
+        elif self.data.change_type == ChangeType.Cycle:
+            mm.cycle(self._mode_sequence)
+        elif self.data.change_type == ChangeType.Unwind:
+            mm.unwind()
+        elif self.data.change_type == ChangeType.Temporary:
+            mm.switch_to(mode_manager.Mode(
+                self.data.target_modes[0],
+                mm.current.name,
+                True
             ))
 
 

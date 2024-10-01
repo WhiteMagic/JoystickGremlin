@@ -76,16 +76,16 @@ class Mode:
 
 class ModeSequence:
 
-    def __init__(self, modes: List[Mode]):
+    def __init__(self, modes: List[str]):
         """Creates a new ModeSequence instance.
 
         Args:
-            modes: List of modes making up the sequence.
+            modes: List of mode names making up the sequence.
         """
         self.modes = modes
         self._current_index = 0
 
-    def next(self) -> Mode:
+    def next(self) -> str:
         """Returns the next mode in the sequence.
 
         Returns:
@@ -125,8 +125,8 @@ class ModeManager(QtCore.QObject):
         self._config.set("global", "internal", "last_mode", self.current.name)
         self.mode_changed.emit(self.current.name)
 
-    # def cycle(self) -> None:
-    #     pass
+    def cycle(self, sequence: ModeSequence) -> None:
+        self.switch_to(Mode(sequence.next(), self.current.name))
 
     def previous(self) -> None:
         if len(self._mode_stack) < 2:
@@ -165,7 +165,7 @@ class ModeManager(QtCore.QObject):
                 if resolution_mode == "newest":
                     # 1. Find the index corresponding to the first non-temporary
                     #    mode entry in the stack before the idx mode
-                    idx2 = idx
+                    idx2 = idx + 1
                     while idx2 > 0 and self._mode_stack[idx2].is_temporary:
                         idx2 -= 1
                     assert not self._mode_stack[idx2].is_temporary
