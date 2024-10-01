@@ -53,6 +53,8 @@ class MapToIOFunctor(AbstractFunctor):
         io_input = self._io[self.data.io_input_guid]
         is_pressed = value.current \
             if io_input.type == InputType.JoystickButton else None
+        if self.data.button_inverted:
+            is_pressed = not is_pressed
         input_value = value.current \
             if io_input.type != InputType.JoystickButton else None
         self._event_listener.joystick_event.emit(
