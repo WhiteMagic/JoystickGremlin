@@ -57,8 +57,12 @@ class Backend(QtCore.QObject):
         self._ui_mode = self.profile.modes.first_mode
         self.runner = code_runner.CodeRunner()
 
+        # Hookup various mode change related callbacks
         mode_manager.ModeManager().mode_changed.connect(self._emit_change)
         self.profileChanged.connect(mode_manager.ModeManager().reset)
+        self.profileChanged.connect(
+            lambda: self._set_ui_mode(mode_manager.ModeManager().current.name)
+        )
 
     def _emit_change(self) -> None:
         """Emits the signal required for property changes to propagate."""
