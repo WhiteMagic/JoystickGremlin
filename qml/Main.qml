@@ -295,16 +295,20 @@ ApplicationWindow {
                 Layout.preferredWidth: 200
                 padding: 5
 
-                text: "Status: " + Helpers.selectText(
-                    backend.gremlinActive, "Active", "Not Running"
-                )
+                text: "<B>Status: </B>" +
+                    Helpers.selectText(
+                        backend.gremlinActive, "Active", "Not Running"
+                    ) +
+                    Helpers.selectText(
+                        backend.gremlinActive & backend.gremlinPaused, " (Paused)", ""
+                    )
             }
 
             Label {
                 Layout.fillWidth: true
                 padding: 5
 
-                text: "Current mode: " + backend.currentMode
+                text: "<B>Current mode: </B>" + backend.currentMode
             }
         }
     }

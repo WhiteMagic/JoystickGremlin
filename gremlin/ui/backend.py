@@ -24,8 +24,8 @@ import uuid
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import code_runner, common, config, error, mode_manager, \
-    profile, shared_state, types
+from gremlin import code_runner, common, config, error, event_handler, \
+    mode_manager, profile, shared_state, types
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.signal import signal
 
@@ -64,9 +64,22 @@ class Backend(QtCore.QObject):
             lambda: self._set_ui_mode(mode_manager.ModeManager().current.name)
         )
 
+        event_handler.EventHandler().is_active.connect(
+            lambda: self.activityChanged.emit()
+        )
+
     def _emit_change(self) -> None:
         """Emits the signal required for property changes to propagate."""
         self.propertyChanged.emit()
+
+    @Property(bool, notify=activityChanged)
+    def gremlinPaused(self) -> bool:
+        """Returns True if Gremlin is paused, False otherwise.
+
+        Returns:
+            True if Gremlin is paused, False otherwise.
+        """
+        return not event_handler.EventHandler().process_callbacks
 
     @Property(bool, notify=activityChanged)
     def gremlinActive(self) -> bool:
