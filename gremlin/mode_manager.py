@@ -165,12 +165,12 @@ class ModeManager(QtCore.QObject):
                 if resolution_mode == "newest":
                     # 1. Find the index corresponding to the first non-temporary
                     #    mode entry in the stack before the idx mode
-                    idx2 = idx + 1
+                    idx2 = idx
                     while idx2 > 0 and self._mode_stack[idx2].is_temporary:
                         idx2 -= 1
                     assert not self._mode_stack[idx2].is_temporary
-                    # 2. Create new stack that contains no longer contains the
-                    #    old temporary mode instance but retains all previous
+                    # 2. Create new stack that no longer contains the old
+                    #    temporary mode instance but retains all previous
                     #    modes until the first non-temporary entry
                     self._mode_stack = [
                         m for m in self._mode_stack[idx2:] if m != mode
@@ -179,8 +179,6 @@ class ModeManager(QtCore.QObject):
                     for a, b in zip(self._mode_stack[:-1], self._mode_stack[1:]):
                         if a.name != b.previous:
                             b.previous = a.name
-        else:
-            GremlinError(f"Invalid behavior mode in mode change {mode}")
 
         self._mode_stack.append(mode)
         self._update_mode()

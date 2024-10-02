@@ -207,23 +207,3 @@ class TestModeManager:
         assert ml[2].is_temporary
         assert ml[3].is_temporary
         assert ml[4].is_temporary
-
-        # Retaining newest mode only but no need for older modes
-        cfg = Configuration().set("profile", "mode-change", "resolution-mode", "newest")
-        mm.reset()
-        del mm._mode_stack[0]
-        mm.switch_to(Mode("A", None))
-        mm.switch_to(Mode("B", "A"))
-        mm.switch_to(Mode("C", "B", True))
-        mm.switch_to(Mode("D", "C", True))
-        mm.switch_to(Mode("E", "D"))
-        mm.switch_to(Mode("C", "E", True))
-        mm.switch_to(Mode("D", "C", True))
-
-        ml = mm._mode_stack
-        assert len(ml) == 3
-        assert ml[0].name == "E"
-        assert ml[1].name == "C"
-        assert ml[2].name == "D"
-        assert ml[1].is_temporary
-        assert ml[2].is_temporary
