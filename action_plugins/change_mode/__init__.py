@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import enum
+import logging
 import threading
 import time
 from typing import List, TYPE_CHECKING
@@ -104,6 +105,11 @@ class ChangeModeFunctor(AbstractFunctor):
                 mm.current.name,
                 True
             ))
+
+        logging.getLogger("system").debug(
+            f"Mode Stack : [{', '.join(m.name for m in mm._mode_stack)}], " +
+            f"Action : {self.data.change_type.name}"
+        )
 
 
 class ChangeModeModel(ActionModel):
