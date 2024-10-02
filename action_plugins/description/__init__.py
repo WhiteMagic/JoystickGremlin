@@ -24,7 +24,8 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataCreationMode, Value
 from gremlin.error import GremlinError
 from gremlin.profile import Library
 from gremlin.types import InputType, PropertyType
@@ -77,7 +78,7 @@ class DescriptionModel(ActionModel):
         ).fileName()
 
     def _icon_string_impl(self) -> str:
-        return "\uF3B9"
+        return DescriptionData.icon
 
     def _get_description(self) -> str:
         return self._data.description
@@ -138,7 +139,7 @@ class DescriptionData(AbstractActionData):
         ))
         return node
 
-    def is_valid(self) -> True:
+    def is_valid(self) -> bool:
         return True
 
     def _valid_selectors(self) -> List[str]:
