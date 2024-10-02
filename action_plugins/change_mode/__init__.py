@@ -84,7 +84,7 @@ class ChangeModeFunctor(AbstractFunctor):
         event: event_handler.Event,
         value: Value
     ) -> None:
-        if not value.current:
+        if not value.current and self.data.change_type != ChangeType.Temporary:
             return
 
         mm = mode_manager.ModeManager()
@@ -100,11 +100,19 @@ class ChangeModeFunctor(AbstractFunctor):
         elif self.data.change_type == ChangeType.Unwind:
             mm.unwind()
         elif self.data.change_type == ChangeType.Temporary:
-            mm.switch_to(mode_manager.Mode(
-                self.data.target_modes[0],
-                mm.current.name,
-                True
-            ))
+            # Enter the temporary mode when the input is pressed
+            if value.current:
+                mm.switch_to(mode_manager.Mode(
+                    self.data.target_modes[0],
+                    mm.current.name,
+                    True
+                ))
+            # Leave the temporary mode when the input is released while in the
+            # correct mode
+            else:
+                if mm.current.name == self.data._target_modes[0] and \
+                        mm.current.is_temporary:
+                    mm.unwind()
 
         logging.getLogger("system").debug(
             f"Mode Stack : [{', '.join(m.name for m in mm._mode_stack)}], " +
