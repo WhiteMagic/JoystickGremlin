@@ -534,7 +534,9 @@ class Profile:
         root = tree.getroot()
 
         # Process all intermediate output system inputs
-        for node in root.findall("./inputs/input[device-id='F0AF472F-8E17-493B-A1EB-7333EE8543F2']"):
+        for node in root.findall(
+            f"./inputs/input[device-id='{str(dill.UUID_IntermediateOutput)}']"
+        ):
             self._create_io_input(node)
 
         # Create library entries and modes
@@ -703,7 +705,7 @@ class Profile:
         self.inputs[item.device_id].append(item)
 
     def _create_io_input(self, node: ElementTree) -> None:
-        """Creates an intermediate output input for the givern node.
+        """Creates an intermediate output input for the given node.
 
         Args:
             node: XML node corresponding to an IO input
