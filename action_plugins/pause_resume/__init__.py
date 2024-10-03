@@ -125,7 +125,7 @@ class PauseResumeData(AbstractActionData):
 
     version = 1
     name = "Pause and Resume"
-    tag = "pause_resume"
+    tag = "pause-resume"
     icon = "\uF4C4"
 
     functor = PauseResumeFunctor
