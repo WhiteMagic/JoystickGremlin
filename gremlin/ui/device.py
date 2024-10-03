@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from typing import Any, Dict, List, Tuple
@@ -749,10 +750,11 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         el.joystick_event.connect(self._event_callback)
 
         self._device = None
+        self._device_uuid = None
         self._state = []
 
     def _event_callback(self, event: event_handler.Event):
-        if event.device_guid != self._device.device_guid:
+        if event.device_guid != self._device_uuid:
             return
 
         self._event_handler_impl(event)
@@ -769,6 +771,7 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         self._device = dill.DILL.get_device_information_by_guid(
             dill.GUID.from_str(guid)
         )
+        self._device_uuid = uuid.UUID(guid)
         self._state = []
         self._initialize_state()
         self.deviceChanged.emit()
@@ -880,6 +883,7 @@ class DeviceAxisSeries(QtCore.QObject):
         el.joystick_event.connect(self._event_callback)
 
         self._device = None
+        self._device_uuid = None
         self._state = []
         self._identifier_map = {}
         self._window_size = 20
@@ -891,6 +895,7 @@ class DeviceAxisSeries(QtCore.QObject):
         self._device = dill.DILL.get_device_information_by_guid(
             dill.GUID.from_str(guid)
         )
+        self._device_uuid = uuid.UUID(guid)
 
         self._state = []
         for i in range(self._device.axis_count):
@@ -910,7 +915,7 @@ class DeviceAxisSeries(QtCore.QObject):
             self.windowSizeChanged.emit()
 
     def _event_callback(self, event: event_handler.Event):
-        if event.device_guid != self._device.device_guid:
+        if event.device_guid != self._device_uuid:
             return
 
         if event.event_type == InputType.JoystickAxis:
@@ -935,8 +940,12 @@ class DeviceAxisSeries(QtCore.QObject):
             return
 
         now  = time.time()
-        while now - data[0][0] > self._window_size:
-            data.pop(0)
+        try:
+            while now - data[0][0] > self._window_size:
+                data.pop(0)
+        except IndexError as e:
+            logging.getLogger("system").warning(f"Unexpected exception: {e}")
+            return
 
         time_series = []
         for pt in data:
