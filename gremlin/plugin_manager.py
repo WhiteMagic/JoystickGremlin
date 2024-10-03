@@ -26,7 +26,8 @@ from typing import TYPE_CHECKING
 from PySide6 import QtQml
 
 from gremlin import common, error, shared_state
-from gremlin.types import InputType
+from gremlin.base_classes import DataCreationMode
+from gremlin.types import ActionProperty, InputType
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
@@ -110,7 +111,10 @@ class PluginManager:
             The newly created action instance
         """
         cls = self.get_class(name)
-        instance = cls.create(cls.default_creation, input_type)
+        creation_mode = DataCreationMode.Create
+        if ActionProperty.ReuseByDefault in cls.properties:
+            creation_mode = DataCreationMode.Reuse
+        instance = cls.create(creation_mode, input_type)
         shared_state.current_profile.library.add_action(instance)
         return instance
 
