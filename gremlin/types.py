@@ -67,13 +67,17 @@ _InputType_to_string_lookup = {
     InputType.JoystickButton: "button",
     InputType.JoystickHat: "hat",
     InputType.Keyboard: "key",
+    InputType.Mouse: "mouse",
+    InputType.VirtualButton: "virtual-button"
 }
 
 _InputType_to_enum_lookup = {
     "axis": InputType.JoystickAxis,
     "button": InputType.JoystickButton,
     "hat": InputType.JoystickHat,
-    "key": InputType.Keyboard
+    "key": InputType.Keyboard,
+    "mouse": InputType.Mouse,
+    "virtual-button": InputType.VirtualButton
 }
 
 
