@@ -30,6 +30,7 @@ Item {
 
     property alias eventTypes: _listener.eventTypes
     property alias multipleInputs: _listener.multipleInputs
+    property alias buttonLabel: _button.text
     property var callback
 
     implicitHeight: _button.height
