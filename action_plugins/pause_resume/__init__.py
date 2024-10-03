@@ -29,7 +29,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataCreationMode, Value
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -71,7 +71,7 @@ class PauseResumeFunctor(AbstractFunctor):
             event: the input event to process
             value: the potentially modified input value
         """
-        if value:
+        if value.current:
             if self.data.operation == PauseResumeType.Pause:
                 event_handler.EventHandler().pause()
             elif self.data.operation == PauseResumeType.Resume:
@@ -130,8 +130,10 @@ class PauseResumeData(AbstractActionData):
 
     functor = PauseResumeFunctor
     model = PauseResumeModel
-    default_creation = DataCreationMode.Create
 
+    properties = [
+        ActionProperty.AlwaysExecute
+    ]
     input_types = [
         InputType.JoystickButton,
         InputType.Keyboard

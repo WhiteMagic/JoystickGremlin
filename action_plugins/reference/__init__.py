@@ -132,8 +132,8 @@ class ReferenceData(AbstractActionData):
 
     functor = None
     model = ReferenceModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

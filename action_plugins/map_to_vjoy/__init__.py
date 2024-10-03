@@ -278,8 +278,8 @@ class MapToVjoyData(AbstractActionData):
 
     functor = MapToVjoyFunctor
     model = MapToVjoyModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

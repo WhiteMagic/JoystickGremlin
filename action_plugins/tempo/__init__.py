@@ -223,8 +223,8 @@ class TempoData(AbstractActionData):
 
     functor = TempoFunctor
     model = TempoModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

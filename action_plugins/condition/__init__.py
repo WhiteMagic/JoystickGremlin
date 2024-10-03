@@ -580,8 +580,8 @@ class ConditionData(AbstractActionData):
 
     functor = ConditionFunctor
     model = ConditionModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

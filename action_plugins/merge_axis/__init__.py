@@ -37,7 +37,7 @@ from gremlin.event_handler import Event
 from gremlin.input_cache import Joystick
 from gremlin.plugin_manager import PluginManager
 from gremlin.profile import InputItemBinding, Library
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel, SequenceIndex
 from gremlin.ui.device import InputIdentifier
@@ -334,8 +334,10 @@ class MergeAxisData(AbstractActionData):
 
     functor = MergeAxisFunctor
     model = MergeAxisModel
-    default_creation = DataCreationMode.Reuse
 
+    properties = [
+        ActionProperty.ReuseByDefault
+    ]
     input_types = {
         InputType.JoystickAxis
     }

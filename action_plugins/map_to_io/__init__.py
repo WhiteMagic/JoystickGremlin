@@ -185,8 +185,8 @@ class MapToIOData(AbstractActionData):
 
     functor = MapToIOFunctor
     model = MapToIOModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

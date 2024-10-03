@@ -108,8 +108,8 @@ class DescriptionData(AbstractActionData):
 
     functor = DescriptionFunctor
     model = DescriptionModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

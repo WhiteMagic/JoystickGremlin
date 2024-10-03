@@ -91,8 +91,8 @@ class RootData(AbstractActionData):
 
     functor = RootFunctor
     model = RootModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

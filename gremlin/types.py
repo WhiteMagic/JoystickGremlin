@@ -579,3 +579,13 @@ class ConditionType(enum.Enum):
                 f"Invalid condition operator type: {str(string)}"
             )
         return value
+
+
+class ActionProperty(enum.Enum):
+
+    """Enumeration of the properties actions can be tagged with."""
+
+    # Will reuse an existing action instead of creating a new one by default
+    ReuseByDefault = 1
+    # Will execute the action even if Gremlin is paused
+    AlwaysExecute = 2

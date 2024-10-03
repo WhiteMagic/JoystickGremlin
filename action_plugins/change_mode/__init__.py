@@ -213,8 +213,8 @@ class ChangeModeData(AbstractActionData):
 
     functor = ChangeModeFunctor
     model = ChangeModeModel
-    default_creation = DataCreationMode.Create
 
+    properties = []
     input_types = [
         InputType.JoystickButton,
         InputType.Keyboard
