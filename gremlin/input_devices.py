@@ -47,14 +47,12 @@ class CallbackRegistry:
         self._registry = {}
         self._current_id = 0
 
-    def add(self, callback, event, mode, always_execute=False):
+    def add(self, callback, event, mode):
         """Adds a new callback to the registry.
 
         :param callback function to add as a callback
         :param event the event on which to trigger the callback
         :param mode the mode in which to trigger the callback
-        :param always_execute if True the callback is run even if Gremlin
-            is paused
         """
         self._current_id += 1
         function_name = "{}_{:d}".format(callback.__name__, self._current_id)
@@ -66,8 +64,7 @@ class CallbackRegistry:
 
         if event not in self._registry[event.device_guid][mode]:
             self._registry[event.device_guid][mode][event] = {}
-        self._registry[event.device_guid][mode][event][function_name] = \
-            (callback, always_execute)
+        self._registry[event.device_guid][mode][event][function_name] = callback
 
     @property
     def registry(self):
@@ -546,14 +543,12 @@ class JoystickInputSignificant:
         return event.value != (0, 0)
 
 
-def _button(button_id, device_guid, mode, always_execute=False):
+def _button(button_id, device_guid, mode):
     """Decorator for button callbacks.
 
     :param button_id the id of the button on the physical joystick
     :param device_guid the GUID of input device
     :param mode the mode in which this callback is active
-    :param always_execute if True the decorated function is executed
-        even when the program is not listening to inputs
     """
 
     def wrap(callback):
@@ -567,21 +562,19 @@ def _button(button_id, device_guid, mode, always_execute=False):
             device_guid=device_guid,
             identifier=button_id
         )
-        callback_registry.add(wrapper_fn, event, mode, always_execute)
+        callback_registry.add(wrapper_fn, event, mode)
 
         return wrapper_fn
 
     return wrap
 
 
-def _hat(hat_id, device_guid, mode, always_execute=False):
+def _hat(hat_id, device_guid, mode):
     """Decorator for hat callbacks.
 
     :param hat_id the id of the button on the physical joystick
     :param device_guid the GUID of input device
     :param mode the mode in which this callback is active
-    :param always_execute if True the decorated function is executed
-        even when the program is not listening to inputs
     """
 
     def wrap(callback):
@@ -595,21 +588,19 @@ def _hat(hat_id, device_guid, mode, always_execute=False):
             device_guid=device_guid,
             identifier=hat_id
         )
-        callback_registry.add(wrapper_fn, event, mode, always_execute)
+        callback_registry.add(wrapper_fn, event, mode)
 
         return wrapper_fn
 
     return wrap
 
 
-def _axis(axis_id, device_guid, mode, always_execute=False):
+def _axis(axis_id, device_guid, mode):
     """Decorator for axis callbacks.
 
     :param axis_id the id of the axis on the physical joystick
     :param device_guid the GUID of input device
     :param mode the mode in which this callback is active
-    :param always_execute if True the decorated function is executed
-        even when the program is not listening to inputs
     """
 
     def wrap(callback):
@@ -623,20 +614,18 @@ def _axis(axis_id, device_guid, mode, always_execute=False):
             device_guid=device_guid,
             identifier=axis_id
         )
-        callback_registry.add(wrapper_fn, event, mode, always_execute)
+        callback_registry.add(wrapper_fn, event, mode)
 
         return wrapper_fn
 
     return wrap
 
 
-def keyboard(key_name, mode, always_execute=False):
+def keyboard(key_name, mode):
     """Decorator for keyboard key callbacks.
 
     :param key_name name of the key of this callback
     :param mode the mode in which this callback is active
-    :param always_execute if True the decorated function is executed
-        even when the program is not listening to inputs
     """
 
     def wrap(callback):
@@ -647,7 +636,7 @@ def keyboard(key_name, mode, always_execute=False):
 
         key = gremlin.keyboard.key_from_name(key_name)
         event = event_handler.Event.from_key(key)
-        callback_registry.add(wrapper_fn, event, mode, always_execute)
+        callback_registry.add(wrapper_fn, event, mode)
 
         return wrapper_fn
 

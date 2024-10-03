@@ -734,7 +734,6 @@ class InputItem:
         self.mode = None
         self.library = library
         self.action_sequences = []
-        self.always_execute = False
         self.is_active = True
 
     def from_xml(self, node: ElementTree.Element) -> None:

@@ -33,7 +33,8 @@ from gremlin.base_classes import Value
 import gremlin.fsm
 from gremlin import error, event_handler, input_devices, joystick_handling, \
     macro, mode_manager, profile, sendinput, user_plugin, util
-from gremlin.types import AxisButtonDirection, HatDirection, InputType
+from gremlin.types import ActionProperty, AxisButtonDirection, HatDirection, \
+    InputType
 
 
 class VirtualButton(metaclass=ABCMeta):
@@ -195,6 +196,21 @@ class CallbackObject:
         else:
             self._physical_event_setup()
 
+    @property
+    def always_execute(self) -> bool:
+        """Returns True if the callback should be executed even when Gremlin
+        is paused.
+
+        Returns:
+            True if the callback is to be always executed
+        """
+        actions = self._binding.root_action.get_actions()[0]
+        values = [
+            ActionProperty.AlwaysExecute in a.properties for
+            a in actions
+        ]
+        return any(values)
+
     def __call__(self, event: event_handler.Event) -> None:
         values = self._generate_values(event)
         for i, value in enumerate(values):
@@ -261,7 +277,6 @@ class CallbackObject:
         virt_item.input_id = self._virtual_identifier
         virt_item.mode = phys_item.mode
         virt_item.action_sequences = phys_item.action_configurations
-        virt_item.always_execute = phys_item.always_execute
         virt_item.is_active = phys_item.is_active
         # Create virtual InputItemBinding instance
         virt_binding = profile.InputItemBinding(virt_item)
@@ -276,8 +291,7 @@ class CallbackObject:
             dill.GUID_Virtual,
             self._binding.input_item.mode,
             virtual_event,
-            CallbackObject(virt_binding),
-            virt_binding.input_item.always_execute
+            CallbackObject(virt_binding)
         )
 
     def _generate_values(self, event):
@@ -353,8 +367,7 @@ class CodeRunner:
                                 dev_id,
                                 mode,
                                 event,
-                                callback[0],
-                                callback[1]
+                                callback,
                             )
                             callback_count += 1
 
@@ -365,8 +378,7 @@ class CodeRunner:
                     0,
                     mode_name,
                     None,
-                    lambda x: x,
-                    False
+                    lambda x: x
                 )
 
             # Process action sequences defined via the UI
@@ -509,6 +521,5 @@ class CodeRunner:
                 event.device_guid,
                 action.input_item.mode,
                 event,
-                CallbackObject(action),
-                action.input_item.always_execute
+                CallbackObject(action)
             )

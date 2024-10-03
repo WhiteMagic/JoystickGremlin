@@ -434,8 +434,7 @@ class EventHandler(QtCore.QObject):
             device_guid: uuid.UUID,
             mode: str,
             event: Event,
-            callback: Callable[[Event, Value], None],
-            permanent: bool=False
+            callback: Callable[[Event, Value], None]
     ) -> None:
         """Installs the provided callback for the given event.
 
@@ -444,8 +443,6 @@ class EventHandler(QtCore.QObject):
             mode: the mode the callback belongs to
             event: the event for which to install the callback
             callback: the callback function to link to the provided event
-            permanent: if True the callback is always active even if the
-                system is paused
         """
         if device_guid not in self.callbacks:
             self.callbacks[device_guid] = {}
@@ -453,10 +450,9 @@ class EventHandler(QtCore.QObject):
             self.callbacks[device_guid][mode] = {}
         if event not in self.callbacks[device_guid][mode]:
             self.callbacks[device_guid][mode][event] = []
-        self.callbacks[device_guid][mode][event].append((
-            self._install_plugins(callback),
-            permanent
-        ))
+        self.callbacks[device_guid][mode][event].append(
+            self._install_plugins(callback)
+        )
 
     def build_event_lookup(self, modes: profile.ModeHierarchy) -> None:
         """Builds the lookup table linking events to callbacks.
@@ -543,9 +539,9 @@ class EventHandler(QtCore.QObject):
 
         # Filter events when the system is paused
         if not self.process_callbacks:
-            return [c[0] for c in callback_list if c[1]]
+            return [c for c in callback_list if c.always_execute]
         else:
-            return [c[0] for c in callback_list]
+            return callback_list
 
     def _install_plugins(
             self,
