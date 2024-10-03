@@ -27,7 +27,7 @@ from PySide6.QtCore import Property, Signal, Slot
 from gremlin import event_handler, input_devices, keyboard, shared_state, \
     windows_event_hook
 
-from gremlin.types import InputType
+from gremlin.types import InputType, MouseButton
 
 
 QML_IMPORT_NAME = "Gremlin.Util"
@@ -160,8 +160,11 @@ class InputListenerModel(QtCore.QObject):
             self._abort_timer.cancel()
             self.listeningTerminated.emit(self._inputs)
 
-        # Terminate listening if a release event is observed
-        if not event.is_pressed:
+        # Terminate listening if a release event is observed or a mouse wheel
+        # is actuated
+        wheel_scrolled = event.event_type == InputType.Mouse and \
+                event.identifier in [MouseButton.WheelUp, MouseButton.WheelDown]
+        if not event.is_pressed or wheel_scrolled:
             self._abort_timer.cancel()
             self.listeningTerminated.emit(self._inputs)
 
