@@ -104,6 +104,38 @@ class MapToMouseModel(ActionModel):
             self._data.mode = mode
             self.changed.emit()
 
+    def _get_direction(self) -> int:
+        return self._data.direction
+
+    def _set_direction(self, value: int) -> None:
+        if value != self._data.direction:
+            self._data.direction = value
+            self.changed.emit()
+
+    def _get_min_speed(self) -> int:
+        return self._data.min_speed
+
+    def _set_min_speed(self, value: int) -> None:
+        if value != self._data.min_speed:
+            self._data.min_speed = value
+            self.changed.emit()
+
+    def _get_max_speed(self) -> int:
+        return self._data.max_speed
+
+    def _set_max_speed(self, value: int) -> None:
+        if value != self._data.max_speed:
+            self._data.max_speed = value
+            self.changed.emit()
+
+    def _get_time_to_max_speed(self) -> float:
+        return self._data.time_to_max_speed
+
+    def _set_time_to_max_speed(self, value: float) -> None:
+        if value != self._data.time_to_max_speed:
+            self._data.time_to_max_speed = value
+            self.changed.emit()
+
     @Property(str, notify=changed)
     def button(self) -> str:
         return MouseButton.to_string(self._data.button)
@@ -125,6 +157,34 @@ class MapToMouseModel(ActionModel):
         str,
         fget=_get_mode,
         fset=_set_mode,
+        notify=changed
+    )
+
+    direction = Property(
+        int,
+        fget=_get_direction,
+        fset=_set_direction,
+        notify=changed
+    )
+
+    minSpeed = Property(
+        int,
+        fget=_get_min_speed,
+        fset=_set_min_speed,
+        notify=changed
+    )
+
+    maxSpeed = Property(
+        int,
+        fget=_get_max_speed,
+        fset=_set_max_speed,
+        notify=changed
+    )
+
+    timeToMaxSpeed = Property(
+        float,
+        fget=_get_time_to_max_speed,
+        fset=_set_time_to_max_speed,
         notify=changed
     )
 
@@ -157,19 +217,49 @@ class MapToMouseData(AbstractActionData):
 
         # Model variables
         self.mode = MapToMouseMode.Button
+        if behavior_type in [InputType.JoystickAxis, InputType.JoystickHat]:
+            self.mode = MapToMouseMode.Motion
         self.button = MouseButton.Left
+        self.direction = 0
+        self.min_speed = 5
+        self.max_speed = 15
+        self.time_to_max_speed = 1.0
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.mode = MapToMouseMode.lookup(util.read_property(
             node, "mode", PropertyType.String
         ))
+        if self.mode == MapToMouseMode.Button:
+            self.button = MouseButton.to_enum(util.read_property(
+                node, "button", PropertyType.String
+            ))
+        else:
+            self.direction = util.read_property(node, "direction", PropertyType.Int)
+            self.min_speed = util.read_property(node, "min-speed", PropertyType.Int)
+            self.max_speed = util.read_property(node, "max-speed", PropertyType.Int)
+            self.time_to_max_speed = util.read_property(
+                node, "time-to-max-speed", PropertyType.Float
+            )
 
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToMouseData.tag, self._id)
-        node.append(util.create_property_node(
-            "mode", self.mode.name, PropertyType.String
-        ))
+        entries = [
+            ["mode", self.mode.name, PropertyType.String],
+        ]
+        if self.mode == MapToMouseMode.Button:
+            entries.append([
+                "button", MouseButton.to_string(self.button), PropertyType.String
+            ])
+        else:
+            entries.extend([
+                ["direction", self.direction, PropertyType.Int],
+                ["min-speed", self.min_speed, PropertyType.Int],
+                ["max-speed", self.max_speed, PropertyType.Int],
+                ["time-to-max-speed", self.time_to_max_speed, PropertyType.Float],
+            ])
+
+        util.append_property_nodes(node, entries)
         return node
 
     def is_valid(self) -> bool:
@@ -186,7 +276,8 @@ class MapToMouseData(AbstractActionData):
         old_behavior: InputType,
         new_behavior: InputType
     ) -> None:
-        pass
+        if new_behavior in [InputType.JoystickAxis, InputType.JoystickHat]:
+            self.mode = MapToMouseMode.Motion
 
 
 create = MapToMouseData

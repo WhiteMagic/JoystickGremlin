@@ -78,6 +78,7 @@ Item {
             }
         }
 
+        // Button configuration
         RowLayout {
             visible: _mode_button.checked
 
@@ -91,22 +92,236 @@ Item {
                 eventTypes: ["mouse"]
 
                 buttonLabel: _root.action.button
-
-                Component.onCompleted: function() {
-                    console.log(inputBinding.behavior)
-                }
             }
 
         }
 
-        RowLayout {
-            visible: _mode_motion.checked
+        // Motion configuration for button-like inputs
+        GridLayout {
+            visible: _mode_motion.checked && inputBinding.behavior === "button"
+
+            columns: 5
 
             Label {
-                text: "Mouse Motion"
+                Layout.fillWidth: true
+
+                text: "Minimum speed"
             }
 
+            SpinBox {
+                id: _min_speed_button
 
+                Layout.fillWidth: true
+
+                value: _root.action.minSpeed
+                from: 0
+                to: _max_speed_button.value
+
+                onValueModified: function() {
+                    _root.action.minSpeed = value
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.horizontalStretchFactor: 1
+            }
+
+            Label {
+                Layout.fillWidth: true
+
+                text: "Maximum speed"
+            }
+
+            SpinBox {
+                id: _max_speed_button
+
+                Layout.fillWidth: true
+
+                value: _root.action.maxSpeed
+                from: _min_speed_button.value
+                to: 100
+
+                onValueModified: function() {
+                    _root.action.maxSpeed = value
+                }
+            }
+
+            Label {
+                text: "Time to maximum speed"
+            }
+
+            FloatSpinBox {
+                minValue: 0
+                maxValue: 30
+                realValue: _root.action.timeToMaxSpeed
+                stepSize: 1.0
+                decimals: 1
+
+                onRealValueModified: function() {
+                    _root.action.timeToMaxSpeed = realValue
+                }
+            }
+
+            Rectangle {}
+
+            Label {
+                text: "Direction"
+            }
+
+            SpinBox {
+                value: _root.action.direction
+                from: 0
+                to: 360
+                stepSize: 15
+
+                onValueModified: function() {
+                    _root.action.direction = value
+                }
+            }
+        }
+
+        // Motion configuration for axis inputs
+        GridLayout {
+            visible: _mode_motion.checked && inputBinding.behavior === "axis"
+
+            columns: 4
+
+            Label {
+                Layout.fillWidth: true
+
+                text: "Control"
+            }
+
+            RadioButton {
+                Layout.fillWidth: true
+
+                text: "X Axis"
+
+                checked: _root.action.direction === 90
+                onClicked: function() {
+                    _root.action.direction = 90
+                }
+            }
+
+            RadioButton {
+                Layout.fillWidth: true
+
+                text: "Y Axis"
+
+                checked: _root.action.direction === 0
+                onClicked: function() {
+                    _root.action.direction = 0
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.horizontalStretchFactor: 1
+            }
+
+            Label {
+                Layout.fillWidth: true
+
+                text: "Minimum speed"
+            }
+
+            SpinBox {
+                id: _min_speed_axis
+
+                Layout.fillWidth: true
+
+                value: _root.action.minSpeed
+                from: 0
+                to: _max_speed_axis.value
+
+                onValueModified: function() {
+                    _root.action.minSpeed = value
+                }
+            }
+
+            Label {
+                Layout.fillWidth: true
+
+                text: "Maximum speed"
+            }
+
+            SpinBox {
+                id: _max_speed_axis
+
+                Layout.fillWidth: true
+
+                value: _root.action.maxSpeed
+                from: _min_speed_axis.value
+                to: 100
+
+                onValueModified: function() {
+                    _root.action.maxSpeed = value
+                }
+            }
+        }
+
+        // Motion configuration for hat inputs
+        GridLayout {
+            visible: _mode_motion.checked && inputBinding.behavior === "hat"
+
+            columns: 4
+
+            Label {
+                Layout.fillWidth: true
+
+                text: "Minimum speed"
+            }
+
+            SpinBox {
+                id: _min_speed_hat
+
+                Layout.fillWidth: true
+
+                value: _root.action.minSpeed
+                from: 0
+                to: _max_speed_hat.value
+
+                onValueModified: function() {
+                    _root.action.minSpeed = value
+                }
+            }
+
+            Label {
+                Layout.fillWidth: true
+
+                text: "Maximum speed"
+            }
+
+            SpinBox {
+                id: _max_speed_hat
+
+                Layout.fillWidth: true
+
+                value: _root.action.maxSpeed
+                from: _min_speed_hat.value
+                to: 100
+
+                onValueModified: function() {
+                    _root.action.maxSpeed = value
+                }
+            }
+
+            Label {
+                text: "Time to maximum speed"
+            }
+
+            FloatSpinBox {
+                minValue: 0
+                maxValue: 30
+                realValue: _root.action.timeToMaxSpeed
+                stepSize: 1.0
+                decimals: 1
+
+                onRealValueModified: function() {
+                    _root.action.timeToMaxSpeed = realValue
+                }
+            }
         }
     }
 }
