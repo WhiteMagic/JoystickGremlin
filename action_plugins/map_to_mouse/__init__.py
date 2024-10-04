@@ -18,13 +18,14 @@
 from __future__ import annotations
 
 import enum
+import math
 from typing import Any, List, Optional, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import event_handler, util
+from gremlin import event_handler, sendinput, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataCreationMode, Value
 from gremlin.error import GremlinError
@@ -58,6 +59,8 @@ class MapToMouseFunctor(AbstractFunctor):
     def __init__(self, action: MapToMouseData):
         super().__init__(action)
 
+        self.mouse_controller = sendinput.MouseController()
+
     def __call__(
         self,
         event: event_handler.Event,
@@ -69,7 +72,89 @@ class MapToMouseFunctor(AbstractFunctor):
             event: the input event to process
             value: the potentially modified input value
         """
-        pass
+        if self.data.mode == MapToMouseMode.Motion:
+            if event.event_type == InputType.JoystickAxis:
+                self._perform_axis_motion(event, value)
+            elif event.event_type == InputType.JoystickHat:
+                self._perform_hat_motion(event, value)
+            else:
+                self._perform_button_motion(event, value)
+        else:
+            self._perform_mouse_button(event, value)
+
+    def _perform_mouse_button(
+            self,
+            event: event_handler.Event,
+            value: Value
+    ) -> None:
+        """Processes mouse button presses.
+
+        Args:
+            event: input event to process
+            value: potentially modified input value
+        """
+        if self.data.button in [MouseButton.WheelDown, MouseButton.WheelUp]:
+            if value.current:
+                sendinput.mouse_wheel(
+                    1 if self.data.button == MouseButton.WheelDown else -1
+                )
+        else:
+            if value.current:
+                sendinput.mouse_press(self.data.button)
+            else:
+                sendinput.mouse_release(self.data.button)
+
+    def _perform_axis_motion(self, event, value):
+        """Processes axis-controlled motion.
+
+        Args:
+            event: input event to process
+            value: potentially modified input value
+        """
+        delta_motion = self.data.min_speed + abs(value.current) * \
+                (self.data.max_speed - self.data.min_speed)
+        delta_motion = math.copysign(delta_motion, value.current)
+        delta_motion = 0.0 if abs(value.current) < 0.05 else delta_motion
+
+        dx = delta_motion if self.data.direction == 90 else None
+        dy = delta_motion if self.data.direction == 0  else None
+        self.mouse_controller.set_absolute_motion(dx, dy)
+
+    def _perform_button_motion(self, event, value):
+        """Processes button-controlled motion.
+
+        Args:
+            event: input event to process
+            value: potentially modified input value
+        """
+        if event.is_pressed:
+            self.mouse_controller.set_accelerated_motion(
+                self.data.direction,
+                self.data.min_speed,
+                self.data.max_speed,
+                self.data.time_to_max_speed
+            )
+        else:
+            self.mouse_controller.set_absolute_motion(0, 0)
+
+    def _perform_hat_motion(self, event, value):
+        """Processes hat-controlled motion.
+
+        Args:
+            event: input event to process
+            value: potentially modified input value
+        """
+        if value.current == (0, 0):
+            self.mouse_controller.set_absolute_motion(0, 0)
+        else:
+            self.mouse_controller.set_accelerated_motion(
+                util.rad2deg(
+                    math.atan2(-value.current[1], value.current[0])
+                ) + 90.0,
+                self.data.min_speed,
+                self.data.max_speed,
+                self.data.time_to_max_speed
+            )
 
 
 class MapToMouseModel(ActionModel):
