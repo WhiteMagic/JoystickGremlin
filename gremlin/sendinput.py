@@ -22,6 +22,7 @@ import enum
 import math
 import threading
 import time
+from typing import Tuple
 
 from gremlin.common import SingletonDecorator
 from gremlin.types import MouseButton
@@ -74,11 +75,12 @@ class MouseMotion:
     # Time step between calls
     delta_t = 0.01
 
-    def __init__(self, dx=0, dy=0):
+    def __init__(self, dx: float=0, dy: float=0):
         """Creates a new instance.
 
-        :param dx motion along the x axis in pixels per second
-        :param dy motion along the y axis in pixels per second
+        Args:
+            dx: motion along the x-axis in pixels per second
+            dy: motion along the y-axis in pixels per second
         """
         self.dx = dx
         self.dy = dy
@@ -89,10 +91,11 @@ class MouseMotion:
         self._dx_timestamp = 0
         self._dy_timestamp = 0
 
-    def __call__(self):
+    def __call__(self) -> Tuple[int, int]:
         """Returns the change in x and y for this point in time.
 
-        :return dx, dy for this time point
+        Returns:
+            The change in (dx, dy) for this time point
         """
         if self._tick_dx_value == 0 and self._tick_dy_value == 0:
             return 0, 0
@@ -108,12 +111,18 @@ class MouseMotion:
             delta_y = self._tick_dy_value
             self._dy_timestamp = cur_time + self._tick_dy_time
 
+        print(delta_x, delta_y)
         return delta_x, delta_y
 
-    def _compute_values(self, delta):
+    def _compute_values(self, delta: float) -> Tuple[int, float]:
         """Computes discretization values to send integer motions.
 
-        :param delta the amount of change in pixels per second to discretize for
+        Args:
+            delta: the amount of change in pixels per second to discretize for
+
+        Returns:
+            Discretization information in terms of cursor movement amount
+            and movement interval
         """
         delta = 0.0 if abs(delta) < 1e-6 else delta
         tick_value = math.ceil(abs(delta) / 100.0)
@@ -130,26 +139,29 @@ class FixedMouseMotion(MouseMotion):
 
     """Motion generation with fixed speed."""
 
-    def __init__(self, dx, dy):
+    def __init__(self, dx: float, dy: float):
         """Creates a new instance.
 
-        :param dx motion along the x axis in pixels per second
-        :param dy motion along the y axis in pixels per second
+        Args:
+            dx: motion along the x-axis in pixels per second
+            dy: motion along the y-axis in pixels per second
         """
         super().__init__(dx, dy)
 
-    def set_dx(self, value):
+    def set_dx(self, value: float) -> None:
         """Updates the x velocity.
 
-        :param value speed in pixels per second along the x axis
+        Args:
+            value: speed in pixels per second along the x-axis
         """
         self.dx = value
         self._tick_dx_value, self._tick_dx_time = self._compute_values(self.dx)
 
-    def set_dy(self, value):
+    def set_dy(self, value: float) -> None:
         """Updates the y velocity.
 
-        :param value speed in pixels per second along the y axis
+        Args:
+            value speed in pixels per second along the y-axis
         """
         self.dy = value
         self._tick_dy_value, self._tick_dy_time = self._compute_values(self.dy)
@@ -159,17 +171,24 @@ class AcceleratedMouseMotion(MouseMotion):
 
     """Motion generation with acceleration over time."""
 
-    def __init__(self, direction, min_speed, max_speed, time_to_max_speed):
+    def __init__(
+            self,
+            direction: int,
+            min_speed: float,
+            max_speed: float,
+            time_to_max_speed: float
+    ):
         """Creates a new instance.
 
-        :param direction the direction of motion
-        :param min_speed minimum speed in pixels per second
-        :param max_speed maximum speed in pixels per second
-        :param time_to_max_speed time to reach max_speed
+        Args:
+            direction: the direction of motion
+            min_speed: minimum speed in pixels per second
+            max_speed: maximum speed in pixels per second
+            time_to_max_speed: time to reach max_speed
         """
         super().__init__()
 
-        self.direction = direction - 90.0
+        self.direction = direction - 90
         self.min_velocity = min_speed
         self.max_velocity = max_speed
         # Make sure we don't get numerical issues with acceleration computation
@@ -184,31 +203,38 @@ class AcceleratedMouseMotion(MouseMotion):
         self._tick_dx_value, self._tick_dx_time = self._compute_values(self.dx)
         self._tick_dy_value, self._tick_dy_time = self._compute_values(self.dy)
 
-    def set_direction(self, direction):
+    def set_direction(self, direction: int):
         """Sets the direction for which to emit position changes.
 
-        :param direction new direction of travel
+        Args:
+            direction: new direction of travel
         """
-        self.direction = direction - 90.0
+        self.direction = direction - 90
         self.dx, self.dy = \
             self._decompose_xy(self.direction, self.current_velocity)
         self._tick_dx_value, self._tick_dx_time = self._compute_values(self.dx)
         self._tick_dy_value, self._tick_dy_time = self._compute_values(self.dy)
 
-    def _decompose_xy(self, direction, value):
+    def _decompose_xy(self, direction: int, value: float) -> Tuple[float, float]:
         """Returns x and y values corresponding to a direction and value.
 
-        :param direction direction in degrees with 0 being pure motion along
-            positive y
-        :param value the length of the direction vector
+        Args:
+            direction: direction in degrees with 0 being pure motion along
+                positive y
+            value: the length of the direction vector
+
+        Returns:
+            Motion in x and y direction corresponding to the original combined
+            velocity vector
         """
         return value * math.cos(deg2rad(direction)),\
             value * math.sin(deg2rad(direction))
 
-    def __call__(self):
+    def __call__(self) -> Tuple[float, float]:
         """Returns the change in x and y for this point in time.
 
-        :return dx, dy for this time point
+        Returns:
+            The change in (dx, dy) for this time point
         """
         # Get values to return using current integration step values
         dx, dy = super().__call__()
@@ -240,13 +266,18 @@ class MouseController:
         self._is_running = False
         self._thread = threading.Thread(target=self._control_loop)
 
-    def set_absolute_motion(self, dx=None, dy=None):
+    def set_absolute_motion(
+            self,
+            dx: int|None=None,
+            dy: int|None=None
+    ) -> None:
         """Configures a motion using absolute velocities.
 
         If dx / dy are set to None their values will not be updated.
 
-        :param dx velocity along the x axis in pixels per second
-        :param dy velocity along the y axis in pixels per second
+        Args:
+            dx: velocity along the x-axis in pixels per second
+            dy: velocity along the y-axis in pixels per second
         """
         if self._motion_type == MotionType.Fixed:
             if dx is not None:
@@ -262,17 +293,18 @@ class MouseController:
 
     def set_accelerated_motion(
             self,
-            direction,
-            min_speed,
-            max_speed,
-            time_to_max_speed
-    ):
+            direction: int,
+            min_speed: int,
+            max_speed: int,
+            time_to_max_speed: float
+    ) -> None:
         """Configures a motion using acceleration.
 
-        :param direction the direction of motion
-        :param min_speed minimum speed in pixels per second
-        :param max_speed maximum speed in pixels per second
-        :param time_to_max_speed time to reach max_speed
+        Args:
+            direction: the direction of motion
+            min_speed: minimum speed in pixels per second
+            max_speed: maximum speed in pixels per second
+            time_to_max_speed: time to reach max_speed
         """
         if self._motion_type == MotionType.Accelerated:
             self._delta_generator.set_direction(direction)
@@ -285,19 +317,19 @@ class MouseController:
             )
             self._motion_type = MotionType.Accelerated
 
-    def start(self):
+    def start(self) -> None:
         """Starts the thread that will send motions when required."""
         if not self._is_running:
             self._thread = threading.Thread(target=self._control_loop)
             self._thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stops the thread that sends motion events."""
         if self._thread.is_alive():
             self._is_running = False
             self._thread.join()
 
-    def _control_loop(self):
+    def _control_loop(self) -> None:
         """Loop responsible for creating and sending mouse motion events."""
         self._is_running = True
 
@@ -367,13 +399,13 @@ class _INPUT(ctypes.Structure):
     )
 
 
-def mouse_relative_motion(dx, dy):
+def mouse_relative_motion(dx: int, dy: int):
     _send_input(
         _mouse_input(MOUSEEVENTF_MOVE, dx, dy)
     )
 
 
-def mouse_press(button):
+def mouse_press(button: MouseButton):
     if button == MouseButton.Left:
         _send_input(_mouse_input(MOUSEEVENTF_LEFTDOWN))
     elif button == MouseButton.Right:
@@ -386,7 +418,7 @@ def mouse_press(button):
         _send_input(_mouse_input(MOUSEEVENTF_XDOWN, data=XBUTTON2))
 
 
-def mouse_release(button):
+def mouse_release(button: MouseButton):
     if button == MouseButton.Left:
         _send_input(_mouse_input(MOUSEEVENTF_LEFTUP))
     elif button == MouseButton.Right:
@@ -399,11 +431,11 @@ def mouse_release(button):
         _send_input(_mouse_input(MOUSEEVENTF_XUP, data=XBUTTON2))
 
 
-def mouse_wheel(motion):
+def mouse_wheel(motion: int):
     _send_input(_mouse_input(MOUSEEVENTF_WHEEL, data=-motion*WHEEL_DELTA))
 
 
-def _mouse_input(flags, dx=0, dy=0, data=0):
+def _mouse_input(flags, dx: int=0, dy: int=0, data: int=0):
     return _INPUT(
         INPUT_MOUSE,
         _INPUTunion(mi=_MOUSEINPUT(dx, dy, data, flags, 0, None))
