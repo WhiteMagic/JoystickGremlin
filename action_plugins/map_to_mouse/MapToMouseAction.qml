@@ -33,6 +33,9 @@ Item {
 
     property MapToMouseModel action
 
+    property int limitLow: 0
+    property int limitHigh: 1000
+
     implicitHeight: _content.height
 
     ColumnLayout {
@@ -114,8 +117,9 @@ Item {
                 Layout.fillWidth: true
 
                 value: _root.action.minSpeed
-                from: 0
+                from: limitLow
                 to: _max_speed_button.value
+                editable: true
 
                 onValueModified: function() {
                     _root.action.minSpeed = value
@@ -140,7 +144,8 @@ Item {
 
                 value: _root.action.maxSpeed
                 from: _min_speed_button.value
-                to: 100
+                to: limitHigh
+                editable: true
 
                 onValueModified: function() {
                     _root.action.maxSpeed = value
@@ -174,6 +179,7 @@ Item {
                 from: 0
                 to: 360
                 stepSize: 15
+                editable: true
 
                 onValueModified: function() {
                     _root.action.direction = value
@@ -232,8 +238,9 @@ Item {
                 Layout.fillWidth: true
 
                 value: _root.action.minSpeed
-                from: 0
+                from: limitLow
                 to: _max_speed_axis.value
+                editable: true
 
                 onValueModified: function() {
                     _root.action.minSpeed = value
@@ -253,7 +260,8 @@ Item {
 
                 value: _root.action.maxSpeed
                 from: _min_speed_axis.value
-                to: 100
+                to: limitHigh
+                editable: true
 
                 onValueModified: function() {
                     _root.action.maxSpeed = value
@@ -279,8 +287,9 @@ Item {
                 Layout.fillWidth: true
 
                 value: _root.action.minSpeed
-                from: 0
+                from: limitLow
                 to: _max_speed_hat.value
+                editable: true
 
                 onValueModified: function() {
                     _root.action.minSpeed = value
@@ -300,7 +309,8 @@ Item {
 
                 value: _root.action.maxSpeed
                 from: _min_speed_hat.value
-                to: 100
+                to: limitHigh
+                editable: true
 
                 onValueModified: function() {
                     _root.action.maxSpeed = value
