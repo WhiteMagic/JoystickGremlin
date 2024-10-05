@@ -26,3 +26,8 @@ function selectText(value, text1, text2)
 {
     return value ? text1 : text2
 }
+
+function safeText(text, backup)
+{
+    return !text ? backup : text
+}
