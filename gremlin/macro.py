@@ -584,22 +584,34 @@ class AbstractRepeat(ABC):
         """
         self.delay = delay
 
-    @abstractmethod
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the repeat information.
 
         Returns:
             XML node containing the instance's information
         """
-        pass
+        node = ElementTree.Element("repeat")
+        node.append(util.create_property_node(
+            "delay", self.delay, PropertyType.Float)
+        )
+        self._to_xml_additional(node)
+        return node
 
-    @abstractmethod
     def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
         Args:
             node: XML node containing data with which to populate the instance
         """
+        self.delay = util.read_property(node, "delay", PropertyType.Float)
+        self._from_xml_additional(node)
+
+    @abstractmethod
+    def _to_xml_additional(self, node: ElementTree.Element) -> None:
+        pass
+
+    @abstractmethod
+    def _from_xml_additional(self, node: ElementTree.Element) -> None:
         pass
 
 
@@ -617,26 +629,24 @@ class CountRepeat(AbstractRepeat):
         super().__init__(delay)
         self.count = count
 
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml_additional(self, node: ElementTree.Element) -> None:
         """Returns an XML node encoding the repeat information.
 
-        Returns:
-            XML node containing the instance's information
+        Args:
+            node: XML node containing the instance's information
         """
-        node = ElementTree.Element("repeat")
         node.set("type", "count")
-        node.set("count", str(self.count))
-        node.set("delay", str(self.delay))
-        return node
+        node.append(util.create_property_node(
+            "count", self.count, PropertyType.Int
+        ))
 
-    def from_xml(self, node: ElementTree.Element) -> None:
+    def _from_xml_additional(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
         Args:
             node: XML node containing data with which to populate the instance
         """
-        self.delay = float(node.get("delay"))
-        self.count = int(node.get("count"))
+        self.count = util.read_property(node, "count", PropertyType.Int)
 
 
 class ToggleRepeat(AbstractRepeat):
@@ -652,24 +662,21 @@ class ToggleRepeat(AbstractRepeat):
         """
         super().__init__(delay)
 
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml_additional(self, node: ElementTree.Element) -> None:
         """Returns an XML node encoding the repeat information.
 
-        Returns:
-            XML node containing the instance's information
+        Args:
+            node: XML node containing the instance's information
         """
-        node = ElementTree.Element("repeat")
         node.set("type", "toggle")
-        node.set("delay", str(self.delay))
-        return node
 
-    def from_xml(self, node: ElementTree.Element) -> None:
+    def _from_xml_additional(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
         Args:
             node: XML node containing data with which to populate the instance
         """
-        self.delay = float(node.get("delay"))
+        pass
 
 
 class HoldRepeat(AbstractRepeat):
@@ -685,21 +692,18 @@ class HoldRepeat(AbstractRepeat):
         """
         super().__init__(delay)
 
-    def to_xml(self) -> ElementTree.Element:
+    def _to_xml_additional(self, node: ElementTree.Element) -> None:
         """Returns an XML node encoding the repeat information.
 
-        Returns:
-            XML node containing the instance's information
+        Args:
+            node: XML node containing the instance's information
         """
-        node = ElementTree.Element("repeat")
         node.set("type", "hold")
-        node.set("delay", str(self.delay))
-        return node
 
-    def from_xml(self, node: ElementTree.Element) -> None:
+    def _from_xml_additional(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
         Args:
             node XML node containing data with which to populate the instance
         """
-        self.delay = float(node.get("delay"))
+        pass
