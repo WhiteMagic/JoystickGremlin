@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import collections
 import functools
@@ -24,8 +26,10 @@ from threading import Event, Lock, Thread
 import uuid
 from xml.etree import ElementTree
 
+from win32security import POLICY_READ
+
 import gremlin
-from gremlin import mode_manager
+from gremlin import mode_manager, util
 from gremlin.base_classes import AbstractActionData
 from gremlin.common import SingletonDecorator
 from gremlin.keyboard import send_key_down, send_key_up, key_from_name, Key
@@ -348,6 +352,19 @@ class AbstractAction(ABC):
     def from_xml(self, node: ElementTree.Element) -> None:
         pass
 
+    def _create_node(self, type_name: str) -> ElementTree.Element:
+        """Creates an action node of the given type.
+
+        Args:
+            type_name: name of the type of this action node
+
+        Returns:
+            An action node typed as request
+        """
+        node = ElementTree.Element("action")
+        node.set("type", type_name)
+        return node
+
 
 class JoystickAction(AbstractAction):
 
@@ -407,10 +424,49 @@ class JoystickAction(AbstractAction):
         el.joystick_event.emit(event)
 
     def to_xml(self) -> ElementTree.Element:
-        pass
+        node = self._create_node("joystick")
+        util.append_property_nodes([
+            ["device-guid", self.device_guid, PropertyType.UUID],
+            ["input-type", self.input_type, PropertyType.InputType],
+            ["input-id", self.input_id, PropertyType.Int],
+        ])
+        if self.input_type == InputType.JoystickAxis:
+            util.append_property_nodes(
+                node,
+                [
+                    ["value", self.value, PropertyType.Float],
+                    ["axis-mode", self.axis_mode, PropertyType.AxisMode]
+                ]
+            )
+        elif self.input_type == InputType.JoystickButton:
+            node.append(util.create_property_node(
+                "value", self.value, PropertyType.Bool
+            ))
+        elif self.input_type == InputType.JoystickHat:
+            node.append(util.create_property_node(
+                "value", self.value, PropertyType.HatDirection
+            ))
+        return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self.device_guid = util.read_property(
+            node, "device-guid", PropertyType.UUID
+        )
+        self.input_type = util.read_property(
+            node, "input-type", PropertyType.InputType
+        )
+        self.input_id = util.read_property(node, "input-id", PropertyType.Int)
+        if self.input_type == InputType.JoystickAxis:
+            self.value = util.read_property(node, "value", PropertyType.Float)
+            self.axis_mode = util.read_property(
+                node, "axis-mode", PropertyType.AxisMode
+            )
+        elif self.input_type == InputType.JoystickButton:
+            self.value = util.read_property(node, "value", PropertyType.Bool)
+        elif self.input_type == InputType.JoystickHat:
+            self.value = util.read_property(
+                node, "value", PropertyType.HatDirection
+            )
 
 
 class KeyAction(AbstractAction):
@@ -426,6 +482,7 @@ class KeyAction(AbstractAction):
         """
         if not isinstance(key, Key):
             raise gremlin.error.KeyboardError("Invalid Key instance provided")
+
         self.key = key
         self.is_pressed = is_pressed
 
@@ -436,10 +493,25 @@ class KeyAction(AbstractAction):
             send_key_up(self.key)
 
     def to_xml(self) -> ElementTree.Element:
-        pass
+        node = self._create_node("key")
+        util.append_property_nodes(
+            node,
+            [
+                ["scan-code", self.key.scan_code, PropertyType.Int],
+                ["is-extended", self.key.is_extended, PropertyType.Bool],
+                ["is-pressed", self.is_pressed, PropertyType.Bool],
+            ]
+        )
+        return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self.key = key_from_code(
+            util.read_property(node, "scan-code", PropertyType.Int),
+            util.read_property(node, "is-extended", PropertyType.Bool)
+        )
+        self.is_pressed = util.read_property(
+            node, "is-pressed", PropertyType.Bool
+        )
 
 
 class MouseButtonAction(AbstractAction):
@@ -471,10 +543,23 @@ class MouseButtonAction(AbstractAction):
                 gremlin.sendinput.mouse_release(self.button)
 
     def to_xml(self) -> ElementTree.Element:
-        pass
+        node = self._create_node("mouse")
+        util.append_property_nodes(
+            node,
+            [
+                ["button", MouseButton.to_string(self.button), PropertyType.String],
+                ["is-pressed", self.is_pressed, PropertyType.Bool],
+            ]
+        )
+        return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self.button = MouseButton.to_enum(util.read_property(
+            node, "button", PropertyType.String
+        ))
+        self.is_pressed = util.read_property(
+            node, "is-pressed", PropertyType.Bool
+        )
 
 
 class MouseMotionAction(AbstractAction):
@@ -495,10 +580,19 @@ class MouseMotionAction(AbstractAction):
         gremlin.sendinput.mouse_relative_motion(self.dx, self.dy)
 
     def to_xml(self) -> ElementTree.Element:
-        pass
+        node = self._create_node("mouse-motion")
+        util.append_property_nodes(
+            node,
+            [
+                ["dx", self.dx, PropertyType.Int],
+                ["dy", self.dy, PropertyType.Int],
+            ]
+        )
+        return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self.dx = util.read_property(node, "dx", PropertyType.Int)
+        self.dy = util.read_property(node, "dy", PropertyType.Int)
 
 
 class PauseAction(AbstractAction):
@@ -517,10 +611,16 @@ class PauseAction(AbstractAction):
         time.sleep(self.duration)
 
     def to_xml(self) -> ElementTree.Element:
-        pass
+        node = self._create_node("pause")
+        node.append(util.create_property_node(
+            "duration", self.duration, PropertyType.Float
+        ))
+        return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self.duration = util.read_property(
+            node, "duration", PropertyType.Float
+        )
 
 
 class VJoyAction(AbstractAction):
@@ -566,10 +666,46 @@ class VJoyAction(AbstractAction):
             vjoy.hat(self.input_id).direction = self.value
 
     def to_xml(self) -> ElementTree.Element:
-        pass
+        node = self._create_node("joystick")
+        util.append_property_nodes([
+            ["vjoy-id", self.vjoy_id, PropertyType.Int],
+            ["input-type", self.input_type, PropertyType.InputType],
+            ["input-id", self.input_id, PropertyType.Int],
+        ])
+        if self.input_type == InputType.JoystickAxis:
+            util.append_property_nodes(
+                node,
+                [
+                    ["value", self.value, PropertyType.Float],
+                    ["axis-mode", self.axis_mode, PropertyType.AxisMode]
+                ])
+        elif self.input_type == InputType.JoystickButton:
+            node.append(util.create_property_node(
+                "value", self.value, PropertyType.Bool
+            ))
+        elif self.input_type == InputType.JoystickHat:
+            node.append(util.create_property_node(
+                "value", self.value, PropertyType.HatDirection
+            ))
+        return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self.vjoy_id = util.read_property(node, "vjoy-id", PropertyType.Int)
+        self.input_type = util.read_property(
+            node, "input-type", PropertyType.InputType
+        )
+        self.input_id = util.read_property(node, "input-id", PropertyType.Int)
+        if self.input_type == InputType.JoystickAxis:
+            self.value = util.read_property(node, "value", PropertyType.Float)
+            self.axis_mode = util.read_property(
+                node, "axis-mode", PropertyType.AxisMode
+            )
+        elif self.input_type == InputType.JoystickButton:
+            self.value = util.read_property(node, "value", PropertyType.Bool)
+        elif self.input_type == InputType.JoystickHat:
+            self.value = util.read_property(
+                node, "value", PropertyType.HatDirection
+            )
 
 
 class AbstractRepeat(ABC):
