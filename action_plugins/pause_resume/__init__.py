@@ -135,7 +135,9 @@ class PauseResumeData(AbstractActionData):
         ActionProperty.AlwaysExecute
     ]
     input_types = [
+        InputType.JoystickAxis,
         InputType.JoystickButton,
+        InputType.JoystickHat,
         InputType.Keyboard
     ]
 
