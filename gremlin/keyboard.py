@@ -17,8 +17,9 @@
 
 
 import ctypes
-import logging
 from ctypes import wintypes
+import logging
+from typing import List
 
 import win32api
 import win32con
@@ -27,7 +28,7 @@ import gremlin
 
 
 def _create_function(lib_name, fn_name, param_types, return_type):
-    """Creates a handle to a windows dll library function.
+    """Creates a handle to a dll library function.
 
     :param lib_name name of the library to retrieve a function handle from
     :param fn_name name of the function
@@ -328,6 +329,23 @@ def key_from_code(scan_code: int, is_extended: bool) -> Key:
         g_scan_code_to_key[(scan_code, is_extended)] = key
         g_name_to_key[name.lower()] = key
         return key
+
+
+def modifier_keys() -> List[Key]:
+    """Returns a list containing all modifier keys.
+
+    Returns:
+        List with key instances corresponding to modifier keys.
+    """
+    return [
+        g_name_to_key["leftshift"],
+        g_name_to_key["leftcontrol"],
+        g_name_to_key["leftalt"],
+        g_name_to_key["rightshift"],
+        g_name_to_key["rightshift2"],
+        g_name_to_key["rightcontrol"],
+        g_name_to_key["rightalt"],
+    ]
 
 
 # Storage for the various keys, prepopulated with non alphabetical keys
