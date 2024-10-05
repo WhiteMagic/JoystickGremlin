@@ -15,19 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from abc import ABC, abstractmethod
 import collections
 import functools
 import logging
 import time
 from threading import Event, Lock, Thread
+import uuid
 from xml.etree import ElementTree
 
 import gremlin
 from gremlin import mode_manager
+from gremlin.base_classes import AbstractActionData
 from gremlin.common import SingletonDecorator
 from gremlin.keyboard import send_key_down, send_key_up, key_from_name, Key
-from gremlin.types import InputType, MouseButton
-
+from gremlin.types import AxisMode, InputType, MouseButton, PropertyType
 
 MacroEntry = collections.namedtuple(
     "MacroEntry",
@@ -59,7 +61,7 @@ class MacroManager:
 
         self._run_scheduler_thread = None
 
-    def start(self):
+    def start(self) -> None:
         """Starts the scheduler."""
         self._active = {}
         self._flags = {}
@@ -69,7 +71,7 @@ class MacroManager:
         if not self._run_scheduler_thread.is_alive():
             self._run_scheduler_thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stops the scheduler."""
         self._is_running = False
         if self._run_scheduler_thread is not None and \
@@ -85,10 +87,11 @@ class MacroManager:
                 for key in self._flags:
                     self._flags[key] = False
 
-    def queue_macro(self, macro):
+    def queue_macro(self, macro: Macro) -> None:
         """Queues a macro in the schedule taking the repeat type into account.
 
-        :param macro the macro to add to the scheduler
+        Args:
+            macro: the macro to add to the scheduler
         """
         if isinstance(macro.repeat, ToggleRepeat) and macro.id in self._active:
             self.terminate_macro(macro)
@@ -99,15 +102,16 @@ class MacroManager:
                 self._queue.append(MacroEntry(macro, True))
             self._schedule_event.set()
 
-    def terminate_macro(self, macro):
+    def terminate_macro(self, macro: Macro) -> None:
         """Adds a termination request for a macro to the execution queue.
 
-        :param macro the macro to terminate
+        Args:
+            macro: the macro to terminate
         """
         self._queue.append(MacroEntry(macro, False))
         self._schedule_event.set()
 
-    def _run_scheduler(self):
+    def _run_scheduler(self) -> None:
         """Dispatches macros as required."""
         while self._is_running:
             # Wake up when the event triggers and reset it
@@ -158,10 +162,11 @@ class MacroManager:
                     if entry in self._queue:
                         self._queue.remove(entry)
 
-    def _dispatch_macro(self, macro):
+    def _dispatch_macro(self, macro: Macro) -> None:
         """Dispatches a single macro to be run.
 
-        :param macro the macro to dispatch
+        Args:
+            macro: the macro to dispatch
         """
         if macro.id not in self._active:
             self._active[macro.id] = macro
@@ -171,14 +176,15 @@ class MacroManager:
                 "Attempting to dispatch an already running macro"
             )
 
-    def _execute_macro(self, macro):
+    def _execute_macro(self, macro: Macro)  :
         """Executes a given macro in a separate thread.
 
         This method will run all provided actions and once they all have been
         executed will remove the macro from the set of active macros and
         inform the scheduler of the completion.
 
-        :param macro the macro object to be executed
+        Args:
+            macro: the macro object to be executed
         """
         # Handle macros with a repeat mode
         if macro.repeat is not None:
@@ -218,8 +224,12 @@ class MacroManager:
                 self._flags[macro.id] = False
         self._schedule_event.set()
 
-    def _preprocess_macro(self, macro):
-        """Inserts pauses as necessary into the macro."""
+    def _preprocess_macro(self, macro: Macro) -> None:
+        """Inserts pauses as necessary into the macro.
+
+        Args:
+            macro: the macro instance to modify
+        """
         new_sequence = [macro.sequence[0]]
         for a1, a2 in zip(macro.sequence[:-1], macro.sequence[1:]):
             if isinstance(a1, PauseAction) or isinstance(a2, PauseAction):
@@ -246,63 +256,71 @@ class Macro:
         self.exclusive = False
 
     @property
-    def id(self):
+    def id(self) -> int:
         """Returns the unique id of this macro.
 
-        :return unique id of this macro
+        Returns:
+            unique id of this macro
         """
         return self._id
 
     @property
-    def sequence(self):
+    def sequence(self) -> List[AbstractActionData]:
         """Returns the action sequence of this macro.
 
-        :return action sequence
+        Returns:
+            Sequence of actions comprising the macro
         """
         return self._sequence
 
-    def add_action(self, action):
+    def add_action(self, action: AbstractActionData) -> None:
         """Adds an action to the list of actions to perform.
 
-        :param action the action to add
+        Args:
+            action: the action to add
         """
         self._sequence.append(action)
 
-    def pause(self, duration):
+    def pause(self, duration: float) -> None:
         """Adds a pause of the given duration to the macro.
 
-        :param duration the duration of the pause in seconds
+        Args:
+            duration: the duration of the pause in seconds
         """
         self._sequence.append(PauseAction(duration))
 
-    def press(self, key):
+    def press(self, key: Key) -> None:
         """Presses the specified key down.
 
-        :param key the key to press
+        Args:
+            key: the key to press
         """
         self.action(key, True)
 
-    def release(self, key):
+    def release(self, key: Key) -> None:
         """Releases the specified key.
 
-        :param key the key to release
+        Args:
+            key; the key to release
         """
         self.action(key, False)
 
-    def tap(self, key):
+    def tap(self, key: Key) -> None:
         """Taps the specified key.
 
-        :param key the key to tap
+        Args:
+            key: the key to tap
         """
         self.action(key, True)
         self.action(key, False)
 
-    def action(self, key, is_pressed):
+    def action(self, key: Key | str, is_pressed: bool) -> None:
         """Adds the specified action to the sequence.
 
-        :param key the key involved in the action
-        :param is_pressed boolean indicating if the key is pressed
-            (True) or released (False)
+        Args:
+            key: the key involved in the action
+            is_pressed: boolean indicating if the key is pressed
+                (True) or released (False)
         """
         if isinstance(key, str):
             key = key_from_name(key)
@@ -314,36 +332,51 @@ class Macro:
         self._sequence.append(KeyAction(key, is_pressed))
 
 
-class AbstractAction:
+class AbstractAction(ABC):
 
     """Base class for all macro action."""
 
-    def __call__(self):
-        raise gremlin.error.MissingImplementationError(
-            "AbstractAction.__call__ not implemented in derived class."
-        )
+    @abstractmethod
+    def __call__(self) -> None:
+        pass
+
+    @abstractmethod
+    def to_xml(self) -> ElementTree.Element:
+        pass
+
+    @abstractmethod
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
 
 
 class JoystickAction(AbstractAction):
 
     """Joystick input action for a macro."""
 
-    def __init__(self, device_guid, input_type, input_id, value, axis_type="absolute"):
+    def __init__(
+            self,
+            device_guid: uuid.UUID,
+            input_type: InputType,
+            input_id: int | uuid.UUID,
+            value: bool | float | Tuple[int, int],
+            axis_mode: AxisMode=AxisMode.Absolute
+    ):
         """Creates a new JoystickAction instance for use in a macro.
 
-        :param device_guid GUID of the device generating the input
-        :param input_type type of input being generated
-        :param input_id id of the input being generated
-        :param value the value of the generated input
-        :param axis_type if an axis is used, how to interpret the value
+        Args:
+            device_guid: GUID of the device generating the input
+            input_type: type of input being generated
+            input_id: id of the input being generated
+            value: the value of the generated input
+            axis_mode: if an axis is used, how to interpret the value
         """
         self.device_guid = device_guid
         self.input_type = input_type
         self.input_id = input_id
         self.value = value
-        self.axis_type = axis_type
+        self.axis_mode = axis_mode
 
-    def __call__(self):
+    def __call__(self) -> None:
         """Emits an Event instance through the EventListener system."""
         el = gremlin.event_handler.EventListener()
         if self.input_type == InputType.JoystickAxis:
@@ -373,38 +406,52 @@ class JoystickAction(AbstractAction):
 
         el.joystick_event.emit(event)
 
+    def to_xml(self) -> ElementTree.Element:
+        pass
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
+
 
 class KeyAction(AbstractAction):
 
     """Key to press or release by a macro."""
 
-    def __init__(self, key, is_pressed):
+    def __init__(self, key: Key, is_pressed: bool):
         """Creates a new KeyAction object for use in a macro.
 
-        :param key the key to use in the action
-        :param is_pressed True if the key should be pressed, False otherwise
+        Args:
+            key: the key to use in the action
+            is_pressed: True if the key should be pressed, False otherwise
         """
         if not isinstance(key, Key):
             raise gremlin.error.KeyboardError("Invalid Key instance provided")
         self.key = key
         self.is_pressed = is_pressed
 
-    def __call__(self):
+    def __call__(self) -> None:
         if self.is_pressed:
             send_key_down(self.key)
         else:
             send_key_up(self.key)
+
+    def to_xml(self) -> ElementTree.Element:
+        pass
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
 
 
 class MouseButtonAction(AbstractAction):
 
     """Mouse button action."""
 
-    def __init__(self, button, is_pressed):
+    def __init__(self, button: MouseButton, is_pressed: bool):
         """Creates a new MouseButtonAction object for use in a macro.
 
-        :param button the button to use in the action
-        :param is_pressed True if the button should be pressed, False otherwise
+        Args:
+            button: the button to use in the action
+            is_pressed: True if the button should be pressed, False otherwise
         """
         if not isinstance(button, MouseButton):
             raise gremlin.error.MouseError("Invalid mouse button provided")
@@ -412,7 +459,7 @@ class MouseButtonAction(AbstractAction):
         self.button = button
         self.is_pressed = is_pressed
 
-    def __call__(self):
+    def __call__(self) -> None:
         if self.button == MouseButton.WheelDown:
             gremlin.sendinput.mouse_wheel(1)
         elif self.button == MouseButton.WheelUp:
@@ -423,59 +470,87 @@ class MouseButtonAction(AbstractAction):
             else:
                 gremlin.sendinput.mouse_release(self.button)
 
+    def to_xml(self) -> ElementTree.Element:
+        pass
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
+
 
 class MouseMotionAction(AbstractAction):
 
     """Mouse motion action."""
 
-    def __init__(self, dx, dy):
+    def __init__(self, dx: float|int, dy: float|int):
         """Creates a new MouseMotionAction object for use in a macro.
 
-        :param dx change along the X axis
-        :param dy change along the Y axis
+        Args:
+            dx: change along the X axis
+            dy: change along the Y axis
         """
         self.dx = int(dx)
         self.dy = int(dy)
 
-    def __call__(self):
+    def __call__(self) -> None:
         gremlin.sendinput.mouse_relative_motion(self.dx, self.dy)
+
+    def to_xml(self) -> ElementTree.Element:
+        pass
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
 
 
 class PauseAction(AbstractAction):
 
     """Represents the pause in a macro between pressed."""
 
-    def __init__(self, duration):
+    def __init__(self, duration: float):
         """Creates a new Pause object for use in a macro.
 
-        :param duration the duration in seconds of the pause
+        Args:
+            duration: the duration in seconds of the pause
         """
         self.duration = duration
 
-    def __call__(self):
+    def __call__(self) -> None:
         time.sleep(self.duration)
+
+    def to_xml(self) -> ElementTree.Element:
+        pass
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
 
 
 class VJoyAction(AbstractAction):
 
     """VJoy input action for a macro."""
 
-    def __init__(self, vjoy_id, input_type, input_id, value, axis_type="absolute"):
+    def __init__(
+            self,
+            vjoy_id: int,
+            input_type: InputType,
+            input_id: int,
+            value: bool | float | Tuple[int, int],
+            axis_mode: AxisMode=AxisMode.Absolute
+    ):
         """Creates a new JoystickAction instance for use in a macro.
 
-        :param vjoy_id id of the vjoy device which is to be modified
-        :param input_type type of input being generated
-        :param input_id id of the input being generated
-        :param value the value of the generated input
-        :param axis_type if an axis is used, how to interpret the value
+        Args:
+            vjoy_id: id of the vjoy device which is to be modified
+            input_type: type of input being generated
+            input_id: id of the input being generated
+            value: the value of the generated input
+            axis_type: if an axis is used, how to interpret the value
         """
         self.vjoy_id = vjoy_id
         self.input_type = input_type
         self.input_id = input_id
         self.value = value
-        self.axis_type = axis_type
+        self.axis_mode = axis_mode
 
-    def __call__(self):
+    def __call__(self) -> None:
         vjoy = gremlin.joystick_handling.VJoyProxy()[self.vjoy_id]
         if self.input_type == InputType.JoystickAxis:
             if self.axis_type == "absolute":
@@ -490,54 +565,63 @@ class VJoyAction(AbstractAction):
         elif self.input_type == InputType.JoystickHat:
             vjoy.hat(self.input_id).direction = self.value
 
+    def to_xml(self) -> ElementTree.Element:
+        pass
 
-class AbstractRepeat:
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
+
+
+class AbstractRepeat(ABC):
 
     """Base class for all macro repeat modes."""
 
-    def __init__(self, delay):
+    def __init__(self, delay: float):
         """Creates a new instance.
 
-        :param delay the delay between repetitions
+        Args:
+            delay the delay between repetitions
         """
         self.delay = delay
 
-    def to_xml(self):
+    @abstractmethod
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the repeat information.
 
-        :return XML node containing the instance's information
+        Returns:
+            XML node containing the instance's information
         """
-        raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat.to_xml not implemented in subclass."
-        )
+        pass
 
-    def from_xml(self, node):
+    @abstractmethod
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
-        :param node XML node containing data with which to populate the instance
+        Args:
+            node: XML node containing data with which to populate the instance
         """
-        raise gremlin.error.MissingImplementationError(
-            "AbstractRepeat.from_xml not implemented in subclass"
-        )
+        pass
 
 
 class CountRepeat(AbstractRepeat):
 
     """Repeat mode which repeats the macro a fixed number of times."""
 
-    def __init__(self, count=1, delay=0.1):
+    def __init__(self, count: int=1, delay: float=0.1):
         """Creates a new instance.
 
-        :param count the number of times to repeat the macro
-        :param delay the delay between repetitions
+        Args:
+            count: the number of times to repeat the macro
+            delay: the delay between repetitions
         """
         super().__init__(delay)
         self.count = count
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the repeat information.
 
-        :return XML node containing the instance's information
+        Returns:
+            XML node containing the instance's information
         """
         node = ElementTree.Element("repeat")
         node.set("type", "count")
@@ -545,10 +629,11 @@ class CountRepeat(AbstractRepeat):
         node.set("delay", str(self.delay))
         return node
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
-        :param node XML node containing data with which to populate the instance
+        Args:
+            node: XML node containing data with which to populate the instance
         """
         self.delay = float(node.get("delay"))
         self.count = int(node.get("count"))
@@ -559,27 +644,30 @@ class ToggleRepeat(AbstractRepeat):
     """Repeat mode which repeats the macro as long as it hasn't been toggled
     off again after being toggled on."""
 
-    def __init__(self, delay=0.1):
+    def __init__(self, delay: float=0.1):
         """Creates a new instance.
 
-        :param delay the delay between repetitions
+        Args:
+            delay the delay between repetitions
         """
         super().__init__(delay)
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the repeat information.
 
-        :return XML node containing the instance's information
+        Returns:
+            XML node containing the instance's information
         """
         node = ElementTree.Element("repeat")
         node.set("type", "toggle")
         node.set("delay", str(self.delay))
         return node
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
-        :param node XML node containing data with which to populate the instance
+        Args:
+            node: XML node containing data with which to populate the instance
         """
         self.delay = float(node.get("delay"))
 
@@ -589,26 +677,29 @@ class HoldRepeat(AbstractRepeat):
     """Repeat mode which repeats the macro as long as the activation condition
     is being fulfilled or held down."""
 
-    def __init__(self, delay=0.1):
+    def __init__(self, delay: float=0.1):
         """Creates a new instance.
 
-        :param delay the delay between repetitions
+        Args:
+            delay the delay between repetitions
         """
         super().__init__(delay)
 
-    def to_xml(self):
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the repeat information.
 
-        :return XML node containing the instance's information
+        Returns:
+            XML node containing the instance's information
         """
         node = ElementTree.Element("repeat")
         node.set("type", "hold")
         node.set("delay", str(self.delay))
         return node
 
-    def from_xml(self, node):
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
 
-        :param node XML node containing data with which to populate the instance
+        Args:
+            node XML node containing data with which to populate the instance
         """
         self.delay = float(node.get("delay"))
