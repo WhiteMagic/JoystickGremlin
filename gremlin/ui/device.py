@@ -608,7 +608,7 @@ class VJoyDevices(QtCore.QObject):
         return [InputType.to_string(entry) for entry in self._valid_types]
 
     def _set_valid_types(self, valid_types: List[str]) -> None:
-        type_list = sorted([InputType.to_enum(entry) for entry in valid_types])
+        type_list = [InputType.to_enum(entry) for entry in sorted(valid_types)]
         if type_list != self._valid_types:
             self._valid_types = type_list
 
