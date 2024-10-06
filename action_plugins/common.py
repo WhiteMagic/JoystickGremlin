@@ -14,3 +14,29 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import uuid
+
+import dill
+
+from gremlin.event_handler import Event
+from gremlin.types import AxisNames, InputType
+
+
+def joystick_label(
+        device_guid: uuid.UUID,
+        input_type: InputType,
+        input_id: int
+) -> str:
+    device = dill.DILL().get_device_information_by_guid(
+        dill.GUID.from_uuid(device_guid)
+    )
+    label = f"{device.name}"
+    if input_type == InputType.JoystickAxis:
+        label += f" - {AxisNames.to_string(AxisNames(input_id))}"
+    elif input_type == InputType.JoystickButton:
+        label += f" - Button {input_id}"
+    elif input_type == InputType.JoystickHat:
+        label += f" - Hat {input_id}"
+
+    return label

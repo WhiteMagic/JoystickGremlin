@@ -28,6 +28,7 @@ from xml.etree import ElementTree
 
 from win32security import POLICY_READ
 
+import dill
 import gremlin
 from gremlin import mode_manager, util
 from gremlin.base_classes import AbstractActionData
@@ -370,6 +371,8 @@ class JoystickAction(AbstractAction):
 
     """Joystick input action for a macro."""
 
+    tag = "joystick"
+
     def __init__(
             self,
             device_guid: uuid.UUID,
@@ -392,6 +395,15 @@ class JoystickAction(AbstractAction):
         self.input_id = input_id
         self.value = value
         self.axis_mode = axis_mode
+
+    @classmethod
+    def create_invalid(cls) -> JoystickAction:
+        return JoystickAction(
+            dill.UUID_Invalid,
+            InputType.JoystickButton,
+            0,
+            False
+        )
 
     def __call__(self) -> None:
         """Emits an Event instance through the EventListener system."""
@@ -424,7 +436,7 @@ class JoystickAction(AbstractAction):
         el.joystick_event.emit(event)
 
     def to_xml(self) -> ElementTree.Element:
-        node = self._create_node("joystick")
+        node = self._create_node(self.tag)
         util.append_property_nodes([
             ["device-guid", self.device_guid, PropertyType.UUID],
             ["input-type", self.input_type, PropertyType.InputType],
@@ -473,6 +485,8 @@ class KeyAction(AbstractAction):
 
     """Key to press or release by a macro."""
 
+    tag = "key"
+
     def __init__(self, key: Key, is_pressed: bool):
         """Creates a new KeyAction object for use in a macro.
 
@@ -493,7 +507,7 @@ class KeyAction(AbstractAction):
             send_key_up(self.key)
 
     def to_xml(self) -> ElementTree.Element:
-        node = self._create_node("key")
+        node = self._create_node(self.tag)
         util.append_property_nodes(
             node,
             [
@@ -517,6 +531,8 @@ class KeyAction(AbstractAction):
 class MouseButtonAction(AbstractAction):
 
     """Mouse button action."""
+
+    tag = "mouse-button"
 
     def __init__(self, button: MouseButton, is_pressed: bool):
         """Creates a new MouseButtonAction object for use in a macro.
@@ -543,7 +559,7 @@ class MouseButtonAction(AbstractAction):
                 gremlin.sendinput.mouse_release(self.button)
 
     def to_xml(self) -> ElementTree.Element:
-        node = self._create_node("mouse")
+        node = self._create_node(self.tag)
         util.append_property_nodes(
             node,
             [
@@ -566,6 +582,8 @@ class MouseMotionAction(AbstractAction):
 
     """Mouse motion action."""
 
+    tag = "mouse-motion"
+
     def __init__(self, dx: float|int, dy: float|int):
         """Creates a new MouseMotionAction object for use in a macro.
 
@@ -580,7 +598,7 @@ class MouseMotionAction(AbstractAction):
         gremlin.sendinput.mouse_relative_motion(self.dx, self.dy)
 
     def to_xml(self) -> ElementTree.Element:
-        node = self._create_node("mouse-motion")
+        node = self._create_node(self.tag)
         util.append_property_nodes(
             node,
             [
@@ -599,6 +617,8 @@ class PauseAction(AbstractAction):
 
     """Represents the pause in a macro between pressed."""
 
+    tag = "pause"
+
     def __init__(self, duration: float):
         """Creates a new Pause object for use in a macro.
 
@@ -611,7 +631,7 @@ class PauseAction(AbstractAction):
         time.sleep(self.duration)
 
     def to_xml(self) -> ElementTree.Element:
-        node = self._create_node("pause")
+        node = self._create_node(self.tag)
         node.append(util.create_property_node(
             "duration", self.duration, PropertyType.Float
         ))
@@ -626,6 +646,8 @@ class PauseAction(AbstractAction):
 class VJoyAction(AbstractAction):
 
     """VJoy input action for a macro."""
+
+    tag = "vjoy"
 
     def __init__(
             self,
@@ -666,7 +688,7 @@ class VJoyAction(AbstractAction):
             vjoy.hat(self.input_id).direction = self.value
 
     def to_xml(self) -> ElementTree.Element:
-        node = self._create_node("joystick")
+        node = self._create_node(self.tag)
         util.append_property_nodes([
             ["vjoy-id", self.vjoy_id, PropertyType.Int],
             ["input-type", self.input_type, PropertyType.InputType],
