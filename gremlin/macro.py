@@ -33,7 +33,9 @@ import gremlin
 from gremlin import mode_manager, util
 from gremlin.base_classes import AbstractActionData
 from gremlin.common import SingletonDecorator
-from gremlin.keyboard import send_key_down, send_key_up, key_from_name, Key
+from gremlin.keyboard import send_key_down, send_key_up, key_from_code, \
+    key_from_name, Key
+from gremlin.sendinput import MouseMotion
 from gremlin.types import AxisMode, InputType, MouseButton, PropertyType
 
 MacroEntry = collections.namedtuple(
@@ -345,6 +347,12 @@ class AbstractAction(ABC):
     def __call__(self) -> None:
         pass
 
+    @classmethod
+    @abstractmethod
+    def create(cls) -> AbstractAction:
+        """Creates an empty, likely invalid instance, of the action."""
+        pass
+
     @abstractmethod
     def to_xml(self) -> ElementTree.Element:
         pass
@@ -362,7 +370,7 @@ class AbstractAction(ABC):
         Returns:
             An action node typed as request
         """
-        node = ElementTree.Element("action")
+        node = ElementTree.Element("macro-action")
         node.set("type", type_name)
         return node
 
@@ -397,7 +405,7 @@ class JoystickAction(AbstractAction):
         self.axis_mode = axis_mode
 
     @classmethod
-    def create_invalid(cls) -> JoystickAction:
+    def create(cls) -> JoystickAction:
         return JoystickAction(
             dill.UUID_Invalid,
             InputType.JoystickButton,
@@ -437,11 +445,14 @@ class JoystickAction(AbstractAction):
 
     def to_xml(self) -> ElementTree.Element:
         node = self._create_node(self.tag)
-        util.append_property_nodes([
-            ["device-guid", self.device_guid, PropertyType.UUID],
-            ["input-type", self.input_type, PropertyType.InputType],
-            ["input-id", self.input_id, PropertyType.Int],
-        ])
+        util.append_property_nodes(
+            node,
+            [
+                ["device-guid", self.device_guid, PropertyType.UUID],
+                ["input-type", self.input_type, PropertyType.InputType],
+                ["input-id", self.input_id, PropertyType.Int],
+            ]
+        )
         if self.input_type == InputType.JoystickAxis:
             util.append_property_nodes(
                 node,
@@ -500,6 +511,10 @@ class KeyAction(AbstractAction):
         self.key = key
         self.is_pressed = is_pressed
 
+    @classmethod
+    def create(cls) -> KeyAction:
+        return KeyAction(key_from_name("noname"), False)
+
     def __call__(self) -> None:
         if self.is_pressed:
             send_key_down(self.key)
@@ -546,6 +561,10 @@ class MouseButtonAction(AbstractAction):
 
         self.button = button
         self.is_pressed = is_pressed
+
+    @classmethod
+    def create(cls) -> MouseButtonAction:
+        return MouseButtonAction(MouseButton.Left, False)
 
     def __call__(self) -> None:
         if self.button == MouseButton.WheelDown:
@@ -594,6 +613,10 @@ class MouseMotionAction(AbstractAction):
         self.dx = int(dx)
         self.dy = int(dy)
 
+    @classmethod
+    def create(cls) -> MouseMotionAction:
+        return MouseMotionAction(0, 0)
+
     def __call__(self) -> None:
         gremlin.sendinput.mouse_relative_motion(self.dx, self.dy)
 
@@ -626,6 +649,10 @@ class PauseAction(AbstractAction):
             duration: the duration in seconds of the pause
         """
         self.duration = duration
+
+    @classmethod
+    def create(cls) -> PauseAction:
+        return PauseAction(0.0)
 
     def __call__(self) -> None:
         time.sleep(self.duration)
@@ -672,6 +699,11 @@ class VJoyAction(AbstractAction):
         self.value = value
         self.axis_mode = axis_mode
 
+    @classmethod
+    def create(cls) -> VJoyAction:
+        # FIXME: Implement a function returning a valid vJoy input
+        return VJoyAction(1, InputType.JoystickButton, 1, False)
+
     def __call__(self) -> None:
         vjoy = gremlin.joystick_handling.VJoyProxy()[self.vjoy_id]
         if self.input_type == InputType.JoystickAxis:
@@ -689,11 +721,14 @@ class VJoyAction(AbstractAction):
 
     def to_xml(self) -> ElementTree.Element:
         node = self._create_node(self.tag)
-        util.append_property_nodes([
-            ["vjoy-id", self.vjoy_id, PropertyType.Int],
-            ["input-type", self.input_type, PropertyType.InputType],
-            ["input-id", self.input_id, PropertyType.Int],
-        ])
+        util.append_property_nodes(
+            node,
+            [
+                ["vjoy-id", self.vjoy_id, PropertyType.Int],
+                ["input-type", self.input_type, PropertyType.InputType],
+                ["input-id", self.input_id, PropertyType.Int],
+            ]
+        )
         if self.input_type == InputType.JoystickAxis:
             util.append_property_nodes(
                 node,

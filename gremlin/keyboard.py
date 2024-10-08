@@ -417,7 +417,9 @@ g_name_to_key = {
     "rightalt": Key("Right Alt", 0x38, True, win32con.VK_RMENU),
     "apps": Key("Apps", 0x5d, True, win32con.VK_APPS),
     "enter": Key("Enter", 0x1c, False, win32con.VK_RETURN),
-    "esc": Key("Esc", 0x01, False, win32con.VK_ESCAPE)
+    "esc": Key("Esc", 0x01, False, win32con.VK_ESCAPE),
+    # Various odd keys
+    "noname": Key("Noname", 0xfc, False, win32con.VK_NONAME),
 }
 
 

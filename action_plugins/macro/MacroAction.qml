@@ -404,7 +404,8 @@ Item {
         font.pixelSize: 16
 
         onClicked: function() {
-            console.log(index)
+            // console.log(index)
+            _root.action.removeAction(index)
         }
     }
 

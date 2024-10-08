@@ -29,7 +29,7 @@ from action_plugins import common
 from gremlin import event_handler, keyboard, macro, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataCreationMode, Value
-from gremlin.error import GremlinError, MissingImplementationError
+from gremlin.error import GremlinError, MissingImplementationError, ProfileError
 from gremlin.macro import KeyAction
 from gremlin.profile import Library
 from gremlin.types import InputType, PropertyType, MouseButton, HatDirection
@@ -478,12 +478,12 @@ class MacroModel(ActionModel):
     changed = Signal()
 
     action_lookup = {
-        "joystick": lambda: macro.JoystickAction.create_invalid(),
-        "key": lambda: macro.KeyAction(keyboard.key_from_name("1"), True),
-        "mouse-button": lambda: macro.MouseButtonAction(MouseButton.Left, True),
-        "mouse-motion": lambda: macro.MouseMotionAction(0, 0),
-        "pause": lambda: macro.PauseAction(0.1),
-        "vjoy": lambda: macro.VJoyAction(1, InputType.JoystickButton, 1, True),
+        "joystick": macro.JoystickAction.create,
+        "key": macro.KeyAction.create,
+        "mouse-button": macro.MouseButtonAction.create,
+        "mouse-motion": macro.MouseMotionAction.create,
+        "pause": macro.PauseAction.create,
+        "vjoy": macro.VJoyAction.create,
     }
 
     model_lookup = {
@@ -515,13 +515,6 @@ class MacroModel(ActionModel):
 
     @Property(list, notify=changed)
     def actions(self) -> List[AbstractActionModel]:
-        # return [
-        #     PauseActionModel(macro.PauseAction(2.0), self),
-        #     KeyActionModel(
-        #         macro.KeyAction(keyboard.key_from_name("A"), False),
-        #         self
-        #     ),
-        # ]
         model_instances = [
             self.model_lookup[action.tag](action, self)
             for action in self._data.actions
@@ -533,10 +526,11 @@ class MacroModel(ActionModel):
         self._data.actions.append(self.action_lookup[name]())
         self.changed.emit()
 
-class MacroActionListModel():
-
-    pass
-
+    @Slot(int)
+    def removeAction(self, index: int) -> None:
+        if index < len(self._data.actions):
+            del self._data.actions[index]
+            self.changed.emit()
 
 
 class MacroData(AbstractActionData):
@@ -571,7 +565,33 @@ class MacroData(AbstractActionData):
         self.repeat_mode = MacroRepeatModes.Single
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
+        type_lookup = {
+            "joystick": macro.JoystickAction.create,
+            "key": macro.KeyAction.create,
+            "mouse-button": macro.MouseButtonAction.create,
+            "mouse-motion": macro.MouseMotionAction.create,
+            "pause": macro.PauseAction.create,
+            "vjoy": macro.VJoyAction.create,
+        }
         self._id = util.read_action_id(node)
+        self.is_exclusive = util.read_property(
+            node, "is-exclusive", PropertyType.Bool
+        )
+        self.repeat_mode = MacroRepeatModes.lookup(util.read_property(
+            node, "repeat-mode", PropertyType.String)
+        )
+        for entry in node.iter("macro-action"):
+            action_type = entry.get("type")
+            action_obj = None
+            if action_type in type_lookup:
+                action_obj = type_lookup[action_type]()
+                action_obj.from_xml(entry)
+                self.actions.append(action_obj)
+            else:
+                raise ProfileError(
+                    f"Unknown action type {action_type} in Macro action with " +
+                    f"id {self._id}"
+                )
 
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MacroData.tag, self._id)
@@ -583,7 +603,7 @@ class MacroData(AbstractActionData):
             ]
         )
         for entry in self.actions:
-            pass
+            node.append(entry.to_xml())
         return node
 
     def is_valid(self) -> bool:
