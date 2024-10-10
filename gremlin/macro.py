@@ -153,7 +153,7 @@ class MacroManager:
                     elif entry.macro.id in self._active:
                         continue
                     # Handle exclusive macros
-                    elif entry.macro.exclusive:
+                    elif entry.macro.is_exclusive:
                         has_exclusive = True
                         if len(self._active) == 0:
                             self._dispatch_macro(entry.macro)
@@ -224,7 +224,7 @@ class MacroManager:
         # Remove macro from active set, notify manager, and remove any
         # potential callbacks
         del self._active[macro.id]
-        if macro.exclusive:
+        if macro.is_exclusive:
             self._is_executing_exclusive = False
         with self._flags_lock:
             if macro.id in self._flags:
@@ -260,7 +260,7 @@ class Macro:
         self._id = Macro._next_macro_id
         Macro._next_macro_id += 1
         self.repeat = None
-        self.exclusive = False
+        self.is_exclusive = False
 
     @property
     def id(self) -> int:
