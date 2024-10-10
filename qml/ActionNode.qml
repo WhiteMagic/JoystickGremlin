@@ -194,6 +194,17 @@ Item {
 
             TriggerMode {
                 Layout.alignment: Qt.AlignVCenter
+
+                pressChecked: _root.action.activateOnPress
+                releaseChecked: _root.action.activateOnRelease
+
+                onPressCheckedChanged: function() {
+                    _root.action.activateOnPress = pressChecked
+
+                }
+                onReleaseCheckedChanged: function() {
+                    _root.action.activateOnRelease = releaseChecked
+                }
             }
 
             IconButton {

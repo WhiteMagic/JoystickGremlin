@@ -330,6 +330,7 @@ class PropertyType(enum.Enum):
     HatDirection = 14
     List = 15
     Selection = 16
+    ActionActivationMode = 17
 
     @staticmethod
     def to_string(value: PropertyType) -> str:
@@ -362,6 +363,7 @@ _PropertyType_to_string_lookup = {
     PropertyType.HatDirection: "hat_direction",
     PropertyType.List: "list",
     PropertyType.Selection: "selection",
+    PropertyType.ActionActivationMode: "activation-mode",
 }
 _PropertyType_to_enum_lookup = {
     "string": PropertyType.String,
@@ -380,6 +382,7 @@ _PropertyType_to_enum_lookup = {
     "hat_direction": PropertyType.HatDirection,
     "list": PropertyType.List,
     "selection": PropertyType.Selection,
+    "activation-mode": PropertyType.ActionActivationMode,
 }
 
 
@@ -593,3 +596,48 @@ class ActionProperty(enum.Enum):
     ReuseByDefault = 1
     # Will execute the action even if Gremlin is paused
     AlwaysExecute = 2
+    # Default action activation modes
+    ActivateOnPress = 3
+    ActivateOnRelease = 4
+    ActivateOnBoth = 5
+    ActivateNever = 6
+
+
+class ActionActivationMode(enum.Enum):
+
+    """Possible activation modes of button-like inputs."""
+
+    Deactivated = 1
+    Press = 2
+    Release = 3
+    Both = 4
+
+    @staticmethod
+    def to_string(instance: ActionActivationMode ) -> str:
+        lookup = {
+            ActionActivationMode.Deactivated: "deactivated",
+            ActionActivationMode.Press: "press",
+            ActionActivationMode.Release: "release",
+            ActionActivationMode.Both: "both"
+        }
+        value = lookup.get(instance, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid action activation mode: {str(instance)}"
+            )
+        return value
+
+    @staticmethod
+    def to_enum(string: str) -> ActionActivationMode:
+        lookup = {
+            "deactivated": ActionActivationMode.Deactivated,
+            "press": ActionActivationMode.Press,
+            "release": ActionActivationMode.Release,
+            "both": ActionActivationMode.Both
+        }
+        value = lookup.get(string, None)
+        if value is None:
+            raise gremlin.error.GremlinError(
+                f"Invalid action activation mode: {str(string)}"
+            )
+        return value

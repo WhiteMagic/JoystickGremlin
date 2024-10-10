@@ -28,7 +28,8 @@ from gremlin import util
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
 from gremlin.profile import Library
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ActionActivationMode, ActionProperty, InputType, \
+    PropertyType
 
 
 class DataInsertionMode(Enum):
@@ -102,6 +103,16 @@ class AbstractActionData(ABC):
         self._behavior_type = behavior_type
         self._action_label = ""
 
+        self._activation_mode = ActionActivationMode.Deactivated
+        for prop in self.properties:
+            match prop:
+                case ActionProperty.ActivateOnPress:
+                    self._activation_mode = ActionActivationMode.Press
+                case ActionProperty.ActivateOnRelease:
+                    self._activation_mode = ActionActivationMode.Release
+                case ActionProperty.ActivateOnBoth:
+                    self._activation_mode = ActionActivationMode.Both
+
     @classmethod
     def create(
             cls,
@@ -165,6 +176,14 @@ class AbstractActionData(ABC):
     def action_label(self, value: str) -> None:
         self._action_label = value
 
+    @property
+    def activation_mode(self) -> ActionActivationMode:
+        return self._activation_mode
+
+    @activation_mode.setter
+    def activation_mode(self, value: ActionActivationMode) -> None:
+        self._activation_mode = value
+
     def from_xml(
             self,
             node: ElementTree.Element,
@@ -181,6 +200,9 @@ class AbstractActionData(ABC):
         self.action_label = util.read_property(
             node, "action-label", PropertyType.String
         )
+        self.activation_mode = util.read_property(
+            node, "activation-mode", PropertyType.ActionActivationMode
+        )
         self._from_xml(node, library)
 
     def to_xml(self) -> ElementTree.Element:
@@ -194,6 +216,11 @@ class AbstractActionData(ABC):
         node = self._to_xml()
         node.append(util.create_property_node(
             "action-label", self.action_label, PropertyType.String
+        ))
+        node.append(util.create_property_node(
+            "activation-mode",
+            self.activation_mode,
+            PropertyType.ActionActivationMode
         ))
         return node
 

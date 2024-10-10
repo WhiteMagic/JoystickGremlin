@@ -28,6 +28,8 @@ Item {
     implicitHeight: _layout.height
     implicitWidth: _layout.width
 
+    property alias pressChecked: _press.checked
+    property alias releaseChecked: _release.checked
 
     RowLayout {
         id: _layout
@@ -37,22 +39,20 @@ Item {
         Text {
             id: _description
 
-            height: press.height
-
             text: "Activation"
             font.pointSize: 10
         }
 
         CompactSwitch {
-            id: press
+            id: _press
 
             text: "Press"
-
             font: _description.font
         }
         CompactSwitch {
-            text: "Release"
+            id: _release
 
+            text: "Release"
             font: _description.font
         }
     }

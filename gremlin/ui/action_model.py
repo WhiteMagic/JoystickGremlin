@@ -26,7 +26,7 @@ from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
 from gremlin.profile import Library
 from gremlin.signal import signal
-from gremlin.types import InputType
+from gremlin.types import ActionActivationMode, InputType
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
@@ -224,6 +224,50 @@ class ActionModel(QtCore.QObject):
             self._data.action_label = value
             self.actionChanged.emit()
 
+    def _get_activate_on_press(self) -> bool:
+        return self._activation_to_tuple()[0]
+
+    def _set_activate_on_press(self, value: bool) -> None:
+        state = self._activation_to_tuple()
+        if state[0] != value:
+            self._tuple_to_activation((value, state[1]))
+
+    def _get_activate_on_release(self) -> bool:
+        return self._activation_to_tuple()[1]
+
+    def _set_activate_on_release(self, value: bool) -> None:
+        state = self._activation_to_tuple()
+        if state[1] != value:
+            self._tuple_to_activation((state[0], value))
+
+    def _activation_to_tuple(self) -> Tuple[bool, bool]:
+        """Returns a tuple representing the activation behavior state.
+
+        Returns:
+            Tuple indicating which activation behaviors are enabled
+        """
+        on_press = self._data.activation_mode in \
+                   [ActionActivationMode.Both, ActionActivationMode.Press]
+        on_release = self._data.activation_mode in \
+            [ActionActivationMode.Both, ActionActivationMode.Release]
+        return (on_press, on_release)
+
+    def _tuple_to_activation(self, state: Tuple[bool, bool]) -> None:
+        """Sets the activation state based on the state tuple.
+
+        Args:
+            Tuple containing the state of the press and releaes activations
+        """
+        match state:
+            case (False, False):
+                self._data.activation_mode = ActionActivationMode.Deactivated
+            case (True, False):
+                self._data.activation_mode = ActionActivationMode.Press
+            case (False, True):
+                self._data.activation_mode = ActionActivationMode.Release
+            case (True, True):
+                self._data.activation_mode = ActionActivationMode.Both
+
     def _append_drop_action(
             self,
             source_sidx: int,
@@ -257,5 +301,19 @@ class ActionModel(QtCore.QObject):
         str,
         fget=_get_action_label,
         fset=_set_action_label,
+        notify=actionChanged
+    )
+
+    activateOnPress = Property(
+        bool,
+        fget=_get_activate_on_press,
+        fset=_set_activate_on_press,
+        notify=actionChanged
+    )
+
+    activateOnRelease = Property(
+        bool,
+        fget=_get_activate_on_release,
+        fset=_set_activate_on_release,
         notify=actionChanged
     )

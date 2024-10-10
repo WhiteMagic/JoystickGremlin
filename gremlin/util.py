@@ -35,8 +35,7 @@ from dill import GUID
 
 from gremlin import error
 from gremlin.types import AxisButtonDirection, AxisMode, HatDirection, \
-    InputType, PropertyType
-
+    InputType, PropertyType, ActionActivationMode
 
 # Table storing which modules have been imported already
 g_loaded_modules = {}
@@ -235,6 +234,7 @@ _property_from_string = {
     PropertyType.List: lambda x: x.split("|"),
     PropertyType.UUID: lambda x: uuid.UUID(x),
     PropertyType.Selection: str,
+    PropertyType.ActionActivationMode: lambda x: ActionActivationMode.to_enum(x),
 }
 
 def property_from_string(data_type: PropertyType, value: str) -> Any:
@@ -265,6 +265,7 @@ _property_to_string = {
     PropertyType.List: lambda x: "|".join([str(v) for v in x]),
     PropertyType.UUID: str,
     PropertyType.Selection: str,
+    PropertyType.ActionActivationMode: lambda x: ActionActivationMode.to_string(x)
 }
 
 def property_to_string(data_type: PropertyType, value: Any) -> str:
@@ -301,6 +302,7 @@ _type_lookup = {
     PropertyType.AxisMode: AxisMode,
     PropertyType.HatDirection: HatDirection,
     PropertyType.Selection: str,
+    PropertyType.ActionActivationMode: ActionActivationMode,
 }
 
 _element_parsers = {
