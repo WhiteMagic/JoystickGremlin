@@ -175,6 +175,9 @@ Item {
             TextField {
                 id: _headerLabel
 
+                Layout.minimumWidth: 150
+                Layout.fillWidth: true
+
                 font.family: "bootstrap-icons"
                 text: _root.action.actionLabel
 
@@ -189,12 +192,8 @@ Item {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                height: 2
+            TriggerMode {
                 Layout.alignment: Qt.AlignVCenter
-
-                color: Universal.baseLowColor
             }
 
             IconButton {
