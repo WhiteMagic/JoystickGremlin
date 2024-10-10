@@ -193,6 +193,9 @@ Item {
             }
 
             TriggerMode {
+                visible: inputBinding.behavior === "button" &&
+                    _root.action.canChangeActivation
+
                 Layout.alignment: Qt.AlignVCenter
 
                 pressChecked: _root.action.activateOnPress

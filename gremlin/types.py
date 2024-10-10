@@ -611,6 +611,7 @@ class ActionActivationMode(enum.Enum):
     Press = 2
     Release = 3
     Both = 4
+    Disallowed = 5
 
     @staticmethod
     def to_string(instance: ActionActivationMode ) -> str:

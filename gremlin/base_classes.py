@@ -112,6 +112,8 @@ class AbstractActionData(ABC):
                     self._activation_mode = ActionActivationMode.Release
                 case ActionProperty.ActivateOnBoth:
                     self._activation_mode = ActionActivationMode.Both
+                case ActionProperty.ActivateDisabled:
+                    self._activation_mode = ActionActivationMode.Disallowed
 
     @classmethod
     def create(

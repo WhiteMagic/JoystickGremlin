@@ -142,6 +142,10 @@ class ActionModel(QtCore.QObject):
             self._sequence_index
         )
 
+    @Property(type=bool, constant=True)
+    def canChangeActivation(self) -> bool:
+        return self._data.activation_mode != ActionActivationMode.Disallowed
+
     @Slot(str, result=list)
     def getActions(self, selector: str) -> List[ActionModel]:
         """Returns the collection of actions corresponding to the selector.
