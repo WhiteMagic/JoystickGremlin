@@ -32,7 +32,8 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
 from gremlin.error import GremlinError, MissingImplementationError, ProfileError
 from gremlin.macro import KeyAction
 from gremlin.profile import Library
-from gremlin.types import InputType, PropertyType, MouseButton, HatDirection
+from gremlin.types import ActionProperty, InputType, PropertyType, \
+    MouseButton, HatDirection
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -458,6 +459,12 @@ class MacroFunctor(AbstractFunctor):
     def __init__(self, action: DescriptionData):
         super().__init__(action)
 
+        self.macro = macro.Macro()
+        for action in self.data.actions:
+            self.macro.add_action(action)
+        self.macro.is_exclusive = self.data.is_exclusive
+        self.macro.repeat = self.data.repeat_data
+
     def __call__(
         self,
         event: event_handler.Event,
@@ -469,7 +476,8 @@ class MacroFunctor(AbstractFunctor):
             event: the input event to process
             value: the potentially modified input value
         """
-        pass
+        if self._should_execute(value):
+            macro.MacroManager().queue_macro(self.macro)
 
 
 class MacroModel(ActionModel):
@@ -545,7 +553,9 @@ class MacroData(AbstractActionData):
     functor = MacroFunctor
     model = MacroModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateOnPress
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,
@@ -563,6 +573,7 @@ class MacroData(AbstractActionData):
         self.actions = []
         self.is_exclusive = False
         self.repeat_mode = MacroRepeatModes.Single
+        self.repeat_data = None
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         type_lookup = {

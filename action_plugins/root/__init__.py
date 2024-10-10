@@ -34,7 +34,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
 from gremlin.error import GremlinError
 from gremlin.config import Configuration
 from gremlin.profile import Library
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import ActionModel
 
@@ -92,7 +92,9 @@ class RootData(AbstractActionData):
     functor = RootFunctor
     model = RootModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateDisabled
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

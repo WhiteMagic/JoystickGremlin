@@ -29,7 +29,7 @@ from gremlin import event_handler, keyboard, macro, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import InputType, MouseButton, PropertyType
+from gremlin.types import ActionProperty, InputType, MouseButton, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -60,10 +60,11 @@ class MapToKeyboardFunctor(AbstractFunctor):
             event: the input event to process
             value: the potentially modified input value
         """
-        if value.current:
-            macro.MacroManager().queue_macro(self.press)
-        else:
-            macro.MacroManager().queue_macro(self.release)
+        if self._should_execute(value):
+            if value.current:
+                macro.MacroManager().queue_macro(self.press)
+            else:
+                macro.MacroManager().queue_macro(self.release)
 
 
 class MapToKeyboardModel(ActionModel):
@@ -128,7 +129,9 @@ class MapToKeyboardData(AbstractActionData):
     functor = MapToKeyboardFunctor
     model = MapToKeyboardModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateOnBoth
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

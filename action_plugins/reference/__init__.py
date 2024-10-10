@@ -25,11 +25,12 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataCreationMode, Value
 from gremlin.error import GremlinError
 from gremlin.macro import AbstractAction
 from gremlin.profile import Library
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 from gremlin.ui.profile import LabelValueSelectionModel
@@ -133,7 +134,9 @@ class ReferenceData(AbstractActionData):
     functor = None
     model = ReferenceModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateDisabled
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

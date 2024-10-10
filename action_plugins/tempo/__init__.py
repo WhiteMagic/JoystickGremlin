@@ -34,7 +34,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, Dat
 from gremlin.config import Configuration
 from gremlin.profile import Library
 from gremlin.tree import TreeNode
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -224,7 +224,9 @@ class TempoData(AbstractActionData):
     functor = TempoFunctor
     model = TempoModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateDisabled
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

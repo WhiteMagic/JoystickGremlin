@@ -28,7 +28,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataCreationMode, Value
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import InputType, PropertyType
+from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -109,7 +109,9 @@ class DescriptionData(AbstractActionData):
     functor = DescriptionFunctor
     model = DescriptionModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateDisabled
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

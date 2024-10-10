@@ -27,14 +27,15 @@ from PySide6.QtCore import Property, Signal, Slot
 from dill import GUID_Keyboard
 
 from gremlin import event_handler, plugin_manager, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataCreationMode, Value
 from gremlin.error import GremlinError
 from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
 from gremlin.profile import Library
 from gremlin.tree import TreeNode
-from gremlin.types import ConditionType, InputType, LogicalOperator, \
-    PropertyType
+from gremlin.types import ActionProperty, ConditionType, InputType, \
+    LogicalOperator, PropertyType
 
 from gremlin.ui.action_model import ActionModel
 import gremlin.ui.util
@@ -425,6 +426,9 @@ class ConditionFunctor(AbstractFunctor):
         super().__init__(action)
 
     def __call__(self, event: event_handler.Event, value: Value) -> None:
+        if not self._should_execute(value):
+            return
+
         actions = self.functors["true"] if \
             self._condition_truth_state(value) else self.functors["false"]
         for action in actions:
@@ -581,7 +585,9 @@ class ConditionData(AbstractActionData):
     functor = ConditionFunctor
     model = ConditionModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateOnBoth
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

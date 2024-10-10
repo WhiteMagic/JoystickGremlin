@@ -497,3 +497,28 @@ class AbstractFunctor(ABC):
             value: the possibly modified value
         """
         pass
+
+    def _should_execute(self, value: Value) -> bool:
+        """Checks if the action should execute based on the value and
+        internal activation behavior.
+
+        Args:
+            value: the current input value to consider
+
+        Returns:
+            True if the action should execute, False otherwise
+        """
+        match self.data.activation_mode:
+            case ActionActivationMode.Both:
+                return True
+            case ActionActivationMode.Deactivated:
+                return False
+            case ActionActivationMode.Press:
+                return value.current
+            case ActionActivationMode.Release:
+                return not value.current
+            case _:
+                raise GremlinError(
+                    f"Invalid activation mode encountered when executing " +
+                    f"action '{self.data.id}'"
+                )

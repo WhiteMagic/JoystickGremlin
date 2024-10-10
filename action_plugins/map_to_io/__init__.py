@@ -26,12 +26,13 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import mode_manager, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataCreationMode, Value
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event, EventListener
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.profile import Library
-from gremlin.types import AxisMode, InputType, PropertyType
+from gremlin.types import ActionProperty, AxisMode, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -48,6 +49,9 @@ class MapToIOFunctor(AbstractFunctor):
         self._event_listener = EventListener()
 
     def __call__(self, event: Event, value: Value) -> None:
+        if not self._should_execute(value):
+            return
+
         # Emit an event with the IO guid and the rest of the system will
         # then take core of executing it
         io_input = self._io[self.data.io_input_guid]
@@ -186,7 +190,9 @@ class MapToIOData(AbstractActionData):
     functor = MapToIOFunctor
     model = MapToIOModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateOnBoth
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

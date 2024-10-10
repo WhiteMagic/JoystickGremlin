@@ -102,7 +102,9 @@ class MergeAxisFunctor(AbstractFunctor):
             self.data.axis_in2.input_id
         ).value
 
-        value.current = MergeAxisFunctor.actions[self.data.operation](axis1, axis2)
+        value.current = MergeAxisFunctor.actions[self.data.operation](
+            axis1, axis2
+        )
 
         for functor in self.functors["children"]:
             functor(event, value)
@@ -336,7 +338,8 @@ class MergeAxisData(AbstractActionData):
     model = MergeAxisModel
 
     properties = [
-        ActionProperty.ReuseByDefault
+        ActionProperty.ReuseByDefault,
+        ActionProperty.ActivateDisabled,
     ]
     input_types = {
         InputType.JoystickAxis

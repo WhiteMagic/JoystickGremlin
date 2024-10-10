@@ -71,7 +71,7 @@ class PauseResumeFunctor(AbstractFunctor):
             event: the input event to process
             value: the potentially modified input value
         """
-        if value.current:
+        if self._should_execute(value):
             if self.data.operation == PauseResumeType.Pause:
                 event_handler.EventHandler().pause()
             elif self.data.operation == PauseResumeType.Resume:
@@ -132,7 +132,8 @@ class PauseResumeData(AbstractActionData):
     model = PauseResumeModel
 
     properties = [
-        ActionProperty.AlwaysExecute
+        ActionProperty.AlwaysExecute,
+        ActionProperty.ActivateOnPress
     ]
     input_types = [
         InputType.JoystickAxis,

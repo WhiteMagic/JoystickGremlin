@@ -27,9 +27,10 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import error, event_handler, input_devices, joystick_handling, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value, DataCreationMode
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+    DataCreationMode, Value
 from gremlin.profile import Library
-from gremlin.types import AxisMode, InputType, PropertyType
+from gremlin.types import ActionProperty, AxisMode, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -52,11 +53,10 @@ class MapToVjoyFunctor(AbstractFunctor):
         self.axis_delta_value = 0.0
         self.axis_value = 0.0
 
-    def __call__(
-        self,
-        event: event_handler.Event,
-        value: Value
-    ) -> None:
+    def __call__(self, event: event_handler.Event, value: Value) -> None:
+        if not self._should_execute(value):
+            return
+
         if self.data.vjoy_input_type == InputType.JoystickAxis:
             if self.data.axis_mode == AxisMode.Absolute:
                 joystick_handling.VJoyProxy()[self.data.vjoy_device_id] \
@@ -279,7 +279,9 @@ class MapToVjoyData(AbstractActionData):
     functor = MapToVjoyFunctor
     model = MapToVjoyModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateOnBoth
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

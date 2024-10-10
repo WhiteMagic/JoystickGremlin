@@ -30,7 +30,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataCreationMode, Value
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import InputType, MouseButton, PropertyType
+from gremlin.types import ActionProperty, InputType, MouseButton, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -61,17 +61,16 @@ class MapToMouseFunctor(AbstractFunctor):
 
         self.mouse_controller = sendinput.MouseController()
 
-    def __call__(
-        self,
-        event: event_handler.Event,
-        value: Value
-    ) -> None:
+    def __call__(self, event: event_handler.Event, value: Value) -> None:
         """Processes the provided event.
 
         Args:
             event: the input event to process
             value: the potentially modified input value
         """
+        if not self._should_execute(value):
+            return
+
         if self.data.mode == MapToMouseMode.Motion:
             if event.event_type == InputType.JoystickAxis:
                 self._perform_axis_motion(event, value)
@@ -276,7 +275,7 @@ class MapToMouseModel(ActionModel):
 
 class MapToMouseData(AbstractActionData):
 
-    """Model of a description action."""
+    """Model of a map to mouse action."""
 
     version = 1
     name = "Map to Mouse"
@@ -286,7 +285,9 @@ class MapToMouseData(AbstractActionData):
     functor = MapToMouseFunctor
     model = MapToMouseModel
 
-    properties = []
+    properties = [
+        ActionProperty.ActivateOnBoth
+    ]
     input_types = [
         InputType.JoystickAxis,
         InputType.JoystickButton,

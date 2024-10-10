@@ -600,7 +600,7 @@ class ActionProperty(enum.Enum):
     ActivateOnPress = 3
     ActivateOnRelease = 4
     ActivateOnBoth = 5
-    ActivateNever = 6
+    ActivateDisabled = 6
 
 
 class ActionActivationMode(enum.Enum):
