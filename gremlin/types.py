@@ -619,7 +619,8 @@ class ActionActivationMode(enum.Enum):
             ActionActivationMode.Deactivated: "deactivated",
             ActionActivationMode.Press: "press",
             ActionActivationMode.Release: "release",
-            ActionActivationMode.Both: "both"
+            ActionActivationMode.Both: "both",
+            ActionActivationMode.Disallowed: "disallowed",
         }
         value = lookup.get(instance, None)
         if value is None:
@@ -634,7 +635,8 @@ class ActionActivationMode(enum.Enum):
             "deactivated": ActionActivationMode.Deactivated,
             "press": ActionActivationMode.Press,
             "release": ActionActivationMode.Release,
-            "both": ActionActivationMode.Both
+            "both": ActionActivationMode.Both,
+            "disallowed": ActionActivationMode.Disallowed
         }
         value = lookup.get(string, None)
         if value is None:
