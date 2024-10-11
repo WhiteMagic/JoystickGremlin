@@ -27,8 +27,8 @@ import sys
 import time
 import traceback
 
+from pathlib import Path
 from typing import Any, Dict
-
 
 # Import QtMultimedia so pyinstaller doesn't miss it
 from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
@@ -36,6 +36,7 @@ from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
 import resources
 
 import dill
+from gremlin.config import Configuration
 from gremlin.types import PropertyType
 
 # Figure out the location of the code / executable and change the working
@@ -124,6 +125,12 @@ def register_config_options() -> None:
         PropertyType.List, [],
         "List of recently opened profiles", {}
     )
+    cfg.register(
+        "global", "general", "plugin_directory",
+        PropertyType.String, "",
+        "Directory containing additional action plugins", {},
+        True
+    )
 
 
 if __name__ == "__main__":
@@ -208,10 +215,18 @@ if __name__ == "__main__":
 
     # Create application and UI engine
     engine = QtQml.QQmlApplicationEngine(parent=app)
+    engine.addImportPath(".")
     QtCore.QDir.addSearchPath(
         "core_plugins",
         gremlin.util.resource_path("action_plugins/")
     )
+    cfg = Configuration()
+    user_plugins_path = Path(cfg.value("global", "general", "plugin_directory"))
+    if user_plugins_path.is_dir():
+        QtCore.QDir.addSearchPath(
+            "user_plugins",
+            str(user_plugins_path)
+        )
 
 
     # +-------------------------------------------------------------------------

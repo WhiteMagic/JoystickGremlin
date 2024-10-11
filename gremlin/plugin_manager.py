@@ -21,11 +21,13 @@ from __future__ import annotations
 import importlib
 import logging
 import os
+from pathlib import Path
+import sys
 from typing import TYPE_CHECKING
 
 from PySide6 import QtQml
 
-from gremlin import common, error, shared_state
+from gremlin import common, config, error, shared_state
 from gremlin.base_classes import DataCreationMode
 from gremlin.types import ActionProperty, InputType
 
@@ -47,7 +49,12 @@ class PluginManager:
         self._tag_to_type_map = {}
         self._parameter_requirements = {}
 
-        self._discover_plugins()
+        self._discover_plugins(Path("action_plugins"), True)
+        path = Path(config.Configuration().value(
+            "global", "general", "plugin_directory"
+        ))
+        if path.is_dir():
+            self._discover_plugins(path, False)
 
         self._create_type_action_map()
         self._create_action_name_map()
@@ -137,19 +144,21 @@ class PluginManager:
             self._name_to_type_map[entry.name] = entry
             self._tag_to_type_map[entry.tag] = entry
 
-    def _discover_plugins(self):
+    def _discover_plugins(self, path: Path, is_core: bool):
         """Processes known plugin folders for action plugins."""
-        for root, dirs, files in os.walk("action_plugins"):
+        if not is_core:
+            sys.path.insert(0, str(path))
+
+        for root, dirs, files in os.walk(path):
             for _ in [v for v in files if v == "__init__.py"]:
                 try:
-                    folder, module = os.path.split(root)
-                    if folder != "action_plugins":
-                        continue
-
                     # Attempt to load the file and if it looks like a proper
                     # action_plugins store it in the registry
+                    module = os.path.split(root)[1]
                     try:
-                        plugin_module_name = "action_plugins.{}".format(module)
+                        plugin_module_name = f"{path.name}.{module}"
+                        if not is_core:
+                            plugin_module_name = module
                         plugin = importlib.import_module(plugin_module_name)
                     except (ModuleNotFoundError, ImportError) as e:
                         logging.getLogger("system").error(
