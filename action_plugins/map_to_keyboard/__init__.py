@@ -133,9 +133,7 @@ class MapToKeyboardData(AbstractActionData):
         ActionProperty.ActivateOnBoth
     ]
     input_types = [
-        InputType.JoystickAxis,
         InputType.JoystickButton,
-        InputType.JoystickHat,
         InputType.Keyboard
     ]
 
