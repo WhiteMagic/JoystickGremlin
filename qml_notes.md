@@ -428,3 +428,24 @@ An `Item` on the other hand is an explicitly existing object that is rendered an
 
 A typical use of `Component` definitions is to define a reusable component inside a QML file, rather than having to create an entirely new QML file that would implement the desired component.
 
+# User Action Plugins
+
+R14 allows specifying a folder that contains additional action plugins to show in the normal drop down. These actions need to be implemented following the same rules as the core actions, however, users can create their own and implement them independently of Gremlin Core.
+
+## Development Setup
+
+- Create the following folder structure
+  ```
+  user_actions/
+  +- custom_action_1
+  |  +- ...
+  +- custom_action_2
+  |  +- ...
+  + __init__.py
+  ```
+
+- Create a development environment with the required dependencies, an easy way is to use this `pyproject.toml` and use poetry
+
+  - Optionally make the Gremlin repository visible to the project (for example via `Project -> Project Structure -> Add Content Root` in PyCharm)
+
+- Develop your plugin and then point Gremlin at that folder to use it with the normal Gremlin version
