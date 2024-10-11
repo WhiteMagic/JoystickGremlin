@@ -124,9 +124,9 @@ Item {
         }
         Drag.onDragFinished: function(action)
         {
-            // If the drop action ought to be ignore reset the ui by calling
+            // If the drop action ought to be ignored, reset the UI by calling
             // the InputConfiguration.qml reload function.
-            if(action == Qt.IgnoreAction)
+            if(action === Qt.IgnoreAction)
             {
                 reload();
             }

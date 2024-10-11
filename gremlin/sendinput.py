@@ -111,7 +111,6 @@ class MouseMotion:
             delta_y = self._tick_dy_value
             self._dy_timestamp = cur_time + self._tick_dy_time
 
-        print(delta_x, delta_y)
         return delta_x, delta_y
 
     def _compute_values(self, delta: float) -> Tuple[int, float]:
