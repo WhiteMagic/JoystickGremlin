@@ -96,6 +96,9 @@ Item {
     DelegateChooser {
         id: _delegateChooser
 
+        property int userInputItemsWidth: 500
+        property int labelWidth: 150
+
         role: "actionType"
 
         // Joystick action
@@ -109,65 +112,70 @@ Item {
                 Icon {
                     text: Constants.icon_joystick
                 }
-                InputListener {
-                    buttonLabel: modelData.label
-                    callback: modelData.updateJoystick
-                    multipleInputs: false
-                    eventTypes: ["axis", "button", "hat"]
+
+                Label {
+                    text: "Joystick"
+
+                    Layout.preferredWidth: _delegateChooser.labelWidth
                 }
 
-                // Show different components based on input
-                Switch {
-                    visible: modelData.inputType === "button"
+                RowLayout {
+                    InputListener {
+                        buttonLabel: modelData.label
+                        callback: modelData.updateJoystick
+                        multipleInputs: false
+                        eventTypes: ["axis", "button", "hat"]
+                    }
+                    Filler {}
+                    // Show different components based on input
+                    PressOrRelease {
+                        visible: modelData.inputType === "button"
 
-                    text: "Key Pressed"
-                    checked: modelData.isPressed
+                        checked: modelData.isPressed
+                        onCheckedChanged: function () {
+                            modelData.isPressed = checked
+                        }
+                    }
+                    FloatSpinBox {
+                        visible: modelData.inputType === "axis"
 
-                    onToggled: function()
-                    {
-                        modelData.isPressed = checked
+                        minValue: -1.0
+                        maxValue: 1.0
+                        realValue: modelData.axisValue
+
+                        onRealValueModified: function () {
+                            modelData.axisValue = realValue
+                        }
+                    }
+                    ComboBox {
+                        visible: modelData.inputType === "hat"
+
+                        textRole: "text"
+                        valueRole: "value"
+
+                        model: [
+                            {value: "center", text: "Center"},
+                            {value: "north", text: "North"},
+                            {value: "north-east", text: "North East"},
+                            {value: "east", text: "East"},
+                            {value: "south-east", text: "South East"},
+                            {value: "south", text: "South"},
+                            {value: "south-west", text: "South West"},
+                            {value: "west", text: "West"},
+                            {value: "north-west", text: "North West"}
+                        ]
+
+                        currentIndex: indexOfValue(modelData.hatDirection)
+                        Component.onCompleted: function () {
+                            currentIndex = indexOfValue(modelData.hatDirection)
+                        }
+
+                        onActivated: function () {
+                            modelData.hatDirection = currentValue
+                        }
                     }
                 }
-                FloatSpinBox {
-                    visible: modelData.inputType === "axis"
 
-                    minValue: -1.0
-                    maxValue: 1.0
-                    realValue: modelData.axisValue
-
-                    onRealValueModified: function() {
-                        modelData.axisValue = realValue
-                    }
-                }
-                ComboBox {
-                    visible: modelData.inputType === "hat"
-
-                    textRole: "text"
-                    valueRole: "value"
-
-                    model: [
-                        {value: "center", text: "Center"},
-                        {value: "north", text: "North"},
-                        {value: "north-east", text: "North East"},
-                        {value: "east", text: "East"},
-                        {value: "south-east", text: "South East"},
-                        {value: "south", text: "South"},
-                        {value: "south-west", text: "South West"},
-                        {value: "west", text: "West"},
-                        {value: "north-west", text: "North West"}
-                    ]
-
-                    currentIndex: indexOfValue(modelData.hatDirection)
-                    Component.onCompleted: function() {
-                        currentIndex = indexOfValue(modelData.hatDirection)
-                    }
-
-                    onActivated: function() {
-                        modelData.hatDirection = currentValue
-                    }
-                }
-
-                Filler {}
                 DeleteButton {}
             }
         }
@@ -184,27 +192,27 @@ Item {
                     text: Constants.icon_keyboard
                 }
                 Label {
-                    text: "Key"
+                    text: "Keyboard"
+
+                    Layout.preferredWidth: _delegateChooser.labelWidth
                 }
 
-                InputListener {
-                    buttonLabel: modelData.key
-                    callback: modelData.updateKey
-                    multipleInputs: false
-                    eventTypes: ["key"]
-                }
-
-                Switch {
-                    text: "Key Pressed"
-                    checked: modelData.isPressed
-
-                    onToggled: function()
-                    {
-                        modelData.isPressed = checked
+                RowLayout {
+                    InputListener {
+                        buttonLabel: modelData.key
+                        callback: modelData.updateKey
+                        multipleInputs: false
+                        eventTypes: ["key"]
+                    }
+                    Filler {}
+                    PressOrRelease {
+                        checked: modelData.isPressed
+                        onCheckedChanged: function () {
+                            modelData.isPressed = checked
+                        }
                     }
                 }
 
-                Filler {}
                 DeleteButton {}
             }
         }
@@ -222,26 +230,27 @@ Item {
                 }
                 Label {
                     text: "Mouse Button"
+
+                    Layout.preferredWidth: _delegateChooser.labelWidth
                 }
 
-                InputListener {
-                    buttonLabel: modelData.button
-                    callback: modelData.updateButton
-                    multipleInputs: false
-                    eventTypes: ["mouse"]
-                }
-
-                Switch {
-                    text: "Key Pressed"
-                    checked: modelData.isPressed
-
-                    onToggled: function()
-                    {
-                        modelData.isPressed = checked
+                RowLayout {
+                    InputListener {
+                        buttonLabel: modelData.button
+                        callback: modelData.updateButton
+                        multipleInputs: false
+                        eventTypes: ["mouse"]
+                    }
+                    Filler {}
+                    PressOrRelease {
+                        checked: modelData.isPressed
+                        onCheckedChanged: function () {
+                            modelData.isPressed = checked
+                        }
                     }
                 }
 
-                Filler {}
+                // Filler {}
                 DeleteButton {}
             }
         }
@@ -259,27 +268,34 @@ Item {
                 }
                 Label {
                     text: "Mouse Motion"
-                }
-                Label {
-                    text: "X-Axis"
-                }
-                SpinBox {
-                    value: modelData.dx
-                    editable: true
 
-                    onValueModified: function() {
-                        modelData.dx = value
+                    Layout.preferredWidth: _delegateChooser.labelWidth
+                }
+
+                RowLayout {
+                    Label {
+                        text: "X-Axis"
                     }
-                }
-                Label {
-                    text: "Y-Axis"
-                }
-                SpinBox {
-                    value: modelData.dy
-                    editable: true
+                    SpinBox {
+                        value: modelData.dx
+                        editable: true
 
-                    onValueModified: function() {
-                        modelData.dy = value
+                        onValueModified: function () {
+                            modelData.dx = value
+                        }
+                    }
+                    Label {
+                        text: "Y-Axis"
+
+                        leftPadding: 25
+                    }
+                    SpinBox {
+                        value: modelData.dy
+                        editable: true
+
+                        onValueModified: function () {
+                            modelData.dy = value
+                        }
                     }
                 }
 
@@ -300,17 +316,26 @@ Item {
                     text: Constants.icon_pause
                 }
                 Label {
-                    text: "Pause Duration"
-                }
-                FloatSpinBox {
-                    minValue: 0.0
-                    maxValue: 10.0
-                    realValue: modelData.duration
+                    text: "Pause"
 
-                    onRealValueModified: function() {
-                        modelData.duration = realValue
+                    Layout.preferredWidth: _delegateChooser.labelWidth
+                }
+
+                RowLayout {
+                    FloatSpinBox {
+                        minValue: 0.0
+                        maxValue: 10.0
+                        realValue: modelData.duration
+
+                        onRealValueModified: function () {
+                            modelData.duration = realValue
+                        }
+                    }
+                    Label {
+                        text: "seconds"
                     }
                 }
+
                 Filler {}
                 DeleteButton {}
             }
@@ -327,69 +352,76 @@ Item {
                 Icon {
                     text: Constants.icon_joystick
                 }
-                VJoySelector {
-                    vjoyInputType: modelData.inputType
-                    vjoyInputId: modelData.inputId
-                    vjoyDeviceId: modelData.vjoyId
-                    validTypes: ["axis", "button", "hat"]
 
-                    onVjoyInputIdChanged: { modelData.inputId = vjoyInputId }
-                    onVjoyDeviceIdChanged: { modelData.vjoyId = vjoyDeviceId }
-                    onVjoyInputTypeChanged: { modelData.inputType = vjoyInputType }
+                Label {
+                    text: "vJoy"
+
+                    Layout.preferredWidth: _delegateChooser.labelWidth
                 }
 
-                // Show different components based on input
-                Switch {
-                    visible: modelData.inputType === "button"
+                RowLayout {
+                    Layout.preferredWidth: _delegateChooser.userInputItemsWidth
 
-                    text: "Key Pressed"
-                    checked: modelData.isPressed
+                    VJoySelector {
+                        vjoyInputType: modelData.inputType
+                        vjoyInputId: modelData.inputId
+                        vjoyDeviceId: modelData.vjoyId
+                        validTypes: ["axis", "button", "hat"]
 
-                    onToggled: function()
-                    {
-                        modelData.isPressed = checked
+                        onVjoyInputIdChanged: { modelData.inputId = vjoyInputId }
+                        onVjoyDeviceIdChanged: { modelData.vjoyId = vjoyDeviceId }
+                        onVjoyInputTypeChanged: { modelData.inputType = vjoyInputType }
+                    }
+                    Filler {}
+                    // Show different components based on input
+                    PressOrRelease {
+                        visible: modelData.inputType === "button"
+
+                        checked: modelData.isPressed
+                        onCheckedChanged: function () {
+                            modelData.isPressed = checked
+                        }
+                    }
+                    FloatSpinBox {
+                        visible: modelData.inputType === "axis"
+
+                        minValue: -1.0
+                        maxValue: 1.0
+                        realValue: modelData.axisValue
+
+                        onRealValueModified: function () {
+                            modelData.axisValue = realValue
+                        }
+                    }
+                    ComboBox {
+                        visible: modelData.inputType === "hat"
+
+                        textRole: "text"
+                        valueRole: "value"
+
+                        model: [
+                            {value: "center", text: "Center"},
+                            {value: "north", text: "North"},
+                            {value: "north-east", text: "North East"},
+                            {value: "east", text: "East"},
+                            {value: "south-east", text: "South East"},
+                            {value: "south", text: "South"},
+                            {value: "south-west", text: "South West"},
+                            {value: "west", text: "West"},
+                            {value: "north-west", text: "North West"}
+                        ]
+
+                        currentIndex: indexOfValue(modelData.hatDirection)
+                        Component.onCompleted: function () {
+                            currentIndex = indexOfValue(modelData.hatDirection)
+                        }
+
+                        onActivated: function () {
+                            modelData.hatDirection = currentValue
+                        }
                     }
                 }
-                FloatSpinBox {
-                    visible: modelData.inputType === "axis"
 
-                    minValue: -1.0
-                    maxValue: 1.0
-                    realValue: modelData.axisValue
-
-                    onRealValueModified: function() {
-                        modelData.axisValue = realValue
-                    }
-                }
-                ComboBox {
-                    visible: modelData.inputType === "hat"
-
-                    textRole: "text"
-                    valueRole: "value"
-
-                    model: [
-                        {value: "center", text: "Center"},
-                        {value: "north", text: "North"},
-                        {value: "north-east", text: "North East"},
-                        {value: "east", text: "East"},
-                        {value: "south-east", text: "South East"},
-                        {value: "south", text: "South"},
-                        {value: "south-west", text: "South West"},
-                        {value: "west", text: "West"},
-                        {value: "north-west", text: "North West"}
-                    ]
-
-                    currentIndex: indexOfValue(modelData.hatDirection)
-                    Component.onCompleted: function() {
-                        currentIndex = indexOfValue(modelData.hatDirection)
-                    }
-
-                    onActivated: function() {
-                        modelData.hatDirection = currentValue
-                    }
-                }
-
-                Filler {}
                 DeleteButton {}
             }
         }
@@ -404,8 +436,25 @@ Item {
         font.pixelSize: 16
 
         onClicked: function() {
-            // console.log(index)
             _root.action.removeAction(index)
+        }
+    }
+
+    component PressOrRelease : Item {
+        property alias checked: _porSwitch.checked
+
+        implicitWidth: _porLayout.width
+        implicitHeight: _porLayout.height
+
+        RowLayout {
+            id: _porLayout
+            Label {
+                text: "Release"
+            }
+            Switch {
+                id: _porSwitch
+                text: "Press"
+            }
         }
     }
 
