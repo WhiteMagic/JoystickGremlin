@@ -82,9 +82,19 @@ Item {
             }
         }
 
+        ActionDrop {
+            targetIndex: 0
+            insertionMode: "prepend"
+        }
+
         ListView {
             Layout.fillWidth: true
             implicitHeight: contentHeight
+
+            // Make it behave like a sensible scrolling container
+            ScrollBar.vertical: ScrollBar {}
+            flickableDirection: Flickable.VerticalFlick
+            boundsBehavior: Flickable.StopAtBounds
 
             model: _root.action.actions
             delegate: _delegateChooser
@@ -96,37 +106,26 @@ Item {
     DelegateChooser {
         id: _delegateChooser
 
-        property int userInputItemsWidth: 500
-        property int labelWidth: 150
-
         role: "actionType"
 
         // Joystick action
         DelegateChoice {
             roleValue: "joystick"
 
-            RowLayout {
-                anchors.left: parent.left
-                anchors.right: parent.right
+            DraggableAction {
+                icon: Constants.icon_joystick
+                label: "Joystick"
 
-                Icon {
-                    text: Constants.icon_joystick
-                }
-
-                Label {
-                    text: "Joystick"
-
-                    Layout.preferredWidth: _delegateChooser.labelWidth
-                }
-
-                RowLayout {
+                actionItem: RowLayout {
                     InputListener {
                         buttonLabel: modelData.label
                         callback: modelData.updateJoystick
                         multipleInputs: false
                         eventTypes: ["axis", "button", "hat"]
                     }
+
                     Filler {}
+
                     // Show different components based on input
                     PressOrRelease {
                         visible: modelData.inputType === "button"
@@ -175,8 +174,6 @@ Item {
                         }
                     }
                 }
-
-                DeleteButton {}
             }
         }
 
@@ -184,27 +181,20 @@ Item {
         DelegateChoice {
             roleValue: "key"
 
-            RowLayout {
-                anchors.left: parent.left
-                anchors.right: parent.right
+            DraggableAction {
+                icon: Constants.icon_keyboard
+                label: "Keyboard"
 
-                Icon {
-                    text: Constants.icon_keyboard
-                }
-                Label {
-                    text: "Keyboard"
-
-                    Layout.preferredWidth: _delegateChooser.labelWidth
-                }
-
-                RowLayout {
+                actionItem: RowLayout {
                     InputListener {
                         buttonLabel: modelData.key
                         callback: modelData.updateKey
                         multipleInputs: false
                         eventTypes: ["key"]
                     }
+
                     Filler {}
+
                     PressOrRelease {
                         checked: modelData.isPressed
                         onCheckedChanged: function () {
@@ -212,8 +202,6 @@ Item {
                         }
                     }
                 }
-
-                DeleteButton {}
             }
         }
 
@@ -221,27 +209,20 @@ Item {
         DelegateChoice {
             roleValue: "mouse-button"
 
-            RowLayout {
-                anchors.left: parent.left
-                anchors.right: parent.right
+            DraggableAction {
+                icon: Constants.icon_mouse
+                label: "Mouse Button"
 
-                Icon {
-                    text: Constants.icon_mouse
-                }
-                Label {
-                    text: "Mouse Button"
-
-                    Layout.preferredWidth: _delegateChooser.labelWidth
-                }
-
-                RowLayout {
+                actionItem: RowLayout {
                     InputListener {
                         buttonLabel: modelData.button
                         callback: modelData.updateButton
                         multipleInputs: false
                         eventTypes: ["mouse"]
                     }
+
                     Filler {}
+
                     PressOrRelease {
                         checked: modelData.isPressed
                         onCheckedChanged: function () {
@@ -249,9 +230,6 @@ Item {
                         }
                     }
                 }
-
-                // Filler {}
-                DeleteButton {}
             }
         }
 
@@ -259,20 +237,11 @@ Item {
         DelegateChoice {
             roleValue: "mouse-motion"
 
-            RowLayout {
-                anchors.left: parent.left
-                anchors.right: parent.right
+            DraggableAction {
+                icon: Constants.icon_mouse
+                label: "Mouse Motion"
 
-                Icon {
-                    text: Constants.icon_mouse
-                }
-                Label {
-                    text: "Mouse Motion"
-
-                    Layout.preferredWidth: _delegateChooser.labelWidth
-                }
-
-                RowLayout {
+                actionItem: RowLayout {
                     Label {
                         text: "X-Axis"
                     }
@@ -284,6 +253,7 @@ Item {
                             modelData.dx = value
                         }
                     }
+
                     Label {
                         text: "Y-Axis"
 
@@ -297,10 +267,9 @@ Item {
                             modelData.dy = value
                         }
                     }
-                }
 
-                Filler {}
-                DeleteButton {}
+                    Filler {}
+                }
             }
         }
 
@@ -308,20 +277,11 @@ Item {
         DelegateChoice {
             roleValue: "pause"
 
-            RowLayout {
-                anchors.left: parent.left
-                anchors.right: parent.right
+            DraggableAction {
+                icon: Constants.icon_pause
+                label: "Pause"
 
-                Icon {
-                    text: Constants.icon_pause
-                }
-                Label {
-                    text: "Pause"
-
-                    Layout.preferredWidth: _delegateChooser.labelWidth
-                }
-
-                RowLayout {
+                actionItem: RowLayout {
                     FloatSpinBox {
                         minValue: 0.0
                         maxValue: 10.0
@@ -334,10 +294,8 @@ Item {
                     Label {
                         text: "seconds"
                     }
+                    Filler {}
                 }
-
-                Filler {}
-                DeleteButton {}
             }
         }
 
@@ -345,23 +303,11 @@ Item {
         DelegateChoice {
             roleValue: "vjoy"
 
-            RowLayout {
-                anchors.left: parent.left
-                anchors.right: parent.right
+            DraggableAction {
+                icon: Constants.icon_joystick
+                label: "vJoy"
 
-                Icon {
-                    text: Constants.icon_joystick
-                }
-
-                Label {
-                    text: "vJoy"
-
-                    Layout.preferredWidth: _delegateChooser.labelWidth
-                }
-
-                RowLayout {
-                    Layout.preferredWidth: _delegateChooser.userInputItemsWidth
-
+                actionItem: RowLayout {
                     VJoySelector {
                         vjoyInputType: modelData.inputType
                         vjoyInputId: modelData.inputId
@@ -372,7 +318,9 @@ Item {
                         onVjoyDeviceIdChanged: { modelData.vjoyId = vjoyDeviceId }
                         onVjoyInputTypeChanged: { modelData.inputType = vjoyInputType }
                     }
+
                     Filler {}
+
                     // Show different components based on input
                     PressOrRelease {
                         visible: modelData.inputType === "button"
@@ -421,16 +369,16 @@ Item {
                         }
                     }
                 }
-
-                DeleteButton {}
             }
         }
     }
 
+    // Component filling remaining available space in a RowLayout
     component Filler : Rectangle {
         Layout.fillWidth: true
     }
 
+    // Predefined button that removes a given action
     component DeleteButton : IconButton {
         text: Constants.remove
         font.pixelSize: 16
@@ -440,6 +388,7 @@ Item {
         }
     }
 
+    // Switch with press/release labels for button action indication
     component PressOrRelease : Item {
         property alias checked: _porSwitch.checked
 
@@ -458,8 +407,148 @@ Item {
         }
     }
 
+    // Displays an icon and also acts as the drag handle for the drag&drop
+    // implementation
     component Icon : Label {
+        property string iconName
+        property var target
+
+        property alias dragActive: _dragArea.drag.active
+
+        text: Constants.drag_handle + iconName
+
         font.pixelSize: 20
+
+        MouseArea {
+            id: _dragArea
+
+            anchors.fill: parent
+
+            drag.target: target
+            drag.axis: Drag.YAxis
+
+            // onReleased: function() {
+            //     console.log("Done")
+            // }
+
+            // Create a visualization of the dragged item
+            onPressed: function() {
+                parent.parent.grabToImage(function(result) {
+                    target.Drag.imageSource = result.url
+                })
+            }
+        }
+    }
+
+    component ActionDrop : DropArea {
+        property int targetIndex
+        property string insertionMode: "append"
+
+        height: 10
+
+        Layout.fillWidth: true
+
+        onDropped: function(drop) {
+            drop.accept()
+            _root.action.dropCallback(targetIndex, drop.text, insertionMode)
+        }
+
+        Rectangle {
+            anchors.fill: parent
+
+            color: "blue"
+        }
+    }
+
+    component DraggableAction : ColumnLayout {
+        id: _draggableAction
+
+        // Widget properties
+        property string icon
+        property string label
+        property alias actionItem: _actionLoader.sourceComponent
+
+        // Ensure entire width is taken up
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        // Define drag&drop behavior
+        Drag.dragType: Drag.Automatic
+        Drag.active: _icon.dragActive
+        Drag.supportedActions: Qt.MoveAction
+        Drag.proposedAction: Qt.MoveAction
+        Drag.mimeData: {
+            "text/plain": index.toString()
+        }
+        Drag.onDragFinished: function (action) {
+            // If the drop action ought to be ignored, reset the UI by calling
+            // the InputConfiguration.qml reload function.
+            if (action === Qt.IgnoreAction) {
+                reload();
+            }
+        }
+
+
+        // Widget content assembly
+        RowLayout {
+            id: _actionContent
+
+            Icon {
+                id: _icon
+
+                iconName: icon
+                target: _draggableAction
+            }
+
+            // Label {
+            //     id: _icon
+            //
+            //     property alias dragActive: _dragArea.drag.active
+            //
+            //     text: Constants.drag_handle + icon
+            //
+            //     font.pixelSize: 20
+            //
+            //     MouseArea {
+            //         id: _dragArea
+            //
+            //         anchors.fill: parent
+            //
+            //         drag.target: _draggableAction
+            //         drag.axis: Drag.YAxis
+            //
+            //         onReleased: function() {
+            //             console.log(parent.parent.Drag.imageSource)
+            //         }
+            //
+            //         // Create a visualization of the dragged item
+            //         onPressed: function() {
+            //             _actionContent.grabToImage(function(result) {
+            //                 _draggableAction.Drag.imageSource = result.url
+            //             })
+            //         }
+            //     }
+            // }
+
+
+            Label {
+                Layout.preferredWidth: 150
+                text: label
+            }
+
+            // Holds action specific UI elements
+            Loader {
+                id: _actionLoader
+
+                Layout.fillWidth: true
+            }
+
+            DeleteButton {}
+        }
+
+        ActionDrop {
+            targetIndex: index
+        }
     }
 
 }

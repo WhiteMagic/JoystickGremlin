@@ -540,6 +540,26 @@ class MacroModel(ActionModel):
             del self._data.actions[index]
             self.changed.emit()
 
+    @Slot(int, int, str)
+    def dropCallback(self, target_index, source_index, mode):
+        source_item = self._data.actions[source_index]
+        target_item = self._data.actions[target_index]
+        self._data.actions.remove(source_item)
+
+        match mode:
+            case "append":
+                offset = 1
+            case "prepend":
+                offset = 0
+            case _:
+                raise GremlinError(f"Invalid insertion mode '{mode}")
+
+        self._data.actions.insert(
+            self._data.actions.index(target_item) + offset,
+            source_item
+        )
+        self.changed.emit()
+
 
 class MacroData(AbstractActionData):
 

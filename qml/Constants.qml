@@ -10,6 +10,7 @@ QtObject {
     readonly property string add: "\uF64D"
     readonly property string trash: "\uF5DE"
     readonly property string edit: "\uF4CB"
+    readonly property string drag_handle: "\uF3FE"
 
     readonly property string icon_mouse: "\uF49D"
     readonly property string icon_keyboard: "\uF451"
