@@ -121,6 +121,11 @@ def register_config_options() -> None:
         "Name of the last active mode", {}
     )
     cfg.register(
+        "global", "internal", "last_profile",
+        PropertyType.String, "",
+        "Most recently used profile", {}
+    )
+    cfg.register(
         "global", "internal", "recent_profiles",
         PropertyType.List, [],
         "List of recently opened profiles", {}
@@ -289,9 +294,17 @@ if __name__ == "__main__":
     #     event_listener.terminate()
     #     sys.exit(0)
 
-    # Handle user provided command line arguments
+    # Load profile specified by the user on the command line, otherwise attempt
+    # to load the previously loaded profile
     if args.profile is not None and os.path.isfile(args.profile):
         backend.loadProfile(args.profile)
+    else:
+        last_profile = Path(Configuration().value(
+            "global", "internal", "last_profile")
+        )
+        if last_profile.is_file():
+            backend.loadProfile(str(last_profile))
+
     # if args.enable:
     #     ui.ui.actionActivate.setChecked(True)
     #     ui.activate(True)

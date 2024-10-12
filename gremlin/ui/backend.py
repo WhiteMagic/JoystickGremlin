@@ -255,6 +255,7 @@ class Backend(QtCore.QObject):
             fpath: Path to the file containing the profile to load
         """
         self._load_profile(fpath)
+        config.Configuration().set("global", "internal", "last_profile", fpath)
         self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
         self.profileChanged.emit()
         signal.reloadUi.emit()
