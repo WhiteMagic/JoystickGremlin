@@ -85,6 +85,8 @@ Item {
         ActionDrop {
             targetIndex: 0
             insertionMode: "prepend"
+
+            Layout.bottomMargin: -10
         }
 
         ListView {
@@ -427,10 +429,6 @@ Item {
             drag.target: target
             drag.axis: Drag.YAxis
 
-            // onReleased: function() {
-            //     console.log("Done")
-            // }
-
             // Create a visualization of the dragged item
             onPressed: function() {
                 parent.parent.grabToImage(function(result) {
@@ -444,19 +442,38 @@ Item {
         property int targetIndex
         property string insertionMode: "append"
 
-        height: 10
+        height: 20
 
         Layout.fillWidth: true
 
         onDropped: function(drop) {
             drop.accept()
+            _marker.opacity = 0.0
             _root.action.dropCallback(targetIndex, drop.text, insertionMode)
+        }
+
+        onEntered: function() {
+            _marker.opacity = 1.0
+        }
+        onExited: function() {
+            _marker.opacity = 0.0
         }
 
         Rectangle {
             anchors.fill: parent
+            color: "transparent"
 
-            color: "blue"
+            Rectangle {
+                id: _marker
+
+                y: parent.y+5
+                height: 10
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                opacity: 0.0
+                color: Universal.accent
+            }
         }
     }
 
@@ -471,6 +488,7 @@ Item {
         // Ensure entire width is taken up
         anchors.left: parent.left
         anchors.right: parent.right
+        spacing: 0
 
         // Define drag&drop behavior
         Drag.dragType: Drag.Automatic
@@ -488,7 +506,6 @@ Item {
             }
         }
 
-
         // Widget content assembly
         RowLayout {
             id: _actionContent
@@ -499,37 +516,6 @@ Item {
                 iconName: icon
                 target: _draggableAction
             }
-
-            // Label {
-            //     id: _icon
-            //
-            //     property alias dragActive: _dragArea.drag.active
-            //
-            //     text: Constants.drag_handle + icon
-            //
-            //     font.pixelSize: 20
-            //
-            //     MouseArea {
-            //         id: _dragArea
-            //
-            //         anchors.fill: parent
-            //
-            //         drag.target: _draggableAction
-            //         drag.axis: Drag.YAxis
-            //
-            //         onReleased: function() {
-            //             console.log(parent.parent.Drag.imageSource)
-            //         }
-            //
-            //         // Create a visualization of the dragged item
-            //         onPressed: function() {
-            //             _actionContent.grabToImage(function(result) {
-            //                 _draggableAction.Drag.imageSource = result.url
-            //             })
-            //         }
-            //     }
-            // }
-
 
             Label {
                 Layout.preferredWidth: 150
@@ -547,6 +533,9 @@ Item {
         }
 
         ActionDrop {
+            Layout.topMargin: -10
+            Layout.bottomMargin: -10
+
             targetIndex: index
         }
     }

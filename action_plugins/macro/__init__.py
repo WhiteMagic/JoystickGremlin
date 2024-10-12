@@ -548,16 +548,15 @@ class MacroModel(ActionModel):
 
         match mode:
             case "append":
-                offset = 1
+                self._data.actions.insert(
+                    self._data.actions.index(target_item) + 1,
+                    source_item
+                )
             case "prepend":
-                offset = 0
+                self._data.actions.insert(0, source_item)
             case _:
                 raise GremlinError(f"Invalid insertion mode '{mode}")
 
-        self._data.actions.insert(
-            self._data.actions.index(target_item) + offset,
-            source_item
-        )
         self.changed.emit()
 
 
