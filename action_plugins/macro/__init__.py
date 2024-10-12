@@ -18,7 +18,9 @@
 from __future__ import annotations
 
 import enum
+from itertools import count
 from typing import Any, List, Optional, TYPE_CHECKING
+from unittest import case
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -26,7 +28,7 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from action_plugins import common
 
-from gremlin import event_handler, keyboard, macro, util
+from gremlin import event_handler, input_devices, keyboard, macro, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     DataCreationMode, Value
 from gremlin.error import GremlinError, MissingImplementationError, ProfileError
@@ -441,15 +443,24 @@ class MacroRepeatModes(enum.Enum):
 
     @staticmethod
     def lookup(value: str) -> MacroRepeatModes:
-        match value:
-            case "Single":
+        match value.lower():
+            case "single":
                 return MacroRepeatModes.Single
-            case "Count":
+            case "count":
                 return MacroRepeatModes.Count
-            case "Toggle":
+            case "toggle":
                 return MacroRepeatModes.Toggle
-            case "Hold":
+            case "hold":
                 return MacroRepeatModes.Hold
+            case _:
+                raise GremlinError(f"Invalid macro repeat mode: {value}")
+
+
+class MacroRepeatData:
+
+    def __init__(self, delay: float=0.1, count: int=1):
+        self.count = count
+        self.delay = delay
 
 
 class MacroFunctor(AbstractFunctor):
@@ -463,7 +474,20 @@ class MacroFunctor(AbstractFunctor):
         for action in self.data.actions:
             self.macro.add_action(action)
         self.macro.is_exclusive = self.data.is_exclusive
-        self.macro.repeat = self.data.repeat_data
+        match self.data.repeat_mode:
+            case MacroRepeatModes.Count:
+                self.macro.repeat = macro.CountRepeat(
+                    self.data.repeat_data.count,
+                    self.data.repeat_data.delay
+                )
+            case MacroRepeatModes.Hold:
+                self.macro.repeat = macro.HoldRepeat(
+                    self.data.repeat_data.delay
+                )
+            case MacroRepeatModes.Toggle:
+                self.macro.repeat = macro.ToggleRepeat(
+                    self.data.repeat_data.delay
+                )
 
     def __call__(
         self,
@@ -478,6 +502,11 @@ class MacroFunctor(AbstractFunctor):
         """
         if self._should_execute(value):
             macro.MacroManager().queue_macro(self.macro)
+            if self.data.repeat_mode == MacroRepeatModes.Hold:
+                input_devices.ButtonReleaseActions().register_callback(
+                    lambda: macro.MacroManager().terminate_macro(self.macro),
+                    event
+                )
 
 
 class MacroModel(ActionModel):
@@ -559,6 +588,60 @@ class MacroModel(ActionModel):
 
         self.changed.emit()
 
+    def _get_repeat_count(self) -> int:
+        if self._data.repeat_mode == MacroRepeatModes.Count:
+            return self._data.repeat_data.count
+        else:
+            return 1
+
+    def _set_repeat_count(self, value: int) -> None:
+        if self._data.repeat_mode == MacroRepeatModes.Count and \
+                value != self._data.repeat_data.count:
+            self._data.repeat_data.count = value
+            self.changed.emit()
+
+    def _get_repeat_delay(self) -> float:
+        if self._data.repeat_mode != MacroRepeatModes.Single:
+            return self._data.repeat_data.delay
+        else:
+            return 0.0
+
+    def _set_repeat_delay(self, value: float) -> None:
+        if self._data.repeat_mode != MacroRepeatModes.Single and \
+                value != self._data.repeat_data.delay:
+            self._data.repeat_data.delay = value
+            self.changed.emit()
+
+    def _get_repeat_mode(self) -> str:
+        return self._data.repeat_mode.name.lower()
+
+    def _set_repeat_mode(self, value: str) -> None:
+        mode = MacroRepeatModes.lookup(value)
+        if mode != self._data.repeat_mode:
+            self._data.repeat_mode = mode
+            self.changed.emit()
+
+    repeatCount = Property(
+        int,
+        fget=_get_repeat_count,
+        fset=_set_repeat_count,
+        notify=changed
+    )
+
+    repeatDelay = Property(
+        float,
+        fget=_get_repeat_delay,
+        fset=_set_repeat_delay,
+        notify=changed
+    )
+
+    repeatMode = Property(
+        str,
+        fget=_get_repeat_mode,
+        fset=_set_repeat_mode,
+        notify=changed
+    )
+
 
 class MacroData(AbstractActionData):
 
@@ -590,7 +673,7 @@ class MacroData(AbstractActionData):
         self.actions = []
         self.is_exclusive = False
         self.repeat_mode = MacroRepeatModes.Single
-        self.repeat_data = None
+        self.repeat_data = MacroRepeatData()
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         type_lookup = {
@@ -608,6 +691,13 @@ class MacroData(AbstractActionData):
         self.repeat_mode = MacroRepeatModes.lookup(util.read_property(
             node, "repeat-mode", PropertyType.String)
         )
+        self.repeat_data.count = util.read_property(
+            node, "repeat-count", PropertyType.Int
+        )
+        self.repeat_data.delay = util.read_property(
+            node, "repeat-delay", PropertyType.Float
+        )
+
         for entry in node.iter("macro-action"):
             action_type = entry.get("type")
             action_obj = None
@@ -628,6 +718,8 @@ class MacroData(AbstractActionData):
             [
                 ["is-exclusive", self.is_exclusive, PropertyType.Bool],
                 ["repeat-mode", self.repeat_mode.name, PropertyType.String],
+                ["repeat-count", self.repeat_data.count, PropertyType.Int],
+                ["repeat-delay", self.repeat_data.delay, PropertyType.Float],
             ]
         )
         for entry in self.actions:

@@ -102,6 +102,59 @@ Item {
             delegate: _delegateChooser
             spacing: 5
         }
+
+        RowLayout {
+            Label {
+                text: "Repeat Mode"
+            }
+
+            ComboBox {
+                id: _repeatMode
+
+                textRole: "text"
+                valueRole: "value"
+
+                Component.onCompleted: function() {
+                    currentIndex = indexOfValue(_root.action.repeatMode)
+                }
+
+                onActivated: function() {
+                    _root.action.repeatMode = currentValue
+                }
+
+                model: [
+                    {value: "single", text: "Single"},
+                    {value: "count", text: "Count"},
+                    {value: "toggle", text: "Togle"},
+                    {value: "hold", text: "Hold"},
+                ]
+            }
+
+            FloatSpinBox {
+                visible: ["count", "toggle", "hold"].includes(_repeatMode.currentValue)
+
+                realValue: _root.action.repeatDelay
+                minValue: 0.0
+                maxValue: 3600.0
+
+                onRealValueModified: function() {
+                    _root.action.repeatDelay = realValue
+                }
+            }
+
+            SpinBox {
+                visible: _repeatMode.currentValue === "count"
+
+                value: _root.action.repeatCount
+                from: 1
+                to: 100
+                editable: true
+
+                onValueModified: function() {
+                    _root.action.repeatCount = value
+                }
+            }
+        }
     }
 
     // Renders the correct delegate based on the action type
