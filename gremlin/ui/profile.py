@@ -328,9 +328,7 @@ class InputItemBindingModel(QtCore.QObject):
     """Model representing an ActionTree instance."""
 
     behaviorChanged = Signal()
-    descriptionChanged = Signal()
     virtualButtonChanged = Signal()
-    actionCountChanged = Signal()
     rootActionChanged = Signal()
     inputTypeChanged = Signal()
 
@@ -670,14 +668,6 @@ class InputItemBindingModel(QtCore.QObject):
             # This one might be overkill
             signal.reloadUi.emit()
 
-    def _get_description(self) -> str:
-        return self._input_item_binding.description
-
-    def _set_description(self, description: str) -> None:
-        if description != self._input_item_binding.description:
-            self._input_item_binding.description = description
-            self.descriptionChanged.emit()
-
     @property
     def behavior_type(self):
         return self._input_item_binding.behavior
@@ -687,13 +677,6 @@ class InputItemBindingModel(QtCore.QObject):
         fget=_get_behavior,
         fset=_set_behavior,
         notify=behaviorChanged
-    )
-
-    description = Property(
-        str,
-        fget=_get_description,
-        fset=_set_description,
-        notify=descriptionChanged
     )
 
 

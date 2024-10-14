@@ -17,13 +17,13 @@
 
 
 import collections
+from collections.abc import Callable
 import functools
 import heapq
 import inspect
 import logging
 import time
 import threading
-from typing import Callable
 import uuid
 
 from PySide6 import QtCore
@@ -643,10 +643,11 @@ def keyboard(key_name, mode):
     return wrap
 
 
-def periodic(interval):
+def periodic(interval: float):
     """Decorator for periodic function callbacks.
 
-    :param interval the duration between executions of the function
+    Args:
+        interval: the duration between executions of the function
     """
 
     def wrap(callback):
@@ -662,39 +663,51 @@ def periodic(interval):
     return wrap
 
 
-def squash(value, func):
+def squash(value: float, func: Callable[[float], float]) -> float:
     """Returns the appropriate function value when the function is
     squashed to [-1, 1].
 
-    :param value the function value to compute
-    :param func the function to be squashed
-    :return function value at value after squashing
+    Args:
+        value: the function value to compute
+        func: the function whose output is to be squashed
+
+    Returns:
+        Function value at value after squashing to [-1, 1]
     """
     return (2 * func(value)) / abs(func(-1) - func(1))
 
 
-def deadzone(value, low, low_center, high_center, high):
+def deadzone(
+        value: float,
+        low: float,
+        low_center: float,
+        high_center: float,
+        high: float
+) -> float:
     """Returns the mapped value taking the provided deadzone into
     account.
 
     The following relationship between the limits has to hold.
     -1 <= low < low_center <= 0 <= high_center < high <= 1
 
-    :param value the raw input value
-    :param low low deadzone limit
-    :param low_center lower center deadzone limit
-    :param high_center upper center deadzone limit
-    :param high high deadzone limit
-    :return corrected value
+    Args:
+        value: the raw input value
+        low: low deadzone limit
+        low_center: lower center deadzone limit
+        high_center: upper center deadzone limit
+        high: high deadzone limit
+
+    Returns:
+        Corrected value
     """
     if value >= 0:
-        return min(1, max(0, (value - high_center) / abs(high - high_center)))
+        return min(1.0, max(0.0, (value - high_center) / abs(high - high_center)))
     else:
-        return max(-1, min(0, (value - low_center) / abs(low - low_center)))
+        return max(-1.0, min(0.0, (value - low_center) / abs(low - low_center)))
 
 
 def format_input(event: event_handler.Event) -> str:
-    """Formats the input specified the the device and event into a string.
+    """Formats the input specified the device and event into a string.
 
     Args:
         event: event to format

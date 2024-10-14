@@ -16,6 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import annotations
+
+from typing import Dict, List
 import uuid
 
 from PySide6 import QtCore
@@ -76,7 +79,6 @@ class JoystickWrapper:
 
         @property
         def is_pressed(self) -> bool:
-            # return DILL.get_button(self._joystick_guid, self._index)
             return self._value
 
     class Hat(Input):
@@ -88,9 +90,6 @@ class JoystickWrapper:
 
         @property
         def direction(self) -> types.HatDirection:
-            # return util.dill_hat_lookup(
-            #     DILL.get_hat(self._joystick_guid, self._index)
-            # )
             return self._value
 
     def __init__(self, device_guid: uuid.UUID):
@@ -237,10 +236,12 @@ class JoystickWrapper:
         """
         return self._info.hat_count
 
-    def _init_axes(self):
+    def _init_axes(self) -> Dict[int, JoystickWrapper.Axis]:
         """Initializes the axes of the joystick.
 
-        :return list of JoystickWrapper.Axis objects
+        Returns:
+            dictionary of JoystickWrapper.Axis objects with their axis index
+            as key rather than the axis number
         """
         axes = {}
         for i in range(self._info.axis_count):
@@ -248,20 +249,22 @@ class JoystickWrapper:
             axes[aid] = JoystickWrapper.Axis(self._device_guid, aid)
         return axes
 
-    def _init_buttons(self):
+    def _init_buttons(self) -> List[JoystickWrapper.Button]:
         """Initializes the buttons of the joystick.
 
-        :return list of JoystickWrapper.Button objects
+        Returns:
+            list of JoystickWrapper.Button objects
         """
         buttons = [None,]
         for i in range(self._info.button_count):
             buttons.append(JoystickWrapper.Button(self._device_guid, i+1))
         return buttons
 
-    def _init_hats(self):
+    def _init_hats(self) -> List[JoystickWrapper.Hat]:
         """Initializes the hats of the joystick.
 
-        :return list of JoystickWrapper.Hat objects
+        Returns:
+            list of JoystickWrapper.Hat objects
         """
         hats = [None,]
         for i in range(self._info.hat_count):
