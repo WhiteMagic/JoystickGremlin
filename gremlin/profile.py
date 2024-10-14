@@ -582,7 +582,8 @@ class Profile:
             self,
             device_guid: uuid.UUID,
             input_type: InputType,
-            input_id: int
+            input_id: int,
+            mode: str
     ) -> int:
         """Returns the number of InputItem instances corresponding to the
         provided information.
@@ -591,6 +592,7 @@ class Profile:
             device_guid: GUID of the device
             input_type: type of the input
             input_id: id of the input
+            mode: name of the mode
 
         Returns:
             Number of InputItem instances linked with the given information
@@ -599,7 +601,8 @@ class Profile:
             return 0
 
         for item in self.inputs[device_guid]:
-            if item.input_type == input_type and item.input_id == input_id:
+            if item.input_type == input_type and item.input_id == input_id \
+                    and item.mode == mode:
                 return len(item.action_sequences)
 
         return 0
@@ -611,7 +614,7 @@ class Profile:
             input_id: int | uuid.UUID,
             mode: str,
             create_if_missing: bool=False
-    ) -> InputItem:
+    ) -> InputItem | None:
         """Returns the InputItem corresponding to the provided information.
 
         Args:
@@ -638,9 +641,7 @@ class Profile:
             if create_if_missing:
                 self.inputs[device_guid] = []
             else:
-                raise error.ProfileError(
-                    f"Device with GUID {device_guid} does not exist"
-                )
+                return None
 
         for item in self.inputs[device_guid]:
             if item.input_type == input_type and \
@@ -657,10 +658,7 @@ class Profile:
             self.inputs[device_guid].append(item)
             return item
         else:
-            raise error.ProfileError(
-                f"No data for input {InputType.to_string(input_type)} "
-                f"{input_id} of device {device_guid}"
-            )
+            return None
 
     def remove_action(
         self,

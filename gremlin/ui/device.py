@@ -185,6 +185,7 @@ class Device(QtCore.QAbstractListModel):
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
         QtCore.Qt.UserRole + 2: QtCore.QByteArray("actionCount".encode()),
+        QtCore.Qt.UserRole + 3: QtCore.QByteArray("description".encode()),
     }
 
     deviceChanged = Signal()
@@ -193,6 +194,16 @@ class Device(QtCore.QAbstractListModel):
         super().__init__(parent)
 
         self._device: dill.DeviceSummary | None = None
+
+    @Slot(int)
+    def refreshInput(self, index: int) -> None:
+        """Refreshes the input at the given index.
+
+        Args:
+            index: linear index of the device's inputs to refresh
+        """
+        self.beginResetModel()
+        self.endResetModel()
 
     def _get_guid(self) -> str:
         if self._device is None:
@@ -223,15 +234,33 @@ class Device(QtCore.QAbstractListModel):
             return "Unknown"
 
         role_name = Device.roles[role].data().decode()
-        if role_name == "name":
-            return self._name(self._convert_index(index.row()))
-        elif role_name == "actionCount":
-            input_info = self._convert_index(index.row())
-            return shared_state.current_profile.get_input_count(
-                self._device.device_guid,
-                input_info[0],
-                input_info[1],
-            )
+        match role_name:
+            case "name":
+                return self._name(self._convert_index(index.row()))
+            case "actionCount":
+                input_info = self._convert_index(index.row())
+                return shared_state.current_profile.get_input_count(
+                    self._device.device_guid.uuid,
+                    input_info[0],
+                    input_info[1],
+                    "Default"
+                )
+            case "description":
+                input_info = self._convert_index(index.row())
+                item = shared_state.current_profile.get_input_item(
+                    self._device.device_guid.uuid,
+                    input_info[0],
+                    input_info[1],
+                    "Default"
+                )
+                if item and len(item.action_sequences) > 0:
+                    labels = filter(
+                        lambda x: x != "Root",
+                        [seq.root_action.action_label for seq in item.action_sequences]
+                    )
+                    return " / ".join(labels)
+                else:
+                    return ""
 
     @Slot(int, result=InputIdentifier)
     def inputIdentifier(self, index: int) -> InputIdentifier:

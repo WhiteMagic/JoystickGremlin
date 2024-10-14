@@ -335,6 +335,9 @@ ApplicationWindow {
             _inputConfigurationPanel.reload()
         }
 
+        function onInputItemChanged(index) {
+            _deviceModel.refreshInput(index)
+        }
         // function onReloadCurrentInputItem() {
         //     _inputConfigurationPanel.reload()
         // }
@@ -443,7 +446,7 @@ ApplicationWindow {
                 id: _deviceInputList
 
                 visible: false
-                SplitView.minimumWidth: 150
+                SplitView.minimumWidth: 200
 
                 device: _deviceModel
 

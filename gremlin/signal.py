@@ -29,5 +29,7 @@ class Signal(QtCore.QObject):
 
     reloadCurrentInputItem = Signal()
 
+    inputItemChanged = Signal(int)
+
 
 signal = Signal()

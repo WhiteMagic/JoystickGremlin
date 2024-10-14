@@ -22,6 +22,7 @@ from typing import List, Optional, TYPE_CHECKING
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
+from gremlin import input_cache
 from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
 from gremlin.profile import Library
@@ -75,6 +76,7 @@ class ActionModel(QtCore.QObject):
     """QML model representing a single action instance."""
 
     actionChanged = Signal()
+    actionLabelChanged = Signal()
 
     def __init__(
             self,
@@ -223,10 +225,29 @@ class ActionModel(QtCore.QObject):
     def _get_action_label(self) -> str:
         return self._data.action_label
 
+    def _compute_linear_input_index(self) -> int:
+        input_item = self._binding_model.input_item_binding.input_item
+        device = input_cache.Joystick()[input_item.device_id]
+
+        match input_item.input_type:
+            case InputType.JoystickAxis:
+                return device.axis_reverse_lookup(input_item.input_id)
+            case InputType.JoystickButton:
+                return device.axis_count() + input_item.input_id
+            case InputType.JoystickHat:
+                return device.axis_count() + device.button_count() + input_item.input_id
+            case _:
+                raise GremlinError(
+                    f"Invalid type in linear index computation "
+                    f"{input_item.input_type}"
+                )
+
     def _set_action_label(self, value: str) -> None:
         if value != self._data.action_label:
             self._data.action_label = value
             self.actionChanged.emit()
+            if self._data == self._binding_model.root_action:
+                signal.inputItemChanged.emit(self._compute_linear_input_index())
 
     def _get_activate_on_press(self) -> bool:
         return self._activation_to_tuple()[0]

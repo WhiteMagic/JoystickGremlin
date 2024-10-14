@@ -64,7 +64,9 @@ Item {
         }
 
         // Make it behave like a sensible scrolling container
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: ScrollBar {
+            policy: ScrollBar.AlwaysOn
+        }
         flickableDirection: Flickable.VerticalFlick
         boundsBehavior: Flickable.StopAtBounds
     }
@@ -91,7 +93,7 @@ Item {
                 )
             }
 
-            color: model.index == _inputList.currentIndex
+            color: model.index === _inputList.currentIndex
                 ? Universal.chromeMediumColor : Universal.background
 
             MouseArea {
@@ -104,17 +106,37 @@ Item {
             Label {
                 id: _inputLabel
                 text: name
+                font.weight: 600
 
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 5
+                anchors.topMargin: 5
             }
 
             Label {
                 id: _inputOverview
                 text: actionCount ? actionCount : ""
 
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.top: parent.top
                 anchors.right: _inputDisplay.right
-                anchors.rightMargin: 15
+                anchors.rightMargin: 20
+                anchors.topMargin: 5
+            }
+
+            Text {
+                id: _inputDescription
+                text: description
+                font.italic: true
+
+                width: parent.width - 30
+                elide: Text.ElideRight
+
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: 5
+                anchors.bottomMargin: 5
             }
         }
     }

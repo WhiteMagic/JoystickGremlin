@@ -23,6 +23,7 @@ from PySide6 import QtCore
 from dill import DILL, GUID
 from gremlin.common import SingletonDecorator
 from gremlin import types, keyboard
+from gremlin.error import GremlinError
 
 
 class JoystickWrapper:
@@ -144,6 +145,22 @@ class JoystickWrapper:
             if self._info.axis_map[i].axis_index == axis_index:
                 return True
         return False
+
+    def axis_reverse_lookup(self, axis_index: int) -> int:
+        """Returns the linear index corresponding to the given axis index.
+
+        Args:
+            axis_index: index of the axis adhering to the AxisNames enum order
+
+        Returns:
+            linear index corresponding to the given axis index
+        """
+        for i in range(self._info.axis_count):
+            if self._info.axis_map[i].axis_index == axis_index:
+                return i + 1
+        raise GremlinError(
+            f"Axis reverse lookup failed for axis index {axis_index}"
+        )
 
     def axis(self, index: int) -> Axis:
         """Returns the axis for the given index.

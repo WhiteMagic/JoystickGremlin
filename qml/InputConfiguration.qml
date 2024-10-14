@@ -32,12 +32,14 @@ Item {
 
     property InputIdentifier inputIdentifier
     property InputItemModel inputItemModel
+    signal contentChanged
 
     function reload()
     {
         if(_root.inputIdentifier.isValid) {
             _root.inputItemModel = backend.getInputItem(_root.inputIdentifier)
         }
+        contentChanged()
     }
 
     onInputIdentifierChanged: {
