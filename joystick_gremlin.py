@@ -1311,6 +1311,9 @@ if __name__ == "__main__":
     ui = GremlinUi()
     syslog.info("Gremlin UI created")
 
+    # hack for profile loading
+    gremlin.gremlin_ui = ui
+
     # Handle user provided command line arguments
     if args.profile is not None and os.path.isfile(args.profile):
         ui._do_load_profile(args.profile)
