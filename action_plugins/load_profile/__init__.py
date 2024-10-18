@@ -46,8 +46,6 @@ class LoadProfileFunctor(AbstractFunctor):
     def __init__(self, action: LoadProfileData):
         super().__init__(action)
 
-        self._profile_filename = action.profile_filename
-
     def __call__(
         self,
         event: event_handler.Event,
@@ -55,14 +53,14 @@ class LoadProfileFunctor(AbstractFunctor):
     ) -> None:
 
         if not self._should_execute(value):
-                return
+            return
 
         logging.getLogger("system").debug(
-            f"Loading profile ...{self._profile_filename}"
+            f"Loading profile ...{self.data.profile_filename}"
         )
 
         be = backend.Backend()
-        be.loadProfile(self._profile_filename)
+        be.loadProfile(self.data.profile_filename)
         be.activate_gremlin(False)
         be.activate_gremlin(True)
 
@@ -119,10 +117,10 @@ class LoadProfileData(AbstractActionData):
     model = LoadProfileModel
 
     properties = [
-        ActionProperty.ActivateOnBoth
+        ActionProperty.ActivateOnPress,
+        ActionProperty.AlwaysExecute
     ]
     input_types = [
-        InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
         InputType.Keyboard
@@ -130,7 +128,7 @@ class LoadProfileData(AbstractActionData):
 
     def __init__(
             self,
-            behavior_type: InputType=InputType.JoystickButton
+            behavior_type: InputType = InputType.JoystickButton
     ):
         super().__init__(behavior_type)
 
@@ -152,7 +150,7 @@ class LoadProfileData(AbstractActionData):
 
     def is_valid(self) -> bool:
         if len(self.profile_filename) > 0 and os.path.isfile(self.profile_filename) and \
-            os.access(self.profile_filename, os.R_OK):
+           os.access(self.profile_filename, os.R_OK):
             return True
         return False
 
