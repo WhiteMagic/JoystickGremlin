@@ -47,7 +47,7 @@ Item {
         }
 
         TextField {
-            id: profile_filename
+            id: _profileFilename
 
             Layout.fillWidth: true
 
@@ -62,16 +62,16 @@ Item {
 
         Button {
             text: "Select File"
-            onClicked: fileDialog.open()
+            onClicked: _fileDialog.open()
         }
    }
 
    FileDialog {
-        id: fileDialog
+        id: _fileDialog
         nameFilters: ["Profile files (*.xml)"]
         title: "Select a File"
         onAccepted: {
-            profile_filename.text = selectedFile.toString().substring("file:///".length)
+            _profileFilename.text = selectedFile.toString().substring("file:///".length)
         }
     }
 }

@@ -56,11 +56,11 @@ class LoadProfileFunctor(AbstractFunctor):
             return
 
         logging.getLogger("system").debug(
-            f"Loading profile ...{self.data.profile_filename}"
+            f"Loading profile ...{self.data._profileFilename}"
         )
 
         be = backend.Backend()
-        be.loadProfile(self.data.profile_filename)
+        be.loadProfile(self.data._profileFilename)
         be.activate_gremlin(False)
         be.activate_gremlin(True)
 
@@ -88,12 +88,12 @@ class LoadProfileModel(ActionModel):
         return LoadProfileData.icon
 
     def _get_profile_filename(self) -> str:
-        return self._data.profile_filename
+        return self._data._profileFilename
 
     def _set_profile_filename(self, value: str) -> None:
-        if str(value) == self._data.profile_filename:
+        if str(value) == self._data._profileFilename:
             return
-        self._data.profile_filename = str(value)
+        self._data._profileFilename = str(value)
         self.fileChanged.emit()
 
     profile_filename = Property(
@@ -122,7 +122,6 @@ class LoadProfileData(AbstractActionData):
     ]
     input_types = [
         InputType.JoystickButton,
-        InputType.JoystickHat,
         InputType.Keyboard
     ]
 
@@ -133,24 +132,27 @@ class LoadProfileData(AbstractActionData):
         super().__init__(behavior_type)
 
         # Model variables
-        self.profile_filename = ""
+        self._profileFilename = ""
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
-        self.profile_filename = util.read_property(
+        self._profileFilename = util.read_property(
             node, "load-profile", PropertyType.String
         )
+
+        if not self.is_valid():
+            raise GremlinError(f"{self._profileFilename} does not exists or is not accessible.")
 
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(LoadProfileData.tag, self._id)
         node.append(util.create_property_node(
-            "load-profile", self.profile_filename, PropertyType.String
+            "load-profile", self._profileFilename, PropertyType.String
         ))
         return node
 
     def is_valid(self) -> bool:
-        if len(self.profile_filename) > 0 and os.path.isfile(self.profile_filename) and \
-           os.access(self.profile_filename, os.R_OK):
+        if len(self._profileFilename) > 0 and os.path.isfile(self._profileFilename) and \
+           os.access(self._profileFilename, os.R_OK):
             return True
         return False
 
