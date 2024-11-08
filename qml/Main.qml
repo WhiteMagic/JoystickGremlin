@@ -389,7 +389,6 @@ ApplicationWindow {
                 }
 
                 MouseArea {
-                    anchors.fill: parent
                     propagateComposedEvents: true
                     onClicked: function(mouse)
                     {

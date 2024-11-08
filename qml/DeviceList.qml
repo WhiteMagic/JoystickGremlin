@@ -46,8 +46,8 @@ Item {
         delegate: _deviceDelegate
 
         // Make it behave like a sensible scrolling container
-        ScrollBar.vertical: ScrollBar {}
-        flickableDirection: Flickable.VerticalFlick
+        ScrollBar.horizontal: ScrollBar {}
+        flickableDirection: Flickable.HorizontalFlick
         boundsBehavior: Flickable.StopAtBounds
     }
 
