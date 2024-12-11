@@ -23,10 +23,12 @@ jobs:
       run: |
           poetry config virtualenvs.create true --local
           poetry config virtualenvs.in-project true --local
-    - name: Install the project dependencies wih poetry and add pylint
+    - name: Install the project dependencies with poetry
+      run: poetry install
+    - name: Install dependencies
       run: |
-          poetry install
-          poetry add pylint
+        python -m pip install --upgrade pip
+        pip install pylint
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
