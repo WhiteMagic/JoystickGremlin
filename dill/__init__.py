@@ -398,7 +398,10 @@ class DeviceSummary:
         self.vendor_id = data.vendor_id
         self.product_id = data.product_id
         self.joystick_id = data.joystick_id
-        self.name = data.name.decode("utf-8")
+        # Some manufacturers seem to have tighter tolerances for what they supply for name. The Moza R12 seems to
+        # have an issue where it outputs some garbage bytes. This fix requires the name is escaped consistently after
+        # entering Gremlin.
+        self.name = data.name.decode("utf-8", errors="ignore")
         self.axis_count = data.axis_count
         self.button_count = data.button_count
         self.hat_count = data.hat_count
