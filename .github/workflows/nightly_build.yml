@@ -29,9 +29,9 @@ jobs:
     - name: Install the project dependencies with poetry
       run: poetry install
     - name: Install dependencies
-      run: |
+      run: pipx install pyinstaller
     #     python -m pip install --upgrade pip
-        pipx install pyinstaller
+        # pipx install pyinstaller
     - name: Build executable
       run: pyinstaller -y --clean joystick_gremlin.spec
     - name: Upload build
