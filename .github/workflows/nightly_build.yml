@@ -44,8 +44,8 @@ jobs:
         retention-days: 7
         overwrite: true
     - name: Upload to Nightly release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: Nightly
-          files: dist/joystick_gremlin_nightly.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: Nightly
+        files: dist/joystick_gremlin_nightly.zip
+        token: ${{ secrets.GITHUB_TOKEN }}
