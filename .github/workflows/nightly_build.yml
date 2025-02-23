@@ -31,7 +31,7 @@ jobs:
     - name: Upload build
       uses: actions/upload-artifact@v4
       with:
-        name: joystick_gremlin_nightly_$CURRENT_DATE
+        name: "joystick_gremlin_nightly_$CURRENT_DATE"
         path: dist/
         if-no-files-found: warn
         retention-days: 7
