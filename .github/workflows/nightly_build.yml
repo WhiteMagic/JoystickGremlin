@@ -39,7 +39,7 @@ jobs:
     #     pip install pyinstaller
     #     pip install PySide6
     - name: Build executable
-      run: pyinstaller -y --clean joystick_gremlin.spec
+      run: poetry run pyinstaller -y --clean joystick_gremlin.spec
     - name: Upload build
       uses: actions/upload-artifact@v4
       with:
