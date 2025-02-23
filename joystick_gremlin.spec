@@ -55,7 +55,12 @@ hidden_imports = [
     "gremlin.ui.device",
     "gremlin.ui.profile",
     "gremlin.ui.util",
-    "PySide6",
+    # PySide
+    "PySide6.QtCore",
+    "PySide6.QtGui",
+    "PySide6.QtQml",
+    "PySide6.QtQuick",
+    "PySide6.QtWidgets",
 ]
 
 a = Analysis(
