@@ -55,8 +55,10 @@ jobs:
         path: /tmp/
     - name: Display structure of downloaded files
       run: ls /tmp
-    - name: Zip build up again
-      run: zip -r /tmp/joystick_gremlin_nightly.zip /tmp/joystick_gremlin/
+    - name: Compress the build again
+      run: |
+        Compress-Archive -Path /tmp/joystick_gremlin/* -DestinationPath /tmp/joystick_gremlin_nightly.zip
+      shell: pwsh
     - name: Upload build to Nightly release
       uses: softprops/action-gh-release@v2
       with:
