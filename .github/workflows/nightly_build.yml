@@ -19,19 +19,24 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Set up poetry for dependency management
-      uses: abatilo/actions-poetry@v3
+      uses: abatilo/actions-poetry@v2
       with:
         poetry-version: ${{ matrix.poetry-version }}
     - name: Setup a local virtual environment
       run: |
           poetry config virtualenvs.create true --local
           poetry config virtualenvs.in-project true --local
+    - uses: actions/cache@v3
+      name: Setup a cache
+      with:
+        path: ./.venv
+        key: venv-${{ hashFiles('poetry.lock') }}
     - name: Install the project dependencies with poetry
       run: poetry install
     - name: Install dependencies
-      run: pipx install pyinstaller
-    #     python -m pip install --upgrade pip
-        # pipx install pyinstaller
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
     - name: Build executable
       run: pyinstaller -y --clean joystick_gremlin.spec
     - name: Upload build
