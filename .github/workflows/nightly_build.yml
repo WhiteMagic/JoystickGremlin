@@ -27,12 +27,11 @@ jobs:
     - name: Build executable
       run: poetry run pyinstaller -y --clean joystick_gremlin.spec
     - name: Get current date
-      id: date
-      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      run: echo "DATE=$(date +'%Y_%m_%d)" >> $GITHUB_STATE
     - name: Upload build
       uses: actions/upload-artifact@v4
       with:
-        name: joystick_gremlin_nightly_${{ steps.date.outputs.date }}
+        name: joystick_gremlin_nightly_${{ GITHUB_STATE.DATE }}
         path: dist/
         if-no-files-found: warn
         retention-days: 7
