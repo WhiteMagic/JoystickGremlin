@@ -35,23 +35,14 @@ jobs:
     - name: Echo current date
       run: |
         echo "${{env.CURRENT_DATE}}"
-    - name: Upload build
-      # env:
-      #   CURRENT_DATE: ${{ steps.current_date.outputs.CURRENT_DATE }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: joystick_gremlin_nightly
-        path: dist/
-        if-no-files-found: warn
-        retention-days: 7
-        overwrite: true
-    # - name: Download build
-    #   uses: actions/download-artifact@v4
+    # - name: Upload build}
+    #   uses: actions/upload-artifact@v4
     #   with:
     #     name: joystick_gremlin_nightly
-    #     path: /tmp/
-    # - name: Display structure of downloaded files
-    #   run: ls /tmp
+    #     path: dist/
+    #     if-no-files-found: warn
+    #     retention-days: 7
+    #     overwrite: true
     - name: Compress the build
       run: |
         Compress-Archive -Path dist/* -DestinationPath dist/joystick_gremlin_nightly_${{env.CURRENT_DATE}}.zip
