@@ -32,9 +32,13 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint
+    #- name: Build executable
+    #  run: pyinstaller -y --clean joystick_gremlin.spec
+    #  working-directory: ./
     - name: Build executable
-      run: pyinstaller -y --clean joystick_gremlin.spec
-      working-directory: ./
+      uses: JackMcKew/pyinstaller-action-windows@main
+      with:
+        path: ./
     - name: Upload build
       uses: actions/upload-artifact@v4
       with:
