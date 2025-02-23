@@ -56,5 +56,5 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: Nightly
-        files: /tmp/
+        files: /tmp/*
         token: ${{ secrets.GITHUB_TOKEN }}
