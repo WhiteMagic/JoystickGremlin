@@ -28,9 +28,6 @@ jobs:
       run: poetry install
     - name: Build executable
       run: poetry run pyinstaller -y --clean joystick_gremlin.spec
-    # - name: Store current date
-    #   id: current_date
-    #   run: echo "CURRENT_DATE=$(date +'%Y_%m_%d')" >> "$GITHUB_OUTPUT"
     - name: Store current date
       run: |
         $CURRENT_DATE=& Get-Date -format yyyy_MM_dd
@@ -48,16 +45,16 @@ jobs:
         if-no-files-found: warn
         retention-days: 7
         overwrite: true
-    - name: Download build
-      uses: actions/download-artifact@v4
-      with:
-        name: joystick_gremlin_nightly
-        path: /tmp/
-    - name: Display structure of downloaded files
-      run: ls /tmp
-    - name: Compress the build again
+    # - name: Download build
+    #   uses: actions/download-artifact@v4
+    #   with:
+    #     name: joystick_gremlin_nightly
+    #     path: /tmp/
+    # - name: Display structure of downloaded files
+    #   run: ls /tmp
+    - name: Compress the build
       run: |
-        Compress-Archive -Path /tmp/joystick_gremlin/* -DestinationPath /tmp/joystick_gremlin_nightly.zip
+        Compress-Archive -Path /dist/* -DestinationPath /tmp/joystick_gremlin_nightly.zip
       shell: pwsh
     - name: Upload build to Nightly release
       uses: softprops/action-gh-release@v2
