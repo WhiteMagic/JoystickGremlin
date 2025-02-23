@@ -26,11 +26,11 @@ jobs:
       run: |
           poetry config virtualenvs.create true --local
           poetry config virtualenvs.in-project true --local
-    - uses: actions/cache@v3
-      name: Setup a cache
-      with:
-        path: ./.venv
-        key: venv-${{ hashFiles('poetry.lock') }}
+    # - uses: actions/cache@v3
+    #   name: Setup a cache
+    #   with:
+    #     path: ./.venv
+    #     key: venv-${{ hashFiles('poetry.lock') }}
     - name: Install the project dependencies with poetry
       run: poetry install
     - name: Install dependencies
