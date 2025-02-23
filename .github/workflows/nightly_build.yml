@@ -1,11 +1,11 @@
 name: NightlyBuild
 
 on:
-  push:
-    branches:
-      - "nightly-build-action"
-  # schedule:
-  #   - cron: '45 23 * * *' # runs daily at 23:45
+  # push:
+  #   branches:
+  #     - "nightly-build-action"
+  schedule:
+    - cron: '45 23 * * *' # runs daily at 23:45
 
 jobs:
   build:
@@ -35,14 +35,6 @@ jobs:
     - name: Echo current date
       run: |
         echo "${{env.CURRENT_DATE}}"
-    # - name: Upload build}
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: joystick_gremlin_nightly
-    #     path: dist/
-    #     if-no-files-found: warn
-    #     retention-days: 7
-    #     overwrite: true
     - name: Compress the build
       run: |
         Compress-Archive -Path dist/* -DestinationPath dist/joystick_gremlin_nightly_${{env.CURRENT_DATE}}.zip
