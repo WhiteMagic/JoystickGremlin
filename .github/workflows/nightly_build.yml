@@ -54,11 +54,11 @@ jobs:
     #   run: ls /tmp
     - name: Compress the build
       run: |
-        Compress-Archive -Path /dist/* -DestinationPath /tmp/joystick_gremlin_nightly.zip
+        Compress-Archive -Path dist/* -DestinationPath dist/joystick_gremlin_nightly.zip
       shell: pwsh
     - name: Upload build to Nightly release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: Nightly
-        files: /tmp/joystick_gremlin_nightly.zip
+        files: dist/joystick_gremlin_nightly.zip
         token: ${{ secrets.GITHUB_TOKEN }}
