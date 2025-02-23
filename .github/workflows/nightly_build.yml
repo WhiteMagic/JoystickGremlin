@@ -1,6 +1,9 @@
 name: NightlyBuild
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - "nightly-build-action"
 
 jobs:
   build:
