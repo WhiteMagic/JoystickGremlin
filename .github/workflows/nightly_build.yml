@@ -6,9 +6,6 @@ on:
       - "nightly-build-action"
 
 jobs:
-  defaults:
-    run:
-      shell: bash
   build:
     runs-on: windows-latest
     strategy:
@@ -22,7 +19,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Set up poetry for dependency management
-      uses: abatilo/actions-poetry@v2
+      uses: abatilo/actions-poetry@v3
       with:
         poetry-version: ${{ matrix.poetry-version }}
     - name: Setup a local virtual environment
