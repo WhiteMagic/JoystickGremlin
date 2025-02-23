@@ -34,10 +34,18 @@ jobs:
       id: current_date
       run: echo "CURRENT_DATE=$(date +'%Y_%m_%d')" >> "$GITHUB_OUTPUT"
     - name: Upload build
+      env:
+        CURRENT_DATE: ${{ steps.current_date.outputs.CURRENT_DATE }}
       uses: actions/upload-artifact@v4
       with:
-        name: joystick_gremlin_nightly_${{ steps.current_date.outputs.CURRENT_DATE }}
+        name: joystick_gremlin_nightly
         path: dist/
         if-no-files-found: warn
         retention-days: 7
         overwrite: true
+    - name: Upload to Nightly release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: Nightly
+          files: dist/joystick_gremlin_nightly.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
