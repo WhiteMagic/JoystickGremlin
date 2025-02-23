@@ -27,7 +27,7 @@ jobs:
     - name: Build executable
       run: poetry run pyinstaller -y --clean joystick_gremlin.spec
     - name: Get current date
-      run: echo "CURRENT_DATE=$(date +'%Y_%m_%d)" >> $GITHUB_ENV
+      run: echo "CURRENT_DATE=$(date +'%Y_%m_%d')" >> $GITHUB_ENV
     - name: Upload build
       uses: actions/upload-artifact@v4
       with:
