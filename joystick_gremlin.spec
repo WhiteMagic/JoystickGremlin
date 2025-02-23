@@ -55,6 +55,7 @@ hidden_imports = [
     "gremlin.ui.device",
     "gremlin.ui.profile",
     "gremlin.ui.util",
+    "PySide6",
 ]
 
 a = Analysis(
