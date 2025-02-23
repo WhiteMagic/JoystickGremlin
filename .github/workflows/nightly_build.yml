@@ -52,5 +52,5 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: Nightly
-        files: joystick_gremlin_nightly.zip
+        files: joystick_gremlin_nightly
         token: ${{ secrets.GITHUB_TOKEN }}
