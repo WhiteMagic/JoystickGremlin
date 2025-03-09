@@ -257,7 +257,7 @@ _DeviceType_to_enum_lookup = {
 }
 
 
-class PluginVariableType(enum.Enum):
+class ScriptVariableType(enum.Enum):
 
     """Enumeration of all supported variable types."""
 
@@ -271,43 +271,43 @@ class PluginVariableType(enum.Enum):
     Selection = 8
 
     @staticmethod
-    def to_string(value: PluginVariableType) -> str:
+    def to_string(value: ScriptVariableType) -> str:
         try:
-            return _PluginVariableType_to_string_lookup[value]
+            return _ScriptVariableType_to_string_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError(
-                "Invalid PluginVariableType in lookup"
+                "Invalid ScriptVariableType in lookup"
             )
 
     @staticmethod
-    def to_enum(value: str) -> PluginVariableType:
+    def to_enum(value: str) -> ScriptVariableType:
         try:
-            return _PluginVariableType_to_enum_lookup[value]
+            return _ScriptVariableType_to_enum_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError(
-                "Invalid PluginVariableType in lookup"
+                "Invalid ScriptVariableType in lookup"
             )
 
 
-_PluginVariableType_to_string_lookup = {
-    PluginVariableType.Int: "Int",
-    PluginVariableType.Float: "Float",
-    PluginVariableType.String: "String",
-    PluginVariableType.Bool: "Bool",
-    PluginVariableType.PhysicalInput: "PhysicalInput",
-    PluginVariableType.VirtualInput: "VirtualInput",
-    PluginVariableType.Mode: "Mode",
-    PluginVariableType.Selection: "Selection"
+_ScriptVariableType_to_string_lookup = {
+    ScriptVariableType.Int: "Int",
+    ScriptVariableType.Float: "Float",
+    ScriptVariableType.String: "String",
+    ScriptVariableType.Bool: "Bool",
+    ScriptVariableType.PhysicalInput: "PhysicalInput",
+    ScriptVariableType.VirtualInput: "VirtualInput",
+    ScriptVariableType.Mode: "Mode",
+    ScriptVariableType.Selection: "Selection"
 }
-_PluginVariableType_to_enum_lookup = {
-    "Int": PluginVariableType.Int,
-    "Float": PluginVariableType.Float,
-    "String": PluginVariableType.String,
-    "Bool": PluginVariableType.Bool,
-    "PhysicalInput": PluginVariableType.PhysicalInput,
-    "VirtualInput": PluginVariableType.VirtualInput,
-    "Mode": PluginVariableType.Mode,
-    "Selection": PluginVariableType.Selection
+_ScriptVariableType_to_enum_lookup = {
+    "Int": ScriptVariableType.Int,
+    "Float": ScriptVariableType.Float,
+    "String": ScriptVariableType.String,
+    "Bool": ScriptVariableType.Bool,
+    "PhysicalInput": ScriptVariableType.PhysicalInput,
+    "VirtualInput": ScriptVariableType.VirtualInput,
+    "Mode": ScriptVariableType.Mode,
+    "Selection": ScriptVariableType.Selection
 }
 
 
@@ -333,6 +333,7 @@ class PropertyType(enum.Enum):
     Selection = 16
     ActionActivationMode = 17,
     Point2D = 18,
+    ScriptVariableType = 19,
 
     @staticmethod
     def to_string(value: PropertyType) -> str:
@@ -367,6 +368,7 @@ _PropertyType_to_string_lookup = {
     PropertyType.Selection: "selection",
     PropertyType.ActionActivationMode: "activation-mode",
     PropertyType.Point2D: "point2d",
+    PropertyType.ScriptVariableType: "plugin_variable_type",
 }
 _PropertyType_to_enum_lookup = {
     "string": PropertyType.String,
@@ -387,6 +389,7 @@ _PropertyType_to_enum_lookup = {
     "selection": PropertyType.Selection,
     "activation-mode": PropertyType.ActionActivationMode,
     "point2d": PropertyType.Point2D,
+    "plugin_variable_type": PropertyType.ScriptVariableType,
 }
 
 

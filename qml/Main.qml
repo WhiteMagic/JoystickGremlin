@@ -38,6 +38,7 @@ ApplicationWindow {
     visible: true
     id: _root
 
+
     MessageDialog {
         id: idErrorDialog
         title: "An error occurred"
@@ -116,7 +117,7 @@ ApplicationWindow {
                 text: qsTr("Save Profile")
                 onTriggered: {
                     var fpath = backend.profilePath()
-                    if(fpath == "")
+                    if(fpath === "")
                     {
                         idSaveProfileFileDialog.open();
                     }
@@ -414,6 +415,10 @@ ApplicationWindow {
             _deviceModel.modelReset()
             _inputConfigurationPanel.reload()
         }
+
+        function onProfileChanged() {
+            _scriptManager.scriptModel = Qt.binding(() => backend.scriptModel)
+        }
     }
 
     function showIntermediateOutput(state)
@@ -421,6 +426,11 @@ ApplicationWindow {
         // Show the appropriate input list
         _ioDeviceList.visible = state
         _deviceInputList.visible = !state
+        _inputConfigurationPanel.visible = true
+
+        // Hide the plugin manager
+        _scriptManager.visible = false
+        _btnPluginManager.checked = false
 
         // Ensure the actions for the active input are shown
         if(state)
@@ -435,6 +445,18 @@ ApplicationWindow {
             _inputConfigurationPanel.inputIdentifier =
                 _deviceInputList.inputIdentifier
         }
+    }
+
+    function showScriptManager()
+    {
+        // Show the appropriate input list
+        _ioDeviceList.visible = false
+        _deviceInputList.visible = false
+        _deviceInputList.visible = false
+        _ioDeviceList.visible = false
+        _inputConfigurationPanel.visible = false
+
+        _scriptManager.visible = true
     }
 
     // Main window content
@@ -452,9 +474,9 @@ ApplicationWindow {
             DeviceList {
                 id: _devicePanel
 
-                Layout.preferredHeight: 50
+                Layout.minimumHeight: 50
+                Layout.maximumHeight: 50
                 Layout.fillWidth: true
-                z: 1
 
                 deviceListModel: _deviceListModel
 
@@ -469,6 +491,16 @@ ApplicationWindow {
                     // device is highlighted
                     currentIndex = 0
                     showIntermediateOutput(false)
+                }
+            }
+
+            JGTabButton {
+                id: _btnPluginManager
+
+                text: "Scripts"
+
+                onClicked: () => {
+                    showScriptManager()
                 }
             }
         }
@@ -526,6 +558,17 @@ ApplicationWindow {
                 SplitView.fillHeight: true
                 SplitView.minimumWidth: 600
             }
+        }
+
+        ScriptManager {
+            id: _scriptManager
+
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            // Without this the height bugs out
+            Layout.verticalStretchFactor: 10
+
+            visible: false
         }
     }
 

@@ -36,6 +36,9 @@ QtObject {
     readonly property string chart: "\uF3F2"
     readonly property string save: "\uF7D9"
     readonly property string reload: "\uF116"
+    readonly property string script: "\uF2C6"
+    readonly property string instance: "\uF227"
+    readonly property string configure: "\uF56B"
 
     readonly property string icon_mouse: "\uF49D"
     readonly property string icon_keyboard: "\uF451"

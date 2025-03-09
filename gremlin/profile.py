@@ -20,19 +20,23 @@ from __future__ import annotations
 from abc import abstractmethod, ABCMeta
 import codecs
 import logging
+from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, TYPE_CHECKING, Callable
 import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
 
+import PySide6.QtCore
+
 import dill
 
 import action_plugins
 from gremlin.types import AxisButtonDirection, InputType, HatDirection, \
-    PluginVariableType
-from gremlin import error, plugin_manager
+    ScriptVariableType, PropertyType
+from gremlin import error, plugin_manager, util
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.tree import TreeNode
+from gremlin.user_script import Script
 from gremlin.util import safe_read, safe_format, read_action_ids, read_bool, \
     read_subelement, create_subelement_node
 
@@ -544,7 +548,7 @@ class Profile:
         self.library = Library()
         self.settings = Settings(self)
         self.modes = ModeHierarchy(self)
-        self.plugins = []
+        self.scripts = ScriptManager(self)
         self.fpath = None
 
     def from_xml(self, fpath: str) -> None:
@@ -565,8 +569,10 @@ class Profile:
             self._create_io_input(node)
 
         # Create library entries and modes
+        # self.settings.from_xml(root)
         self.library.from_xml(root)
         self.modes.from_xml(root)
+        self.scripts.from_xml(root)
 
         # Parse individual inputs
         for node in root.findall("./inputs/input"):
@@ -581,21 +587,19 @@ class Profile:
         root = ElementTree.Element("profile")
         root.set("version", str(Profile.current_version))
 
+        # Inputs
         inputs = ElementTree.Element("inputs")
         for device_data in self.inputs.values():
             for input_data in device_data:
                 if len(input_data.action_sequences) > 0:
                     inputs.append(input_data.to_xml())
         root.append(inputs)
-        root.append(self.settings.to_xml())
+
+        # Managed content
+        # root.append(self.settings.to_xml())
         root.append(self.library.to_xml())
         root.append(self.modes.to_xml())
-
-        # User plugins
-        plugins = ElementTree.Element("plugins")
-        for plugin in self.plugins:
-            plugins.append(plugin.to_xml())
-        root.append(plugins)
+        root.append(self.scripts.to_xml())
 
         # Serialize XML document
         ugly_xml = ElementTree.tostring(root, encoding="utf-8")
@@ -1132,263 +1136,124 @@ class ModeHierarchy:
         return actions
 
 
-class Plugin:
+class ScriptManager:
 
-    """Represents an unconfigured plugin."""
-
-    def __init__(self, parent):
+    def __init__(self, profile: Profile) -> None:
         """Creates a new instance.
 
-        Parameters
-        ==========
-        parent : object
-            The parent object of this plugin
+        Each script is uniquely identified by the path to the script as well
+        as its assigned name.
+
+        Args:
+            profile: the profile whose scripts to manage
         """
-        self.parent = parent
-        self.file_name = None
-        self.instances = []
+        self._profile = profile
+        self._scripts : list[Script] = []
 
-    def from_xml(self, node):
-        """Initializes the values of this instance based on the node's contents.
+    @property
+    def scripts(self) -> list[Script]:
+        """Returns all managed scripts.
 
-        Parameters
-        ==========
-        node : ElementTree.Element
-            XML node containing this instance's configuration
+        Returns:
+            List of all managed scripts
         """
-        self.file_name = safe_read(node, "file-name", str, None)
-        for child in node.iter("instance"):
-            instance = PluginInstance(self)
-            instance.from_xml(child)
-            self.instances.append(instance)
+        return self._scripts
 
-    def to_xml(self):
-        """Returns an XML node representing this instance.
+    def add_script(self, path: Path) -> None:
+        """Adds a new script to the manager.
 
-        Returns
-        =======
-        ElementTree.Element
-            XML node representing this instance
+        Args:
+            path: path to the scripts location
         """
-        node = ElementTree.Element("plugin")
-        node.set("file-name", safe_format(self.file_name, str))
-        for instance in self.instances:
-            if instance.is_configured():
-                node.append(instance.to_xml())
-        return node
+        self._scripts.append(Script(path, self._default_name(path)))
+        self._scripts.sort(key=lambda s: (s.path, s.name))
 
+    def remove_script(self, path: Path, name: str) -> None:
+        """Removes the specified script.
 
-class PluginInstance:
-
-    """Instantiation of a usrer plugin with its own set of parameters."""
-
-    def __init__(self, parent):
-        """Creates a new instance.
-
-        Parameters
-        ==========
-        parent : object
-            The parent object of this plugin
+        Args:
+            path: path to the script
+            name: name of the script
         """
-        self.parent = parent
-        self.name = None
-        self.variables = {}
+        script = self._find_instance(path, name)
+        if script:
+            self._scripts.remove(script)
 
-    def is_configured(self):
-        """Returns whether or not the instance is properly configured.
+    def rename_script(self, path: Path, old_name: str, new_name: str) -> None:
+        """Renames the specified script.
 
-        Returns
-        =======
-        bool
-            True if the instance is fully configured, False otherwise
+        Args:
+            path: path to the script
+            old_name: current name of the script
+            new_name: new name to use for the script
         """
-        is_configured = True
-        for var in [var for var in self.variables.values() if not var.is_optional]:
-            is_configured &= var.value is not None
-        return is_configured
+        names = [s.name for s in self.scripts if s.path == path]
+        if new_name not in names:
+            script = self._find_instance(path, old_name)
+            script.name = new_name
+            self._scripts.sort(key=lambda s: (s.path, s.name))
 
-    def has_variable(self, name):
-        """Returns whether or not this instance has a particular variable.
+    def index_of(self, path: Path, name: str) -> int:
+        """Returns the index of the specified script.
 
-        Parameters
-        ==========
-        name : str
-            Name of the variable to check the existence of
+        Args:
+            path: path to the script
+            name: name of the script
 
-        Returns
-        =======
-        bool
-            True if a variable with the given name exists, False otherwise
+        Returns:
+            Index of the script in the list of scripts
         """
-        return name in self.variables
+        instance = self._find_instance(path, name)
+        if not instance:
+            raise error.GremlinError(
+                f"Unable to find script {path} with name '{name}'"
+            )
+        return self._scripts.index(instance)
 
-    def set_variable(self, name, variable):
-        """Sets a named variable.
+    def _default_name(self, path: Path) -> str:
+        """Generates a valid default name for the given script path.
 
-        Parameters
-        ==========
-        name : str
-            Name of the variable object to be set
-        variable : PluginVariable
-            Variable to store
+        Args:
+            path: path to the script
+
+        Returns:
+            Valid name to use for the script that doesn't clash with other
+            existing scripts.
         """
-        self.variables[name] = variable
-
-    def get_variable(self, name):
-        """Returns the variable stored under the specified name.
-
-        If no variable with the specified name exists, a new empty variable
-        will be created and returned.
-
-        Parameters
-        ==========
-        name : str
-            Name of the variable to return
-
-        Returns
-        =======
-        PluginVariable
-            Variable corresponding to the specified name
-        """
-        if name not in self.variables:
-            var = PluginVariable(self)
-            var.name = name
-            self.variables[name] = var
-
-        return self.variables[name]
-
-    def from_xml(self, node):
-        """Initializes the contents of this instance.
-
-        Parameters
-        ==========
-        node : ElementTree.Element
-            XML node containing this instance's configuration
-        """
-        self.name = safe_read(node, "name", str, "")
-        for child in node.iter("variable"):
-            variable = PluginVariable(self)
-            variable.from_xml(child)
-            self.variables[variable.name] = variable
-
-    def to_xml(self):
-        """Returns an XML node representing this instance.
-
-        Returns
-        =======
-        ElementTree.Element
-            XML node representing this instance
-        """
-        node = ElementTree.Element("instance")
-        node.set("name", safe_format(self.name, str))
-        for variable in self.variables.values():
-            variable_node = variable.to_xml()
-            if variable_node is not None:
-                node.append(variable_node)
-        return node
-
-
-class PluginVariable:
-
-    """A single variable of a user plugin instance."""
-
-    def __init__(self, parent):
-        """Creates a new instance.
-
-        Parameters
-        ==========
-        parent : object
-            The parent object of this plugin
-        """
-        self.parent = parent
-        self.name = None
-        self.type = None
-        self.value = None
-        self.is_optional = False
-
-    def from_xml(self, node):
-        """Initializes the contents of this instance.
-
-        Parameters
-        ==========
-        node : ElementTree.Element
-            XML node containing this instance's configuration
-        """
-        self.name = safe_read(node, "name", str, "")
-        self.type = PluginVariableType.to_enum(
-            safe_read(node, "type", str, "String")
+        names = [s.name for s in self.scripts if s.path == path]
+        for i in range(len(names) + 1):
+            candidate = f"Instance {i+1}"
+            if candidate not in names:
+                return candidate
+        raise error.GremlinError(
+            f"Unablle to find a valid default name for {path}"
         )
-        self.is_optional = read_bool(node, "is-optional")
 
-        # Read variable content based on type information
-        if self.type == PluginVariableType.Int:
-            self.value = safe_read(node, "value", int, 0)
-        elif self.type == PluginVariableType.Float:
-            self.value = safe_read(node, "value", float, 0.0)
-        elif self.type == PluginVariableType.Selection:
-            self.value = safe_read(node, "value", str, "")
-        elif self.type == PluginVariableType.String:
-            self.value = safe_read(node, "value", str, "")
-        elif self.type == PluginVariableType.Bool:
-            self.value = read_bool(node, "value", False)
-        elif self.type == PluginVariableType.Mode:
-            self.value = safe_read(node, "value", str, "")
-        elif self.type == PluginVariableType.PhysicalInput:
-            self.value = {
-                "device_id": safe_read(
-                    node,
-                    "device-guid",
-                    uuid.UUID,
-                    dill.UUID_Invalid
-                ),
-                "device_name": safe_read(node, "device-name", str, ""),
-                "input_id": safe_read(node, "input-id", int, None),
-                "input_type": InputType.to_enum(
-                    safe_read(node, "input-type", str, None)
-                )
-            }
-        elif self.type == PluginVariableType.VirtualInput:
-            self.value = {
-                "device_id": safe_read(node, "vjoy-id", int, None),
-                "input_id": safe_read(node, "input-id", int, None),
-                "input_type": InputType.to_enum(
-                    safe_read(node, "input-type", str, None)
-                )
-            }
+    def from_xml(self, root: ElementTree.Element) -> None:
+        for node in root.findall("./scripts/script"):
+            self._scripts.append(Script())
+            self._scripts[-1].from_xml(node)
+        self._scripts.sort(key=lambda s: (s.path, s.name))
 
-    def to_xml(self):
-        """Returns an XML node representing this instance.
+    def to_xml(self) -> ElementTree.Element:
+        script_node = ElementTree.Element("scripts")
+        for script in self._scripts:
+            node = script.to_xml()
+            if node:
+                script_node.append(node)
+        return script_node
 
-        Returns
-        =======
-        ElementTree.Element
-            XML node representing this instance
+    def _find_instance(self, path: Path, name: str) -> Script|None:
+        """Attempts to find the specified script.
+
+        Args:
+            path: path to the script
+            name: name of the script
+
+        Returns:
+            The script instance if one is found, else None
         """
-        if self.value is None:
-            return None
-
-        node = ElementTree.Element("variable")
-        node.set("name", safe_format(self.name, str))
-        node.set("type", PluginVariableType.to_string(self.type))
-        node.set("is-optional", safe_format(self.is_optional, bool, str))
-
-        # Write out content based on the type
-        if self.type in [
-            PluginVariableType.Int, PluginVariableType.Float,
-            PluginVariableType.Mode, PluginVariableType.Selection,
-            PluginVariableType.String,
-        ]:
-            node.set("value", str(self.value))
-        elif self.type == PluginVariableType.Bool:
-            node.set("value", "1" if self.value else "0")
-        elif self.type == PluginVariableType.PhysicalInput:
-            node.set("device-guid", str(self.value["device_id"]))
-            node.set("device-name", safe_format(self.value["device_name"], str))
-            node.set("input-id", safe_format(self.value["input_id"], int))
-            node.set("input-type", InputType.to_string(self.value["input_type"]))
-        elif self.type == PluginVariableType.VirtualInput:
-            node.set("vjoy-id", safe_format(self.value["device_id"], int))
-            node.set("input-id", safe_format(self.value["input_id"], int))
-            node.set("input-type", InputType.to_string(self.value["input_type"]))
-
-        return node
+        for script in self._scripts:
+            if script.path == path and script.name == name:
+                return script
+        return None

@@ -87,14 +87,4 @@ Item {
             }
         }
     }
-
-    component JGTabButton : TabButton {
-        font.pixelSize: 14
-        font.weight: 600
-
-        background: Rectangle {
-            color: parent.checked ? Universal.accent : Universal.background
-        }
-    }
-
 }

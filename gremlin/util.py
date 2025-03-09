@@ -36,7 +36,7 @@ from dill import GUID
 
 from gremlin import error
 from gremlin.types import AxisButtonDirection, AxisMode, HatDirection, \
-    InputType, Point2D, PropertyType, ActionActivationMode
+    InputType, Point2D, PropertyType, ActionActivationMode, ScriptVariableType
 
 # Table storing which modules have been imported already
 g_loaded_modules = {}
@@ -310,6 +310,7 @@ _type_lookup = {
     PropertyType.Selection: str,
     PropertyType.ActionActivationMode: ActionActivationMode,
     PropertyType.Point2D: Point2D,
+    PropertyType.ScriptVariableType: ScriptVariableType
 }
 
 _element_parsers = {
@@ -325,6 +326,7 @@ _element_parsers = {
     "axis-button-direction": lambda x: AxisButtonDirection.to_enum(x.text),
     "hat-direction": lambda x: HatDirection.to_enum(x.text),
     "label": lambda x: str(x.text),
+    "plugin-variable-type": lambda x: ScriptVariableType.to_enum(x.text),
 }
 
 _element_types = {
@@ -340,6 +342,7 @@ _element_types = {
     "axis-button-direction": [AxisButtonDirection],
     "hat-direction": [HatDirection],
     "label": [str],
+    "plugin-variable-type": [ScriptVariableType],
 }
 
 _element_to_string = {
@@ -355,6 +358,7 @@ _element_to_string = {
     "axis-button-direction": lambda x: AxisButtonDirection.to_string(x),
     "hat-direction": lambda x: HatDirection.to_string(x),
     "label": str,
+    "plugin-variable-type": lambda x: ScriptVariableType.to_string(x),
 }
 
 def create_subelement_node(
