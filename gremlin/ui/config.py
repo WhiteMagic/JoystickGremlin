@@ -162,7 +162,7 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
                 value
             )
 
-            self.dataChanged.emit(index, index, {role});
+            self.dataChanged.emit(index, index, {role})
             return True
         return False
 
