@@ -63,10 +63,11 @@ class Backend(QtCore.QObject):
         self.runner = code_runner.CodeRunner()
 
         # Hookup various mode change related callbacks
-        mode_manager.ModeManager().mode_changed.connect(self._emit_change)
-        self.profileChanged.connect(mode_manager.ModeManager().reset)
+        mm = mode_manager.ModeManager()
+        mm.mode_changed.connect(self._emit_change)
+        self.profileChanged.connect(mm.reset)
         self.profileChanged.connect(
-            lambda: self._set_ui_mode(mode_manager.ModeManager().current.name)
+            lambda: self._set_ui_mode(mm.current.name)
         )
 
         event_handler.EventHandler().is_active.connect(
