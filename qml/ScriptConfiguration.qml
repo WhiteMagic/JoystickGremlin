@@ -20,10 +20,260 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
+import Qt.labs.qmlmodels
 
 import Gremlin.Plugin
 
 
-Item {
-    property var variableList : []
+ListView {
+    model: []
+    delegate: _variableRenderer
+    spacing: 10
+
+    DelegateChooser {
+        id: _variableRenderer
+        role: "type"
+
+        DelegateChoice {
+            roleValue: "bool"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                Switch {
+                    Layout.alignment: Qt.AlignTop | Qt.AlignRight
+                    checked: modelData.value
+
+                    text: checked ? "On" : "Off"
+
+                    onToggled: () => modelData.value = checked
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "float"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                FloatSpinBox {
+                    Layout.alignment: Qt.AlignRight
+
+                    minValue: modelData.minValue
+                    maxValue: modelData.maxValue
+                    realValue: modelData.value
+
+                    onRealValueModified: function () {
+                        modelData.value = realValue
+                    }
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "int"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                SpinBox {
+                    Layout.alignment: Qt.AlignRight
+
+                    from: modelData.minValue
+                    to: modelData.maxValue
+                    value: modelData.value
+
+                    onValueModified: function () {
+                        modelData.value = value
+                    }
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "mode"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                ComboBox {
+                    Layout.alignment: Qt.AlignRight
+
+                    model: backend.modeHierarchy.modeList
+
+                    textRole: "name"
+                    valueRole: "name"
+
+                    onActivated: {
+                        modelData.value = currentText
+                    }
+
+                    Component.onCompleted: function() {
+                        currentIndex = find(modelData.value)
+                    }
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "selection"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                ComboBox {
+                    Layout.alignment: Qt.AlignRight
+
+                    model: modelData.options
+
+                    onActivated: {
+                        modelData.value = currentText
+                    }
+
+                    Component.onCompleted: function() {
+                        currentIndex = find(modelData.value)
+                    }
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "string"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                JGTextInput {
+                    Layout.alignment: Qt.AlignRight
+
+                    Layout.fillWidth: true
+                    text: modelData.value
+
+                    onTextEdited: function() {
+                        modelData.value = text
+                    }
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "physical-input"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                InputListener {
+                    Layout.alignment: Qt.AlignRight
+
+                    buttonLabel: modelData.label
+                    callback: modelData.updateJoystick
+                    multipleInputs: false
+                    eventTypes: modelData.validTypes
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "vjoy"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                }
+
+                VJoySelector {
+                    Layout.alignment: Qt.AlignRight
+
+                    validTypes: modelData.validTypes
+
+                    onVjoyInputIdChanged: { modelData.inputId = vjoyInputId }
+                    onVjoyDeviceIdChanged: { modelData.vjoyId = vjoyDeviceId }
+                    onVjoyInputTypeChanged: { modelData.inputType = vjoyInputType }
+
+                    Component.onCompleted: {
+                        vjoyInputType = modelData.inputType
+                        vjoyInputId = modelData.inputId
+                        vjoyDeviceId = modelData.vjoyId
+                    }
+                }
+            }
+        }
+
+    }
+
+    component DescriptiveText : Text {
+        property alias description: _tooltip.text
+
+        Layout.minimumWidth: 150
+        Layout.preferredWidth: 150
+
+        font.pointSize: 11
+        font.family: "Segoe UI"
+
+        ToolTip {
+            id: _tooltip
+            visible: _hoverHandler.hovered
+            delay: 500
+        }
+
+        HoverHandler {
+            id: _hoverHandler
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        }
+    }
 }

@@ -31,7 +31,7 @@ import dill
 from gremlin.base_classes import Value
 import gremlin.fsm
 from gremlin import audio_player, error, event_handler, input_devices, \
-    joystick_handling, macro, mode_manager, profile, sendinput, user_plugin, \
+    joystick_handling, macro, mode_manager, profile, sendinput, user_script, \
     util
 from gremlin.types import ActionProperty, AxisButtonDirection, HatDirection, \
     InputType
@@ -352,7 +352,7 @@ class CodeRunner:
 
         try:
             # Process actions define in user plugins
-            self._setup_plugins()
+            self._setup_user_scripts()
 
             # Add a fake keyboard action which does nothing to the callbacks
             # in every mode in order to have empty modes be "present"
@@ -441,47 +441,32 @@ class CodeRunner:
         input_devices.callback_registry.clear()
         input_devices.ButtonReleaseActions().reset()
 
-    def _setup_plugins(self):
-        """Handles loading and configuring of loaded plugins."""
+    def _setup_user_scripts(self):
+        """Handles loading and configuring of user scripts.."""
         # Retrieve list of current paths searched by Python
         system_paths = [os.path.normcase(os.path.abspath(p)) for p in sys.path]
 
         # Populate custom module variable registry
-        var_reg = user_plugin.variable_registry
-        for plugin in self._profile.plugins:
+        for script in self._profile.scripts.scripts:
+            if not script.is_configured:
+                continue
+
             # Perform system path mangling for import statements
-            path, _ = os.path.split(
-                os.path.normcase(os.path.abspath(plugin.file_name))
-            )
-            if path not in system_paths:
-                system_paths.append(path)
+            script_folder = str(script.path.parent)
+            if script_folder not in system_paths:
+                system_paths.append(script_folder)
 
             # Load module specification so we can later create multiple
             # instances if desired
             spec = importlib.util.spec_from_file_location(
                 "".join(random.choices(string.ascii_lowercase, k=16)),
-                plugin.file_name
+                str(script.path)
             )
 
-            # Process each instance in turn
-            for instance in plugin.instances:
-                # Skip all instances that are not fully configured
-                if not instance.is_configured():
-                    continue
-
-                # Store variable values in the registry
-                for var in instance.variables.values():
-                    var_reg.set(
-                        plugin.file_name,
-                        instance.name,
-                        var.name,
-                        var.value
-                    )
-
-                # Load the modules
-                tmp = importlib.util.module_from_spec(spec)
-                tmp.__gremlin_identifier = (plugin.file_name, instance.name)
-                spec.loader.exec_module(tmp)
+            # Load the modules
+            tmp = importlib.util.module_from_spec(spec)
+            tmp.__gremlin_identifier = (str(script.path), script.name)
+            spec.loader.exec_module(tmp)
 
         # Update system path list searched by Python in order to locate the
         # plugins properly

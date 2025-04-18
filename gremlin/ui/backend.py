@@ -32,7 +32,7 @@ from gremlin.signal import signal
 
 from gremlin.ui.device import InputIdentifier, IODeviceManagementModel
 from gremlin.ui.profile import InputItemModel, ModeHierarchyModel
-from gremlin.ui.script import ScriptModel
+from gremlin.ui.script import ScriptListModel
 from gremlin.audio_player import AudioPlayer
 
 
@@ -275,9 +275,9 @@ class Backend(QtCore.QObject):
         self.profileChanged.emit()
         signal.reloadUi.emit()
 
-    @Property(type=ScriptModel, notify=scriptsChanged)
-    def scriptModel(self) -> ScriptModel:
-        return ScriptModel(self.profile.scripts, self)
+    @Property(type=ScriptListModel, notify=scriptsChanged)
+    def scriptListModel(self) -> ScriptListModel:
+        return ScriptListModel(self.profile.scripts, self)
 
     @Property(type=ModeHierarchyModel, notify=profileChanged)
     def modeHierarchy(self) -> ModeHierarchyModel:

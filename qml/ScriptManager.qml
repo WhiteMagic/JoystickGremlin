@@ -20,6 +20,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
+import Qt.labs.qmlmodels
 
 import Gremlin.Plugin
 
@@ -29,7 +30,7 @@ import "helpers.js" as Helpers
 Item {
     id: _root
 
-    property ScriptModel scriptModel : backend.scriptModel
+    property ScriptListModel scriptListModel : backend.scriptListModel
 
     // Dialog to select a script to add
     FileDialog {
@@ -44,7 +45,7 @@ Item {
 
         onAccepted: function()
         {
-            scriptModel.addScript(Helpers.pythonizePath(selectedFile))
+            scriptListModel.addScript(Helpers.pythonizePath(selectedFile))
         }
     }
 
@@ -74,7 +75,7 @@ Item {
 
             ListView {
                 id: _view
-                model: scriptModel
+                model: scriptListModel
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
@@ -92,15 +93,13 @@ Item {
                 delegate: ScriptUI {
                     Layout.margins: 10
                     width: _view.width
-
-                    // path: model.path
-                    // name: model.name
                 }
             }
 
             Button {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
                 Layout.preferredHeight: 30
+                Layout.bottomMargin: 10
 
                 text: "Add Script"
 
@@ -112,12 +111,8 @@ Item {
             id: _config
 
             SplitView.fillHeight: true
-            SplitView.minimumWidth: 300
+            SplitView.minimumWidth: 500
         }
-    }
-
-    DebugBox {
-        target: _config
     }
 
     component ScriptUI : RowLayout {
@@ -160,7 +155,7 @@ Item {
             onClicked: {
                 _renameScriptDialog.text = name
                 _renameScriptDialog.callback = (value) => {
-                    scriptModel.renameScript(path, name, value)
+                    scriptListModel.renameScript(path, name, value)
                 }
                 _renameScriptDialog.visible = true
             }
@@ -170,7 +165,8 @@ Item {
             text: bsi.icons.configure
 
             onClicked: {
-                console.log("Configuring script: " + _item.variables)
+                console.log("Configuring script: " + variables)
+                _config.model = variables
             }
         }
 
@@ -178,7 +174,7 @@ Item {
             Layout.rightMargin: 20
             text: bsi.icons.trash
 
-            onClicked: () => scriptModel.removeScript(path, name)
+            onClicked: () => scriptListModel.removeScript(path, name)
         }
     }
 }

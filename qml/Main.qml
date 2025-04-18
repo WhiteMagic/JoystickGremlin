@@ -417,7 +417,9 @@ ApplicationWindow {
         }
 
         function onProfileChanged() {
-            _scriptManager.scriptModel = Qt.binding(() => backend.scriptModel)
+            _scriptManager.scriptListModel = Qt.binding(
+                () => backend.scriptListModel
+            )
         }
     }
 
