@@ -47,6 +47,7 @@ hidden_imports = [
     "action_plugins.reference",
     "action_plugins.response_curve",
     "action_plugins.root",
+    "action_plugins.smart_toggle",
     "action_plugins.tempo",
     "gremlin.ui",
     "gremlin.ui.action_model",
