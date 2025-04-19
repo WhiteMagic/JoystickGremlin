@@ -68,7 +68,7 @@ Item {
 
    FileDialog {
         id: _fileDialog
-        nameFilters: ["Application (*.bat, *.exe)"]
+        nameFilters: ["Application (*.bat, *.exe)", "All applications (*.*)"]
         title: "Select an application"
         onAccepted: {
             _applicationToLaunch.text = selectedFile.toString().substring("file:///".length)
