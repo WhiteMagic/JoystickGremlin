@@ -47,16 +47,16 @@ Item {
         }
 
         TextField {
-            id: _applicationToLaunch
+            id: _applicationPath
 
             Layout.fillWidth: true
 
             placeholderText: null != action ? null : "Enter an application to launch"
-            text: action.application_to_launch
+            text: action.application_path
             selectByMouse: true
 
-            onTextChanged: {
-                action.application_to_launch = text
+            onEditingFinished: {
+                action.application_path = text
             }
         }
 
@@ -71,7 +71,7 @@ Item {
         nameFilters: ["Application (*.bat, *.exe)", "All applications (*.*)"]
         title: "Select an application"
         onAccepted: {
-            _applicationToLaunch.text = selectedFile.toString().substring("file:///".length)
+            action.application_path = selectedFile.toString().substring("file:///".length)
         }
     }
 }

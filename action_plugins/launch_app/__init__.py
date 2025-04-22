@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import logging
+import subprocess
 from typing import List, TYPE_CHECKING
 from xml.etree import ElementTree
 
@@ -34,7 +35,7 @@ from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 from gremlin.ui import backend
-from gremlin.error import GremlinError
+from gremlin.error import GremlinError, ProfileError
 from gremlin.util import file_exists_and_is_accessible
 
 if TYPE_CHECKING:
@@ -52,17 +53,18 @@ class LaunchAppFunctor(AbstractFunctor):
             self,
             event: Event,
             value: Value,
-            properties: list[ActionProperty]=[]
+            properties: list[ActionProperty] = []
     ) -> None:
         if not self._should_execute(value):
             return
 
-        logging.getLogger("system").debug(
-            f"Launching application ... {self.data.application_to_launch}"
-        )
-
-        be = backend.Backend()
-        be.launchApp(self.data.application_to_launch)
+        # log exceptions from subprocess
+        try:
+            subprocess.run([self.data.application_path])
+        except subprocess.SubprocessError as e:
+            logging.getLogger("system").exception(
+                f"There was an error launching the application '{self.data.application_path}': {e}"
+            )
 
 
 class LaunchAppModel(ActionModel):
@@ -89,19 +91,21 @@ class LaunchAppModel(ActionModel):
             self._parent_sequence_index.index
         ).actionBehavior
 
-    def _get_application_to_launch(self) -> str:
-        return self._data.application_to_launch
+    def _get_application_path(self) -> str:
+        return self._data.application_path
 
-    def _set_application_to_launch(self, value: str) -> None:
-        if str(value) == self._data.application_to_launch:
+    def _set_application_path(self, value: str) -> None:
+        if value == self._data.application_path:
             return
-        self._data.application_to_launch = str(value)
+        if not file_exists_and_is_accessible(value):
+            raise GremlinError(f"{value} does not exists or is not accessible.")
+        self._data.application_path = value
         self.fileChanged.emit()
 
-    application_to_launch = Property(
+    application_path = Property(
         str,
-        fget=_get_application_to_launch,
-        fset=_set_application_to_launch,
+        fget=_get_application_path,
+        fset=_set_application_path,
         notify=fileChanged
     )
 
@@ -134,26 +138,26 @@ class LaunchAppData(AbstractActionData):
         super().__init__(behavior_type)
 
         # Model variables
-        self.application_to_launch = ""
+        self.application_path = ""
 
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
-        self.application_to_launch = util.read_property(
-            node, self.tag, PropertyType.String
+        self.application_path = util.read_property(
+            node, "launch-app", PropertyType.String
         )
 
         if not self.is_valid():
-            raise GremlinError(f"{self.application_to_launch} does not exists or is not accessible.")
+            raise ProfileError(f"{self.application_path} does not exists or is not accessible.")
 
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(LaunchAppData.tag, self._id)
         node.append(util.create_property_node(
-            self.tag, self.application_to_launch, PropertyType.String
+            "launch-app", self.application_path, PropertyType.String
         ))
         return node
 
     def is_valid(self) -> bool:
-        return file_exists_and_is_accessible(self.application_to_launch)
+        return file_exists_and_is_accessible(self.application_path)
 
     def _valid_selectors(self) -> List[str]:
         return []

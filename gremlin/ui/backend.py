@@ -21,7 +21,6 @@ import os
 import sys
 from typing import List
 import uuid
-import subprocess
 
 from PySide6 import QtCore, QtQml, QtGui
 from PySide6.QtCore import Property, Signal, Slot
@@ -276,20 +275,6 @@ class Backend(QtCore.QObject):
         self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
         self.profileChanged.emit()
         signal.reloadUi.emit()
-
-    @Slot(str)
-    def launchApp(self, fpath):
-        """Spawns a subprocess to launch an application
-
-        Args:
-            fpath: Path to the application being launched.
-        """
-
-        # ignore all exceptions from subprocess
-        try:
-            subprocess.run([fpath], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except subprocess.SubprocessError:
-            pass
 
     @Property(type=ScriptListModel, notify=scriptsChanged)
     def scriptListModel(self) -> ScriptListModel:
