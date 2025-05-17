@@ -18,6 +18,7 @@
 import sys
 sys.path.append(".")
 
+from collections.abc import Iterator
 import tempfile
 import pytest
 from unittest import mock
@@ -30,99 +31,97 @@ from gremlin.types import PropertyType
 
 
 @pytest.fixture
-def modify_config():
+def cfg() -> Iterator[gremlin.config.Configuration]:
+    """Returns a Configuration object other than the singleton, with file path modified."""
     tmp = tempfile.mkstemp()
-    gremlin.config._config_file_path = tmp[1]
-    c = gremlin.config.Configuration()
-    c._data = {}
+    with mock.patch.object(gremlin.config, "_config_file_path", tmp[1]):
+        yield gremlin.config.Configuration.klass()
 
 
-def test_simple(modify_config):
-    c = gremlin.config.Configuration()
-
-    c.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
-    c.register("test", "case", "2", PropertyType.Bool, False, "", {})
-    c.register(
+def test_simple(cfg: gremlin.config.Configuration):
+    cfg.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
+    cfg.register("test", "case", "2", PropertyType.Bool, False, "", {})
+    cfg.register(
         "test",
         "case",
         "3",
         PropertyType.HatDirection,
         gremlin.types.HatDirection.NorthEast,
         "",
-        {}
+        {},
     )
-    assert c.value("test", "case", "1") == 42
-    assert c.value("test", "case", "2") == False
-    assert c.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
+    assert cfg.value("test", "case", "1") == 42
+    assert cfg.value("test", "case", "2") == False
+    assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
 
-    c.set("test", "case", "1", 37)
-    c.set("test", "case", "2", True)
-    c.set("test", "case", "3", gremlin.types.HatDirection.SouthWest)
-    assert c.value("test", "case", "1") == 37
-    assert c.value("test", "case", "2") == True
-    assert c.value("test", "case", "3") == gremlin.types.HatDirection.SouthWest
+    cfg.set("test", "case", "1", 37)
+    cfg.set("test", "case", "2", True)
+    cfg.set("test", "case", "3", gremlin.types.HatDirection.SouthWest)
+    assert cfg.value("test", "case", "1") == 37
+    assert cfg.value("test", "case", "2") == True
+    assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.SouthWest
 
-def test_load_save(modify_config):
-    c = gremlin.config.Configuration()
 
-    c.register("test", "case", "1", PropertyType.Int, 42, "one", {"min": 1, "max": 20})
-    c.register("test", "case", "2", PropertyType.Bool, False, "two", {}, True)
-    c.register(
+def test_load_save(cfg: gremlin.config.Configuration):
+    cfg.register(
+        "test", "case", "1", PropertyType.Int, 42, "one", {"min": 1, "max": 20}
+    )
+    cfg.register("test", "case", "2", PropertyType.Bool, False, "two", {}, True)
+    cfg.register(
         "test",
         "case",
         "3",
         PropertyType.HatDirection,
         gremlin.types.HatDirection.NorthEast,
         "",
-        {}
+        {},
     )
-    c.register("test", "case", "4", PropertyType.List, [1,2,3,4,5], "", {})
-    assert c.value("test", "case", "1") == 42
-    assert c.description("test", "case", "1") == "one"
-    assert c.expose("test", "case", "1") == False
+    cfg.register("test", "case", "4", PropertyType.List, [1, 2, 3, 4, 5], "", {})
+    assert cfg.value("test", "case", "1") == 42
+    assert cfg.description("test", "case", "1") == "one"
+    assert cfg.expose("test", "case", "1") == False
 
-    assert c.value("test", "case", "2") == False
-    assert c.description("test", "case", "2") == "two"
-    assert c.expose("test", "case", "2") == True
+    assert cfg.value("test", "case", "2") == False
+    assert cfg.description("test", "case", "2") == "two"
+    assert cfg.expose("test", "case", "2") == True
 
-    assert c.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
-    assert c.description("test", "case", "3") == ""
-    assert c.expose("test", "case", "3") == False
+    assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
+    assert cfg.description("test", "case", "3") == ""
+    assert cfg.expose("test", "case", "3") == False
 
-    assert c.value("test", "case", "4") == [1,2,3,4,5]
-    assert c.description("test", "case", "4") == ""
-    assert c.expose("test", "case", "4") == False
+    assert cfg.value("test", "case", "4") == [1, 2, 3, 4, 5]
+    assert cfg.description("test", "case", "4") == ""
+    assert cfg.expose("test", "case", "4") == False
 
-    c.save()
-    with mock.patch.object(c, c._skip_reload.__name__, return_value=False):
-        c.load()
+    cfg.save()
+    with mock.patch.object(cfg, cfg._skip_reload.__name__, return_value=False):
+        cfg.load()
 
-    assert c.value("test", "case", "1") == 42
-    assert c.description("test", "case", "1") == "one"
-    assert c.expose("test", "case", "1") == False
+    assert cfg.value("test", "case", "1") == 42
+    assert cfg.description("test", "case", "1") == "one"
+    assert cfg.expose("test", "case", "1") == False
 
-    assert c.value("test", "case", "2") == False
-    assert c.description("test", "case", "2") == "two"
-    assert c.expose("test", "case", "2") == True
+    assert cfg.value("test", "case", "2") == False
+    assert cfg.description("test", "case", "2") == "two"
+    assert cfg.expose("test", "case", "2") == True
 
-    assert c.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
-    assert c.description("test", "case", "3") == ""
-    assert c.expose("test", "case", "3") == False
+    assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
+    assert cfg.description("test", "case", "3") == ""
+    assert cfg.expose("test", "case", "3") == False
 
     # Types for list elements is not preserved after reload.
-    assert c.value("test", "case", "4") == ["1", "2", "3", "4", "5"]
-    assert c.description("test", "case", "4") == ""
-    assert c.expose("test", "case", "4") == False
+    assert cfg.value("test", "case", "4") == ["1", "2", "3", "4", "5"]
+    assert cfg.description("test", "case", "4") == ""
+    assert cfg.expose("test", "case", "4") == False
 
-def test_exceptions():
-    c = gremlin.config.Configuration()
 
-    c.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
+def test_exceptions(cfg: gremlin.config.Configuration):
+    cfg.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
     with pytest.raises(gremlin.error.GremlinError):
-        c.set("test", "case", "1", 3.14)
-
-    with pytest.raises(gremlin.error.GremlinError):
-        c.set("test", "some", "other", "test")
+        cfg.set("test", "case", "1", 3.14)
 
     with pytest.raises(gremlin.error.GremlinError):
-        c.value("does", "not", "exist")
+        cfg.set("test", "some", "other", "test")
+
+    with pytest.raises(gremlin.error.GremlinError):
+        cfg.value("does", "not", "exist")
