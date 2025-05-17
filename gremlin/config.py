@@ -65,10 +65,13 @@ class Configuration:
         """
         return len(self._data)
 
+    def _skip_reload(self) -> bool:
+        """Returns True if the last load() was less than 1 second ago."""
+        return self._last_reload is not None and time.time() - self._last_reload < 1
+
     def load(self):
         """Loads the configuration file's content."""
-        if self._last_reload is not None and \
-                time.time() - self._last_reload < 1:
+        if self._skip_reload():
             return
 
         # Attempt to load the configuration file if this fails set
@@ -90,7 +93,7 @@ class Configuration:
         self._data = {}
         for section, sec_data in json_data.items():
             for group, grp_data in sec_data.items():
-               for name, entry in grp_data.items():
+                for name, entry in grp_data.items():
                     data_type = PropertyType.to_enum(entry["data_type"])
                     self._data[(section, group, name)] = {
                         "value": util.property_from_string(
