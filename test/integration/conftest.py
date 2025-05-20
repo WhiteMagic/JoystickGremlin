@@ -130,7 +130,7 @@ def vjoy_control_device(vjoy_control_device_id: int) -> Iterator[vjoy.VJoy]:
         vjoy.VJoyProxy.reset()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def vjoy_di_devices_or_skip() -> list[dill.DeviceSummary]:
     """Returns list of DirectInput vJoy devices summaries if any, else skips dependent tests."""
     vjoy_devices = gremlin.device_initialization.vjoy_devices()
@@ -139,7 +139,7 @@ def vjoy_di_devices_or_skip() -> list[dill.DeviceSummary]:
     return vjoy_devices
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def vjoy_ids_or_skip() -> list[int]:
     """Returns list of vJoy device IDs if any, else skips dependent tests.
 
@@ -164,7 +164,7 @@ def vjoy_ids_or_skip() -> list[int]:
 
 
 # Do not use directly, see app_tester fixture instead.
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def _gremlin_app() -> Iterator[QtWidgets.QApplication]:
     """Yields the Gremlin app."""
     argv = [sys.argv[0]]
@@ -183,6 +183,13 @@ def _activate_gremlin(edited_profile_path: str) -> Iterator[None]:
     backend.minimize()
     yield
     backend.activate_gremlin(False)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def tear_down() -> Iterator[None]:
+    """Performs package-level teardown for integration tests."""
+    yield
+    vjoy.VJoyProxy.reset()
 
 
 # +-------------------------------------------------------------------------
