@@ -916,7 +916,52 @@ class VJoy:
         )
 
 
-def deadzone(value: float, low: float, low_center: float, high_center: float, high: float) -> float:
+class VJoyProxy:
+
+    """Manages the usage of vJoy and allows shared access all callbacks."""
+
+    vjoy_devices = {}
+
+    def __getitem__(self, index):
+        """Returns the requested vJoy instance.
+
+        Args:
+            index: index of the vjoy device to return
+
+        Returns:
+            VJoy instance corresponding to the given id
+        """
+        if index in VJoyProxy.vjoy_devices:
+            return VJoyProxy.vjoy_devices[index]
+        else:
+            if not isinstance(index, int):
+                raise VJoyError("Integer ID for vjoy device ID expected")
+
+            try:
+                device = VJoy(index)
+                VJoyProxy.vjoy_devices[index] = device
+                return device
+            except error.VJoyError as e:
+                logging.getLogger("system").error(
+                    f"Failed accessing vJoy id={index}, error is: {e}"
+                )
+                raise e
+
+    @classmethod
+    def reset(cls):
+        """Relinquishes control over all held VJoy devices."""
+        for device in VJoyProxy.vjoy_devices.values():
+            device.invalidate()
+        VJoyProxy.vjoy_devices = {}
+
+
+def deadzone(
+        value: float,
+        low: float,
+        low_center: float,
+        high_center: float,
+        high: float
+) -> float:
     """Returns the mapped value taking the provided deadzone into
     account.
 
@@ -931,7 +976,7 @@ def deadzone(value: float, low: float, low_center: float, high_center: float, hi
         high: high deadzone limit
 
     Returns:
-        corrected value
+        Value clamped and interpolated based on the deadzone settings
     """
     if value >= 0:
         return min(1.0, max(0.0, (value - high_center) / abs(high - high_center)))

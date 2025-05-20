@@ -1163,7 +1163,7 @@ class ScriptManager:
         """Adds a new script to the manager.
 
         Args:
-            path: path to the scripts location
+            path: path to the script's location
         """
         self._scripts.append(Script(path, self._default_name(path)))
         self._scripts.sort(key=lambda s: (s.path, s.name))

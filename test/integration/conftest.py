@@ -28,8 +28,8 @@ from PySide6 import QtWidgets
 import pytest
 
 import dill
+import gremlin.device_initialization
 import gremlin.error
-import gremlin.input_devices
 import gremlin.profile
 import gremlin.ui.backend
 import joystick_gremlin
@@ -122,18 +122,18 @@ def edited_profile_path(profile_for_testing: gremlin.profile.Profile) -> Iterato
 
 @pytest.fixture(scope="module", params=None)
 def vjoy_control_device(vjoy_control_device_id: int) -> Iterator[vjoy.VJoy]:
-    vjoy_control = gremlin.input_devices.VJoyProxy()[vjoy_control_device_id]
+    vjoy_control = vjoy.VJoyProxy()[vjoy_control_device_id]
     try:
         yield vjoy_control
     finally:
         vjoy_control.invalidate()
-        gremlin.input_devices.VJoyProxy.reset()
+        vjoy.VJoyProxy.reset()
 
 
 @pytest.fixture(scope="session")
 def vjoy_di_devices_or_skip() -> list[dill.DeviceSummary]:
     """Returns list of DirectInput vJoy devices summaries if any, else skips dependent tests."""
-    vjoy_devices = gremlin.input_devices.vjoy_devices()
+    vjoy_devices = gremlin.device_initialization.vjoy_devices()
     if len(vjoy_devices) == 0:
         pytest.skip("No vJoy input devices found")
     return vjoy_devices
@@ -148,7 +148,7 @@ def vjoy_ids_or_skip() -> list[int]:
     """
     # TODO: Share this functionality with input_devices.py
     vjoy_ids = []
-    vjoy_proxy = gremlin.input_devices.VJoyProxy()
+    vjoy_proxy = vjoy.VJoyProxy()
     for i in range(1, 17):
         if vjoy.device_exists(i):
             try:

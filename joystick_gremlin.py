@@ -36,6 +36,7 @@ from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
 import resources
 
 import dill
+import vjoy.vjoy
 from gremlin.config import Configuration
 from gremlin.types import PropertyType
 
@@ -60,7 +61,7 @@ gremlin.util.setup_userprofile()
 
 import gremlin.config
 import gremlin.error
-import gremlin.input_devices
+import gremlin.device_initialization
 import gremlin.plugin_manager
 import gremlin.types
 import gremlin.signal
@@ -114,7 +115,7 @@ def shutdown_cleanup() -> None:
     backend.runner.stop()
 
     # Relinquish control over all VJoy devices used
-    gremlin.input_devices.VJoyProxy.reset()
+    vjoy.vjoy.VJoyProxy.reset()
 
 
 def register_config_options() -> None:
@@ -223,7 +224,7 @@ def make_gremlin_app(argv):
 
     # Ensure joystick devices are correctly setup
     dill.DILL.init()
-    gremlin.input_devices.joystick_devices_initialization()
+    gremlin.device_initialization.joystick_devices_initialization()
 
     # Create application and UI engine
     engine = QtQml.QQmlApplicationEngine(parent=app)
@@ -280,7 +281,7 @@ def make_gremlin_app(argv):
     # try:
     #     syslog.info("Checking vJoy installation")
     #     vjoy_working = len([
-    #         dev for dev in gremlin.input_devices.joystick_devices()
+    #         dev for dev in gremlin.device_initialization.joystick_devices()
     #         if dev.is_virtual
     #     ]) != 0
     #
@@ -302,13 +303,13 @@ def make_gremlin_app(argv):
     #     error_display.show()
     #     app.exec_()
     #
-    #     gremlin.input_devices.VJoyProxy.reset()
+    #     vjoy.vjoy.VJoyProxy.reset()
     #     event_listener = gremlin.event_handler.EventListener()
     #     event_listener.terminate()
     #     sys.exit(0)
 
-    # Load profile specified by the user on the command line, otherwise attempt
-    # to load the previously loaded profile
+    # Load the profile specified by the user on the command line, otherwise
+    # attempt to load the previously loaded profile
     if args.profile is not None and os.path.isfile(args.profile):
         backend.loadProfile(args.profile)
     else:

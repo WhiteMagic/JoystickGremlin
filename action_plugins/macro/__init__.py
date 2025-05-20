@@ -28,7 +28,7 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from action_plugins import common
 
-from gremlin import event_handler, input_devices, keyboard, macro, util
+from gremlin import device_helpers, event_handler, keyboard, macro, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     Value
 from gremlin.error import GremlinError, MissingImplementationError, ProfileError
@@ -521,7 +521,7 @@ class MacroFunctor(AbstractFunctor):
         if self._should_execute(value):
             macro.MacroManager().queue_macro(self.macro)
             if self.data.repeat_mode == MacroRepeatModes.Hold:
-                input_devices.ButtonReleaseActions().register_callback(
+                device_helpers.ButtonReleaseActions().register_callback(
                     lambda: macro.MacroManager().terminate_macro(self.macro),
                     event
                 )

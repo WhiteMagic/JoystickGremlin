@@ -27,8 +27,8 @@ from PySide6.QtCore import Property, Signal, Slot
 
 import dill
 
-from gremlin import code_runner, common, config, error, event_handler, \
-    input_devices, mode_manager, profile, shared_state, types
+from gremlin import code_runner, common, config, device_initialization, error, \
+    event_handler, mode_manager, profile, shared_state, types
 from gremlin.intermediate_output import IntermediateOutput
 from gremlin.signal import signal
 
@@ -74,7 +74,7 @@ class UIState(QtCore.QObject):
         if self._current_tab != "physical":
             return
 
-        devices = input_devices.physical_devices()
+        devices = device_initialization.physical_devices()
         selection_valid = False
         for dev in devices:
             if dev.device_guid.uuid == self._current_device:

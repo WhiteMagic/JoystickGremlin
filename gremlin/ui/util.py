@@ -24,7 +24,7 @@ from typing import Callable, List, Optional
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import event_handler, input_devices, keyboard, shared_state, \
+from gremlin import device_helpers, event_handler, keyboard, shared_state, \
     windows_event_hook
 
 from gremlin.types import InputType, MouseButton
@@ -186,10 +186,10 @@ class InputListenerModel(QtCore.QObject):
 
         # Ensure the event corresponds to a significant enough change in input
         process_event = \
-            input_devices.JoystickInputSignificant().should_process(event)
+            device_helpers.JoystickInputSignificant().should_process(event)
 
         if process_event:
-            input_devices.JoystickInputSignificant().reset()
+            device_helpers.JoystickInputSignificant().reset()
             if event.event_type == InputType.JoystickButton and event.is_pressed:
                 self._inputs.append(event)
             else:

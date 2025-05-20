@@ -29,9 +29,8 @@ from PySide6 import QtCore
 
 import dill
 
-import gremlin.keyboard
-from gremlin import common, config, error, input_devices, mode_manager, \
-    profile, util, shared_state, windows_event_hook
+from gremlin import common, config, device_initialization, error, keyboard, \
+    mode_manager, util, shared_state, tree, windows_event_hook
 from gremlin.input_cache import Joystick, Keyboard
 from gremlin.types import InputType
 
@@ -89,6 +88,38 @@ class Event:
         self.value = value
         self.raw_value = raw_value
 
+    def display_name(self) -> str:
+        """Returns the display representation of this event.
+
+        Returns:
+            Textual representation of the event's input
+        """
+        # Retrieve the device instance belonging to this event
+        device = None
+        for dev in device_initialization.joystick_devices():
+            if dev.device_guid.uuid == self.device_guid:
+                device = dev
+                break
+
+        # Retrieve device name
+        label = ""
+        if device is None:
+            logging.warning(
+                f"Unable to find a device with GUID {str(self.device_guid)}"
+            )
+            label = "Unknown"
+        else:
+            label = device.name
+
+        # Retrive input name
+        label += " - "
+        label += common.input_to_ui_string(
+            self.event_type,
+            self.identifier
+        )
+
+        return label
+
     def clone(self) -> Event:
         """Returns a clone of the event.
 
@@ -141,7 +172,7 @@ class Event:
             ))
 
     @staticmethod
-    def from_key(key: gremlin.keyboard.Key) -> Event:
+    def from_key(key: keyboard.Key) -> Event:
         """Creates an event object corresponding to the provided key.
 
         Args:
@@ -150,7 +181,7 @@ class Event:
         Returns:
             Event object corresponding to the provided key
         """
-        assert isinstance(key, gremlin.keyboard.Key)
+        assert isinstance(key, keyboard.Key)
         return Event(
             event_type=InputType.Keyboard,
             identifier=(key.scan_code, key.is_extended),
@@ -292,7 +323,7 @@ class EventListener(QtCore.QObject):
 
     def _run_device_list_update(self) -> None:
         """Performs the update of the devices connected."""
-        input_devices.joystick_devices_initialization()
+        device_initialization.joystick_devices_initialization()
         self._init_joysticks()
         self.device_change_event.emit()
 
@@ -319,7 +350,7 @@ class EventListener(QtCore.QObject):
         # time or released but not when it's being held down
         if not is_repeat:
             self._keyboard.update(
-                gremlin.keyboard.key_from_code(key_id[0], key_id[1]),
+                keyboard.key_from_code(key_id[0], key_id[1]),
                 is_pressed
             )
             self.keyboard_event.emit(Event(
@@ -384,7 +415,7 @@ class EventListener(QtCore.QObject):
         Loads calibration data for the joystick.
         """
         cfg = config.Configuration()
-        for dev_info in input_devices.joystick_devices():
+        for dev_info in device_initialization.joystick_devices():
             for entry in dev_info.axis_map:
                 self.reload_calibration(
                     dev_info.device_guid,
@@ -445,7 +476,7 @@ class EventHandler(QtCore.QObject):
             self._install_plugins(callback)
         )
 
-    def build_event_lookup(self, modes: profile.ModeHierarchy) -> None:
+    def build_event_lookup(self, mode_list: List[tree.TreeNode]) -> None:
         """Builds the lookup table linking events to callbacks.
 
         This takes mode inheritance into account to create items in children
@@ -454,7 +485,7 @@ class EventHandler(QtCore.QObject):
         Args:
             modes: information about the mode hierarchy
         """
-        for mode in modes.mode_list():
+        for mode in mode_list:
             # Each device is treated separately
             for device_guid in self.callbacks:
                 # Only attempt to copy handlers into child modes if the current

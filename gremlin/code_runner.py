@@ -27,10 +27,10 @@ import time
 from typing import List, Tuple
 
 import dill
+from vjoy.vjoy import VJoyProxy
 
 from gremlin.base_classes import Value
-import gremlin.fsm
-from gremlin import audio_player, error, event_handler, input_devices, \
+from gremlin import audio_player, device_helpers, error, event_handler, fsm, \
     macro, mode_manager, profile, sendinput, user_script, util
 from gremlin.types import ActionProperty, AxisButtonDirection, HatDirection, \
     InputType
@@ -49,12 +49,12 @@ class VirtualButton(metaclass=ABCMeta):
         states = ["up", "down"]
         actions = ["press", "release"]
         transitions = {
-            ("up", "press"): gremlin.fsm.Transition([self._press], "down"),
-            ("up", "release"): gremlin.fsm.Transition([self._noop], "up"),
-            ("down", "release"): gremlin.fsm.Transition([self._release], "up"),
-            ("down", "press"): gremlin.fsm.Transition([self._noop], "down")
+            ("up", "press"): fsm.Transition([self._press], "down"),
+            ("up", "release"): fsm.Transition([self._noop], "up"),
+            ("down", "release"): fsm.Transition([self._release], "up"),
+            ("down", "press"): fsm.Transition([self._noop], "down")
         }
-        return gremlin.fsm.FiniteStateMachine("up", states, actions, transitions)
+        return fsm.FiniteStateMachine("up", states, actions, transitions)
 
     @abstractmethod
     def __call__(self, event: event_handler.Event) -> List[bool]:
@@ -314,9 +314,9 @@ class CodeRunner:
     def __init__(self):
         """Creates a new code runner instance."""
         self.event_handler = event_handler.EventHandler()
-        self.event_handler.add_plugin(input_devices.JoystickPlugin())
-        self.event_handler.add_plugin(input_devices.VJoyPlugin())
-        self.event_handler.add_plugin(input_devices.KeyboardPlugin())
+        self.event_handler.add_plugin(user_script.JoystickPlugin())
+        self.event_handler.add_plugin(user_script.VJoyPlugin())
+        self.event_handler.add_plugin(user_script.KeyboardPlugin())
 
         self._profile = None
         self._running = False
@@ -365,7 +365,7 @@ class CodeRunner:
 
             # Create callbacks fom the user code
             callback_count = 0
-            for dev_id, modes in input_devices.callback_registry.registry.items():
+            for dev_id, modes in user_script.callback_registry.registry.items():
                 for mode, events in modes.items():
                     for event, callback_list in events.items():
                         for callback in callback_list.values():
@@ -382,11 +382,11 @@ class CodeRunner:
 
             # Use inheritance to build duplicate parent actions in children
             # if the child mode does not override the parent's action
-            self.event_handler.build_event_lookup(self._profile.modes)
+            self.event_handler.build_event_lookup(self._profile.modes.mode_list())
 
             # Set vJoy axis default values
             for vid, data in settings.vjoy_initial_values.items():
-                vjoy_proxy = input_devices.VJoyProxy()[vid]
+                vjoy_proxy = VJoyProxy()[vid]
                 for aid, value in data.items():
                     vjoy_proxy.axis(linear_index=aid).set_absolute_value(value)
 
@@ -403,7 +403,7 @@ class CodeRunner:
             )
             evt_listener.gremlin_active = True
 
-            input_devices.periodic_registry.start()
+            user_script.periodic_registry.start()
             macro.MacroManager().start()
 
             mode_manager.ModeManager().switch_to(
@@ -431,18 +431,18 @@ class CodeRunner:
         self._running = False
 
         # Empty callback registry
-        input_devices.callback_registry.clear()
+        user_script.callback_registry.clear()
         self.event_handler.clear()
 
         # Stop periodic events and clear registry
-        input_devices.periodic_registry.stop()
-        input_devices.periodic_registry.clear()
+        user_script.periodic_registry.stop()
+        user_script.periodic_registry.clear()
 
         macro.MacroManager().stop()
         sendinput.MouseController().stop()
 
         # Remove all claims on VJoy devices
-        input_devices.VJoyProxy.reset()
+        VJoyProxy.reset()
 
         # Remove other possibly long-running aspects
         audio_player.AudioPlayer().stop()
@@ -451,8 +451,8 @@ class CodeRunner:
         """Resets all states to their default values."""
         self.event_handler._active_mode = self._profile.modes.first_mode
         self.event_handler._previous_mode = self._profile.modes.first_mode
-        input_devices.callback_registry.clear()
-        input_devices.ButtonReleaseActions().reset()
+        user_script.callback_registry.clear()
+        device_helpers.ButtonReleaseActions().reset()
 
     def _setup_user_scripts(self):
         """Handles loading and configuring of user scripts."""

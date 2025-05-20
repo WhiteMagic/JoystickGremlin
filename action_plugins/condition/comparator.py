@@ -22,7 +22,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal
 
-from gremlin import error, event_handler, input_devices, keyboard, util
+from gremlin import error, event_handler, input_cache, keyboard, util
 from gremlin.base_classes import Value
 from gremlin.input_cache import Keyboard
 from gremlin.types import HatDirection, InputType, PropertyType
@@ -149,7 +149,7 @@ class RangeComparator(AbstractComparator):
                 f"Received type other than an axis in a range comparator."
             )
 
-        axis = input_devices.Joystick()[events[0].device_guid].axis(
+        axis = input_cache.Joystick()[events[0].device_guid].axis(
             events[0].identifier
         )
         return self.lower <= axis.value <= self.upper
@@ -281,7 +281,7 @@ class PressedComparator(AbstractComparator):
             True if the comparator holds for all buttons, False if at least one
             button fails the comparator
         """
-        joystick = input_devices.Joystick()
+        joystick = input_cache.Joystick()
         is_pressed = True
         for event in events:
             button = joystick[event.device_guid].button(event.identifier)
@@ -341,7 +341,7 @@ class DirectionComparator(AbstractComparator):
                 f"Received type other than a hat in a direction comparator."
             )
 
-        hat = input_devices.Joystick()[events[0].device_guid].hat(
+        hat = input_cache.Joystick()[events[0].device_guid].hat(
             events[0].identifier
         )
         return HatDirection.to_enum(hat.direction) in self.directions

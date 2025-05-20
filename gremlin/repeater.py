@@ -21,8 +21,8 @@ import time
 
 from PyQt5 import QtCore
 
-import gremlin.types
-from . import common, event_handler, input_devices, joystick_handling
+from gremlin import common, device_helpers, device_initialization, event_handler
+from gremlin.types import InputType
 
 
 class Repeater(QtCore.QObject):
@@ -51,7 +51,7 @@ class Repeater(QtCore.QObject):
         self._update_func = update_func
         self._timeout = time.time()
         self._vjoy_device_guids = \
-            [dev.device_guid for dev in joystick_handling.vjoy_devices()]
+            [dev.device_guid for dev in device_initialization.vjoy_devices()]
         self._event_registry = {}
 
     @property
@@ -96,18 +96,18 @@ class Repeater(QtCore.QObject):
                 event.device_guid in self._vjoy_device_guids:
             return
 
-        if not input_devices.JoystickInputSignificant().should_process(event):
+        if not device_helpers.JoystickInputSignificant().should_process(event):
             return
 
         event_list = []
         if event.event_type in [
-            gremlin.types.InputType.Keyboard,
-            gremlin.types.InputType.JoystickButton
+            InputType.Keyboard,
+            InputType.JoystickButton
         ]:
             event_list = [event.clone(), event.clone()]
             event_list[0].is_pressed = False
             event_list[1].is_pressed = True
-        elif event.event_type == gremlin.types.InputType.JoystickAxis:
+        elif event.event_type == InputType.JoystickAxis:
             event_list = [
                 event.clone(),
                 event.clone(),
@@ -118,7 +118,7 @@ class Repeater(QtCore.QObject):
             event_list[1].value = 0.0
             event_list[2].value = 0.75
             event_list[3].value = 0.0
-        elif event.event_type == gremlin.types.InputType.JoystickHat:
+        elif event.event_type == InputType.JoystickHat:
             event_list = [event.clone(), event.clone()]
             event_list[0].value = (0, 0)
 
@@ -148,15 +148,13 @@ class Repeater(QtCore.QObject):
 
         # Repeatedly send events until the thread is interrupted
         while self.is_running:
-            if self._events[0].event_type == gremlin.types.InputType.Keyboard:
+            if self._events[0].event_type == InputType.Keyboard:
                 el.keyboard_event.emit(self._events[index])
             else:
                 el.joystick_event.emit(self._events[index])
 
             self._update_func("{} {}".format(
-                gremlin.types.InputType.to_string(
-                    self._events[index].event_type
-                ).capitalize(),
+                InputType.to_string(self._events[index].event_type).capitalize(),
                 str(self._events[index].identifier)
             ))
 
@@ -170,12 +168,12 @@ class Repeater(QtCore.QObject):
 
         # Ensure we leave the input in a neutral state when done
         event = self._events[0].clone()
-        if event.event_type == gremlin.types.InputType.JoystickButton:
+        if event.event_type == InputType.JoystickButton:
             event.is_pressed = False
-        elif event.event_type == gremlin.types.InputType.JoystickAxis:
+        elif event.event_type == InputType.JoystickAxis:
             event.value = \
-                input_devices.JoystickInputSignificant().last_event(event).value
-        elif event.event_type == gremlin.types.InputType.JoystickHat:
+                device_helpers.JoystickInputSignificant().last_event(event).value
+        elif event.event_type == InputType.JoystickHat:
             event.value = (0, 0)
         el.joystick_event.emit(event)
         self._event_registry = {}

@@ -23,7 +23,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore, QtGui, QtQml
 from PySide6.QtCore import Property, Signal, Slot, QCborTag
 
-from gremlin import event_handler, input_devices, spline, util
+from gremlin import event_handler, spline, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError, ProfileError
 from gremlin.profile import Library
@@ -40,6 +40,35 @@ QML_IMPORT_NAME = "Gremlin.ActionPlugins"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
+def deadzone(
+        value: float,
+        low: float,
+        low_center: float,
+        high_center: float,
+        high: float
+) -> float:
+    """Returns the mapped value taking the provided deadzone into
+    account.
+
+    The following relationship between the limits has to hold.
+    -1 <= low < low_center <= 0 <= high_center < high <= 1
+
+    Args:
+        value: the raw input value
+        low: low deadzone limit
+        low_center: lower center deadzone limit
+        high_center: upper center deadzone limit
+        high: high deadzone limit
+
+    Returns:
+        Corrected value
+    """
+    if value >= 0:
+        return min(1.0, max(0.0, (value - high_center) / abs(high - high_center)))
+    else:
+        return max(-1.0, min(0.0, (value - low_center) / abs(low - low_center)))
+
+
 class ResponseCurveFunctor(AbstractFunctor):
 
     """Implements the function executed for the response curve at runtime."""
@@ -53,7 +82,7 @@ class ResponseCurveFunctor(AbstractFunctor):
             value: Value,
             properties: list[ActionProperty]=[]
     ) -> None:
-        dz_value = input_devices.deadzone(
+        dz_value = deadzone(
             value.current,
             self.data.deadzone[0],
             self.data.deadzone[1],

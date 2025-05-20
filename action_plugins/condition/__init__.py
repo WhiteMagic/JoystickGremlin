@@ -29,7 +29,6 @@ from dill import GUID_Keyboard
 from gremlin import error, event_handler, plugin_manager, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     Value
-from gremlin.input_devices import format_input
 from gremlin.keyboard import key_from_code
 from gremlin.profile import Library
 from gremlin.tree import TreeNode
@@ -352,8 +351,8 @@ class JoystickCondition(AbstractCondition):
 
         return node
 
-    def _get_inputs_impl(self) -> List[str]:
-        return [format_input(v) for v in self._inputs]
+    def _get_inputs_impl(self) -> List[event_handler.Event]:
+        return [v.display_name() for v in self._inputs]
 
     def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
         self._update_inputs(data)

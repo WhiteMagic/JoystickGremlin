@@ -30,7 +30,8 @@ from PySide6.QtCore import Property, Signal, Slot
 
 import dill
 
-from gremlin import common, event_handler, input_devices, shared_state, util
+from gremlin import common, device_initialization, event_handler, shared_state, \
+    util
 from gremlin.common import SingletonDecorator
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
@@ -258,7 +259,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._devices = input_devices.physical_devices()
+        self._devices = device_initialization.physical_devices()
 
         event_handler.EventListener().device_change_event.connect(
             self.update_model
@@ -267,7 +268,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
     def update_model(self) -> None:
         """Updates the model if the connected devices change."""
         old_count = len(self._devices)
-        self._devices = input_devices.physical_devices()
+        self._devices = device_initialization.physical_devices()
         new_count = len(self._devices)
 
         # Ensure the entire model is refreshed
@@ -309,11 +310,11 @@ class DeviceListModel(QtCore.QAbstractListModel):
             types: the type of devices to list
         """
         if types == "physical":
-            self._devices = input_devices.physical_devices()
+            self._devices = device_initialization.physical_devices()
         elif types == "virtual":
-            self._devices = input_devices.vjoy_devices()
+            self._devices = device_initialization.vjoy_devices()
         elif types == "all":
-            self._devices = input_devices.joystick_devices()
+            self._devices = device_initialization.joystick_devices()
 
         # Remove everything and then add it back to force a model update
         new_count = len(self._devices)
@@ -739,7 +740,7 @@ class VJoyDevices(QtCore.QObject):
         super().__init__(parent)
 
         self._devices = sorted(
-            input_devices.vjoy_devices(),
+            device_initialization.vjoy_devices(),
             key=lambda x: x.vjoy_id
         )
 

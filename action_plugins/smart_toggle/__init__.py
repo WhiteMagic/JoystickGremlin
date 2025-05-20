@@ -28,7 +28,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import event_handler, fsm, input_devices, plugin_manager, util
+from gremlin import event_handler, fsm, plugin_manager, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     Value
 from gremlin.error import GremlinError

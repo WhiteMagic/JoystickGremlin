@@ -15,13 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from __future__ import annotations
 
-
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 import copy
+import functools
+import heapq
 import importlib
 import inspect
 import logging
@@ -30,14 +29,302 @@ import os
 from pathlib import Path
 import random
 import string
-from typing import Any
+import threading
+import time
+from typing import Any, Callable
 import uuid
 from xml.etree import ElementTree
 
 import dill
+from vjoy.vjoy import VJoyProxy
 
+from gremlin.input_cache import Joystick, Keyboard
 from gremlin.types import InputType, PropertyType
-from gremlin import common, error, input_devices, shared_state, util
+from gremlin import error, event_handler, shared_state, util
+
+
+class CallbackRegistry:
+
+    """Registry of all callbacks known to the system."""
+
+    def __init__(self):
+        """Creates a new callback registry instance."""
+        self._registry = {}
+        self._current_id = 0
+
+    def add(
+            self,
+            callback: Callable,
+            event: event_handler.Event,
+            mode: str
+    ) -> None:
+        """Adds a new callback to the registry.
+
+        Args:
+            callback: function to add as a callback
+            event: the event on which to trigger the callback
+            mode: the mode in which to trigger the callback
+        """
+        self._current_id += 1
+        function_name = "{}_{:d}".format(callback.__name__, self._current_id)
+
+        if event.device_guid not in self._registry:
+            self._registry[event.device_guid] = {}
+        if mode not in self._registry[event.device_guid]:
+            self._registry[event.device_guid][mode] = {}
+        if event not in self._registry[event.device_guid][mode]:
+            self._registry[event.device_guid][mode][event] = {}
+
+        self._registry[event.device_guid][mode][event][function_name] = callback
+
+    @property
+    def registry(self) -> dict:
+        """Returns the registry dictionary.
+
+        Returns:
+            The callback registry dictionary
+        """
+        return self._registry
+
+    def clear(self) -> None:
+        """Clears the registry entries."""
+        self._registry = {}
+
+
+class PeriodicRegistry:
+
+    """Registry for periodically executed functions."""
+
+    def __init__(self):
+        """Creates a new instance."""
+        self._registry = {}
+        self._running = False
+        self._thread = threading.Thread(target=self._thread_loop)
+        self._queue = []
+        self._plugins = []
+
+    def start(self) -> None:
+        """Starts the event loop."""
+        # Only proceed if we have functions to call
+        if len(self._registry) == 0:
+            return
+
+        # Only create a new thread and start it if the thread is not
+        # currently running
+        self._running = True
+        if not self._thread.is_alive():
+            self._thread = threading.Thread(target=self._thread_loop)
+            self._thread.start()
+
+    def stop(self) -> None:
+        """Stops the event loop."""
+        self._running = False
+        if self._thread.is_alive():
+            self._thread.join()
+
+    def add(self, callback: Callable, interval: float) -> None:
+        """Adds a function to execute periodically.
+
+        Args:
+            callback: the function to execute
+            interval: the time in seconds between executions
+        """
+        self._registry[callback] = (interval, callback)
+
+    def clear(self) -> None:
+        """Clears the registry."""
+        self._registry = {}
+
+    def _install_plugins(self, callback: Callable) -> Callable:
+        """Installs the current plugins into the given callback.
+
+        Args:
+            callback: the callback function to install the plugins into
+
+        Returns:
+            new callback with plugins installed
+        """
+        signature = inspect.signature(callback).parameters
+        partial_fn = functools.partial
+        if "self" in signature:
+            partial_fn = functools.partialmethod
+        for plugin in self._plugins:
+            if plugin.keyword in signature:
+                callback = plugin.install(callback, partial_fn)
+        return callback
+
+    def _thread_loop(self) -> None:
+        """Main execution loop run in a separate thread."""
+        # Setup plugins to use
+        self._plugins = [
+            JoystickPlugin(),
+            VJoyPlugin(),
+            KeyboardPlugin()
+        ]
+        callback_map = {}
+
+        # Populate the queue
+        self._queue = []
+        for item in self._registry.values():
+            plugin_cb = self._install_plugins(item[1])
+            callback_map[plugin_cb] = item[0]
+            heapq.heappush(
+                self._queue,
+                (time.time() + callback_map[plugin_cb], plugin_cb)
+            )
+
+        # Main thread loop
+        while self._running:
+            # Process all events that require running
+            while self._queue[0][0] < time.time():
+                item = heapq.heappop(self._queue)
+                item[1]()
+
+                heapq.heappush(
+                    self._queue,
+                    (time.time() + callback_map[item[1]], item[1])
+                )
+
+            # Sleep until either the next function needs to be run or
+            # our timeout expires
+            time.sleep(min(self._queue[0][0] - time.time(), 1.0))
+
+
+callback_registry = CallbackRegistry()
+periodic_registry = PeriodicRegistry()
+
+
+class JoystickDecorator:
+
+    """Creates customized decorators for physical joystick devices."""
+
+    def __init__(self, name: str, device_guid: str, mode: str):
+        """Creates a new instance with customized decorators.
+
+        Args:
+            name: name of the device
+            device_guid: the device's guid in the system
+            mode: the mode in which the decorated functions should be active
+        """
+        self.name = name
+        self.mode = mode
+
+        # Convert string-based GUID to the actual GUID object
+        try:
+            self.device_guid = uuid.UUID(device_guid)
+        except ValueError:
+            logging.getLogger("system").error(
+                f"Invalid guid value '{device_guid}' received."
+            )
+            self.device_guid = diill.UUID_Invalid
+
+        # Create decorators for the different input types
+        self.axis = functools.partial(
+            _input_callback,
+            device_guid=self.device_guid,
+            input_type=InputType.JoystickAxis,
+            mode=self.mode
+        )
+        self.button = functools.partial(
+            _input_callback,
+            device_guid=self.device_guid,
+            input_type=InputType.JoystickButton,
+            mode=self.mode
+        )
+        self.hat = functools.partial(
+            _input_callback,
+            device_guid=self.device_guid,
+            input_type=InputType.JoystickHat,
+            mode=self.mode
+        )
+
+
+class VJoyPlugin:
+
+    """Plugin providing automatic access to the VJoyProxy object.
+
+    For a function to use this plugin it requires one of its parameters
+    to be named "vjoy".
+    """
+
+    vjoy = VJoyProxy()
+
+    def __init__(self):
+        self.keyword = "vjoy"
+
+    def install(self, callback: Callable, partial_fn: Callable) -> Callable:
+        """Decorates the given callback function to provide access to
+        the VJoyProxy object.
+
+        Only if the signature contains the plugin's keyword is the
+        decorator applied.
+
+        Args:
+            callback: the callback to decorate
+            partial_fn: function to create the partial function / method
+
+        Returns:
+            callback with the plugin parameter bound
+        """
+        return partial_fn(callback, vjoy=VJoyPlugin.vjoy)
+
+
+class JoystickPlugin:
+
+    """Plugin providing automatic access to the Joystick object.
+
+    For a function to use this plugin it requires one of its parameters
+    to be named "joy".
+    """
+
+    joystick = Joystick()
+
+    def __init__(self):
+        self.keyword = "joy"
+
+    def install(self, callback: Callable, partial_fn: Callable) -> Callable:
+        """Decorates the given callback function to provide access
+        to the Joystick object.
+
+        Only if the signature contains the plugin's keyword is the
+        decorator applied.
+
+        Args:
+            callback: the callback to decorate
+            partial_fn: function to create the partial function / method
+
+        Returns:
+            callback with the plugin parameter bound
+        """
+        return partial_fn(callback, joy=JoystickPlugin.joystick)
+
+
+class KeyboardPlugin:
+
+    """Plugin providing automatic access to the Keyboard object.
+
+    For a function to use this plugin it requires one of its parameters
+    to be named "keyboard".
+    """
+
+    keyboard = Keyboard()
+
+    def __init__(self):
+        self.keyword = "keyboard"
+
+    def install(self, callback, partial_fn):
+        """Decorates the given callback function to provide access to
+        the Keyboard object.
+
+        Args:
+            callback: the callback to decorate
+            partial_fn: function to create the partial function / method
+
+        Returns:
+            callback with the plugin parameter bound
+        """
+        return partial_fn(callback, keyboard=KeyboardPlugin.keyboard)
+
 
 
 class ScriptVariableRegistry:
@@ -677,11 +964,11 @@ class PhysicalInputVariable(AbstractVariable):
 
     def create_decorator(self, mode: str):
         if not self.is_valid():
-            return input_devices.JoystickDecorator(
+            return JoystickDecorator(
                 "", str(dill.GUID_Invalid), ""
             )
         else:
-            return input_devices.JoystickDecorator(
+            return JoystickDecorator(
                 "device name",
                 str(self._device_guid),
                 mode
@@ -764,7 +1051,7 @@ class VirtualInputVariable(AbstractVariable):
         return self._valid_types
 
     def remap(self, value: float|bool|Tuple[int, int]) -> None:
-        device = input_devices.VJoyProxy().vjoy_devices[self._vjoy_id]
+        device = VJoyProxy().vjoy_devices[self._vjoy_id]
         match self._input_type:
             case InputType.JoystickButton:
                 device.button(self._input_id).is_pressed = value
@@ -822,3 +1109,83 @@ def clamp_value(value: float, min_val: float, max_val: float) -> float:
     if min_val > max_val:
         min_val, max_val = max_val, min_val
     return min(max_val, max(min_val, value))
+
+
+def keyboard(key_name: str, mode: str) -> Callable:
+    """Decorator for keyboard key callbacks.
+
+    Args:
+        key_name: name of key triggering the callback
+        mode: mode in which this callback is active
+    """
+
+    def wrap(callback):
+
+        @functools.wraps(callback)
+        def wrapper_fn(*args, **kwargs):
+            callback(*args, **kwargs)
+
+        key = gremlin.keyboard.key_from_name(key_name)
+        event = event_handler.Event.from_key(key)
+        callback_registry.add(wrapper_fn, event, mode)
+
+        return wrapper_fn
+
+    return wrap
+
+
+def periodic(interval: float) -> Callable:
+    """Decorator for periodic function callbacks.
+
+    Args:
+        interval: the duration between executions of the function
+    """
+
+    def wrap(callback):
+
+        @functools.wraps(callback)
+        def wrapper_fn(*args, **kwargs):
+            callback(*args, **kwargs)
+
+        periodic_registry.add(wrapper_fn, interval)
+
+        return wrapper_fn
+
+    return wrap
+
+
+def _input_callback(
+        input_id: int,
+        device_guid: uuid.UUID,
+        input_type: InputType,
+        mode: str
+):
+    """Decorator for a specific input on a physical device.
+
+    Args:
+        device_guid: GUID of the physical device
+        input_type: type of the input being wrapped in the decorator
+        input_id: identifier of the axis, button, or hat being decorated
+        mode: name of the mode the callback is active in
+    """
+
+    # The order of the input arguments has to be this specific one as otherwise
+    # the positional argument part of the decorator breaks.
+
+    def wrap(callback):
+
+        @functools.wraps(callback)
+        def wrapper_fn(*args, **kwargs):
+            callback(*args, **kwargs)
+
+        event = event_handler.Event(
+            event_type=input_type,
+            identifier=input_id,
+            device_guid=device_guid,
+            mode=mode
+        )
+        callback_registry.add(wrapper_fn, event, mode)
+
+        return wrapper_fn
+
+    return wrap

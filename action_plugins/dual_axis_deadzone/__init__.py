@@ -32,7 +32,6 @@ from gremlin import event_handler, spline, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError, ProfileError
 from gremlin.input_cache import Joystick
-from gremlin.input_devices import select_first_valid_vjoy_input
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType
 from gremlin.util import clamp
