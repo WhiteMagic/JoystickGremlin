@@ -35,6 +35,8 @@ from gremlin.profile import Profile, ModeHierarchy
 
 import action_plugins.tempo as tempo
 
+_PROFILE_REALISTIC = "profile_realistic.xml"
+
 
 class TestModeHierarchy:
 
@@ -106,9 +108,9 @@ class TestModeHierarchy:
         assert mh.find_mode("Default").parent.value == "Second"
         assert mh.find_mode("Default").parent == mh.find_mode("Second")
 
-    def test_complex_modifications(self):
+    def test_complex_modifications(self, xml_dir: str):
         p = Profile()
-        p.from_xml("test/unit/xml/profile_realistic.xml")
+        p.from_xml(os.path.join(xml_dir, _PROFILE_REALISTIC))
         mh = p.modes
 
         assert set(mh.mode_names()) == set(["Default", "Second", "Child"])

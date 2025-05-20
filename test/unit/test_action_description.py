@@ -18,6 +18,7 @@
 import sys
 sys.path.append(".")
 
+import os.path
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -29,6 +30,8 @@ from gremlin.ui.action_model import SequenceIndex
 
 from action_plugins.description import DescriptionData, DescriptionModel
 from action_plugins.root import RootData
+
+_ACTION_DESCRIPTION_SIMPLE = "action_description_simple.xml"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -45,14 +48,14 @@ def test_model_ctor():
     assert a.description == ""
 
 
-def test_actions():
+def test_actions(xml_dir: str):
     l = Library()
     a = DescriptionData()
     a.from_xml(
         ElementTree.fromstring(
-            open("test/unit/xml/action_description_simple.xml").read(),
+            open(os.path.join(xml_dir, _ACTION_DESCRIPTION_SIMPLE)).read(),
         ),
-        l
+        l,
     )
 
     assert len(a.get_actions()[0]) == 0
@@ -61,6 +64,7 @@ def test_actions():
         a.insert_action(d, "something")
     with pytest.raises(GremlinError):
         a.remove_action(0, "something")
+
 
 def test_model_setter_getter():
     p = Profile()
@@ -87,14 +91,14 @@ def test_model_setter_getter():
     assert m.description == "Test 123"
 
 
-def test_model_from_xml():
+def test_model_from_xml(xml_dir):
     l = Library()
     a = DescriptionData()
     a.from_xml(
         ElementTree.fromstring(
-            open("test/unit/xml/action_description_simple.xml").read(),
+            open(os.path.join(xml_dir, _ACTION_DESCRIPTION_SIMPLE)).read(),
         ),
-        l
+        l,
     )
 
     assert a.description == "This is a test"

@@ -18,6 +18,7 @@
 import sys
 sys.path.append(".")
 
+import os.path
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -29,6 +30,7 @@ from gremlin.types import InputType, DataInsertionMode
 from action_plugins.description import DescriptionData
 from action_plugins.root import RootData, RootModel
 
+_PROFILE_HIERARCHY = "profile_hierarchy.xml"
 
 
 def test_ctor():
@@ -38,9 +40,9 @@ def test_ctor():
     assert a.is_valid() == True
 
 
-def test_from_xml():
+def test_from_xml(xml_dir: str):
     p = Profile()
-    p.from_xml("test/unit/xml/profile_hierarchy.xml")
+    p.from_xml(os.path.join(xml_dir, _PROFILE_HIERARCHY))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
@@ -50,9 +52,9 @@ def test_from_xml():
     assert a.children[2].id == uuid.UUID("0c905a47-9ad3-4b65-b702-fbae1d133603")
 
 
-def test_action_methods():
+def test_action_methods(xml_dir: str):
     p = Profile()
-    p.from_xml("test/unit/xml/profile_hierarchy.xml")
+    p.from_xml(os.path.join(xml_dir, _PROFILE_HIERARCHY))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 

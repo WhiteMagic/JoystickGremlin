@@ -18,6 +18,7 @@
 import sys
 sys.path.append(".")
 
+import os.path
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -42,9 +43,9 @@ def test_ctor():
     assert a.axis_in2 == InputIdentifier()
 
 
-def test_from_xml():
+def test_from_xml(xml_dir: str):
     p = Profile()
-    p.from_xml("test/unit/xml/action_merge_axis.xml")
+    p.from_xml(os.path.join(xml_dir, "action_merge_axis.xml"))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 

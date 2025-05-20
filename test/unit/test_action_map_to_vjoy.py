@@ -18,6 +18,7 @@
 import sys
 sys.path.append(".")
 
+import os.path
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -30,6 +31,8 @@ from gremlin.profile import Library
 from action_plugins.description import DescriptionData
 from action_plugins.map_to_vjoy import MapToVjoyData
 
+_ACTION_MAP_BUTTON = "action_map_to_vjoy_button.xml"
+_ACTION_MAP_AXIS = "action_map_to_vjoy_axis.xml"
 
 
 def test_ctor(joystick_init):
@@ -42,12 +45,12 @@ def test_ctor(joystick_init):
     assert r.axis_scaling == 1.0
 
 
-def test_actions():
+def test_actions(xml_dir: str):
     l = Library()
     a = MapToVjoyData(types.InputType.JoystickButton)
-    a.from_xml(ElementTree.fromstring(
-        open("test/unit/xml/action_map_to_vjoy_button.xml").read()),
-        l
+    a.from_xml(
+        ElementTree.fromstring(open(os.path.join(xml_dir, _ACTION_MAP_BUTTON)).read()),
+        l,
     )
 
     assert len(a.get_actions()[0]) == 0
@@ -58,12 +61,12 @@ def test_actions():
         a.remove_action(0, "something")
 
 
-def test_from_xml():
+def test_from_xml(xml_dir: str):
     l = Library()
     r = MapToVjoyData(types.InputType.JoystickButton)
-    r.from_xml(ElementTree.fromstring(
-        open("test/unit/xml/action_map_to_vjoy_button.xml").read()),
-        l
+    r.from_xml(
+        ElementTree.fromstring(open(os.path.join(xml_dir, _ACTION_MAP_BUTTON)).read()),
+        l,
     )
     assert r.vjoy_device_id == 1
     assert r.vjoy_input_id == 12
@@ -72,9 +75,8 @@ def test_from_xml():
     assert r.axis_scaling == 1.0
 
     r = MapToVjoyData(types.InputType.JoystickButton)
-    r.from_xml(ElementTree.fromstring(
-        open("test/unit/xml/action_map_to_vjoy_axis.xml").read()),
-        l
+    r.from_xml(
+        ElementTree.fromstring(open(os.path.join(xml_dir, _ACTION_MAP_AXIS)).read()), l
     )
     assert r.vjoy_device_id == 2
     assert r.vjoy_input_id == 6
