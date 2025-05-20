@@ -467,6 +467,8 @@ class DILL:
         raise DILLError("Unable to locate dill.dll library")
 
     _dll = ctypes.cdll.LoadLibrary(_dll_path)
+    # Should only be initialized once in a process's lifetime.
+    _dill_initialized = False
 
     # Storage for the callback functions
     device_change_callback_fn = None
@@ -523,7 +525,9 @@ class DILL:
 
         This has to be called before any other DILL interactions can take place.
         """
-        DILL._dll.init()
+        if not DILL._dill_initialized:
+            DILL._dll.init()
+            DILL._dill_initialized = True
 
     @staticmethod
     def set_input_event_callback(callback: Callable[[InputEvent], None]) -> None:
