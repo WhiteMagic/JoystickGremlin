@@ -18,7 +18,7 @@
 import sys
 sys.path.append(".")
 
-import os.path
+import pathlib
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -40,9 +40,9 @@ def test_ctor():
     assert a.is_valid() == True
 
 
-def test_from_xml(xml_dir: str):
+def test_from_xml(xml_dir: pathlib.Path):
     p = Profile()
-    p.from_xml(os.path.join(xml_dir, _PROFILE_HIERARCHY))
+    p.from_xml(str(xml_dir / _PROFILE_HIERARCHY))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
@@ -52,9 +52,9 @@ def test_from_xml(xml_dir: str):
     assert a.children[2].id == uuid.UUID("0c905a47-9ad3-4b65-b702-fbae1d133603")
 
 
-def test_action_methods(xml_dir: str):
+def test_action_methods(xml_dir: pathlib.Path):
     p = Profile()
-    p.from_xml(os.path.join(xml_dir, _PROFILE_HIERARCHY))
+    p.from_xml(str(xml_dir / _PROFILE_HIERARCHY))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 

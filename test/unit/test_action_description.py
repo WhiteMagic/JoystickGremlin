@@ -18,7 +18,7 @@
 import sys
 sys.path.append(".")
 
-import os.path
+import pathlib
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -48,12 +48,12 @@ def test_model_ctor():
     assert a.description == ""
 
 
-def test_actions(xml_dir: str):
+def test_actions(xml_dir: pathlib.Path):
     l = Library()
     a = DescriptionData()
     a.from_xml(
         ElementTree.fromstring(
-            open(os.path.join(xml_dir, _ACTION_DESCRIPTION_SIMPLE)).read(),
+            (xml_dir / _ACTION_DESCRIPTION_SIMPLE).read_text(),
         ),
         l,
     )
@@ -91,12 +91,12 @@ def test_model_setter_getter():
     assert m.description == "Test 123"
 
 
-def test_model_from_xml(xml_dir):
+def test_model_from_xml(xml_dir: pathlib.Path):
     l = Library()
     a = DescriptionData()
     a.from_xml(
         ElementTree.fromstring(
-            open(os.path.join(xml_dir, _ACTION_DESCRIPTION_SIMPLE)).read(),
+            (xml_dir / _ACTION_DESCRIPTION_SIMPLE).read_text(),
         ),
         l,
     )

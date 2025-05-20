@@ -4,7 +4,7 @@ import gremlin.device_initialization
 
 sys.path.append(".")
 
-import os.path
+import pathlib
 
 import pytest
 
@@ -28,6 +28,6 @@ def terminate_event_listener(request):
 
 
 @pytest.fixture(scope="package")
-def xml_dir() -> str:
+def xml_dir() -> pathlib.Path:
     """Returns the path for the directory with XML files for unit tests."""
-    return os.path.join(os.path.dirname(__file__), "xml")
+    return pathlib.Path(__file__).parent / "xml"

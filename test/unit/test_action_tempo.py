@@ -18,7 +18,7 @@
 import sys
 sys.path.append(".")
 
-import os.path
+import pathlib
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -35,9 +35,9 @@ from action_plugins.description import DescriptionData
 _ACTION_TEMPO_SIMPLE = "action_tempo_simple.xml"
 
 
-def test_from_xml(xml_dir: str):
+def test_from_xml(xml_dir: pathlib.Path):
     p = Profile()
-    p.from_xml(os.path.join(xml_dir, _ACTION_TEMPO_SIMPLE))
+    p.from_xml(str(xml_dir / _ACTION_TEMPO_SIMPLE))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
@@ -70,9 +70,9 @@ def test_to_xml():
     ).text == "fbe6be7b-07c9-4400-94f2-caa245ebcc7e"
 
 
-def test_action_methods(xml_dir: str):
+def test_action_methods(xml_dir: pathlib.Path):
     p = Profile()
-    p.from_xml(os.path.join(xml_dir, _ACTION_TEMPO_SIMPLE))
+    p.from_xml(str(xml_dir / _ACTION_TEMPO_SIMPLE))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 

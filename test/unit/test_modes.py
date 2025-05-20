@@ -18,7 +18,7 @@
 import sys
 sys.path.append(".")
 
-import os
+import pathlib
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -108,9 +108,9 @@ class TestModeHierarchy:
         assert mh.find_mode("Default").parent.value == "Second"
         assert mh.find_mode("Default").parent == mh.find_mode("Second")
 
-    def test_complex_modifications(self, xml_dir: str):
+    def test_complex_modifications(self, xml_dir: pathlib.Path):
         p = Profile()
-        p.from_xml(os.path.join(xml_dir, _PROFILE_REALISTIC))
+        p.from_xml(str(xml_dir / _PROFILE_REALISTIC))
         mh = p.modes
 
         assert set(mh.mode_names()) == set(["Default", "Second", "Child"])

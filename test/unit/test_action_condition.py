@@ -20,7 +20,7 @@ import sys
 from gremlin import event_handler
 sys.path.append(".")
 
-import os.path
+import pathlib
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -39,9 +39,9 @@ import action_plugins.condition as condition
 _PROFILE_SIMPLE = "action_condition_simple.xml"
 
 
-def test_from_xml(xml_dir: str):
+def test_from_xml(xml_dir: pathlib.Path):
     p = Profile()
-    p.from_xml(os.path.join(xml_dir, _PROFILE_SIMPLE))
+    p.from_xml(str(xml_dir / _PROFILE_SIMPLE))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
@@ -59,9 +59,9 @@ def test_from_xml(xml_dir: str):
     assert cond.is_valid()
 
 
-def test_from_xml_complex(xml_dir: str):
+def test_from_xml_complex(xml_dir: pathlib.Path):
     p = Profile()
-    p.from_xml(os.path.join(xml_dir, "action_condition_complex.xml"))
+    p.from_xml(str(xml_dir / "action_condition_complex.xml"))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 
@@ -149,9 +149,9 @@ def test_to_xml():
         ).text == "True"
 
 
-def test_action_methods(xml_dir: str):
+def test_action_methods(xml_dir: pathlib.Path):
     p = Profile()
-    p.from_xml(os.path.join(xml_dir, _PROFILE_SIMPLE))
+    p.from_xml(str(xml_dir / _PROFILE_SIMPLE))
 
     a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
 

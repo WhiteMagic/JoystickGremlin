@@ -21,7 +21,7 @@ sys.path.append(".")
 
 from collections.abc import Iterator
 import logging
-import os.path
+import pathlib
 import tempfile
 
 from PySide6 import QtWidgets
@@ -109,7 +109,7 @@ def profile_for_testing(
 @pytest.fixture(scope="module")
 def profile_path(profile_name: str) -> str:
     """Returns profile path. Requires test modules to define the profile_name fixture."""
-    return os.path.join(os.path.dirname(__file__), "xml", profile_name)
+    return pathlib.Path(__file__).parent / "xml" / profile_name
 
 
 @pytest.fixture(scope="module")

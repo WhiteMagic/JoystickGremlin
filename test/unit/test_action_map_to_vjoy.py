@@ -18,7 +18,7 @@
 import sys
 sys.path.append(".")
 
-import os.path
+import pathlib
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -35,7 +35,7 @@ _ACTION_MAP_BUTTON = "action_map_to_vjoy_button.xml"
 _ACTION_MAP_AXIS = "action_map_to_vjoy_axis.xml"
 
 
-def test_ctor(joystick_init):
+def test_ctor(joystick_init: None) -> None:
     r = MapToVjoyData(types.InputType.JoystickButton)
 
     assert r.vjoy_device_id == 1
@@ -45,11 +45,11 @@ def test_ctor(joystick_init):
     assert r.axis_scaling == 1.0
 
 
-def test_actions(xml_dir: str):
+def test_actions(xml_dir: pathlib.Path):
     l = Library()
     a = MapToVjoyData(types.InputType.JoystickButton)
     a.from_xml(
-        ElementTree.fromstring(open(os.path.join(xml_dir, _ACTION_MAP_BUTTON)).read()),
+        ElementTree.fromstring((xml_dir / _ACTION_MAP_BUTTON).read_text()),
         l,
     )
 
@@ -61,11 +61,11 @@ def test_actions(xml_dir: str):
         a.remove_action(0, "something")
 
 
-def test_from_xml(xml_dir: str):
+def test_from_xml(xml_dir: pathlib.Path):
     l = Library()
     r = MapToVjoyData(types.InputType.JoystickButton)
     r.from_xml(
-        ElementTree.fromstring(open(os.path.join(xml_dir, _ACTION_MAP_BUTTON)).read()),
+        ElementTree.fromstring((xml_dir / _ACTION_MAP_BUTTON).read_text()),
         l,
     )
     assert r.vjoy_device_id == 1
@@ -76,7 +76,7 @@ def test_from_xml(xml_dir: str):
 
     r = MapToVjoyData(types.InputType.JoystickButton)
     r.from_xml(
-        ElementTree.fromstring(open(os.path.join(xml_dir, _ACTION_MAP_AXIS)).read()), l
+        ElementTree.fromstring((xml_dir / _ACTION_MAP_AXIS).read_text()), l
     )
     assert r.vjoy_device_id == 2
     assert r.vjoy_input_id == 6
