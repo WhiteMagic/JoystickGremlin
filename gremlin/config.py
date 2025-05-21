@@ -65,13 +65,13 @@ class Configuration:
         """
         return len(self._data)
 
-    def _skip_reload(self) -> bool:
+    def _should_skip_reload(self) -> bool:
         """Returns True if the last load() was less than 1 second ago."""
         return self._last_reload is not None and time.time() - self._last_reload < 1
 
     def load(self):
         """Loads the configuration file's content."""
-        if self._skip_reload():
+        if self._should_skip_reload():
             return
 
         # Attempt to load the configuration file if this fails set

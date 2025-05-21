@@ -94,7 +94,7 @@ def test_load_save(cfg: gremlin.config.Configuration):
     assert cfg.expose("test", "case", "4") == False
 
     cfg.save()
-    with mock.patch.object(cfg, cfg._skip_reload.__name__, return_value=False):
+    with mock.patch.object(cfg, cfg._should_skip_reload.__name__, return_value=False):
         cfg.load()
 
     assert cfg.value("test", "case", "1") == 42
