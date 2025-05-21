@@ -7,8 +7,15 @@ import pytest
 
 import dill
 
+# Import creates required user profile directory.
+import joystick_gremlin
 import gremlin.device_initialization
 import gremlin.event_handler
+
+
+@pytest.fixture(scope="package", autouse=True)
+def register_config_options():
+    joystick_gremlin.register_config_options()
 
 
 @pytest.fixture(scope="package", autouse=True)
