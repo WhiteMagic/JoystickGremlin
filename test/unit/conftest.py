@@ -1,7 +1,4 @@
 import sys
-
-import gremlin.device_initialization
-
 sys.path.append(".")
 
 import pathlib
