@@ -133,13 +133,15 @@ class Configuration:
                 "expose": entry["expose"]
             }
 
-        # Write data to file
-        with open(_config_file_path, "w") as hdl:
-            encoder = json.JSONEncoder(
-                sort_keys=True,
-                indent=4
+        try:
+            # Write data to file
+            with open(_config_file_path, "w") as hdl:
+                encoder = json.JSONEncoder(sort_keys=True, indent=4)
+                hdl.write(encoder.encode(json_data))
+        except FileNotFoundError as e:
+            logging.getLogger("system").exception(
+                f"Failed to save configuration file: {e}"
             )
-            hdl.write(encoder.encode(json_data))
 
     def register(
         self,
