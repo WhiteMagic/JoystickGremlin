@@ -941,7 +941,7 @@ class VJoyProxy:
                 device = VJoy(index)
                 VJoyProxy.vjoy_devices[index] = device
                 return device
-            except error.VJoyError as e:
+            except VJoyError as e:
                 logging.getLogger("system").error(
                     f"Failed accessing vJoy id={index}, error is: {e}"
                 )
