@@ -327,6 +327,7 @@ def make_gremlin_app(argv):
     # Run UI
     syslog.info("Gremlin UI launching")
     app.aboutToQuit.connect(shutdown_cleanup)
+    cfg.ensure_watcher_running()
     return app
 
 

@@ -54,8 +54,13 @@ class Configuration:
         self._last_reload = None
         self.load()
 
-        self.watcher = QtCore.QFileSystemWatcher([_config_file_path])
-        self.watcher.fileChanged.connect(self.load)
+        self.watcher = None  # See ensure_watcher_running()
+        
+    def ensure_watcher_running(self):
+        """Only call this after configuring the rest of the Qt app."""
+        if self.watcher is None:
+            self.watcher = QtCore.QFileSystemWatcher([_config_file_path])
+            self.watcher.fileChanged.connect(self.load)
 
     def count(self) -> int:
         """Returns the number of parameters stored.
