@@ -54,14 +54,6 @@ class Configuration:
         self._last_reload = None
         self.load()
 
-        self.watcher = None  # See ensure_watcher_running()
-        
-    def ensure_watcher_running(self):
-        """Only call this after configuring the rest of the Qt app."""
-        if self.watcher is None:
-            self.watcher = QtCore.QFileSystemWatcher([_config_file_path])
-            self.watcher.fileChanged.connect(self.load)
-
     def count(self) -> int:
         """Returns the number of parameters stored.
 
@@ -138,15 +130,13 @@ class Configuration:
                 "expose": entry["expose"]
             }
 
-        try:
-            # Write data to file
-            with open(_config_file_path, "w") as hdl:
-                encoder = json.JSONEncoder(sort_keys=True, indent=4)
-                hdl.write(encoder.encode(json_data))
-        except FileNotFoundError as e:
-            logging.getLogger("system").exception(
-                f"Failed to save configuration file: {e}"
+        # Write data to file
+        with open(_config_file_path, "w") as hdl:
+            encoder = json.JSONEncoder(
+                sort_keys=True,
+                indent=4
             )
+            hdl.write(encoder.encode(json_data))
 
     def register(
         self,

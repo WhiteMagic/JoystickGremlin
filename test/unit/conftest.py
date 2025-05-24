@@ -24,9 +24,11 @@ def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
         Data4=(128, 4, 68, 69, 83, 84, 0, 0),
     )
     axis_map_array = (dill._AxisMap * 8)()
-    for i in range(8):
+    for i, (linear_i, axis_i) in enumerate(
+        [(1, 1), (2, 2), (3, 3), (4, 6), (5, 7), (6, 8), (7, 0), (8, 0)]
+    ):
         axis_map_array[i] = axis_map = dill._AxisMap(
-            linear_index=i + 1, axis_index=i + 1
+            linear_index=linear_i, axis_index=axis_i
         )
     return dill.DeviceSummary(
         dill._DeviceSummary(
@@ -35,9 +37,9 @@ def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
             product_id=0xBEAD if is_virtual else 0xFACE,
             joystick_id=0 if is_virtual else 1,
             name=b"vJoy Device" if is_virtual else b"pJoy Pro",
-            axis_count=8,
-            button_count=128,
-            hat_count=4,
+            axis_count=6,
+            button_count=64,
+            hat_count=2,
             axis_map=axis_map_array,
         )
     )
@@ -78,19 +80,19 @@ def joystick_init():
             vjoy,
             vjoy.axis_count.__name__,
             autospec=True,
-            return_value=8,
+            return_value=6,
         ),
         mock.patch.object(
             vjoy,
             vjoy.button_count.__name__,
             autospec=True,
-            return_value=128,
+            return_value=64,
         ),
         mock.patch.object(
             vjoy,
             vjoy.hat_count.__name__,
             autospec=True,
-            return_value=4,
+            return_value=2,
         ),
         mock.patch.object(
             vjoy,
