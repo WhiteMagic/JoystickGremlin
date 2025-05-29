@@ -40,45 +40,50 @@ class TestSimpleProfile:
     """Tests for a simple profile."""
 
     @pytest.mark.parametrize(
-        "di_input",
+        "di_input, vjoy_input, cached_input, cached_output, di_output",
         [
-            0.7,
-            0.5,
-            0.2,
-            0,
-            1,
-            -0.2,
-            -0.5,
-            -0.7,
-            -1,
+            (22937/32767, 22936, 22934/32767, 22931/32767, 22930),
+            (16384/32767, 16380, 16381/32767, 16377/32767, 16378),
+            (6554/32767, 6549, 6549/32767, 6545/32767, 6545),
+            (0/32767, 0, -2/32767, -6/32767, -6),
+            (32767/32767, 32767, 32764/32767, 32763/32767, 32763),
+            (-6554/32767, -6554, -6574/32767, -6593/32767, -6576),
+            (-16384/32767, -16384, -16431/32767, -16479/32767, -16434),
+            (-22940/32767, -22940, -23005/32767, -23069/32767, -23004),
+            (-32767/32767, -32767, -32767/32767, -32767/32767, -32767),
         ],
     )
     def test_axis(
         self,
+        subtests,
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
         di_input: float,
+        vjoy_input: int,
+        cached_input: float,
+        cached_output: float,
+        di_output: int,
     ):
-        axis_value_int = tester.AXIS_MAX_INT * di_input
         input_axis_id = 1
         output_axis_id = 3
         vjoy_control_device.axis(linear_index=input_axis_id).set_absolute_value(
             di_input
         )
-        # There is a small discrepancy between these values, for unknown reasons
-        # (unclear if this is a Gremlin bug).
+        with subtests.test("input readback"):
+            tester.assert_axis_eventually_equals(
+                vjoy_di_device.device_guid, input_axis_id, vjoy_input
+            )
+        with subtests.test("input axis cache"):
+            tester.assert_cached_axis_eventually_equals(
+                vjoy_di_device.device_guid.uuid, input_axis_id, cached_input
+            )
+        with subtests.test("output axis cache"):
+            tester.assert_cached_axis_eventually_equals(
+                vjoy_di_device.device_guid.uuid, output_axis_id, cached_output
+            )
         tester.assert_axis_eventually_equals(
-            vjoy_di_device.device_guid, input_axis_id, axis_value_int
-        )
-        tester.assert_cached_axis_eventually_equals(
-            vjoy_di_device.device_guid.uuid, input_axis_id, di_input
-        )
-        tester.assert_cached_axis_eventually_equals(
-            vjoy_di_device.device_guid.uuid, output_axis_id, di_input
-        )
-        tester.assert_axis_eventually_equals(
-            vjoy_di_device.device_guid, output_axis_id, axis_value_int
+            vjoy_di_device.device_guid, output_axis_id, di_output
         )
 
     @pytest.mark.parametrize(

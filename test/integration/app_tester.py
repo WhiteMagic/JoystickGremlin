@@ -31,9 +31,10 @@ _InputTypeT = TypeVar("_InputTypeT")
 _ASSERT_EVENTUALLY_MAX_DELAY = 1  # Seconds
 _ASSERT_EVENTUALLY_RETRY_DELAY = 0.01  # Seconds
 
-# These limits should be tighter, but the results failures need to be investigated.
-_INTEGER_AXIS_MAX_DELTA = 68  # Should be 1.
-_FLOAT_AXIS_MAX_DELTA = 0.004  # Should be 1 / 32767
+# vJoy range is 0-32767, but DirectInput default axis range is 0-65535.
+# So we allow a max delta of 2.
+_INTEGER_AXIS_MAX_DELTA = 2
+_FLOAT_AXIS_MAX_DELTA = 1 / 32767
 
 
 class GremlinAppTester:
