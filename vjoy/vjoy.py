@@ -46,6 +46,10 @@ def _error_string(vid: int, iid: int, value: Any) -> str:
     return "vjoy: {} input: {} value: {}".format(vid, iid, value)
 
 
+def _simple_round(value: float) -> int:
+    """Traditional rounding, rather than the built-in banker's rounding."""
+    return int(value + 0.5)
+
 class AxisCode(enum.Enum):
 
     """Enumeration of the valid axis names."""
@@ -273,7 +277,7 @@ class Axis:
         )
 
         if not VJoyInterface.SetAxis(
-                round(self._half_range + self._half_range * self._value),
+                _simple_round(self._half_range + self._half_range * self._value),
                 self.vjoy_id,
                 self.axis_id
         ):
@@ -306,7 +310,7 @@ class Axis:
         self._value = value
 
         if not VJoyInterface.SetAxis(
-                round(self._half_range + self._half_range * self._value),
+                _simple_round(self._half_range + self._half_range * self._value),
                 self.vjoy_id,
                 self.axis_id
         ):
