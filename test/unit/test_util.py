@@ -146,3 +146,23 @@ def test_read_property():
         gremlin.util.read_property(
             doc, "value", gremlin.types.PropertyType.Int
         )
+
+
+@pytest.mark.parametrize(
+    "value, min_val, max_val, expected", [
+        pytest.param(5, 0, 10, 5, id="within_range"),
+        pytest.param(-1, 0, 10, 0, id="below_min"),
+        pytest.param(11, 0, 10, 10, id="above_max"),
+        pytest.param(0, 0, 10, 0, id="equal_to_min"),
+        pytest.param(10, 0, 10, 10, id="equal_to_max"),
+        pytest.param(5, 10, 0, 5, id="min_max_swapped"),
+        pytest.param(3.14, 0.0, 5.0, 3.14, id="float_values_positive"),
+        pytest.param(-3.14, -5.0, 5.0, -3.14, id="float_values_negative"),
+        pytest.param(-10, -5, 5, -5, id="negative_range_below"),
+        pytest.param(10, -5, 5, 5, id="negative_range_above"),
+        pytest.param(-32766, -32768, 32767, -32766, id="negative_range_below")
+    ]
+)
+def test_clamp(value, min_val, max_val, expected):
+    """Test that values are properly clamped to the specified range."""
+    assert gremlin.util.clamp(value, min_val, max_val) == expected

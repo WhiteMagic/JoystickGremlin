@@ -452,7 +452,7 @@ class Configuration:
             data = self.value("calibration", str(uuid).upper(), str(axis_id))
             return [int(v) for v in data[:-1]] + [util.parse_bool(data[-1])]
         else:
-            return [-32678, 0, 0, 32767, True]
+            return [-32768, 0, 0, 32767, True]
 
     def set_calibration(
             self,

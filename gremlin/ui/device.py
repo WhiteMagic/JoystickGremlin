@@ -1282,7 +1282,7 @@ class AxisCalibration(QtCore.QAbstractListModel):
             return
 
         # Reset values to defaults
-        self._state[index]["low"] = -32678
+        self._state[index]["low"] = -32768
         self._state[index]["centerLow"] = 0
         self._state[index]["centerHigh"] = 0
         self._state[index]["high"] = 32767
