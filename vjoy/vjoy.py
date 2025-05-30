@@ -189,7 +189,7 @@ class Axis:
             ctypes.byref(tmp)
         )
         self._max_value = tmp.value
-        self._half_range = int(self._max_value / 2)
+        self._half_range = (self._max_value - self._min_value) / 2
 
         self._deadzone_fn = lambda x: deadzone(x, -1.0, -0.0, 0.0, 1.0)
         self._response_curve_fn = lambda x: x
@@ -273,7 +273,7 @@ class Axis:
         )
 
         if not VJoyInterface.SetAxis(
-                int(self._half_range + self._half_range * self._value),
+                round(self._half_range + self._half_range * self._value),
                 self.vjoy_id,
                 self.axis_id
         ):
@@ -306,7 +306,7 @@ class Axis:
         self._value = value
 
         if not VJoyInterface.SetAxis(
-                int(self._half_range + self._half_range * self._value),
+                round(self._half_range + self._half_range * self._value),
                 self.vjoy_id,
                 self.axis_id
         ):
