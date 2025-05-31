@@ -20,7 +20,7 @@ from typing import Callable, TypeVar
 import uuid
 
 import pytest
-from PySide6 import  QtWidgets
+from PySide6 import QtWidgets
 
 import dill
 import gremlin.input_cache
@@ -31,14 +31,19 @@ _InputTypeT = TypeVar("_InputTypeT")
 _ASSERT_EVENTUALLY_MAX_DELAY = 1  # Seconds
 _ASSERT_EVENTUALLY_RETRY_DELAY = 0.01  # Seconds
 
-# vJoy range is 0-32767, but DirectInput default axis range is 0-65535.
-# So we allow a max delta of 2.
-_INTEGER_AXIS_MAX_DELTA = 2
-_FLOAT_AXIS_MAX_DELTA = 1 / 32767
+# The max delta below for integration testing is determined by the following factors:
+# 1. vJoy range is 0-32767, but DirectInput default axis range is 0-65535.
+# 2. The "calibration" of axis values for Dill reads is done on a different range than
+#    the uncalibration of axis values for vJoy. Specifically, the ratio of points on
+#    either side of zero is different.
+# 3. We loop-back the device, potentially doubling the above errors.
+_INTEGER_AXIS_MAX_DELTA = 4
+_FLOAT_AXIS_MAX_DELTA = 7 / 65536
 
 
 class GremlinAppTester:
     """Helper class for assertions in integration tests."""
+
     AXIS_MAX_INT = 32767
 
     def __init__(self, app: QtWidgets.QApplication):
@@ -80,7 +85,7 @@ class GremlinAppTester:
         try:
             joystick_cache = gremlin.input_cache.Joystick()[device_uuid]
         except gremlin.error.GremlinError as e:
-            raise AssertionError('Could not validate cached axis') from e
+            raise AssertionError("Could not validate cached axis") from e
         self._assert_input_eventually_equals(
             lambda: joystick_cache.axis(axis_id).value,
             pytest.approx(expected, abs=_FLOAT_AXIS_MAX_DELTA),
@@ -99,14 +104,14 @@ class GremlinAppTester:
         try:
             joystick_cache = gremlin.input_cache.Joystick()[device_uuid]
         except gremlin.error.GremlinError as e:
-            raise AssertionError('Could not validate cached button') from e
+            raise AssertionError("Could not validate cached button") from e
         self._assert_input_eventually_equals(
             lambda: joystick_cache.button(button_id).is_pressed,
             expected,
             min_delay,
             max_delay,
         )
-    
+
     def assert_cached_hat_eventually_equals(
         self,
         device_uuid: uuid.UUID,
@@ -118,7 +123,7 @@ class GremlinAppTester:
         try:
             joystick_cache = gremlin.input_cache.Joystick()[device_uuid]
         except gremlin.error.GremlinError as e:
-            raise AssertionError('Could not validate cached hat') from e
+            raise AssertionError("Could not validate cached hat") from e
         self._assert_input_eventually_equals(
             lambda: joystick_cache.hat(hat_id).direction,
             expected,

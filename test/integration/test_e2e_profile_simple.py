@@ -26,6 +26,7 @@ import pytest
 
 import dill
 from gremlin import types
+from gremlin import util
 from test.integration import app_tester
 from vjoy import vjoy
 from vjoy import vjoy_interface
@@ -39,21 +40,20 @@ def profile_name() -> str:
 class TestSimpleProfile:
     """Tests for a simple profile."""
 
-    # @pytest.mark.skip(reason="Temporarily disabled for debugging")
     @pytest.mark.parametrize(
-        "di_input, vjoy_input, cached_input, cached_output, di_output",
+        "di_input",
         [
-            (32767/32767, 32767, 32767/32767, 32767/32767, 32767),
-            (32766/32767, 32766, 32766/32767, 32766/32767, 32766),
-            (32765/32767, 32765, 32765/32767, 32765/32767, 32765),
-            (-2/32768, -2, -2/32768, -2/32768, -2),
-            (-1/32768, -1, -1/32768, -1/32768, -1),
-            (0, 0, 0, 0, 0),
-            (1/32767, 1, 1/32767, 1/32767, 1),
-            (2/32767, 2, 2/32767, 0/32767, 2),  # Debug output cache.
-            (-32765/32768, -32765, -32765/32768, -32765/32768, -32765),
-            (-32766/32768, -32766, -32766/32768, -32766/32768, -32766),
-            (-32768/32768, -32768, -32768/32768, -32768/32768, -32768),
+            32767,
+            32766,
+            32765,
+            -2,
+            -1,
+            0,
+            1,
+            2,
+            -32765,
+            -32766,
+            -32768,
         ],
     )
     def test_axis_sequential(
@@ -62,11 +62,7 @@ class TestSimpleProfile:
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
-        di_input: float,
-        vjoy_input: int,
-        cached_input: float,
-        cached_output: float,
-        di_output: int,
+        di_input: int,
     ):
         """Applies groups of sequential inputs."""
         self._test_axis(
@@ -75,33 +71,29 @@ class TestSimpleProfile:
             vjoy_control_device,
             vjoy_di_device,
             di_input,
-            vjoy_input,
-            cached_input,
-            cached_output,
-            di_output,
         )
-    
+
     @pytest.mark.parametrize(
-        "di_input, vjoy_input, cached_input, cached_output, di_output",
+        "di_input",
         [
-            (32767/32767, 32767, 32767/32767, 32767/32767, 32767),
-            (-2/32768, -2, -2/32768, -2/32768, -2),
-            (32766/32767, 32766, 32766/32767, 32766/32767, 32766),
-            (-1/32768, -1, -1/32768, -1/32768, -1),
-            (32765/32767, 32765, 32765/32767, 32765/32767, 32765),
-            (22937/32767, 22937, 22937/32767, 22937/32767, 22937),
-            (16384/32767, 16384, 16384/32767, 16384/32767, 16384),
-            # (6554/32767, 6554, 6554/32767, 6554/32767, 6554),
-            (0, 0, 0, 0, 0),
-            (-32766/32768, -32766, -32766/32768, -32766/32768, -32766),
-            (1/32767, 1, 1/32767, 1/32767, 1),
-            (-32767/32768, -32767, -32767/32768, -32767/32768, -32767),
-            (2/32767, 2, 2/32767, 0/32767, 2),  # Debug output cache.
-            (-6554/32768, -6554, -6554/32768, -6554/32768, -6554),
-            (-16384/32768, -16384, -16384/32768, -16384/32768, -16384),
-            (-22940/32768, -22940, -22940/32768, -22940/32768, -22940),
-            (0, 0, 0, 0, 0),
-            (-32768/32768, -32768, -32768/32768, -32768/32768, -32768),
+            32767,
+            -2,
+            32766,
+            -1,
+            32765,
+            22937,
+            16384,
+            6554,
+            0,
+            -32766,
+            1,
+            -32767,
+            2,
+            -6554,
+            -16384,
+            -22940,
+            0,
+            -32768,
         ],
     )
     def test_axis_large_steps(
@@ -110,11 +102,7 @@ class TestSimpleProfile:
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
-        di_input: float,
-        vjoy_input: int,
-        cached_input: float,
-        cached_output: float,
-        di_output: int,
+        di_input: int,
     ):
         """Applies fixed sequence of inputs with large steps."""
         self._test_axis(
@@ -123,10 +111,6 @@ class TestSimpleProfile:
             vjoy_control_device,
             vjoy_di_device,
             di_input,
-            vjoy_input,
-            cached_input,
-            cached_output,
-            di_output,
         )
 
     def _test_axis(
@@ -135,31 +119,28 @@ class TestSimpleProfile:
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
-        di_input: float,
-        vjoy_input: int,
-        cached_input: float,
-        cached_output: float,
-        di_output: int,
+        di_input: int,
     ):
         input_axis_id = 1
         output_axis_id = 3
+        calibrated_value = util.with_default_center_calibration(di_input)
         vjoy_control_device.axis(linear_index=input_axis_id).set_absolute_value(
-            di_input
+            calibrated_value
         )
         with subtests.test("input readback"):
             tester.assert_axis_eventually_equals(
-                vjoy_di_device.device_guid, input_axis_id, vjoy_input
+                vjoy_di_device.device_guid, input_axis_id, di_input
             )
         with subtests.test("input axis cache"):
             tester.assert_cached_axis_eventually_equals(
-                vjoy_di_device.device_guid.uuid, input_axis_id, cached_input
+                vjoy_di_device.device_guid.uuid, input_axis_id, calibrated_value
             )
         with subtests.test("output axis cache"):
             tester.assert_cached_axis_eventually_equals(
-                vjoy_di_device.device_guid.uuid, output_axis_id, cached_output
+                vjoy_di_device.device_guid.uuid, output_axis_id, calibrated_value
             )
         tester.assert_axis_eventually_equals(
-            vjoy_di_device.device_guid, output_axis_id, di_output
+            vjoy_di_device.device_guid, output_axis_id, di_input
         )
 
     @pytest.mark.parametrize(

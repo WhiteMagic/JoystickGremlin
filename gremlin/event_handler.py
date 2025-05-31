@@ -407,7 +407,7 @@ class EventListener(QtCore.QObject):
             logging.getLogger("system").warning(
                 f"No calibration data for {key[0]} - Axis {key[1]}"
             )
-            return util.with_center_calibration(event.value, -32768, 0, 0, 32767)
+            return util.with_default_center_calibration(event.value)
 
     def _init_joysticks(self):
         """Initializes joystick devices.

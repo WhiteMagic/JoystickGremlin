@@ -765,6 +765,11 @@ def with_center_calibration(
         return (value - centerHigh) / float(high - centerHigh)
 
 
+def with_default_center_calibration(value: int) -> float:
+    """Returns with_center_calibration with DirectInput default values."""
+    return with_center_calibration(value, -32768, 0, 0, 32767)
+
+
 def no_center_calibration(value: int, minimum: int, maximum: int) -> float:
     """Returns the calibrated value for a slider type axis.
 
