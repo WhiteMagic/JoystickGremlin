@@ -1,0 +1,382 @@
+# -*- coding: utf-8; -*-
+
+# Copyright (C) 2025 Linux Port Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Linux Keyboard and Mouse Input/Output
+
+Native Linux implementation for keyboard and mouse input detection and output
+using pynput and evdev.
+"""
+
+from __future__ import annotations
+
+import logging
+import threading
+import time
+import uuid
+from typing import Callable, Optional
+
+import pynput.keyboard
+import pynput.mouse
+
+from .types import (
+    InputEvent,
+    InputType,
+    UUID_KEYBOARD,
+    UUID_MOUSE
+)
+
+
+class LinuxKeyboardMouseManager:
+    """
+    Manages keyboard and mouse input/output on Linux.
+    """
+    
+    def __init__(self):
+        """Initialize the keyboard/mouse manager."""
+        self._running = False
+        
+        # Input listeners
+        self._keyboard_listener: Optional[pynput.keyboard.Listener] = None
+        self._mouse_listener: Optional[pynput.mouse.Listener] = None
+        
+        # Output controllers
+        self._keyboard_controller = pynput.keyboard.Controller()
+        self._mouse_controller = pynput.mouse.Controller()
+        
+        # Event callback
+        self._input_event_callback: Optional[Callable[[InputEvent], None]] = None
+        
+        self._logger = logging.getLogger(__name__)
+        self._logger.info("LinuxKeyboardMouseManager initialized")
+    
+    def start(self) -> None:
+        """Start keyboard and mouse monitoring."""
+        if self._running:
+            return
+        
+        self._running = True
+        
+        # Start keyboard listener
+        self._keyboard_listener = pynput.keyboard.Listener(
+            on_press=self._on_key_press,
+            on_release=self._on_key_release
+        )
+        self._keyboard_listener.start()
+        
+        # Start mouse listener
+        self._mouse_listener = pynput.mouse.Listener(
+            on_click=self._on_mouse_click,
+            on_scroll=self._on_mouse_scroll,
+            on_move=self._on_mouse_move
+        )
+        self._mouse_listener.start()
+        
+        self._logger.info("Keyboard and mouse monitoring started")
+    
+    def stop(self) -> None:
+        """Stop keyboard and mouse monitoring."""
+        if not self._running:
+            return
+        
+        self._running = False
+        
+        if self._keyboard_listener:
+            self._keyboard_listener.stop()
+            self._keyboard_listener = None
+        
+        if self._mouse_listener:
+            self._mouse_listener.stop()
+            self._mouse_listener = None
+        
+        self._logger.info("Keyboard and mouse monitoring stopped")
+    
+    def register_input_callback(self, callback: Callable[[InputEvent], None]) -> None:
+        """Register a callback to be called when input events occur.
+        
+        Args:
+            callback: Function to call with InputEvent when events occur
+        """
+        self._input_event_callback = callback
+        self._logger.debug("Input event callback registered")
+    
+    def unregister_input_callback(self, callback: Callable[[InputEvent], None]) -> None:
+        """Unregister a previously registered input callback.
+        
+        Args:
+            callback: Function to remove from callback list
+        """
+        if self._input_event_callback == callback:
+            self._input_event_callback = None
+            self._logger.debug("Input event callback unregistered")
+    
+    def _on_key_press(self, key) -> None:
+        """Handle key press events."""
+        if self._input_event_callback:
+            try:
+                # Convert pynput key to our format
+                key_id = self._convert_key_to_id(key)
+                if key_id is not None:                    event = InputEvent(
+                        device_guid=UUID_KEYBOARD,
+                        input_type=InputType.Key,
+                        code=key_id,
+                        value=True,
+                        is_pressed=True
+                    )
+                    self._input_event_callback(event)
+            except Exception as e:
+                self._logger.error(f"Error handling key press: {e}")
+    
+    def _on_key_release(self, key) -> None:
+        """Handle key release events."""
+        if self._input_event_callback:
+            try:
+                # Convert pynput key to our format
+                key_id = self._convert_key_to_id(key)
+                if key_id is not None:
+                    event = InputEvent(
+                        device_guid=UUID_KEYBOARD,
+                        input_type=InputType.Keyboard,
+                        input_id=key_id,
+                        value=False,
+                        is_pressed=False
+                    )
+                    self._input_event_callback(event)
+            except Exception as e:
+                self._logger.error(f"Error handling key release: {e}")
+    
+    def _on_mouse_click(self, x, y, button, pressed) -> None:
+        """Handle mouse click events."""
+        if self._input_event_callback:
+            try:
+                button_id = self._convert_mouse_button_to_id(button)
+                if button_id is not None:
+                    event = InputEvent(
+                        device_guid=UUID_MOUSE,
+                        input_type=InputType.Mouse,
+                        input_id=button_id,
+                        value=pressed,
+                        is_pressed=pressed
+                    )
+                    self._input_event_callback(event)
+            except Exception as e:
+                self._logger.error(f"Error handling mouse click: {e}")
+    
+    def _on_mouse_scroll(self, x, y, dx, dy) -> None:
+        """Handle mouse scroll events."""
+        if self._input_event_callback:
+            try:
+                # Scroll up
+                if dy > 0:
+                    event = InputEvent(
+                        device_guid=UUID_MOUSE,
+                        input_type=InputType.Mouse,
+                        input_id=4,  # Scroll up
+                        value=True,
+                        is_pressed=True
+                    )
+                    self._input_event_callback(event)
+                
+                # Scroll down
+                elif dy < 0:
+                    event = InputEvent(
+                        device_guid=UUID_MOUSE,
+                        input_type=InputType.Mouse,
+                        input_id=5,  # Scroll down
+                        value=True,
+                        is_pressed=True
+                    )
+                    self._input_event_callback(event)
+            except Exception as e:
+                self._logger.error(f"Error handling mouse scroll: {e}")
+    
+    def _on_mouse_move(self, x, y) -> None:
+        """Handle mouse move events."""
+        # Usually we don't need to track mouse movement for joystick mapping
+        pass
+    
+    def _convert_key_to_id(self, key) -> Optional[int]:
+        """Convert pynput key to our key ID."""
+        try:
+            if hasattr(key, 'vk'):
+                return key.vk
+            elif hasattr(key, 'char') and key.char:
+                return ord(key.char.upper())
+            elif hasattr(key, 'name'):
+                # Handle special keys
+                special_keys = {
+                    'space': 32,
+                    'enter': 13,
+                    'tab': 9,
+                    'esc': 27,
+                    'shift': 16,
+                    'ctrl': 17,
+                    'alt': 18,
+                    'shift_l': 160,
+                    'shift_r': 161,
+                    'ctrl_l': 162,
+                    'ctrl_r': 163,
+                    'alt_l': 164,
+                    'alt_r': 165,
+                    'up': 38,
+                    'down': 40,
+                    'left': 37,
+                    'right': 39,
+                    'f1': 112,
+                    'f2': 113,
+                    'f3': 114,
+                    'f4': 115,
+                    'f5': 116,
+                    'f6': 117,
+                    'f7': 118,
+                    'f8': 119,
+                    'f9': 120,
+                    'f10': 121,
+                    'f11': 122,
+                    'f12': 123,
+                }
+                return special_keys.get(key.name.lower())
+        except Exception as e:
+            self._logger.warning(f"Could not convert key {key}: {e}")
+        
+        return None
+    
+    def _convert_mouse_button_to_id(self, button) -> Optional[int]:
+        """Convert pynput mouse button to our button ID."""
+        button_mapping = {
+            pynput.mouse.Button.left: 1,
+            pynput.mouse.Button.right: 2,
+            pynput.mouse.Button.middle: 3,
+        }
+        return button_mapping.get(button)
+    
+    # Output methods
+    def press_key(self, key_id: int) -> None:
+        """Press a key."""
+        try:
+            key = self._id_to_key(key_id)
+            if key:
+                self._keyboard_controller.press(key)
+        except Exception as e:
+            self._logger.error(f"Error pressing key {key_id}: {e}")
+    
+    def release_key(self, key_id: int) -> None:
+        """Release a key."""
+        try:
+            key = self._id_to_key(key_id)
+            if key:
+                self._keyboard_controller.release(key)
+        except Exception as e:
+            self._logger.error(f"Error releasing key {key_id}: {e}")
+    
+    def type_text(self, text: str) -> None:
+        """Type text."""
+        try:
+            self._keyboard_controller.type(text)
+        except Exception as e:
+            self._logger.error(f"Error typing text: {e}")
+    
+    def click_mouse_button(self, button_id: int, pressed: bool) -> None:
+        """Click or release mouse button."""
+        try:
+            button = self._id_to_mouse_button(button_id)
+            if button:
+                if pressed:
+                    self._mouse_controller.press(button)
+                else:
+                    self._mouse_controller.release(button)
+        except Exception as e:
+            self._logger.error(f"Error with mouse button {button_id}: {e}")
+    
+    def move_mouse_relative(self, dx: int, dy: int) -> None:
+        """Move mouse relatively."""
+        try:
+            self._mouse_controller.move(dx, dy)
+        except Exception as e:
+            self._logger.error(f"Error moving mouse: {e}")
+    
+    def scroll_mouse(self, dx: int, dy: int) -> None:
+        """Scroll mouse."""
+        try:
+            self._mouse_controller.scroll(dx, dy)
+        except Exception as e:
+            self._logger.error(f"Error scrolling mouse: {e}")
+    
+    def _id_to_key(self, key_id: int):
+        """Convert key ID to pynput key."""
+        # Handle special keys
+        special_keys = {
+            32: pynput.keyboard.Key.space,
+            13: pynput.keyboard.Key.enter,
+            9: pynput.keyboard.Key.tab,
+            27: pynput.keyboard.Key.esc,
+            16: pynput.keyboard.Key.shift,
+            17: pynput.keyboard.Key.ctrl,
+            18: pynput.keyboard.Key.alt,
+            160: pynput.keyboard.Key.shift_l,
+            161: pynput.keyboard.Key.shift_r,
+            162: pynput.keyboard.Key.ctrl_l,
+            163: pynput.keyboard.Key.ctrl_r,
+            164: pynput.keyboard.Key.alt_l,
+            165: pynput.keyboard.Key.alt_r,
+            38: pynput.keyboard.Key.up,
+            40: pynput.keyboard.Key.down,
+            37: pynput.keyboard.Key.left,
+            39: pynput.keyboard.Key.right,
+            112: pynput.keyboard.Key.f1,
+            113: pynput.keyboard.Key.f2,
+            114: pynput.keyboard.Key.f3,
+            115: pynput.keyboard.Key.f4,
+            116: pynput.keyboard.Key.f5,
+            117: pynput.keyboard.Key.f6,
+            118: pynput.keyboard.Key.f7,
+            119: pynput.keyboard.Key.f8,
+            120: pynput.keyboard.Key.f9,
+            121: pynput.keyboard.Key.f10,
+            122: pynput.keyboard.Key.f11,
+            123: pynput.keyboard.Key.f12,
+        }
+        
+        if key_id in special_keys:
+            return special_keys[key_id]
+        
+        # Handle regular characters
+        if 32 <= key_id <= 126:
+            return chr(key_id).lower()
+        
+        return None
+    
+    def _id_to_mouse_button(self, button_id: int):
+        """Convert button ID to pynput mouse button."""
+        button_mapping = {
+            1: pynput.mouse.Button.left,
+            2: pynput.mouse.Button.right,
+            3: pynput.mouse.Button.middle,
+        }
+        return button_mapping.get(button_id)
+
+
+# Global instance
+_keyboard_mouse_manager = None
+
+
+def get_keyboard_mouse_manager() -> LinuxKeyboardMouseManager:
+    """Get the global keyboard/mouse manager instance."""
+    global _keyboard_mouse_manager
+    if _keyboard_mouse_manager is None:
+        _keyboard_mouse_manager = LinuxKeyboardMouseManager()
+    return _keyboard_mouse_manager

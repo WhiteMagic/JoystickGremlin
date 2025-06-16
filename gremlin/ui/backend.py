@@ -25,7 +25,7 @@ import uuid
 from PySide6 import QtCore, QtQml, QtGui
 from PySide6.QtCore import Property, Signal, Slot
 
-import dill
+import linput
 
 from gremlin import code_runner, common, config, device_initialization, error, \
     event_handler, mode_manager, profile, shared_state, types
@@ -59,7 +59,7 @@ class UIState(QtCore.QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self._current_device = dill.UUID_Invalid
+        self._current_device = linput.UUID_Invalid
         self._current_input = {}
         self._current_mode = "Default"
         self._current_tab = "physical"
@@ -85,7 +85,7 @@ class UIState(QtCore.QObject):
             if len(devices) > 0:
                 self.setCurrentDevice(str(devices[0].device_guid))
             else:
-                self.setCurrentDevice(str(dill.UUID_Invalid))
+                self.setCurrentDevice(str(linput.UUID_Invalid))
                 self.setCurrentTab("intermediate")
 
 

@@ -1,5 +1,14 @@
 PySide6
 reportlab
-PyInstaller
-pywin32
 pytest
+
+# Linux input handling
+evdev>=1.6.0
+pyudev>=0.24.0
+
+# Linux input/output
+pynput>=1.7.6
+psutil>=5.9.0
+
+# Linux virtual input devices (uinput)
+python-uinput>=0.11.2

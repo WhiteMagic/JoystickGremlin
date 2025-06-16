@@ -35,8 +35,7 @@ from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
 
 import resources
 
-import dill
-import vjoy.vjoy
+import linput
 from gremlin.config import Configuration
 from gremlin.types import PropertyType
 
@@ -114,8 +113,8 @@ def shutdown_cleanup() -> None:
     backend = gremlin.ui.backend.Backend()
     backend.runner.stop()
 
-    # Relinquish control over all VJoy devices used
-    vjoy.vjoy.VJoyProxy.reset()
+    # Clean up Linux input/output devices
+    linput.shutdown()
 
 
 def register_config_options() -> None:
@@ -205,11 +204,9 @@ def make_gremlin_app(argv):
     # Use software rendering to prevent flickering on variable refresh rate
     # displays
     # QtQuick.QQuickWindow.setSceneGraphBackend("software")
-    QtQuick.QQuickWindow.setGraphicsApi(QtQuick.QSGRendererInterface.OpenGL)
-
-    # Create user interface
+    QtQuick.QQuickWindow.setGraphicsApi(QtQuick.QSGRendererInterface.OpenGL)    # Create user interface
     app_id = u"joystick.gremlin"
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+    # Linux does not need SetCurrentProcessExplicitAppUserModelID
     app = QtWidgets.QApplication(argv)
     app.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
     app.setApplicationDisplayName("Joystick Gremlin")
@@ -217,13 +214,11 @@ def make_gremlin_app(argv):
     # Configure QSettings to keep QT happy
     app.setOrganizationName("H2IK")
     app.setOrganizationDomain("https://whitemagic.github.io/JoystickGremlin/")
-    app.setApplicationName("Joystick Gremlin")
-
-    # Change application wide font
-    app.setFont(QtGui.QFont("Segoe UI", 11))
+    app.setApplicationName("Joystick Gremlin")    # Change application wide font - use system default on Linux
+    # app.setFont(QtGui.QFont("Segoe UI", 11))
 
     # Ensure joystick devices are correctly setup
-    dill.DILL.init()
+    linput.initialize()
     gremlin.device_initialization.joystick_devices_initialization()
 
     # Create application and UI engine
