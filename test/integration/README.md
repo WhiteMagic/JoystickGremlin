@@ -64,3 +64,34 @@ It is recommended to run the integration tests using `-v`, e.g.:
 ```
 JoystickGremlin> pytest -v test/integration
 ```
+
+# Action Plugin Integration Tests
+
+The action plugin integration tests are located in the `action_plugins` subdirectory.
+
+# Objective
+
+To test the interplay of action plugins using `IntermediateOutput` to feed inputs and check
+outputs.
+
+## Ability to run quickly, and on GitHub actions.
+
+By using only `IntermediateOutput` device for inputs and outputs, the tests can be run quickly,
+and on GitHub actions where we do not install vJoy. `DirectInput` is also bypassed.
+
+# How it works
+
+The action plugin integration tests are similar to the end-to-end tests, but with a few key
+differences:
+
+1.  The profile is directly modified via Python APIs, and activated.
+2.  The inputs are written to the `IntermediateOutput` device, and the outputs are verified,
+    also from the `IntermediateOutput` device.
+
+# Code Layout
+
+Similar to the end-to-end tests (and many fixtures are re-used via pytest fixture inheritance),
+but with the following differences/overrides for the fixtures:
+
+1.  `_activate_gremlin` is overridden to not load a profile but directly activate the current one.
+2.  (Only) `assert_io_*` methods are used to verify `IntermediateOutput` device outputs.
