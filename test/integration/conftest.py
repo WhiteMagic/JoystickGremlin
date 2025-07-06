@@ -30,6 +30,7 @@ import pytest
 import dill
 import gremlin.device_initialization
 import gremlin.error
+import gremlin.intermediate_output
 import gremlin.profile
 import gremlin.ui.backend
 import joystick_gremlin
@@ -75,7 +76,7 @@ def vjoy_control_device_id(vjoy_ids_or_skip: list[int]) -> vjoy.VJoy:
 def profile_for_testing(
     vjoy_control_device: vjoy.VJoy,
     vjoy_di_device: dill.DeviceSummary,
-    profile_path: str,
+    profile_path: pathlib.Path,
 ) -> gremlin.profile.Profile:
     """Returns a Gremlin profile for testing the current module.
     
@@ -85,6 +86,7 @@ def profile_for_testing(
 
     (Where "real" means actual vJoy devices on this system.)
     """
+    gremlin.intermediate_output.IntermediateOutput().reset()
     profile = gremlin.profile.Profile()
     profile.from_xml(profile_path)
     # Replace the (only) input device.
@@ -107,7 +109,7 @@ def profile_for_testing(
 
 
 @pytest.fixture(scope="module")
-def profile_path(profile_name: str) -> str:
+def profile_path(profile_name: str) -> pathlib.Path:
     """Returns profile path. Requires test modules to define the profile_name fixture."""
     return pathlib.Path(__file__).parent / "xml" / profile_name
 
@@ -164,7 +166,7 @@ def vjoy_ids_or_skip() -> list[int]:
 
 
 # Do not use directly, see app_tester fixture instead.
-@pytest.fixture(scope="package", autouse=True)
+@pytest.fixture(scope="package")
 def _gremlin_app() -> Iterator[QtWidgets.QApplication]:
     """Yields the Gremlin app."""
     argv = [sys.argv[0]]
