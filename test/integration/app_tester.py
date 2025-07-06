@@ -23,6 +23,7 @@ import pytest
 from PySide6 import QtWidgets
 
 import dill
+from gremlin import event_handler
 import gremlin.input_cache
 import gremlin.types
 
@@ -48,6 +49,9 @@ class GremlinAppTester:
 
     def __init__(self, app: QtWidgets.QApplication):
         self.app = app
+    
+    def send_event(self, event: event_handler.Event):
+        event_handler.EventListener().joystick_event.emit(event)
 
     def _assert_input_eventually_equals(
         self,

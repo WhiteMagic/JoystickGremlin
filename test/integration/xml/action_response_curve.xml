@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" ?>
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>axis</input-type>
+            <mode>Default</mode>
+            <input-id>cc52df17-d864-4808-b7d3-3e595bdc19a1</input-id>
+            <label>Axis cc52df17</label>
+            <action-configuration>
+                <root-action>e9f5f974-3d17-416d-a7a9-ec80aa68c7a7</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+    <library>
+        <action id="e9f5f974-3d17-416d-a7a9-ec80aa68c7a7" type="root">
+            <actions>
+                <action-id>cc0f2296-c1e5-4e02-aad9-525a6bdc5d57</action-id>
+                <action-id>dbc957ce-97b0-4582-8730-24647d483d75</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="cc0f2296-c1e5-4e02-aad9-525a6bdc5d57" type="response-curve">
+            <deadzone>
+                <property type="float">
+                    <name>low</name>
+                    <value>-1.0</value>
+                </property>
+                <property type="float">
+                    <name>center-low</name>
+                    <value>0.0</value>
+                </property>
+                <property type="float">
+                    <name>center-high</name>
+                    <value>0.0</value>
+                </property>
+                <property type="float">
+                    <name>high</name>
+                    <value>1.0</value>
+                </property>
+            </deadzone>
+            <control-points>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>-1.0,-1.0</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>1.0,1.0</value>
+                </property>
+            </control-points>
+            <property type="string">
+                <name>curve-type</name>
+                <value>PiecewiseLinear</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Response Curve</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="dbc957ce-97b0-4582-8730-24647d483d75" type="map-to-io">
+            <property type="uuid">
+                <name>io-input-guid</name>
+                <value>d18b9b87-1904-4995-bf58-07457edba887</value>
+            </property>
+            <property type="input_type">
+                <name>io-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>absolute</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.0</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to IO</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+    </library>
+    <modes>
+        <mode>Default</mode>
+    </modes>
+    <scripts/>
+</profile>
