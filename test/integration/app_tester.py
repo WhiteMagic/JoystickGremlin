@@ -181,3 +181,17 @@ class GremlinAppTester:
             min_delay,
             max_delay,
         )
+    
+    def assert_io_axis_eventually_equals(
+        self,
+        axis_uuid: uuid.UUID,
+        expected: int,
+        min_delay: float = 0,
+        max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
+    ):
+        self._assert_input_eventually_equals(
+            lambda: gremlin.input_cache.Joystick()[dill.GUID_IntermediateOutput.uuid][axis_uuid].value,
+            pytest.approx(expected, abs=_INTEGER_AXIS_MAX_DELTA),
+            min_delay,
+            max_delay,
+        )

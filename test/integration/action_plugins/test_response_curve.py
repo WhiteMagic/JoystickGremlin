@@ -40,9 +40,12 @@ def profile_name() -> str:
 def input_axis_uuid(loaded_profile: profile.Profile) -> uuid.UUID:
     return loaded_profile.inputs[dill.UUID_IntermediateOutput][0].input_id
 
+
 @pytest.fixture
 def output_axis_uuid(loaded_profile: profile.Profile) -> uuid.UUID:
-    return loaded_profile.library.actions_by_type(map_to_io.MapToIOData)[0].io_input_guid
+    return loaded_profile.library.actions_by_type(map_to_io.MapToIOData)[
+        0
+    ].io_input_guid
 
 
 class TestResponseCurve:
@@ -64,19 +67,17 @@ class TestResponseCurve:
         output_axis_uuid: uuid.UUID,
     ):
         """Applies groups of sequential inputs."""
-        event = event_handler.Event(
-            event_type=types.InputType.JoystickAxis,
-            identifier=input_axis_uuid,
-            device_guid=dill.UUID_IntermediateOutput,
-            mode=mode_manager.ModeManager().current.name,
-            value=axis_input
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_uuid,
+                device_guid=dill.UUID_IntermediateOutput,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
         )
-        tester.send_event(event)
-        joystick_cache = input_cache.Joystick()[dill.GUID_IntermediateOutput.uuid][output_axis_uuid]
-        # Note that, because of the way we created and injected the event, the input cache will
-        # not have a value for the input axis.
-        tester._assert_input_eventually_equals(
-            lambda: joystick_cache.value,
+        tester.assert_io_axis_eventually_equals(
+            output_axis_uuid,
             pytest.approx(axis_input, abs=8),
             0,
             1,
