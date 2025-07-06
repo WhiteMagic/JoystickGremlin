@@ -38,4 +38,4 @@ jobs:
         run: poetry install
 
       - name: Run tests
-        run: poetry run pytest test/unit
+        run: poetry run pytest test/unit test/integration/action_plugins
