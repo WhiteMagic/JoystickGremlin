@@ -22,30 +22,76 @@ import uuid
 
 import pytest
 
+from action_plugins import response_curve
+from action_plugins import root
 from action_plugins import map_to_io
 import dill
+from gremlin.ui import backend
 from gremlin import event_handler
+from gremlin import intermediate_output
+from gremlin import plugin_manager
 from gremlin import profile
+from gremlin import shared_state
 from gremlin import types
 from gremlin import mode_manager
 from test.integration import app_tester
 
+_INPUT_IO_AXIS_LABEL = "InputAxis1"
+_OUTPUT_IO_AXIS_LABEL = "OutputAxis1"
 
-@pytest.fixture(scope="module", autouse=True)
-def profile_name() -> str:
-    return "action_response_curve.xml"
+
+@pytest.fixture(scope="module")
+def profile_setup() -> None:
+    # This is important for locally-run tests where the last used profile could
+    # get loaded, if present in configuration.
+    backend.Backend().profile = pr = profile.Profile()
+    shared_state.current_profile = pr
+
+    # Create intermediate output axis for both input and output.
+    io = intermediate_output.IntermediateOutput()
+    io.reset()
+    io.create(types.InputType.JoystickAxis, label=_INPUT_IO_AXIS_LABEL)
+    io.create(types.InputType.JoystickAxis, label=_OUTPUT_IO_AXIS_LABEL)
+
+    p_manager = plugin_manager.PluginManager()
+    # Create response curve action.
+    response_curve_action = p_manager.create_instance(
+        response_curve.ResponseCurveData.name,
+        types.InputType.JoystickAxis
+    )
+
+    # Create intermediate output mapping action.
+    map_to_io_action = p_manager.create_instance(
+        map_to_io.MapToIOData.name,
+        types.InputType.JoystickAxis
+    )
+    map_to_io_action.io_input_guid = io[_OUTPUT_IO_AXIS_LABEL].guid
+
+    # Add actions to profile.
+    root_action = p_manager.create_instance(root.RootData.name, types.InputType.JoystickAxis)
+    root_action.insert_action(response_curve_action, "children")
+    root_action.insert_action(map_to_io_action, "children")
+    # Add input item and its binding.
+    input_item = profile.InputItem(pr.library)
+    input_item.device_id = dill.UUID_IntermediateOutput
+    input_item.input_id = io[_INPUT_IO_AXIS_LABEL].guid
+    input_item.input_type = types.InputType.JoystickAxis
+    input_item.mode = mode_manager.ModeManager().current.name
+    input_item_binding = profile.InputItemBinding(input_item)
+    input_item_binding.root_action = root_action
+    input_item_binding.behavior = types.InputType.JoystickAxis
+    input_item.action_sequences.append(input_item_binding)
+    pr.inputs.setdefault(dill.UUID_IntermediateOutput, []).append(input_item)
 
 
 @pytest.fixture
-def input_axis_uuid(loaded_profile: profile.Profile) -> uuid.UUID:
-    return loaded_profile.inputs[dill.UUID_IntermediateOutput][0].input_id
+def input_axis_uuid() -> uuid.UUID:
+    return intermediate_output.IntermediateOutput()[_INPUT_IO_AXIS_LABEL].guid
 
 
 @pytest.fixture
-def output_axis_uuid(loaded_profile: profile.Profile) -> uuid.UUID:
-    return loaded_profile.library.actions_by_type(map_to_io.MapToIOData)[
-        0
-    ].io_input_guid
+def output_axis_uuid() -> uuid.UUID:
+    return intermediate_output.IntermediateOutput()[_OUTPUT_IO_AXIS_LABEL].guid
 
 
 class TestResponseCurve:

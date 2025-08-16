@@ -16,20 +16,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections.abc import Iterator
-import pathlib
 
 import pytest
 
-from gremlin import profile
 from gremlin.ui import backend
 
 
-@pytest.fixture(scope="module")
-def edited_profile_path(profile_path: pathlib.Path) -> Iterator[str]:
-    """For action plugins tests we don't need to edit the profile."""
-    yield str(profile_path)
-
-
-@pytest.fixture(scope="module")
-def loaded_profile() -> profile.Profile:
-    return backend.Backend().profile
+# Do not use directly, see app_tester fixture instead.
+@pytest.fixture(scope="module", autouse=True)
+def _activate_gremlin(profile_setup: None) -> Iterator[None]:
+    """Activates Gremlin using the profile created by profile_setup.
+    
+    profile_setup is a fixture that should be created by individual tests, creating
+    the necessary IntermediateOutput objects, actions, and InputItemBindings.
+    """
+    backend_ = backend.Backend()
+    backend_.activate_gremlin(True)
+    backend_.minimize()
+    yield
+    backend_.activate_gremlin(False)
