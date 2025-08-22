@@ -109,8 +109,7 @@ def test_load_save(cfg: gremlin.config.Configuration):
     assert cfg.description("test", "case", "3") == ""
     assert cfg.expose("test", "case", "3") == False
 
-    # Types for list elements is not preserved after reload.
-    assert cfg.value("test", "case", "4") == ["1", "2", "3", "4", "5"]
+    assert cfg.value("test", "case", "4") == [1, 2, 3, 4, 5]
     assert cfg.description("test", "case", "4") == ""
     assert cfg.expose("test", "case", "4") == False
 
