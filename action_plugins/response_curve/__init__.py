@@ -225,22 +225,13 @@ class ResponseCurveModel(ActionModel):
 
     @Slot(float, float)
     def addControlPoint(self, x: float, y: float) -> None:
-        self._data.curve.add_control_point(
-            clamp(x, -1.0, 1.0),
-            clamp(y, -1.0, 1.0)
-        )
+        self._data.curve.add_control_point(x, y)
         self.controlPointChanged.emit()
         self.curveChanged.emit()
 
     @Slot(float, float, int)
     def setControlPoint(self, x: float, y: float, idx: int) -> None:
-        points = self._data.curve.control_points()
-        points[idx].x = x
-        points[idx].y = y
-        if self._data.curve.is_symmetric:
-            points[len(points)-idx-1].x = -x
-            points[len(points)-idx-1].y = -y
-        self._data.curve.fit()
+        self._data.curve.set_control_point(x, y, idx)
         self.curveChanged.emit()
 
     @Slot(float, float, int, str)

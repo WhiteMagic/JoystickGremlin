@@ -19,11 +19,9 @@
 from __future__ import annotations
 
 import abc
-import collections
-import math
 from typing import List, Tuple, Optional
 
-from gremlin import error, util
+from gremlin import util
 from gremlin.types import Point2D
 
 
@@ -71,10 +69,28 @@ class AbstractCurve(abc.ABC):
         the symmetric mode.
 
         Args:
-            x: x-coordinate of the control point
-            y: y-coordinate of the control point
+            x: x-coordinate of the control point (will be clamped).
+            y: y-coordinate of the control point (will be clamped).
         """
         pass
+
+    def set_control_point(self, x: float, y: float, idx: int) -> None:
+        """Sets a new position for an existing control point.
+
+        Args:
+            x: x-coordinate of the control point (will be clamped).
+            y: y-coordinate of the control point (will be clamped).
+            idx: index of the control point to set
+        """
+        x = util.clamp_analog_axis(x)
+        y = util.clamp_analog_axis(y)
+        points = self.control_points()
+        points[idx].x = x
+        points[idx].y = y
+        if self.is_symmetric:
+            points[len(points)-idx-1].x = -x
+            points[len(points)-idx-1].y = -y
+        self.fit()
 
     @abc.abstractmethod
     def invert(self) -> None:
@@ -135,6 +151,8 @@ class PiecewiseLinear(AbstractCurve):
         return self.points
 
     def add_control_point(self, x: float, y: float) -> None:
+        x = util.clamp_analog_axis(x)
+        y = util.clamp_analog_axis(y)
         self.points.append(Point2D(x, y))
         if self.is_symmetric:
             self.points.append(Point2D(-x, -y))
@@ -211,6 +229,8 @@ class CubicSpline(AbstractCurve):
         return self.points
 
     def add_control_point(self, x: float, y: float) -> None:
+        x = util.clamp_analog_axis(x)
+        y = util.clamp_analog_axis(y)
         self.points.append(Point2D(x, y))
         self.z.append(0.0)
         self.fit()
@@ -329,6 +349,8 @@ class CubicBezierSpline(AbstractCurve):
         return self._control_points
 
     def add_control_point(self, x: float, y: float) -> None:
+        x = util.clamp_analog_axis(x)
+        y = util.clamp_analog_axis(y)
         self._control_points.append(CubicBezierSpline.ControlPoint(
             Point2D(x, y),
             Point2D(x-0.05, y),

@@ -918,6 +918,18 @@ def clamp(value: float, min_val: float, max_val: float) -> float:
     return min(max_val, max(min_val, value))
 
 
+def clamp_analog_axis(value: float) -> float:
+    """Returns the value clamped to the Gremlin standard range of [-1, 1].
+
+    Args:
+        value: The value to clamp.
+
+    Returns:
+        The value, clamped to [-1, 1].
+    """
+    return clamp(value, -1.0, 1.0)
+
+
 def hat_tuple_to_direction(value):
     """Converts a hat event direction value to it's textual equivalent.
 
