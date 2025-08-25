@@ -76,7 +76,7 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
                     is_pressed = not is_pressed
                 input.update(is_pressed)
             case InputType.JoystickHat:
-                input_vaue = value.current
+                input_value = value.current
                 input.update(input_value)
 
         # Emit an event with the LogicalDevice guid and the rest of the
