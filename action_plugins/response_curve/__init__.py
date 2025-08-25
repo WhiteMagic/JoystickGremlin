@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import enum
 from typing import Any, List, Optional, TYPE_CHECKING
 from xml.etree import ElementTree
 
@@ -38,6 +39,13 @@ if TYPE_CHECKING:
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
 QML_IMPORT_MAJOR_VERSION = 1
+
+class DeadzoneIndex(enum.Enum):
+    """Index of a specific deadzone marker in the deadzone list in ResponseCurveData."""
+    LOW = 0
+    CENTER_LOW = 1
+    CENTER_HIGH = 2
+    HIGH = 3
 
 
 def deadzone(
@@ -84,10 +92,10 @@ class ResponseCurveFunctor(AbstractFunctor):
     ) -> None:
         dz_value = deadzone(
             value.current,
-            self.data.deadzone[0],
-            self.data.deadzone[1],
-            self.data.deadzone[2],
-            self.data.deadzone[3]
+            self.data.deadzone[DeadzoneIndex.LOW.value],
+            self.data.deadzone[DeadzoneIndex.CENTER_LOW.value],
+            self.data.deadzone[DeadzoneIndex.CENTER_HIGH.value],
+            self.data.deadzone[DeadzoneIndex.HIGH.value]
         )
         value.current = self.data.curve(dz_value)
 
@@ -106,45 +114,45 @@ class Deadzone(QtCore.QObject):
 
         self._data = data
 
-    def _get_value(self, index: int) -> float:
-        return self._data.deadzone[index]
+    def _get_value(self, index: DeadzoneIndex) -> float:
+        return self._data.deadzone[index.value]
 
-    def _set_value(self, index: int, value: float) -> None:
+    def _set_value(self, index: DeadzoneIndex, value: float) -> None:
         lookup = {
-            0: self.lowModified,
-            1: self.centerLowModified,
-            2: self.centerHighModified,
-            3: self.highModified
+            DeadzoneIndex.LOW: self.lowModified,
+            DeadzoneIndex.CENTER_LOW: self.centerLowModified,
+            DeadzoneIndex.CENTER_HIGH: self.centerHighModified,
+            DeadzoneIndex.HIGH: self.highModified
         }
-        if value != self._data.deadzone[index]:
-            self._data.deadzone[index] = value
+        if value != self._data.deadzone[index.value]:
+            self._data.deadzone[index.value] = value
             lookup[index].emit(value)
 
     low = Property(
         float,
-        fget=lambda cls: Deadzone._get_value(cls, 0),
-        fset=lambda cls, value: Deadzone._set_value(cls, 0, value),
+        fget=lambda cls: Deadzone._get_value(cls, DeadzoneIndex.LOW),
+        fset=lambda cls, value: Deadzone._set_value(cls, DeadzoneIndex.LOW, value),
         notify=lowModified
     )
 
     centerLow = Property(
         float,
-        fget=lambda cls: Deadzone._get_value(cls, 1),
-        fset=lambda cls, value: Deadzone._set_value(cls, 1, value),
+        fget=lambda cls: Deadzone._get_value(cls, DeadzoneIndex.CENTER_LOW),
+        fset=lambda cls, value: Deadzone._set_value(cls, DeadzoneIndex.CENTER_LOW, value),
         notify=centerLowModified
     )
 
     centerHigh = Property(
         float,
-        fget=lambda cls: Deadzone._get_value(cls, 2),
-        fset=lambda cls, value: Deadzone._set_value(cls, 2, value),
+        fget=lambda cls: Deadzone._get_value(cls, DeadzoneIndex.CENTER_HIGH),
+        fset=lambda cls, value: Deadzone._set_value(cls, DeadzoneIndex.CENTER_HIGH, value),
         notify=centerHighModified
     )
 
     high = Property(
         float,
-        fget=lambda cls: Deadzone._get_value(cls, 3),
-        fset=lambda cls, value: Deadzone._set_value(cls, 3, value),
+        fget=lambda cls: Deadzone._get_value(cls, DeadzoneIndex.HIGH),
+        fset=lambda cls, value: Deadzone._set_value(cls, DeadzoneIndex.HIGH, value),
         notify=highModified
     )
 
@@ -478,10 +486,10 @@ class ResponseCurveData(AbstractActionData):
         node.append(util.create_node_from_data(
             "deadzone",
             [
-                ("low", self.deadzone[0], PropertyType.Float),
-                ("center-low", self.deadzone[1], PropertyType.Float),
-                ("center-high", self.deadzone[2], PropertyType.Float),
-                ("high", self.deadzone[3], PropertyType.Float),
+                ("low", self.deadzone[DeadzoneIndex.LOW.value], PropertyType.Float),
+                ("center-low", self.deadzone[DeadzoneIndex.CENTER_LOW.value], PropertyType.Float),
+                ("center-high", self.deadzone[DeadzoneIndex.CENTER_HIGH.value], PropertyType.Float),
+                ("high", self.deadzone[DeadzoneIndex.HIGH.value], PropertyType.Float),
             ]
         ))
         points = []
