@@ -32,6 +32,7 @@ from gremlin import logical_device
 from gremlin import plugin_manager
 from gremlin import profile
 from gremlin import shared_state
+from gremlin import spline
 from gremlin import types
 from gremlin import mode_manager
 from test.integration import app_tester
@@ -41,7 +42,24 @@ _OUTPUT_LOGICAL_AXIS_LABEL = "OutputAxis1"
 
 
 @pytest.fixture(scope="module")
-def profile_setup() -> None:
+def response_curve_action() -> response_curve.ResponseCurveData:
+    """Create response curve action instance for testing.
+    
+    Response curves should be modifiable while Gremlin is running, so making
+    this fixture "module" scoped indirectly tests that feature as well.
+
+    Returns:
+        Response curve action instance for this test session.
+    """
+    p_manager = plugin_manager.PluginManager()
+    return p_manager.create_instance(
+        response_curve.ResponseCurveData.name,
+        types.InputType.JoystickAxis
+    )
+
+
+@pytest.fixture(scope="module")
+def profile_setup(response_curve_action: response_curve.ResponseCurveData) -> None:
     # This is important for locally-run tests where the last used profile could
     # get loaded, if present in configuration.
     backend.Backend().profile = pr = profile.Profile()
@@ -54,11 +72,6 @@ def profile_setup() -> None:
     device.create(types.InputType.JoystickAxis, label=_OUTPUT_LOGICAL_AXIS_LABEL)
 
     p_manager = plugin_manager.PluginManager()
-    # Create response curve action.
-    response_curve_action = p_manager.create_instance(
-        response_curve.ResponseCurveData.name,
-        types.InputType.JoystickAxis
-    )
 
     # Create logical device mapping action.
     map_to_logical_action: map_to_logical_device.MapToLogicalDeviceData = (
@@ -105,18 +118,19 @@ class TestResponseCurve:
         "axis_input",
         [
             1,
-            # 0,
-            # -1,
+            0.33,
+            0,
+            -0.22,
+            -1,
         ],
     )
-    def test_axis_sequential(
+    def test_default_curve(
         self,
         tester: app_tester.GremlinAppTester,
         axis_input: int,
         input_axis_id: uuid.UUID,
         output_axis_id: uuid.UUID,
     ):
-        """Applies groups of sequential inputs."""
         tester.send_event(
             event_handler.Event(
                 event_type=types.InputType.JoystickAxis,
@@ -128,7 +142,50 @@ class TestResponseCurve:
         )
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
-            pytest.approx(axis_input, abs=8),
+            pytest.approx(axis_input, abs=0.01),
+            0,
+            1,
+        )
+    
+    @pytest.mark.parametrize(
+        "axis_input, expected_output",
+        [
+            (1, 1),
+            (0.75, 0.55),
+            (0.5, 0.1),
+            (0.25, 0.05),
+            (0, 0),
+            (-0.25, -0.05),
+            (-0.5, -0.1),
+            (-0.75, -0.55),
+            (-1, -1),
+        ],
+    )
+    def test_piecewise_linear_symmetric(
+        self,
+        tester: app_tester.GremlinAppTester,
+        response_curve_action: response_curve.ResponseCurveData,
+        axis_input: int,
+        expected_output: int,
+        input_axis_id: uuid.UUID,
+        output_axis_id: uuid.UUID,
+    ):
+        response_curve_action.curve = curve = spline.PiecewiseLinear()
+        curve.is_symmetric = True
+        curve.add_control_point(-0.5, -0.1)
+        curve.fit()
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_id,
+                device_guid=dill.UUID_LogicalDevice,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
+        )
+        tester.assert_logical_axis_eventually_equals(
+            output_axis_id,
+            pytest.approx(expected_output, abs=0.01),
             0,
             1,
         )
