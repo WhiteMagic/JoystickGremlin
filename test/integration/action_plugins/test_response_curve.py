@@ -310,8 +310,6 @@ class TestResponseCurve:
         response_curve_action.curve = curve = spline.CubicSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
-        # TODO: The following control point should not be needed.
-        curve.add_control_point(0.5, 0.1)
         curve.fit()
         tester.send_event(
             event_handler.Event(
@@ -353,7 +351,6 @@ class TestResponseCurve:
         response_curve_action.curve = curve = spline.CubicSpline()
         curve.is_symmetric = False
         curve.add_control_point(-0.5, -0.1)
-        # TODO: The following control point should not be needed.
         curve.add_control_point(0.0, 0.0)
         curve.add_control_point(0.5, 0.4)
         curve.fit()
@@ -377,9 +374,9 @@ class TestResponseCurve:
             (1, 1.0),
             (0.75, 0.58125),
             (0.5, 0.2),
-            (0.25, 0.1),
+            (0.25, 0.1048),
             (0, 0.0),
-            (-0.25, -0.1),
+            (-0.25, -0.1048),
             (-0.5, -0.2),
             (-0.75, -0.58125),
             (-1, -1.0),
@@ -397,8 +394,6 @@ class TestResponseCurve:
         response_curve_action.curve = curve = spline.CubicBezierSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.2)
-        curve.add_control_point(0.0, 0.0)
-        curve.add_control_point(0.5, 0.2)
         curve.fit()
         tester.send_event(
             event_handler.Event(

@@ -233,6 +233,9 @@ class CubicSpline(AbstractCurve):
         y = util.clamp_analog_axis(y)
         self.points.append(Point2D(x, y))
         self.z.append(0.0)
+        if self._is_symmetric:
+            self.points.append(Point2D(-x, -y))
+            self.z.append(0.0)
         self.fit()
 
     def invert(self) -> None:
@@ -356,6 +359,12 @@ class CubicBezierSpline(AbstractCurve):
             Point2D(x-0.05, y),
             Point2D(x+0.05, y)
         ))
+        if self._is_symmetric:
+            self._control_points.append(CubicBezierSpline.ControlPoint(
+                Point2D(-x, -y),
+                Point2D(-x-0.05, -y),
+                Point2D(-x+0.05, -y)
+            ))
         self.fit()
 
     def invert(self) -> None:
