@@ -142,11 +142,9 @@ class TestResponseCurve:
         )
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
-            pytest.approx(axis_input, abs=0.01),
-            0,
-            1,
+            axis_input,
         )
-    
+
     @pytest.mark.parametrize(
         "axis_input, expected_output",
         [
@@ -185,7 +183,276 @@ class TestResponseCurve:
         )
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
-            pytest.approx(expected_output, abs=0.01),
-            0,
-            1,
+            expected_output,
+        )
+
+    @pytest.mark.parametrize(
+        "axis_input, expected_output",
+        [
+            (1, 1),
+            (0.75, 0.7),
+            (0.5, 0.4),
+            (0.25, 0.2),
+            (0, 0),
+            (-0.25, -0.05),
+            (-0.5, -0.1),
+            (-0.75, -0.55),
+            (-1, -1),
+        ],
+    )
+    def test_piecewise_linear_asymmetric(
+        self,
+        tester: app_tester.GremlinAppTester,
+        response_curve_action: response_curve.ResponseCurveData,
+        axis_input: int,
+        expected_output: int,
+        input_axis_id: uuid.UUID,
+        output_axis_id: uuid.UUID,
+    ):
+        response_curve_action.curve = curve = spline.PiecewiseLinear()
+        curve.is_symmetric = False
+        curve.add_control_point(-0.5, -0.1)
+        curve.add_control_point(0.5, 0.4)
+        curve.add_control_point(0, 0)
+        curve.fit()
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_id,
+                device_guid=dill.UUID_LogicalDevice,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
+        )
+        tester.assert_logical_axis_eventually_equals(
+            output_axis_id,
+            expected_output,
+        )
+
+    @pytest.mark.parametrize(
+        "axis_input, expected_output",
+        [
+            (1, 1.0),
+            (0.71, 1.0),
+            (0.7, 1.0),
+            (0.69, 0.97),
+            (0.5, 0.4),
+            (0.25, 0.05),
+            (0.11, 0.0033),
+            (0.1, 0.0),
+            (0.09, 0.0),
+            (0, 0),
+            (-0.25, 0.0),
+            (-0.29, 0.0),
+            (-0.3, 0.0),
+            (-0.31, -0.004),
+            (-0.5, -0.08),
+            (-0.79, -0.964),
+            (-0.8, -1.0),
+            (-0.81, -1.0),
+            (-1, -1),
+        ],
+    )
+    def test_piecewise_linear_with_deadzones(
+        self,
+        tester: app_tester.GremlinAppTester,
+        response_curve_action: response_curve.ResponseCurveData,
+        monkeypatch,
+        axis_input: int,
+        expected_output: int,
+        input_axis_id: uuid.UUID,
+        output_axis_id: uuid.UUID,
+    ):
+        response_curve_action.curve = curve = spline.PiecewiseLinear()
+        curve.is_symmetric = True
+        curve.add_control_point(-0.5, -0.1)
+        curve.fit()
+        # The action is shared for all tests; only change deadzone for
+        # this function.
+        monkeypatch.setattr(response_curve_action, "deadzone", [-0.8, -0.3, 0.1, 0.7])
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_id,
+                device_guid=dill.UUID_LogicalDevice,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
+        )
+        tester.assert_logical_axis_eventually_equals(
+            output_axis_id,
+            expected_output,
+        )
+
+    @pytest.mark.parametrize(
+        "axis_input, expected_output",
+        [
+            (1, 1),
+            (0.75, 0.475),
+            (0.5, 0.1),
+            (0.25, -0.025),
+            (0, 0),
+            (-0.25, 0.025),
+            (-0.5, -0.1),
+            (-0.75, -0.475),
+            (-1, -1),
+        ],
+    )
+    def test_cubic_spline_symmetric(
+        self,
+        tester: app_tester.GremlinAppTester,
+        response_curve_action: response_curve.ResponseCurveData,
+        axis_input: int,
+        expected_output: int,
+        input_axis_id: uuid.UUID,
+        output_axis_id: uuid.UUID,
+    ):
+        response_curve_action.curve = curve = spline.CubicSpline()
+        curve.is_symmetric = True
+        curve.add_control_point(-0.5, -0.1)
+        # TODO: The following control point should not be needed.
+        curve.add_control_point(0.5, 0.1)
+        curve.fit()
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_id,
+                device_guid=dill.UUID_LogicalDevice,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
+        )
+        tester.assert_logical_axis_eventually_equals(
+            output_axis_id,
+            expected_output,
+        )
+
+    @pytest.mark.parametrize(
+        "axis_input, expected_output",
+        [
+            (1, 1),
+            (0.75, 0.6933),
+            (0.5, 0.4),
+            (0.25, 0.1451),
+            (0, 0),
+            (-0.25, -0.0112),
+            (-0.5, -0.1),
+            (-0.75, -0.463),
+            (-1, -1),
+        ],
+    )
+    def test_cubic_spline_asymmetric(
+        self,
+        tester: app_tester.GremlinAppTester,
+        response_curve_action: response_curve.ResponseCurveData,
+        axis_input: int,
+        expected_output: int,
+        input_axis_id: uuid.UUID,
+        output_axis_id: uuid.UUID,
+    ):
+        response_curve_action.curve = curve = spline.CubicSpline()
+        curve.is_symmetric = False
+        curve.add_control_point(-0.5, -0.1)
+        # TODO: The following control point should not be needed.
+        curve.add_control_point(0.0, 0.0)
+        curve.add_control_point(0.5, 0.4)
+        curve.fit()
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_id,
+                device_guid=dill.UUID_LogicalDevice,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
+        )
+        tester.assert_logical_axis_eventually_equals(
+            output_axis_id,
+            expected_output,
+        )
+
+    @pytest.mark.parametrize(
+        "axis_input, expected_output",
+        [
+            (1, 1.0),
+            (0.75, 0.58125),
+            (0.5, 0.2),
+            (0.25, 0.1),
+            (0, 0.0),
+            (-0.25, -0.1),
+            (-0.5, -0.2),
+            (-0.75, -0.58125),
+            (-1, -1.0),
+        ],
+    )
+    def test_cubic_bezier_spline_symmetric(
+        self,
+        tester: app_tester.GremlinAppTester,
+        response_curve_action: response_curve.ResponseCurveData,
+        axis_input: int,
+        expected_output: int,
+        input_axis_id: uuid.UUID,
+        output_axis_id: uuid.UUID,
+    ):
+        response_curve_action.curve = curve = spline.CubicBezierSpline()
+        curve.is_symmetric = True
+        curve.add_control_point(-0.5, -0.2)
+        curve.add_control_point(0.0, 0.0)
+        curve.add_control_point(0.5, 0.2)
+        curve.fit()
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_id,
+                device_guid=dill.UUID_LogicalDevice,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
+        )
+        tester.assert_logical_axis_eventually_equals(
+            output_axis_id,
+            expected_output,
+        )
+
+    @pytest.mark.parametrize(
+        "axis_input, expected_output",
+        [
+            (1, 1.0),
+            (0.75, 0.68125),
+            (0.5, 0.4),
+            (0.25, 0.2),
+            (0, 0.0),
+            (-0.25, -0.1),
+            (-0.5, -0.2),
+            (-0.75, -0.58125),
+            (-1, -1.0),
+        ],
+    )
+    def test_cubic_bezier_spline_asymmetric(
+        self,
+        tester: app_tester.GremlinAppTester,
+        response_curve_action: response_curve.ResponseCurveData,
+        axis_input: int,
+        expected_output: int,
+        input_axis_id: uuid.UUID,
+        output_axis_id: uuid.UUID,
+    ):
+        response_curve_action.curve = curve = spline.CubicBezierSpline()
+        curve.is_symmetric = False
+        curve.add_control_point(-0.5, -0.2)
+        curve.add_control_point(0.0, 0.0)
+        curve.add_control_point(0.5, 0.4)
+        curve.fit()
+        tester.send_event(
+            event_handler.Event(
+                event_type=types.InputType.JoystickAxis,
+                identifier=input_axis_id,
+                device_guid=dill.UUID_LogicalDevice,
+                mode=mode_manager.ModeManager().current.name,
+                value=axis_input,
+            )
+        )
+        tester.assert_logical_axis_eventually_equals(
+            output_axis_id,
+            expected_output,
         )

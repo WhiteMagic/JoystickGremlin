@@ -197,7 +197,7 @@ class GremlinAppTester:
                     gremlin.types.InputType.JoystickAxis,
                     axis_id
                 )].value,
-            pytest.approx(expected, abs=_INTEGER_AXIS_MAX_DELTA),
+            pytest.approx(expected, abs=_FLOAT_AXIS_MAX_DELTA),
             min_delay,
             max_delay,
         )
