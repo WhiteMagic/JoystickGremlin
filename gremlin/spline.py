@@ -177,8 +177,10 @@ class PiecewiseLinear(AbstractCurve):
             p2.x = -p1.x
             p2.y = -p1.y
 
-        if count % 2 != 0:
+        if count % 2:  # Odd number of points.
             self.points[int(count / 2)] = Point2D(0.0, 0.0)
+        else:
+            self.points.insert(int(count / 2), Point2D(0.0, 0.0))
 
     def _default_points(self) -> CoordinateList:
         return [(-1.0, -1.0), (1.0, 1.0)]
@@ -254,8 +256,11 @@ class CubicSpline(AbstractCurve):
             p2.x = -p1.x
             p2.y = -p1.y
 
-        if count % 2 != 0:
+        if count % 2:  # Odd number of points.
             self.points[int(count / 2)] = Point2D(0.0, 0.0)
+        else:
+            self.points.insert(int(count / 2), Point2D(0.0, 0.0))
+            self.z.insert(int(count / 2), 0.0)
 
     def fit(self) -> None:
         """Computes the second derivatives for the control points."""
@@ -408,8 +413,15 @@ class CubicBezierSpline(AbstractCurve):
             if cp1.handle_right is not None:
                 cp2.handle_left = cp2.center - (cp1.handle_right - cp1.center)
 
-        if count % 2 != 0:
+        if count % 2:  # Odd number of points.
             self._control_points[int(count / 2)].center = Point2D(0.0, 0.0)
+        else:
+            self._control_points.insert(
+                int(count / 2),
+                CubicBezierSpline.ControlPoint(
+                    Point2D(0, 0), Point2D(-0.05, 0), Point2D(+0.05, 0)
+                ),
+            )
 
     def _default_points(self) -> CoordinateList:
         return [(-1.0, -1.0), (-0.95, -0.95), (0.95, 0.95), (1.0, 1.0)]
