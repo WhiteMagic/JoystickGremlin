@@ -88,8 +88,10 @@ class AbstractCurve(abc.ABC):
         points[idx].x = x
         points[idx].y = y
         if self.is_symmetric:
-            points[len(points)-idx-1].x = -x
-            points[len(points)-idx-1].y = -y
+            len_points = len(points)
+            assert len_points % 2, "Symmetric curves must have odd number of points"
+            points[len_points-idx-1].x = -x
+            points[len_points-idx-1].y = -y
         self.fit()
 
     @abc.abstractmethod
