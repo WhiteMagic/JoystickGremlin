@@ -18,26 +18,26 @@
 """
 Integration test for response curve action using logical output devices.
 """
-import uuid
-
 import pytest
 
 from action_plugins import response_curve
 from action_plugins import root
 from action_plugins import map_to_logical_device
 import dill
-from gremlin.ui import backend
 from gremlin import logical_device
 from gremlin import plugin_manager
 from gremlin import profile
-from gremlin import shared_state
 from gremlin import spline
 from gremlin import types
 from gremlin import mode_manager
 from test.integration import app_tester
+from test.integration.action_plugins.conftest import (
+    LogicalActionCallableT,
+    LogicalIdentifierCallableT,
+)
 
-_INPUT_LOGICAL_AXIS_LABEL = "InputAxis1"
-_OUTPUT_LOGICAL_AXIS_LABEL = "OutputAxis1"
+_LOGICAL_INPUT_AXIS_LABEL = "InputAxis1"
+_LOGICAL_OUTPUT_AXIS_LABEL = "OutputAxis1"
 
 
 @pytest.fixture(scope="module")
@@ -58,39 +58,26 @@ def response_curve_action() -> response_curve.ResponseCurveData:
 
 
 @pytest.fixture(scope="module")
-def logical_input_action() -> map_to_logical_device.MapToLogicalDeviceData:
+def profile_setup(
+    profile_for_test: profile.Profile,
+    response_curve_action: response_curve.ResponseCurveData,
+    logical_device_for_test: logical_device.LogicalDevice,
+):
+    """Sets up the profile for testing response curve action via intermediate outputs."""
+    # Create logical device action to map response curve to an output logical axis.
     p_manager = plugin_manager.PluginManager()
-    action = p_manager.create_instance(
-        map_to_logical_device.MapToLogicalDeviceData.name,
-        types.InputType.JoystickAxis
-    )
-    action.logical_input_id = logical_device.LogicalDevice()[_INPUT_LOGICAL_AXIS_LABEL].id
-    return action
-
-
-@pytest.fixture(scope="module")
-def profile_setup(response_curve_action: response_curve.ResponseCurveData) -> None:
-    # This is important for locally-run tests where the last used profile could
-    # get loaded, if present in configuration.
-    backend.Backend().profile = pr = profile.Profile()
-    shared_state.current_profile = pr
-
-    # Create logical device axis for both input and output.
-    device = logical_device.LogicalDevice()
-    device.reset()
-    device.create(types.InputType.JoystickAxis, label=_INPUT_LOGICAL_AXIS_LABEL)
-    device.create(types.InputType.JoystickAxis, label=_OUTPUT_LOGICAL_AXIS_LABEL)
-
-    p_manager = plugin_manager.PluginManager()
-
-    # Create logical device mapping action.
     map_to_logical_action: map_to_logical_device.MapToLogicalDeviceData = (
         p_manager.create_instance(
             map_to_logical_device.MapToLogicalDeviceData.name,
             types.InputType.JoystickAxis,
         )
     )
-    map_to_logical_action.logical_input_id = device[_OUTPUT_LOGICAL_AXIS_LABEL].id
+
+    # Create logical device action to map response curve to an output logical axis.
+    logical_output_axis = logical_device_for_test.create(
+        types.InputType.JoystickAxis, label=_LOGICAL_OUTPUT_AXIS_LABEL
+    )
+    map_to_logical_action.logical_input_id = logical_output_axis.id
 
     # Add actions to profile.
     root_action = p_manager.create_instance(
@@ -98,22 +85,21 @@ def profile_setup(response_curve_action: response_curve.ResponseCurveData) -> No
     )
     root_action.insert_action(response_curve_action, "children")
     root_action.insert_action(map_to_logical_action, "children")
+    # Create the input axis.
+    logical_axis_1 = logical_device_for_test.create(
+        types.InputType.JoystickAxis, label=_LOGICAL_INPUT_AXIS_LABEL
+    )
     # Add input item and its binding.
-    input_item = profile.InputItem(pr.library)
+    input_item = profile.InputItem(profile_for_test.library)
     input_item.device_id = dill.UUID_LogicalDevice
-    input_item.input_id = device[_INPUT_LOGICAL_AXIS_LABEL].id
+    input_item.input_id = logical_axis_1.id
     input_item.input_type = types.InputType.JoystickAxis
     input_item.mode = mode_manager.ModeManager().current.name
     input_item_binding = profile.InputItemBinding(input_item)
     input_item_binding.root_action = root_action
     input_item_binding.behavior = types.InputType.JoystickAxis
     input_item.action_sequences.append(input_item_binding)
-    pr.inputs.setdefault(dill.UUID_LogicalDevice, []).append(input_item)
-
-
-@pytest.fixture
-def output_axis_id() -> uuid.UUID:
-    return logical_device.LogicalDevice()[_OUTPUT_LOGICAL_AXIS_LABEL].id
+    profile_for_test.inputs.setdefault(dill.UUID_LogicalDevice, []).append(input_item)
 
 
 class TestResponseCurve:
@@ -132,13 +118,15 @@ class TestResponseCurve:
     def test_default_curve(
         self,
         tester: app_tester.GremlinAppTester,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             axis_input,
         )
 
@@ -160,18 +148,20 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -193,10 +183,10 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = False
@@ -204,9 +194,11 @@ class TestResponseCurve:
         curve.add_control_point(0.5, 0.4)
         curve.add_control_point(0, 0)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -238,11 +230,11 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         monkeypatch,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = True
@@ -251,9 +243,11 @@ class TestResponseCurve:
         # The action is shared for all tests; only change deadzone for
         # this function.
         monkeypatch.setattr(response_curve_action, "deadzone", [-0.8, -0.3, 0.1, 0.7])
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -275,18 +269,20 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -308,10 +304,10 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicSpline()
         curve.is_symmetric = False
@@ -319,9 +315,11 @@ class TestResponseCurve:
         curve.add_control_point(0.0, 0.0)
         curve.add_control_point(0.5, 0.4)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -343,18 +341,20 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicBezierSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.2)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -376,10 +376,10 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicBezierSpline()
         curve.is_symmetric = False
@@ -387,9 +387,11 @@ class TestResponseCurve:
         curve.add_control_point(0.0, 0.0)
         curve.add_control_point(0.5, 0.4)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -411,10 +413,10 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = True
@@ -422,9 +424,11 @@ class TestResponseCurve:
         curve.fit()
         curve.set_control_point(-0.5, 0.5, 1)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
 
@@ -446,10 +450,10 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         response_curve_action: response_curve.ResponseCurveData,
+        logical_device_for_test: logical_device.LogicalDevice,
+        get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
-        output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = False
@@ -457,8 +461,10 @@ class TestResponseCurve:
         curve.fit()
         curve.set_control_point(-0.5, 0.5, 1)
         curve.fit()
-        tester.inject_logical_input(logical_input_action, axis_input)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
+        )
         tester.assert_logical_axis_eventually_equals(
-            output_axis_id,
+            logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
