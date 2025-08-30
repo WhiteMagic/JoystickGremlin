@@ -21,12 +21,11 @@ sys.path.append(".")
 import pathlib
 import pytest
 import uuid
-from xml.etree import ElementTree
 
 import gremlin.plugin_manager
 from gremlin.config import Configuration
-from gremlin.error import GremlinError
 from gremlin.types import AxisMode, InputType
+from gremlin import shared_state
 
 from gremlin.profile import Profile
 
@@ -109,3 +108,24 @@ def test_mode_hierarchy(xml_dir: pathlib.Path):
 
     assert p.modes.find_mode("Default").parent.value == ""
     assert p.modes.find_mode("Default").parent == p.modes._hierarchy
+
+
+def test_script_manager(test_root_dir: pathlib.Path, subtests):
+    # Mode is retrieved from shared state when loading user plugins.
+    shared_state.current_profile = p = Profile()
+    script_path = test_root_dir / "data" / "testing_script.py"
+    p.scripts.add_script(script_path)
+
+    with subtests.test("script added"):
+        assert len(p.scripts.scripts) == 1
+
+    with subtests.test("script rename"):
+        p.scripts.rename_script(script_path, "Instance 1", "New Name")
+        assert p.scripts.scripts[0].name == "New Name"
+
+    with subtests.test("index of"):
+        assert p.scripts.index_of(script_path, "New Name") == 0
+
+    with subtests.test("script remove"):
+        p.scripts.remove_script(script_path, "New Name")
+        assert not p.scripts.scripts

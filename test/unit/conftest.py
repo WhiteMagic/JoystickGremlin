@@ -1,4 +1,5 @@
 import sys
+import uuid
 sys.path.append(".")
 
 import pathlib
@@ -14,15 +15,19 @@ import gremlin.device_initialization
 import gremlin.event_handler
 
 
-def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
-    """Creates a repeatable, faked DeviceSummary."""
-    # Data below was generated from a vJoy device.
-    guid = dill._GUID(
+def get_fake_device_guid(is_virtual: bool) -> uuid.UUID:
+    return dill._GUID(
         Data1=501018480 + int(is_virtual),
         Data2=264,
         Data3=4592,
         Data4=(128, 4, 68, 69, 83, 84, 0, 0),
     )
+
+
+def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
+    """Creates a repeatable, faked DeviceSummary."""
+    # Data below was generated from a vJoy device.
+    guid =  get_fake_device_guid(is_virtual)
     axis_map_array = (dill._AxisMap * 8)()
     for i, (linear_i, axis_i) in enumerate(
         [(1, 1), (2, 2), (3, 3), (4, 6), (5, 7), (6, 8), (7, 0), (8, 0)]
@@ -112,6 +117,12 @@ def terminate_event_listener(request):
 
 
 @pytest.fixture(scope="package")
-def xml_dir() -> pathlib.Path:
+def unit_test_dir(test_root_dir: pathlib.Path) -> pathlib.Path:
+    """Returns the path for the directory with unit test files."""
+    return test_root_dir / "unit"
+
+
+@pytest.fixture(scope="package")
+def xml_dir(unit_test_dir: pathlib.Path) -> pathlib.Path:
     """Returns the path for the directory with XML files for unit tests."""
-    return pathlib.Path(__file__).parent / "xml"
+    return unit_test_dir / "xml"
