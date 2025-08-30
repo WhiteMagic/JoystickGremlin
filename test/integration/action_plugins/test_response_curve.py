@@ -27,7 +27,6 @@ from action_plugins import root
 from action_plugins import map_to_logical_device
 import dill
 from gremlin.ui import backend
-from gremlin import event_handler
 from gremlin import logical_device
 from gremlin import plugin_manager
 from gremlin import profile
@@ -56,6 +55,17 @@ def response_curve_action() -> response_curve.ResponseCurveData:
         response_curve.ResponseCurveData.name,
         types.InputType.JoystickAxis
     )
+
+
+@pytest.fixture(scope="module")
+def logical_input_action() -> map_to_logical_device.MapToLogicalDeviceData:
+    p_manager = plugin_manager.PluginManager()
+    action = p_manager.create_instance(
+        map_to_logical_device.MapToLogicalDeviceData.name,
+        types.InputType.JoystickAxis
+    )
+    action.logical_input_id = logical_device.LogicalDevice()[_INPUT_LOGICAL_AXIS_LABEL].id
+    return action
 
 
 @pytest.fixture(scope="module")
@@ -102,11 +112,6 @@ def profile_setup(response_curve_action: response_curve.ResponseCurveData) -> No
 
 
 @pytest.fixture
-def input_axis_id() -> uuid.UUID:
-    return logical_device.LogicalDevice()[_INPUT_LOGICAL_AXIS_LABEL].id
-
-
-@pytest.fixture
 def output_axis_id() -> uuid.UUID:
     return logical_device.LogicalDevice()[_OUTPUT_LOGICAL_AXIS_LABEL].id
 
@@ -128,18 +133,10 @@ class TestResponseCurve:
         self,
         tester: app_tester.GremlinAppTester,
         axis_input: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             axis_input,
@@ -165,22 +162,14 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -206,7 +195,7 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
@@ -215,15 +204,7 @@ class TestResponseCurve:
         curve.add_control_point(0.5, 0.4)
         curve.add_control_point(0, 0)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -260,7 +241,7 @@ class TestResponseCurve:
         monkeypatch,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
@@ -270,15 +251,7 @@ class TestResponseCurve:
         # The action is shared for all tests; only change deadzone for
         # this function.
         monkeypatch.setattr(response_curve_action, "deadzone", [-0.8, -0.3, 0.1, 0.7])
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -304,22 +277,14 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -345,7 +310,7 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicSpline()
@@ -354,15 +319,7 @@ class TestResponseCurve:
         curve.add_control_point(0.0, 0.0)
         curve.add_control_point(0.5, 0.4)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -388,22 +345,14 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicBezierSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.2)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -429,7 +378,7 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.CubicBezierSpline()
@@ -438,15 +387,7 @@ class TestResponseCurve:
         curve.add_control_point(0.0, 0.0)
         curve.add_control_point(0.5, 0.4)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -472,7 +413,7 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
@@ -481,15 +422,7 @@ class TestResponseCurve:
         curve.fit()
         curve.set_control_point(-0.5, 0.5, 1)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,
@@ -515,7 +448,7 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         axis_input: int,
         expected_output: int,
-        input_axis_id: uuid.UUID,
+        logical_input_action: map_to_logical_device.MapToLogicalDeviceData,
         output_axis_id: uuid.UUID,
     ):
         response_curve_action.curve = curve = spline.PiecewiseLinear()
@@ -524,15 +457,7 @@ class TestResponseCurve:
         curve.fit()
         curve.set_control_point(-0.5, 0.5, 1)
         curve.fit()
-        tester.send_event(
-            event_handler.Event(
-                event_type=types.InputType.JoystickAxis,
-                identifier=input_axis_id,
-                device_guid=dill.UUID_LogicalDevice,
-                mode=mode_manager.ModeManager().current.name,
-                value=axis_input,
-            )
-        )
+        tester.inject_logical_input(logical_input_action, axis_input)
         tester.assert_logical_axis_eventually_equals(
             output_axis_id,
             expected_output,

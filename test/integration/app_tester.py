@@ -16,15 +16,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 import uuid
 
 import pytest
 from PySide6 import QtWidgets
 
 import dill
+from action_plugins import map_to_logical_device
+from gremlin import base_classes
 from gremlin import event_handler
 from gremlin import logical_device
+from gremlin import mode_manager
 import gremlin.input_cache
 import gremlin.types
 
@@ -51,8 +54,19 @@ class GremlinAppTester:
     def __init__(self, app: QtWidgets.QApplication):
         self.app = app
 
-    def send_event(self, event: event_handler.Event):
-        event_handler.EventListener().joystick_event.emit(event)
+    def inject_logical_input(
+        self, logical_action: map_to_logical_device.MapToLogicalDeviceData, value: Any
+    ):
+        functor = map_to_logical_device.MapToLogicalDeviceFunctor(logical_action)
+        # Not used today, but let's create a valid one anyway.
+        event = event_handler.Event(
+            event_type=logical_action.logical_input_type,
+            identifier=logical_action.logical_input_id,
+            device_guid=dill.UUID_LogicalDevice,
+            mode=mode_manager.ModeManager().current.name,
+            value=value,
+        )
+        functor(event, base_classes.Value(value))
 
     def _assert_input_eventually_equals(
         self,
