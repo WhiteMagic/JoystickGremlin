@@ -21,12 +21,8 @@ import pytest
 
 from action_plugins import map_to_logical_device
 import dill
-from gremlin import logical_device
-from gremlin import plugin_manager
-from gremlin import profile
-from gremlin import shared_state
-from gremlin.ui import backend
-from gremlin.ui import device
+from gremlin import logical_device, plugin_manager, profile, shared_state
+from gremlin.ui import backend, device
 
 LogicalActionCallableT = Callable[
     [logical_device.LogicalDevice.Input.Identifier | str],
@@ -41,9 +37,9 @@ LogicalIdentifierCallableT = Callable[
 def profile_for_test() -> profile.Profile:
     # This is important for locally-run tests where the last used profile could
     # get loaded, if present in configuration.
-    backend.Backend().profile = pr = profile.Profile()
-    shared_state.current_profile = pr
-    return pr
+    backend_ = backend.Backend()
+    backend_.newProfile()
+    return backend_.profile
 
 
 @pytest.fixture(scope="module")

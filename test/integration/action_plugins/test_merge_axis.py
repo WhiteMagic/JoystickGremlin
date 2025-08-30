@@ -20,15 +20,9 @@ Integration test for response curve action using logical output devices.
 """
 import pytest
 
-from action_plugins import merge_axis
-from action_plugins import root
-from action_plugins import map_to_logical_device
+from action_plugins import merge_axis, root, map_to_logical_device
 import dill
-from gremlin import logical_device
-from gremlin import plugin_manager
-from gremlin import profile
-from gremlin import types
-from gremlin import mode_manager
+from gremlin import logical_device, mode_manager, plugin_manager, profile, types
 from test.integration import app_tester
 from test.integration.action_plugins.conftest import LogicalActionCallableT, LogicalIdentifierCallableT
 
