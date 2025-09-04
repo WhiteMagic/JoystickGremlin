@@ -15,7 +15,7 @@ import gremlin.device_initialization
 import gremlin.event_handler
 
 
-def get_fake_device_guid(is_virtual: bool) -> uuid.UUID:
+def get_fake_device_guid(is_virtual: bool) -> dill._GUID:
     return dill._GUID(
         Data1=501018480 + int(is_virtual),
         Data2=264,
@@ -32,7 +32,7 @@ def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
     for i, (linear_i, axis_i) in enumerate(
         [(1, 1), (2, 2), (3, 3), (4, 6), (5, 7), (6, 8), (7, 0), (8, 0)]
     ):
-        axis_map_array[i] = axis_map = dill._AxisMap(
+        axis_map_array[i] = dill._AxisMap(
             linear_index=linear_i, axis_index=axis_i
         )
     return dill.DeviceSummary(
