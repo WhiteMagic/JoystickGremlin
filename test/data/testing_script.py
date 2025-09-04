@@ -63,16 +63,44 @@ selection_var = user_script.SelectionVariable(
     default_index=1,
 )
 
-virtual_input_var = user_script.VirtualInputVariable(
-    "A virtual input variable",
-    "Example virtual input variable",
+virtual_input_axis_var = user_script.VirtualInputVariable(
+    "A virtual axis input variable",
+    "Example virtual input variable for an axis",
     is_optional=True,
     valid_types=[types.InputType.JoystickAxis],
 )
 
-physical_input_var = user_script.PhysicalInputVariable(
-    "A physical input variable",
-    "Example physical input variable",
+virtual_input_button_var = user_script.VirtualInputVariable(
+    "A virtual button input variable",
+    "Example virtual input variable for a button",
     is_optional=True,
     valid_types=[types.InputType.JoystickButton],
+)
+
+virtual_input_hat_var = user_script.VirtualInputVariable(
+    "A virtual hat input variable",
+    "Example virtual input variable for a hat",
+    is_optional=True,
+    valid_types=[types.InputType.JoystickHat],
+)
+
+physical_input_axis_var = user_script.PhysicalInputVariable(
+    "A physical axis input variable",
+    "Example physical input variable for an axis",
+    is_optional=True,
+    valid_types=[types.InputType.JoystickAxis],
+)
+
+physical_input_button_var = user_script.PhysicalInputVariable(
+    "A physical button input variable",
+    "Example physical input variable for a button",
+    is_optional=True,
+    valid_types=[types.InputType.JoystickButton],
+)
+
+physical_input_hat_var = user_script.PhysicalInputVariable(
+    "A physical hat input variable",
+    "Example physical input variable for a hat",
+    is_optional=True,
+    valid_types=[types.InputType.JoystickHat],
 )
