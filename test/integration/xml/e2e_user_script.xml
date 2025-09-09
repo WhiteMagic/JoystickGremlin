@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" ?>
+<profile version="14">
+    <inputs/>
+    <logical-device/>
+    <library/>
+    <modes>
+        <mode>Default</mode>
+    </modes>
+    <scripts>
+        <script id="412a8176-6f35-4a0c-959a-b6fd02541c78">
+            <property type="string">
+                <name>path</name>
+                <value>C:\Users\Code Monet\Documents\GitHub\JoystickGremlin\user_scripts\example.py</value>
+            </property>
+            <property type="string">
+                <name>name</name>
+                <value>Instance 1</value>
+            </property>
+            <variable type="bool">
+                <property type="string">
+                    <name>name</name>
+                    <value>A bool variable</value>
+                </property>
+                <property type="bool">
+                    <name>value</name>
+                    <value>True</value>
+                </property>
+            </variable>
+            <variable type="float">
+                <property type="string">
+                    <name>name</name>
+                    <value>A float variable</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>0.5</value>
+                </property>
+            </variable>
+            <variable type="int">
+                <property type="string">
+                    <name>name</name>
+                    <value>An integer variable</value>
+                </property>
+                <property type="int">
+                    <name>value</name>
+                    <value>2</value>
+                </property>
+            </variable>
+            <variable type="mode">
+                <property type="string">
+                    <name>name</name>
+                    <value>A mode variable</value>
+                </property>
+                <property type="string">
+                    <name>value</name>
+                    <value>Default</value>
+                </property>
+            </variable>
+            <variable type="string">
+                <property type="string">
+                    <name>name</name>
+                    <value>A string variable</value>
+                </property>
+                <property type="string">
+                    <name>value</name>
+                    <value>example string var</value>
+                </property>
+            </variable>
+            <variable type="selection">
+                <property type="string">
+                    <name>name</name>
+                    <value>A selection variable</value>
+                </property>
+                <property type="int">
+                    <name>index</name>
+                    <value>1</value>
+                </property>
+            </variable>
+            <variable type="vjoy">
+                <property type="string">
+                    <name>name</name>
+                    <value>A virtual axis input variable</value>
+                </property>
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>2</value>
+                </property>
+            </variable>
+            <variable type="vjoy">
+                <property type="string">
+                    <name>name</name>
+                    <value>A virtual button input variable</value>
+                </property>
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>button</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>2</value>
+                </property>
+            </variable>
+            <variable type="vjoy">
+                <property type="string">
+                    <name>name</name>
+                    <value>A virtual hat input variable</value>
+                </property>
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>hat</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>2</value>
+                </property>
+            </variable>
+            <variable type="physical-input">
+                <property type="string">
+                    <name>name</name>
+                    <value>A physical axis input variable</value>
+                </property>
+                <property type="uuid">
+                    <name>device-guid</name>
+                    <value>97b77b40-07d8-11f0-8028-444553540000</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>1</value>
+                </property>
+            </variable>
+            <variable type="physical-input">
+                <property type="string">
+                    <name>name</name>
+                    <value>A physical button input variable</value>
+                </property>
+                <property type="uuid">
+                    <name>device-guid</name>
+                    <value>97b77b40-07d8-11f0-8028-444553540000</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>button</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>2</value>
+                </property>
+            </variable>
+            <variable type="physical-input">
+                <property type="string">
+                    <name>name</name>
+                    <value>A physical hat input variable</value>
+                </property>
+                <property type="uuid">
+                    <name>device-guid</name>
+                    <value>97b77b40-07d8-11f0-8028-444553540000</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>hat</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>1</value>
+                </property>
+            </variable>
+        </script>
+    </scripts>
+</profile>
