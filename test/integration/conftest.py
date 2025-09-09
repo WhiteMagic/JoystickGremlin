@@ -73,34 +73,24 @@ def vjoy_control_device_id(vjoy_ids_or_skip: list[int]) -> vjoy.VJoy:
 
 
 @pytest.fixture(scope="module")
-def profile_for_testing(
-    vjoy_control_device: vjoy.VJoy,
+def edited_profile(
+    profile_from_file: gremlin.profile.Profile,
     vjoy_di_device: dill.DeviceSummary,
-    profile_path: pathlib.Path,
+    vjoy_control_device: vjoy.VJoy,
 ) -> gremlin.profile.Profile:
-    """Returns a Gremlin profile for testing the current module.
-
-    This implementation mutates the profile specified by 'profile_path', with
-    inputs and outputs swapped with "real" devices. Alternatively, you can
-    override this fixture in test modules to use a generated profile.
-
-    (Where "real" means actual vJoy devices on this system.)
-    """
-    gremlin.logical_device.LogicalDevice().reset()
-    profile = gremlin.profile.Profile()
-    profile.from_xml(profile_path)
+    """Replaces input/output devices in the profile."""
     # Replace the (only) input device.
-    assert len(profile.inputs) == 1
-    _, input_items = profile.inputs.popitem()
-    profile.inputs[vjoy_di_device.device_guid.uuid] = input_items
+    assert len(profile_from_file.inputs) == 1
+    _, input_items = profile_from_file.inputs.popitem()
+    profile_from_file.inputs[vjoy_di_device.device_guid.uuid] = input_items
     for input_item in input_items:
-      input_item.device_id = vjoy_di_device.device_guid.uuid
+        input_item.device_id = vjoy_di_device.device_guid.uuid
 
     # Replace the output device(s) with the single vJoy control device.
-    for action in profile.library.actions_by_type(map_to_vjoy.MapToVjoyData):
+    for action in profile_from_file.library.actions_by_type(map_to_vjoy.MapToVjoyData):
         action.vjoy_device_id = vjoy_control_device.vjoy_id
-
-    return profile
+    
+    return profile_from_file
 
 
 # +-------------------------------------------------------------------------
@@ -115,10 +105,28 @@ def profile_path(profile_name: str) -> pathlib.Path:
 
 
 @pytest.fixture(scope="module")
-def edited_profile_path(profile_for_testing: gremlin.profile.Profile) -> Iterator[str]:
+def profile_from_file(
+    profile_path: pathlib.Path,
+) -> gremlin.profile.Profile:
+    """Returns a Gremlin profile for testing the current module.
+
+    This implementation mutates the profile specified by 'profile_path', with
+    inputs and outputs swapped with "real" devices. Alternatively, you can
+    override this fixture in test modules to use a generated profile.
+
+    (Where "real" means actual vJoy devices on this system.)
+    """
+    gremlin.logical_device.LogicalDevice().reset()
+    profile = gremlin.profile.Profile()
+    profile.from_xml(profile_path)
+    return profile
+
+
+@pytest.fixture(scope="module")
+def edited_profile_path(edited_profile: gremlin.profile.Profile) -> Iterator[str]:
     with tempfile.NamedTemporaryFile(delete_on_close=False) as f:
         f.close()
-        profile_for_testing.to_xml(f.name)
+        edited_profile.to_xml(f.name)
         yield f.name
 
 
