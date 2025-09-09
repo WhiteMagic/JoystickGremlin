@@ -1051,7 +1051,7 @@ class VirtualInputVariable(AbstractVariable):
         return self._valid_types
 
     def remap(self, value: float|bool|Tuple[int, int]) -> None:
-        device = VJoyProxy().vjoy_devices[self._vjoy_id]
+        device = VJoyProxy()[self._vjoy_id]
         match self._input_type:
             case InputType.JoystickButton:
                 device.button(self._input_id).is_pressed = value
