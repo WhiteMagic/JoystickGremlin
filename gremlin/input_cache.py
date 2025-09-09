@@ -91,10 +91,10 @@ class JoystickWrapper:
         def __init__(self, joystick_guid: uuid.UUID, index: int) -> None:
             super().__init__(joystick_guid, index)
 
-            self._value = types.HatDirection.Center
+            self._value = types.HatDirection.Center.value
 
         @property
-        def direction(self) -> types.HatDirection:
+        def direction(self) -> tuple[int, int]:
             return self._value
 
     def __init__(self, device_guid: uuid.UUID) -> None:

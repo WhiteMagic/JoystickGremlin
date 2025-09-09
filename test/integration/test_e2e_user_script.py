@@ -151,7 +151,7 @@ class TestUserScript:
     @pytest.mark.parametrize(
         ("di_input", "vjoy_output", "cached_value"),
         [
-            (types.HatDirection.Center, -1, types.HatDirection.Center),
+            (types.HatDirection.Center, -1, types.HatDirection.Center.value),
             (types.HatDirection.North, 0, types.HatDirection.North.value),
             (types.HatDirection.NorthEast, 4500, types.HatDirection.NorthEast.value),
             (types.HatDirection.East, 9000, types.HatDirection.East.value),
