@@ -104,3 +104,11 @@ physical_input_hat_var = user_script.PhysicalInputVariable(
     is_optional=True,
     valid_types=[types.InputType.JoystickHat],
 )
+
+physical_input_axis_decorator = physical_input_axis_var.create_decorator(mode_var.value)
+
+
+@physical_input_axis_decorator.axis(physical_input_axis_var.input_id)
+def axis_handler(event):
+    """Scales input axis by float_var and writes to output axis."""
+    virtual_input_axis_var.remap(event.value * float_var.value)

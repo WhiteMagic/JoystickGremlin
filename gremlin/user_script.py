@@ -43,6 +43,13 @@ from gremlin.types import InputType, PropertyType
 from gremlin import error, event_handler, shared_state, util
 
 
+def _resolve_path(script_path: Path) -> Path:
+    """If script_path is relative, resolve (not strictly) it to the standard scripts directory."""
+    if script_path.is_absolute():
+        return script_path
+    return Path(util.resource_path("user_scripts")) / script_path
+
+
 class CallbackRegistry:
 
     """Registry of all callbacks known to the system."""
@@ -392,7 +399,7 @@ class Script:
     def __init__(self, path: Path=Path(), name: str=""):
         """Creates a new Script."""
         self._id = uuid.uuid4()
-        self.path = path
+        self.path = _resolve_path(path)
         self.name = name
         self.variables: dict[str, AbstractVariable] = {}
 
@@ -478,7 +485,9 @@ class Script:
         }
 
         self._id = util.read_uuid(node, "script", "id")
-        self.path = Path(util.read_property(node, "path", PropertyType.String))
+        self.path = _resolve_path(
+            Path(util.read_property(node, "path", PropertyType.String))
+        )
         self.name = util.read_property(node, "name", PropertyType.String)
 
         # Retrieve variable information from the script and instantiate them

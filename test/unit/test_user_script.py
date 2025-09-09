@@ -23,8 +23,8 @@ from test.unit.conftest import get_fake_device_guid
 
 
 @pytest.fixture(scope="module")
-def script_path(test_root_dir: pathlib.Path) -> pathlib.Path:
-    return test_root_dir / "data" / "testing_script.py"
+def script_path() -> pathlib.Path:
+    return pathlib.Path("example.py")
 
 
 @pytest.fixture(scope="module")
@@ -40,7 +40,7 @@ class TestScript:
     def test_script_loaded_and_configured(
         self, script_for_test: user_script.Script, script_path: pathlib.Path
     ):
-        assert script_for_test.path == script_path
+        assert script_for_test.path.match(script_path)
         assert script_for_test.name == "Instance 1"
         assert script_for_test.is_configured
 
