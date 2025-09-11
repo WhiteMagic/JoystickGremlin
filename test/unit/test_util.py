@@ -18,7 +18,7 @@
 import sys
 sys.path.append(".")
 
-import os
+import pathlib
 import pytest
 import uuid
 from xml.etree import ElementTree
@@ -45,6 +45,10 @@ xml_doc = """
     <property type="bool">
         <name>lies</name>
         <value>true</value>
+    </property>
+    <property type="path">
+        <name>path</name>
+        <value>./test</value>
     </property>
 </action>
 """
@@ -95,7 +99,9 @@ def test_read_property():
     assert gremlin.util.read_property(
         doc, "lies", gremlin.types.PropertyType.Bool
     ) == True
-
+    assert gremlin.util.read_property(
+        doc, "path", gremlin.types.PropertyType.Path
+    ) == pathlib.Path("./test")
 
     with pytest.raises(gremlin.error.ProfileError, match=r"A property named"):
         gremlin.util.read_property(
@@ -166,3 +172,58 @@ def test_read_property():
 def test_clamp(value, min_val, max_val, expected):
     """Test that values are properly clamped to the specified range."""
     assert gremlin.util.clamp(value, min_val, max_val) == expected
+
+
+@pytest.mark.parametrize(
+    "value, property_type",
+    [
+        pytest.param("a valid string", gremlin.types.PropertyType.String),
+        pytest.param(
+            "a valid string",
+            [gremlin.types.PropertyType.Int, gremlin.types.PropertyType.String],
+        ),
+        pytest.param(9, gremlin.types.PropertyType.Int),
+        pytest.param(3.14, gremlin.types.PropertyType.Float),
+        pytest.param(True, gremlin.types.PropertyType.Bool),
+        pytest.param(uuid.uuid4(), gremlin.types.PropertyType.UUID),
+        pytest.param(pathlib.Path("./test"), gremlin.types.PropertyType.Path),
+    ],
+)
+def test_determine_value_type_valid_values(value, property_type):
+    property_type, is_valid = gremlin.util.determine_value_type(value, property_type)
+    assert property_type == property_type
+    assert is_valid == True
+
+
+@pytest.mark.parametrize(
+    "value, property_type",
+    [
+        pytest.param("a string", gremlin.types.PropertyType.Int),
+        pytest.param(
+            "a string",
+            [gremlin.types.PropertyType.Int, gremlin.types.PropertyType.Bool],
+        ),
+        pytest.param(9.0, gremlin.types.PropertyType.Int),
+        pytest.param(True, gremlin.types.PropertyType.Float),
+        pytest.param(uuid.uuid4(), gremlin.types.PropertyType.Int),
+        pytest.param(pathlib.Path("./test"), gremlin.types.PropertyType.String),
+    ],
+)
+def test_determine_value_type_invalid_values(value, property_type):
+    property_type, is_valid = gremlin.util.determine_value_type(value, property_type)
+    assert property_type == None
+    assert is_valid == False
+
+
+@pytest.mark.parametrize(
+    "property, property_value, property_string",
+    [
+        pytest.param(gremlin.types.PropertyType.String, "a valid string", "a valid string"),
+        pytest.param(gremlin.types.PropertyType.Int, 9, "9"),
+        pytest.param(gremlin.types.PropertyType.Float, 3.14, "3.14"),
+        pytest.param(gremlin.types.PropertyType.Bool, True, "True"),
+        pytest.param(gremlin.types.PropertyType.Path, pathlib.Path("/test"), "\\test"),
+    ],
+)
+def test_property_to_string(property, property_value, property_string):
+    assert gremlin.util.property_to_string(property, property_value) == property_string

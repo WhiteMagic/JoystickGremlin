@@ -485,9 +485,7 @@ class Script:
         }
 
         self._id = util.read_uuid(node, "script", "id")
-        self.path = _resolve_path(
-            Path(util.read_property(node, "path", PropertyType.String))
-        )
+        self.path = _resolve_path(util.read_property(node, "path", PropertyType.Path))
         self.name = util.read_property(node, "name", PropertyType.String)
 
         # Retrieve variable information from the script and instantiate them
@@ -523,7 +521,7 @@ class Script:
         node = util.create_node_from_data(
             "script",
             [
-                ("path", str(self.path), PropertyType.String),
+                ("path", self.path, PropertyType.Path),
                 ("name", str(self.name), PropertyType.String),
             ]
         )

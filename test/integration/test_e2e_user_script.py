@@ -147,7 +147,7 @@ class TestUserScript:
         tester.assert_button_eventually_equals(
             vjoy_di_device.device_guid, output_button_id, vjoy_output
         )
-    
+
     @pytest.mark.parametrize(
         ("di_input", "vjoy_output", "cached_value"),
         [

@@ -8,9 +8,9 @@
     </modes>
     <scripts>
         <script id="412a8176-6f35-4a0c-959a-b6fd02541c78">
-            <property type="string">
+            <property type="path">
                 <name>path</name>
-                <value>C:\Users\Code Monet\Documents\GitHub\JoystickGremlin\user_scripts\example.py</value>
+                <value>example.py</value>
             </property>
             <property type="string">
                 <name>name</name>

@@ -238,6 +238,7 @@ _property_from_string = {
     PropertyType.Selection: str,
     PropertyType.ActionActivationMode: lambda x: ActionActivationMode.to_enum(x),
     PropertyType.Point2D: lambda x: Point2D.from_string(x),
+    PropertyType.Path: Path,
 }
 
 def property_from_string(data_type: PropertyType, value: str) -> Any:
@@ -269,6 +270,7 @@ _property_to_string = {
     PropertyType.Selection: str,
     PropertyType.ActionActivationMode: lambda x: ActionActivationMode.to_string(x),
     PropertyType.Point2D: lambda x: x.to_string(),
+    PropertyType.Path: str,
 }
 
 def property_to_string(data_type: PropertyType, value: Any) -> str:
@@ -308,7 +310,8 @@ _type_lookup = {
     PropertyType.Selection: str,
     PropertyType.ActionActivationMode: ActionActivationMode,
     PropertyType.Point2D: Point2D,
-    PropertyType.ScriptVariableType: ScriptVariableType
+    PropertyType.ScriptVariableType: ScriptVariableType,
+    PropertyType.Path: Path,
 }
 
 _element_parsers = {
@@ -636,16 +639,16 @@ def _process_property(
     p_type = PropertyType.to_enum(property_node.get("type"))
     if p_type not in property_types:
         raise error.ProfileError(
-            f"Property type mismatch, got '{p_type}' expected on of: " +
+            f"Property type mismatch, got '{p_type}' expected one of: " +
             f"[{', '.join([str(v) for v in property_types])}]"
         )
     try:
         return _property_from_string[p_type](v_node.text)
-    except Exception:
+    except Exception as e:
         raise error.ProfileError(
             f"Failed parsing property value '{v_node.text}' which "
             f"should be of type '{p_type}"
-        )
+        ) from e
 
 
 def read_action_ids(node: ElementTree.Element) -> List[uuid.UUID]:
@@ -697,12 +700,12 @@ def determine_value_type(
     is_valid = False
     value_type = None
     if isinstance(property_type, PropertyType):
-        is_valid = type(value) == _type_lookup[property_type]
+        is_valid = isinstance(value, _type_lookup[property_type])
         if is_valid:
             value_type = property_type
     else:
         for pt in property_type:
-            if type(value) == _type_lookup[pt]:
+            if isinstance(value, _type_lookup[pt]):
                 is_valid = True
                 value_type = pt
                 break
