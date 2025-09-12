@@ -29,7 +29,7 @@ from xml.etree import ElementTree
 import dill
 from vjoy.vjoy import VJoyProxy
 
-from gremlin import mode_manager, util
+from gremlin import event_handler, mode_manager, util
 from gremlin.base_classes import AbstractActionData
 from gremlin.common import SingletonDecorator
 from gremlin.config import Configuration
@@ -417,9 +417,9 @@ class JoystickAction(AbstractAction):
 
     def __call__(self) -> None:
         """Emits an Event instance through the EventListener system."""
-        el = gremlin.event_handler.EventListener()
+        el = event_handler.EventListener()
         if self.input_type == InputType.JoystickAxis:
-            event = gremlin.event_handler.Event(
+            event = event_handler.Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
@@ -427,7 +427,7 @@ class JoystickAction(AbstractAction):
                 value=self.value
             )
         elif self.input_type == InputType.JoystickButton:
-            event = gremlin.event_handler.Event(
+            event = event_handler.Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
@@ -435,7 +435,7 @@ class JoystickAction(AbstractAction):
                 is_pressed=self.value
             )
         elif self.input_type == InputType.JoystickHat:
-            event = gremlin.event_handler.Event(
+            event = event_handler.Event(
                 event_type=self.input_type,
                 device_guid=self.device_guid,
                 identifier=self.input_id,
