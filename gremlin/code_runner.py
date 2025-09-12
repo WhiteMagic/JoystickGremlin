@@ -140,7 +140,7 @@ class VirtualHatButton(VirtualButton):
         self._directions = directions
 
     def __call__(self, event: event_handler.Event) -> List[bool]:
-        is_pressed = HatDirection.to_enum(event.value) in self._directions
+        is_pressed = event.value in self._directions
         action = "press" if is_pressed else "release"
         has_changed = self._fsm.perform(action)
         return [is_pressed] if has_changed else []

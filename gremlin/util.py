@@ -986,27 +986,27 @@ def setup_userprofile() -> None:
 
 
 _dill_hat_lookup = {
-    -1: (0, 0),
-    0: (0, 1),
-    4500: (1, 1),
-    9000: (1, 0),
-    13500: (1, -1),
-    18000: (0, -1),
-    22500: (-1, -1),
-    27000: (-1, 0),
-    31500: (-1, 1)
+    -1: HatDirection.Center,
+    0: HatDirection.North,
+    4500: HatDirection.NorthEast,
+    9000: HatDirection.East,
+    13500: HatDirection.SouthEast,
+    18000: HatDirection.South,
+    22500: HatDirection.SouthWest,
+    27000: HatDirection.West,
+    31500: HatDirection.NorthWest
 }
 
-def dill_hat_lookup(value: int) -> Tuple[int, int]:
-    """Returns the tuple representation of a hat direction from raw value.
+def dill_hat_lookup(value: int) -> HatDirection:
+    """Returns the HatDirection corresponding to the raw value if exact, else "Center".
 
     Args:
         value: raw hat value to convert
 
     Returns:
-        Tuple representing the hat direction
+        HatDirection corresponding to the raw value if exact, else "Center".
     """
-    return _dill_hat_lookup.get(value, (0, 0))
+    return _dill_hat_lookup.get(value, HatDirection.Center)
 
 
 def load_module(name):

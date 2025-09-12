@@ -151,16 +151,16 @@ class TestUserScript:
     @pytest.mark.parametrize(
         ("di_input", "vjoy_output", "cached_value"),
         [
-            (types.HatDirection.Center, -1, types.HatDirection.Center.value),
-            (types.HatDirection.North, 0, types.HatDirection.North.value),
-            (types.HatDirection.NorthEast, 4500, types.HatDirection.NorthEast.value),
-            (types.HatDirection.East, 9000, types.HatDirection.East.value),
-            (types.HatDirection.SouthEast, 13500, types.HatDirection.SouthEast.value),
-            (types.HatDirection.South, 18000, types.HatDirection.South.value),
-            (types.HatDirection.SouthWest, 22500, types.HatDirection.SouthWest.value),
-            (types.HatDirection.West, 27000, types.HatDirection.West.value),
-            (types.HatDirection.NorthWest, 31500, types.HatDirection.NorthWest.value),
-            (types.HatDirection.North, 0, types.HatDirection.North.value),
+            (types.HatDirection.Center, -1, types.HatDirection.Center),
+            (types.HatDirection.North, 0, types.HatDirection.North),
+            (types.HatDirection.NorthEast, 4500, types.HatDirection.NorthEast),
+            (types.HatDirection.East, 9000, types.HatDirection.East),
+            (types.HatDirection.SouthEast, 13500, types.HatDirection.SouthEast),
+            (types.HatDirection.South, 18000, types.HatDirection.South),
+            (types.HatDirection.SouthWest, 22500, types.HatDirection.SouthWest),
+            (types.HatDirection.West, 27000, types.HatDirection.West),
+            (types.HatDirection.NorthWest, 31500, types.HatDirection.NorthWest),
+            (types.HatDirection.North, 0, types.HatDirection.North),
         ],
     )
     def test_hat(

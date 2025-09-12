@@ -97,7 +97,7 @@ class MapToVjoyFunctor(AbstractFunctor):
 
         elif self.data.vjoy_input_type == InputType.JoystickHat:
             VJoyProxy()[self.data.vjoy_device_id] \
-                .hat(self.data.vjoy_input_id).direction = value.current
+                .hat(self.data.vjoy_input_id).direction = value.current.value
 
     def relative_axis_thread(self) -> None:
         self.thread_running = True

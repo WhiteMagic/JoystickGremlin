@@ -91,7 +91,7 @@ class DirectionalButton:
             value: Value,
             properties: list[ActionProperty] = []
     ) -> None:
-        is_pressed = HatDirection.to_enum(event.value) == self.type_direction
+        is_pressed = event.value == self.type_direction
         action = "press" if is_pressed else "release"
 
         # Event creation

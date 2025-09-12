@@ -39,7 +39,7 @@ import dill
 from vjoy.vjoy import VJoyProxy
 
 from gremlin.input_cache import Joystick, Keyboard
-from gremlin.types import InputType, PropertyType
+from gremlin.types import HatDirection, InputType, PropertyType
 from gremlin import error, event_handler, shared_state, util
 
 
@@ -1057,7 +1057,7 @@ class VirtualInputVariable(AbstractVariable):
     def valid_types(self) -> list[InputType]:
         return self._valid_types
 
-    def remap(self, value: float|bool|Tuple[int, int]) -> None:
+    def remap(self, value: float|bool|HatDirection) -> None:
         device = VJoyProxy()[self._vjoy_id]
         match self._input_type:
             case InputType.JoystickButton:
@@ -1065,7 +1065,7 @@ class VirtualInputVariable(AbstractVariable):
             case InputType.JoystickAxis:
                 device.axis(self._input_id).value = value
             case InputType.JoystickHat:
-                device.hat(self._input_id).direction = value
+                device.hat(self._input_id).direction = value.value
             case _:
                 raise error.GremlinError(
                     f"Received invalid input type '{self._input_type}'"

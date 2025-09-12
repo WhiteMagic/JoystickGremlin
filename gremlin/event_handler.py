@@ -291,16 +291,20 @@ class EventListener(QtCore.QObject):
                 is_pressed=event.value == 1
             ))
         elif event.input_type == dill.InputType.Hat:
-            self._joystick[event.device_guid.uuid].hat(event.input_index) \
-                .update(util.dill_hat_lookup(event.value))
+            direction = util.dill_hat_lookup(event.value)
+            self._joystick[event.device_guid.uuid].hat(event.input_index).update(
+                direction
+            )
 
-            self.joystick_event.emit(Event(
-                event_type=InputType.JoystickHat,
-                device_guid=event.device_guid.uuid,
-                identifier=event.input_index,
-                mode=self._modes.current.name,
-                value=util.dill_hat_lookup(event.value)
-            ))
+            self.joystick_event.emit(
+                Event(
+                    event_type=InputType.JoystickHat,
+                    device_guid=event.device_guid.uuid,
+                    identifier=event.input_index,
+                    mode=self._modes.current.name,
+                    value=direction,
+                )
+            )
 
     def _joystick_device_handler(
             self,

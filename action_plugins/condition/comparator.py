@@ -329,7 +329,7 @@ class DirectionComparator(AbstractComparator):
     def __call__(self, value: Value, events: List[event_handler.Event]) -> bool:
         # Check whether to use events or value
         if len(events) == 0:
-            return HatDirection.to_enum(value.current) in self.directions
+            return value.current in self.directions
 
         # Retrieve state of the events which should be just one
         if len(events) > 1:
@@ -344,7 +344,7 @@ class DirectionComparator(AbstractComparator):
         hat = input_cache.Joystick()[events[0].device_guid].hat(
             events[0].identifier
         )
-        return HatDirection.to_enum(hat.direction) in self.directions
+        return hat.direction in self.directions
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.directions = util.read_properties(
