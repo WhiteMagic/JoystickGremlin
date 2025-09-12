@@ -18,12 +18,15 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal
 
 import gremlin.config
+from gremlin.common import SingletonMetaclass
+from gremlin.error import GremlinError
 from gremlin.types import PropertyType
 
 if TYPE_CHECKING:
@@ -202,9 +205,20 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
         return self.roles
 
 
-class MetaConfigOption:
+class MetaConfigOption(metaclass=SingletonMetaclass):
 
-    def register_meta_option(
+    def __init__(self) -> None:
+        self._options = {}
+
+    def count(self) -> int:
+        """Returns the number of registered options.
+
+        Returns:
+            Number of registered options.
+        """
+        return len(self._options)
+
+    def register(
         self,
         section: str,
         group: str,
@@ -226,5 +240,106 @@ class MetaConfigOption:
             description: description of the parameter's purpose
             qml_element: path to the QML to load for this option
         """
-        pass
+        key = (section, group, name)
+        if key in self._options:
+            logging.getLogger("system").warning(
+                f"Option {section}.{group}.{name} already registered."
+            )
+            return
 
+        self._options[key] = {
+            "description": description,
+            "qml_element": qml_element
+        }
+
+    def sections(self) -> list[str]:
+        """Returns the list of sections for which options have been registered.
+
+        Returns:
+            List of section names.
+        """
+        return list(set(section for section, _, _ in self._options.keys()))
+
+    def groups(self, section: str) -> list[str]:
+        """Returns the groups associated with the given section.
+
+        Args:
+            section: name of the section for which to find groups
+
+        Returns:
+            List of group names.
+        """
+        return list(set(
+            group for sec, group, _ in self._options.keys() if sec == section
+        ))
+
+    def entries(self, section: str, group: str) -> list[str]:
+        """Returns the entries associated with the given section and group.
+
+        Args:
+            section: name of the section for which to find entries
+            group: name of the group for which to find entries
+
+        Returns:
+            List of entry names.
+        """
+        return list(
+            name for sec, grp, name in self._options.keys()
+            if sec == section and grp == group
+        )
+
+    def qml_element(self, section: str, group: str, name: str) -> Optional[str]:
+        """Returns the QML element associated with the given option.
+
+        Args:
+            section: name of the section for which to find the option
+            group: name of the group for which to find the option
+            name: name of the option
+
+        Returns:
+            Path to the QML element or None if not found.
+        """
+        return self._retrieve_value(section, group, name, "qml_element")
+
+    def description(self, section: str, group: str, name: str) -> Optional[str]:
+        """Returns the description associated with the given option.
+
+        Args:
+            section: name of the section for which to find the option
+            group: name of the group for which to find the option
+            name: name of the option
+
+        Returns:
+            Description string or None if not found.
+        """
+        return self._retrieve_value(section, group, name, "description")
+
+    def _retrieve_value(
+            self,
+            section: str,
+            group: str,
+            name: str,
+            entry: str
+    ) -> str:
+        """Retrieves an entry from storage.
+
+        Args:
+            section: name of the section
+            group: name of the group
+            name: name of the option
+            entry: which entry to retrieve
+
+        Returns:
+            Value of the requested entry.
+        """
+        key = (section, group, name)
+        if key not in self._options:
+            raise GremlinError(f"No option with key {key} exists.")
+
+        match entry:
+            case "description":
+                return self._options[key]["description"]
+            case "qml_element":
+                return self._options[key]["qml_element"]
+            case _:
+                raise GremlinError(f"Unknown entry '{entry}' requested.")

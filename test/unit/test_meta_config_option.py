@@ -1,0 +1,47 @@
+# -*- coding: utf-8; -*-
+
+# Copyright (C) 2025 Lionel Ott
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+import sys
+sys.path.append(".")
+
+import pytest
+
+import gremlin.error
+import gremlin.types
+
+from gremlin.ui.option import MetaConfigOption
+
+from gremlin.types import PropertyType
+
+
+def test_basic():
+    option = MetaConfigOption()
+
+    assert option.count() == 0
+
+    option.register("some", "test", "option 1", "description 1", "ui/test1.qml")
+    option.register("some", "test", "option 2", "description 2", "ui/test2.qml")
+
+    assert option.count() == 2
+
+    assert len(option.sections()) == 1
+    assert len(option.groups("some")) == 1
+    assert len(option.entries("some", "test")) == 2
+    assert option.description("some", "test", "option 1") == "description 1"
+    assert option.description("some", "test", "option 2") == "description 2"
+    assert option.qml_element("some", "test", "option 1") == "ui/test1.qml"
+    assert option.qml_element("some", "test", "option 2") == "ui/test2.qml"
