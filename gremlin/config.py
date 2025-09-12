@@ -40,8 +40,7 @@ _required_properties = {
 }
 
 
-@common.SingletonDecorator
-class Configuration:
+class Configuration(metaclass=common.SingletonMetaclass):
 
     """Responsible for loading and saving configuration data."""
 
@@ -58,10 +57,6 @@ class Configuration:
             Number of parameters stored by the configuration.
         """
         return len(self._data)
-
-    def _should_skip_reload(self) -> bool:
-        """Returns True if the last load() was less than 1 second ago."""
-        return self._last_reload is not None and time.time() - self._last_reload < 1
 
     def load(self) -> None:
         """Loads the configuration file's content."""
@@ -489,6 +484,17 @@ class Configuration:
             raise error.GremlinError(f"No parameter with key {key} exists")
 
         return self._data[key][entry]
+
+    def _should_skip_reload(self) -> bool:
+        """Returns True if the last load() was less than 1 second ago.
+
+        Prevents reloading the configuration file too often.
+
+        Returns:
+            True if reloading of the configuration should be skipped.
+        """
+        return self._last_reload is not None and \
+            time.time() - self._last_reload < 1.0
 
     # def get_executable_list(self):
     #     """Returns a list of all executables with associated profiles.

@@ -200,3 +200,31 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
 
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
+
+
+class MetaConfigOption:
+
+    def register_meta_option(
+        self,
+        section: str,
+        group: str,
+        name: str,
+        description: str,
+        qml_element: str
+    ) -> None:
+        """Registers an option that does not directly contain a value.
+
+        This allows register option items of a more complex nature that have a
+        dedicate QML UI element to them which handles the UI configuring the
+        content and also the logic to persist the data to the Configuration
+        class.
+
+        Args:
+            section: overall section this option is associated with
+            group: grouping into which the option belongs
+            name: name by which the new option is shown
+            description: description of the parameter's purpose
+            qml_element: path to the QML to load for this option
+        """
+        pass
+
