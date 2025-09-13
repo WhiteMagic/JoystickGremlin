@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import logging
 import sys
 sys.path.append(".")
 
@@ -45,3 +46,23 @@ def test_basic():
     assert option.description("some", "test", "option 2") == "description 2"
     assert option.qml_element("some", "test", "option 1") == "ui/test1.qml"
     assert option.qml_element("some", "test", "option 2") == "ui/test2.qml"
+
+
+def test_register_duplicate_logs_warning(caplog):
+    option = MetaConfigOption()
+    option.register("dup", "grp", "name", "desc", "ui/elem.qml")
+    option.register("dup", "grp", "name", "desc", "ui/elem.qml")
+
+    assert caplog.record_tuples == [
+        ("system", logging.WARNING, "Option dup.grp.name already registered.")
+    ]
+
+
+def test_retrieve_nonexistent_raises():
+    option = MetaConfigOption()
+    with pytest.raises(gremlin.error.GremlinError):
+        option.qml_element("no", "such", "option")
+
+    option.register("sec", "grp", "name", "desc", "ui/elem.qml")
+    with pytest.raises(gremlin.error.GremlinError):
+        option.description("sec", "grp", "other")
