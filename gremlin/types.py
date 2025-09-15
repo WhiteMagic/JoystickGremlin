@@ -19,7 +19,6 @@
 from __future__ import annotations
 
 import enum
-from enum import Enum
 import logging
 from typing import Generic, Tuple, TypeVar, Union
 
@@ -659,7 +658,7 @@ class ActionActivationMode(enum.Enum):
         return value
 
 
-class DataInsertionMode(Enum):
+class DataInsertionMode(enum.Enum):
 
     """Specifies to insertion type to be performed."""
 
@@ -667,7 +666,7 @@ class DataInsertionMode(Enum):
     Prepend = 1
 
 
-class DataCreationMode(Enum):
+class DataCreationMode(enum.Enum):
 
     """Specifies how a new AbstractActionData instance is created."""
 
