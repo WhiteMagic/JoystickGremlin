@@ -24,9 +24,15 @@ import pytest
 import gremlin.error
 import gremlin.types
 
-from gremlin.ui.option import MetaConfigOption
+from gremlin.ui.option import BaseMetaConfigOptionWidget, MetaConfigOption
 
 from gremlin.types import PropertyType
+
+
+class DummyWidget(BaseMetaConfigOptionWidget):
+
+    def _qml_path(self) -> str:
+        return "dummy.qml"
 
 
 def test_basic():
@@ -34,8 +40,8 @@ def test_basic():
 
     assert option.count() == 0
 
-    option.register("some", "test", "option 1", "description 1", "ui/test1.qml")
-    option.register("some", "test", "option 2", "description 2", "ui/test2.qml")
+    option.register("some", "test", "option 1", "description 1", DummyWidget)
+    option.register("some", "test", "option 2", "description 2", DummyWidget)
 
     assert option.count() == 2
 
@@ -44,8 +50,8 @@ def test_basic():
     assert len(option.entries("some", "test")) == 2
     assert option.description("some", "test", "option 1") == "description 1"
     assert option.description("some", "test", "option 2") == "description 2"
-    assert option.qml_element("some", "test", "option 1") == "ui/test1.qml"
-    assert option.qml_element("some", "test", "option 2") == "ui/test2.qml"
+    assert option.qml_widget("some", "test", "option 1") == DummyWidget
+    assert option.qml_widget("some", "test", "option 2") == DummyWidget
 
 
 def test_register_duplicate_logs_warning(caplog):
@@ -61,8 +67,8 @@ def test_register_duplicate_logs_warning(caplog):
 def test_retrieve_nonexistent_raises():
     option = MetaConfigOption()
     with pytest.raises(gremlin.error.GremlinError):
-        option.qml_element("no", "such", "option")
+        option.qml_widget("no", "such", "option")
 
-    option.register("sec", "grp", "name", "desc", "ui/elem.qml")
+    option.register("sec", "grp", "name", "desc", DummyWidget)
     with pytest.raises(gremlin.error.GremlinError):
         option.description("sec", "grp", "other")

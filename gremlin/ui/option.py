@@ -1,6 +1,6 @@
 # -*- coding: utf-8; -*-
 
-# Copyright (C) 2015 - 2024 Lionel Ott
+# Copyright (C) 2022 Lionel Ott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import cast, Any, Dict, Optional, TYPE_CHECKING
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal
 
 import gremlin.config
 from gremlin.common import SingletonMetaclass
-from gremlin.error import GremlinError
+from gremlin.error import GremlinError, MissingImplementationError
 from gremlin.types import PropertyType
 
 if TYPE_CHECKING:
@@ -205,6 +205,22 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
         return self.roles
 
 
+class BaseMetaConfigOptionWidget(QtCore.QObject):
+
+    def __init__(self, parent: Optional[QtCore.QObject]=None) -> None:
+        super().__init__(parent)
+
+    @Property(str, constant=True)
+    def qmlPath(self) -> str:
+        return self._qml_path()
+
+    def _qml_path(self) -> str:
+        raise MissingImplementationError(
+            "BaseMetaConfigOptionWidget: Subclasses must implement the " +
+            "qml_path method."
+        )
+
+
 class MetaConfigOption(metaclass=SingletonMetaclass):
 
     def __init__(self) -> None:
@@ -224,12 +240,12 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
         group: str,
         name: str,
         description: str,
-        qml_element: str
+        qml_widget: BaseMetaConfigOptionWidget
     ) -> None:
         """Registers an option that does not directly contain a value.
 
         This allows register option items of a more complex nature that have a
-        dedicate QML UI element to them which handles the UI configuring the
+        dedicated QML UI widget to them which handles the UI configuring the
         content and also the logic to persist the data to the Configuration
         class.
 
@@ -238,7 +254,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
             group: grouping into which the option belongs
             name: name by which the new option is shown
             description: description of the parameter's purpose
-            qml_element: path to the QML to load for this option
+            qml_widget: QML widget class to use for this option
         """
         key = (section, group, name)
         if key in self._options:
@@ -249,7 +265,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
 
         self._options[key] = {
             "description": description,
-            "qml_element": qml_element
+            "qml_widget": qml_widget
         }
 
     def sections(self) -> list[str]:
@@ -288,8 +304,13 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
             if sec == section and grp == group
         )
 
-    def qml_element(self, section: str, group: str, name: str) -> Optional[str]:
-        """Returns the QML element associated with the given option.
+    def qml_widget(
+            self,
+            section: str,
+            group: str,
+            name: str
+    ) -> BaseMetaConfigOptionWidget:
+        """Returns the QML widget class associated with the given option.
 
         Args:
             section: name of the section for which to find the option
@@ -297,9 +318,12 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
             name: name of the option
 
         Returns:
-            Path to the QML element or None if not found.
+            Class type of the QML widget to be used.
         """
-        return self._retrieve_value(section, group, name, "qml_element")
+        return cast(
+            BaseMetaConfigOptionWidget,
+            self._retrieve_value(section, group, name, "qml_widget")
+        )
 
     def description(self, section: str, group: str, name: str) -> Optional[str]:
         """Returns the description associated with the given option.
@@ -312,7 +336,10 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
         Returns:
             Description string or None if not found.
         """
-        return self._retrieve_value(section, group, name, "description")
+        return cast(
+            str,
+            self._retrieve_value(section, group, name, "description")
+        )
 
     def _retrieve_value(
             self,
@@ -320,7 +347,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
             group: str,
             name: str,
             entry: str
-    ) -> str:
+    ) -> str|BaseMetaConfigOptionWidget:
         """Retrieves an entry from storage.
 
         Args:
@@ -339,7 +366,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
         match entry:
             case "description":
                 return self._options[key]["description"]
-            case "qml_element":
-                return self._options[key]["qml_element"]
+            case "qml_widget":
+                return self._options[key]["qml_widget"]
             case _:
                 raise GremlinError(f"Unknown entry '{entry}' requested.")
