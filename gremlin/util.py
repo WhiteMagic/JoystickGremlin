@@ -933,46 +933,6 @@ def clamp_analog_axis(value: float) -> float:
     return clamp(value, -1.0, 1.0)
 
 
-def hat_tuple_to_direction(value):
-    """Converts a hat event direction value to it's textual equivalent.
-
-    :param value direction tuple from a hat event
-    :return textual equivalent of the event tuple
-    """
-    lookup = {
-        ( 0,  0): "center",
-        ( 0,  1): "north",
-        ( 1,  1): "north-east",
-        ( 1,  0): "east",
-        ( 1, -1): "south-east",
-        ( 0, -1): "south",
-        (-1, -1): "south-west",
-        (-1,  0): "west",
-        (-1,  1): "north-west",
-    }
-    return lookup[value]
-
-
-def hat_direction_to_tuple(value):
-    """Converts a direction string to a tuple value.
-
-    :param value textual representation of a hat direction
-    :return tuple corresponding to the textual direction
-    """
-    lookup = {
-        "center": (0, 0),
-        "north": (0, 1),
-        "north-east": (1, 1),
-        "east": (1, 0),
-        "south-east": (1, -1),
-        "south": (0, -1),
-        "south-west": (-1, -1),
-        "west": (-1, 0),
-        "north-west": (-1, 1)
-    }
-    return lookup[value]
-
-
 def setup_userprofile() -> None:
     """Initializes the data folder in the user's profile folder."""
     folder = userprofile_path()
