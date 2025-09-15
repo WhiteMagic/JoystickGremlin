@@ -198,7 +198,7 @@ class TestSimpleProfile:
     ):
         input_hat_id = 1
         output_hat_id = 3
-        vjoy_control_device.hat(index=input_hat_id).direction = di_input.value
+        vjoy_control_device.hat(index=input_hat_id).direction = di_input
         tester.assert_hat_eventually_equals(
             vjoy_di_device.device_guid, input_hat_id, vjoy_output
         )

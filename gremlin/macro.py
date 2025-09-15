@@ -719,7 +719,7 @@ class VJoyAction(AbstractAction):
         elif self.input_type == InputType.JoystickButton:
             vjoy.button(self.input_id).is_pressed = self.value
         elif self.input_type == InputType.JoystickHat:
-            vjoy.hat(self.input_id).direction = self.value.value
+            vjoy.hat(self.input_id).direction = self.value
 
     def to_xml(self) -> ElementTree.Element:
         node = self._create_node(self.tag)

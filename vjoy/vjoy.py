@@ -28,7 +28,7 @@ import os
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 
 from gremlin.error import VJoyError
-from gremlin.types import AxisNames
+from gremlin.types import AxisNames, HatDirection
 import gremlin.spline
 
 
@@ -374,26 +374,26 @@ class Hat:
     """Represents a discrete hat in vJoy, allows setting the direction
     of the hat."""
 
-    # Discrete directions, mapping (x, y) coordinates to vJoy values
+    # Discrete directions, mapping HatDirection coordinates to vJoy values
     to_discrete_direction = {
-        (0, 1): 0,
-        (1, 0): 1,
-        (0, -1): 2,
-        (-1, 0): 3,
-        (0, 0): -1
+        HatDirection.North: 0,
+        HatDirection.NorthEast: 1,
+        HatDirection.South: 2,
+        HatDirection.West: 3,
+        HatDirection.Center: -1
     }
 
     # Continuous directions, mapping 8-way *(x, y) coordinates to vJoy values
     to_continuous_direction = {
-        (0, 0): -1,
-        (0, 1): 0,
-        (1, 1): 4500,
-        (1, 0): 9000,
-        (1, -1): 13500,
-        (0, -1): 18000,
-        (-1, -1): 22500,
-        (-1, 0): 27000,
-        (-1, 1): 31500
+        HatDirection.Center: -1,
+        HatDirection.North: 0,
+        HatDirection.NorthEast: 4500,
+        HatDirection.East: 9000,
+        HatDirection.SouthEast: 13500,
+        HatDirection.South: 18000,
+        HatDirection.SouthWest: 22500,
+        HatDirection.West: 27000,
+        HatDirection.NorthWest: 31500
     }
 
     def __init__(self, vjoy_dev: VJoy, hat_id: int, hat_type: HatType) -> None:
@@ -407,11 +407,11 @@ class Hat:
         self.vjoy_dev = vjoy_dev
         self.vjoy_id = vjoy_dev.vjoy_id
         self.hat_id = hat_id
-        self._direction = (0, 0)
+        self._direction = HatDirection.Center
         self.hat_type = hat_type
 
     @property
-    def direction(self) -> Tuple[int, int]:
+    def direction(self) -> HatDirection:
         """Returns the current direction of the hat.
 
         Returns:
@@ -421,7 +421,7 @@ class Hat:
         return self._direction
 
     @direction.setter
-    def direction(self, direction: Tuple[int, int]) -> None:
+    def direction(self, direction: HatDirection) -> None:
         """Sets the direction of the hat.
 
         Args:
@@ -439,7 +439,7 @@ class Hat:
             ))
         self.vjoy_dev.used()
 
-    def _set_discrete_direction(self, direction: Tuple[int, int]) -> None:
+    def _set_discrete_direction(self, direction: HatDirection) -> None:
         """Sets the direction of a discrete hat.
 
         Args:
@@ -464,7 +464,7 @@ class Hat:
                 )
             )
 
-    def _set_continuous_direction(self, direction: Tuple[int, int]) -> None:
+    def _set_continuous_direction(self, direction: HatDirection) -> None:
         """Sets the direction of a continuous hat.
 
         Args:

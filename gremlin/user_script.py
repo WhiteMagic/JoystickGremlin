@@ -1065,7 +1065,7 @@ class VirtualInputVariable(AbstractVariable):
             case InputType.JoystickAxis:
                 device.axis(self._input_id).value = value
             case InputType.JoystickHat:
-                device.hat(self._input_id).direction = value.value
+                device.hat(self._input_id).direction = value
             case _:
                 raise error.GremlinError(
                     f"Received invalid input type '{self._input_type}'"
