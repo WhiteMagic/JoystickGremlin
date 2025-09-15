@@ -27,18 +27,23 @@ import gremlin.config
 import gremlin.error
 import gremlin.types
 
+from gremlin.common import SingletonMetaclass
 from gremlin.types import PropertyType
 
 
 @pytest.fixture
 def cfg() -> Iterator[gremlin.config.Configuration]:
     """Returns a Configuration object other than the singleton, with file path modified."""
-    tmp = tempfile.mkstemp()
-    with mock.patch.object(gremlin.config, "_config_file_path", tmp[1]):
-        yield gremlin.config.Configuration.klass()
+    # Remove the singleton instance if it exists and create a temporary file
+    # to use as the config file.
+    SingletonMetaclass._instances.pop(gremlin.config.Configuration, None)
+    with mock.patch.object(
+        gremlin.config, "_config_file_path", tempfile.mkstemp()[1]
+    ):
+        yield gremlin.config.Configuration()
 
 
-def test_simple(cfg: gremlin.config.Configuration):
+def test_simple(cfg: gremlin.config.Configuration) -> None:
     cfg.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
     cfg.register("test", "case", "2", PropertyType.Bool, False, "", {})
     cfg.register(
@@ -62,7 +67,7 @@ def test_simple(cfg: gremlin.config.Configuration):
     assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.SouthWest
 
 
-def test_load_save(cfg: gremlin.config.Configuration):
+def test_load_save(cfg: gremlin.config.Configuration) -> None:
     cfg.register(
         "test", "case", "1", PropertyType.Int, 42, "one", {"min": 1, "max": 20}
     )
@@ -94,7 +99,9 @@ def test_load_save(cfg: gremlin.config.Configuration):
     assert cfg.expose("test", "case", "4") == False
 
     cfg.save()
-    with mock.patch.object(cfg, cfg._should_skip_reload.__name__, return_value=False):
+    with mock.patch.object(
+        cfg, cfg._should_skip_reload.__name__, return_value=False
+    ):
         cfg.load()
 
     assert cfg.value("test", "case", "1") == 42
@@ -114,8 +121,10 @@ def test_load_save(cfg: gremlin.config.Configuration):
     assert cfg.expose("test", "case", "4") == False
 
 
-def test_exceptions(cfg: gremlin.config.Configuration):
-    cfg.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
+def test_exceptions(cfg: gremlin.config.Configuration) -> None:
+    cfg.register(
+        "test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20}
+    )
     with pytest.raises(gremlin.error.GremlinError):
         cfg.set("test", "case", "1", 3.14)
 
