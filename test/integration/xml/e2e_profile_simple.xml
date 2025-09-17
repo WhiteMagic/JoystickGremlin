@@ -98,7 +98,7 @@
             </property>
             <property type="axis_mode">
                 <name>axis-mode</name>
-                <value>absolute</value>
+                <value>relative</value>
             </property>
             <property type="float">
                 <name>axis-scaling</name>

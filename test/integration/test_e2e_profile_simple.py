@@ -18,18 +18,44 @@
 Integration tests with a profile that does simple input forwarding.
 """
 
+from collections.abc import Iterator
+import contextlib
+import itertools
 import sys
+import threading
+from unittest import mock
 
 sys.path.append(".")
 
 import pytest
 
+from action_plugins import map_to_vjoy
 import dill
 from gremlin import types
 from gremlin import util
 from test.integration import app_tester
 from vjoy import vjoy
 from vjoy import vjoy_interface
+
+
+@pytest.fixture
+def patched_time() -> Iterator[threading.Semaphore]:
+    """Patches the time module in map_to_vjoy.
+
+    The sleep() function is replaced with a mock that we can
+    step through at will by calling release() on the yielded semaphore.
+    The time() function is replaced by a counter that increments on each call.
+    """
+    time_stepper = threading.Semaphore(value=0)
+    time_counter = itertools.count(
+        step=map_to_vjoy.MapToVjoyFunctor.THREAD_SLEEP_DURATION_S
+    )
+    # Don't mock time() and sleep() globally; instead, mock out the "time" name
+    # in the map_to_vjoy module only.
+    with mock.patch.object(map_to_vjoy, "time", autospec=True) as mock_time:
+        mock_time.sleep.side_effect = lambda _: time_stepper.acquire(timeout=2)
+        mock_time.time.side_effect = lambda: next(time_counter)
+        yield time_stepper
 
 
 @pytest.fixture(scope="module")
@@ -142,6 +168,60 @@ class TestSimpleProfile:
         tester.assert_axis_eventually_equals(
             vjoy_di_device.device_guid, output_axis_id, di_input
         )
+
+    def test_axis_relative(
+        self,
+        subtests,
+        patched_time: threading.Semaphore,
+        tester: app_tester.GremlinAppTester,
+        vjoy_control_device: vjoy.VJoy,
+        vjoy_di_device: dill.DeviceSummary,
+    ):
+        """Verifies relative axis changes over time."""
+        input_axis_id = 2
+        output_axis_id = 4
+        sleep_calls_per_subtest = 10
+        # The thread updating output axis values takes one step before we can pause it with
+        # our semaphore, hence the +1 in the values below.
+        for di_input, steps in [
+            (tester.AXIS_MAX_INT, [11, 21, 31]),
+            (-tester.AXIS_MAX_INT, [21, 11, 1, -9, -19, -29]),
+        ]:
+            calibrated_value = util.with_default_center_calibration(di_input)
+            vjoy_control_device.axis(linear_index=input_axis_id).set_absolute_value(
+                calibrated_value
+            )
+            with subtests.test("input readback"):
+                tester.assert_axis_eventually_equals(
+                    vjoy_di_device.device_guid, input_axis_id, di_input
+                )
+            with subtests.test("input axis cache"):
+                tester.assert_cached_axis_eventually_equals(
+                    vjoy_di_device.device_guid.uuid, input_axis_id, calibrated_value
+                )
+            for step in steps:
+                absolute_change = (
+                    step
+                    * map_to_vjoy.MapToVjoyFunctor.SCALING_MULTIPLIER
+                    * map_to_vjoy.MapToVjoyData.DEFAULT_SCALING
+                )
+                with subtests.test(
+                    "output",
+                    di_input=di_input,
+                    step=step,
+                    absolute_change=absolute_change,
+                ):
+                    patched_time.release(sleep_calls_per_subtest)
+                    tester.assert_cached_axis_eventually_equals(
+                        vjoy_di_device.device_guid.uuid,
+                        output_axis_id,
+                        absolute_change,
+                    )
+                    tester.assert_axis_eventually_equals(
+                        vjoy_di_device.device_guid,
+                        output_axis_id,
+                        absolute_change * tester.AXIS_MAX_INT,
+                    )
 
     @pytest.mark.parametrize(
         ("di_input", "vjoy_output", "cached_value"),

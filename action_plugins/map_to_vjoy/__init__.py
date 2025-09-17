@@ -44,6 +44,9 @@ class MapToVjoyFunctor(AbstractFunctor):
 
     """Executes a map to vjoy action when called."""
 
+    SCALING_MULTIPLIER = 1 / 1000.0
+    THREAD_SLEEP_DURATION_S = 0.01
+
     def __init__(self, action: MapToVjoyData):
         super().__init__(action)
 
@@ -70,8 +73,9 @@ class MapToVjoyFunctor(AbstractFunctor):
                     .axis(self.data.vjoy_input_id).value = value.current
             else:
                 self.should_stop_thread = abs(event.value) < 0.05
-                self.axis_delta_value = \
-                    value.current * (self.data.axis_scaling / 1000.0)
+                self.axis_delta_value = value.current * (
+                    self.data.axis_scaling * self.SCALING_MULTIPLIER
+                )
                 self.thread_last_update = time.time()
                 if self.thread_running is False:
                     if isinstance(self.thread, threading.Thread):
@@ -129,7 +133,7 @@ class MapToVjoyFunctor(AbstractFunctor):
                 if self.should_stop_thread and \
                         self.thread_last_update + 1.0 < time.time():
                     self.thread_running = False
-                time.sleep(0.01)
+                time.sleep(self.THREAD_SLEEP_DURATION_S)
             except error.VJoyError:
                 self.thread_running = False
 
@@ -263,6 +267,8 @@ class MapToVjoyData(AbstractActionData):
 
     """Action feeding a vJoy device."""
 
+    DEFAULT_SCALING = 1.0
+
     version = 1
     name = "Map to vJoy"
     tag = "map-to-vjoy"
@@ -299,7 +305,7 @@ class MapToVjoyData(AbstractActionData):
         self.vjoy_input_id = input_id
         self.vjoy_input_type = behavior_type
         self.axis_mode = AxisMode.Absolute
-        self.axis_scaling = 1.0
+        self.axis_scaling = self.DEFAULT_SCALING
         self.button_inverted = False
 
     @classmethod
