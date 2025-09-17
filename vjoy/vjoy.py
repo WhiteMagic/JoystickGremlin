@@ -27,7 +27,7 @@ import os
 
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 
-from gremlin.error import VJoyError
+from gremlin.error import VJoyConcurrencyError, VJoyError
 from gremlin.types import AxisNames, HatDirection
 import gremlin.spline
 
@@ -514,6 +514,11 @@ class VJoy:
 
         Args:
             vjoy_id: id of the vJoy device to initialize.
+
+        Raises:
+            VJoyConcurrencyError: If the requested vJoy device is already owned by this
+                process. Calling code should be able to catch and handle this.
+            VJoyError: If the requested vJoy device cannot be instantiated for any other reason.
         """
         self.vjoy_id = None
 
@@ -526,19 +531,17 @@ class VJoy:
             )
             raise VJoyError("Running incompatible vJoy version, 2.1.8 or higher required")
         elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
-            logging.getLogger("system").error(
-                "Requested vJoy device is not available - vid: {}".format(vjoy_id)
-            )
-            raise VJoyError(
-                "Requested vJoy device is not available - vid: {}".format(vjoy_id)
-            )
+            if VJoyInterface.GetOwnerPid(vjoy_id) == os.getpid():
+                raise VJoyConcurrencyError(
+                    f"vJoy device {vjoy_id} is already acquired by this process"
+                )
+            msg = "Requested vJoy device is not available - vid: {}".format(vjoy_id)
+            logging.getLogger("system").error(msg)
+            raise VJoyError(msg)
         elif not VJoyInterface.AcquireVJD(vjoy_id):
-            logging.getLogger("system").error(
-                "Failed to acquire the vJoy device - vid: {}".format(vjoy_id)
-            )
-            raise VJoyError(
-                "Failed to acquire the vJoy device - vid: {}".format(vjoy_id)
-            )
+            msg = "Failed to acquire the vJoy device - vid: {}".format(vjoy_id)
+            logging.getLogger("system").error(msg)
+            raise VJoyError(msg)
 
         self.vjoy_id = vjoy_id
         self.pid = os.getpid()
@@ -932,22 +935,35 @@ class VJoyProxy:
 
         Returns:
             VJoy instance corresponding to the given id
+        
+        Raises:
+            VJoyError: if the vJoy device is not available
+            VJoyConcurrencyError: if a race condition could not be resolved with vJoy acquisition.
         """
-        if index in VJoyProxy.vjoy_devices:
-            return VJoyProxy.vjoy_devices[index]
-        else:
+        for attempt in range(1, 4):
+            if index in VJoyProxy.vjoy_devices:
+                return VJoyProxy.vjoy_devices[index]
+
             if not isinstance(index, int):
                 raise VJoyError("Integer ID for vjoy device ID expected")
 
             try:
                 device = VJoy(index)
-                VJoyProxy.vjoy_devices[index] = device
-                return device
+            except VJoyConcurrencyError as e:
+                logging.getLogger("system").info(
+                    f"Concurrent instantiation {attempt=} for vJoy {index=}, retrying..."
+                )
+                time.sleep(0.05)
+                continue
             except VJoyError as e:
                 logging.getLogger("system").error(
                     f"Failed accessing vJoy id={index}, error is: {e}"
                 )
                 raise e
+            else:
+                VJoyProxy.vjoy_devices[index] = device
+                return device
+        raise VJoyConcurrencyError(f"Failed to resolve concurrent vJoy {index=} access")
 
     @classmethod
     def reset(cls):

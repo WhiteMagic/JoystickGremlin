@@ -77,6 +77,14 @@ class VJoyError(GremlinError):
         super().__init__(value)
 
 
+class VJoyConcurrencyError(VJoyError):
+
+    """Exception raised when vJoy is accessed from multiple threads."""
+
+    def __init__(self, value):
+        super().__init__(value)
+
+
 class PluginError(GremlinError):
 
     """Exception raised when an error occurs withing a user plugin."""
