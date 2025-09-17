@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" ?>
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>97b77b40-07d8-11f0-8028-444553540000</device-id>
+            <input-type>button</input-type>
+            <mode>Default</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>7c55893e-ceff-4038-8223-0b8a5294b392</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+    <logical-device/>
+    <library>
+        <action id="5daa1184-c5e9-4316-9a66-c4143c51a6b9" type="macro">
+            <property type="bool">
+                <name>is-exclusive</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>repeat-mode</name>
+                <value>Single</value>
+            </property>
+            <property type="int">
+                <name>repeat-count</name>
+                <value>3</value>
+            </property>
+            <property type="float">
+                <name>repeat-delay</name>
+                <value>0.8</value>
+            </property>
+            <macro-action type="vjoy">
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>hat</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>1</value>
+                </property>
+                <property type="hat_direction">
+                    <name>value</name>
+                    <value>north-east</value>
+                </property>
+            </macro-action>
+            <macro-action type="vjoy">
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>hat</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>2</value>
+                </property>
+                <property type="hat_direction">
+                    <name>value</name>
+                    <value>west</value>
+                </property>
+            </macro-action>
+            <macro-action type="vjoy">
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>button</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>3</value>
+                </property>
+                <property type="bool">
+                    <name>value</name>
+                    <value>True</value>
+                </property>
+            </macro-action>
+            <macro-action type="vjoy">
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>2</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>0.7</value>
+                </property>
+                <property type="axis_mode">
+                    <name>axis-mode</name>
+                    <value>absolute</value>
+                </property>
+            </macro-action>
+            <macro-action type="vjoy">
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>3</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>-0.5</value>
+                </property>
+                <property type="axis_mode">
+                    <name>axis-mode</name>
+                    <value>absolute</value>
+                </property>
+            </macro-action>
+            <macro-action type="vjoy">
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>5</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>0.2</value>
+                </property>
+                <property type="axis_mode">
+                    <name>axis-mode</name>
+                    <value>relative</value>
+                </property>
+            </macro-action>
+            <macro-action type="vjoy">
+                <property type="int">
+                    <name>vjoy-id</name>
+                    <value>1</value>
+                </property>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>axis</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>6</value>
+                </property>
+                <property type="float">
+                    <name>value</name>
+                    <value>-0.1</value>
+                </property>
+                <property type="axis_mode">
+                    <name>axis-mode</name>
+                    <value>relative</value>
+                </property>
+            </macro-action>
+            <property type="string">
+                <name>action-label</name>
+                <value>Macro</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>press</value>
+            </property>
+        </action>
+        <action id="7c55893e-ceff-4038-8223-0b8a5294b392" type="root">
+            <actions>
+                <action-id>5daa1184-c5e9-4316-9a66-c4143c51a6b9</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+    </library>
+    <modes>
+        <mode>Default</mode>
+    </modes>
+    <scripts/>
+</profile>
