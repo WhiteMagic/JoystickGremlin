@@ -380,13 +380,9 @@ class ScriptListModel(QtCore.QAbstractListModel):
 
     @Slot(str)
     def addScript(self, path: str) -> None:
-        self.beginInsertRows(
-            QtCore.QModelIndex(),
-            self.rowCount(),
-            self.rowCount()
-        )
+        self.layoutAboutToBeChanged.emit()
         self._script_manager.add_script(Path(path))
-        self.endInsertRows()
+        self.layoutChanged.emit()
 
     @Slot(str, str)
     def removeScript(self, path: str, name: str) -> None:
