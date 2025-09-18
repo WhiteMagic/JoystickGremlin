@@ -535,6 +535,8 @@ class Script:
     def reload(self):
         Script.variable_registry.register_script(self)
         self.module._script_id = self.id
+        # Clear periodic registry to avoid duplicate entries.
+        periodic_registry.clear()
         self.spec.loader.exec_module(self.module)
 
     def _retrieve_variable_definitions(self):
