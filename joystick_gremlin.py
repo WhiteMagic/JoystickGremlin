@@ -262,6 +262,7 @@ def make_gremlin_app(argv: List[str]) -> QtWidgets.QApplication:
         "core_plugins",
         gremlin.util.resource_path("action_plugins/")
     )
+    QtCore.QDir.addSearchPath("qml", gremlin.util.resource_path("qml/"))
     cfg = Configuration()
     user_plugins_path = Path(cfg.value("global", "general", "plugin_directory"))
     if user_plugins_path.is_dir():

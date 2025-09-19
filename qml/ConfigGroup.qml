@@ -173,6 +173,51 @@ ColumnLayout {
                 }
             }
         }
+        // Meta Option dynamic loading
+        DelegateChoice {
+            roleValue: "meta_option"
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 200
+
+                UIText {
+                    text: description
+                }
+
+                Item {
+                    Layout.fillWidth: true
+
+                    height: _dynamicLoad.item ? _dynamicLoad.item.height : 0
+                    // implicitHeight: _dynamicLoad.item
+                    //     ? (_dynamicLoad.item.implicitHeight > 0
+                    //         ? _dynamicLoad.item.implicitHeight
+                    //             : _dynamicLoad.item.height)
+                    //         : 0
+
+                    Loader {
+                        id: _dynamicLoad
+
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+
+                        source: Qt.resolvedUrl(value)
+
+                        onStatusChanged: () => {
+                            if (status === Loader.Error) {
+                                console.log(
+                                    "Error loading meta option component from " +
+                                    value + ": " + item);
+                            } else if (status === Loader.Ready) {
+                                // item.Layout.fillHeight = true
+                                // item.height = 300
+                                console.log(item.height);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
     }
 }

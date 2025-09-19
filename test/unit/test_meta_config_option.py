@@ -15,17 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from collections.abc import Iterator
 import logging
 import sys
 sys.path.append(".")
 
 import pytest
+from unittest import mock
 
 import gremlin.error
 import gremlin.types
 
 from gremlin.ui.option import BaseMetaConfigOptionWidget, MetaConfigOption
 
+from gremlin.common import SingletonMetaclass
 from gremlin.types import PropertyType
 
 
@@ -35,9 +38,12 @@ class DummyWidget(BaseMetaConfigOptionWidget):
         return "dummy.qml"
 
 
-def test_basic():
-    option = MetaConfigOption()
+@pytest.fixture
+def option() -> MetaConfigOption:
+    SingletonMetaclass._instances.pop(MetaConfigOption, None)
+    return MetaConfigOption()
 
+def test_basic(option: MetaConfigOption) -> None:
     assert option.count() == 0
 
     option.register("some", "test", "option 1", "description 1", DummyWidget)
@@ -54,18 +60,30 @@ def test_basic():
     assert option.qml_widget("some", "test", "option 2") == DummyWidget
 
 
-def test_register_duplicate_logs_warning(caplog):
-    option = MetaConfigOption()
-    option.register("dup", "grp", "name", "desc", "ui/elem.qml")
-    option.register("dup", "grp", "name", "desc", "ui/elem.qml")
+def test_empty_entries(option: MetaConfigOption) -> None:
+    assert option.count() == 0
+
+    option.register("some", "test", "option 1", "description 1", DummyWidget)
+
+    assert option.count() == 1
+
+    assert len(option.sections()) == 1
+    assert len(option.groups("some")) == 1
+    assert len(option.entries("some", "test")) == 1
+    assert option.entries("no", "such") == []
+    assert option.entries("some", "no such") == []
+
+
+def test_register_duplicate_logs_warning(option: MetaConfigOption, caplog) -> None:
+    option.register("dup", "grp", "name", "desc", DummyWidget)
+    option.register("dup", "grp", "name", "desc", DummyWidget)
 
     assert caplog.record_tuples == [
         ("system", logging.WARNING, "Option dup.grp.name already registered.")
     ]
 
 
-def test_retrieve_nonexistent_raises():
-    option = MetaConfigOption()
+def test_retrieve_nonexistent_raises(option: MetaConfigOption) -> None:
     with pytest.raises(gremlin.error.GremlinError):
         option.qml_widget("no", "such", "option")
 

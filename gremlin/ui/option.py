@@ -51,9 +51,10 @@ class ConfigSectionModel(QtCore.QAbstractListModel):
         super().__init__(parent)
 
         self._config = gremlin.config.Configuration()
+        self._option = MetaConfigOption()
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
-        return len(self._config.sections())
+        return len(self._combined_sections())
 
     def data(
             self,
@@ -63,7 +64,7 @@ class ConfigSectionModel(QtCore.QAbstractListModel):
         if role not in self.roles:
             return None
 
-        sections = self._config.sections()
+        sections = self._combined_sections()
         if index.row() >= len(sections):
             return None
 
@@ -75,6 +76,11 @@ class ConfigSectionModel(QtCore.QAbstractListModel):
 
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
+
+    def _combined_sections(self) -> list[str]:
+        return list(sorted(
+            set(self._config.sections() + self._option.sections())
+        ))
 
 
 @QtQml.QmlElement
@@ -91,10 +97,15 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"entryModel"),
     }
 
-    def __init__(self, section: str, parent: Optional[QtCore.QObject]=None) -> None:
+    def __init__(
+            self,
+            section: str,
+            parent: Optional[QtCore.QObject]=None
+    ) -> None:
         super().__init__(parent)
 
         self._config = gremlin.config.Configuration()
+        self._option = MetaConfigOption()
         self._section_name = section
 
     @Property(str, notify=changed) # type: ignore
@@ -102,14 +113,14 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
         return self._section_name
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
-        return len(self._config.groups(self._section_name))
+        return len(self._combined_groups())
 
     def data(
             self,
             index: ta.ModelIndex,
             role: int=QtCore.Qt.ItemDataRole.DisplayRole
     ) -> Any:
-        groups = self._config.groups(self._section_name)
+        groups = self._combined_groups()
         if index.row() < len(groups):
             match self.roles[role]:
                 case "entryModel":
@@ -123,6 +134,12 @@ class ConfigGroupModel(QtCore.QAbstractListModel):
 
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
+
+    def _combined_groups(self) -> list[str]:
+        return list(sorted(set(
+            self._config.groups(self._section_name) +
+            self._option.groups(self._section_name)
+        )))
 
 
 @QtQml.QmlElement
@@ -146,35 +163,53 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
         super().__init__(parent)
 
         self._config = gremlin.config.Configuration()
+        self._option = MetaConfigOption()
         self._section_name = section
         self._group_name = group
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
-        return len(self._config.entries(self._section_name, self._group_name))
+        return len(self._combined_entries())
 
     def data(
             self,
             index: ta.ModelIndex,
             role: int=QtCore.Qt.ItemDataRole.DisplayRole
     ) -> Any:
-        entries = self._config.entries(self._section_name, self._group_name)
+        entries = self._combined_entries()
         if not index.isValid() or index.row() >= len(entries):
             return None
 
+        value = None
         if role in self.roles:
             role_name = bytes(self.roles[role].data()).decode()
 
+            # TODO: Figure out if we need to retrieve an option or a config
+            #       entry and handle it accordingly.
             # Special handling
-            value = self._config.get(
-                self._section_name,
-                self._group_name,
-                entries[index.row()],
-                role_name
-            )
-            if isinstance(value, PropertyType):
-                value = PropertyType.to_string(value)
-            return value
-        return None
+            name = entries[index.row()]
+            if self._config.exists(self._section_name, self._group_name, name):
+                value = self._config.get(
+                    self._section_name,
+                    self._group_name,
+                    entries[index.row()],
+                    role_name
+                )
+                if isinstance(value, PropertyType):
+                    value = PropertyType.to_string(value)
+            else:
+                match role_name:
+                    case "description":
+                        value = self._option.description(
+                            self._section_name, self._group_name, name
+                        )
+                    case "value":
+                        value = self._option.qml_widget(
+                            self._section_name, self._group_name, name
+                        )().qml_path
+                        print(value)
+                    case "data_type":
+                        value = "meta_option"
+        return value
 
     def setData(
             self,
@@ -204,14 +239,17 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
 
+    def _combined_entries(self) -> list[str]:
+        return list(sorted(set(
+            self._config.entries(self._section_name, self._group_name) +
+            self._option.entries(self._section_name, self._group_name)
+        )))
 
-class BaseMetaConfigOptionWidget(QtCore.QObject):
 
-    def __init__(self, parent: Optional[QtCore.QObject]=None) -> None:
-        super().__init__(parent)
+class BaseMetaConfigOptionWidget:
 
-    @Property(str, constant=True)
-    def qmlPath(self) -> str:
+    @property
+    def qml_path(self) -> str:
         return self._qml_path()
 
     def _qml_path(self) -> str:
@@ -219,6 +257,64 @@ class BaseMetaConfigOptionWidget(QtCore.QObject):
             "BaseMetaConfigOptionWidget: Subclasses must implement the " +
             "qml_path method."
         )
+
+
+# @QtQml.QmlElement
+# class OptionTestWidget(BaseMetaConfigOptionWidget):
+
+    timeChanged = Signal()
+
+    def _qml_path(self) -> str:
+        return "file:///" + QtCore.QFile("qml:OptionTest.qml").fileName()
+
+    @Property(float, notify=timeChanged)
+    def timeNow(self) -> float:
+        import time
+        return time.time()
+
+
+@QtQml.QmlElement
+class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
+
+    roles = {
+        QtCore.Qt.UserRole + 1: QtCore.QByteArray(b"name"),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray(b"visible"),
+    }
+
+    def __init__(self, parent: Optional[QtCore.QObject]=None) -> None:
+        QtCore.QAbstractListModel.__init__(self, parent)
+        BaseMetaConfigOptionWidget.__init__(self)
+
+        self._config = gremlin.config.Configuration()
+        self._cfg_key = ["global", "general", "action_priorities"]
+
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        return len(self._config.value(*self._cfg_key))
+
+    def data(
+            self,
+            index: ta.ModelIndex,
+            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if role in self.roles:
+            data = self._config.value(*self._cfg_key)[index.row()]
+            match self.roles[role]:
+                case "name":
+                    return data[0]
+                case "visible":
+                    return data[1]
+                case _:
+                    raise GremlinError(f"Unknown role name {role}")
+
+        else:
+            raise GremlinError("Invalid role encountered")
+
+    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+        return self.roles
+
+    def _qml_path(self) -> str:
+        return "file:///" + \
+            QtCore.QFile("qml:OptionActionSequenceOrdering.qml").fileName()
 
 
 class MetaConfigOption(metaclass=SingletonMetaclass):
@@ -240,7 +336,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
         group: str,
         name: str,
         description: str,
-        qml_widget: BaseMetaConfigOptionWidget
+        qml_widget: type[BaseMetaConfigOptionWidget]
     ) -> None:
         """Registers an option that does not directly contain a value.
 
@@ -309,7 +405,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
             section: str,
             group: str,
             name: str
-    ) -> BaseMetaConfigOptionWidget:
+    ) -> type[BaseMetaConfigOptionWidget]:
         """Returns the QML widget class associated with the given option.
 
         Args:
@@ -321,7 +417,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
             Class type of the QML widget to be used.
         """
         return cast(
-            BaseMetaConfigOptionWidget,
+            type[BaseMetaConfigOptionWidget],
             self._retrieve_value(section, group, name, "qml_widget")
         )
 
@@ -347,7 +443,7 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
             group: str,
             name: str,
             entry: str
-    ) -> str|BaseMetaConfigOptionWidget:
+    ) -> str|type[BaseMetaConfigOptionWidget]:
         """Retrieves an entry from storage.
 
         Args:
@@ -370,3 +466,10 @@ class MetaConfigOption(metaclass=SingletonMetaclass):
                 return self._options[key]["qml_widget"]
             case _:
                 raise GremlinError(f"Unknown entry '{entry}' requested.")
+
+
+MetaConfigOption().register(
+    "global", "general", "action list",
+    "Reorder actions as desired",
+    ActionSequenceOrdering
+)
