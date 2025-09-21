@@ -38,7 +38,7 @@ int_var = user_script.IntegerVariable(
     "Example integer variable",
     is_optional=True,
     initial_value=2,
-    min_value=0,
+    min_value=-20,
     max_value=10,
 )
 

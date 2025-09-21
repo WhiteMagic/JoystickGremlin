@@ -69,7 +69,7 @@ class TestScript:
         with subtests.test("value change"):
             var.value = False
             assert var.value is False
-        
+
     @pytest.mark.parametrize("value", [True, False])
     def test_bool_variable_xml_transforms(self, script_for_test: user_script.Script, value):
         var = script_for_test.get_variable("A bool variable")
@@ -118,7 +118,7 @@ class TestScript:
         assert isinstance(var, user_script.IntegerVariable)
         assert var.value == 2
         assert var.is_optional is True
-        assert var.min_value == 0
+        assert var.min_value == -20
         assert var.max_value == 10
         assert var.description == "Example integer variable"
 
@@ -132,9 +132,20 @@ class TestScript:
             assert var.value == 10
             assert var.is_valid()
 
-            var.value = -1
-            assert var.value == 0
+            var.value = -21
+            assert var.value == -20  # Limit as defined in script.
             assert var.is_valid()
+
+    @pytest.mark.parametrize("value", [-11, 0, 2, 3, 10])
+    def test_integer_variable_xml_transforms(
+        self, script_for_test: user_script.Script, value
+    ):
+        var = script_for_test.get_variable("An integer variable")
+        var.value = value
+        xml = var.to_xml()
+        var_from_xml = user_script.IntegerVariable("", "", 0, 0, 0, False)
+        var_from_xml.from_xml(xml)
+        assert var_from_xml.value == value
 
     def test_mode_variable(self, script_for_test: user_script.Script, subtests):
         """Test mode variable properties."""
@@ -154,6 +165,14 @@ class TestScript:
             assert var.value == initial_mode
             assert var.is_valid()
 
+    def test_mode_variable_xml_transforms(self, script_for_test: user_script.Script):
+        var = script_for_test.get_variable("A mode variable")
+        var.value = "Default"
+        xml = var.to_xml()
+        var_from_xml = user_script.ModeVariable("", "", False)
+        var_from_xml.from_xml(xml)
+        assert var_from_xml.value == "Default"
+
     def test_string_variable(self, script_for_test: user_script.Script, subtests):
         """Test string variable properties."""
         var = script_for_test.get_variable("A string variable")
@@ -171,6 +190,25 @@ class TestScript:
             var.value = "new string var val"
             assert var.value == "new string var val"
             assert var.is_valid()
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "example string var val",
+            "new string var val",
+            "long string value",
+            "1",
+        ],
+    )
+    def test_string_variable_xml_transforms(
+        self, script_for_test: user_script.Script, value
+    ):
+        var = script_for_test.get_variable("A string variable")
+        var.value = value
+        xml = var.to_xml()
+        var_from_xml = user_script.StringVariable("", "", "", False)
+        var_from_xml.from_xml(xml)
+        assert var_from_xml.value == value
 
     def test_selection_variable(self, script_for_test: user_script.Script, subtests):
         """Test selection variable properties."""
@@ -190,6 +228,19 @@ class TestScript:
             assert var.value == "selection2"
             assert var.is_valid()
 
+    @pytest.mark.parametrize("value", ["selection1", "selection2", "selection3"])
+    def test_selection_variable_xml_transforms(
+        self, script_for_test: user_script.Script, value
+    ):
+        var = script_for_test.get_variable("A selection variable")
+        var.value = value
+        xml = var.to_xml()
+        var_from_xml = user_script.SelectionVariable(
+            "", "", False, ["selection1", "selection2", "selection3"]
+        )
+        var_from_xml.from_xml(xml)
+        assert var_from_xml.value == value
+
     def test_virtual_input_variable(
         self, script_for_test: user_script.Script, subtests
     ):
@@ -200,6 +251,12 @@ class TestScript:
             assert var.valid_types == [types.InputType.JoystickAxis]
             assert var.is_optional is True
             assert var.description == "Example virtual input variable for an axis"
+        
+        with subtests.test("axis from xml"):
+            var_from_xml = user_script.VirtualInputVariable(
+                "", "", True, [types.InputType.JoystickAxis]
+            )
+            var_from_xml.from_xml(var.to_xml())
 
         with subtests.test("button"):
             var = script_for_test.get_variable("A virtual button input variable")
@@ -207,6 +264,12 @@ class TestScript:
             assert var.valid_types == [types.InputType.JoystickButton]
             assert var.is_optional is True
             assert var.description == "Example virtual input variable for a button"
+        
+        with subtests.test("button from xml"):
+            var_from_xml = user_script.VirtualInputVariable(
+                "", "", True, [types.InputType.JoystickButton]
+            )
+            var_from_xml.from_xml(var.to_xml())
 
         with subtests.test("hat"):
             var = script_for_test.get_variable("A virtual hat input variable")
@@ -214,6 +277,12 @@ class TestScript:
             assert var.valid_types == [types.InputType.JoystickHat]
             assert var.is_optional is True
             assert var.description == "Example virtual input variable for a hat"
+
+        with subtests.test("hat from xml"):
+            var_from_xml = user_script.VirtualInputVariable(
+                "", "", True, [types.InputType.JoystickHat]
+            )
+            var_from_xml.from_xml(var.to_xml())
 
     def test_physical_input_variable(
         self, script_for_test: user_script.Script, subtests
@@ -234,6 +303,12 @@ class TestScript:
                 1,
             )
             assert var.is_valid()
+        
+        with subtests.test("axis from xml"):
+            var_from_xml = user_script.PhysicalInputVariable(
+                "", "", True, [types.InputType.JoystickAxis]
+            )
+            var_from_xml.from_xml(var.to_xml())
 
         with subtests.test("button"):
             var = script_for_test.get_variable("A physical button input variable")
@@ -243,6 +318,12 @@ class TestScript:
             assert var.description == "Example physical input variable for a button"
             assert not var.is_valid()
 
+        with subtests.test("button from xml"):
+            var_from_xml = user_script.PhysicalInputVariable(
+                "", "", True, [types.InputType.JoystickButton]
+            )
+            var_from_xml.from_xml(var.to_xml())
+
         with subtests.test("hat"):
             var = script_for_test.get_variable("A physical hat input variable")
             assert isinstance(var, user_script.PhysicalInputVariable)
@@ -250,3 +331,9 @@ class TestScript:
             assert var.is_optional is True
             assert var.description == "Example physical input variable for a hat"
             assert not var.is_valid()
+
+        with subtests.test("hat from xml"):
+            var_from_xml = user_script.PhysicalInputVariable(
+                "", "", True, [types.InputType.JoystickHat]
+            )
+            var_from_xml.from_xml(var.to_xml())
