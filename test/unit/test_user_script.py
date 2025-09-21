@@ -69,6 +69,15 @@ class TestScript:
         with subtests.test("value change"):
             var.value = False
             assert var.value is False
+        
+    @pytest.mark.parametrize("value", [True, False])
+    def test_bool_variable_xml_transforms(self, script_for_test: user_script.Script, value):
+        var = script_for_test.get_variable("A bool variable")
+        var.value = value
+        xml = var.to_xml()
+        var_from_xml = user_script.BoolVariable('', '', False, False)
+        var_from_xml.from_xml(xml)
+        assert var_from_xml.value is value
 
     def test_float_variable(self, script_for_test: user_script.Script, subtests):
         """Test float variable properties."""
@@ -93,6 +102,15 @@ class TestScript:
             var.value = -5.5
             assert var.value == -4.0
             assert var.is_valid()
+
+    @pytest.mark.parametrize("value", [1.1, 2.2, 10.0, -4.0])
+    def test_float_variable_xml_transforms(self, script_for_test: user_script.Script, value):
+        var = script_for_test.get_variable("A float variable")
+        var.value = value
+        xml = var.to_xml()
+        var_from_xml = user_script.FloatVariable('', '', 0.0, 0.0, 0.0, False)
+        var_from_xml.from_xml(xml)
+        assert var_from_xml.value == value
 
     def test_integer_variable(self, script_for_test: user_script.Script, subtests):
         """Test integer variable properties."""
