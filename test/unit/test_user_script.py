@@ -251,7 +251,7 @@ class TestScript:
             assert var.valid_types == [types.InputType.JoystickAxis]
             assert var.is_optional is True
             assert var.description == "Example virtual input variable for an axis"
-        
+
         with subtests.test("axis from xml"):
             var_from_xml = user_script.VirtualInputVariable(
                 "", "", True, [types.InputType.JoystickAxis]
@@ -264,7 +264,7 @@ class TestScript:
             assert var.valid_types == [types.InputType.JoystickButton]
             assert var.is_optional is True
             assert var.description == "Example virtual input variable for a button"
-        
+
         with subtests.test("button from xml"):
             var_from_xml = user_script.VirtualInputVariable(
                 "", "", True, [types.InputType.JoystickButton]
@@ -296,19 +296,21 @@ class TestScript:
             assert var.description == "Example physical input variable for an axis"
             assert not var.is_valid()
 
-        with subtests.test("value change"):
+        with subtests.test("axis value change"):
             var.value = (
-                get_fake_device_guid(is_virtual=False),
+                get_fake_device_guid(is_virtual=False).uuid,
                 types.InputType.JoystickAxis,
                 1,
             )
             assert var.is_valid()
-        
+
         with subtests.test("axis from xml"):
             var_from_xml = user_script.PhysicalInputVariable(
                 "", "", True, [types.InputType.JoystickAxis]
             )
             var_from_xml.from_xml(var.to_xml())
+            assert var_from_xml.is_valid()
+            assert var_from_xml.value == var.value
 
         with subtests.test("button"):
             var = script_for_test.get_variable("A physical button input variable")
@@ -318,11 +320,21 @@ class TestScript:
             assert var.description == "Example physical input variable for a button"
             assert not var.is_valid()
 
+        with subtests.test("button value change"):
+            var.value = (
+                get_fake_device_guid(is_virtual=False).uuid,
+                types.InputType.JoystickButton,
+                1,
+            )
+            assert var.is_valid()
+
         with subtests.test("button from xml"):
             var_from_xml = user_script.PhysicalInputVariable(
                 "", "", True, [types.InputType.JoystickButton]
             )
             var_from_xml.from_xml(var.to_xml())
+            assert var_from_xml.is_valid()
+            assert var_from_xml.value == var.value
 
         with subtests.test("hat"):
             var = script_for_test.get_variable("A physical hat input variable")
@@ -332,8 +344,18 @@ class TestScript:
             assert var.description == "Example physical input variable for a hat"
             assert not var.is_valid()
 
+        with subtests.test("hat value change"):
+            var.value = (
+                get_fake_device_guid(is_virtual=False).uuid,
+                types.InputType.JoystickHat,
+                1,
+            )
+            assert var.is_valid()
+
         with subtests.test("hat from xml"):
             var_from_xml = user_script.PhysicalInputVariable(
                 "", "", True, [types.InputType.JoystickHat]
             )
             var_from_xml.from_xml(var.to_xml())
+            assert var_from_xml.is_valid()
+            assert var_from_xml.value == var.value

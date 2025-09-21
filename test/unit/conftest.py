@@ -1,5 +1,4 @@
 import sys
-import uuid
 sys.path.append(".")
 
 import pathlib
@@ -15,7 +14,8 @@ import gremlin.device_initialization
 import gremlin.event_handler
 
 
-def get_fake_device_guid(is_virtual: bool) -> dill._GUID:
+def get_fake_device_raw_guid(is_virtual: bool) -> dill._GUID:
+    """Returns "raw" _GUID for a fake device. Rarely used directly."""
     return dill._GUID(
         Data1=501018480 + int(is_virtual),
         Data2=264,
@@ -24,10 +24,15 @@ def get_fake_device_guid(is_virtual: bool) -> dill._GUID:
     )
 
 
+def get_fake_device_guid(is_virtual: bool) -> dill.GUID:
+    """Returns dill.GUID for a fake device. Typically .uuid is used."""
+    return dill.GUID(get_fake_device_raw_guid(is_virtual))
+
+
 def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
     """Creates a repeatable, faked DeviceSummary."""
     # Data below was generated from a vJoy device.
-    guid =  get_fake_device_guid(is_virtual)
+    guid =  get_fake_device_raw_guid(is_virtual)
     axis_map_array = (dill._AxisMap * 8)()
     for i, (linear_i, axis_i) in enumerate(
         [(1, 1), (2, 2), (3, 3), (4, 6), (5, 7), (6, 8), (7, 0), (8, 0)]
