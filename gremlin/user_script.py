@@ -333,7 +333,6 @@ class KeyboardPlugin:
         return partial_fn(callback, keyboard=KeyboardPlugin.keyboard)
 
 
-
 class ScriptVariableRegistry:
 
     def __init__(self):
@@ -724,12 +723,16 @@ class FloatVariable(AbstractVariable):
         return isinstance(self._value, numbers.Number)
 
     def _from_xml(self, node: ElementTree.Element) -> None:
-        self._value = util.read_property(node, "value", PropertyType.Float)
+        self._value = util.read_property(
+            node, "value", [PropertyType.Float, PropertyType.Int]
+        )
 
     def _to_xml(self, node: ElementTree.Element) -> None:
-        node.append(util.create_property_node(
-            "value", self._value, PropertyType.Float
-        ))
+        node.append(
+            util.create_property_node(
+                "value", self._value, [PropertyType.Float, PropertyType.Int]
+            )
+        )
 
     def _assign_value_from(self, other: FloatVariable) -> None:
         self._value = other.value

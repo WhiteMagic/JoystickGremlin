@@ -103,7 +103,7 @@ class TestScript:
             assert var.value == -4.0
             assert var.is_valid()
 
-    @pytest.mark.parametrize("value", [1.1, 2.2, 10.0, -4.0])
+    @pytest.mark.parametrize("value", [1.1, 2.2, 10.0, -4.0, 1])
     def test_float_variable_xml_transforms(self, script_for_test: user_script.Script, value):
         var = script_for_test.get_variable("A float variable")
         var.value = value
