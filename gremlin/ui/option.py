@@ -309,6 +309,21 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
         else:
             raise GremlinError("Invalid role encountered")
 
+    def setData(
+            self,
+            index: ta.ModelIndex,
+            value: Any,
+            role: int=QtCore.Qt.ItemDataRole.EditRole
+    ) -> bool:
+        data = self._config.value(*self._cfg_key)
+        match self.roles[role]:
+            case "visible":
+                data[index.row()][1] = value
+                self._config.set(*self._cfg_key, data)
+                return True
+            case _:
+                return False
+
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
 

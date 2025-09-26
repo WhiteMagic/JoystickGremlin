@@ -179,43 +179,73 @@ ColumnLayout {
 
             ColumnLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 200
 
                 UIText {
                     text: description
                 }
 
-                Item {
+                // Dynamic item container
+                DynamicItemLoader {
+                    id: metaLoader
                     Layout.fillWidth: true
 
-                    height: _dynamicLoad.item ? _dynamicLoad.item.height : 0
-                    // implicitHeight: _dynamicLoad.item
-                    //     ? (_dynamicLoad.item.implicitHeight > 0
-                    //         ? _dynamicLoad.item.implicitHeight
-                    //             : _dynamicLoad.item.height)
-                    //         : 0
+                    // 'value' is assumed to be the qrc:/... URL for the meta option QML
+                    qmlPath: value
 
-                    Loader {
-                        id: _dynamicLoad
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-
-                        source: Qt.resolvedUrl(value)
-
-                        onStatusChanged: () => {
-                            if (status === Loader.Error) {
-                                console.log(
-                                    "Error loading meta option component from " +
-                                    value + ": " + item);
-                            } else if (status === Loader.Ready) {
-                                // item.Layout.fillHeight = true
-                                // item.height = 300
-                                console.log(item.height);
-                            }
-                        }
+                    // Provide additional properties to the loaded component if needed
+                    // (delete if not required)
+                    injectedProperties: {
+                        // Example placeholders:
+                        // initialValue: model.value,
+                        // description: description
                     }
+
+                    // Optional: force a reload even when file path string stays the same
+                    // forceReloadOnIdenticalPath: true
+
+                    // Optional: react to successful load
+                    onLoaded: (item) => {
+                        // If the loaded item exposes a property you want to initialize,
+                        // you can set it here. Keep empty if not needed.
+                        // console.log("Meta option loaded", item);
+                        console.log("Meta option loaded", item);
+                    }
+
+                    // Optional: log errors
+                    onLoadError: (src, err) => console.warn("Meta option load error:", src, err)
                 }
+
+                // Item {
+                //     Layout.fillWidth: true
+
+                //     height: _dynamicLoad.item ? _dynamicLoad.item.height : 0
+                //     // implicitHeight: _dynamicLoad.item
+                //     //     ? (_dynamicLoad.item.implicitHeight > 0
+                //     //         ? _dynamicLoad.item.implicitHeight
+                //     //             : _dynamicLoad.item.height)
+                //     //         : 0
+
+                //     // Loader {
+                //     //     id: _dynamicLoad
+
+                //     //     anchors.left: parent.left
+                //     //     anchors.right: parent.right
+
+                //     //     source: Qt.resolvedUrl(value)
+
+                //     //     onStatusChanged: () => {
+                //     //         if (status === Loader.Error) {
+                //     //             console.log(
+                //     //                 "Error loading meta option component from " +
+                //     //                 value + ": " + item);
+                //     //         } else if (status === Loader.Ready) {
+                //     //             // item.Layout.fillHeight = true
+                //     //             // item.height = 300
+                //     //             console.log(item.height);
+                //     //         }
+                //     //     }
+                //     // }
+                // }
             }
         }
 
