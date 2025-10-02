@@ -507,12 +507,12 @@ class Profile:
     current_version = 14
 
     def __init__(self) -> None:
-        self.inputs = {}
+        self.inputs: dict[uuid.UUID, list[InputItem]] = {}
         self.library = Library()
         self.settings = Settings(self)
         self.modes = ModeHierarchy(self)
         self.scripts = ScriptManager(self)
-        self.fpath = None
+        self.fpath: str | None = None
         LogicalDevice().reset()
 
     def from_xml(self, fpath: str) -> None:
@@ -722,12 +722,13 @@ class InputItem:
         Args:
             library: library instance that contains all action definitions
         """
-        self.device_id = None
-        self.input_type = None
-        self.input_id = None
-        self.mode = None
+        self.device_id: uuid.UUID | None = None
+        self.input_type: InputType | None = None
+        # Int for joysticks, tuple of two ints for keyboard.
+        self.input_id: int | tuple[int, int] | None = None
+        self.mode: str | None = None
         self.library = library
-        self.action_sequences = []
+        self.action_sequences: list[InputItemBinding] = []
         self.is_active = True
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -793,7 +794,7 @@ class InputItemBinding:
 
     def __init__(self, input_item: InputItem):
         self.input_item = input_item
-        self.root_action = None
+        self.root_action: AbstractActionData | None = None
         self.behavior = None
         self.virtual_button = None
 
