@@ -22,13 +22,13 @@ import enum
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 import os
 
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 
 from gremlin.error import VJoyConcurrencyError, VJoyError
-from gremlin.types import AxisNames, HatDirection
+from gremlin.types import AxisNames, HatDirection, InputType
 import gremlin.spline
 
 
@@ -66,6 +66,14 @@ class HatType(enum.Enum):
 
     Discrete = 0
     Continuous = 1
+
+
+class VjoyInput(NamedTuple):
+    """Uniquely identifies a vJoy input on this system."""
+    vjoy_id: int
+    input_type: InputType
+    # Be consistent for axes: preferable use "linear_index".
+    input_id: int
 
 
 def device_available(vjoy_id: int) -> bool:
