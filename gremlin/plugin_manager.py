@@ -49,11 +49,13 @@ class PluginManager:
         self._parameter_requirements = {}
 
         self._discover_plugins(Path(util.resource_path("action_plugins")), True)
-        path = Path(config.Configuration().value(
+        user_plugin_dir = config.Configuration().value(
             "global", "general", "plugin_directory"
-        ))
-        if path.is_dir():
-            self._discover_plugins(path, False)
+        )
+        if user_plugin_dir:
+            path = Path(user_plugin_dir)
+            if path.is_dir():
+                self._discover_plugins(path, False)
 
         self._create_type_action_map()
         self._create_action_name_map()
