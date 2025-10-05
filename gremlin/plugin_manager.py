@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 @common.SingletonDecorator
 class PluginManager:
 
-    """Handles discovery and handling of action plugins."""
+    """Handles discovery and management of action plugins."""
 
     def __init__(self) -> None:
         """Initializes the action plugin manager."""
@@ -65,7 +65,8 @@ class PluginManager:
     def repository(self) -> PluginDict:
         """Returns the dictionary of all found plugins.
 
-        :return dictionary containing all plugins found
+        Returns:
+            Dictionary containing all plugins found.
         """
         return self._plugins
 
@@ -73,7 +74,8 @@ class PluginManager:
     def type_action_map(self) -> dict[InputType, PluginList]:
         """Returns a mapping from input types to valid action plugins.
 
-        :return mapping from input types to associated actions
+        Returns:
+            Mmapping from input types to associated actions.
         """
         return self._type_to_action_map
 
@@ -81,15 +83,19 @@ class PluginManager:
     def tag_map(self) -> PluginDict:
         """Returns the mapping from an action tag to the action plugin.
 
-        :return mapping from action name to action plugin
+        Returns:
+            Mapping from action name to action plugin.
         """
         return self._tag_to_type_map
 
     def get_class(self, name: str) -> Plugin:
         """Returns the class object corresponding to the given name.
 
-        :param name of the action class to return
-        :return class object corresponding to the provided name
+        Args:
+            name: Name of the action class to return.
+
+        Returns:
+            Action class object corresponding to the provided name.
         """
         if name not in self._name_to_type_map:
             raise error.GremlinError(
@@ -103,8 +109,11 @@ class PluginManager:
     ) -> PluginList:
         """Returns the list of plugins requiring a certain parameter.
 
-        :param param_name the parameter name required by the returned actions
-        :return list of actions requiring a certain parameter in the callback
+        Args:
+            param_name: The parameter name required by the returned actions.
+
+        Returns:
+            List of actions requiring a certain parameter in the callback.
         """
         return self._parameter_requirements.get(param_name, [])
 
@@ -116,11 +125,11 @@ class PluginManager:
         """Creates an action instance which is stored in the library.
 
         Args:
-            name: name of the action to create an instance of
-            input_type: the input type associated with the new instance
+            name: Name of the action to create an instance of.
+            input_type: The input type associated with the new instance.
 
         Returns:
-            The newly created action instance
+            The newly created action instance.
         """
         cls = self.get_class(name)
         creation_mode = DataCreationMode.Create
@@ -144,7 +153,7 @@ class PluginManager:
                 self._type_to_action_map[input_type].append(entry)
 
     def _create_action_name_map(self) -> None:
-        """Creates a lookup table from action names to actions."""
+        """Creates lookup tables from action name and tag to actions."""
         for entry in self._plugins.values():
             self._name_to_type_map[entry.name] = entry
             self._tag_to_type_map[entry.tag] = entry
@@ -153,9 +162,9 @@ class PluginManager:
         """Processes known plugin folders for action plugins.
 
         Args:
-            path: path to the folder to scan for action plugins
-            is_core: whether the folder is part of the core Gremlin or user
-                specified
+            path: Path to the folder to scan for action plugins.
+            is_core: Whether the folder is part of the core Gremlin or user
+                specified.
         """
         if not is_core:
             sys.path.insert(0, str(path))

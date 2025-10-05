@@ -165,7 +165,6 @@ Item {
             text: bsi.icons.configure
 
             onClicked: {
-                console.log("Configuring script: " + variables)
                 _config.model = variables
             }
         }
