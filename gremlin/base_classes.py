@@ -80,6 +80,15 @@ class AbstractActionData(ABC):
 
     """Base class holding the data of all action related data classes."""
 
+    version = None
+    name = None
+    tag = None
+    icon = None
+    functor = None
+    model = None
+    properties = []
+    input_types: List[InputType] = []
+
     def __init__(self, behavior_type: InputType=InputType.JoystickButton) -> None:
         """Creates a new action data instance.
 
