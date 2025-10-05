@@ -157,15 +157,18 @@ def update_action_priorities() -> None:
     priorities = []
     if cfg.exists(*key):
         priorities = cfg.value(*key)
-    priorities_tags = [v[0] for v in priorities]
-    plugin_tags = gremlin.plugin_manager.PluginManager().repository.keys()
+    priority_names = [v[0] for v in priorities]
+    plugin_names = [
+        p.name for p in
+        gremlin.plugin_manager.PluginManager().repository.values()
+    ]
 
-    for tag in plugin_tags:
-        if tag not in priorities_tags:
+    for tag in plugin_names:
+        if tag not in priority_names:
             priorities.append((tag, True))
     to_delete = []
-    for i, tag in enumerate(priorities_tags):
-        if tag not in plugin_tags:
+    for i, tag in enumerate(priority_names):
+        if tag not in plugin_names:
             to_delete.append(i)
     for idx in reversed(to_delete):
         del priorities[idx]
