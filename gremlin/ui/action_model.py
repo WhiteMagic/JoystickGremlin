@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-import gremlin.config
+from gremlin.config import Configuration
 from gremlin.error import MissingImplementationError, GremlinError
 from gremlin.plugin_manager import PluginManager
 from gremlin.profile import Library
@@ -318,11 +318,25 @@ class ActionModel(QtCore.QObject):
             signal.reloadUi.emit()
 
     def _compatible_actions(self) -> List[str]:
+        key = ["global", "general", "action_priorities"]
+        priority_list = Configuration().value(*key)
+
         action_list = PluginManager().type_action_map[
             self._binding_model.behavior_type
         ]
-        action_list = [entry for entry in action_list if entry.tag != "root"]
-        return [a.name for a in sorted(action_list, key=lambda x: x.name)]
+        all_valid_action_names = [
+            entry.name for entry in action_list if entry.tag != "root"
+        ]
+
+        # Sort actions according to the priority list but hide those we don't
+        # intend to show.
+        sort_names = [name for name, vis in priority_list if vis]
+        remove_names = [name for name, vis in priority_list if not vis]
+
+        filtered_names = [
+            name for name in all_valid_action_names if name not in remove_names
+        ]
+        return sorted(filtered_names, key=lambda x: sort_names.index(x))
 
     actionLabel = Property(
         str,

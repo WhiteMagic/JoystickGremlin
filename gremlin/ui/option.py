@@ -22,7 +22,7 @@ import logging
 from typing import cast, Any, Dict, Optional, TYPE_CHECKING
 
 from PySide6 import QtCore, QtQml
-from PySide6.QtCore import Property, Signal
+from PySide6.QtCore import Property, Signal, Slot
 
 import gremlin.config
 from gremlin.common import SingletonMetaclass
@@ -279,6 +279,7 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray(b"name"),
         QtCore.Qt.UserRole + 2: QtCore.QByteArray(b"visible"),
+        QtCore.Qt.UserRole + 3: QtCore.QByteArray(b"index"),
     }
 
     def __init__(self, parent: Optional[QtCore.QObject]=None) -> None:
@@ -303,9 +304,10 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
                     return data[0]
                 case "visible":
                     return data[1]
+                case "index":
+                    return index.row()
                 case _:
                     raise GremlinError(f"Unknown role name {role}")
-
         else:
             raise GremlinError("Invalid role encountered")
 
@@ -321,11 +323,23 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
                 data[index.row()][1] = value
                 self._config.set(*self._cfg_key, data)
                 return True
+            case "index":
+                return False
             case _:
                 return False
 
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
+
+    @Slot(int, int)
+    def move(self, source_index: int, target_index: int) -> None:
+        print(f"Moving from {source_index} to {target_index}")
+        self.layoutAboutToBeChanged.emit()
+        data = self._config.value(*self._cfg_key)
+        item = data.pop(source_index)
+        data.insert(target_index, item)
+        self._config.set(*self._cfg_key, data)
+        self.layoutChanged.emit()
 
     def _qml_path(self) -> str:
         return "file:///" + \

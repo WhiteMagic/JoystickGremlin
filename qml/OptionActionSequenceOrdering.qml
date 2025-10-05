@@ -27,37 +27,128 @@ Item {
         id: _data
     }
 
-    implicitHeight: _content.implicitHeight
+    implicitHeight: _content.implicitHeight + _bottomDropArea.height
 
-    ListView {
-        id: _content
 
-        implicitHeight: contentHeight
+    ColumnLayout {
+        anchors.fill: parent
 
-        model: _data
+        ListView {
+            id: _content
 
-        delegate: Thing {
-            name: model.name
-            active: model.visible
+            width: parent.width
+            implicitHeight: contentHeight
+
+            model: _data
+
+            delegate: ActionDisplay {
+                name: model.name
+                active: model.visible
+
+                width: ListView.view.width
+            }
+        }
+
+        DropArea {
+            id: _bottomDropArea
+
+            Layout.fillWidth: true
+            height: 20
+
+            onDropped: (drop) => {
+                _data.move(drop.text, _data.rowCount())
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                y: 0
+                height: 1
+
+                color: "steelblue"
+                opacity: parent.containsDrag ? 1.0 : 0.0
+            }
         }
     }
 
-    component Thing : RowLayout {
+    component ActionDisplay : Item {
         property alias name: _switch.text
         property alias active: _switch.checked
 
+        implicitHeight: _item.implicitHeight
 
-        IconButton {
-            text: bsi.icons.drag_handle
-        }
-        CompactSwitch {
-            id: _switch
+        RowLayout {
+            id: _item
 
-            onToggled: () => {
-                // if (model.visible !== checked) {
+            anchors.fill: parent
+            property int index: model.index
+            property bool isDragging: false
+
+            Drag.active: isDragging
+            Drag.dragType: Drag.Automatic
+            Drag.supportedActions: Qt.MoveAction
+            Drag.proposedAction: Qt.MoveAction
+            Drag.source: _item
+            Drag.hotSpot.x: width / 2
+            Drag.hotSpot.y: height / 2
+            Drag.mimeData: {
+                "text/plain": model.index.toString()
+            }
+
+            IconButton {
+                text: bsi.icons.drag_handle
+
+                // Drag handle interaction for drag&drop suppport.
+                MouseArea {
+                    id: _dragArea
+
+                    anchors.fill: parent
+                    drag.target: _item
+                    drag.axis: Drag.YAxis
+
+                    // Create an image of the object being dragged for visualization
+                    onPressed: () => {
+                        _item.isDragging = true
+                        _item.grabToImage((result) => {
+                            _item.Drag.imageSource = result.url
+                        })
+                    }
+
+                    onReleased: () => {
+                        _item.isDragging = false
+                    }
+                }
+            }
+            CompactSwitch {
+                id: _switch
+
+                Layout.fillWidth: true
+
+                onToggled: () => {
                     model.visible = checked
-                // }
-                console.log("Toggled", name, " to ", checked)
+                }
+            }
+        }
+
+        DropArea {
+            id: _dropArea
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: _item.height
+            y: _item.y - height/2
+
+            onDropped: (drop) => {
+                _data.move(drop.text, index)
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 1
+                y: parent.height / 2
+
+                color: "steelblue"
+                opacity: parent.containsDrag ? 1.0 : 0.0
             }
         }
     }
