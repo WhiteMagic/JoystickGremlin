@@ -248,6 +248,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 6: QtCore.QByteArray("vid".encode()),
         QtCore.Qt.UserRole + 7: QtCore.QByteArray("guid".encode()),
         QtCore.Qt.UserRole + 8: QtCore.QByteArray("joy_id".encode()),
+        QtCore.Qt.UserRole + 9: QtCore.QByteArray("vjoy_id".encode()),
     }
 
     role_query = {
@@ -259,6 +260,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
         "vid": lambda dev: "{:04X}".format(dev.vendor_id),
         "guid": lambda dev: str(dev.device_guid),
         "joy_id": lambda dev: dev.joystick_id,
+        "vjoy_id": lambda dev: dev.vjoy_id,
     }
 
     def __init__(self, parent=None):

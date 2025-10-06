@@ -151,6 +151,10 @@ ApplicationWindow {
                 //onTriggered: Helpers.createComponent(".qml")
             }
             MenuItem {
+                text: qsTr("Auto Mapper")
+                onTriggered: Helpers.createComponent("DialogAutoMapper.qml")
+            }
+            MenuItem {
                 text: qsTr("Device Information")
                 onTriggered: Helpers.createComponent("DialogDeviceInformation.qml")
             }
@@ -285,6 +289,23 @@ ApplicationWindow {
 
                 onClicked: {
                     Helpers.createComponent("DialogInputViewer.qml")
+                }
+            }
+
+            ToolButton {
+                text: "1:1"
+                font.family: "bootstrap-icons"
+                font.pixelSize: 20
+                font.weight: 900
+
+                ToolTip {
+                    visible: parent.hovered
+                    text: qsTr("Open Auto Mapper")
+                    delay: 500
+                }
+
+                onClicked: {
+                    Helpers.createComponent("DialogAutoMapper.qml")
                 }
             }
 
