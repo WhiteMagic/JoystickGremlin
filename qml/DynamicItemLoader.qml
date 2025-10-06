@@ -19,9 +19,9 @@ import QtQuick
 import QtQuick.Layouts
 
 Item {
-    id: root
+    id: _dynamicRoot
 
-    // Fully-formed QML source URL (e.g. qrc:/... ). Caller guarantees validity.
+    // Fully-formed QML source URL (e.g. qrc:/... ).
     property string qmlPath: ""
 
     // Optional object passed to a loaded component with an 'action' property.
@@ -31,9 +31,6 @@ Item {
     // Example: { someProp: 42, model: myModel }
     property var injectedProperties: ({})
 
-    // Legacy 'expanded' / 'active' flags removed; component always attempts
-    // to load when qmlPath is set.
-
     // Automatically reload when qmlPath changes.
     property bool autoReloadOnPathChange: true
 
@@ -41,8 +38,7 @@ Item {
     property alias dynamicItem: _loader.item
 
     // If true, the loader will be forced to recreate the item when qmlPath
-    // changes even if the new path string is identical (useful after file
-    // overwrites); implemented by briefly toggling active off and on.
+    // changes even if the new path string is identical.
     property bool forceReloadOnIdenticalPath: false
 
     // Internal flag driving Loader.active to avoid rebinding warnings. We
@@ -50,16 +46,13 @@ Item {
     // keeping the Loader's 'active' binding stable.
     property bool _activeFlag: false
 
-    // Height follows loaded content; fallback to height if implicitHeight unset.
+    // Height tracks that of the dynamically loaded content. Fallback handling
+    // if the 'implicitHeight' is not set.
     implicitHeight: dynamicItem ? (dynamicItem.implicitHeight > 0
-                                   ? dynamicItem.implicitHeight
-                                   : dynamicItem.height) : 0
+                                ? dynamicItem.implicitHeight
+                                : dynamicItem.height) : 0
 
-    // Let layouts stretch us horizontally by default.
-    Layout.fillWidth: true
-    // Always visible; caller can hide externally if needed.
-    visible: true
-
+    // Signals communicating load status.
     signal loaded(Item item)
     signal loadError(string source, string errorString)
 
@@ -67,57 +60,66 @@ Item {
         // Toggle the flag to force re-instantiation. Use callLater so the
         // event loop processes deactivation before reactivation.
         if (!_activeFlag) {
-            _activeFlag = !!root.qmlPath;
-            return;
+            _activeFlag = !!_dynamicRoot.qmlPath
+            return
         }
-        _activeFlag = false;
-        Qt.callLater(function(){
-            _activeFlag = !!root.qmlPath;
-        });
+        _activeFlag = false
+        Qt.callLater(function() {
+            _activeFlag = !!_dynamicRoot.qmlPath
+        })
     }
 
-    onQmlPathChanged: if (autoReloadOnPathChange) {
-        if (forceReloadOnIdenticalPath)
-            reload();
-        else
-            _activeFlag = !!root.qmlPath;
+    onQmlPathChanged: () => {
+        if (autoReloadOnPathChange) {
+            if (forceReloadOnIdenticalPath) {
+                reload()
+            }
+            else {
+                _activeFlag = !!_dynamicRoot.qmlPath
+            }
+        }
     }
 
-    Component.onCompleted: _activeFlag = !!root.qmlPath;
+    Component.onCompleted: () => {
+        _activeFlag = !!_dynamicRoot.qmlPath
+    }
 
-    // Core Loader doing the work.
+    // Core Loader performing all the actual loading.
     Loader {
         id: _loader
-        // Note: 'active' is controlled externally when properties change.
-        active: root._activeFlag
-        asynchronous: true
-        source: root.qmlPath
+
         anchors.left: parent.left
         anchors.right: parent.right
 
-        onStatusChanged: {
+        // Note: 'active' is controlled externally when properties change.
+        active: _dynamicRoot._activeFlag
+        asynchronous: true
+        source: _dynamicRoot.qmlPath
+
+        onStatusChanged: (src, errStr) => {
             if (status === Loader.Error) {
-                console.log("DynamicItemLoader: error loading", source, errorString());
-                root.loadError(source, errorString());
+                console.log("DynamicItemLoader: error loading", src, errStr())
+                _dynamicRoot.loadError(src, errStr())
             }
         }
-        onLoaded: {
+        onLoaded: (item) => {
             if (item) {
                 // Inject standard action property if present.
-                if (root.action && item.hasOwnProperty("action")) {
-                    item.action = root.action;
+                if (_dynamicRoot.action && item.hasOwnProperty("action")) {
+                    item.action = _dynamicRoot.action
                 }
                 // Apply any additional injected properties.
-                if (root.injectedProperties && typeof root.injectedProperties === 'object') {
-                    for (let k in root.injectedProperties) {
-                        try { item[k] = root.injectedProperties[k]; } catch(e) { /* ignore assignment errors */ }
+                if (_dynamicRoot.injectedProperties &&
+                    typeof root.injectedProperties === 'object')
+                {
+                    for (let k in _dynamicRoot.injectedProperties) {
+                        try {
+                            item[k] = _dynamicRoot.injectedProperties[k]
+                        }
+                        catch(e) { /* ignore assignment errors */ }
                     }
                 }
-                // If inside a Layout, ensure it expands horizontally when possible.
-                if (item.Layout) {
-                    item.Layout.fillWidth = true;
-                }
-                root.loaded(item);
+                _dynamicRoot.loaded(item)
             }
         }
     }

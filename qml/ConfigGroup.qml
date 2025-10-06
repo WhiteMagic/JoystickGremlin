@@ -184,33 +184,14 @@ ColumnLayout {
                     text: description
                 }
 
-                // Dynamic item container
                 DynamicItemLoader {
-                    id: metaLoader
-                    // Layout.fillWidth: true
-
-                    // 'value' is assumed to be the qrc:/... URL for the meta option QML
                     qmlPath: value
 
-                    // Provide additional properties to the loaded component if needed
-                    // (delete if not required)
-                    injectedProperties: {
-                        // Example placeholders:
-                        // initialValue: model.value,
-                        // description: description
+                    Layout.fillWidth: true
+
+                    onLoadError: (src, err) => {
+                        console.warn("Meta option load error:", src, err)
                     }
-
-                    // Optional: force a reload even when file path string stays the same
-                    // forceReloadOnIdenticalPath: true
-
-                    // Optional: react to successful load
-                    onLoaded: (item) => {
-                        // If the loaded item exposes a property you want to initialize,
-                        // you can set it here. Keep empty if not needed.
-                    }
-
-                    // Optional: log errors
-                    onLoadError: (src, err) => console.warn("Meta option load error:", src, err)
                 }
 
             }

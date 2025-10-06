@@ -80,6 +80,9 @@ class AbstractActionData(ABC):
 
     """Base class holding the data of all action related data classes."""
 
+    # Fields expected to be present in every action plugin. These define
+    # information required by the plugin manager as well as UI and behavior
+    # logic.
     version = None
     name = None
     tag = None

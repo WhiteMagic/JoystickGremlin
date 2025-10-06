@@ -183,10 +183,8 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
         if role in self.roles:
             role_name = bytes(self.roles[role].data()).decode()
 
-            # TODO: Figure out if we need to retrieve an option or a config
-            #       entry and handle it accordingly.
-            # Special handling
             name = entries[index.row()]
+            # Separate handling of config and meta option entries.
             if self._config.exists(self._section_name, self._group_name, name):
                 value = self._config.get(
                     self._section_name,
@@ -206,7 +204,6 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
                         value = self._option.qml_widget(
                             self._section_name, self._group_name, name
                         )().qml_path
-                        print(value)
                     case "data_type":
                         value = "meta_option"
         return value
@@ -257,20 +254,6 @@ class BaseMetaConfigOptionWidget:
             "BaseMetaConfigOptionWidget: Subclasses must implement the " +
             "qml_path method."
         )
-
-
-# @QtQml.QmlElement
-# class OptionTestWidget(BaseMetaConfigOptionWidget):
-
-    timeChanged = Signal()
-
-    def _qml_path(self) -> str:
-        return "file:///" + QtCore.QFile("qml:OptionTest.qml").fileName()
-
-    @Property(float, notify=timeChanged)
-    def timeNow(self) -> float:
-        import time
-        return time.time()
 
 
 @QtQml.QmlElement
@@ -333,7 +316,6 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
 
     @Slot(int, int)
     def move(self, source_index: int, target_index: int) -> None:
-        print(f"Moving from {source_index} to {target_index}")
         self.layoutAboutToBeChanged.emit()
         data = self._config.value(*self._cfg_key)
         item = data.pop(source_index)

@@ -17,6 +17,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Universal
 import QtQuick.Layouts
 
 import Gremlin.Config
@@ -65,7 +66,7 @@ Item {
                 y: 0
                 height: 1
 
-                color: "steelblue"
+                color: Universal.accent
                 opacity: parent.containsDrag ? 1.0 : 0.0
             }
         }
@@ -147,7 +148,7 @@ Item {
                 height: 1
                 y: parent.height / 2
 
-                color: "steelblue"
+                color: Universal.accent
                 opacity: parent.containsDrag ? 1.0 : 0.0
             }
         }

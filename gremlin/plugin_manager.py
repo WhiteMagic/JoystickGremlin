@@ -23,11 +23,12 @@ import logging
 import os
 from pathlib import Path
 import sys
-from typing import TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from PySide6 import QtQml
 
-from gremlin import common, config, error, shared_state, util
+from gremlin import config, error, shared_state, util
+from gremlin.common import SingletonMetaclass
 from gremlin.types import ActionProperty, InputType, DataCreationMode
 
 if TYPE_CHECKING:
@@ -38,8 +39,7 @@ if TYPE_CHECKING:
     PluginDict = dict[str, Plugin]
 
 
-@common.SingletonDecorator
-class PluginManager:
+class PluginManager(metaclass=SingletonMetaclass):
 
     """Handles discovery and management of action plugins."""
 
@@ -75,7 +75,7 @@ class PluginManager:
         """Returns a mapping from input types to valid action plugins.
 
         Returns:
-            Mmapping from input types to associated actions.
+            Mapping from input types to associated actions.
         """
         return self._type_to_action_map
 
@@ -110,7 +110,8 @@ class PluginManager:
         """Returns the list of plugins requiring a certain parameter.
 
         Args:
-            param_name: The parameter name required by the returned actions.
+            param_name: Name of the parameter required by all action classes
+                returned.
 
         Returns:
             List of actions requiring a certain parameter in the callback.
@@ -126,10 +127,10 @@ class PluginManager:
 
         Args:
             name: Name of the action to create an instance of.
-            input_type: The input type associated with the new instance.
+            input_type: Input type associated with the new instance.
 
         Returns:
-            The newly created action instance.
+            Newly created action instance.
         """
         cls = self.get_class(name)
         creation_mode = DataCreationMode.Create
@@ -141,7 +142,7 @@ class PluginManager:
 
     def _create_type_action_map(self) -> None:
         """Creates a lookup table from input types to available actions."""
-        self._type_to_action_map : dict[InputType, PluginList]= {
+        self._type_to_action_map : dict[InputType, PluginList] = {
             InputType.JoystickAxis: [],
             InputType.JoystickButton: [],
             InputType.JoystickHat: [],

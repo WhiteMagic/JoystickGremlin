@@ -318,6 +318,15 @@ class ActionModel(QtCore.QObject):
             signal.reloadUi.emit()
 
     def _compatible_actions(self) -> List[str]:
+        """Returns the names of actions that are compatible within the current
+        context.
+
+        The list of action names are filtered and sorted based on user
+        preferences.
+
+        Returns:
+            List of currently valid actions.
+        """
         key = ["global", "general", "action_priorities"]
         priority_list = Configuration().value(*key)
 
