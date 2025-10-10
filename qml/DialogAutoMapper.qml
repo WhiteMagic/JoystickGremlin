@@ -29,12 +29,10 @@ import Gremlin.UI
 
 
 Window {
-    id: _root
-
     minimumWidth: 900
-    minimumHeight: 300
+    minimumHeight: 400
 
-    title: "Auto Mapper"
+    title: "Auto Mapper: Maps your physical controls to vJoy inputs"
 
     DeviceListModel {
         id: physicalDevices
@@ -46,157 +44,164 @@ Window {
         deviceType: "virtual"
     }
 
-    property AutoMapper autoMapper: backend.getAutoMapper()
+    AutoMapper {
+        id: autoMapper
+    }
 
-    // Properties to track the selected devices
+    // Properties to track the selected devices and user selections.
     property var selectedPhysicalDevices: ({})
     property var selectedVJoyDevices: ({})
     property bool overwriteNonEmpty: false
     property bool repeatVJoy: false
 
+    property string statusMessage: "Select devices, options and click the Create button"
+
     Rectangle {
-        id: mainWindow
         anchors.fill: parent
         anchors.margins: 10
         
-        Column {
-            id: mainColumn
+        ColumnLayout {
             anchors.fill: parent
             spacing: 10
 
-            Row {
-                id: devicesRow
-                width: parent.width
-                height: parent.height - 60 // Leave space for the button
-                spacing: 20
+            // Description/Manual Section
+            TextOutputBox {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 100
+                text: qsTr("<ul>" +
+                      "<li>Select source physical devices and target vJoy devices" +
+                      "<li>Click 'Create 1:1 mappings' to map from physical to virtual inputs" +
+                      "<li>Enable 'Overwrite non-empty' to replace existing mappings in the profile" +
+                      "<li>Enable 'Repeat vJoy' to cycle through vJoy inputs, if needed to map all physical inputs" +
+                      "</ul>")
+            }
 
-                Column {
-                    id: physicalDevicesColumn
-                    width: parent.width * 0.45
-                    height: parent.height
+            // Main content area with device lists
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 10
+
+                // Physical Devices Column
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                     spacing: 5
 
-                    CheckBox {
-                        id: overwriteNonEmptyPhysicalInputsCheckbox
-                        width: parent.width
-                        text: qsTr("Overwrite non-empty physical inputs")
-                        checked: overwriteNonEmpty
-                        onCheckedChanged: overwriteNonEmpty = checked
-                    }
-
                     GroupBox {
-                        id: physicalDevicesGroupBox
-                        width: parent.width
-                        height: parent.height - overwriteNonEmptyPhysicalInputsCheckbox.height - 5
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                         title: qsTr("Physical Devices")
 
                         ScrollView {
-                            id: physicalDevicesScroll
+                            id: _physicalScroll
                             anchors.fill: parent
                             clip: true
                             
-                            Column {
-                                width: physicalDevicesScroll.width - 20
+                            ListView {
+                                model: physicalDevices
                                 spacing: 5
-                                padding: 5
-                                
-                                Repeater {
-                                    model: physicalDevices
-                                    delegate: CheckBox {
-                                        width: parent.width - 10
-                                        text: model.name
-                                        checked: false
-                                        onCheckedChanged: {
-                                            selectedPhysicalDevices[model.guid] = checked;
-                                        }
+                                delegate: CheckBox {
+                                    width: ListView.view.width - 10
+                                    text: model.name
+                                    checked: false
+                                    onCheckedChanged: {
+                                        selectedPhysicalDevices[model.guid] = checked;
                                     }
                                 }
                             }
                         }
                     }
+
+                    Switch {
+                        id: _overwriteSwitch
+                        Layout.fillWidth: true
+                        text: qsTr("Overwrite non-empty physical inputs")
+
+                        ToolTip {
+                            visible: parent.hovered
+                            text: qsTr("Overwrite non-empty physical inputs")
+                            delay: 500
+                        }
+
+                        onToggled: function() {
+                            overwriteNonEmpty = position ? true : false;
+                        }
+                    }
                 }
 
-                Column {
-                    id: vjoyDevicesColumn
-                    width: parent.width * 0.45
-                    height: parent.height
+                // vJoy Devices Column
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                     spacing: 5
 
-                    CheckBox {
-                        id: repeatVJoyCheckbox
-                        width: parent.width
-                        text: qsTr("Repeat vJoy devices")
-                        checked: repeatVJoy
-                        onCheckedChanged: repeatVJoy = checked
-                    }
-
                     GroupBox {
-                        id: vjoyDevicesGroupBox
-                        width: parent.width
-                        height: parent.height - repeatVJoyCheckbox.height - 5
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                         title: qsTr("vJoy Devices")
 
                         ScrollView {
-                            id: vjoyDevicesScroll
+                            id: _vjoyScroll
                             anchors.fill: parent
                             clip: true
                             
-                            Column {
-                                width: vjoyDevicesScroll.width - 20
+                            ListView {
+                                model: virtualDevices
                                 spacing: 5
-                                padding: 5
-                                
-                                Repeater {
-                                    model: virtualDevices
-                                    delegate: CheckBox {
-                                        width: parent.width - 10
-                                        text: model.name
-                                        checked: false
-                                        onCheckedChanged: {
-                                            selectedVJoyDevices[model.vjoy_id] = checked;
-                                        }
+                                delegate: CheckBox {
+                                    width: ListView.view.width - 10
+                                    text: model.name
+                                    checked: false
+                                    onCheckedChanged: {
+                                        selectedVJoyDevices[model.vjoy_id] = checked;
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    Switch {
+                        id: _repeatSwitch
+                        Layout.fillWidth: true
+                        text: qsTr("Repeat vJoy devices")
+
+                        ToolTip {
+                            visible: parent.hovered
+                            text: qsTr("Repeat vJoy devices")
+                            delay: 500
+                        }
+
+                        onToggled: function() {
+                            repeatVJoy = position ? true : false;
                         }
                     }
                 }
             }
 
-            Row {
-                id: buttonRow
-                width: Math.min(600, parent.width * 0.8)
-                height: 60
+            // Action bar with button and status
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 35
                 spacing: 10
-                anchors.horizontalCenter: parent.horizontalCenter
 
                 Button {
-                    id: createButton
+                    id: _createButton
                     text: qsTr("Create 1:1 mappings")
+                    Layout.preferredWidth: implicitWidth + 20
+                    Layout.preferredHeight: 30
                     onClicked: {
-                        var result = autoMapper.create_mappings(
+                        statusMessage = autoMapper.create_mappings(
                             selectedPhysicalDevices, selectedVJoyDevices,
                             overwriteNonEmpty, repeatVJoy);
-                        resultText.text = result ? result : "";
                     }
-                    height: parent.height
-                    width: 200
                 }
 
-                TextArea {
-                    id: resultText
-                    width: parent.width - createButton.width - parent.spacing
-                    height: parent.height
-                    readOnly: true
-                    wrapMode: Text.WordWrap
-                    horizontalAlignment: Text.AlignRight
-                    placeholderText: qsTr("Awaiting user selections and button press")
-                    background: Rectangle {
-                        color: "#f5f5f5"
-                        border.color: "#cccccc"
-                        border.width: 1
-                        radius: 2
-                    }
+                TextOutputBox {
+                    id: _statusNotification
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 30
+                    text: statusMessage
                 }
             }
         }

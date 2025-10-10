@@ -294,9 +294,6 @@ ApplicationWindow {
 
             ToolButton {
                 text: "1:1"
-                font.family: "bootstrap-icons"
-                font.pixelSize: 20
-                font.weight: 900
 
                 ToolTip {
                     visible: parent.hovered
