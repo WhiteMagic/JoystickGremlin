@@ -18,13 +18,13 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, Callable, List, Optional, Sequence, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from dill import GUID_Keyboard
+from dill import UUID_Keyboard
 
 from gremlin import error, event_handler, plugin_manager, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
@@ -42,6 +42,7 @@ from . import comparator
 
 
 if TYPE_CHECKING:
+    import gremlin.ui.type_aliases as ta
     from gremlin.ui.profile import InputItemBindingModel
     from gremlin.ui.action_model import SequenceIndex
 
@@ -58,16 +59,16 @@ class AbstractCondition(QtCore.QObject):
     comparatorChanged = Signal()
     inputsChanged = Signal(list)
 
-    def __init__(self, parent: Optional[QtCore.QObject]=None):
+    def __init__(self, parent: ta.OQO=None) -> None:
         """Creates a new instance."""
         super().__init__(parent)
 
         # Specific condition type needed for QT side of things
-        self._condition_type = None
+        self._condition_type : Optional[ConditionType] = None
         # Comparator object implementing the condition
-        self._comparator = None
+        self._comparator : Optional[comparator.AbstractComparator] = None
         # Inputs used within the comparator
-        self._inputs = []
+        self._inputs : List[Any] = []
 
     def __call__(self, value: Value) -> bool:
         """Evaluates the truth state of the condition.
@@ -78,9 +79,11 @@ class AbstractCondition(QtCore.QObject):
         Returns:
             True if the condition is fulfilled, False otherwise
         """
-        return self._comparator(value, self._inputs)
+        if self._comparator is not None:
+            return self._comparator(value, self._inputs)
+        return False
 
-    def from_xml(self, node: ElementTree) -> None:
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the object with data from an XML node.
 
         Args:
@@ -90,7 +93,7 @@ class AbstractCondition(QtCore.QObject):
             "AbstractCondition.from_xml not implemented in subclass"
         )
 
-    def to_xml(self) -> ElementTree:
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the objects data.
 
         Returns:
@@ -106,9 +109,11 @@ class AbstractCondition(QtCore.QObject):
         Returns:
             True if the condition is properly specified, False otherwise
         """
-        return self._condition_type is not None and \
-            self._comparator is not None and \
+        return all([
+            self._condition_type is not None,
+            self._comparator is not None,
             len(self._inputs) > 0
+        ])
 
     @Property(str, notify=conditionTypeChanged)
     def conditionType(self) -> str:
@@ -117,9 +122,11 @@ class AbstractCondition(QtCore.QObject):
         Returns:
             String representation of the condition's type
         """
+        if self._condition_type is None:
+            raise error.GremlinError("Condition type not set")
         return ConditionType.to_string(self._condition_type)
 
-    def set_condition_type(self, condition_type: ConditionType):
+    def set_condition_type(self, condition_type: ConditionType) -> None:
         """Sets the condition type to the provided one.
 
         This allows modifying the condition type from within code without
@@ -136,7 +143,7 @@ class AbstractCondition(QtCore.QObject):
             "AbstractCondition::_set_condition_type_impl implementation missing"
         )
 
-    def _create_comparator(self, input_type: InputType):
+    def _create_comparator(self, input_type: InputType) -> None:
         """Creates the comparator based on the current condition type.
 
         Args:
@@ -154,14 +161,14 @@ class AbstractCondition(QtCore.QObject):
             InputType.JoystickHat: "direction",
             InputType.Keyboard: "pressed",
         }
-        if not isinstance(self._comparator, comparator_map[input_type]):
+        if not isinstance(self._comparator, type(comparator_map[input_type])):
             self._comparator = comparator.create_default_comparator(
                 comparator_types[input_type]
             )
             self.comparatorChanged.emit()
 
     @Property(comparator.AbstractComparator, notify=comparatorChanged)
-    def comparator(self) -> comparator.AbstractComparator:
+    def comparator(self) -> comparator.AbstractComparator | None:
         return self._comparator
 
     def _update_inputs(self, input_list: List[event_handler.Event]) -> None:
@@ -202,13 +209,13 @@ class KeyboardCondition(AbstractCondition):
     code as well as the extended flag.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: ta.OQO=None) -> None:
         """Creates a new instance."""
         super().__init__(parent)
 
         self._condition_type = ConditionType.Keyboard
 
-    def from_xml(self, node: ElementTree) -> None:
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the object with data from an XML node.
 
         Args:
@@ -222,7 +229,7 @@ class KeyboardCondition(AbstractCondition):
             event = event_handler.Event(
                 InputType.Keyboard,
                 key_id,
-                GUID_Keyboard,
+                UUID_Keyboard,
                 "None"
             )
             self._inputs.append(event)
@@ -232,12 +239,17 @@ class KeyboardCondition(AbstractCondition):
             raise error.ProfileError("Comparator node missing in condition.")
         self._comparator = comparator.create_comparator_from_xml(comp_node)
 
-    def to_xml(self) -> ElementTree:
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the objects data.
 
         Returns:
             XML node containing the object's data
         """
+        if self._comparator is None:
+            raise error.GremlinError(
+                "Cannot serialize condition without comparator"
+            )
+
         entries = [
             ["condition-type", "keyboard", PropertyType.String]
         ]
@@ -252,7 +264,6 @@ class KeyboardCondition(AbstractCondition):
                 ]
             ))
         node.append(self._comparator.to_xml())
-
         return node
 
     def _get_inputs_impl(self) -> List[str]:
@@ -286,7 +297,9 @@ class KeyboardCondition(AbstractCondition):
         if len(input_types) == 0:
             self._comparator = None
         else:
-            if not isinstance(self._comparator, comparator.PressedComparator):
+            if not isinstance(
+                self._comparator, type(comparator.PressedComparator)
+            ):
                 self._comparator = \
                     comparator.create_default_comparator("pressed")
 
@@ -301,13 +314,13 @@ class JoystickCondition(AbstractCondition):
     This condition is based on the state of a joystick axis, button, or hat.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: ta.OQO=None) -> None:
         """Creates a new instance."""
         super().__init__(parent)
 
         self._condition_type = ConditionType.Joystick
 
-    def from_xml(self, node: ElementTree) -> None:
+    def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the object with data from an XML node.
 
         Args:
@@ -327,7 +340,7 @@ class JoystickCondition(AbstractCondition):
             raise error.ProfileError("Comparator node missing in condition.")
         self._comparator = comparator.create_comparator_from_xml(comp_node)
 
-    def to_xml(self) -> ElementTree:
+    def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the objects data.
 
         Returns:
@@ -351,7 +364,7 @@ class JoystickCondition(AbstractCondition):
 
         return node
 
-    def _get_inputs_impl(self) -> List[event_handler.Event]:
+    def _get_inputs_impl(self) -> List[str]:
         return [v.display_name() for v in self._inputs]
 
     def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
@@ -389,13 +402,13 @@ class CurrentInputCondition(AbstractCondition):
 
         self._condition_type = ConditionType.CurrentInput
 
-    def from_xml(self, node: ElementTree) -> None:
+    def from_xml(self, node: ElementTree.Element) -> None:
         comp_node = node.find("comparator")
         if comp_node is None:
             raise error.ProfileError("Comparator node missing in condition.")
         self._comparator = comparator.create_comparator_from_xml(comp_node)
 
-    def to_xml(self) -> ElementTree:
+    def to_xml(self) -> ElementTree.Element:
         entries = [
             ["condition-type", "current_input", PropertyType.String]
         ]
@@ -418,14 +431,82 @@ class CurrentInputCondition(AbstractCondition):
             self.conditionTypeChanged.emit()
 
 
+@QtQml.QmlElement
+class VJoyCondition(AbstractCondition):
+
+    """vJoy input state based condition."""
+
+    def __init__(self, parent: ta.OQO=None) -> None:
+        super().__init__(parent)
+
+        self._condition_type = ConditionType.VJoy
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
+
+    def to_xml(self) -> ElementTree.Element[str]:
+        entries = [
+            ["condition-type", "vjoy", PropertyType.String]
+        ]
+        node = util.create_node_from_data("condition", entries)
+        return node
+
+    def  _get_inputs_impl(self) -> List[str]:
+        return ["",]
+
+    def _set_inputs_impl(self, data: List) -> None:
+        return self._set_inputs_impl(data)
+
+    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+        pass
+
+    @Slot(list)
+    def updateInputs(self, data: List[event_handler.Event]) -> None:
+        pass
+
+
+@QtQml.QmlElement
+class LogicalDeviceCondition(AbstractCondition):
+
+    """Logical Device input state based condition."""
+
+    def __init__(self, parent: ta.OQO=None) -> None:
+        super().__init__(parent)
+
+        self._condition_type = ConditionType.VJoy
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
+
+    def to_xml(self) -> ElementTree.Element[str]:
+        entries = [
+            ["condition-type", "vjoy", PropertyType.String]
+        ]
+        node = util.create_node_from_data("condition", entries)
+        return node
+
+    def  _get_inputs_impl(self) -> List[str]:
+        return ["",]
+
+    def _set_inputs_impl(self, data: List) -> None:
+        return self._set_inputs_impl(data)
+
+    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+        pass
+
+    @Slot(list)
+    def updateInputs(self, data: List[event_handler.Event]) -> None:
+        pass
+
+
 class ConditionFunctor(AbstractFunctor):
 
-    def __init__(self, action: ConditionModel):
+    def __init__(self, action: ConditionModel) -> None:
         super().__init__(action)
 
     def __call__(
             self,
-            event: Event,
+            event: event_handler.Event,
             value: Value,
             properties: list[ActionProperty] = []
     ) -> None:
@@ -447,14 +528,16 @@ class ConditionFunctor(AbstractFunctor):
             True if the condition evaluates to True, False otherwise
         """
         outcomes = [cond(value) for cond in self.data.conditions]
-        if self.data.logical_operator == LogicalOperator.All:
-            return all(outcomes)
-        elif self.data.logical_operator == LogicalOperator.Any:
-            return any(outcomes)
-        else:
-            raise error.GremlinError(
-                f"Invalid logical operator present {self.data._logical_operator}"
-            )
+        match self.data.logical_operator:
+            case LogicalOperator.All:
+                return all(outcomes)
+            case LogicalOperator.Any:
+                return any(outcomes)
+            case _:
+                raise error.GremlinError(
+                    "Invalid logical operator present " +
+                    f"{self.data.logical_operator}"
+                )
 
 
 class ConditionModel(ActionModel):
@@ -470,7 +553,7 @@ class ConditionModel(ActionModel):
             action_index: SequenceIndex,
             parent_index: SequenceIndex,
             parent: QtCore.QObject
-    ):
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
@@ -494,6 +577,8 @@ class ConditionModel(ActionModel):
             ConditionType.Joystick: JoystickCondition,
             ConditionType.Keyboard: KeyboardCondition,
             ConditionType.CurrentInput: CurrentInputCondition,
+            ConditionType.VJoy: VJoyCondition,
+            ConditionType.LogicalDevice: LogicalDeviceCondition,
         }
 
         condition_type = ConditionType(condition)
@@ -543,21 +628,21 @@ class ConditionModel(ActionModel):
         self.conditionsChanged.emit()
 
     @Property(list, constant=True)
-    def logicalOperators(self) -> List[str]:
+    def logicalOperators(self) -> List[dict[str, str]]:
         return [
             {"value": str(e.value), "text": LogicalOperator.to_display(e)}
             for e in LogicalOperator
         ]
 
     @Property(list, constant=True)
-    def conditionOperators(self) -> List[str]:
+    def conditionOperators(self) -> List[dict[str, str]]:
         return [
             {"value": str(e.value), "text": ConditionType.to_display(e)}
             for e in ConditionType
         ]
 
     @Property(list, notify=conditionsChanged)
-    def conditions(self):
+    def conditions(self) -> list[AbstractCondition]:
         return self._data.conditions
 
     def _get_logical_operator(self) -> str:
@@ -671,7 +756,7 @@ class ConditionData(AbstractActionData):
             case "false":
                 return self.false_actions
             case _:
-                raise GremlinError(
+                raise error.GremlinError(
                     f"{self.name}: has no container with name {selector}"
                 )
 

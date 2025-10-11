@@ -168,8 +168,8 @@ ColumnLayout {
 
                     implicitContentWidthPolicy: ComboBox.WidestText
 
-                    Component.onCompleted: () => currentIndex = find(value)
-                    onActivated: () => value = currentValue
+                    Component.onCompleted: () => { currentIndex = find(value) }
+                    onActivated: () => { value = currentValue }
                 }
             }
         }

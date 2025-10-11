@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2022 Lionel Ott
+// Copyright (C) 2020 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,11 +60,11 @@ Item {
                 textRole: "text"
                 valueRole: "value"
 
-                Component.onCompleted: {
+                Component.onCompleted: () => {
                     currentIndex = indexOfValue(_root.action.logicalOperator)
                 }
 
-                onActivated: {
+                onActivated: () => {
                     _root.action.logicalOperator = currentValue
                 }
             }
@@ -72,14 +72,12 @@ Item {
                 text: "of the following conditions are met"
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
+            LayoutHorizontalSpacer {}
 
             Button {
                 text: "Add Condition"
 
-                onClicked: {
+                onClicked: () => {
                     _root.action.addCondition(_condition.currentValue)
                 }
             }
@@ -87,6 +85,7 @@ Item {
             ComboBox {
                 id: _condition
 
+                implicitContentWidthPolicy: ComboBox.WidestText
                 textRole: "text"
                 valueRole: "value"
 
@@ -106,13 +105,11 @@ Item {
                     model: modelData
                 }
                 IconButton {
+                    text: bsi.icons.trash
                     Layout.alignment: Qt.AlignTop
                     Layout.topMargin: 4
 
-                    text: "\uF5DD"
-
-                    onClicked: function()
-                    {
+                    onClicked: () => {
                         _root.action.removeCondition(conditionIndex)
                     }
                 }
@@ -129,13 +126,11 @@ Item {
                 text: "When the condition is <b>TRUE</b> then"
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
+            LayoutHorizontalSpacer {}
 
             ActionSelector {
                 actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "true"); }
+                callback: (x) => { _root.action.appendAction(x, "true"); }
             }
         }
 
@@ -171,13 +166,11 @@ Item {
                 text: "When the condition is <b>FALSE</b> then"
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
+            LayoutHorizontalSpacer {}
 
             ActionSelector {
                 actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "false"); }
+                callback: (x) => { _root.action.appendAction(x, "false"); }
             }
         }
 
@@ -207,16 +200,16 @@ Item {
     // Drop action for insertion into empty/first slot of the true actions
     ActionDragDropArea {
         target: _trueDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.id, "true");
+        dropCallback: (drop) => {
+            modelData.dropAction(drop.text, modelData.sequenceIndex, "true");
         }
     }
 
     // Drop action for insertion into empty/first slot of the false actions
     ActionDragDropArea {
         target: _falseDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.id, "false");
+        dropCallback: (drop) => {
+            modelData.dropAction(drop.text, modelData.sequenceIndex, "false");
         }
     }
 }

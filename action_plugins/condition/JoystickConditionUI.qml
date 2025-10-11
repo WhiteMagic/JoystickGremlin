@@ -117,9 +117,7 @@ Item {
                 id: _comparator
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
+            LayoutHorizontalSpacer {}
 
             InputListener {
                 callback: _root.model.updateInputs
