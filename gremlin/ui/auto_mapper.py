@@ -24,7 +24,7 @@ import dill
 from gremlin import auto_mapper
 from gremlin.ui import backend
 
-QML_IMPORT_NAME = "Gremlin.UI"
+QML_IMPORT_NAME = "Gremlin.Tools"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
@@ -33,8 +33,10 @@ class AutoMapper(QtCore.QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-    @QtCore.Slot(dict, dict, bool, bool, result=str)
-    def create_mappings(self, physical_devices, vjoy_devices, overwrite, repeat) -> str:
+    @QtCore.Slot(str, dict, dict, bool, bool, result=str)
+    def createMappings(
+        self, mode, physical_devices, vjoy_devices, overwrite, repeat
+    ) -> str:
         """
         Create mappings between physical and vJoy devices.
 
@@ -43,28 +45,22 @@ class AutoMapper(QtCore.QObject):
             vjoy_devices: Dictionary of {vjoy_id: is_selected} for vJoy devices
             overwrite: Whether to overwrite existing mappings
             repeat: Whether to repeat vJoy mappings
-        
+
         Returns:
             A string report for the user summarizing new mappings.
         """
         logging.getLogger("system").info(
-            "Creating mappings from physical devices %s to vJoy devices %s, "
-            "options overwrite: %s, repeat: %s",
-            physical_devices,
-            vjoy_devices,
-            overwrite,
-            repeat,
+            f"Creating mappings from physical devices {physical_devices} to vJoy devices "
+            f" {vjoy_devices}, options overwrite: {overwrite}, repeat: {repeat}"
         )
         mapper = auto_mapper.AutoMapper(backend.Backend().profile)
         return mapper.generate_mappings(
+            mode,
             [
                 dill.GUID.from_str(guid)
                 for (guid, chosen) in physical_devices.items()
                 if chosen
             ],
             [int(vjoy_id) for (vjoy_id, chosen) in vjoy_devices.items() if chosen],
-            auto_mapper.AutoMapperOptions(
-                repeat_vjoy_inputs=repeat,
-                overwrite_used_inputs=overwrite,
-            ),
+            auto_mapper.AutoMapperOptions(repeat, overwrite),
         )

@@ -25,7 +25,7 @@ import QtQuick.Controls.Universal
 
 import Gremlin.Device
 import Gremlin.Profile
-import Gremlin.UI
+import Gremlin.Tools
 
 
 Window {
@@ -49,6 +49,7 @@ Window {
     }
 
     // Properties to track the selected devices and user selections.
+    property string selectedMode: ""
     property var selectedPhysicalDevices: ({})
     property var selectedVJoyDevices: ({})
     property bool overwriteNonEmpty: false
@@ -66,11 +67,34 @@ Window {
             Layout.fillWidth: true
             Layout.preferredHeight: 100
             text: qsTr("<ul>" +
+                    "<li>Select mode to create bindings in" +
                     "<li>Select source physical devices and target vJoy devices" +
                     "<li>Click 'Create 1:1 mappings' to map from physical to virtual inputs" +
                     "<li>Enable 'Overwrite non-empty' to replace existing mappings in the profile" +
                     "<li>Enable 'Repeat vJoy' to cycle through vJoy inputs, if needed to map all physical inputs" +
                     "</ul>")
+        }
+
+        // Mode selection.
+        RowLayout {
+            spacing: 10
+
+            Rectangle {
+                Layout.fillWidth: true
+            }
+
+            TextOutputBox {
+                Layout.preferredWidth: 100
+                Layout.preferredHeight: 30
+                border.color: Universal.background
+                text: "Select Mode"
+            }
+
+            ComboBox {
+                model: backend.modeHierarchy.modeList
+                textRole: "name"
+                onActivated: selectedMode = currentText
+            }
         }
 
         // Main content area with device lists
@@ -130,7 +154,7 @@ Window {
                         model: virtualDevices
                         delegate: CheckBox {
                             width: ListView.view.width - 10
-                            text: model.name
+                            text: model.name + model.vjoy_id
                             checked: false
                             onCheckedChanged: {
                                 selectedVJoyDevices[model.vjoy_id] = checked;
@@ -167,7 +191,8 @@ Window {
                 Layout.preferredWidth: implicitWidth + 20
                 Layout.preferredHeight: 30
                 onClicked: {
-                    statusMessage = autoMapper.create_mappings(
+                    statusMessage = autoMapper.createMappings(
+                        selectedMode,
                         selectedPhysicalDevices, selectedVJoyDevices,
                         overwriteNonEmpty, repeatVJoy);
                 }

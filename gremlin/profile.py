@@ -26,8 +26,6 @@ import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
 
-import dill
-
 from gremlin.types import AxisButtonDirection, InputType, HatDirection
 from gremlin import error, plugin_manager
 from gremlin.logical_device import LogicalDevice
@@ -777,6 +775,16 @@ class InputItem:
         """
         return f"{self.device_id}: {InputType.to_string(self.input_type)} " \
                f"{self.input_id}"
+    
+    def add_item_binding(self) -> InputItemBinding:
+        """Adds a new binding to this input item and returns it."""
+        p_manager = plugin_manager.PluginManager()
+        root_action = p_manager.create_instance("Root", self.input_type)
+        binding = InputItemBinding(self)
+        binding.root_action = root_action
+        binding.behavior = self.input_type
+        self.action_sequences.append(binding)
+        return binding
 
     def remove_item_binding(self, binding: InputItemBinding) -> None:
         """Removes the given binding instance if present.

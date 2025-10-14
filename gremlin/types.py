@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import enum
 import logging
-from typing import Generic, Tuple, TypeVar, Union
+from typing import Generic, NamedTuple, Tuple, TypeVar, Union
 
 import gremlin.error
 
@@ -80,6 +80,14 @@ _InputType_to_enum_lookup = {
     "mouse": InputType.Mouse,
     "virtual-button": InputType.VirtualButton
 }
+
+
+class VjoyInput(NamedTuple):
+    """Uniquely identifies a vJoy input on this system."""
+    vjoy_id: int
+    input_type: InputType
+    # Be consistent for axes: preferable use "linear_index".
+    input_id: int
 
 
 class AxisNames(enum.Enum):

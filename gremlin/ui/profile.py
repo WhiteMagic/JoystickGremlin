@@ -651,23 +651,12 @@ class InputItemModel(QtCore.QAbstractListModel):
 
     @Slot()
     def newActionSequence(self) -> None:
-        # Create root action for the new action sqeuence
-        action = PluginManager().create_instance(
-            "Root",
-            self._input_item.input_type
-        )
-
-        # Create binding instance and add it to the input item
-        binding = gremlin.profile.InputItemBinding(self._input_item)
-        binding.root_action = action
-        binding.behavior = self._input_item.input_type
-
         self.beginInsertRows(
             QtCore.QModelIndex(),
             self.rowCount(),
             self.rowCount()
         )
-        self._input_item.action_sequences.append(binding)
+        self._input_item.action_sequences.append(self._input_item.add_item_binding())
         self.endInsertRows()
         signal.inputItemChanged.emit(self._enumeration_index)
 

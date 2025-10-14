@@ -984,6 +984,7 @@
     </library>
     <modes>
         <mode>Default</mode>
+        <mode>EmptyMode</mode>
     </modes>
     <scripts/>
 </profile>

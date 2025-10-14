@@ -20,15 +20,7 @@ import pathlib
 import pytest
 
 import dill
-from gremlin import (
-    auto_mapper,
-    device_initialization,
-    mode_manager,
-    profile,
-    shared_state,
-    types,
-)
-from vjoy import vjoy
+from gremlin import auto_mapper, device_initialization, profile, shared_state, types
 
 _PROFILE_DEVICE_AXIS_COUNT = 4
 _PROFILE_DEVICE_BUTTON_COUNT = 6
@@ -63,13 +55,12 @@ def register_profile_device() -> dill.DeviceSummary:
         if mocked_dev.device_guid == dev.device_guid:
             yield dev
     else:
-      device_initialization._joystick_devices.append(dev)
-      yield dev
+        device_initialization._joystick_devices.append(dev)
+        yield dev
     for i, mocked_dev in enumerate(device_initialization._joystick_devices):
         if mocked_dev.device_guid == dev.device_guid:
             device_initialization._joystick_devices.pop(i)
             break
-    
 
 
 def test_get_used_vjoy_inputs_from_profile(
@@ -78,36 +69,48 @@ def test_get_used_vjoy_inputs_from_profile(
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
-    mode_manager.ModeManager().reset()
 
     mapper = auto_mapper.AutoMapper(p)
-    used_vjoy_inputs = mapper._get_used_vjoy_inputs()
+    used_vjoy_inputs = mapper._get_used_vjoy_inputs("Default")
 
     assert len(used_vjoy_inputs) == 14
 
     with subtests.test("axis single mapping"):
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickAxis, 1) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickAxis, 1) in used_vjoy_inputs
 
     with subtests.test("axis double mapping"):
-        assert vjoy.VjoyInput(2, vjoy.InputType.JoystickAxis, 4) in used_vjoy_inputs
-        assert vjoy.VjoyInput(2, vjoy.InputType.JoystickAxis, 5) in used_vjoy_inputs
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickAxis, 4) in used_vjoy_inputs
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickAxis, 5) in used_vjoy_inputs
+        assert types.VjoyInput(2, types.InputType.JoystickAxis, 4) in used_vjoy_inputs
+        assert types.VjoyInput(2, types.InputType.JoystickAxis, 5) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickAxis, 4) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickAxis, 5) in used_vjoy_inputs
 
     with subtests.test("button single mapping"):
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 1) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickButton, 1) in used_vjoy_inputs
 
     with subtests.test("button double mapping"):
-        assert vjoy.VjoyInput(2, vjoy.InputType.JoystickButton, 5) in used_vjoy_inputs
-        assert vjoy.VjoyInput(2, vjoy.InputType.JoystickButton, 6) in used_vjoy_inputs
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 5) in used_vjoy_inputs
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 6) in used_vjoy_inputs
+        assert types.VjoyInput(2, types.InputType.JoystickButton, 5) in used_vjoy_inputs
+        assert types.VjoyInput(2, types.InputType.JoystickButton, 6) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickButton, 5) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickButton, 6) in used_vjoy_inputs
 
     with subtests.test("hat mappings"):
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickHat, 1) in used_vjoy_inputs
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickHat, 2) in used_vjoy_inputs
-        assert vjoy.VjoyInput(2, vjoy.InputType.JoystickHat, 1) in used_vjoy_inputs
-        assert vjoy.VjoyInput(2, vjoy.InputType.JoystickHat, 2) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickHat, 1) in used_vjoy_inputs
+        assert types.VjoyInput(1, types.InputType.JoystickHat, 2) in used_vjoy_inputs
+        assert types.VjoyInput(2, types.InputType.JoystickHat, 1) in used_vjoy_inputs
+        assert types.VjoyInput(2, types.InputType.JoystickHat, 2) in used_vjoy_inputs
+
+
+def test_get_used_vjoy_inputs_from_empty_mode(
+    xml_dir: pathlib.Path, register_profile_device: dill.DeviceSummary
+):
+    p = profile.Profile()
+    p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
+    shared_state.current_profile = p
+
+    mapper = auto_mapper.AutoMapper(p)
+    used_vjoy_inputs = mapper._get_used_vjoy_inputs("EmptyMode")
+
+    assert len(used_vjoy_inputs) == 0
 
 
 def test_get_unused_vjoy_inputs(
@@ -116,10 +119,9 @@ def test_get_unused_vjoy_inputs(
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
-    mode_manager.ModeManager().reset()
 
     mapper = auto_mapper.AutoMapper(p)
-    used_vjoy_inputs = mapper._get_used_vjoy_inputs()
+    used_vjoy_inputs = mapper._get_used_vjoy_inputs("Default")
     unused_vjoy_axes = list(mapper._iter_unused_vjoy_axes([1], used_vjoy_inputs))
     unused_vjoy_buttons = list(mapper._iter_unused_vjoy_buttons([1], used_vjoy_inputs))
     unused_vjoy_hats = list(mapper._iter_unused_vjoy_hats([1], used_vjoy_inputs))
@@ -130,45 +132,47 @@ def test_get_unused_vjoy_inputs(
     # can still verify the logic below.
     with subtests.test("vJoy 1 unused axes"):
         assert len(unused_vjoy_axes) == 5
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickAxis, 2) in unused_vjoy_axes
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickAxis, 3) in unused_vjoy_axes
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickAxis, 6) in unused_vjoy_axes
+        assert types.VjoyInput(1, types.InputType.JoystickAxis, 2) in unused_vjoy_axes
+        assert types.VjoyInput(1, types.InputType.JoystickAxis, 3) in unused_vjoy_axes
+        assert types.VjoyInput(1, types.InputType.JoystickAxis, 6) in unused_vjoy_axes
 
     with subtests.test("vJoy 1 some unused buttons"):
         assert len(unused_vjoy_buttons) == 61
         assert (
-            vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 2) in unused_vjoy_buttons
+            types.VjoyInput(1, types.InputType.JoystickButton, 2) in unused_vjoy_buttons
         )
         assert (
-            vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 3) in unused_vjoy_buttons
+            types.VjoyInput(1, types.InputType.JoystickButton, 3) in unused_vjoy_buttons
         )
         assert (
-            vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 4) in unused_vjoy_buttons
+            types.VjoyInput(1, types.InputType.JoystickButton, 4) in unused_vjoy_buttons
         )
         assert (
-            vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 7) in unused_vjoy_buttons
+            types.VjoyInput(1, types.InputType.JoystickButton, 7) in unused_vjoy_buttons
         )
         assert (
-            vjoy.VjoyInput(1, vjoy.InputType.JoystickButton, 63) in unused_vjoy_buttons
+            types.VjoyInput(1, types.InputType.JoystickButton, 63)
+            in unused_vjoy_buttons
         )
 
     with subtests.test("vJoy 1 unavailable hats"):
         assert len(unused_vjoy_hats) == 0
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickHat, 1) not in unused_vjoy_hats
-        assert vjoy.VjoyInput(1, vjoy.InputType.JoystickHat, 2) not in unused_vjoy_hats
+        assert (
+            types.VjoyInput(1, types.InputType.JoystickHat, 1) not in unused_vjoy_hats
+        )
+        assert (
+            types.VjoyInput(1, types.InputType.JoystickHat, 2) not in unused_vjoy_hats
+        )
 
 
 # Intentionally not using the register_profile_device fixture in this test.
-def test_get_used_vjoy_inputs_for_disconnected_device_in_profile(
-    xml_dir: pathlib.Path
-):
+def test_get_used_vjoy_inputs_for_disconnected_device_in_profile(xml_dir: pathlib.Path):
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
-    mode_manager.ModeManager().reset()
 
     mapper = auto_mapper.AutoMapper(p)
-    used_vjoy_inputs = mapper._get_used_vjoy_inputs()
+    used_vjoy_inputs = mapper._get_used_vjoy_inputs("Default")
 
     assert not len(used_vjoy_inputs)
 
@@ -179,23 +183,22 @@ def test_iter_physical_inputs_exclude_used(
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
-    mode_manager.ModeManager().reset()
 
     mapper = auto_mapper.AutoMapper(p)
     mapper._prepare_profile([register_profile_device], auto_mapper.AutoMapperOptions())
     physical_axes = list(
         mapper._iter_physical_axes(
-            [register_profile_device], auto_mapper.AutoMapperOptions()
+            "Default", [register_profile_device], auto_mapper.AutoMapperOptions()
         )
     )
     physical_buttons = list(
         mapper._iter_physical_buttons(
-            [register_profile_device], auto_mapper.AutoMapperOptions()
+            "Default", [register_profile_device], auto_mapper.AutoMapperOptions()
         )
     )
     physical_hats = list(
         mapper._iter_physical_hats(
-            [register_profile_device], auto_mapper.AutoMapperOptions()
+            "Default", [register_profile_device], auto_mapper.AutoMapperOptions()
         )
     )
 
@@ -221,7 +224,6 @@ def test_iter_physical_inputs_overwrite_used(
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
-    mode_manager.ModeManager().reset()
 
     mapper = auto_mapper.AutoMapper(p)
     mapper._prepare_profile(
@@ -230,18 +232,21 @@ def test_iter_physical_inputs_overwrite_used(
     )
     physical_axes = list(
         mapper._iter_physical_axes(
+            "Default",
             [register_profile_device],
             auto_mapper.AutoMapperOptions(overwrite_used_inputs=True),
         )
     )
     physical_buttons = list(
         mapper._iter_physical_buttons(
+            "Default",
             [register_profile_device],
             auto_mapper.AutoMapperOptions(overwrite_used_inputs=True),
         )
     )
     physical_hats = list(
         mapper._iter_physical_hats(
+            "Default",
             [register_profile_device],
             auto_mapper.AutoMapperOptions(overwrite_used_inputs=True),
         )
@@ -274,23 +279,25 @@ def test_iter_physical_inputs_for_new_device(
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
-    mode_manager.ModeManager().reset()
 
     mapper = auto_mapper.AutoMapper(p)
     physical_axes = list(
         mapper._iter_physical_axes(
+            "Default",
             [device_initialization.physical_devices()[0]],
             auto_mapper.AutoMapperOptions(),
         )
     )
     physical_buttons = list(
         mapper._iter_physical_buttons(
+            "Default",
             [device_initialization.physical_devices()[0]],
             auto_mapper.AutoMapperOptions(),
         )
     )
     physical_hats = list(
         mapper._iter_physical_hats(
+            "Default",
             [device_initialization.physical_devices()[0]],
             auto_mapper.AutoMapperOptions(),
         )
@@ -319,15 +326,78 @@ def test_iter_physical_inputs_for_new_device(
             assert hat.input_id == hat_i + 1
 
 
-def test_auto_map(xml_dir: pathlib.Path, register_profile_device: dill.DeviceSummary):
+def test_iter_physical_inputs_for_empty_mode(
+    subtests, xml_dir: pathlib.Path, register_profile_device: dill.DeviceSummary
+):
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
-    mode_manager.ModeManager().reset()
 
     mapper = auto_mapper.AutoMapper(p)
-    mapper.generate_mappings(
-        [register_profile_device.device_guid],
-        [1],
+    mapper._prepare_profile(
+        [register_profile_device],
         auto_mapper.AutoMapperOptions(),
     )
+    physical_axes = list(
+        mapper._iter_physical_axes(
+            "EmptyMode",
+            [register_profile_device],
+            auto_mapper.AutoMapperOptions(),
+        )
+    )
+    physical_buttons = list(
+        mapper._iter_physical_buttons(
+            "EmptyMode",
+            [register_profile_device],
+            auto_mapper.AutoMapperOptions(),
+        )
+    )
+    physical_hats = list(
+        mapper._iter_physical_hats(
+            "EmptyMode",
+            [register_profile_device],
+            auto_mapper.AutoMapperOptions(),
+        )
+    )
+
+    assert len(physical_axes) == _PROFILE_DEVICE_AXIS_COUNT
+
+    for axis_i in range(_PROFILE_DEVICE_AXIS_COUNT):
+        with subtests.test("axis", axis_i=axis_i):
+            axis = physical_axes[axis_i]
+            assert axis.input_type == types.InputType.JoystickAxis
+            assert axis.input_id == axis_i + 1
+
+    for button_i in range(_PROFILE_DEVICE_BUTTON_COUNT):
+        with subtests.test("button", button_i=button_i):
+            button = physical_buttons[button_i]
+            assert button.input_type == types.InputType.JoystickButton
+            assert button.input_id == button_i + 1
+
+    for hat_i in range(_PROFILE_DEVICE_HAT_COUNT):
+        with subtests.test("hat", hat_i=hat_i):
+            hat = physical_hats[hat_i]
+            assert hat.input_type == types.InputType.JoystickHat
+            assert hat.input_id == hat_i + 1
+
+
+def test_auto_map(subtests, xml_dir: pathlib.Path, register_profile_device: dill.DeviceSummary):
+    p = profile.Profile()
+    p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
+    shared_state.current_profile = p
+
+    mapper = auto_mapper.AutoMapper(p)
+    with subtests.test("default profile"):
+        assert mapper.generate_mappings(
+                "Default",
+                [register_profile_device.device_guid],
+                [1],
+                auto_mapper.AutoMapperOptions(),
+        ) == "Created 2 mappings."
+    with subtests.test("EmptyMode"):
+        assert mapper.generate_mappings(
+                "EmptyMode",
+                [register_profile_device.device_guid],
+                [1],
+                auto_mapper.AutoMapperOptions(),
+        ) == "Created 13 mappings."

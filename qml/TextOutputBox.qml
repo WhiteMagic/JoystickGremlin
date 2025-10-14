@@ -23,6 +23,8 @@ Rectangle {
     id: root
     property alias text: _notificationLabel.text
     
+    implicitHeight: _notificationLabel.height
+    implicitWidth: _notificationLabel.width
     color: Universal.background
     border.color: Universal.accent
 
