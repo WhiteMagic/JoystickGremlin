@@ -35,7 +35,7 @@ class AutoMapperOptions:
 
     More flags may be added here to further customize auto-mapper behavior.
     """
-
+    mode: str = "Default"
     repeat_vjoy_inputs: bool = False
     overwrite_used_inputs: bool = False
 
@@ -76,7 +76,6 @@ class AutoMapper:
 
     def generate_mappings(
         self,
-        mode: str,
         input_devices_guids: list[dill.GUID],
         output_vjoy_ids: list[int],
         options: AutoMapperOptions,
@@ -84,7 +83,6 @@ class AutoMapper:
         """Generates mappings for the profile.
 
         Args:
-            mode: The mode to generate mappings for.
             input_devices_guids: List of GUIDs representing the input devices to map from.
             output_vjoy_ids: List of DeviceSummary objects representing the vJoy devices to map to.
             options: Options for the auto-mapper.
@@ -99,7 +97,7 @@ class AutoMapper:
         ]
 
         self._prepare_profile(input_devices, options)
-        used_vjoy_inputs = set(self._get_used_vjoy_inputs(mode))
+        used_vjoy_inputs = set(self._get_used_vjoy_inputs(options.mode))
         vjoy_axes = self._iter_unused_vjoy_axes(output_vjoy_ids, used_vjoy_inputs)
         vjoy_buttons = self._iter_unused_vjoy_buttons(output_vjoy_ids, used_vjoy_inputs)
         vjoy_hats = self._iter_unused_vjoy_hats(output_vjoy_ids, used_vjoy_inputs)
@@ -108,15 +106,15 @@ class AutoMapper:
             vjoy_buttons = itertools.cycle(vjoy_buttons)
             vjoy_hats = itertools.cycle(vjoy_hats)
         for physical_axis, vjoy_axis in zip(
-            self._iter_physical_axes(mode, input_devices, options), vjoy_axes
+            self._iter_physical_axes(input_devices, options), vjoy_axes
         ):
             self._create_new_mapping(physical_axis, vjoy_axis)
         for physical_button, vjoy_button in zip(
-            self._iter_physical_buttons(mode, input_devices, options), vjoy_buttons
+            self._iter_physical_buttons(input_devices, options), vjoy_buttons
         ):
             self._create_new_mapping(physical_button, vjoy_button)
         for physical_hat, vjoy_hat in zip(
-            self._iter_physical_hats(mode, input_devices, options), vjoy_hats
+            self._iter_physical_hats(input_devices, options), vjoy_hats
         ):
             self._create_new_mapping(physical_hat, vjoy_hat)
         return self._create_mappings_report()
@@ -131,7 +129,6 @@ class AutoMapper:
 
     def _iter_physical_axes(
         self,
-        mode: str,
         input_devices: list[dill.DeviceSummary],
         options: AutoMapperOptions,
     ) -> Iterable[profile.InputItem]:
@@ -143,7 +140,7 @@ class AutoMapper:
                     dev.device_guid.uuid,
                     types.InputType.JoystickAxis,
                     axis_index,
-                    mode,
+                    options.mode,
                     create_if_missing=True,
                 )
                 if not input_item.action_sequences:
@@ -151,7 +148,6 @@ class AutoMapper:
 
     def _iter_physical_buttons(
         self,
-        mode: str,
         input_devices: list[dill.DeviceSummary],
         options: AutoMapperOptions,
     ) -> Iterable[profile.InputItem]:
@@ -162,7 +158,7 @@ class AutoMapper:
                     dev.device_guid.uuid,
                     types.InputType.JoystickButton,
                     button,
-                    mode,
+                    options.mode,
                     create_if_missing=True,
                 )
                 if not input_item.action_sequences:
@@ -170,7 +166,6 @@ class AutoMapper:
 
     def _iter_physical_hats(
         self,
-        mode: str,
         input_devices: list[dill.DeviceSummary],
         options: AutoMapperOptions,
     ) -> Iterable[profile.InputItem]:
@@ -181,7 +176,7 @@ class AutoMapper:
                     dev.device_guid.uuid,
                     types.InputType.JoystickHat,
                     hat,
-                    mode,
+                    options.mode,
                     create_if_missing=True,
                 )
                 if not input_item.action_sequences:

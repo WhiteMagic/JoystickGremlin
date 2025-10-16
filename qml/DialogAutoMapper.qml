@@ -94,6 +94,7 @@ Window {
                 model: backend.modeHierarchy.modeList
                 textRole: "name"
                 onActivated: selectedMode = currentText
+                Component.onCompleted: selectedMode = currentText
             }
         }
 

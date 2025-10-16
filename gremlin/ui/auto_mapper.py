@@ -55,12 +55,11 @@ class AutoMapper(QtCore.QObject):
         )
         mapper = auto_mapper.AutoMapper(backend.Backend().profile)
         return mapper.generate_mappings(
-            mode,
             [
                 dill.GUID.from_str(guid)
                 for (guid, chosen) in physical_devices.items()
                 if chosen
             ],
             [int(vjoy_id) for (vjoy_id, chosen) in vjoy_devices.items() if chosen],
-            auto_mapper.AutoMapperOptions(repeat, overwrite),
+            auto_mapper.AutoMapperOptions(mode, repeat, overwrite),
         )

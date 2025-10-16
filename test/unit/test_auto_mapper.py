@@ -188,17 +188,17 @@ def test_iter_physical_inputs_exclude_used(
     mapper._prepare_profile([register_profile_device], auto_mapper.AutoMapperOptions())
     physical_axes = list(
         mapper._iter_physical_axes(
-            "Default", [register_profile_device], auto_mapper.AutoMapperOptions()
+            [register_profile_device], auto_mapper.AutoMapperOptions()
         )
     )
     physical_buttons = list(
         mapper._iter_physical_buttons(
-            "Default", [register_profile_device], auto_mapper.AutoMapperOptions()
+            [register_profile_device], auto_mapper.AutoMapperOptions()
         )
     )
     physical_hats = list(
         mapper._iter_physical_hats(
-            "Default", [register_profile_device], auto_mapper.AutoMapperOptions()
+            [register_profile_device], auto_mapper.AutoMapperOptions()
         )
     )
 
@@ -232,21 +232,18 @@ def test_iter_physical_inputs_overwrite_used(
     )
     physical_axes = list(
         mapper._iter_physical_axes(
-            "Default",
             [register_profile_device],
             auto_mapper.AutoMapperOptions(overwrite_used_inputs=True),
         )
     )
     physical_buttons = list(
         mapper._iter_physical_buttons(
-            "Default",
             [register_profile_device],
             auto_mapper.AutoMapperOptions(overwrite_used_inputs=True),
         )
     )
     physical_hats = list(
         mapper._iter_physical_hats(
-            "Default",
             [register_profile_device],
             auto_mapper.AutoMapperOptions(overwrite_used_inputs=True),
         )
@@ -283,21 +280,18 @@ def test_iter_physical_inputs_for_new_device(
     mapper = auto_mapper.AutoMapper(p)
     physical_axes = list(
         mapper._iter_physical_axes(
-            "Default",
             [device_initialization.physical_devices()[0]],
             auto_mapper.AutoMapperOptions(),
         )
     )
     physical_buttons = list(
         mapper._iter_physical_buttons(
-            "Default",
             [device_initialization.physical_devices()[0]],
             auto_mapper.AutoMapperOptions(),
         )
     )
     physical_hats = list(
         mapper._iter_physical_hats(
-            "Default",
             [device_initialization.physical_devices()[0]],
             auto_mapper.AutoMapperOptions(),
         )
@@ -340,23 +334,20 @@ def test_iter_physical_inputs_for_empty_mode(
     )
     physical_axes = list(
         mapper._iter_physical_axes(
-            "EmptyMode",
             [register_profile_device],
-            auto_mapper.AutoMapperOptions(),
+            auto_mapper.AutoMapperOptions(mode="EmptyMode"),
         )
     )
     physical_buttons = list(
         mapper._iter_physical_buttons(
-            "EmptyMode",
             [register_profile_device],
-            auto_mapper.AutoMapperOptions(),
+            auto_mapper.AutoMapperOptions(mode="EmptyMode"),
         )
     )
     physical_hats = list(
         mapper._iter_physical_hats(
-            "EmptyMode",
             [register_profile_device],
-            auto_mapper.AutoMapperOptions(),
+            auto_mapper.AutoMapperOptions(mode="EmptyMode"),
         )
     )
 
@@ -389,15 +380,13 @@ def test_auto_map(subtests, xml_dir: pathlib.Path, register_profile_device: dill
     mapper = auto_mapper.AutoMapper(p)
     with subtests.test("default profile"):
         assert mapper.generate_mappings(
-                "Default",
                 [register_profile_device.device_guid],
                 [1],
                 auto_mapper.AutoMapperOptions(),
         ) == "Created 2 mappings."
     with subtests.test("EmptyMode"):
         assert mapper.generate_mappings(
-                "EmptyMode",
                 [register_profile_device.device_guid],
                 [1],
-                auto_mapper.AutoMapperOptions(),
+                auto_mapper.AutoMapperOptions(mode="EmptyMode"),
         ) == "Created 13 mappings."
