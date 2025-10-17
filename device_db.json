@@ -60,6 +60,12 @@
             "product_id": 242,
             "name": "CH Pro Pedals",
             "mapping": "ch_pro_pedals"
+        },
+        {
+            "vendor_id": 1103,
+            "product_id": 45322,
+            "name": "Thrustmaster T.16000M",
+            "mapping": "tm_t16000m"
         }
     ],
     "mapping": {
@@ -421,6 +427,17 @@
             "Axis 1": "Toe Brake Left",
             "Axis 2": "Toe Brake Right",
             "Axis 3": "Yaw"
+        },
+        "tm_t16000m": {
+            "Axis 1": "X Axis",
+            "Axis 2": "Y Axis",
+            "Axis 6": "Z Rotation",
+            "Axis 7": "Throttle",
+            "Button 1": "Trigger",
+            "Button 2": "Thumb Button",
+            "Button 3": "Top Left Button",
+            "Button 4": "Top Right Button",
+            "Hat 1": "POV Hat"
         }
     }
 }

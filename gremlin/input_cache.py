@@ -18,14 +18,177 @@
 
 from __future__ import annotations
 
-from typing import Dict, List
+import json
+import jsonschema
+import logging
+from typing import Any, Dict, List
 import uuid
 
-from PySide6 import QtCore
 
-from dill import DILL, GUID, UUID_LogicalDevice
-from gremlin.common import SingletonDecorator
-from gremlin import error, keyboard, logical_device, types
+from dill import DeviceSummary, DILL, GUID, UUID_LogicalDevice
+from gremlin.common import SingletonMetaclass
+from gremlin.config import Configuration
+from gremlin import error, keyboard, logical_device, types, util
+
+
+
+_device_database_schema = {
+  "type": "object",
+  "required": ["revision", "devices", "mapping"],
+  "additionalProperties": False,
+  "properties": {
+    "revision": {
+      "type": "integer",
+    },
+    "devices": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/device" }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/mappingEntry" }
+    }
+  },
+  "$defs": {
+    "device": {
+      "type": "object",
+      "required": ["vendor_id", "product_id", "name", "mapping"],
+      "additionalProperties": False,
+      "properties": {
+        "vendor_id": { "type": "integer" },
+        "product_id": { "type": "integer" },
+        "name": { "type": "string", "minLength": 1 },
+        "mapping": { "type": "string", "minLength": 1 }
+      }
+    },
+    "mappingEntry": {
+      "type": "object",
+      "additionalProperties": False,
+      "patternProperties": {
+        "^Axis [1-8]$": { "type": "string" },
+        "^Button [1-9]\\d*$": { "type": "string" },
+        "^Hat [1-4]$": { "type": "string" }
+      }
+    }
+  }
+}
+
+
+class DeviceMapping:
+
+    def __init__(self, input_map: Dict[str, Any]) -> None:
+        self._input_map = input_map
+
+    def input_name(self, input_name: str) -> str:
+        """Returns the label of an input formatted based on user preferences.
+
+        Name formatting is based on the global configuration option and the
+        availability of information about the input in the device mapping.
+
+        If a device exists in the device database and its mapping or the input
+        are not defined, input_name() returns the base input name.
+
+        Args:
+            input_name: Base name of the input to format.
+
+        Returns:
+            Formatted input name based on user settings.
+        """
+        input_name_display_mode = Configuration().value(
+            "global", "input-names", "input-name-display-mode"
+        )
+
+        if input_name_display_mode == "Numerical" or \
+                input_name not in self._input_map:
+            return input_name
+
+        # Return base input name if it is not present in the database, otherwise
+        # apply the desired formatting.
+        db_input_name = self._input_map[input_name].strip()
+        if len(db_input_name) == 0:
+            return input_name
+        elif input_name_display_mode == "Numerical + Label":
+            return f"{input_name} - {db_input_name}"
+        elif input_name_display_mode == "Label":
+            return db_input_name
+        else:
+            return input_name
+
+
+class DeviceDatabase(metaclass=SingletonMetaclass):
+
+    """Provides device specific names of axis, buttons, and hats if available
+    for a given device.
+    """
+
+    # TODO: Some devices have configurable number of buttons and/or axes
+    #       so adjusting device database information might be required in the
+    #       future.
+
+    def __init__(self) -> None:
+        db_file = util.resource_path("device_db.json")
+        if not util.file_exists_and_is_accessible(db_file):
+            return
+
+        self._device_db = {"revision": 0, "devices": [], "mapping": {}}
+        try:
+            self._device_db = json.load(open(db_file))
+            jsonschema.validate(self._device_db, _device_database_schema)
+        except (json.decoder.JSONDecodeError, jsonschema.ValidationError) as e:
+            logging.getLogger("system").error(
+                f"There was an error loading device database {db_file}: {e}"
+            )
+
+    def _device_matches(
+        self,
+        device_data: Dict[str, Any],
+        device: DeviceSummary
+    ) -> bool:
+        return device_data["product_id"] == device.product_id and \
+            device_data["vendor_id"] == device.vendor_id
+
+    def get_mapping_by_uuid(
+        self,
+        device_uuid: uuid.UUID
+    ) -> DeviceMapping | None:
+        """Returns: DeviceMapping object for the given device GUID.
+
+        Args:
+            device_guid: Unique identifier of the device instance.
+
+        Returns:
+            A DeviceMapping instance matching the given device, or None if no
+            mapping is available.
+        """
+        return self.get_mapping(
+            DILL.get_device_information_by_guid(GUID.from_uuid(device_uuid))
+        )
+
+    def get_mapping(self, device: DeviceSummary) -> DeviceMapping | None:
+        """Returns: DeviceMapping object for the given device.
+
+        Args:
+            device: Raw device data from DILL representing the device.
+
+        Returns:
+            A DeviceMapping instance matching the given device, or None if no
+            mapping is available.
+        """
+        for dev in self._device_db["devices"]:
+            if self._device_matches(dev, device):
+                if dev["mapping"] not in self._device_db["mapping"]:
+                    logging.getLogger("system").warning(
+                        f"Unable to find device mapping for pid: "
+                        f"{device.product_id} vid: {device.vendor_id}"
+                    )
+                    return None
+                return DeviceMapping(self._device_db["mapping"][dev["mapping"]])
+
+        logging.getLogger("system").warning(
+            f"Unsupported device pid: {device.product_id} "
+            f"vid: {device.vendor_id}"
+        )
+        return None
 
 
 class JoystickWrapper:
@@ -280,8 +443,7 @@ class JoystickWrapper:
         return hats
 
 
-@SingletonDecorator
-class Joystick:
+class Joystick(metaclass=SingletonMetaclass):
 
     """Allows read access to joystick state information."""
 
@@ -320,8 +482,7 @@ class Joystick:
         return self.devices[device_guid]
 
 
-@SingletonDecorator
-class Keyboard:
+class Keyboard(metaclass=SingletonMetaclass):
 
     """Provides access to the keyboard state."""
 

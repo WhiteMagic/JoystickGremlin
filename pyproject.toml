@@ -10,6 +10,7 @@ homepage = "https://whitemagic.github.io/JoystickGremlin/"
 repository = "https://github.com/WhiteMagic/JoystickGremlin"
 
 [tool.poetry.dependencies]
+jsonschema = ">=4.25"
 python = ">=3.10, <3.13"
 PySide6 = ">=6.8"
 PyInstaller = ">=6.10"
@@ -24,3 +25,7 @@ addopts = "--import-mode=importlib"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+lint.select = ["ANN"]
+lint.ignore = ["ANN401"]
