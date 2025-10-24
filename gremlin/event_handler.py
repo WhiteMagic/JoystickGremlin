@@ -40,6 +40,8 @@ from gremlin import common, config, device_initialization, error, keyboard, \
     mode_manager, util, shared_state, tree
 from gremlin.input_cache import Joystick, Keyboard
 from gremlin.types import InputType
+# REFACTORED: Import Event from domain to break circular dependency
+from gremlin.domain import Event
 
 
 if TYPE_CHECKING:
@@ -47,110 +49,44 @@ if TYPE_CHECKING:
     from gremlin.code_runner import CallbackObject
 
 
-class Event:
-    """Represents a single event captured by the system.
+# Event class moved to gremlin.domain to break circular dependency
 
-    An event can originate from the keyboard or joystick which is
-    indicated by the InputType value. The value of the event has to
-    be interpreted based on the type of the event.
 
-    Keyboard and JoystickButton events have a simple True / False
-    value stored in is_pressed indicating whether or not the key has
-    been pressed. For JoystickAxis the value indicates the axis value
-    in the range [-1, 1] stored in the value field. JoystickHat events
-    represent the hat position as a unit tuple (x, y) representing
-    deflection in cartesian coordinates in the value field.
+def event_display_name(event: Event) -> str:
+    """Returns the display representation of an event.
+
+    Args:
+        event: The event to generate display name for
+
+    Returns:
+        Textual representation of the event's input
     """
+    # Retrieve the device instance belonging to this event
+    device = None
+    for dev in device_initialization.joystick_devices():
+        if dev.device_guid == event.device_guid:
+            device = dev
+            break
 
-    def __init__(
-            self,
-            event_type: InputType,
-            identifier: Any,
-            device_guid: uuid.UUID,
-            mode: str,
-            value: Any | None=None,
-            is_pressed: bool | None=None,
-            raw_value: Any | None=None
-    ):
-        """Creates a new Event object.
-
-        Args:
-            event_type: the type of input causing the event
-            identifier: the identifier of the event source
-            device_guid: uuid identifying the device causing this event
-            mode: name of the mode the system was in when the even was received
-            value: the value of the input
-            is_pressed: boolean flag indicating if a button or key is pressed
-            raw_value: the raw value of the axis being moved
-        """
-        self.event_type = event_type
-        self.identifier = identifier
-        self.device_guid = device_guid
-        self.mode = mode
-        self.is_pressed = is_pressed
-        self.value = value
-        self.raw_value = raw_value
-
-    def display_name(self) -> str:
-        """Returns the display representation of this event.
-
-        Returns:
-            Textual representation of the event's input
-        """
-        # Retrieve the device instance belonging to this event
-        device = None
-        for dev in device_initialization.joystick_devices():
-            if dev.device_guid == self.device_guid:
-                device = dev
-                break
-
-        if device is None:
-            # Handle keyboard events
-            if self.device_guid == linput.GUID_Keyboard:
-                return keyboard.key_from_code(
-                    self.identifier[0],
-                    self.identifier[1]
-                ).name
-            else:
-                return "Unknown"
-
-        # Format device input based on type
-        if self.event_type == InputType.JoystickAxis:
-            return f"{device.name} Axis {self.identifier}"
-        elif self.event_type == InputType.JoystickButton:
-            return f"{device.name} Button {self.identifier}"
-        elif self.event_type == InputType.JoystickHat:
-            return f"{device.name} Hat {self.identifier}"
+    if device is None:
+        # Handle keyboard events
+        if event.device_guid == linput.GUID_Keyboard:
+            return keyboard.key_from_code(
+                event.identifier[0],
+                event.identifier[1]
+            ).name
         else:
             return "Unknown"
 
-    def clone(self):
-        """Returns a copy of this event.
-
-        Returns:
-            Copy of this event
-        """
-        return Event(
-            self.event_type,
-            self.identifier,
-            self.device_guid,
-            self.mode,
-            self.value,
-            self.is_pressed,
-            self.raw_value
-        )
-
-    def __eq__(self, other):
-        return isinstance(other, Event) \
-            and other.event_type == self.event_type \
-            and other.identifier == self.identifier \
-            and other.device_guid == self.device_guid
-
-    def __ne__(self, other):
-        return not (self == other)
-
-    def __hash__(self):
-        return hash((self.event_type, self.identifier, self.device_guid))
+    # Format device input based on type
+    if event.event_type == InputType.JoystickAxis:
+        return f"{device.name} Axis {event.identifier}"
+    elif event.event_type == InputType.JoystickButton:
+        return f"{device.name} Button {event.identifier}"
+    elif event.event_type == InputType.JoystickHat:
+        return f"{device.name} Hat {event.identifier}"
+    else:
+        return "Unknown"
 
 
 @common.SingletonDecorator

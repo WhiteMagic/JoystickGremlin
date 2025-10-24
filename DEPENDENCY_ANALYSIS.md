@@ -4,7 +4,7 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 
 ## 1. PROJEKTÜBERSICHT
    Gesamtanzahl Module: 104
-   Gesamtzeilen Code: 50,204
+   Gesamtzeilen Code: 50,218
    Gesamtanzahl Funktionen: 1774
    Gesamtanzahl Klassen: 275
 
@@ -33,12 +33,10 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
    ⚠️  - win32process
 
 ## 3. ZYKLISCHE ABHÄNGIGKEITEN (CLEAN CODE VERSTOSSE)
-   ⚠️  Gefundene zyklische Abhängigkeiten: 5
-   1. gremlin.base_classes -> gremlin.event_handler -> gremlin.code_runner -> gremlin.base_classes
-   2. gremlin.base_classes -> gremlin.event_handler -> gremlin.base_classes
-   3. gremlin.profile -> gremlin.base_classes -> gremlin.profile
-   4. gremlin.ui.profile -> gremlin.ui.action_model -> gremlin.ui.profile
-   5. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
+   ⚠️  Gefundene zyklische Abhängigkeiten: 3
+   1. gremlin.base_classes -> gremlin.profile -> gremlin.base_classes
+   2. gremlin.ui.profile -> gremlin.ui.action_model -> gremlin.ui.profile
+   3. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
 
 ## 4. LANGE FUNKTIONEN (> 50 Zeilen - Clean Code Verstoß)
    ⚠️  Gefundene lange Funktionen: 20
@@ -315,7 +313,6 @@ graph TD
     base_classes[base_classes] --> gremlin[gremlin]
     base_classes[base_classes] --> domain[domain]
     base_classes[base_classes] --> error[error]
-    base_classes[base_classes] --> event_handler[event_handler]
     base_classes[base_classes] --> profile[profile]
     base_classes[base_classes] --> types[types]
     cheatsheet[cheatsheet] --> gremlin[gremlin]
@@ -336,6 +333,7 @@ graph TD
     event_handler[event_handler] --> gremlin[gremlin]
     event_handler[event_handler] --> base_classes[base_classes]
     event_handler[event_handler] --> code_runner[code_runner]
+    event_handler[event_handler] --> domain[domain]
     event_handler[event_handler] --> input_cache[input_cache]
     event_handler[event_handler] --> types[types]
     event_handler[event_handler] -.->|Linux| linput[linput]
