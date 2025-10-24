@@ -4,9 +4,9 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 
 ## 1. PROJEKTÜBERSICHT
    Gesamtanzahl Module: 104
-   Gesamtzeilen Code: 50,218
-   Gesamtanzahl Funktionen: 1774
-   Gesamtanzahl Klassen: 275
+   Gesamtzeilen Code: 50,273
+   Gesamtanzahl Funktionen: 1783
+   Gesamtanzahl Klassen: 276
 
 ## 2. EXTERNE ABHÄNGIGKEITEN
    Linux-native Bibliotheken:
@@ -388,6 +388,7 @@ graph TD
     types[types] --> error[error]
     action_model[action_model] --> gremlin[gremlin]
     action_model[action_model] --> base_classes[base_classes]
+    action_model[action_model] --> domain[domain]
     action_model[action_model] --> error[error]
     action_model[action_model] --> plugin_manager[plugin_manager]
     action_model[action_model] --> profile[profile]

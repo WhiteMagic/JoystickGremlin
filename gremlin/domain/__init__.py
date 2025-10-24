@@ -348,11 +348,64 @@ class IContainer(ABC):
         pass
 
 
+class IBindingModel(Protocol):
+    """Abstract interface for input binding models.
+    
+    This breaks the circular dependency between ui.profile and ui.action_model
+    by providing a common interface for accessing binding properties without
+    importing the concrete implementation.
+    
+    REFACTORED: Created to break ui.profile <-> ui.action_model cycle using
+    Dependency Inversion Principle (SOLID).
+    """
+    
+    @property
+    def behavior_type(self) -> 'InputType':
+        """Returns the input behavior type of this binding."""
+        ...
+    
+    @property
+    def input_item_binding(self) -> Any:
+        """Returns the underlying input item binding."""
+        ...
+    
+    @property
+    def root_action(self) -> 'IActionData':
+        """Returns the root action of this binding."""
+        ...
+    
+    def is_last_action_in_container(self, action: 'IActionData', container: Optional[str] = None) -> bool:
+        """Check if action is the last in its container."""
+        ...
+    
+    def get_child_actions(self, action: 'IActionData', container: Optional[str] = None) -> List[Any]:
+        """Get child actions of the specified action."""
+        ...
+    
+    def sync_data(self) -> None:
+        """Synchronize data changes."""
+        ...
+    
+    def remove_action(self, index: Any) -> None:
+        """Remove action at index."""
+        ...
+    
+    def parent(self) -> Any:
+        """Get parent model."""
+        ...
+    
+    def move_action(self, source: Any, target: Any, container: Optional[str] = None) -> None:
+        """Move action from source to target."""
+        ...
+
+
 # Re-export for convenience
 __all__ = [
+    'Event',
     'ISerializable',
     'IProfileElement',
     'IActionData',
     'ILibrary',
     'IContainer',
+    'IBindingModel',
 ]
