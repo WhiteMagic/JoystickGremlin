@@ -39,6 +39,8 @@ from gremlin.tree import TreeNode
 from gremlin.user_script import Script
 from gremlin.util import safe_read, safe_format, read_action_ids, read_bool, \
     read_subelement, create_subelement_node
+# REFACTORED: Use abstraction instead of concrete AbstractActionData to break circular dependency
+from gremlin.domain import IActionData, ILibrary
 
 
 if TYPE_CHECKING:
@@ -309,12 +311,14 @@ class Settings:
         self.vjoy_initial_values[vid][aid] = value
 
 
-class Library:
+class Library(ILibrary):
 
     """Stores actions in order to be reference by input binding instances.
 
     Each item is a self-contained entry with a UUID assigned to it which
     is used by the input items to reference the actual content.
+    
+    REFACTORED: Now implements ILibrary to break circular dependency with base_classes.
     """
 
     def __init__(self):
@@ -323,7 +327,7 @@ class Library:
         The library contains both the individual action configurations as well
         as the items composed of them.
         """
-        self._actions: Dict[uuid.UUID, AbstractActionData] = {}
+        self._actions: Dict[uuid.UUID, IActionData] = {}
 
     def add_action(self, action: AbstractActionData) -> None:
         if action.id in self._actions:
@@ -344,6 +348,15 @@ class Library:
             )
         if key in self._actions:
             del self._actions[key]
+    
+    # REFACTORED: Implement ILibrary.remove_action as alias to delete_action
+    def remove_action(self, action_id: uuid.UUID) -> None:
+        """Remove action from library (implements ILibrary interface).
+        
+        Args:
+            action_id: UUID of action to remove
+        """
+        self.delete_action(action_id)
 
     def remove_unused(
         self,
@@ -411,20 +424,17 @@ class Library:
         return actions
 
 
-    def get_action(self, key: uuid.UUID) -> AbstractActionData:
-        """Returns the action specified by the key.
-
-        If there is no action with the specified key an exception is throw.
+    # REFACTORED: Update signature to match ILibrary interface
+    def get_action(self, action_id: uuid.UUID) -> Optional[IActionData]:
+        """Returns the action specified by the action_id.
 
         Args:
-            key: the key to return an action for
+            action_id: the UUID to return an action for
 
         Returns:
-            The  instance stored at the given key
+            The action instance stored at the given key, or None if not found
         """
-        if key not in self._actions:
-            raise error.GremlinError(f"Invalid key for library action: {key}")
-        return self._actions[key]
+        return self._actions.get(action_id, None)
 
     def has_action(self, key: uuid.UUID) -> bool:
         """Checks if an action exists with the given key.

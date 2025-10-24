@@ -3,10 +3,10 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 ================================================================================
 
 ## 1. PROJEKTÜBERSICHT
-   Gesamtanzahl Module: 100
-   Gesamtzeilen Code: 49,280
-   Gesamtanzahl Funktionen: 1720
-   Gesamtanzahl Klassen: 265
+   Gesamtanzahl Module: 104
+   Gesamtzeilen Code: 50,204
+   Gesamtanzahl Funktionen: 1774
+   Gesamtanzahl Klassen: 275
 
 ## 2. EXTERNE ABHÄNGIGKEITEN
    Linux-native Bibliotheken:
@@ -34,9 +34,9 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 
 ## 3. ZYKLISCHE ABHÄNGIGKEITEN (CLEAN CODE VERSTOSSE)
    ⚠️  Gefundene zyklische Abhängigkeiten: 5
-   1. gremlin.base_classes -> gremlin.profile -> gremlin.base_classes
-   2. gremlin.base_classes -> gremlin.event_handler -> gremlin.code_runner -> gremlin.base_classes
-   3. gremlin.base_classes -> gremlin.event_handler -> gremlin.base_classes
+   1. gremlin.base_classes -> gremlin.event_handler -> gremlin.code_runner -> gremlin.base_classes
+   2. gremlin.base_classes -> gremlin.event_handler -> gremlin.base_classes
+   3. gremlin.profile -> gremlin.base_classes -> gremlin.profile
    4. gremlin.ui.profile -> gremlin.ui.action_model -> gremlin.ui.profile
    5. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
 
@@ -61,14 +61,14 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
    ⚠️  Große Module: 16
    - resources: 20,104 Zeilen
    - gremlin.ui.device: 1,473 Zeilen
-   - gremlin.profile: 1,259 Zeilen
-   - gremlin.util: 1,040 Zeilen
-   - vjoy.vjoy: 984 Zeilen
+   - gremlin.profile: 1,269 Zeilen
+   - gremlin.util: 1,041 Zeilen
+   - deprecated_windows_only.vjoy.vjoy: 984 Zeilen
    - gremlin.macro: 920 Zeilen
    - gremlin.ui.profile: 906 Zeilen
    - action_plugins.macro: 781 Zeilen
    - gremlin.types: 729 Zeilen
-   - dill: 681 Zeilen
+   - deprecated_windows_only.dill: 681 Zeilen
 
 ## 7. CLEAN CODE REFACTORING-EMPFEHLUNGEN
 
@@ -93,7 +93,7 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 ### 7.4 Große Module aufteilen:
    - resources (20,104 Zeilen) → In mehrere Module aufteilen
    - gremlin.ui.device (1,473 Zeilen) → In mehrere Module aufteilen
-   - gremlin.profile (1,259 Zeilen) → In mehrere Module aufteilen
+   - gremlin.profile (1,269 Zeilen) → In mehrere Module aufteilen
 
 ## 8. ARCHITEKTUR-VERBESSERUNGEN
 
@@ -303,10 +303,17 @@ graph TD
     tempo[tempo] --> types[types]
     tempo[tempo] --> action_model[action_model]
     tempo[tempo] --> profile[profile]
+    vjoy[vjoy] --> error[error]
+    vjoy[vjoy] --> spline[spline]
+    vjoy[vjoy] --> types[types]
+    vjoy_interface[vjoy_interface] --> error[error]
+    dill_compat[dill_compat] -.->|Linux| linput[linput]
+    dill_compat[dill_compat] -.->|Linux| types[types]
     audio_player[audio_player] --> common[common]
     audio_player[audio_player] --> config[config]
     audio_player[audio_player] --> util[util]
     base_classes[base_classes] --> gremlin[gremlin]
+    base_classes[base_classes] --> domain[domain]
     base_classes[base_classes] --> error[error]
     base_classes[base_classes] --> event_handler[event_handler]
     base_classes[base_classes] --> profile[profile]
@@ -325,6 +332,7 @@ graph TD
     device_helpers[device_helpers] --> types[types]
     device_initialization[device_initialization] --> gremlin[gremlin]
     device_initialization[device_initialization] -.->|Linux| linput[linput]
+    domain[domain] --> types[types]
     event_handler[event_handler] --> gremlin[gremlin]
     event_handler[event_handler] --> base_classes[base_classes]
     event_handler[event_handler] --> code_runner[code_runner]
@@ -365,6 +373,7 @@ graph TD
     plugin_manager[plugin_manager] --> types[types]
     profile[profile] --> gremlin[gremlin]
     profile[profile] --> base_classes[base_classes]
+    profile[profile] --> domain[domain]
     profile[profile] --> intermediate_output[intermediate_output]
     profile[profile] --> tree[tree]
     profile[profile] --> types[types]
@@ -499,10 +508,6 @@ graph TD
     test_linux_backend[test_linux_backend] -.->|Linux| keyboard_mouse[keyboard_mouse]
     test_linux_backend[test_linux_backend] -.->|Linux| types[types]
     test_linux_backend[test_linux_backend] -.->|Linux| virtual_output[virtual_output]
-    vjoy[vjoy] --> error[error]
-    vjoy[vjoy] --> spline[spline]
-    vjoy[vjoy] --> types[types]
-    vjoy_interface[vjoy_interface] --> error[error]
 
     %% Externe Abhängigkeiten
     PySide6{{"PySide6"}}

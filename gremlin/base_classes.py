@@ -27,12 +27,14 @@ from xml.etree import ElementTree
 
 from gremlin import util, event_handler
 from gremlin.error import GremlinError
-from gremlin.profile import Library
+# REFACTORED: Use abstraction instead of concrete Library to break circular dependency
+from gremlin.domain import ILibrary, IActionData
 from gremlin.types import ActionActivationMode, ActionProperty, InputType, \
     PropertyType, DataInsertionMode, DataCreationMode
 
 if typing.TYPE_CHECKING:
     from gremlin.event_handler import Event
+    from gremlin.profile import Library
 
 
 class Value:
@@ -76,9 +78,12 @@ class Value:
         self._current = current
 
 
-class AbstractActionData(ABC):
+class AbstractActionData(IActionData):
 
-    """Base class holding the data of all action related data classes."""
+    """Base class holding the data of all action related data classes.
+    
+    REFACTORED: Now implements IActionData to break circular dependency with profile.
+    """
 
     def __init__(self, behavior_type: InputType=InputType.JoystickButton) -> None:
         """Creates a new action data instance.
@@ -331,13 +336,17 @@ class AbstractActionData(ABC):
 
         container.insert(anchor, action)
 
-    def remove_action(self, index: int, selector: str) -> None:
+    def remove_action(self, index: int, selector: Optional[str] = None) -> None:
         """Removes the provided action from this action's children.
 
         Args:
             index: index of the action in the container to remove
             selector: the container in which the action is located
         """
+        if selector is None:
+            raise GremlinError(
+                f"{self.name}: selector is required for remove_action"
+            )
         self._validate_selector(selector)
 
         container = self._get_container(selector)
