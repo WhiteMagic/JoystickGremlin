@@ -1,0 +1,3412 @@
+{
+  "dependencies": {
+    "joystick_gremlin": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.error",
+      "gremlin.ui.config",
+      "linput",
+      "gremlin.plugin_manager",
+      "gremlin.signal",
+      "gremlin.ui.backend",
+      "gremlin.device_initialization",
+      "gremlin.config"
+    ],
+    "test_linux_backend": [
+      "linput.virtual_output",
+      "linput",
+      "gremlin.event_handler",
+      "gremlin.sendinput",
+      "linput.types",
+      "linput.device_manager",
+      "linput.keyboard_mouse",
+      "gremlin.device_initialization"
+    ],
+    "action_plugins.common": [
+      "gremlin.types",
+      "gremlin.event_handler"
+    ],
+    "action_plugins.chain": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.change_mode": [
+      "gremlin.types",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.condition.comparator": [
+      "gremlin.types",
+      "gremlin.ui.profile",
+      "gremlin",
+      "gremlin.input_cache",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.condition": [
+      "gremlin.types",
+      "gremlin.keyboard",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.ui.util",
+      "gremlin.tree",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.description": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.double_tap": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.tree",
+      "gremlin.base_classes",
+      "gremlin.config"
+    ],
+    "action_plugins.dual_axis_deadzone": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.input_cache",
+      "gremlin.base_classes",
+      "gremlin.ui.device"
+    ],
+    "action_plugins.hat_buttons": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.plugin_manager",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.load_profile": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.error",
+      "gremlin.ui",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.macro": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "action_plugins",
+      "gremlin.ui.action_model",
+      "gremlin.macro",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.map_to_io": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.event_handler",
+      "gremlin.ui.action_model",
+      "gremlin.intermediate_output",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.map_to_keyboard": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.map_to_mouse": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.map_to_vjoy": [
+      "gremlin.types",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.merge_axis": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.event_handler",
+      "gremlin.ui.action_model",
+      "gremlin.input_cache",
+      "gremlin.plugin_manager",
+      "gremlin.ui.device",
+      "gremlin.base_classes",
+      "gremlin.config"
+    ],
+    "action_plugins.pause_resume": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.play_sound": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.error",
+      "gremlin.audio_player",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes",
+      "gremlin.config"
+    ],
+    "action_plugins.reference": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.macro",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.response_curve": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes"
+    ],
+    "action_plugins.root": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes",
+      "gremlin.config"
+    ],
+    "action_plugins.smart_toggle": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.base_classes",
+      "gremlin.config"
+    ],
+    "action_plugins.tempo": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.action_model",
+      "gremlin.tree",
+      "gremlin.base_classes",
+      "gremlin.config"
+    ],
+    "gremlin.audio_player": [
+      "gremlin.util",
+      "gremlin.common",
+      "gremlin.config"
+    ],
+    "gremlin.base_classes": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.event_handler"
+    ],
+    "gremlin.cheatsheet": [
+      "gremlin.keyboard",
+      "gremlin"
+    ],
+    "gremlin.code_runner": [
+      "gremlin.types",
+      "gremlin",
+      "gremlin.base_classes"
+    ],
+    "gremlin.common": [
+      "gremlin.types",
+      "gremlin.keyboard",
+      "gremlin"
+    ],
+    "gremlin.device_helpers": [
+      "gremlin.types",
+      "gremlin.keyboard",
+      "gremlin",
+      "gremlin.common"
+    ],
+    "gremlin.device_initialization": [
+      "linput",
+      "gremlin"
+    ],
+    "gremlin.event_handler": [
+      "gremlin.types",
+      "linput",
+      "gremlin",
+      "gremlin.input_cache",
+      "gremlin.code_runner",
+      "gremlin.base_classes"
+    ],
+    "gremlin.hints": [
+      "gremlin.util"
+    ],
+    "gremlin.input_cache": [
+      "gremlin",
+      "gremlin.common"
+    ],
+    "gremlin.intermediate_output": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.common"
+    ],
+    "gremlin.keyboard": [
+      "gremlin"
+    ],
+    "gremlin.linux_event_handler": [
+      "gremlin.types",
+      "linput",
+      "gremlin",
+      "gremlin.input_cache",
+      "gremlin.code_runner",
+      "gremlin.base_classes"
+    ],
+    "gremlin.linux_sendinput": [
+      "gremlin.types",
+      "linput",
+      "gremlin.common",
+      "gremlin.event_handler"
+    ],
+    "gremlin.macro": [
+      "gremlin.types",
+      "gremlin.keyboard",
+      "gremlin.base_classes",
+      "gremlin",
+      "gremlin.sendinput",
+      "gremlin.common",
+      "gremlin.config"
+    ],
+    "gremlin.mode_manager": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin",
+      "gremlin.common",
+      "gremlin.config"
+    ],
+    "gremlin.plugin_manager": [
+      "gremlin.types",
+      "gremlin",
+      "gremlin.base_classes"
+    ],
+    "gremlin.profile": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.user_script",
+      "gremlin",
+      "action_plugins",
+      "gremlin.intermediate_output",
+      "gremlin.tree",
+      "gremlin.base_classes"
+    ],
+    "gremlin.repeater": [
+      "gremlin.types",
+      "gremlin"
+    ],
+    "gremlin.sendinput": [
+      "gremlin.types",
+      "linput",
+      "gremlin.common",
+      "gremlin.event_handler"
+    ],
+    "gremlin.signal": [
+      "gremlin"
+    ],
+    "gremlin.tree": [
+      "gremlin"
+    ],
+    "gremlin.types": [
+      "gremlin.error"
+    ],
+    "gremlin.util": [
+      "gremlin.types",
+      "gremlin"
+    ],
+    "gremlin.windows_event_hook": [
+      "gremlin.types",
+      "gremlin.common"
+    ],
+    "gremlin.ui.action_model": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.plugin_manager",
+      "gremlin.signal",
+      "gremlin.base_classes"
+    ],
+    "gremlin.ui.backend": [
+      "gremlin.audio_player",
+      "gremlin.ui.profile",
+      "gremlin.ui.script",
+      "linput",
+      "gremlin",
+      "gremlin.intermediate_output",
+      "gremlin.signal",
+      "gremlin.ui.device"
+    ],
+    "gremlin.ui.config": [
+      "gremlin.types",
+      "gremlin.config"
+    ],
+    "gremlin.ui.device": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin",
+      "gremlin.intermediate_output",
+      "gremlin.signal",
+      "gremlin.common",
+      "gremlin.config"
+    ],
+    "gremlin.ui.profile": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.error",
+      "gremlin.profile",
+      "gremlin.ui.action_model",
+      "gremlin.plugin_manager",
+      "action_plugins.root",
+      "gremlin.signal",
+      "gremlin.base_classes"
+    ],
+    "gremlin.ui.script": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.ui.device"
+    ],
+    "gremlin.ui.util": [
+      "gremlin.types",
+      "gremlin"
+    ],
+    "test.integration.app_tester": [
+      "gremlin.types",
+      "gremlin.input_cache"
+    ],
+    "test.integration.conftest": [
+      "gremlin.error",
+      "gremlin.profile",
+      "action_plugins",
+      "gremlin.ui.backend",
+      "gremlin.device_initialization"
+    ],
+    "test.integration.test_e2e_profile_simple": [
+      "gremlin"
+    ],
+    "test.unit.conftest": [
+      "gremlin.device_initialization",
+      "gremlin.event_handler"
+    ],
+    "test.unit.test_action_condition": [
+      "gremlin.types",
+      "action_plugins.description",
+      "action_plugins.condition",
+      "gremlin.error",
+      "gremlin.profile",
+      "gremlin",
+      "gremlin.event_handler",
+      "action_plugins.root"
+    ],
+    "test.unit.test_action_description": [
+      "action_plugins.description",
+      "gremlin.error",
+      "gremlin.ui.profile",
+      "gremlin.profile",
+      "gremlin.ui.action_model",
+      "gremlin.event_handler",
+      "action_plugins.root"
+    ],
+    "test.unit.test_action_map_to_vjoy": [
+      "gremlin.types",
+      "action_plugins.description",
+      "gremlin.error",
+      "action_plugins.map_to_vjoy",
+      "gremlin.profile"
+    ],
+    "test.unit.test_action_merge": [
+      "gremlin.types",
+      "action_plugins.description",
+      "gremlin.error",
+      "action_plugins.merge_axis",
+      "gremlin.profile",
+      "gremlin.ui.device"
+    ],
+    "test.unit.test_action_root": [
+      "gremlin.types",
+      "action_plugins.description",
+      "gremlin.error",
+      "gremlin.profile",
+      "action_plugins.root"
+    ],
+    "test.unit.test_action_tempo": [
+      "gremlin.types",
+      "action_plugins.description",
+      "gremlin.error",
+      "gremlin.profile",
+      "action_plugins.tempo",
+      "gremlin.config"
+    ],
+    "test.unit.test_config": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.config"
+    ],
+    "test.unit.test_fsm": [
+      "gremlin"
+    ],
+    "test.unit.test_intermediate_output": [
+      "gremlin.intermediate_output",
+      "gremlin.error",
+      "gremlin.common"
+    ],
+    "test.unit.test_modes": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.profile",
+      "gremlin.shared_state",
+      "gremlin.plugin_manager",
+      "action_plugins.tempo",
+      "gremlin.mode_manager",
+      "gremlin.config"
+    ],
+    "test.unit.test_profile": [
+      "gremlin.types",
+      "gremlin.error",
+      "gremlin.profile",
+      "gremlin.plugin_manager",
+      "action_plugins.tempo",
+      "gremlin.config"
+    ],
+    "test.unit.test_splines": [
+      "gremlin.spline"
+    ],
+    "test.unit.test_tree": [
+      "gremlin.error",
+      "gremlin.tree"
+    ],
+    "test.unit.test_util": [
+      "gremlin.types",
+      "gremlin.util",
+      "gremlin.error"
+    ],
+    "vjoy.vjoy": [
+      "gremlin.types",
+      "gremlin.spline",
+      "gremlin.error"
+    ],
+    "vjoy.vjoy_interface": [
+      "gremlin.error"
+    ]
+  },
+  "external_deps": {
+    "analyze_dependencies": [
+      "typing",
+      "pathlib",
+      "json",
+      "os",
+      "collections",
+      "ast",
+      "re"
+    ],
+    "generate_wix": [
+      "argparse",
+      "xml.dom",
+      "xml.etree",
+      "uuid",
+      "os",
+      "pickle",
+      "sys"
+    ],
+    "joystick_gremlin": [
+      "traceback",
+      "time",
+      "typing",
+      "pathlib",
+      "argparse",
+      "ctypes",
+      "os",
+      "resources",
+      "sys",
+      "logging",
+      "PySide6"
+    ],
+    "resources": [
+      "PySide6"
+    ],
+    "test_linux_backend": [
+      "sys",
+      "os"
+    ],
+    "action_plugins.common": [
+      "dill",
+      "uuid"
+    ],
+    "action_plugins.chain": [
+      "typing",
+      "time",
+      "xml.etree",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.change_mode": [
+      "typing",
+      "time",
+      "xml.etree",
+      "enum",
+      "threading",
+      "PySide6.QtCore",
+      "logging",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.condition.comparator": [
+      "typing",
+      "PySide6.QtCore",
+      "xml.etree",
+      "PySide6"
+    ],
+    "action_plugins.condition": [
+      "__future__",
+      "typing",
+      "xml.etree",
+      "PySide6.QtCore",
+      "logging",
+      "dill",
+      "PySide6"
+    ],
+    "action_plugins.description": [
+      "typing",
+      "xml.etree",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.double_tap": [
+      "__future__",
+      "time",
+      "typing",
+      "xml.etree",
+      "copy",
+      "threading",
+      "PySide6.QtCore",
+      "logging",
+      "PySide6"
+    ],
+    "action_plugins.dual_axis_deadzone": [
+      "math",
+      "__future__",
+      "typing",
+      "xml.etree",
+      "copy",
+      "PySide6.QtCore",
+      "collections",
+      "logging",
+      "PySide6"
+    ],
+    "action_plugins.hat_buttons": [
+      "typing",
+      "time",
+      "xml.etree",
+      "copy",
+      "PySide6.QtCore",
+      "collections.abc",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.load_profile": [
+      "__future__",
+      "typing",
+      "xml.etree",
+      "PySide6.QtCore",
+      "logging",
+      "PySide6"
+    ],
+    "action_plugins.macro": [
+      "typing",
+      "itertools",
+      "xml.etree",
+      "enum",
+      "PySide6.QtCore",
+      "unittest",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.map_to_io": [
+      "typing",
+      "xml.etree",
+      "uuid",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.map_to_keyboard": [
+      "math",
+      "typing",
+      "xml.etree",
+      "enum",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.map_to_mouse": [
+      "math",
+      "typing",
+      "xml.etree",
+      "enum",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.map_to_vjoy": [
+      "typing",
+      "time",
+      "vjoy.vjoy",
+      "xml.etree",
+      "threading",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.merge_axis": [
+      "typing",
+      "xml.etree",
+      "uuid",
+      "enum",
+      "PySide6.QtCore",
+      "__future__",
+      "dill",
+      "PySide6"
+    ],
+    "action_plugins.pause_resume": [
+      "typing",
+      "xml.etree",
+      "enum",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.play_sound": [
+      "typing",
+      "xml.etree",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.reference": [
+      "typing",
+      "xml.etree",
+      "uuid",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.response_curve": [
+      "typing",
+      "xml.etree",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "action_plugins.root": [
+      "__future__",
+      "time",
+      "typing",
+      "xml.etree",
+      "copy",
+      "threading",
+      "PySide6.QtCore",
+      "logging",
+      "PySide6"
+    ],
+    "action_plugins.smart_toggle": [
+      "__future__",
+      "time",
+      "typing",
+      "xml.etree",
+      "copy",
+      "threading",
+      "PySide6.QtCore",
+      "logging",
+      "PySide6"
+    ],
+    "action_plugins.tempo": [
+      "__future__",
+      "time",
+      "typing",
+      "xml.etree",
+      "copy",
+      "threading",
+      "PySide6.QtCore",
+      "logging",
+      "PySide6"
+    ],
+    "dill": [
+      "typing",
+      "time",
+      "ctypes.wintypes",
+      "uuid",
+      "ctypes",
+      "copy",
+      "enum",
+      "os",
+      "sys",
+      "__future__"
+    ],
+    "doc.source.conf": [
+      "unittest.mock",
+      "mock",
+      "sys",
+      "os"
+    ],
+    "gremlin.audio_player": [
+      "PySide6.QtMultimedia",
+      "PySide6.QtCore",
+      "PySide6"
+    ],
+    "gremlin.base_classes": [
+      "typing",
+      "time",
+      "xml.etree",
+      "uuid",
+      "copy",
+      "abc",
+      "__future__"
+    ],
+    "gremlin.cheatsheet": [
+      "reportlab.lib.units",
+      "reportlab.lib.styles",
+      "reportlab.platypus",
+      "reportlab.lib.pagesizes",
+      "reportlab.lib.colors"
+    ],
+    "gremlin.code_runner": [
+      "typing",
+      "time",
+      "vjoy.vjoy",
+      "random",
+      "os",
+      "importlib",
+      "copy",
+      "string",
+      "abc",
+      "sys",
+      "logging",
+      "dill"
+    ],
+    "gremlin.device_helpers": [
+      "time",
+      "vjoy.vjoy",
+      "uuid",
+      "functools",
+      "collections",
+      "collections.abc",
+      "logging",
+      "PySide6"
+    ],
+    "gremlin.device_initialization": [
+      "threading",
+      "logging"
+    ],
+    "gremlin.error": [
+      "logging"
+    ],
+    "gremlin.event_handler": [
+      "__future__",
+      "time",
+      "typing",
+      "uuid",
+      "threading",
+      "functools",
+      "inspect",
+      "logging",
+      "PySide6"
+    ],
+    "gremlin.fsm": [
+      "typing",
+      "collections.abc",
+      "logging"
+    ],
+    "gremlin.hints": [
+      "csv"
+    ],
+    "gremlin.input_cache": [
+      "typing",
+      "uuid",
+      "__future__",
+      "dill",
+      "PySide6"
+    ],
+    "gremlin.intermediate_output": [
+      "typing",
+      "time",
+      "dill",
+      "uuid"
+    ],
+    "gremlin.keyboard": [
+      "typing",
+      "win32con",
+      "win32api",
+      "ctypes",
+      "logging"
+    ],
+    "gremlin.linux_event_handler": [
+      "__future__",
+      "time",
+      "typing",
+      "uuid",
+      "threading",
+      "functools",
+      "inspect",
+      "logging",
+      "PySide6"
+    ],
+    "gremlin.linux_sendinput": [
+      "threading",
+      "time",
+      "logging",
+      "typing"
+    ],
+    "gremlin.macro": [
+      "__future__",
+      "time",
+      "vjoy.vjoy",
+      "xml.etree",
+      "uuid",
+      "threading",
+      "functools",
+      "collections",
+      "abc",
+      "logging",
+      "dill"
+    ],
+    "gremlin.mode_manager": [
+      "typing",
+      "PySide6"
+    ],
+    "gremlin.plugin_manager": [
+      "__future__",
+      "typing",
+      "pathlib",
+      "os",
+      "importlib",
+      "sys",
+      "logging",
+      "PySide6"
+    ],
+    "gremlin.process_monitor": [
+      "time",
+      "ctypes.wintypes",
+      "ctypes",
+      "os",
+      "threading",
+      "win32gui",
+      "win32com.client",
+      "win32process",
+      "PySide6"
+    ],
+    "gremlin.profile": [
+      "__future__",
+      "typing",
+      "pathlib",
+      "codecs",
+      "xml.dom",
+      "xml.etree",
+      "uuid",
+      "PySide6.QtCore",
+      "abc",
+      "logging",
+      "dill"
+    ],
+    "gremlin.repeater": [
+      "threading",
+      "time",
+      "PyQt5"
+    ],
+    "gremlin.sendinput": [
+      "threading",
+      "time",
+      "logging",
+      "typing"
+    ],
+    "gremlin.shared_state": [
+      "threading"
+    ],
+    "gremlin.signal": [
+      "PySide6.QtCore",
+      "PySide6"
+    ],
+    "gremlin.tree": [
+      "typing",
+      "__future__"
+    ],
+    "gremlin.tts": [
+      "win32com.client",
+      "logging"
+    ],
+    "gremlin.types": [
+      "enum",
+      "__future__",
+      "typing"
+    ],
+    "gremlin.util": [
+      "math",
+      "time",
+      "typing",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "ctypes",
+      "os",
+      "importlib",
+      "threading",
+      "sys",
+      "logging",
+      "re",
+      "dill",
+      "PySide6"
+    ],
+    "gremlin.windows_event_hook": [
+      "threading",
+      "ctypes"
+    ],
+    "gremlin.ui.action_model": [
+      "typing",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "gremlin.ui.backend": [
+      "typing",
+      "uuid",
+      "os",
+      "PySide6.QtCore",
+      "sys",
+      "logging",
+      "PySide6"
+    ],
+    "gremlin.ui.config": [
+      "typing",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "gremlin.ui.device": [
+      "math",
+      "time",
+      "typing",
+      "json",
+      "uuid",
+      "PySide6.QtCore",
+      "logging",
+      "json.decoder",
+      "__future__",
+      "dill",
+      "PySide6"
+    ],
+    "gremlin.ui.profile": [
+      "__future__",
+      "typing",
+      "uuid",
+      "PySide6.QtCore",
+      "logging",
+      "PySide6"
+    ],
+    "gremlin.ui.script": [
+      "typing",
+      "pathlib",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "gremlin.ui.util": [
+      "typing",
+      "threading",
+      "PySide6.QtCore",
+      "__future__",
+      "PySide6"
+    ],
+    "linput.device_manager": [
+      "__future__",
+      "time",
+      "typing",
+      "pathlib",
+      "pyudev",
+      "uuid",
+      "threading",
+      "asyncio",
+      "evdev",
+      "logging",
+      "types"
+    ],
+    "linput.keyboard_mouse": [
+      "typing",
+      "time",
+      "pynput.keyboard",
+      "pynput.mouse",
+      "pynput",
+      "logging",
+      "types"
+    ],
+    "linput.keyboard_mouse_new": [
+      "typing",
+      "time",
+      "pynput.keyboard",
+      "pynput.mouse",
+      "pynput",
+      "logging",
+      "types"
+    ],
+    "linput.types": [
+      "typing",
+      "uuid",
+      "enum",
+      "__future__",
+      "dataclasses"
+    ],
+    "linput.virtual_output": [
+      "__future__",
+      "time",
+      "typing",
+      "uinput",
+      "uuid",
+      "os",
+      "stat",
+      "logging",
+      "types"
+    ],
+    "linput": [
+      "virtual_output",
+      "device_manager",
+      "keyboard_mouse",
+      "logging",
+      "types"
+    ],
+    "test.integration.app_tester": [
+      "typing",
+      "time",
+      "pytest",
+      "uuid",
+      "dill",
+      "PySide6"
+    ],
+    "test.integration.conftest": [
+      "pytest",
+      "joystick_gremlin",
+      "pathlib",
+      "vjoy",
+      "test.integration",
+      "tempfile",
+      "sys",
+      "collections.abc",
+      "logging",
+      "dill",
+      "PySide6"
+    ],
+    "test.integration.test_e2e_profile_simple": [
+      "pytest",
+      "vjoy",
+      "test.integration",
+      "sys",
+      "dill"
+    ],
+    "test.unit.conftest": [
+      "pytest",
+      "vjoy",
+      "pathlib",
+      "sys",
+      "unittest",
+      "joystick_gremlin",
+      "dill"
+    ],
+    "test.unit.test_action_condition": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_action_description": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_action_map_to_vjoy": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys",
+      "dill"
+    ],
+    "test.unit.test_action_merge": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_action_root": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_action_tempo": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_config": [
+      "pytest",
+      "tempfile",
+      "sys",
+      "unittest",
+      "collections.abc"
+    ],
+    "test.unit.test_dill": [
+      "dill"
+    ],
+    "test.unit.test_fsm": [
+      "pytest",
+      "sys"
+    ],
+    "test.unit.test_intermediate_output": [
+      "pytest",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_modes": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_profile": [
+      "pytest",
+      "pathlib",
+      "xml.etree",
+      "uuid",
+      "sys"
+    ],
+    "test.unit.test_splines": [
+      "pytest",
+      "sys"
+    ],
+    "test.unit.test_tree": [
+      "pytest",
+      "sys"
+    ],
+    "test.unit.test_util": [
+      "pytest",
+      "xml.etree",
+      "uuid",
+      "os",
+      "sys"
+    ],
+    "vjoy.vjoy": [
+      "__future__",
+      "time",
+      "typing",
+      "vjoy.vjoy_interface",
+      "ctypes",
+      "os",
+      "enum",
+      "threading",
+      "logging"
+    ],
+    "vjoy.vjoy_interface": [
+      "enum",
+      "sys",
+      "ctypes",
+      "os"
+    ]
+  },
+  "stats": {
+    "analyze_dependencies": {
+      "lines": 369,
+      "functions": 10,
+      "classes": 1,
+      "imports": [],
+      "external_imports": [
+        "typing",
+        "pathlib",
+        "json",
+        "os",
+        "collections",
+        "ast",
+        "re"
+      ],
+      "long_functions": [
+        {
+          "name": "generate_report",
+          "lines": 149,
+          "start": 176
+        }
+      ],
+      "complexity_issues": []
+    },
+    "generate_wix": {
+      "lines": 523,
+      "functions": 13,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [
+        "argparse",
+        "xml.dom",
+        "xml.etree",
+        "uuid",
+        "os",
+        "pickle",
+        "sys"
+      ],
+      "long_functions": [
+        {
+          "name": "create_folder_structure",
+          "lines": 61,
+          "start": 78
+        },
+        {
+          "name": "create_document",
+          "lines": 80,
+          "start": 204
+        },
+        {
+          "name": "create_shortcuts",
+          "lines": 131,
+          "start": 329
+        }
+      ],
+      "complexity_issues": []
+    },
+    "joystick_gremlin": {
+      "lines": 335,
+      "functions": 5,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.error",
+        "gremlin.ui.config",
+        "linput",
+        "gremlin.plugin_manager",
+        "gremlin.signal",
+        "gremlin.ui.backend",
+        "gremlin.device_initialization",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "traceback",
+        "time",
+        "typing",
+        "pathlib",
+        "argparse",
+        "ctypes",
+        "os",
+        "resources",
+        "sys",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [
+        {
+          "name": "make_gremlin_app",
+          "lines": 179,
+          "start": 146
+        }
+      ],
+      "complexity_issues": []
+    },
+    "resources": {
+      "lines": 20104,
+      "functions": 2,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test_linux_backend": {
+      "lines": 147,
+      "functions": 3,
+      "classes": 0,
+      "imports": [
+        "linput.virtual_output",
+        "linput",
+        "gremlin.event_handler",
+        "gremlin.sendinput",
+        "linput.types",
+        "linput.device_manager",
+        "linput.keyboard_mouse",
+        "gremlin.device_initialization"
+      ],
+      "external_imports": [
+        "sys",
+        "os"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.common": {
+      "lines": 42,
+      "functions": 1,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "gremlin.event_handler"
+      ],
+      "external_imports": [
+        "dill",
+        "uuid"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins": {
+      "lines": 16,
+      "functions": 0,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.chain": {
+      "lines": 200,
+      "functions": 17,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "xml.etree",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.change_mode": {
+      "lines": 310,
+      "functions": 24,
+      "classes": 4,
+      "imports": [
+        "gremlin.types",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "xml.etree",
+        "enum",
+        "threading",
+        "PySide6.QtCore",
+        "logging",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.condition.comparator": {
+      "lines": 423,
+      "functions": 33,
+      "classes": 4,
+      "imports": [
+        "gremlin.types",
+        "gremlin.ui.profile",
+        "gremlin",
+        "gremlin.input_cache",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "PySide6.QtCore",
+        "xml.etree",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.condition": {
+      "lines": 680,
+      "functions": 57,
+      "classes": 7,
+      "imports": [
+        "gremlin.types",
+        "gremlin.keyboard",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.ui.util",
+        "gremlin.tree",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "__future__",
+        "typing",
+        "xml.etree",
+        "PySide6.QtCore",
+        "logging",
+        "dill",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.description": {
+      "lines": 158,
+      "functions": 14,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "xml.etree",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.double_tap": {
+      "lines": 310,
+      "functions": 19,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.tree",
+        "gremlin.base_classes",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "xml.etree",
+        "copy",
+        "threading",
+        "PySide6.QtCore",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [
+        {
+          "name": "_create_fsm",
+          "lines": 62,
+          "start": 79
+        }
+      ],
+      "complexity_issues": []
+    },
+    "action_plugins.dual_axis_deadzone": {
+      "lines": 366,
+      "functions": 24,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.input_cache",
+        "gremlin.base_classes",
+        "gremlin.ui.device"
+      ],
+      "external_imports": [
+        "math",
+        "__future__",
+        "typing",
+        "xml.etree",
+        "copy",
+        "PySide6.QtCore",
+        "collections",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.hat_buttons": {
+      "lines": 286,
+      "functions": 20,
+      "classes": 4,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.plugin_manager",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "xml.etree",
+        "copy",
+        "PySide6.QtCore",
+        "collections.abc",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.load_profile": {
+      "lines": 174,
+      "functions": 14,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.error",
+        "gremlin.ui",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "__future__",
+        "typing",
+        "xml.etree",
+        "PySide6.QtCore",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.macro": {
+      "lines": 781,
+      "functions": 78,
+      "classes": 12,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "action_plugins",
+        "gremlin.ui.action_model",
+        "gremlin.macro",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "itertools",
+        "xml.etree",
+        "enum",
+        "PySide6.QtCore",
+        "unittest",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.map_to_io": {
+      "lines": 308,
+      "functions": 22,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.event_handler",
+        "gremlin.ui.action_model",
+        "gremlin.intermediate_output",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "xml.etree",
+        "uuid",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.map_to_keyboard": {
+      "lines": 183,
+      "functions": 14,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "math",
+        "typing",
+        "xml.etree",
+        "enum",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.map_to_mouse": {
+      "lines": 372,
+      "functions": 29,
+      "classes": 4,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "math",
+        "typing",
+        "xml.etree",
+        "enum",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.map_to_vjoy": {
+      "lines": 373,
+      "functions": 26,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "vjoy.vjoy",
+        "xml.etree",
+        "threading",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.merge_axis": {
+      "lines": 433,
+      "functions": 31,
+      "classes": 4,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.event_handler",
+        "gremlin.ui.action_model",
+        "gremlin.input_cache",
+        "gremlin.plugin_manager",
+        "gremlin.ui.device",
+        "gremlin.base_classes",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "typing",
+        "xml.etree",
+        "uuid",
+        "enum",
+        "PySide6.QtCore",
+        "__future__",
+        "dill",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.pause_resume": {
+      "lines": 180,
+      "functions": 15,
+      "classes": 4,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "xml.etree",
+        "enum",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.play_sound": {
+      "lines": 208,
+      "functions": 16,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.error",
+        "gremlin.audio_player",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "typing",
+        "xml.etree",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.reference": {
+      "lines": 185,
+      "functions": 15,
+      "classes": 2,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.macro",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "xml.etree",
+        "uuid",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.response_curve": {
+      "lines": 537,
+      "functions": 38,
+      "classes": 5,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "xml.etree",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.root": {
+      "lines": 148,
+      "functions": 12,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "xml.etree",
+        "copy",
+        "threading",
+        "PySide6.QtCore",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.smart_toggle": {
+      "lines": 226,
+      "functions": 17,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.base_classes",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "xml.etree",
+        "copy",
+        "threading",
+        "PySide6.QtCore",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "action_plugins.tempo": {
+      "lines": 295,
+      "functions": 19,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.action_model",
+        "gremlin.tree",
+        "gremlin.base_classes",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "xml.etree",
+        "copy",
+        "threading",
+        "PySide6.QtCore",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "dill": {
+      "lines": 681,
+      "functions": 29,
+      "classes": 12,
+      "imports": [],
+      "external_imports": [
+        "typing",
+        "time",
+        "ctypes.wintypes",
+        "uuid",
+        "ctypes",
+        "copy",
+        "enum",
+        "os",
+        "sys",
+        "__future__"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "doc.source.conf": {
+      "lines": 185,
+      "functions": 1,
+      "classes": 1,
+      "imports": [],
+      "external_imports": [
+        "unittest.mock",
+        "mock",
+        "sys",
+        "os"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.audio_player": {
+      "lines": 86,
+      "functions": 6,
+      "classes": 2,
+      "imports": [
+        "gremlin.util",
+        "gremlin.common",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "PySide6.QtMultimedia",
+        "PySide6.QtCore",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.base_classes": {
+      "lines": 578,
+      "functions": 35,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.event_handler"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "xml.etree",
+        "uuid",
+        "copy",
+        "abc",
+        "__future__"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.cheatsheet": {
+      "lines": 412,
+      "functions": 17,
+      "classes": 3,
+      "imports": [
+        "gremlin.keyboard",
+        "gremlin"
+      ],
+      "external_imports": [
+        "reportlab.lib.units",
+        "reportlab.lib.styles",
+        "reportlab.platypus",
+        "reportlab.lib.pagesizes",
+        "reportlab.lib.colors"
+      ],
+      "long_functions": [
+        {
+          "name": "generate_cheatsheet",
+          "lines": 64,
+          "start": 328
+        },
+        {
+          "name": "table_data",
+          "lines": 92,
+          "start": 56
+        }
+      ],
+      "complexity_issues": []
+    },
+    "gremlin.code_runner": {
+      "lines": 502,
+      "functions": 25,
+      "classes": 6,
+      "imports": [
+        "gremlin.types",
+        "gremlin",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "vjoy.vjoy",
+        "random",
+        "os",
+        "importlib",
+        "copy",
+        "string",
+        "abc",
+        "sys",
+        "logging",
+        "dill"
+      ],
+      "long_functions": [
+        {
+          "name": "_virtual_event_setup",
+          "lines": 66,
+          "start": 227
+        },
+        {
+          "name": "start",
+          "lines": 88,
+          "start": 332
+        }
+      ],
+      "complexity_issues": []
+    },
+    "gremlin.common": {
+      "lines": 56,
+      "functions": 3,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "gremlin.keyboard",
+        "gremlin"
+      ],
+      "external_imports": [],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.device_helpers": {
+      "lines": 344,
+      "functions": 15,
+      "classes": 2,
+      "imports": [
+        "gremlin.types",
+        "gremlin.keyboard",
+        "gremlin",
+        "gremlin.common"
+      ],
+      "external_imports": [
+        "time",
+        "vjoy.vjoy",
+        "uuid",
+        "functools",
+        "collections",
+        "collections.abc",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.device_initialization": {
+      "lines": 83,
+      "functions": 4,
+      "classes": 0,
+      "imports": [
+        "linput",
+        "gremlin"
+      ],
+      "external_imports": [
+        "threading",
+        "logging"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.error": {
+      "lines": 85,
+      "functions": 8,
+      "classes": 7,
+      "imports": [],
+      "external_imports": [
+        "logging"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.event_handler": {
+      "lines": 347,
+      "functions": 18,
+      "classes": 2,
+      "imports": [
+        "gremlin.types",
+        "linput",
+        "gremlin",
+        "gremlin.input_cache",
+        "gremlin.code_runner",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "uuid",
+        "threading",
+        "functools",
+        "inspect",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.fsm": {
+      "lines": 107,
+      "functions": 3,
+      "classes": 2,
+      "imports": [],
+      "external_imports": [
+        "typing",
+        "collections.abc",
+        "logging"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.hints": {
+      "lines": 34,
+      "functions": 0,
+      "classes": 0,
+      "imports": [
+        "gremlin.util"
+      ],
+      "external_imports": [
+        "csv"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.input_cache": {
+      "lines": 343,
+      "functions": 26,
+      "classes": 7,
+      "imports": [
+        "gremlin",
+        "gremlin.common"
+      ],
+      "external_imports": [
+        "typing",
+        "uuid",
+        "__future__",
+        "dill",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.intermediate_output": {
+      "lines": 308,
+      "functions": 30,
+      "classes": 5,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.common"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "dill",
+        "uuid"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.keyboard": {
+      "lines": 430,
+      "functions": 19,
+      "classes": 1,
+      "imports": [
+        "gremlin"
+      ],
+      "external_imports": [
+        "typing",
+        "win32con",
+        "win32api",
+        "ctypes",
+        "logging"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.linux_event_handler": {
+      "lines": 347,
+      "functions": 18,
+      "classes": 2,
+      "imports": [
+        "gremlin.types",
+        "linput",
+        "gremlin",
+        "gremlin.input_cache",
+        "gremlin.code_runner",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "uuid",
+        "threading",
+        "functools",
+        "inspect",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.linux_sendinput": {
+      "lines": 177,
+      "functions": 12,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "linput",
+        "gremlin.common",
+        "gremlin.event_handler"
+      ],
+      "external_imports": [
+        "threading",
+        "time",
+        "logging",
+        "typing"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.macro": {
+      "lines": 920,
+      "functions": 67,
+      "classes": 13,
+      "imports": [
+        "gremlin.types",
+        "gremlin.keyboard",
+        "gremlin.base_classes",
+        "gremlin",
+        "gremlin.sendinput",
+        "gremlin.common",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "vjoy.vjoy",
+        "xml.etree",
+        "uuid",
+        "threading",
+        "functools",
+        "collections",
+        "abc",
+        "logging",
+        "dill"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.mode_manager": {
+      "lines": 211,
+      "functions": 20,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin",
+        "gremlin.common",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "typing",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.plugin_manager": {
+      "lines": 198,
+      "functions": 10,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "gremlin",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "__future__",
+        "typing",
+        "pathlib",
+        "os",
+        "importlib",
+        "sys",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [
+        {
+          "name": "_discover_plugins",
+          "lines": 52,
+          "start": 146
+        }
+      ],
+      "complexity_issues": []
+    },
+    "gremlin.process_monitor": {
+      "lines": 126,
+      "functions": 6,
+      "classes": 1,
+      "imports": [],
+      "external_imports": [
+        "time",
+        "ctypes.wintypes",
+        "ctypes",
+        "os",
+        "threading",
+        "win32gui",
+        "win32com.client",
+        "win32process",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.profile": {
+      "lines": 1259,
+      "functions": 70,
+      "classes": 10,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.user_script",
+        "gremlin",
+        "action_plugins",
+        "gremlin.intermediate_output",
+        "gremlin.tree",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "__future__",
+        "typing",
+        "pathlib",
+        "codecs",
+        "xml.dom",
+        "xml.etree",
+        "uuid",
+        "PySide6.QtCore",
+        "abc",
+        "logging",
+        "dill"
+      ],
+      "long_functions": [
+        {
+          "name": "from_xml",
+          "lines": 58,
+          "start": 440
+        },
+        {
+          "name": "get_input_item",
+          "lines": 51,
+          "start": 639
+        }
+      ],
+      "complexity_issues": []
+    },
+    "gremlin.repeater": {
+      "lines": 180,
+      "functions": 7,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "gremlin"
+      ],
+      "external_imports": [
+        "threading",
+        "time",
+        "PyQt5"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.sendinput": {
+      "lines": 177,
+      "functions": 12,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "linput",
+        "gremlin.common",
+        "gremlin.event_handler"
+      ],
+      "external_imports": [
+        "threading",
+        "time",
+        "logging",
+        "typing"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.shared_state": {
+      "lines": 70,
+      "functions": 3,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [
+        "threading"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.signal": {
+      "lines": 37,
+      "functions": 0,
+      "classes": 1,
+      "imports": [
+        "gremlin"
+      ],
+      "external_imports": [
+        "PySide6.QtCore",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.tree": {
+      "lines": 267,
+      "functions": 16,
+      "classes": 1,
+      "imports": [
+        "gremlin"
+      ],
+      "external_imports": [
+        "typing",
+        "__future__"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.tts": {
+      "lines": 77,
+      "functions": 5,
+      "classes": 1,
+      "imports": [],
+      "external_imports": [
+        "win32com.client",
+        "logging"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.types": {
+      "lines": 729,
+      "functions": 31,
+      "classes": 17,
+      "imports": [
+        "gremlin.error"
+      ],
+      "external_imports": [
+        "enum",
+        "__future__",
+        "typing"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.util": {
+      "lines": 1040,
+      "functions": 45,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "gremlin"
+      ],
+      "external_imports": [
+        "math",
+        "time",
+        "typing",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "ctypes",
+        "os",
+        "importlib",
+        "threading",
+        "sys",
+        "logging",
+        "re",
+        "dill",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.windows_event_hook": {
+      "lines": 390,
+      "functions": 22,
+      "classes": 6,
+      "imports": [
+        "gremlin.types",
+        "gremlin.common"
+      ],
+      "external_imports": [
+        "threading",
+        "ctypes"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin": {
+      "lines": 16,
+      "functions": 0,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.ui.action_model": {
+      "lines": 346,
+      "functions": 39,
+      "classes": 2,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.plugin_manager",
+        "gremlin.signal",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "typing",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.ui.backend": {
+      "lines": 500,
+      "functions": 37,
+      "classes": 2,
+      "imports": [
+        "gremlin.audio_player",
+        "gremlin.ui.profile",
+        "gremlin.ui.script",
+        "linput",
+        "gremlin",
+        "gremlin.intermediate_output",
+        "gremlin.signal",
+        "gremlin.ui.device"
+      ],
+      "external_imports": [
+        "typing",
+        "uuid",
+        "os",
+        "PySide6.QtCore",
+        "sys",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [
+        {
+          "name": "_load_profile",
+          "lines": 58,
+          "start": 442
+        }
+      ],
+      "complexity_issues": []
+    },
+    "gremlin.ui.config": {
+      "lines": 173,
+      "functions": 14,
+      "classes": 3,
+      "imports": [
+        "gremlin.types",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "typing",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.ui.device": {
+      "lines": 1473,
+      "functions": 104,
+      "classes": 14,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin",
+        "gremlin.intermediate_output",
+        "gremlin.signal",
+        "gremlin.common",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "math",
+        "time",
+        "typing",
+        "json",
+        "uuid",
+        "PySide6.QtCore",
+        "logging",
+        "json.decoder",
+        "__future__",
+        "dill",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.ui.profile": {
+      "lines": 906,
+      "functions": 58,
+      "classes": 7,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.error",
+        "gremlin.profile",
+        "gremlin.ui.action_model",
+        "gremlin.plugin_manager",
+        "action_plugins.root",
+        "gremlin.signal",
+        "gremlin.base_classes"
+      ],
+      "external_imports": [
+        "__future__",
+        "typing",
+        "uuid",
+        "PySide6.QtCore",
+        "logging",
+        "PySide6"
+      ],
+      "long_functions": [
+        {
+          "name": "move_action",
+          "lines": 64,
+          "start": 374
+        }
+      ],
+      "complexity_issues": []
+    },
+    "gremlin.ui.script": {
+      "lines": 431,
+      "functions": 50,
+      "classes": 10,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.ui.device"
+      ],
+      "external_imports": [
+        "typing",
+        "pathlib",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.ui.util": {
+      "lines": 261,
+      "functions": 15,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "gremlin"
+      ],
+      "external_imports": [
+        "typing",
+        "threading",
+        "PySide6.QtCore",
+        "__future__",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "gremlin.ui": {
+      "lines": 16,
+      "functions": 0,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "linput.device_manager": {
+      "lines": 523,
+      "functions": 23,
+      "classes": 2,
+      "imports": [],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "pathlib",
+        "pyudev",
+        "uuid",
+        "threading",
+        "asyncio",
+        "evdev",
+        "logging",
+        "types"
+      ],
+      "long_functions": [
+        {
+          "name": "_create_device_summary",
+          "lines": 74,
+          "start": 208
+        },
+        {
+          "name": "_convert_evdev_event",
+          "lines": 79,
+          "start": 420
+        }
+      ],
+      "complexity_issues": []
+    },
+    "linput.keyboard_mouse": {
+      "lines": 359,
+      "functions": 21,
+      "classes": 1,
+      "imports": [],
+      "external_imports": [
+        "typing",
+        "time",
+        "pynput.keyboard",
+        "pynput.mouse",
+        "pynput",
+        "logging",
+        "types"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "linput.keyboard_mouse_new": {
+      "lines": 359,
+      "functions": 21,
+      "classes": 1,
+      "imports": [],
+      "external_imports": [
+        "typing",
+        "time",
+        "pynput.keyboard",
+        "pynput.mouse",
+        "pynput",
+        "logging",
+        "types"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "linput.types": {
+      "lines": 106,
+      "functions": 1,
+      "classes": 5,
+      "imports": [],
+      "external_imports": [
+        "typing",
+        "uuid",
+        "enum",
+        "__future__",
+        "dataclasses"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "linput.virtual_output": {
+      "lines": 431,
+      "functions": 19,
+      "classes": 3,
+      "imports": [],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "uinput",
+        "uuid",
+        "os",
+        "stat",
+        "logging",
+        "types"
+      ],
+      "long_functions": [
+        {
+          "name": "create",
+          "lines": 70,
+          "start": 89
+        }
+      ],
+      "complexity_issues": []
+    },
+    "linput": {
+      "lines": 129,
+      "functions": 7,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [
+        "virtual_output",
+        "device_manager",
+        "keyboard_mouse",
+        "logging",
+        "types"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test": {
+      "lines": 16,
+      "functions": 0,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.integration.app_tester": {
+      "lines": 173,
+      "functions": 8,
+      "classes": 1,
+      "imports": [
+        "gremlin.types",
+        "gremlin.input_cache"
+      ],
+      "external_imports": [
+        "typing",
+        "time",
+        "pytest",
+        "uuid",
+        "dill",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.integration.conftest": {
+      "lines": 202,
+      "functions": 12,
+      "classes": 0,
+      "imports": [
+        "gremlin.error",
+        "gremlin.profile",
+        "action_plugins",
+        "gremlin.ui.backend",
+        "gremlin.device_initialization"
+      ],
+      "external_imports": [
+        "pytest",
+        "joystick_gremlin",
+        "pathlib",
+        "vjoy",
+        "test.integration",
+        "tempfile",
+        "sys",
+        "collections.abc",
+        "logging",
+        "dill",
+        "PySide6"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.integration.test_e2e_profile_simple": {
+      "lines": 195,
+      "functions": 5,
+      "classes": 1,
+      "imports": [
+        "gremlin"
+      ],
+      "external_imports": [
+        "pytest",
+        "vjoy",
+        "test.integration",
+        "sys",
+        "dill"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.integration": {
+      "lines": 16,
+      "functions": 0,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.conftest": {
+      "lines": 117,
+      "functions": 5,
+      "classes": 0,
+      "imports": [
+        "gremlin.device_initialization",
+        "gremlin.event_handler"
+      ],
+      "external_imports": [
+        "pytest",
+        "vjoy",
+        "pathlib",
+        "sys",
+        "unittest",
+        "joystick_gremlin",
+        "dill"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_action_condition": {
+      "lines": 182,
+      "functions": 5,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "action_plugins.description",
+        "action_plugins.condition",
+        "gremlin.error",
+        "gremlin.profile",
+        "gremlin",
+        "gremlin.event_handler",
+        "action_plugins.root"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [
+        {
+          "name": "test_from_xml_complex",
+          "lines": 58,
+          "start": 62
+        }
+      ],
+      "complexity_issues": []
+    },
+    "test.unit.test_action_description": {
+      "lines": 139,
+      "functions": 6,
+      "classes": 0,
+      "imports": [
+        "action_plugins.description",
+        "gremlin.error",
+        "gremlin.ui.profile",
+        "gremlin.profile",
+        "gremlin.ui.action_model",
+        "gremlin.event_handler",
+        "action_plugins.root"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_action_map_to_vjoy": {
+      "lines": 128,
+      "functions": 4,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "action_plugins.description",
+        "gremlin.error",
+        "action_plugins.map_to_vjoy",
+        "gremlin.profile"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys",
+        "dill"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_action_merge": {
+      "lines": 91,
+      "functions": 3,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "action_plugins.description",
+        "gremlin.error",
+        "action_plugins.merge_axis",
+        "gremlin.profile",
+        "gremlin.ui.device"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_action_root": {
+      "lines": 74,
+      "functions": 3,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "action_plugins.description",
+        "gremlin.error",
+        "gremlin.profile",
+        "action_plugins.root"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_action_tempo": {
+      "lines": 103,
+      "functions": 4,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "action_plugins.description",
+        "gremlin.error",
+        "gremlin.profile",
+        "action_plugins.tempo",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_config": {
+      "lines": 127,
+      "functions": 4,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "pytest",
+        "tempfile",
+        "sys",
+        "unittest",
+        "collections.abc"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_dill": {
+      "lines": 9,
+      "functions": 1,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [
+        "dill"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_fsm": {
+      "lines": 79,
+      "functions": 2,
+      "classes": 0,
+      "imports": [
+        "gremlin"
+      ],
+      "external_imports": [
+        "pytest",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_intermediate_output": {
+      "lines": 111,
+      "functions": 5,
+      "classes": 0,
+      "imports": [
+        "gremlin.intermediate_output",
+        "gremlin.error",
+        "gremlin.common"
+      ],
+      "external_imports": [
+        "pytest",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_modes": {
+      "lines": 214,
+      "functions": 8,
+      "classes": 2,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.profile",
+        "gremlin.shared_state",
+        "gremlin.plugin_manager",
+        "action_plugins.tempo",
+        "gremlin.mode_manager",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_profile": {
+      "lines": 111,
+      "functions": 4,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "gremlin.error",
+        "gremlin.profile",
+        "gremlin.plugin_manager",
+        "action_plugins.tempo",
+        "gremlin.config"
+      ],
+      "external_imports": [
+        "pytest",
+        "pathlib",
+        "xml.etree",
+        "uuid",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_splines": {
+      "lines": 77,
+      "functions": 3,
+      "classes": 0,
+      "imports": [
+        "gremlin.spline"
+      ],
+      "external_imports": [
+        "pytest",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_tree": {
+      "lines": 291,
+      "functions": 9,
+      "classes": 0,
+      "imports": [
+        "gremlin.error",
+        "gremlin.tree"
+      ],
+      "external_imports": [
+        "pytest",
+        "sys"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "test.unit.test_util": {
+      "lines": 148,
+      "functions": 2,
+      "classes": 0,
+      "imports": [
+        "gremlin.types",
+        "gremlin.util",
+        "gremlin.error"
+      ],
+      "external_imports": [
+        "pytest",
+        "xml.etree",
+        "uuid",
+        "os",
+        "sys"
+      ],
+      "long_functions": [
+        {
+          "name": "test_read_property",
+          "lines": 65,
+          "start": 83
+        }
+      ],
+      "complexity_issues": []
+    },
+    "vjoy.vjoy": {
+      "lines": 984,
+      "functions": 46,
+      "classes": 7,
+      "imports": [
+        "gremlin.types",
+        "gremlin.spline",
+        "gremlin.error"
+      ],
+      "external_imports": [
+        "__future__",
+        "time",
+        "typing",
+        "vjoy.vjoy_interface",
+        "ctypes",
+        "os",
+        "enum",
+        "threading",
+        "logging"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "vjoy.vjoy_interface": {
+      "lines": 190,
+      "functions": 1,
+      "classes": 2,
+      "imports": [
+        "gremlin.error"
+      ],
+      "external_imports": [
+        "enum",
+        "sys",
+        "ctypes",
+        "os"
+      ],
+      "long_functions": [],
+      "complexity_issues": []
+    },
+    "vjoy": {
+      "lines": 16,
+      "functions": 0,
+      "classes": 0,
+      "imports": [],
+      "external_imports": [],
+      "long_functions": [],
+      "complexity_issues": []
+    }
+  }
+}

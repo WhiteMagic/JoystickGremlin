@@ -31,8 +31,9 @@ from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtWidgets
 
-import dill
-from dill import GUID
+# REMOVED: import dill, from dill import GUID (Windows-specific)
+# Use standard uuid module instead
+import uuid
 
 from gremlin import error
 from gremlin.types import AxisButtonDirection, AxisMode, HatDirection, \
