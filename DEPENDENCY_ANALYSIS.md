@@ -35,8 +35,8 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 ## 3. ZYKLISCHE ABHÄNGIGKEITEN (CLEAN CODE VERSTOSSE)
    ⚠️  Gefundene zyklische Abhängigkeiten: 3
    1. gremlin.base_classes -> gremlin.profile -> gremlin.base_classes
-   2. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
-   3. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.action_model -> gremlin.ui.profile
+   2. gremlin.ui.profile -> gremlin.ui.action_model -> gremlin.ui.profile
+   3. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
 
 ## 4. LANGE FUNKTIONEN (> 50 Zeilen - Clean Code Verstoß)
    ⚠️  Gefundene lange Funktionen: 20
@@ -283,6 +283,7 @@ graph TD
     root[root] --> profile[profile]
     root[root] --> types[types]
     root[root] --> action_model[action_model]
+    root[root] --> models[models]
     root[root] --> profile[profile]
     smart_toggle[smart_toggle] --> gremlin[gremlin]
     smart_toggle[smart_toggle] --> base_classes[base_classes]

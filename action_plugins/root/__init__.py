@@ -35,12 +35,12 @@ from gremlin.error import GremlinError
 from gremlin.config import Configuration
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType, DataInsertionMode, DataCreationMode
-
+# REFACTORED: Import from separate modules to reduce circular dependencies
 from gremlin.ui.action_model import ActionModel
+from gremlin.ui.models import SequenceIndex
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
-    from gremlin.ui.action_model import SequenceIndex
 
 
 class RootFunctor(AbstractFunctor):
