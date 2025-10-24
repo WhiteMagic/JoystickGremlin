@@ -36,7 +36,9 @@ import uuid
 from xml.etree import ElementTree
 
 import dill
-from vjoy.vjoy import VJoyProxy
+# REMOVED: from vjoy.vjoy import VJoyProxy (Windows-specific)
+# Use linput.VirtualJoystick instead
+import linput
 
 from gremlin.input_cache import Joystick, Keyboard
 from gremlin.types import InputType, PropertyType
@@ -241,20 +243,23 @@ class JoystickDecorator:
 
 class VJoyPlugin:
 
-    """Plugin providing automatic access to the VJoyProxy object.
+    """Plugin providing automatic access to virtual joystick devices.
 
+    REFACTORED: Now uses linput.VirtualJoystick instead of Windows VJoyProxy.
+    
     For a function to use this plugin it requires one of its parameters
     to be named "vjoy".
     """
 
-    vjoy = VJoyProxy()
+    # Use linput VirtualJoystick manager instead of VJoyProxy
+    vjoy = linput.VirtualJoystick
 
     def __init__(self):
         self.keyword = "vjoy"
 
     def install(self, callback: Callable, partial_fn: Callable) -> Callable:
         """Decorates the given callback function to provide access to
-        the VJoyProxy object.
+        virtual joystick devices.
 
         Only if the signature contains the plugin's keyword is the
         decorator applied.
@@ -1051,14 +1056,26 @@ class VirtualInputVariable(AbstractVariable):
         return self._valid_types
 
     def remap(self, value: float|bool|Tuple[int, int]) -> None:
-        device = VJoyProxy().vjoy_devices[self._vjoy_id]
+        # REFACTORED: Use linput.VirtualJoystick instead of VJoyProxy
+        device = linput.VirtualJoystick.get(self._vjoy_id)
+        if device is None:
+            raise error.GremlinError(
+                f"Virtual device {self._vjoy_id} not found"
+            )
+        
         match self._input_type:
             case InputType.JoystickButton:
-                device.button(self._input_id).is_pressed = value
+                device.set_button(self._input_id, bool(value))
             case InputType.JoystickAxis:
-                device.axis(self._input_id).value = value
+                device.set_axis(self._input_id, float(value))
             case InputType.JoystickHat:
-                device.hat(self._input_id).direction = value
+                # Hat expects tuple of (x, y) values
+                if isinstance(value, tuple):
+                    device.set_hat(self._input_id, value[0], value[1])
+                else:
+                    raise error.GremlinError(
+                        f"Hat input requires tuple, got {type(value)}"
+                    )
             case _:
                 raise error.GremlinError(
                     f"Received invalid input type '{self._input_type}'"
