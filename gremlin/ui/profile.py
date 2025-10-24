@@ -32,8 +32,9 @@ from gremlin.plugin_manager import PluginManager
 from gremlin.signal import signal
 from gremlin.types import AxisButtonDirection, HatDirection, InputType, DataInsertionMode
 from gremlin.util import clamp
-
-from gremlin.ui.action_model import ActionModel, SequenceIndex
+# REFACTORED: Import from separate modules to break circular dependency
+from gremlin.ui.action_model import ActionModel
+from gremlin.ui.models import SequenceIndex
 
 if TYPE_CHECKING:
     from action_plugins.root import RootModel

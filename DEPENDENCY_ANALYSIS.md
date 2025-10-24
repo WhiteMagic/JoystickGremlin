@@ -3,8 +3,8 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 ================================================================================
 
 ## 1. PROJEKTÜBERSICHT
-   Gesamtanzahl Module: 104
-   Gesamtzeilen Code: 50,273
+   Gesamtanzahl Module: 108
+   Gesamtzeilen Code: 50,436
    Gesamtanzahl Funktionen: 1783
    Gesamtanzahl Klassen: 276
 
@@ -35,8 +35,8 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 ## 3. ZYKLISCHE ABHÄNGIGKEITEN (CLEAN CODE VERSTOSSE)
    ⚠️  Gefundene zyklische Abhängigkeiten: 3
    1. gremlin.base_classes -> gremlin.profile -> gremlin.base_classes
-   2. gremlin.ui.profile -> gremlin.ui.action_model -> gremlin.ui.profile
-   3. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
+   2. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
+   3. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.action_model -> gremlin.ui.profile
 
 ## 4. LANGE FUNKTIONEN (> 50 Zeilen - Clean Code Verstoß)
    ⚠️  Gefundene lange Funktionen: 20
@@ -63,7 +63,7 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
    - gremlin.util: 1,041 Zeilen
    - deprecated_windows_only.vjoy.vjoy: 984 Zeilen
    - gremlin.macro: 920 Zeilen
-   - gremlin.ui.profile: 906 Zeilen
+   - gremlin.ui.profile: 907 Zeilen
    - action_plugins.macro: 781 Zeilen
    - gremlin.types: 729 Zeilen
    - deprecated_windows_only.dill: 681 Zeilen
@@ -329,7 +329,13 @@ graph TD
     device_helpers[device_helpers] --> types[types]
     device_initialization[device_initialization] --> gremlin[gremlin]
     device_initialization[device_initialization] -.->|Linux| linput[linput]
-    domain[domain] --> types[types]
+    domain[domain] --> events[events]
+    domain[domain] --> interfaces[interfaces]
+    domain[domain] --> ui_interfaces[ui_interfaces]
+    events[events] --> types[types]
+    interfaces[interfaces] --> types[types]
+    ui_interfaces[ui_interfaces] --> interfaces[interfaces]
+    ui_interfaces[ui_interfaces] --> types[types]
     event_handler[event_handler] --> gremlin[gremlin]
     event_handler[event_handler] --> base_classes[base_classes]
     event_handler[event_handler] --> code_runner[code_runner]
@@ -394,6 +400,7 @@ graph TD
     action_model[action_model] --> profile[profile]
     action_model[action_model] --> signal[signal]
     action_model[action_model] --> types[types]
+    action_model[action_model] --> models[models]
     action_model[action_model] --> profile[profile]
     backend[backend] --> gremlin[gremlin]
     backend[backend] --> audio_player[audio_player]
@@ -419,6 +426,7 @@ graph TD
     profile[profile] --> signal[signal]
     profile[profile] --> types[types]
     profile[profile] --> action_model[action_model]
+    profile[profile] --> models[models]
     profile[profile] --> util[util]
     script[script] --> gremlin[gremlin]
     script[script] --> error[error]
