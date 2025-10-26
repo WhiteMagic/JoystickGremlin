@@ -69,6 +69,7 @@ class AutoMapper:
         self._profile = profile
         # For debug, testing and creating a report for the user.
         self._created_mappings: list[map_to_vjoy.MapToVjoyData] = []
+        self._num_retained_bindings = 0
 
     @classmethod
     def from_current_profile(cls) -> Self:
@@ -90,6 +91,10 @@ class AutoMapper:
         Returns:
             A string report for the user summarizing new mappings.
         """
+        if not input_devices_guids:
+            return "No input devices selected"
+        if not output_vjoy_ids:
+            return "No vJoy devices selected"
         input_devices = [
             dev
             for dev in device_initialization.physical_devices()
@@ -97,6 +102,7 @@ class AutoMapper:
         ]
 
         self._prepare_profile(input_devices, options)
+        self._num_retained_bindings = 0
         used_vjoy_inputs = set(self._get_used_vjoy_inputs(options.mode))
         vjoy_axes = self._iter_unused_vjoy_axes(output_vjoy_ids, used_vjoy_inputs)
         vjoy_buttons = self._iter_unused_vjoy_buttons(output_vjoy_ids, used_vjoy_inputs)
@@ -145,6 +151,8 @@ class AutoMapper:
                 )
                 if not input_item.action_sequences:
                     yield input_item
+                else:
+                    self._num_retained_bindings += 1
 
     def _iter_physical_buttons(
         self,
@@ -163,6 +171,8 @@ class AutoMapper:
                 )
                 if not input_item.action_sequences:
                     yield input_item
+                else:
+                    self._num_retained_bindings += 1
 
     def _iter_physical_hats(
         self,
@@ -181,6 +191,8 @@ class AutoMapper:
                 )
                 if not input_item.action_sequences:
                     yield input_item
+                else:
+                    self._num_retained_bindings += 1
 
     def _get_used_vjoy_inputs(self, mode: str) -> list[types.VjoyInput]:
         """Returns a list of all vJoy inputs that are already used in the prepared profile."""
@@ -268,4 +280,7 @@ class AutoMapper:
 
     def _create_mappings_report(self) -> str:
         """Creates a text report for the user after a mapping operation."""
-        return f"Created {len(self._created_mappings)} mappings."
+        return (
+            f"Created {len(self._created_mappings)} mappings; "
+            f"{self._num_retained_bindings} previous bindings retained."
+        )
