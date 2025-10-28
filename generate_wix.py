@@ -75,15 +75,13 @@ def create_node(tag, data):
     return node
 
 
-def create_folder_structure(folder_list):
-    """Creates the basic XML directory structure.
-
-    :param folder_list the list of folders present
-    :return dictionary with folder nodes
+def _create_base_directory_structure():
+    """Create the base directory structure for WiX.
+    
+    Returns:
+        Dictionary with base directory nodes
     """
     structure = {}
-
-    # Create the basic structure for where to place the actual files
     structure["root"] = create_node(
         "Directory",
         {"Id": "TARGETDIR", "Name": "SourceDir"}
@@ -103,8 +101,15 @@ def create_folder_structure(folder_list):
     structure["root"].append(structure["pfiles"])
     structure["pfiles"].append(structure["h2ik"])
     structure["h2ik"].append(structure["jg"])
+    return structure
 
-    # Component to remove the H2ik folder
+
+def _add_h2ik_removal_component(structure):
+    """Add component to remove H2ik folder on uninstall.
+    
+    Args:
+        structure: Directory structure dictionary
+    """
     node = create_node(
         "Component",
         {
@@ -118,23 +123,51 @@ def create_folder_structure(folder_list):
     )
     structure["h2ik"].append(node)
 
-    # Create the folder structure for the Joystick Gremlin install
+
+def _create_folder_node(dirs, i, structure):
+    """Create a single folder node if it doesn't exist.
+    
+    Args:
+        dirs: Directory path components
+        i: Current directory level
+        structure: Directory structure dictionary
+    """
+    path = "__".join(dirs[:i+1])
+    if path not in structure:
+        structure[path] = create_node(
+            "Directory",
+            {"Id": path, "Name": dirs[i]}
+        )
+        if i > 0:
+            parent_path = "__".join(dirs[:i])
+            structure[parent_path].append(structure[path])
+
+
+def _link_top_level_folders(dirs, structure):
+    """Link top-level folders to install directory.
+    
+    Args:
+        dirs: Directory path components
+        structure: Directory structure dictionary
+    """
+    if len(dirs) == 1:
+        structure["jg"].append(structure[dirs[0]])
+
+
+def create_folder_structure(folder_list):
+    """Creates the basic XML directory structure.
+
+    :param folder_list the list of folders present
+    :return dictionary with folder nodes
+    """
+    structure = _create_base_directory_structure()
+    _add_h2ik_removal_component(structure)
+
     for folder in folder_list:
         dirs = folder.split("\\")
         for i in range(len(dirs)):
-            path = "__".join(dirs[:i+1])
-            if path not in structure:
-                structure[path] = create_node(
-                    "Directory",
-                    {"Id": path, "Name": dirs[i]}
-                )
-                if i > 0:
-                    parent_path = "__".join(dirs[:i])
-                    structure[parent_path].append(structure[path])
-
-        # Link top level folders to the install folder
-        if len(dirs) == 1:
-            structure["jg"].append(structure[dirs[0]])
+            _create_folder_node(dirs, i, structure)
+        _link_top_level_folders(dirs, structure)
 
     return structure
 
