@@ -76,69 +76,103 @@ class DoubleTapFunctor(AbstractFunctor):
             properties
         )
 
-    def _create_fsm(self) -> fsm.FiniteStateMachine:
-        # Define lambda functions for the needed actions
-        T = fsm.Transition
-        noop = lambda *args: None
-        single_pulse = lambda e, v, p: self._pulse_event(
-            self.functors["single"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        single_press = lambda e, v, p: self._process_event(
-            self.functors["single"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        single_release = lambda e, v, p: self._process_event(
-            self.functors["single"], e, v, p
-        )
-        double_press = lambda e, v, p: self._process_event(
-            self.functors["double"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        double_release = lambda e, v, p: self._process_event(
-            self.functors["double"], e, v, p
-        )
+    def _create_lambda_actions(self):
+        """Create lambda functions for FSM actions.
+        
+        Returns:
+            Dictionary of lambda functions
+        """
+        return {
+            "noop": lambda *args: None,
+            "single_pulse": lambda e, v, p: self._pulse_event(
+                self.functors["single"],
+                self.event_press,
+                self.value_press,
+                p
+            ),
+            "single_press": lambda e, v, p: self._process_event(
+                self.functors["single"],
+                self.event_press,
+                self.value_press,
+                p
+            ),
+            "single_release": lambda e, v, p: self._process_event(
+                self.functors["single"], e, v, p
+            ),
+            "double_press": lambda e, v, p: self._process_event(
+                self.functors["double"],
+                self.event_press,
+                self.value_press,
+                p
+            ),
+            "double_release": lambda e, v, p: self._process_event(
+                self.functors["double"], e, v, p
+            )
+        }
 
+    def _create_exclusive_transitions(self, actions):
+        """Create transitions for exclusive activation mode.
+        
+        Args:
+            actions: Dictionary of lambda action functions
+            
+        Returns:
+            Dictionary of state transitions
+        """
+        T = fsm.Transition
+        return {
+            ("neutral", "press"): T([self._start_timer], "p1+t"),
+            ("neutral", "release"): T([actions["noop"]], "neutral"),
+            ("neutral", "timeout"): T([actions["noop"]], "neutral"),
+            ("p1+t", "release"): T([actions["noop"]], "t"),
+            ("p1+t", "timeout"): T([actions["single_press"]], "p1"),
+            ("p1", "release"): T([actions["single_release"]], "neutral"),
+            ("t", "press"): T([actions["double_press"]], "p2+t"),
+            ("t", "timeout"): T([actions["single_pulse"]], "neutral"),
+            ("p2+t", "release"): T([actions["double_release"]], "neutral"),
+            ("p2+t", "timeout"): T([actions["noop"]], "p2+t")
+        }
+
+    def _create_combined_transitions(self, actions):
+        """Create transitions for combined activation mode.
+        
+        Args:
+            actions: Dictionary of lambda action functions
+            
+        Returns:
+            Dictionary of state transitions
+        """
+        T = fsm.Transition
+        return {
+            ("neutral", "press"): T(
+                [actions["single_press"], self._start_timer], "p1+t"
+            ),
+            ("neutral", "timeout"): T([actions["noop"]], "neutral"),
+            ("p1+t", "release"): T([actions["single_release"]], "t"),
+            ("p1+t", "timeout"): T([actions["noop"]], "p1"),
+            ("p1", "release"): T([actions["single_release"]], "neutral"),
+            ("t", "press"): T(
+                [actions["single_press"], actions["double_press"]], "p2+t"
+            ),
+            ("t", "timeout"): T([actions["noop"]], "neutral"),
+            ("p2+t", "release"): T(
+                [actions["single_release"], actions["double_release"]], "neutral"
+            ),
+            ("p2+t", "timeout"): T([actions["noop"]], "p2+t")
+        }
+
+    def _create_fsm(self) -> fsm.FiniteStateMachine:
+        """Create finite state machine for double-tap detection."""
+        actions = self._create_lambda_actions()
         states = ["neutral", "p1", "p1+t", "p2+t", "t"]
-        actions = ["press", "release", "timeout"]
+        fsm_actions = ["press", "release", "timeout"]
+        
         if self.data.activate_on == "exclusive":
-            transitions = {
-                ("neutral", "press"): T([self._start_timer], "p1+t"),
-                ("neutral", "release"): T([noop], "neutral"),
-                ("neutral", "timeout"): T([noop], "neutral"),
-                ("p1+t", "release"): T([noop], "t"),
-                ("p1+t", "timeout"): T([single_press], "p1"),
-                ("p1", "release"): T([single_release], "neutral"),
-                ("t", "press"): T([double_press], "p2+t"),
-                ("t", "timeout"): T([single_pulse], "neutral"),
-                ("p2+t", "release"): T([double_release], "neutral"),
-                ("p2+t", "timeout"): T([noop], "p2+t")
-            }
+            transitions = self._create_exclusive_transitions(actions)
         elif self.data.activate_on == "combined":
-            transitions = {
-                ("neutral", "press"): T(
-                    [single_press, self._start_timer], "p1+t"
-                ),
-                ("neutral", "timeout"): T([noop], "neutral"),
-                ("p1+t", "release"): T([single_release], "t"),
-                ("p1+t", "timeout"): T([noop], "p1"),
-                ("p1", "release"): T([single_release], "neutral"),
-                ("t", "press"): T(
-                    [single_press, double_press], "p2+t"
-                ),
-                ("t", "timeout"): T([noop], "neutral"),
-                ("p2+t", "release"): T(
-                    [single_release, double_release], "neutral"
-                ),
-                ("p2+t", "timeout"): T([noop], "p2+t")
-            }
-        return fsm.FiniteStateMachine("neutral", states, actions, transitions)
+            transitions = self._create_combined_transitions(actions)
+        
+        return fsm.FiniteStateMachine("neutral", states, fsm_actions, transitions)
 
     def _timeout(self) -> None:
         self.fsm.perform("timeout", self.event_press, self.value_press, [])
