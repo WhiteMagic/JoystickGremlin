@@ -143,6 +143,87 @@ class PluginManager:
             self._name_to_type_map[entry.name] = entry
             self._tag_to_type_map[entry.tag] = entry
 
+    def _load_plugin_module(self, module_name, path, is_core):
+        """Load a plugin module by name.
+        
+        Args:
+            module_name: Module name to load
+            path: Base path
+            is_core: Whether this is a core plugin
+            
+        Returns:
+            Loaded plugin module or None
+        """
+        plugin_module_name = f"{path.name}.{module_name}"
+        if not is_core:
+            plugin_module_name = module_name
+        
+        try:
+            return importlib.import_module(plugin_module_name)
+        except (ModuleNotFoundError, ImportError) as e:
+            logging.getLogger("system").error(
+                f"Failed to load plugin '{plugin_module_name}' "
+                f"with error: '{e}"
+            )
+            return None
+
+    def _verify_and_register_plugin(self, plugin):
+        """Verify plugin requirements and register if valid.
+        
+        Args:
+            plugin: Plugin module to verify
+            
+        Returns:
+            True if registered, False otherwise
+        """
+        if "create" not in plugin.__dict__:
+            return False
+        
+        if not plugin.create.can_create():
+            return False
+        
+        # Store plugin class information
+        self._plugins[plugin.create.tag] = plugin.create
+        logging.getLogger("system").debug(
+            "Loaded: {}".format(plugin.create.tag)
+        )
+        
+        # Register QML type
+        QtQml.qmlRegisterType(
+            plugin.create.model,
+            "Gremlin.ActionPlugins",
+            1,
+            0,
+            plugin.create.model.__name__
+        )
+        return True
+
+    def _process_plugin_folder(self, root, path, is_core):
+        """Process a single plugin folder.
+        
+        Args:
+            root: Folder root path
+            path: Base path
+            is_core: Whether this is a core plugin
+        """
+        try:
+            module = os.path.split(root)[1]
+            plugin = self._load_plugin_module(module, path, is_core)
+            
+            if plugin is None:
+                return
+            
+            if not self._verify_and_register_plugin(plugin):
+                del plugin
+        except Exception as e:
+            logging.getLogger("system").warning(
+                "Loading action_plugins '{}' failed due to: {}".format(
+                    root.split("\\")[-1],
+                    e
+                )
+            )
+            raise(e)
+
     def _discover_plugins(self, path: Path, is_core: bool):
         """Processes known plugin folders for action plugins."""
         if not is_core:
@@ -150,49 +231,4 @@ class PluginManager:
 
         for root, dirs, files in os.walk(path):
             for _ in [v for v in files if v == "__init__.py"]:
-                try:
-                    # Attempt to load the file and if it looks like a proper
-                    # action_plugins store it in the registry
-                    module = os.path.split(root)[1]
-
-                    try:
-                        plugin_module_name = f"{path.name}.{module}"
-                        if not is_core:
-                            plugin_module_name = module
-                        plugin = importlib.import_module(plugin_module_name)
-                    except (ModuleNotFoundError, ImportError) as e:
-                        logging.getLogger("system").error(
-                            f"Failed to load plugin '{plugin_module_name}' "
-                            f"with error: '{e}"
-                        )
-                        continue
-
-                    # Verify requirements for the plugin are satisfied
-                    if "create" in plugin.__dict__ \
-                            and plugin.create.can_create():
-                        # Store plugin class information
-                        self._plugins[plugin.create.tag] = plugin.create
-                        logging.getLogger("system").debug(
-                            "Loaded: {}".format(plugin.create.tag)
-                        )
-
-                        # Register QML type
-                        QtQml.qmlRegisterType(
-                            plugin.create.model,
-                            "Gremlin.ActionPlugins",
-                            1,
-                            0,
-                            plugin.create.model.__name__
-                        )
-                    else:
-                        del plugin
-                except Exception as e:
-                    # Log an error and ignore the action_plugins if
-                    # anything is wrong with it
-                    logging.getLogger("system").warning(
-                        "Loading action_plugins '{}' failed due to: {}".format(
-                            root.split("\\")[-1],
-                            e
-                        )
-                    )
-                    raise(e)
+                self._process_plugin_folder(root, path, is_core)
