@@ -439,62 +439,90 @@ class Backend(QtCore.QObject):
         self._last_error = msg
         self.lastErrorChanged.emit()
 
+    def _validate_profile_path(self, fpath):
+        """Validate that profile file exists.
+        
+        Args:
+            fpath: Profile file path
+            
+        Returns:
+            True if valid, False otherwise
+        """
+        if not os.path.isfile(fpath):
+            self.display_error(
+                f"Unable to load profile '{fpath}', no such file."
+            )
+            return False
+        return True
+
+    def _parse_profile_from_xml(self, fpath):
+        """Parse profile from XML file.
+        
+        Args:
+            fpath: Profile file path
+            
+        Returns:
+            Tuple of (profile, was_converted)
+        """
+        IntermediateOutput().reset()
+        new_profile = profile.Profile()
+        profile_was_converted = new_profile.from_xml(fpath)
+        return new_profile, profile_was_converted
+
+    def _update_sys_path(self, fpath):
+        """Add profile folder to sys.path.
+        
+        Args:
+            fpath: Profile file path
+        """
+        profile_folder = os.path.dirname(fpath)
+        if profile_folder not in sys.path:
+            sys.path = list(set(sys.path))
+            sys.path.insert(0, profile_folder)
+
+    def _apply_loaded_profile(self, new_profile):
+        """Apply loaded profile to application state.
+        
+        Args:
+            new_profile: Loaded profile instance
+        """
+        self.profile = new_profile
+        shared_state.current_profile = self.profile
+        self.windowTitleChanged.emit()
+
+    def _handle_profile_error(self, fpath, error_obj):
+        """Handle profile loading errors.
+        
+        Args:
+            fpath: Profile file path
+            error_obj: Exception that occurred
+        """
+        if isinstance(error_obj, (KeyError, TypeError)):
+            logging.getLogger("system").exception(
+                "Invalid profile content:\n{}".format(error_obj)
+            )
+            self.newProfile()
+        elif isinstance(error_obj, error.ProfileError):
+            self.newProfile()
+            self.display_error(
+                f"Failed to load the profile {fpath} due to:\n\n{error_obj}"
+            )
+
     def _load_profile(self, fpath):
         """Attempts to load the profile at the provided path.
 
         Args:
             fpath: The file path from which to load the profile
         """
-        # Check if there exists a file with this path
-        if not os.path.isfile(fpath):
-            self.display_error(
-                f"Unable to load profile '{fpath}', no such file."
-            )
+        if not self._validate_profile_path(fpath):
             return
 
-        # Disable the program if it is running when we're loading a
-        # new profile
-        # TODO: implement this for QML
-        #self.ui.actionActivate.setChecked(False)
-        #self.activate(False)
-
-        # Attempt to load the new profile
         try:
-            # self.profile = profile.Profile()
-            # self.profile.from_xml(fpath)
-            IntermediateOutput().reset()
-            new_profile = profile.Profile()
-            profile_was_converted = new_profile.from_xml(fpath)
+            new_profile, profile_was_converted = self._parse_profile_from_xml(fpath)
+            self._update_sys_path(fpath)
+            self._apply_loaded_profile(new_profile)
 
-            profile_folder = os.path.dirname(fpath)
-            if profile_folder not in sys.path:
-                sys.path = list(set(sys.path))
-                sys.path.insert(0, profile_folder)
-
-            # self._sanitize_profile(new_profile)
-            self.profile = new_profile
-            # self._profile_fname = fname
-            # self._update_window_title()
-            shared_state.current_profile = self.profile
-            self.windowTitleChanged.emit()
-
-            # Save the profile at this point if it was converted from a prior
-            # profile version, as otherwise the change detection logic will
-            # trip over insignificant input item additions.
             if profile_was_converted:
                 self.profile.to_xml(fpath)
-        except (KeyError, TypeError) as e:
-            # An error occurred while parsing an existing profile,
-            # creating an empty profile instead
-            logging.getLogger("system").exception(
-                "Invalid profile content:\n{}".format(e)
-            )
-            self.newProfile()
-        except error.ProfileError as e:
-            # Parsing the profile went wrong, stop loading and start with an
-            # empty profile
-            #cfg = config.Configuration()
-            self.newProfile()
-            self.display_error(
-                f"Failed to load the profile {fpath} due to:\n\n{e}"
-            )
+        except (KeyError, TypeError, error.ProfileError) as e:
+            self._handle_profile_error(fpath, e)
