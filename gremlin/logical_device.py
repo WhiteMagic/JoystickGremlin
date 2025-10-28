@@ -28,7 +28,6 @@ from gremlin.common import SingletonMetaclass
 from gremlin.types import InputType, HatDirection
 
 
-# @SingletonDecorator
 class LogicalDevice(metaclass=SingletonMetaclass):
 
     """Implements a device like system for arbitrary amonuts of logical device

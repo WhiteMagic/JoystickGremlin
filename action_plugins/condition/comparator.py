@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
 
-from typing import List
+from typing import List, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
@@ -27,6 +28,10 @@ from gremlin.base_classes import Value
 from gremlin.input_cache import Keyboard
 from gremlin.types import HatDirection, InputType, PropertyType
 from gremlin.ui.profile import HatDirectionModel
+
+
+if TYPE_CHECKING:
+    import gremlin.ui.type_aliases as ta
 
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -43,7 +48,7 @@ class AbstractComparator(QtCore.QObject):
 
     typeChanged = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: ta.OQO=None) -> None:
         """Creates a new instance.
 
         Args:
@@ -110,7 +115,7 @@ class RangeComparator(AbstractComparator):
     lowerLimitChanged = Signal()
     upperLimitChanged = Signal()
 
-    def __init__(self, lower: float, upper: float):
+    def __init__(self, lower: float, upper: float) -> None:
         """Creates a new axis range comparison object.
 
         Args:
@@ -160,9 +165,9 @@ class RangeComparator(AbstractComparator):
 
     def to_xml(self) -> ElementTree.Element:
         entries = [
-            ["comparator-type", self._comparator_type(), PropertyType.String],
-            ["lower-limit", self.lower, PropertyType.Float],
-            ["upper-limit", self.upper, PropertyType.Float]
+            ("comparator-type", self._comparator_type(), PropertyType.String),
+            ("lower-limit", self.lower, PropertyType.Float),
+            ("upper-limit", self.upper, PropertyType.Float)
         ]
         return util.create_node_from_data("comparator", entries)
 
@@ -195,7 +200,7 @@ class PressedComparator(AbstractComparator):
 
     isPressedChanged = Signal()
 
-    def __init__(self, is_pressed: bool):
+    def __init__(self, is_pressed: bool) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -231,9 +236,9 @@ class PressedComparator(AbstractComparator):
             return self._process_keyboard(events)
         else:
             raise error.GremlinError(
-                f"Unsupported event type (" \
+                "Unsupported event type (" \
                 f"{InputType.to_string(events[0].event_type)}" \
-                f") in PressedComparator"
+                ") in PressedComparator"
             )
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -242,8 +247,8 @@ class PressedComparator(AbstractComparator):
 
     def to_xml(self) -> ElementTree.Element:
         entries = [
-            ["comparator-type", self._comparator_type(), PropertyType.String],
-            ["is-pressed", self.is_pressed, PropertyType.Bool]
+            ("comparator-type", self._comparator_type(), PropertyType.String),
+            ("is-pressed", self.is_pressed, PropertyType.Bool)
         ]
         return util.create_node_from_data("comparator", entries)
 
@@ -315,7 +320,7 @@ class DirectionComparator(AbstractComparator):
 
     directionsChanged = Signal()
 
-    def __init__(self, directions: List[HatDirection]):
+    def __init__(self, directions: List[HatDirection]) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -355,10 +360,10 @@ class DirectionComparator(AbstractComparator):
 
     def to_xml(self) -> ElementTree.Element:
         entries = [
-            ["comparator-type", self._comparator_type(), PropertyType.String]
+            ("comparator-type", self._comparator_type(), PropertyType.String)
         ]
         for direction in self.directions:
-            entries.append(["direction", direction, PropertyType.HatDirection])
+            entries.append(("direction", direction, PropertyType.HatDirection))
         return util.create_node_from_data("comparator", entries)
 
     def _comparator_type(self) -> str:

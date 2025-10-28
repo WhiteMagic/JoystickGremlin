@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2022 Lionel Ott
+// Copyright (C) 2025 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,26 +22,16 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Util
-
 import "../../qml"
 
 
 Item {
     id: _root
 
-    property JoystickCondition model
-    property string conditionText: formatStates(model.states)
-    property var comparatorUi: null
-
     implicitHeight: _content.height
 
-    function formatStates(data) {
-        var text = "<ul>";
-        data.forEach((entry) => { text += "<li>" + entry + "</li>"; })
-        text += "</ul>";
-        return text;
-    }
+    property LogicalDeviceCondition model
+    property var comparatorUi: null
 
     function updateComparatorUi() {
         if(!model.comparator) {
@@ -74,47 +64,34 @@ Item {
     Connections {
         target: model
 
-        // Format the user inputs.
-        function onInputsChanged(data) {
-            _root.conditionText = formatStates(data);
-        }
-
         // Change comparator UI element when needed.
         function onComparatorChanged() {
-            updateComparatorUi();
+            updateComparatorUi()
         }
     }
 
     ColumnLayout {
         id: _content
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-
         RowLayout {
             Label {
                 Layout.preferredWidth: 150
-                text: "Joystick Condition"
+                text: "Logical Device Condition"
+            }
+
+            LogicalDeviceSelector {
+                // The ordering is important, swapping it will result in the
+                // wrong item being displayed.
+                validTypes: ["axis", "button", "hat"]
+                logicalInputIdentifier: model.logicalInputIdentifier
+
+                onLogicalInputIdentifierChanged: () => {
+                    model.logicalInputIdentifier = logicalInputIdentifier
+                }
             }
 
             Item {
                 id: _comparator
-            }
-
-            LayoutHorizontalSpacer {}
-
-            InputListener {
-                callback: _root.model.updateFromUserInput
-                multipleInputs: true
-                eventTypes: ["axis", "button", "hat"]
-            }
-        }
-
-        RowLayout {
-            Label {
-                Layout.fillWidth: true
-
-                text: _root.conditionText
             }
         }
     }

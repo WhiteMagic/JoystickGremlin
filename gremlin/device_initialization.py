@@ -11,7 +11,7 @@ _joystick_devices = []
 _joystick_init_lock = threading.Lock()
 
 
-def joystick_devices_initialization():
+def joystick_devices_initialization() -> None:
     """Initializes joystick device information.
 
     This function retrieves information about various joystick devices and

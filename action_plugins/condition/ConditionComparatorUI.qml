@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2022 Lionel Ott
+// Copyright (C) 2021 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ Item {
 
     implicitHeight: _content.height
 
-
     RowLayout {
         id: _content
 
@@ -41,43 +40,45 @@ Item {
         anchors.right: parent.right
 
         Loader {
-            id: _joystick
             active: _root.model.conditionType == "joystick"
 
             sourceComponent: JoystickConditionUI {
                 model: _root.model
-
                 implicitWidth: _content.width
             }
         }
         Loader {
-            id: _self
             active: _root.model.conditionType == "current_input"
 
             sourceComponent: CurrentInputConditionUI {
                 model: _root.model
-
                 implicitWidth: _content.width
             }
         }
 
-    // Loader {
-    //     id: _vjoy
-    //     active: _root.model.conditionType == "vjoy"
-
-    //     sourceComponent: VJoyConditionUI {
-    //         model: modelData
-    //
-    //         implicitWidth: _content.width
-    //     }
-    // }
         Loader {
-            id: _keyboard
             active: _root.model.conditionType == "keyboard"
 
             sourceComponent: KeyboardConditionUI {
                 model: _root.model
+                implicitWidth: _content.width
+            }
+        }
 
+        Loader {
+            active: _root.model.conditionType == "logical_device"
+
+            sourceComponent: LogicalDeviceConditionUI {
+                model: _root.model
+                implicitWidth: _content.width
+            }
+        }
+
+        Loader {
+            active: _root.model.conditionType == "vjoy"
+
+            sourceComponent: VJoyConditionUI {
+                model: _root.model
                 implicitWidth: _content.width
             }
         }

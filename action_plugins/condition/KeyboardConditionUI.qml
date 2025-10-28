@@ -112,7 +112,7 @@ Item {
             LayoutHorizontalSpacer {}
 
             InputListener {
-                callback: _root.model.updateInputs
+                callback: _root.model.updateFromUserInput
                 multipleInputs: true
                 eventTypes: ["key"]
             }

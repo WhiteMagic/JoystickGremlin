@@ -19,15 +19,17 @@
 from __future__ import annotations
 
 import threading
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, TYPE_CHECKING
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import device_helpers, event_handler, keyboard, shared_state, \
     windows_event_hook
-
 from gremlin.types import InputType, MouseButton
+
+if TYPE_CHECKING:
+    import gremlin.ui.type_aliases as ta
 
 
 QML_IMPORT_NAME = "Gremlin.Util"
@@ -49,7 +51,7 @@ class InputListenerModel(QtCore.QObject):
     # Signal emitted when multiple inputs are accepted or ignored
     multipleInputsChanged = Signal(bool)
 
-    def __init__(self, parent: Optional[QtCore.QObject]=None):
+    def __init__(self, parent: ta.OQO=None) -> None:
         super().__init__(parent)
 
         # List of InputTypes that will be listened to
@@ -75,7 +77,7 @@ class InputListenerModel(QtCore.QObject):
             self._event_types = types
             self.eventTypesChanged.emit()
 
-    def _get_current_inputs(self) -> List[str]:
+    def _get_current_inputs(self) -> List[event_handler.Event]:
         return self._inputs
 
     def _get_is_enabled(self) -> bool:
@@ -95,7 +97,7 @@ class InputListenerModel(QtCore.QObject):
     def _get_multiple_inputs(self) -> bool:
         return self._multiple_inputs
 
-    def _set_multiple_inputs(self, value) -> None:
+    def _set_multiple_inputs(self, value: bool) -> None:
         if value != self._multiple_inputs:
             self._multiple_inputs = value
             self.multipleInputsChanged.emit(self._multiple_inputs)

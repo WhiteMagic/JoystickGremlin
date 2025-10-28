@@ -45,6 +45,7 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 @QtQml.QmlElement
+#@ta,QmlElementTyped
 class InputIdentifier(QtCore.QObject):
 
     """Stores the identifier of a single input item."""
@@ -548,7 +549,10 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
         return self.roles
 
     def _set_valid_types(self, valid_types: List[str]) -> None:
-        type_list = sorted([InputType.to_enum(entry) for entry in valid_types])
+        type_list = sorted(
+            [InputType.to_enum(entry) for entry in valid_types],
+            key=lambda x: x.value
+        )
         if type_list != self._valid_types:
             is_initialized = len(self._valid_types) > 0
             self._valid_types = type_list

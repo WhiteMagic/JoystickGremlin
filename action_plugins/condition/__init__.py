@@ -17,26 +17,29 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod, ABCMeta
 import logging
-from typing import Any, Callable, List, Optional, Sequence, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
+import uuid
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from dill import UUID_Keyboard
+from vjoy.vjoy import VJoyProxy
 
 from gremlin import error, event_handler, plugin_manager, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
-    Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.input_cache import DeviceDatabase, Keyboard, Joystick
 from gremlin.keyboard import key_from_code
+from gremlin.logical_device import LogicalDevice
 from gremlin.profile import Library
 from gremlin.tree import TreeNode
-from gremlin.types import ActionProperty, ConditionType, InputType, \
-    LogicalOperator, PropertyType, DataCreationMode
+from gremlin.types import ActionProperty, ConditionType, HatDirection, \
+    InputType, LogicalOperator, PropertyType
 
 from gremlin.ui.action_model import ActionModel
-import gremlin.ui.util
+from gremlin.ui.device import InputIdentifier
 
 from . import comparator
 
@@ -51,103 +54,192 @@ QML_IMPORT_NAME = "Gremlin.ActionPlugins"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
+"""Overall design of the condition action.
+
+A condition is comprised of two components:
+- condition variable
+- comparator
+
+The condition variable represents the variable which is evaluated to true or
+false by the comparator. The variable also defines which comparator is being
+used.
+
+A condition variable can capture various states of the Gremlin system, including
+joystick state, keyboard state, vJoy state, logical device state, and in the
+future possible even time, game state, or an internal state tracker system.
+
+Comparators deal currently with three different styles of values: boolean,
+range, and direction. In the future this could possibly be extended to
+enumerations or text.
+
+The condition variable(s) represent different information depending on the
+type of the Condition they capture. They need to capture the information
+
+
+Condition -> Input -> Value -> Comparator -> bool
+
+"""
+
+class AbstractState(metaclass=ABCMeta):
+
+    """Represents a state against which a comparator can be evaluated.
+
+    Stores the information erquired to evaluate the state's value as well
+    as obtaining a human readable representation of the state.
+    """
+
+    @abstractmethod
+    def get(self) -> Any:
+        """Returns the current value of the state.
+
+        Returns:
+            Current value of the state.
+        """
+        pass
+
+    @abstractmethod
+    def display_name(self) -> str:
+        """Returns a human readable representation of the state.
+
+        Returns:
+            Human readable representation of the state.
+        """
+        pass
+
+
 class AbstractCondition(QtCore.QObject):
 
     """Base class of all individual condition representations."""
 
     conditionTypeChanged = Signal()
     comparatorChanged = Signal()
-    inputsChanged = Signal(list)
+    statesChanged = Signal(list)
 
     def __init__(self, parent: ta.OQO=None) -> None:
-        """Creates a new instance."""
+        """Creates a new AbstractCondition instance."""
         super().__init__(parent)
 
-        # Specific condition type needed for QT side of things
-        self._condition_type : Optional[ConditionType] = None
-        # Comparator object implementing the condition
+        # Specific condition type needed for QT side of things. Every
+        # subclass constructor sets this to the correct value.
+        self._condition_type : ConditionType = ConditionType.CurrentInput
+        # Comparator object implementing the condition.
         self._comparator : Optional[comparator.AbstractComparator] = None
-        # Inputs used within the comparator
-        self._inputs : List[Any] = []
+        # States whose values will be compared within the comparator.
+        self._states : List[AbstractState] = []
 
     def __call__(self, value: Value) -> bool:
         """Evaluates the truth state of the condition.
 
         Args:
-            value: value of the input event being evaluates
+            value: Value of the input event being evaluated.
 
         Returns:
-            True if the condition is fulfilled, False otherwise
+            True if the condition is fulfilled, False otherwise.
         """
         if self._comparator is not None:
-            return self._comparator(value, self._inputs)
+            return self._comparator(value, [s.get() for s in self._states])
         return False
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the object with data from an XML node.
 
         Args:
-            node: the XML node to parse for data
+            node: The XML node to parse for data.
         """
         raise error.MissingImplementationError(
-            "AbstractCondition.from_xml not implemented in subclass"
+            "AbstractCondition.from_xmT not implemented in subclass."
         )
 
     def to_xml(self) -> ElementTree.Element:
-        """Returns an XML node containing the objects data.
+        """Returns an XML node containing the object's data.
 
         Returns:
-            XML node containing the object's data
+            XML node containing the object's data.
         """
         raise error.MissingImplementationError(
-            "AbstractCondition.to_xml not implemented in subclass"
+            "AbstractCondition.to_xml not implemented in subclass."
         )
 
-    def is_valid(self) -> bool:
-        """Returns whether or not a condition is fully specified.
+    def _comparator_from_xml(self, node: ElementTree.Element) -> None:
+        """Creates the comparator from XML data.
+
+        Args:
+            node: The XML node to parse for data.
+        """
+        comp_node = node.find("comparator")
+        if comp_node is None:
+            raise error.ProfileError(
+                "ConditionAction: JoystickCondition missing comparator."
+            )
+        self._comparator = comparator.create_comparator_from_xml(comp_node)
+
+    def _create_condition_node(self) -> ElementTree.Element:
+        """Creates the base condition XML node with comparator contents.
 
         Returns:
-            True if the condition is properly specified, False otherwise
+            Condition XML node for the uderlying type.
         """
-        return all([
-            self._condition_type is not None,
-            self._comparator is not None,
-            len(self._inputs) > 0
-        ])
+        if self._comparator is None:
+            raise error.GremlinError(
+                "ConditionAction: Cannot serialize condition without comparator."
+            )
+
+        node = util.create_node_from_data(
+            "condition",
+            [(
+                "condition-type",
+                ConditionType.to_string(self._condition_type),
+                PropertyType.String
+            )]
+        )
+        node.append(self._comparator.to_xml())
+        return node
+
+    def is_valid(self) -> bool:
+        """Returns whether or not a condition is validly specified.
+
+        Returns:
+            True if the condition is properly specified, False otherwise.
+        """
+        # TODO: Ensure condition type and comparator are compatible.
+        return (self._comparator is not None) and (len(self._states) > 0)
 
     @Property(str, notify=conditionTypeChanged)
     def conditionType(self) -> str:
         """Returns the name of the condition type.
 
         Returns:
-            String representation of the condition's type
+            String representation of the condition's type.
         """
-        if self._condition_type is None:
-            raise error.GremlinError("Condition type not set")
         return ConditionType.to_string(self._condition_type)
 
-    def set_condition_type(self, condition_type: ConditionType) -> None:
-        """Sets the condition type to the provided one.
+    def set_input_type(self, input_type: InputType) -> None:
+        """Sets the InputType of the input the condition is triggered within.
 
-        This allows modifying the condition type from within code without
-        UI based intervetion. The UI should cause input type changes by
-        setting the inputs.
+        This method forwards the change to each condition such that they can
+        decide what, if any, change is needed.
 
         Args:
-            condition_type: type of condition to use
+            input_type: New type of input the condition is based on.
         """
-        self._set_condition_type_impl(condition_type)
+        self._update_comparator_if_needed(input_type)
 
-    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+    def _update_comparator_if_needed(self, input_type: InputType) -> None:
+        """Updates the comparator if the current one is not adequate.
+
+        Args:
+            input_type: The InputType the comparator should support.
+        """
         raise error.GremlinError(
-            "AbstractCondition::_set_condition_type_impl implementation missing"
+            "AbstractCondition::_update_comparator_if_needed "
+            "implementation missing."
         )
 
     def _create_comparator(self, input_type: InputType) -> None:
-        """Creates the comparator based on the current condition type.
+        """Creates the comparator based on the type of input.
 
         Args:
-            input_type: type of input the comparator is meant for
+            input_type: Type of input the comparator is meant for.
         """
         comparator_map = {
             InputType.JoystickAxis: comparator.RangeComparator,
@@ -162,41 +254,45 @@ class AbstractCondition(QtCore.QObject):
             InputType.Keyboard: "pressed",
         }
         if not isinstance(self._comparator, type(comparator_map[input_type])):
+            print("0")
             self._comparator = comparator.create_default_comparator(
                 comparator_types[input_type]
             )
+            print("1")
             self.comparatorChanged.emit()
+            print("2")
 
     @Property(comparator.AbstractComparator, notify=comparatorChanged)
     def comparator(self) -> comparator.AbstractComparator | None:
+        """Returns the current comparator instnace.
+
+        Returns:
+            Current comparator instance.
+        """
         return self._comparator
 
-    def _update_inputs(self, input_list: List[event_handler.Event]) -> None:
-        if set(input_list) != set(self._inputs):
-            self._inputs = input_list
-            self.inputsChanged.emit(self._get_inputs())
+    def _update_states(self, state_list: List[AbstractState]) -> None:
+        """Updates the list of states used by the condition.
 
-    def _get_inputs(self) -> List[str]:
-        return self._get_inputs_impl()
+        Args:
+            state_list: New list of states to use.
+        """
+        if set(state_list) != set(self._states):
+            self._states = state_list
+            self.statesChanged.emit(self._get_state_names())
 
-    def _get_inputs_impl(self) -> List[str]:
-        raise error.GremlinError(
-            "AbstractCondition::_get_inputs_impl implementation missing"
-        )
+    def _get_state_names(self) -> List[str]:
+        """Returns a human readable textual representation for each state.
 
-    def _set_inputs(self, data: List) -> None:
-        self._set_inputs_impl(data)
+        Returns:
+            List of human readable state names.
+        """
+        return [s.display_name() for s in self._states]
 
-    def _set_inputs_impl(self, data: List) -> None:
-        raise error.GremlinError(
-            "AbstractCondition::_set_inputs_impl implementation missing"
-        )
-
-    inputs = Property(
+    states = Property(
         list,
-        _get_inputs,
-        _set_inputs,
-        notify=inputsChanged
+        fget=_get_state_names,
+        notify=statesChanged
     )
 
 
@@ -205,9 +301,21 @@ class KeyboardCondition(AbstractCondition):
 
     """Keyboard state based condition.
 
-    The condition is for a single key and as such contains the key's scan
-    code as well as the extended flag.
+    The condition can contain a sequence of keys which will be treated as one
+    for the purpose of determining truth value.
     """
+
+    class State(AbstractState):
+
+        def __init__(self, scan_code: int, is_extended: bool) -> None:
+            self.key = key_from_code(scan_code, is_extended)
+            self.keyboard = Keyboard()
+
+        def get(self) -> bool:
+            return self.keyboard.is_pressed(self.key)
+
+        def display_name(self) -> str:
+            return self.key.name
 
     def __init__(self, parent: ta.OQO=None) -> None:
         """Creates a new instance."""
@@ -221,23 +329,12 @@ class KeyboardCondition(AbstractCondition):
         Args:
             node: the XML node to parse for data
         """
+        self._comparator_from_xml(node)
         for item_node in node.findall("input"):
-            key_id = (
+            self._states.append(self.State(
                 util.read_property(item_node, "scan-code", PropertyType.Int),
                 util.read_property(item_node, "is-extended", PropertyType.Bool)
-            )
-            event = event_handler.Event(
-                InputType.Keyboard,
-                key_id,
-                UUID_Keyboard,
-                "None"
-            )
-            self._inputs.append(event)
-
-        comp_node = node.find("comparator")
-        if comp_node is None:
-            raise error.ProfileError("Comparator node missing in condition.")
-        self._comparator = comparator.create_comparator_from_xml(comp_node)
+            ))
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the objects data.
@@ -245,56 +342,31 @@ class KeyboardCondition(AbstractCondition):
         Returns:
             XML node containing the object's data
         """
-        if self._comparator is None:
-            raise error.GremlinError(
-                "Cannot serialize condition without comparator"
-            )
-
-        entries = [
-            ["condition-type", "keyboard", PropertyType.String]
-        ]
-        node = util.create_node_from_data("condition", entries)
-
-        for event in self._inputs:
+        node = self._create_condition_node()
+        for state in self._states:
             node.append(util.create_node_from_data(
                 "input",
                 [
-                    ("scan-code", event.identifier[0], PropertyType.Int),
-                    ("is-extended", event.identifier[1], PropertyType.Bool)
+                    ("scan-code", state.key.scan_code, PropertyType.Int),
+                    ("is-extended", state.key.is_extended, PropertyType.Bool)
                 ]
             ))
-        node.append(self._comparator.to_xml())
         return node
 
-    def _get_inputs_impl(self) -> List[str]:
-        return [key_from_code(*v.identifier).name for v in self._inputs]
-
-    def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
-        self._update_inputs(data)
-
-    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
-        pass
-
     @Slot(list)
-    def updateInputs(self, data: List[event_handler.Event]) -> None:
+    def updateFromUserInput(self, data: List[event_handler.Event]) -> None:
         # Verify the comparator type is still adequate and modify / warn as
         # needed. First determine the correct type and then check if changes
         # are needed.
-        input_types = [evt.event_type for evt in data]
-        if len(set(input_types)) > 1:
-            # Should never happen for a condition to make sense
-            raise error.GremlinError(
-                f"Multiple InputType types present in a single condition"
-            )
-        elif input_types[0] != InputType.Keyboard:
-            raise error.GremlinError(
-                f"Found non Keyboard input type" + \
-                f"({InputType.to_string(input_types[0])}) " + \
-                f"in a keyboard condition."
-            )
+        for evt in data:
+            if evt.event_type != InputType.Keyboard:
+                raise error.GremlinError(
+                    f"ConditionAction: Invalid InputType {evt.event_type} in "
+                    "KeyboardCondition."
+                )
 
         # Check if the comparator type has to change
-        if len(input_types) == 0:
+        if len(data) == 0:
             self._comparator = None
         else:
             if not isinstance(
@@ -303,7 +375,12 @@ class KeyboardCondition(AbstractCondition):
                 self._comparator = \
                     comparator.create_default_comparator("pressed")
 
-        self._update_inputs(data)
+        self._update_states(
+            [self.State(evt.identifier[0], evt.identifier[1]) for evt in data]
+        )
+
+    def _update_comparator_if_needed(self, input_type: InputType) -> None:
+        pass
 
 
 @QtQml.QmlElement
@@ -313,6 +390,54 @@ class JoystickCondition(AbstractCondition):
 
     This condition is based on the state of a joystick axis, button, or hat.
     """
+
+    class State(AbstractState):
+
+        def __init__(
+            self,
+            device_uuid: uuid.UUID,
+            input_type: InputType,
+            input_id: int
+        ) -> None:
+            self.device_uuid = device_uuid
+            self.input_type = input_type
+            self.input_id = input_id
+            self.joystick = Joystick()[self.device_uuid]
+            self.device_lookup = DeviceDatabase().get_mapping_by_uuid(
+                self.device_uuid
+            )
+
+        def get(self) -> bool | float | HatDirection:
+            match self.input_type:
+                case InputType.JoystickAxis:
+                    return self.joystick.axis(self.input_id).value
+                case InputType.JoystickButton:
+                    return self.joystick.button(self.input_id).is_pressed
+                case InputType.JoystickHat:
+                    return self.joystick.hat(self.input_id).direction
+                case _:
+                    raise error.GremlinError(
+                        f"ConditionAction: Invalid InputType {self.input_type} "
+                        "in JoystickCondition."
+                    )
+
+        def display_name(self) -> str:
+            input_name = ""
+            match self.input_type:
+                case InputType.JoystickAxis:
+                    input_name = f"Axis: {self.input_id}"
+                case InputType.JoystickButton:
+                    input_name = f"Button: {self.input_id}"
+                case InputType.JoystickHat:
+                    input_name = f"Hat: {self.input_id}"
+                case _:
+                    raise error.GremlinError(
+                        f"ConditionAction: Invalid InputType {self.input_type} "
+                        "in JoystickCondition."
+                    )
+            if self.device_lookup is None:
+                return input_name
+            return self.device_lookup.input_name(input_name)
 
     def __init__(self, parent: ta.OQO=None) -> None:
         """Creates a new instance."""
@@ -324,57 +449,36 @@ class JoystickCondition(AbstractCondition):
         """Populates the object with data from an XML node.
 
         Args:
-            node: the XML node to parse for data
+            node: The XML node to parse for data.
         """
+        self._comparator_from_xml(node)
         for entry in node.findall("input"):
-            event = event_handler.Event(
-                util.read_property(entry, "input-type", PropertyType.InputType),
-                util.read_property(entry, "input-id", PropertyType.Int),
+            self._states.append(self.State(
                 util.read_property(entry, "device-guid", PropertyType.UUID),
-                "None"
-            )
-            self._inputs.append(event)
-
-        comp_node = node.find("comparator")
-        if comp_node is None:
-            raise error.ProfileError("Comparator node missing in condition.")
-        self._comparator = comparator.create_comparator_from_xml(comp_node)
+                util.read_property(entry, "input-type", PropertyType.InputType),
+                util.read_property(entry, "input-id", PropertyType.Int)
+            ))
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the objects data.
 
         Returns:
-            XML node containing the object's data
+            XML node containing the object's data.
         """
-        entries = [
-            ["condition-type", "joystick", PropertyType.String]
-        ]
-        node = util.create_node_from_data("condition", entries)
-
-        for event in self._inputs:
+        node = self._create_condition_node()
+        for state in self._states:
             node.append(util.create_node_from_data(
                 "input",
                 [
-                    ("device-guid", event.device_guid, PropertyType.UUID),
-                    ("input-type", event.event_type, PropertyType.InputType),
-                    ("input-id", event.identifier, PropertyType.Int)
+                    ("device-guid", state.device_guid, PropertyType.UUID),
+                    ("input-type", state.event_type, PropertyType.InputType),
+                    ("input-id", state.identifier, PropertyType.Int)
                 ]
             ))
-        node.append(self._comparator.to_xml())
-
         return node
 
-    def _get_inputs_impl(self) -> List[str]:
-        return [v.display_name() for v in self._inputs]
-
-    def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
-        self._update_inputs(data)
-
-    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
-        pass
-
     @Slot(list)
-    def updateInputs(self, data: List[event_handler.Event]) -> None:
+    def updateFromUserInput(self, data: List[event_handler.Event]) -> None:
         # Verify the comparator type is still adequate and modify / warn as
         # needed. First determine the correct type and then check if changes
         # are needed.
@@ -382,7 +486,8 @@ class JoystickCondition(AbstractCondition):
         if len(set(input_types)) > 1:
             # Should never happen for a condition to make sense
             raise error.GremlinError(
-                f"Multiple InputType types present in a single condition"
+                "ConditionAction: Multiple InputType types present in a "
+                "single condition."
             )
 
         # Check if the comparator type has to change
@@ -391,78 +496,184 @@ class JoystickCondition(AbstractCondition):
         else:
             self._create_comparator(input_types[0])
 
-        self._update_inputs(data)
+        # Create state objects and update.
+        self._update_states([
+            self.State(evt.device_guid, evt.event_type, evt.identifier)
+            for evt in data
+        ])
+
+    def _update_comparator_if_needed(self, input_type: InputType) -> None:
+        # No need to change the comparator as we don't rely on the input's
+        # type for condition checks.
+        pass
 
 
 @QtQml.QmlElement
 class CurrentInputCondition(AbstractCondition):
 
-    def __init__(self, parent: Optional[QtCore.QObject]=None):
+    class State(AbstractState):
+
+        def __init__(self) -> None:
+            pass
+
+        def get(self) -> Any:
+            return None
+
+        def display_name(self) -> str:
+            return "Current Input"
+
+    def __init__(self, parent: ta.OQO=None) -> None:
         super().__init__(parent)
 
         self._condition_type = ConditionType.CurrentInput
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        comp_node = node.find("comparator")
-        if comp_node is None:
-            raise error.ProfileError("Comparator node missing in condition.")
-        self._comparator = comparator.create_comparator_from_xml(comp_node)
+        self._comparator_from_xml(node)
 
     def to_xml(self) -> ElementTree.Element:
-        entries = [
-            ["condition-type", "current_input", PropertyType.String]
-        ]
-        node = util.create_node_from_data("condition", entries)
-        node.append(self._comparator.to_xml())
+        node = self._create_condition_node()
+        node = util.create_node_from_data(
+            "condition",
+            [("condition-type", "current_input", PropertyType.String)]
+        )
         return node
 
-    def _get_inputs_impl(self) -> List[str]:
-        return ["Current Input"]
-
-    def _set_inputs_impl(self, data: List[event_handler.Event]) -> None:
-        self._update_inputs(data)
-
-    def set_input_type(self, input_type: InputType):
+    def _update_comparator_if_needed(self, input_type: InputType) -> None:
+        # Create a new comparator as the InputType of the selected input
+        # itself changed, i.e. axis treated as button. Thus a different
+        # comparator is required.
         self._create_comparator(input_type)
-
-    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
-        if self._condition_type != condition_type:
-            self._condition_type = condition_type
-            self.conditionTypeChanged.emit()
 
 
 @QtQml.QmlElement
 class VJoyCondition(AbstractCondition):
+
+    vjoyConditionChanged = Signal()
+
+    class State(AbstractState):
+
+        def __init__(
+            self,
+            vjoy_id: int,
+            input_type: InputType,
+            input_id: int
+        ) -> None:
+            self.vjoy_id = vjoy_id
+            self.input_type = input_type
+            self.input_id = input_id
+            self.vjoy = VJoyProxy()[self.vjoy_id]
+
+        def get(self) -> bool | float | HatDirection:
+            match self.input_type:
+                case InputType.JoystickAxis:
+                    return self.vjoy.axis(self.input_id).value
+                case InputType.JoystickButton:
+                    return self.vjoy.button(self.input_id).is_pressed
+                case InputType.JoystickHat:
+                    return self.vjoy.hat(self.input_id).direction
+                case _:
+                    raise error.GremlinError(
+                        f"ConditionAction: Invalid InputType {self.input_type} "
+                        "in VJoyCondition."
+                    )
+
+        def display_name(self) -> str:
+            vjoy_name = f"vJoy {self.vjoy_id}"
+            match self.input_type:
+                case InputType.JoystickAxis:
+                    return f"{vjoy_name} - Axis: {self.input_id}"
+                case InputType.JoystickButton:
+                    return f"{vjoy_name} - Button: {self.input_id}"
+                case InputType.JoystickHat:
+                    return f"{vjoy_name} - Hat: {self.input_id}"
+                case _:
+                    raise error.GremlinError(
+                        f"ConditionAction: Invalid InputType {self.input_type} "
+                        "in VJoyCondition."
+                    )
 
     """vJoy input state based condition."""
 
     def __init__(self, parent: ta.OQO=None) -> None:
         super().__init__(parent)
 
+        self._states = [self.State(1, InputType.JoystickButton, 1)]
         self._condition_type = ConditionType.VJoy
+        self._create_comparator(self._states[0].input_type)
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self._comparator_from_xml(node)
+        self._states = [self.State(
+            util.read_property(node, "vjoy-id", PropertyType.Int),
+            util.read_property(node, "input-type", PropertyType.InputType),
+            util.read_property(node, "input-id", PropertyType.Int)
+        )]
 
     def to_xml(self) -> ElementTree.Element[str]:
-        entries = [
-            ["condition-type", "vjoy", PropertyType.String]
-        ]
-        node = util.create_node_from_data("condition", entries)
+        node = self._create_condition_node()
+        util.append_property_nodes(
+            node,
+            [
+                ("vjoy-id", self._states[0].vjoy_id, PropertyType.Int),
+                (
+                    "input-type",
+                    self._states[0].input_type,
+                    PropertyType.InputType
+                ),
+                ("input-id", self._states[0].input_id, PropertyType.Int)
+            ]
+        )
         return node
 
-    def  _get_inputs_impl(self) -> List[str]:
-        return ["",]
-
-    def _set_inputs_impl(self, data: List) -> None:
-        return self._set_inputs_impl(data)
-
-    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+    def _update_comparator_if_needed(self, input_type: InputType) -> None:
         pass
 
-    @Slot(list)
-    def updateInputs(self, data: List[event_handler.Event]) -> None:
-        pass
+    def _get_vjoy_device_id(self) -> int:
+        return self._states[0].vjoy_id
+
+    def _set_vjoy_device_id(self, vjoy_device_id: int) -> None:
+        if vjoy_device_id != self._states[0].vjoy_id:
+            self._states[0].vjoy_id = vjoy_device_id
+            self._create_comparator(self._states[0].input_type)
+            self._update_states(self._states)
+
+    def _get_vjoy_input_id(self) -> int:
+        return self._states[0].input_id
+
+    def _set_vjoy_input_id(self, vjoy_input_id: int) -> None:
+        if vjoy_input_id != self._states[0].input_id:
+            self._states[0].input_id = vjoy_input_id
+            self._update_states(self._states)
+
+    def _get_vjoy_input_type(self) -> str:
+        return InputType.to_string(self._states[0].input_type)
+
+    def _set_vjoy_input_type(self, input_type: str) -> None:
+        input_type_tmp = InputType.to_enum(input_type)
+        if input_type_tmp != self._states[0].input_type:
+            self._states[0].input_type = input_type_tmp
+            self._create_comparator(self._states[0].input_type)
+            self._update_states(self._states)
+
+    # Define properties
+    vjoyDeviceId = Property(
+        int,
+        fget=_get_vjoy_device_id,
+        fset=_set_vjoy_device_id,
+        notify=vjoyConditionChanged
+    )
+    vjoyInputId = Property(
+        int,
+        fget=_get_vjoy_input_id,
+        fset=_set_vjoy_input_id,
+        notify=vjoyConditionChanged
+    )
+    vjoyInputType = Property(
+        str,
+        fget=_get_vjoy_input_type,
+        fset=_set_vjoy_input_type,
+        notify=vjoyConditionChanged
+    )
 
 
 @QtQml.QmlElement
@@ -470,33 +681,92 @@ class LogicalDeviceCondition(AbstractCondition):
 
     """Logical Device input state based condition."""
 
+    logicalInputIdentifierChanged = Signal()
+
+    class State(AbstractState):
+
+        def __init__(self, input_type: InputType, input_id: int) -> None:
+            self.input_type = input_type
+            self.input_id = input_id
+            self.input = LogicalDevice()[LogicalDevice.Input.Identifier(
+                self.input_type,
+                self.input_id
+            )]
+
+        def get(self) -> Any:
+            match self.input_type:
+                case InputType.JoystickAxis:
+                    return self.input.value
+                case InputType.JoystickButton:
+                    return self.input.is_pressed
+                case InputType.JoystickHat:
+                    return self.input.direction
+                case _:
+                    raise error.GremlinError(
+                        f"ConditionAction: Invalid InputType {self.input_type} "
+                        "in LogicalDeviceCondition."
+                    )
+
+        def display_name(self) -> str:
+            return self.input.label
+
     def __init__(self, parent: ta.OQO=None) -> None:
         super().__init__(parent)
 
-        self._condition_type = ConditionType.VJoy
+        logical_input = LogicalDevice().inputs_of_type()[0]
+        self._states = [self.State(logical_input.type, logical_input.id)]
+        self._condition_type = ConditionType.LogicalDevice
+        self._create_comparator(self._states[0].input_type)
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        pass
+        self._comparator_from_xml(node)
+        self._states = [self.State(
+            util.read_property(node, "input-type", PropertyType.InputType),
+            util.read_property(node, "input-id", PropertyType.Int)
+        )]
 
     def to_xml(self) -> ElementTree.Element[str]:
-        entries = [
-            ["condition-type", "vjoy", PropertyType.String]
-        ]
-        node = util.create_node_from_data("condition", entries)
+        node = self._create_condition_node()
+        util.append_property_nodes(
+            node,
+            [
+                (
+                    "input-type",
+                    self._states[0].input_type,
+                    PropertyType.InputType
+                ),
+                ("input-id", self._states[0].input_id, PropertyType.Int)
+            ]
+        )
         return node
 
-    def  _get_inputs_impl(self) -> List[str]:
-        return ["",]
-
-    def _set_inputs_impl(self, data: List) -> None:
-        return self._set_inputs_impl(data)
-
-    def _set_condition_type_impl(self, condition_type: ConditionType) -> None:
+    def _update_comparator_if_needed(self, input_type: InputType) -> None:
         pass
 
-    @Slot(list)
-    def updateInputs(self, data: List[event_handler.Event]) -> None:
-        pass
+    def _get_logical_input_identifier(self) -> InputIdentifier:
+        return InputIdentifier(
+            LogicalDevice().device_guid,
+            self._states[0].input_type,
+            self._states[0].input_id,
+            parent=self
+        )
+
+    def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
+        if (identifier.input_type != self._states[0].input_type) or \
+                (identifier.input_id != self._states[0].input_id):
+            self._states[0] = self.State(
+                identifier.input_type,
+                identifier.input_id
+            )
+            self.logicalInputIdentifierChanged.emit()
+            self._create_comparator(self._states[0].input_type)
+
+    logicalInputIdentifier = Property(
+        InputIdentifier,
+        fget=_get_logical_input_identifier,
+        fset=_set_logical_input_identifier,
+        notify=logicalInputIdentifierChanged
+    )
 
 
 class ConditionFunctor(AbstractFunctor):
@@ -688,7 +958,10 @@ class ConditionData(AbstractActionData):
         InputType.Keyboard
     )
 
-    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
+    def __init__(
+        self,
+        behavior_type: InputType=InputType.JoystickButton
+    ) -> None:
         super().__init__(behavior_type)
 
         self.logical_operator = LogicalOperator.All
@@ -715,12 +988,22 @@ class ConditionData(AbstractActionData):
                 util.read_property(entry, "condition-type", PropertyType.String)
             )
             cond_obj = None
-            if condition_type == ConditionType.Joystick:
-                cond_obj = JoystickCondition()
-            elif condition_type == ConditionType.Keyboard:
-                cond_obj = KeyboardCondition()
-            elif condition_type == ConditionType.CurrentInput:
-                cond_obj = CurrentInputCondition()
+            match condition_type:
+                case ConditionType.Joystick:
+                    cond_obj = JoystickCondition()
+                case ConditionType.Keyboard:
+                    cond_obj = KeyboardCondition()
+                case ConditionType.CurrentInput:
+                    cond_obj = CurrentInputCondition()
+                case ConditionType.VJoy:
+                    cond_obj = VJoyCondition()
+                case ConditionType.LogicalDevice:
+                    cond_obj = LogicalDeviceCondition()
+                case _:
+                    logging.getLogger("system").error(
+                        "ConditionAction: Unknown condition type "
+                        f"{condition_type} encountered during XML parsing."
+                    )
             if cond_obj is not None:
                 cond_obj.from_xml(entry)
                 self.conditions.append(cond_obj)
@@ -765,6 +1048,8 @@ class ConditionData(AbstractActionData):
         old_behavior: InputType,
         new_behavior: InputType
     ) -> None:
-        pass
+        if old_behavior != new_behavior:
+            for condition in self.conditions:
+                condition.set_input_type(new_behavior)
 
 create = ConditionData

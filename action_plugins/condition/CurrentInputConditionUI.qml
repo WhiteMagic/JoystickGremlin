@@ -37,27 +37,22 @@ Item {
 
     function updateComparatorUi()
     {
-        if(!model.comparator)
-        {
+        if(!model.comparator) {
             return;
         }
 
-        if(comparatorUi !== null)
-        {
+        if(comparatorUi !== null) {
             comparatorUi.destroy();
         }
 
         var qml_string = "";
-        if(model.comparator.typeName == "pressed")
-        {
+        if(model.comparator.typeName == "pressed") {
             qml_string = `PressedComparatorUI {comparator: model.comparator}`;
         }
-        else if(model.comparator.typeName == "range")
-        {
+        else if(model.comparator.typeName == "range") {
             qml_string = `RangeComparatorUI {comparator: model.comparator}`;
         }
-        else if(model.comparator.typeName == "direction")
-        {
+        else if(model.comparator.typeName == "direction") {
             qml_string = `DirectionComparatorUI {comparator: model.comparator}`;
         }
         comparatorUi = Qt.createQmlObject(qml_string, _comparator, "Comparator");
@@ -66,18 +61,14 @@ Item {
     }
 
     // Load appropriate comprator UI element
-    Component.onCompleted: function()
-    {
-        updateComparatorUi();
-    }
+    Component.onCompleted: () => { updateComparatorUi(); }
 
     // React to model changes
     Connections {
         target: model
 
         // Change comparator UI element when needed
-        function onComparatorChanged()
-        {
+        function onComparatorChanged() {
             updateComparatorUi();
         }
     }
