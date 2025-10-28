@@ -173,6 +173,178 @@ class DependencyAnalyzer:
         
         return '\n'.join(lines)
     
+    def _generate_overview_section(self) -> List[str]:
+        """Generate project overview statistics."""
+        lines = ["## 1. PROJEKTÜBERSICHT"]
+        lines.append(f"   Gesamtanzahl Module: {len(self.module_stats)}")
+        total_lines = sum(s['lines'] for s in self.module_stats.values())
+        lines.append(f"   Gesamtzeilen Code: {total_lines:,}")
+        total_funcs = sum(s['functions'] for s in self.module_stats.values())
+        lines.append(f"   Gesamtanzahl Funktionen: {total_funcs}")
+        total_classes = sum(s['classes'] for s in self.module_stats.values())
+        lines.append(f"   Gesamtanzahl Klassen: {total_classes}")
+        lines.append("")
+        return lines
+
+    def _generate_external_deps_section(self) -> List[str]:
+        """Generate external dependencies section."""
+        lines = ["## 2. EXTERNE ABHÄNGIGKEITEN"]
+        all_external = set()
+        for deps in self.external_deps.values():
+            all_external.update(deps)
+        
+        lines.append("   Linux-native Bibliotheken:")
+        for lib in sorted(all_external):
+            if lib in ['evdev', 'pyudev', 'pynput']:
+                lines.append(f"   - {lib}")
+        
+        lines.append("\n   Qt/UI Bibliotheken:")
+        for lib in sorted(all_external):
+            if 'PySide6' in lib or 'Qt' in lib:
+                lines.append(f"   - {lib}")
+        
+        lines.append("\n   Legacy Windows-Abhängigkeiten (ENTFERNEN!):")
+        for lib in sorted(all_external):
+            if any(x in lib for x in ['dill', 'vjoy', 'win32', 'wintypes']):
+                lines.append(f"   ⚠️  - {lib}")
+        lines.append("")
+        return lines
+
+    def _generate_circular_deps_section(self) -> List[str]:
+        """Generate circular dependencies section."""
+        lines = ["## 3. ZYKLISCHE ABHÄNGIGKEITEN (CLEAN CODE VERSTOSSE)"]
+        cycles = self.find_circular_dependencies()
+        if cycles:
+            lines.append(f"   ⚠️  Gefundene zyklische Abhängigkeiten: {len(cycles)}")
+            for i, cycle in enumerate(cycles[:5], 1):
+                cycle_str = ' -> '.join(cycle)
+                lines.append(f"   {i}. {cycle_str}")
+        else:
+            lines.append("   ✓ Keine zyklischen Abhängigkeiten gefunden!")
+        lines.append("")
+        return lines
+
+    def _generate_long_functions_section(self) -> Tuple[List[str], List]:
+        """Generate long functions section.
+        
+        Returns:
+            Tuple of (report lines, list of long functions)
+        """
+        lines = ["## 4. LANGE FUNKTIONEN (> 50 Zeilen - Clean Code Verstoß)"]
+        long_funcs = []
+        for module, stats in self.module_stats.items():
+            for func in stats.get('long_functions', []):
+                long_funcs.append((module, func['name'], func['lines']))
+        
+        long_funcs.sort(key=lambda x: x[2], reverse=True)
+        if long_funcs:
+            lines.append(f"   ⚠️  Gefundene lange Funktionen: {len(long_funcs)}")
+            for module, func_name, lines_count in long_funcs[:10]:
+                lines.append(f"   - {module}.{func_name}: {lines_count} Zeilen")
+        else:
+            lines.append("   ✓ Alle Funktionen sind angemessen kurz!")
+        lines.append("")
+        return lines, long_funcs
+
+    def _generate_high_coupling_section(self) -> Tuple[List[str], List]:
+        """Generate high coupling section.
+        
+        Returns:
+            Tuple of (report lines, list of highly coupled modules)
+        """
+        lines = ["## 5. HOCHGEKOPPELTE MODULE (> 10 Abhängigkeiten)"]
+        high_coupling = []
+        for module, deps in self.dependencies.items():
+            if len(deps) > 10:
+                high_coupling.append((module, len(deps)))
+        
+        high_coupling.sort(key=lambda x: x[1], reverse=True)
+        if high_coupling:
+            lines.append(f"   ⚠️  Module mit hoher Kopplung: {len(high_coupling)}")
+            for module, count in high_coupling:
+                lines.append(f"   - {module}: {count} Abhängigkeiten")
+        else:
+            lines.append("   ✓ Alle Module haben angemessene Kopplung!")
+        lines.append("")
+        return lines, high_coupling
+
+    def _generate_large_modules_section(self) -> Tuple[List[str], List]:
+        """Generate large modules section.
+        
+        Returns:
+            Tuple of (report lines, list of large modules)
+        """
+        lines = ["## 6. GROSSE MODULE (> 500 Zeilen)"]
+        large_modules = [(m, s['lines']) for m, s in self.module_stats.items() if s['lines'] > 500]
+        large_modules.sort(key=lambda x: x[1], reverse=True)
+        
+        if large_modules:
+            lines.append(f"   ⚠️  Große Module: {len(large_modules)}")
+            for module, line_count in large_modules[:10]:
+                lines.append(f"   - {module}: {line_count:,} Zeilen")
+        else:
+            lines.append("   ✓ Alle Module sind angemessen groß!")
+        lines.append("")
+        return lines, large_modules
+
+    def _generate_refactoring_recommendations(self, long_funcs, high_coupling, large_modules) -> List[str]:
+        """Generate refactoring recommendations section."""
+        lines = ["## 7. CLEAN CODE REFACTORING-EMPFEHLUNGEN", ""]
+        
+        lines.append("### 7.1 Kritische Windows-Abhängigkeiten entfernen:")
+        lines.append("   - gremlin.util: Entfernt dill, GUID Imports")
+        lines.append("   - gremlin.user_script: Entfernt dill, vjoy Imports")
+        lines.append("   - gremlin.device_helpers: Entfernt vjoy.VJoyProxy")
+        lines.append("   - gremlin.process_monitor: Komplett Windows-spezifisch (win32gui, ctypes.wintypes)")
+        lines.append("   - gremlin.tts: win32com.client ersetzen mit Linux TTS")
+        lines.append("   - gremlin.windows_event_hook: Komplett entfernen")
+        lines.append("")
+        
+        lines.append("### 7.2 Funktionen aufteilen (Single Responsibility):")
+        for module, func_name, line_count in long_funcs[:5]:
+            lines.append(f"   - {module}.{func_name} ({line_count} Zeilen) → In kleinere Funktionen aufteilen")
+        lines.append("")
+        
+        lines.append("### 7.3 Abhängigkeiten reduzieren:")
+        for module, count in high_coupling[:3]:
+            lines.append(f"   - {module} ({count} Deps) → Dependency Injection nutzen")
+        lines.append("")
+        
+        lines.append("### 7.4 Große Module aufteilen:")
+        for module, line_count in large_modules[:3]:
+            lines.append(f"   - {module} ({line_count:,} Zeilen) → In mehrere Module aufteilen")
+        lines.append("")
+        return lines
+
+    def _generate_architecture_improvements(self) -> List[str]:
+        """Generate architecture improvements section."""
+        lines = ["## 8. ARCHITEKTUR-VERBESSERUNGEN", ""]
+        
+        lines.append("### 8.1 Schichtenarchitektur einführen:")
+        lines.append("   ```")
+        lines.append("   [UI Layer - PySide6]")
+        lines.append("        ↓")
+        lines.append("   [Application Layer - gremlin.*]")
+        lines.append("        ↓")
+        lines.append("   [Domain Layer - event_handler, profile, etc.]")
+        lines.append("        ↓")
+        lines.append("   [Infrastructure Layer - linput.*]")
+        lines.append("   ```")
+        lines.append("")
+        
+        lines.append("### 8.2 Dependency Inversion Principle:")
+        lines.append("   - Interfaces/Abstrakte Klassen für Plattform-Abhängigkeiten")
+        lines.append("   - LinuxInputProvider implementiert IInputProvider")
+        lines.append("   - VirtualOutputProvider implementiert IVirtualDevice")
+        lines.append("")
+        
+        lines.append("### 8.3 Single Responsibility:")
+        lines.append("   - event_handler.py: Nur Event-Routing, keine Business Logic")
+        lines.append("   - sendinput.py: Nur Input-Sending, keine Event-Verarbeitung")
+        lines.append("   - device_manager.py: Nur Device-Enumeration")
+        lines.append("")
+        return lines
+
     def generate_report(self) -> str:
         """Generiert einen ausführlichen Bericht."""
         report = []
@@ -181,144 +353,22 @@ class DependencyAnalyzer:
         report.append("=" * 80)
         report.append("")
         
-        # 1. Übersicht
-        report.append("## 1. PROJEKTÜBERSICHT")
-        report.append(f"   Gesamtanzahl Module: {len(self.module_stats)}")
-        total_lines = sum(s['lines'] for s in self.module_stats.values())
-        report.append(f"   Gesamtzeilen Code: {total_lines:,}")
-        total_funcs = sum(s['functions'] for s in self.module_stats.values())
-        report.append(f"   Gesamtanzahl Funktionen: {total_funcs}")
-        total_classes = sum(s['classes'] for s in self.module_stats.values())
-        report.append(f"   Gesamtanzahl Klassen: {total_classes}")
-        report.append("")
+        # Generate all sections using extracted helper methods
+        report.extend(self._generate_overview_section())
+        report.extend(self._generate_external_deps_section())
+        report.extend(self._generate_circular_deps_section())
         
-        # 2. Externe Abhängigkeiten
-        report.append("## 2. EXTERNE ABHÄNGIGKEITEN")
-        all_external = set()
-        for deps in self.external_deps.values():
-            all_external.update(deps)
+        lines, long_funcs = self._generate_long_functions_section()
+        report.extend(lines)
         
-        report.append("   Linux-native Bibliotheken:")
-        for lib in sorted(all_external):
-            if lib in ['evdev', 'pyudev', 'pynput']:
-                report.append(f"   - {lib}")
+        lines, high_coupling = self._generate_high_coupling_section()
+        report.extend(lines)
         
-        report.append("\n   Qt/UI Bibliotheken:")
-        for lib in sorted(all_external):
-            if 'PySide6' in lib or 'Qt' in lib:
-                report.append(f"   - {lib}")
+        lines, large_modules = self._generate_large_modules_section()
+        report.extend(lines)
         
-        report.append("\n   Legacy Windows-Abhängigkeiten (ENTFERNEN!):")
-        for lib in sorted(all_external):
-            if any(x in lib for x in ['dill', 'vjoy', 'win32', 'wintypes']):
-                report.append(f"   ⚠️  - {lib}")
-        report.append("")
-        
-        # 3. Zyklische Abhängigkeiten
-        report.append("## 3. ZYKLISCHE ABHÄNGIGKEITEN (CLEAN CODE VERSTOSSE)")
-        cycles = self.find_circular_dependencies()
-        if cycles:
-            report.append(f"   ⚠️  Gefundene zyklische Abhängigkeiten: {len(cycles)}")
-            for i, cycle in enumerate(cycles[:5], 1):  # Zeige die ersten 5
-                cycle_str = ' -> '.join(cycle)
-                report.append(f"   {i}. {cycle_str}")
-        else:
-            report.append("   ✓ Keine zyklischen Abhängigkeiten gefunden!")
-        report.append("")
-        
-        # 4. Lange Funktionen (Clean Code Verstöße)
-        report.append("## 4. LANGE FUNKTIONEN (> 50 Zeilen - Clean Code Verstoß)")
-        long_funcs = []
-        for module, stats in self.module_stats.items():
-            for func in stats.get('long_functions', []):
-                long_funcs.append((module, func['name'], func['lines']))
-        
-        long_funcs.sort(key=lambda x: x[2], reverse=True)
-        if long_funcs:
-            report.append(f"   ⚠️  Gefundene lange Funktionen: {len(long_funcs)}")
-            for module, func_name, lines in long_funcs[:10]:  # Top 10
-                report.append(f"   - {module}.{func_name}: {lines} Zeilen")
-        else:
-            report.append("   ✓ Alle Funktionen sind angemessen kurz!")
-        report.append("")
-        
-        # 5. Module mit vielen Abhängigkeiten
-        report.append("## 5. HOCHGEKOPPELTE MODULE (> 10 Abhängigkeiten)")
-        high_coupling = []
-        for module, deps in self.dependencies.items():
-            if len(deps) > 10:
-                high_coupling.append((module, len(deps)))
-        
-        high_coupling.sort(key=lambda x: x[1], reverse=True)
-        if high_coupling:
-            report.append(f"   ⚠️  Module mit hoher Kopplung: {len(high_coupling)}")
-            for module, count in high_coupling:
-                report.append(f"   - {module}: {count} Abhängigkeiten")
-        else:
-            report.append("   ✓ Alle Module haben angemessene Kopplung!")
-        report.append("")
-        
-        # 6. Große Module
-        report.append("## 6. GROSSE MODULE (> 500 Zeilen)")
-        large_modules = [(m, s['lines']) for m, s in self.module_stats.items() if s['lines'] > 500]
-        large_modules.sort(key=lambda x: x[1], reverse=True)
-        
-        if large_modules:
-            report.append(f"   ⚠️  Große Module: {len(large_modules)}")
-            for module, lines in large_modules[:10]:
-                report.append(f"   - {module}: {lines:,} Zeilen")
-        else:
-            report.append("   ✓ Alle Module sind angemessen groß!")
-        report.append("")
-        
-        # 7. Refactoring-Empfehlungen
-        report.append("## 7. CLEAN CODE REFACTORING-EMPFEHLUNGEN")
-        report.append("")
-        report.append("### 7.1 Kritische Windows-Abhängigkeiten entfernen:")
-        report.append("   - gremlin.util: Entfernt dill, GUID Imports")
-        report.append("   - gremlin.user_script: Entfernt dill, vjoy Imports")
-        report.append("   - gremlin.device_helpers: Entfernt vjoy.VJoyProxy")
-        report.append("   - gremlin.process_monitor: Komplett Windows-spezifisch (win32gui, ctypes.wintypes)")
-        report.append("   - gremlin.tts: win32com.client ersetzen mit Linux TTS")
-        report.append("   - gremlin.windows_event_hook: Komplett entfernen")
-        report.append("")
-        report.append("### 7.2 Funktionen aufteilen (Single Responsibility):")
-        for module, func_name, lines in long_funcs[:5]:
-            report.append(f"   - {module}.{func_name} ({lines} Zeilen) → In kleinere Funktionen aufteilen")
-        report.append("")
-        report.append("### 7.3 Abhängigkeiten reduzieren:")
-        for module, count in high_coupling[:3]:
-            report.append(f"   - {module} ({count} Deps) → Dependency Injection nutzen")
-        report.append("")
-        report.append("### 7.4 Große Module aufteilen:")
-        for module, lines in large_modules[:3]:
-            report.append(f"   - {module} ({lines:,} Zeilen) → In mehrere Module aufteilen")
-        report.append("")
-        
-        # 8. Architektur-Verbesserungen
-        report.append("## 8. ARCHITEKTUR-VERBESSERUNGEN")
-        report.append("")
-        report.append("### 8.1 Schichtenarchitektur einführen:")
-        report.append("   ```")
-        report.append("   [UI Layer - PySide6]")
-        report.append("        ↓")
-        report.append("   [Application Layer - gremlin.*]")
-        report.append("        ↓")
-        report.append("   [Domain Layer - event_handler, profile, etc.]")
-        report.append("        ↓")
-        report.append("   [Infrastructure Layer - linput.*]")
-        report.append("   ```")
-        report.append("")
-        report.append("### 8.2 Dependency Inversion Principle:")
-        report.append("   - Interfaces/Abstrakte Klassen für Plattform-Abhängigkeiten")
-        report.append("   - LinuxInputProvider implementiert IInputProvider")
-        report.append("   - VirtualOutputProvider implementiert IVirtualDevice")
-        report.append("")
-        report.append("### 8.3 Single Responsibility:")
-        report.append("   - event_handler.py: Nur Event-Routing, keine Business Logic")
-        report.append("   - sendinput.py: Nur Input-Sending, keine Event-Verarbeitung")
-        report.append("   - device_manager.py: Nur Device-Enumeration")
-        report.append("")
+        report.extend(self._generate_refactoring_recommendations(long_funcs, high_coupling, large_modules))
+        report.extend(self._generate_architecture_improvements())
         
         report.append("=" * 80)
         
