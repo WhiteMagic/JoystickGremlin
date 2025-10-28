@@ -53,20 +53,24 @@ class InputItemData:
         self.input_item = input_item
         self.inherited_from = inherited_from
 
-    def table_data(self):
-        """Returns the data necessary to create the data table.
-
-        :return table data entries
+    def _extract_container_data(self):
+        """Extract basic container information.
+        
+        Returns:
+            Tuple of (containers, container_count, actionset_count, descriptions)
         """
         containers = self.input_item.containers
-
-        # Extract information about the input item's data
         container_count = len(containers)
         actionset_count = [len(c.action_sets) for c in containers]
-        global_desc = self.input_item.description
         container_desc = [self.extract_description_actions(c) for c in containers]
+        return containers, container_count, actionset_count, container_desc
 
-        # Basic information
+    def _create_basic_info(self):
+        """Create basic input information.
+        
+        Returns:
+            Tuple of (input_name, inherited paragraph)
+        """
         input_name = format_input_name(
             self.input_item.input_type,
             self.input_item.input_id
@@ -77,75 +81,128 @@ class InputItemData:
             ),
             InputItemData.style
         )
+        return input_name, inherited
 
-        output = []
+    def _process_standard_input(self, input_name, container_desc, inherited):
+        """Process non-hat input types.
+        
+        Args:
+            input_name: Name of the input
+            container_desc: Container descriptions
+            inherited: Inherited paragraph
+            
+        Returns:
+            List with single output entry
+        """
+        additional_desc = ""
+        for c_descs in container_desc:
+            for a_desc in c_descs:
+                additional_desc += "\n{}".format(a_desc)
 
-        # If it's not a hat we have one input name and each description element
-        # on a line of its own
-        if self.input_item.input_type != gremlin.common.InputType.JoystickHat:
-            additional_desc = ""
-            for c_descs in container_desc:
-                for a_desc in c_descs:
-                    additional_desc += "\n{}".format(a_desc)
+        description = self.input_item.description
+        if len(additional_desc) > 0:
+            description += additional_desc
 
-            description = global_desc
-            if len(additional_desc) > 0:
-                description += additional_desc
+        return [(input_name, description, inherited)]
 
-            output.append((input_name, description, inherited))
+    def _process_hat_buttons(self, container, input_name, inherited):
+        """Process hat buttons container.
+        
+        Args:
+            container: Hat buttons container
+            input_name: Name of the input
+            inherited: Inherited paragraph
+            
+        Returns:
+            List of hat button outputs
+        """
+        hat_outputs = []
+        direction_lookup = []
+        if container.button_count == 4:
+            direction_lookup = ["N", "E", "S", "W"]
+        elif container.button_count == 8:
+            direction_lookup = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
-        # In the case of a hat we have multiple lines based on virtual button
-        # settings or container
-        else:
-            hat_outputs = []
-            standard_desc = [global_desc]
+        for i, action_set in enumerate(container.action_sets):
+            if len(action_set) > 0:
+                hat_outputs.append((
+                    "{} {}".format(input_name, direction_lookup[i]),
+                    self.extract_action_set_descriptions(action_set),
+                    inherited
+                ))
+        return hat_outputs
 
-            for container in containers:
-                # Hat to Buttons container
-                if container.tag == "hat_buttons":
-                    direction_lookup = []
-                    if container.button_count == 4:
-                        direction_lookup = ["N", "E", "S", "W"]
-                    elif container.button_count == 8:
-                        direction_lookup = [
-                            "N", "NE", "E", "SE", "S", "SW", "W", "NW"
-                        ]
+    def _process_virtual_button(self, container, input_name, inherited):
+        """Process virtual button container.
+        
+        Args:
+            container: Virtual button container
+            input_name: Name of the input
+            inherited: Inherited paragraph
+            
+        Returns:
+            Single output entry for virtual button
+        """
+        c_dirs = []
+        for direction in container.virtual_button.directions:
+            c_dirs.append("{} {}".format(
+                input_name,
+                hat_direction_abbrev[direction]
+            ))
+        c_input_name = "\n".join(c_dirs)
 
-                    for i, action_set in enumerate(container.action_sets):
-                        if len(action_set) > 0:
-                            hat_outputs.append((
-                                "{} {}".format(input_name, direction_lookup[i]),
-                                self.extract_action_set_descriptions(action_set),
-                                inherited
-                            ))
+        return (
+            c_input_name,
+            "\n".join(self.extract_description_actions(container)),
+            inherited
+        )
 
-                # Virtual button
-                elif container.virtual_button is not None:
-                    c_dirs = []
-                    for direction in container.virtual_button.directions:
-                        c_dirs.append("{} {}".format(
-                            input_name,
-                            hat_direction_abbrev[direction]
-                        ))
-                    c_input_name = "\n".join(c_dirs)
+    def _process_hat_input(self, containers, input_name, inherited):
+        """Process hat input type with multiple configurations.
+        
+        Args:
+            containers: List of containers
+            input_name: Name of the input
+            inherited: Inherited paragraph
+            
+        Returns:
+            List of output entries for hat
+        """
+        hat_outputs = []
+        standard_desc = [self.input_item.description]
 
-                    hat_outputs.append((
-                        c_input_name,
-                        "\n".join(self.extract_description_actions(container)),
-                        inherited
-                    ))
+        for container in containers:
+            if container.tag == "hat_buttons":
+                hat_outputs.extend(
+                    self._process_hat_buttons(container, input_name, inherited)
+                )
+            elif container.virtual_button is not None:
+                hat_outputs.append(
+                    self._process_virtual_button(container, input_name, inherited)
+                )
+            else:
+                standard_desc.append(
+                    "\n".join(self.extract_description_actions(container))
+                )
 
-                # Standard hat
-                else:
-                    standard_desc.append(
-                        "\n".join(self.extract_description_actions(container))
-                    )
-
-            # Insert standard hat entry before the specialized ones
-            output.append((input_name, "\n".join(standard_desc), inherited))
-            output.extend(hat_outputs)
-
+        # Insert standard hat entry before specialized ones
+        output = [(input_name, "\n".join(standard_desc), inherited)]
+        output.extend(hat_outputs)
         return output
+
+    def table_data(self):
+        """Returns the data necessary to create the data table.
+
+        :return table data entries
+        """
+        containers, _, _, container_desc = self._extract_container_data()
+        input_name, inherited = self._create_basic_info()
+
+        # Process based on input type
+        if self.input_item.input_type != gremlin.common.InputType.JoystickHat:
+            return self._process_standard_input(input_name, container_desc, inherited)
+        else:
+            return self._process_hat_input(containers, input_name, inherited)
 
     def extract_description_actions(self, container):
         """Returns all description contents from Description actions.

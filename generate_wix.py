@@ -326,76 +326,12 @@ def create_ui_node(parent):
     parent.append(ui)
 
 
-def create_shortcuts(doc, root, product_node):
-    """Creates program shortcut nodes.
-
-    :param doc the main document
-    :param root the root directory node
+def _create_program_menu_folder():
+    """Create program menu folder structure for shortcuts.
+    
+    Returns:
+        XML node for program menu folder
     """
-    # Find the executable node and add shortcut entries
-    # for node in doc.iter("File"):
-    #     if node.get("Id") == "file_joystick_gremlin.exe":
-    #         node.append(create_node(
-    #             "Shortcut",
-    #             {
-    #                 "Id": "startmenu_joystick_gremlin",
-    #                 "Directory": "ProgramMenuDir",
-    #                 "Name": "Joystick Gremlin",
-    #                 "Target": "[INSTALLDIR]joystick_gremlin.exe",
-    #                 "WorkingDirectory": "INSTALLDIR",
-    #                 "Advertise": "no",
-    #                 "Icon": "icon.ico"
-    #             }
-    #         ))
-    #         node.append(create_node(
-    #             "Shortcut",
-    #             {
-    #                 "Id": "desktop_joystick_gremlin",
-    #                 "Directory": "DesktopFolder",
-    #                 "Name": "Joystick Gremlin",
-    #                 "Target": "[INSTALLDIR]joystick_gremlin.exe",
-    #                 "WorkingDirectory": "INSTALLDIR",
-    #                 "Advertise": "no",
-    #                 "Icon": "icon.ico"
-    #             }
-    #         ))
-
-    # Create folder names used for the shortcuts
-    # n1 = create_node(
-    #     "Directory",
-    #     {"Id": "ProgramMenuFolder", "Name": "Programs"}
-    # )
-    # n2 = create_node(
-    #     "Directory",
-    #     {"Id": "ProgramMenuDir", "Name": "Joystick Gremlin"}
-    # )
-    # n3 = create_node(
-    #     "Component",
-    #     {"Id": "ProgramMenuDir", "Guid": "e7a50051-e76c-457e-9d43-824ae5ce7ef5"}
-    # )
-    # n3.append(create_node(
-    #     "RemoveFolder",
-    #     {"Id": "ProgramMenuDir", "On": "uninstall"}
-    # ))
-    # n3.append(create_node(
-    #     "RegistryValue",
-    #     {
-    #         "Root": "HKCU",
-    #         "Key": "Software\H2ik\Joystick Gremlin",
-    #         "Type": "string",
-    #         "Value": "",
-    #         "KeyPath": "yes"
-    #     }
-    # ))
-    # n2.append(n3)
-    # n1.append(n2)
-    # root.append(n1)
-    #
-    # root.append(create_node(
-    #     "Directory",
-    #     {"Id": "DesktopFolder", "Name": "Desktop"}
-    # ))
-
     menu_folder_node = create_node(
         "Directory",
         {"Id": "ProgramMenuFolder"}
@@ -405,25 +341,28 @@ def create_shortcuts(doc, root, product_node):
         {"Id": "ApplicationProgramsFolder", "Name": "Joystick Gremlin"}
     )
     menu_folder_node.append(app_folder_node)
-    root.append(menu_folder_node)
+    return menu_folder_node
 
-    # Create the used icon
-    product = doc.find("Product")
-    product.append(create_node(
+
+def _create_application_icon(product_node):
+    """Create icon definition for application.
+    
+    Args:
+        product_node: Product XML node to append icon to
+    """
+    product_node.append(create_node(
         "Icon",
         {"Id": "icon.ico", "SourceFile": "joystick_gremlin\gfx\icon.ico"}
     ))
 
-    # Create shortcut folder
-    n1 = create_node("DirectoryRef", {"Id": "ApplicationProgramsFolder"})
-    n2 = create_node(
-        "Component",
-        {
-            "Id": "ApplicationShortcut",
-            "Guid": "c8b6efdf-915f-44a8-8690-125c4edfa158"
-        }
-    )
-    n3 = create_node(
+
+def _create_start_menu_shortcut():
+    """Create start menu shortcut configuration.
+    
+    Returns:
+        XML node for start menu shortcut
+    """
+    return create_node(
         "Shortcut",
         {
             "Id": "ApplicationStartMenuShortcut",
@@ -434,14 +373,30 @@ def create_shortcuts(doc, root, product_node):
             "Icon": "icon.ico"
         }
     )
-    n4 = create_node(
+
+
+def _create_remove_folder_node():
+    """Create remove folder configuration for uninstall.
+    
+    Returns:
+        XML node for folder removal
+    """
+    return create_node(
         "RemoveFolder",
         {
             "Id": "ApplicationProgramsFolder",
             "On": "uninstall"
-        })
+        }
+    )
 
-    n5 = create_node(
+
+def _create_registry_value():
+    """Create registry value for installation tracking.
+    
+    Returns:
+        XML node for registry value
+    """
+    return create_node(
         "RegistryValue",
         {
             "Root": "HKCU",
@@ -453,11 +408,45 @@ def create_shortcuts(doc, root, product_node):
         }
     )
 
-    n2.append(n3)
-    n2.append(n4)
-    n2.append(n5)
-    n1.append(n2)
-    product_node.append(n1)
+
+def _create_shortcut_component():
+    """Create component containing shortcut and related nodes.
+    
+    Returns:
+        XML node for shortcut component
+    """
+    component_node = create_node(
+        "Component",
+        {
+            "Id": "ApplicationShortcut",
+            "Guid": "c8b6efdf-915f-44a8-8690-125c4edfa158"
+        }
+    )
+    component_node.append(_create_start_menu_shortcut())
+    component_node.append(_create_remove_folder_node())
+    component_node.append(_create_registry_value())
+    return component_node
+
+
+def create_shortcuts(doc, root, product_node):
+    """Creates program shortcut nodes.
+
+    Args:
+        doc: Main XML document
+        root: Root directory node
+        product_node: Product node to append shortcuts to
+    """
+    # Add program menu folder structure
+    root.append(_create_program_menu_folder())
+    
+    # Create application icon
+    _create_application_icon(doc.find("Product"))
+    
+    # Create shortcut folder with component
+    directory_ref = create_node("DirectoryRef", {"Id": "ApplicationProgramsFolder"})
+    directory_ref.append(_create_shortcut_component())
+    product_node.append(directory_ref)
+
 
 def write_xml(node, fname):
     """Saves the XML document to the given file.
