@@ -372,6 +372,75 @@ class InputItemBindingModel(QtCore.QObject):
             raise GremlinError(f"No action with provided index: {index}")
         return self._action_models[self._index_lookup[index]]._data
 
+    def _get_parent_identifiers(self, s_model, t_model):
+        """Get parent identifiers for source and target models.
+        
+        Args:
+            s_model: Source action model
+            t_model: Target action model
+            
+        Returns:
+            Tuple of (source_parent_id, target_parent_id)
+        """
+        s_parent_identifier = (
+            s_model.sequence_index.parent_index,
+            s_model.sequence_index.container_name
+        )
+        t_parent_identifier = (
+            t_model.sequence_index.parent_index,
+            t_model.sequence_index.container_name
+        )
+        return s_parent_identifier, t_parent_identifier
+
+    def _move_to_container(self, s_model, t_model, container):
+        """Move source action to specific container of target.
+        
+        Args:
+            s_model: Source action model
+            t_model: Target action model
+            container: Container name
+        """
+        self.remove_action(s_model.sequence_index, False)
+        self.append_action(
+            s_model.action_data,
+            t_model.sequence_index,
+            container
+        )
+
+    def _move_within_same_container(self, s_model, t_model, s_parent_id, t_parent_id):
+        """Move action within same container.
+        
+        Args:
+            s_model: Source action model
+            t_model: Target action model
+            s_parent_id: Source parent identifier
+            t_parent_id: Target parent identifier
+            
+        Returns:
+            True if move was performed
+        """
+        if s_parent_id != t_parent_id:
+            return False
+
+        s_lid = self.get_action_container_index(s_model.sequence_index)
+        t_lid = self.get_action_container_index(t_model.sequence_index)
+
+        if s_lid < t_lid:
+            self.append_action(s_model.action_data, t_model.sequence_index)
+            self.remove_action(s_model.sequence_index, False)
+            return True
+        return False
+
+    def _move_default(self, s_model, t_model):
+        """Perform default move operation.
+        
+        Args:
+            s_model: Source action model
+            t_model: Target action model
+        """
+        self.remove_action(s_model.sequence_index, False)
+        self.append_action(s_model.action_data, t_model.sequence_index)
+
     def move_action(
             self,
             source_idx: int,
@@ -391,49 +460,16 @@ class InputItemBindingModel(QtCore.QObject):
         """
         s_model = self.get_action_model_by_sidx(source_idx)
         t_model = self.get_action_model_by_sidx(target_idx)
-
-        s_parent_identifier = (
-            s_model.sequence_index.parent_index,
-            s_model.sequence_index.container_name
-        )
-        t_parent_identifier = (
-            t_model.sequence_index.parent_index,
-            t_model.sequence_index.container_name
-        )
+        s_parent_id, t_parent_id = self._get_parent_identifiers(s_model, t_model)
 
         if container is not None:
-            self.remove_action(s_model.sequence_index, False)
-            self.append_action(
-                s_model.action_data,
-                t_model.sequence_index,
-                container
-            )
+            self._move_to_container(s_model, t_model, container)
         else:
-            # If source and target are in the same container special care has to
-            # be taken to ensure removal and insertion happen in a valid order
-            move_performed = False
-            if s_parent_identifier == t_parent_identifier:
-                # Determine container indices of the source and target actions
-                s_lid = self.get_action_container_index(s_model.sequence_index)
-                t_lid = self.get_action_container_index(t_model.sequence_index)
-
-                # Perform the action that affects a change in the rear part
-                # of the container
-                if s_lid < t_lid:
-                    move_performed = True
-                    self.append_action(
-                        s_model.action_data,
-                        t_model.sequence_index
-                    )
-                    self.remove_action(s_model.sequence_index, False)
-
-            # This is the default case if the source and target actions are part
-            # of different parent actions or containers. Also, if the source
-            # action is after the target action, performing the removal first
-            # is safe.
+            move_performed = self._move_within_same_container(
+                s_model, t_model, s_parent_id, t_parent_id
+            )
             if not move_performed:
-                self.remove_action(s_model.sequence_index, False)
-                self.append_action(s_model.action_data, t_model.sequence_index)
+                self._move_default(s_model, t_model)
 
         self._create_action_models()
         self.rootActionChanged.emit()
