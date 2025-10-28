@@ -205,64 +205,113 @@ class EvdevInputManager:
         
         return False
     
+    def _generate_device_guid(self, device: evdev.InputDevice) -> uuid.UUID:
+        """Generate deterministic UUID from device info.
+        
+        Args:
+            device: evdev input device
+            
+        Returns:
+            UUID for the device
+        """
+        device_info = f"{device.info.vendor:04x}:{device.info.product:04x}:{device.name}:{device.path}"
+        return uuid.uuid5(uuid.NAMESPACE_OID, device_info)
+
+    def _get_standard_axis_mapping(self):
+        """Get standard joystick axis mapping.
+        
+        Returns:
+            Dictionary mapping evdev axis codes to joystick axis IDs
+        """
+        return {
+            evdev.ecodes.ABS_X: 1,      # Left stick X
+            evdev.ecodes.ABS_Y: 2,      # Left stick Y  
+            evdev.ecodes.ABS_Z: 3,      # Left trigger
+            evdev.ecodes.ABS_RX: 4,     # Right stick X
+            evdev.ecodes.ABS_RY: 5,     # Right stick Y
+            evdev.ecodes.ABS_RZ: 6,     # Right trigger
+            evdev.ecodes.ABS_THROTTLE: 7,
+            evdev.ecodes.ABS_RUDDER: 8,
+            evdev.ecodes.ABS_WHEEL: 9,
+            evdev.ecodes.ABS_GAS: 10,
+            evdev.ecodes.ABS_BRAKE: 11,
+        }
+
+    def _count_axes(self, caps: dict) -> tuple[int, list]:
+        """Count and map device axes.
+        
+        Args:
+            caps: Device capabilities
+            
+        Returns:
+            Tuple of (axis_count, axis_map)
+        """
+        axis_count = 0
+        axis_map = []
+        
+        if evdev.ecodes.EV_ABS not in caps:
+            return axis_count, axis_map
+            
+        abs_axes = caps[evdev.ecodes.EV_ABS]
+        standard_axes = self._get_standard_axis_mapping()
+        
+        for evdev_axis in abs_axes:
+            if evdev_axis in standard_axes:
+                axis_id = standard_axes[evdev_axis]
+                axis_map.append(AxisMap(axis_index=axis_id, axis_id=evdev_axis))
+                axis_count += 1
+                
+        return axis_count, axis_map
+
+    def _count_buttons(self, caps: dict) -> int:
+        """Count joystick/gamepad buttons.
+        
+        Args:
+            caps: Device capabilities
+            
+        Returns:
+            Number of buttons
+        """
+        if evdev.ecodes.EV_KEY not in caps:
+            return 0
+            
+        key_codes = caps[evdev.ecodes.EV_KEY]
+        joystick_btns = set(range(evdev.ecodes.BTN_JOYSTICK, evdev.ecodes.BTN_JOYSTICK + 16))
+        gamepad_btns = set(range(evdev.ecodes.BTN_GAMEPAD, evdev.ecodes.BTN_GAMEPAD + 16))
+        all_game_btns = joystick_btns | gamepad_btns
+        
+        return len([btn for btn in key_codes if btn in all_game_btns])
+
+    def _count_hats(self, caps: dict) -> int:
+        """Count hat switches (D-pads).
+        
+        Args:
+            caps: Device capabilities
+            
+        Returns:
+            Number of hat switches
+        """
+        if evdev.ecodes.EV_ABS not in caps:
+            return 0
+            
+        abs_axes = caps[evdev.ecodes.EV_ABS]
+        hat_axes = [
+            evdev.ecodes.ABS_HAT0X, evdev.ecodes.ABS_HAT0Y,
+            evdev.ecodes.ABS_HAT1X, evdev.ecodes.ABS_HAT1Y,
+            evdev.ecodes.ABS_HAT2X, evdev.ecodes.ABS_HAT2Y,
+            evdev.ecodes.ABS_HAT3X, evdev.ecodes.ABS_HAT3Y
+        ]
+        # Each hat needs both X and Y, so count pairs
+        return len([axis for axis in abs_axes if axis in hat_axes]) // 2
+
     def _create_device_summary(self, device: evdev.InputDevice) -> Optional[DeviceSummary]:
         """Create device summary from evdev device."""
         try:
             caps = device.capabilities()
-            
-            # Generate deterministic UUID from device info
-            device_info = f"{device.info.vendor:04x}:{device.info.product:04x}:{device.name}:{device.path}"
-            device_uuid = uuid.uuid5(uuid.NAMESPACE_OID, device_info)
-            
-            # Map and count axes
-            axis_count = 0
-            axis_map = []
-            if evdev.ecodes.EV_ABS in caps:
-                abs_axes = caps[evdev.ecodes.EV_ABS]
-                
-                # Standard joystick axis mapping
-                standard_axes = {
-                    evdev.ecodes.ABS_X: 1,      # Left stick X
-                    evdev.ecodes.ABS_Y: 2,      # Left stick Y  
-                    evdev.ecodes.ABS_Z: 3,      # Left trigger
-                    evdev.ecodes.ABS_RX: 4,     # Right stick X
-                    evdev.ecodes.ABS_RY: 5,     # Right stick Y
-                    evdev.ecodes.ABS_RZ: 6,     # Right trigger
-                    evdev.ecodes.ABS_THROTTLE: 7,
-                    evdev.ecodes.ABS_RUDDER: 8,
-                    evdev.ecodes.ABS_WHEEL: 9,
-                    evdev.ecodes.ABS_GAS: 10,
-                    evdev.ecodes.ABS_BRAKE: 11,
-                }
-                
-                for evdev_axis in abs_axes:
-                    if evdev_axis in standard_axes:
-                        axis_id = standard_axes[evdev_axis]
-                        axis_map.append(AxisMap(axis_index=axis_id, axis_id=evdev_axis))
-                        axis_count += 1
-            
-            # Count buttons
-            button_count = 0
-            if evdev.ecodes.EV_KEY in caps:
-                key_codes = caps[evdev.ecodes.EV_KEY]
-                # Count joystick and gamepad buttons
-                joystick_btns = set(range(evdev.ecodes.BTN_JOYSTICK, evdev.ecodes.BTN_JOYSTICK + 16))
-                gamepad_btns = set(range(evdev.ecodes.BTN_GAMEPAD, evdev.ecodes.BTN_GAMEPAD + 16))
-                all_game_btns = joystick_btns | gamepad_btns
-                button_count = len([btn for btn in key_codes if btn in all_game_btns])
-            
-            # Count hat switches (D-pads)  
-            hat_count = 0
-            if evdev.ecodes.EV_ABS in caps:
-                abs_axes = caps[evdev.ecodes.EV_ABS]
-                hat_axes = [
-                    evdev.ecodes.ABS_HAT0X, evdev.ecodes.ABS_HAT0Y,
-                    evdev.ecodes.ABS_HAT1X, evdev.ecodes.ABS_HAT1Y,
-                    evdev.ecodes.ABS_HAT2X, evdev.ecodes.ABS_HAT2Y,
-                    evdev.ecodes.ABS_HAT3X, evdev.ecodes.ABS_HAT3Y
-                ]
-                # Each hat needs both X and Y, so count pairs
-                hat_count = len([axis for axis in abs_axes if axis in hat_axes]) // 2
+            device_uuid = self._generate_device_guid(device)
+            axis_count, axis_map = self._count_axes(caps)
+            button_count = self._count_buttons(caps)
+            hat_count = self._count_hats(caps)
             
             return DeviceSummary(
                 device_guid=device_uuid,
@@ -417,84 +466,145 @@ class EvdevInputManager:
         except Exception as e:
             self._logger.error(f"Error handling input event: {e}")
     
+    def _get_axis_mapping(self):
+        """Get evdev axis code to joystick axis ID mapping.
+        
+        Returns:
+            Dictionary mapping evdev axis codes to joystick axis IDs
+        """
+        return {
+            evdev.ecodes.ABS_X: 1,
+            evdev.ecodes.ABS_Y: 2,
+            evdev.ecodes.ABS_Z: 3,
+            evdev.ecodes.ABS_RX: 4,
+            evdev.ecodes.ABS_RY: 5,
+            evdev.ecodes.ABS_RZ: 6,
+            evdev.ecodes.ABS_THROTTLE: 7,
+            evdev.ecodes.ABS_RUDDER: 8,
+            evdev.ecodes.ABS_WHEEL: 9,
+            evdev.ecodes.ABS_GAS: 10,
+            evdev.ecodes.ABS_BRAKE: 11,
+        }
+
+    def _normalize_axis_value(self, raw_value: int) -> float:
+        """Normalize raw axis value to [-1.0, 1.0] range.
+        
+        Args:
+            raw_value: Raw axis value from device
+            
+        Returns:
+            Normalized value in [-1.0, 1.0] range
+        """
+        # TODO: Get actual min/max values from device capabilities for proper normalization
+        normalized = (raw_value - 32768) / 32768.0
+        return max(-1.0, min(1.0, normalized))
+
+    def _convert_axis_event(self, device_summary: DeviceSummary, event: evdev.InputEvent) -> Optional[InputEvent]:
+        """Convert axis event to InputEvent.
+        
+        Args:
+            device_summary: Device information
+            event: evdev event
+            
+        Returns:
+            InputEvent or None if not a recognized axis
+        """
+        axis_mapping = self._get_axis_mapping()
+        
+        if event.code not in axis_mapping:
+            return None
+            
+        normalized_value = self._normalize_axis_value(event.value)
+        
+        return InputEvent(
+            device_guid=device_summary.device_guid,
+            input_type=InputType.JoystickAxis,
+            input_id=axis_mapping[event.code],
+            value=normalized_value,
+            raw_value=event.value
+        )
+
+    def _convert_hat_event(self, device_summary: DeviceSummary, event: evdev.InputEvent) -> Optional[InputEvent]:
+        """Convert hat/D-pad event to InputEvent.
+        
+        Args:
+            device_summary: Device information
+            event: evdev event
+            
+        Returns:
+            InputEvent or None if not a hat event
+        """
+        hat_codes = {evdev.ecodes.ABS_HAT0X, evdev.ecodes.ABS_HAT0Y,
+                     evdev.ecodes.ABS_HAT1X, evdev.ecodes.ABS_HAT1Y,
+                     evdev.ecodes.ABS_HAT2X, evdev.ecodes.ABS_HAT2Y,
+                     evdev.ecodes.ABS_HAT3X, evdev.ecodes.ABS_HAT3Y}
+        
+        if event.code not in hat_codes:
+            return None
+            
+        hat_id = (event.code - evdev.ecodes.ABS_HAT0X) // 2 + 1
+        
+        # For simplicity, return individual X/Y events
+        # TODO: Combine X/Y events into single hat direction
+        if event.code % 2 == 0:  # X axis
+            value = (event.value, 0)
+        else:  # Y axis
+            value = (0, event.value)
+            
+        return InputEvent(
+            device_guid=device_summary.device_guid,
+            input_type=InputType.JoystickHat,
+            input_id=hat_id,
+            value=value,
+            raw_value=event.value
+        )
+
+    def _convert_button_event(self, device_summary: DeviceSummary, event: evdev.InputEvent) -> Optional[InputEvent]:
+        """Convert button event to InputEvent.
+        
+        Args:
+            device_summary: Device information
+            event: evdev event
+            
+        Returns:
+            InputEvent or None if not a button event
+        """
+        # Check if it's a joystick or gamepad button
+        is_joystick_btn = evdev.ecodes.BTN_JOYSTICK <= event.code <= evdev.ecodes.BTN_JOYSTICK + 15
+        is_gamepad_btn = evdev.ecodes.BTN_GAMEPAD <= event.code <= evdev.ecodes.BTN_GAMEPAD + 15
+        
+        if not (is_joystick_btn or is_gamepad_btn):
+            return None
+        
+        # Map button codes to button IDs
+        if is_joystick_btn:
+            button_id = event.code - evdev.ecodes.BTN_JOYSTICK + 1
+        else:
+            button_id = event.code - evdev.ecodes.BTN_GAMEPAD + 1
+        
+        return InputEvent(
+            device_guid=device_summary.device_guid,
+            input_type=InputType.JoystickButton,
+            input_id=button_id,
+            value=bool(event.value),
+            is_pressed=bool(event.value),
+            raw_value=event.value
+        )
+
     def _convert_evdev_event(self, device_summary: DeviceSummary, event: evdev.InputEvent) -> Optional[InputEvent]:
         """Convert evdev event to InputEvent."""
         
         if event.type == evdev.ecodes.EV_ABS:
-            # Absolute axis event (analog sticks, triggers, etc.)
-            axis_mapping = {
-                evdev.ecodes.ABS_X: 1,
-                evdev.ecodes.ABS_Y: 2,
-                evdev.ecodes.ABS_Z: 3,
-                evdev.ecodes.ABS_RX: 4,
-                evdev.ecodes.ABS_RY: 5,
-                evdev.ecodes.ABS_RZ: 6,
-                evdev.ecodes.ABS_THROTTLE: 7,
-                evdev.ecodes.ABS_RUDDER: 8,
-                evdev.ecodes.ABS_WHEEL: 9,
-                evdev.ecodes.ABS_GAS: 10,
-                evdev.ecodes.ABS_BRAKE: 11,
-            }
+            # Try axis conversion first
+            result = self._convert_axis_event(device_summary, event)
+            if result:
+                return result
             
-            if event.code in axis_mapping:
-                # Regular axis - normalize to [-1.0, 1.0]
-                # TODO: Get actual min/max values from device capabilities for proper normalization
-                normalized_value = (event.value - 32768) / 32768.0
-                normalized_value = max(-1.0, min(1.0, normalized_value))
-                
-                return InputEvent(
-                    device_guid=device_summary.device_guid,
-                    input_type=InputType.JoystickAxis,
-                    input_id=axis_mapping[event.code],
-                    value=normalized_value,
-                    raw_value=event.value
-                )
-            
-            elif event.code in {evdev.ecodes.ABS_HAT0X, evdev.ecodes.ABS_HAT0Y,
-                               evdev.ecodes.ABS_HAT1X, evdev.ecodes.ABS_HAT1Y,
-                               evdev.ecodes.ABS_HAT2X, evdev.ecodes.ABS_HAT2Y,
-                               evdev.ecodes.ABS_HAT3X, evdev.ecodes.ABS_HAT3Y}:
-                # Hat/D-pad event
-                hat_id = (event.code - evdev.ecodes.ABS_HAT0X) // 2 + 1
-                
-                # For simplicity, return individual X/Y events
-                # TODO: Combine X/Y events into single hat direction
-                if event.code % 2 == 0:  # X axis
-                    return InputEvent(
-                        device_guid=device_summary.device_guid,
-                        input_type=InputType.JoystickHat,
-                        input_id=hat_id,
-                        value=(event.value, 0),
-                        raw_value=event.value
-                    )
-                else:  # Y axis
-                    return InputEvent(
-                        device_guid=device_summary.device_guid,
-                        input_type=InputType.JoystickHat,
-                        input_id=hat_id,
-                        value=(0, event.value),
-                        raw_value=event.value
-                    )
+            # Try hat conversion
+            return self._convert_hat_event(device_summary, event)
         
         elif event.type == evdev.ecodes.EV_KEY:
-            # Button event
-            if (evdev.ecodes.BTN_JOYSTICK <= event.code <= evdev.ecodes.BTN_JOYSTICK + 15 or
-                evdev.ecodes.BTN_GAMEPAD <= event.code <= evdev.ecodes.BTN_GAMEPAD + 15):
-                
-                # Map button codes to button IDs
-                if evdev.ecodes.BTN_JOYSTICK <= event.code <= evdev.ecodes.BTN_JOYSTICK + 15:
-                    button_id = event.code - evdev.ecodes.BTN_JOYSTICK + 1
-                else:
-                    button_id = event.code - evdev.ecodes.BTN_GAMEPAD + 1
-                
-                return InputEvent(
-                    device_guid=device_summary.device_guid,
-                    input_type=InputType.JoystickButton,
-                    input_id=button_id,
-                    value=bool(event.value),
-                    is_pressed=bool(event.value),
-                    raw_value=event.value
-                )
+            return self._convert_button_event(device_summary, event)
         
         return None
     
