@@ -4,8 +4,8 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 
 ## 1. PROJEKTÜBERSICHT
    Gesamtanzahl Module: 108
-   Gesamtzeilen Code: 50,436
-   Gesamtanzahl Funktionen: 1783
+   Gesamtzeilen Code: 51,184
+   Gesamtanzahl Funktionen: 1886
    Gesamtanzahl Klassen: 276
 
 ## 2. EXTERNE ABHÄNGIGKEITEN
@@ -39,31 +39,21 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
    3. gremlin.ui.profile -> action_plugins.root -> gremlin.ui.profile
 
 ## 4. LANGE FUNKTIONEN (> 50 Zeilen - Clean Code Verstoß)
-   ⚠️  Gefundene lange Funktionen: 20
-   - joystick_gremlin.make_gremlin_app: 179 Zeilen
-   - analyze_dependencies.generate_report: 149 Zeilen
-   - generate_wix.create_shortcuts: 131 Zeilen
-   - gremlin.cheatsheet.table_data: 92 Zeilen
-   - gremlin.code_runner.start: 88 Zeilen
-   - generate_wix.create_document: 80 Zeilen
-   - linput.device_manager._convert_evdev_event: 79 Zeilen
-   - linput.device_manager._create_device_summary: 74 Zeilen
-   - linput.virtual_output.create: 70 Zeilen
-   - gremlin.code_runner._virtual_event_setup: 66 Zeilen
+   ✓ Alle Funktionen sind angemessen kurz!
 
 ## 5. HOCHGEKOPPELTE MODULE (> 10 Abhängigkeiten)
    ⚠️  Module mit hoher Kopplung: 1
    - action_plugins.merge_axis: 12 Abhängigkeiten
 
 ## 6. GROSSE MODULE (> 500 Zeilen)
-   ⚠️  Große Module: 16
+   ⚠️  Große Module: 18
    - resources: 20,104 Zeilen
    - gremlin.ui.device: 1,473 Zeilen
-   - gremlin.profile: 1,269 Zeilen
+   - gremlin.profile: 1,338 Zeilen
    - gremlin.util: 1,041 Zeilen
    - deprecated_windows_only.vjoy.vjoy: 984 Zeilen
+   - gremlin.ui.profile: 943 Zeilen
    - gremlin.macro: 920 Zeilen
-   - gremlin.ui.profile: 907 Zeilen
    - action_plugins.macro: 781 Zeilen
    - gremlin.types: 729 Zeilen
    - deprecated_windows_only.dill: 681 Zeilen
@@ -79,11 +69,6 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
    - gremlin.windows_event_hook: Komplett entfernen
 
 ### 7.2 Funktionen aufteilen (Single Responsibility):
-   - joystick_gremlin.make_gremlin_app (179 Zeilen) → In kleinere Funktionen aufteilen
-   - analyze_dependencies.generate_report (149 Zeilen) → In kleinere Funktionen aufteilen
-   - generate_wix.create_shortcuts (131 Zeilen) → In kleinere Funktionen aufteilen
-   - gremlin.cheatsheet.table_data (92 Zeilen) → In kleinere Funktionen aufteilen
-   - gremlin.code_runner.start (88 Zeilen) → In kleinere Funktionen aufteilen
 
 ### 7.3 Abhängigkeiten reduzieren:
    - action_plugins.merge_axis (12 Deps) → Dependency Injection nutzen
@@ -91,7 +76,7 @@ JOYSTICK GREMLIN - ABHÄNGIGKEITSANALYSE & CLEAN CODE REFACTORING
 ### 7.4 Große Module aufteilen:
    - resources (20,104 Zeilen) → In mehrere Module aufteilen
    - gremlin.ui.device (1,473 Zeilen) → In mehrere Module aufteilen
-   - gremlin.profile (1,269 Zeilen) → In mehrere Module aufteilen
+   - gremlin.profile (1,338 Zeilen) → In mehrere Module aufteilen
 
 ## 8. ARCHITEKTUR-VERBESSERUNGEN
 
