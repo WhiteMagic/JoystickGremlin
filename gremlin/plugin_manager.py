@@ -196,7 +196,7 @@ class PluginManager(metaclass=SingletonMetaclass):
                     # Store plugin class information.
                     self._plugins[plugin.create.tag] = plugin.create
                     logging.getLogger("system").debug(
-                        "Loaded: {}".format(plugin.create.tag)
+                        f"Loaded: {plugin.create.tag}"
                     )
 
                     # Register QML type.
@@ -212,10 +212,7 @@ class PluginManager(metaclass=SingletonMetaclass):
             except Exception as e:
                 # Log an error and ignore the action_plugins if anything
                 # is wrong with it.
-                logging.getLogger("system").warning(
-                    "Loading action_plugins '{}' failed due to: {}".format(
-                        root.split("\\")[-1],
-                        e
-                    )
+                logging.getLogger("system").error(
+                    f"Loading action_plugins '{fpath.parent}' failed due to: {e}."
                 )
                 raise(e)

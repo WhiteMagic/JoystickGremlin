@@ -1,6 +1,6 @@
 // -*- coding: utf-8; -*-
 //
-// Copyright (C) 2015 - 2020 Lionel Ott
+// Copyright (C) 2020 Lionel Ott
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,26 +24,21 @@ Item {
     id: root
 
     property string image
-    property bool checked
+    property alias checked : _checkbox.checked
 
-    width: idCheckbox.width + idImage.width
-    height: idCheckbox.height
+    width: _checkbox.width + _image.width
+    height: _checkbox.height
 
     CheckBox {
-        id: idCheckbox
-
-        checked: root.checked
-        onCheckedChanged: {
-            root.checked = checked
-        }
+        id: _checkbox
 
         contentItem: Image {
-            id: idImage
+            id: _image
 
             source: image
             fillMode: Image.PreserveAspectFit
             transform: Translate{
-                x: idCheckbox.indicator.implicitWidth
+                x: _checkbox.indicator.implicitWidth
             }
         }
     }

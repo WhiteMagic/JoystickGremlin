@@ -927,18 +927,17 @@ class VJoyProxy:
 
     vjoy_devices = {}
 
-    def __getitem__(self, index):
-        """Returns the requested vJoy instance.
+    def __getitem__(self, index: int) -> VJoy:
+        """Returns the requested vJoy instance accessor.
+
+        Raises a VJoyError if the requested vJoy device is not available. In
+        case of concurrent access a VJoyConcurrencyError is raised.
 
         Args:
-            index: index of the vjoy device to return
+            index: Index of the vjoy device to return.
 
         Returns:
-            VJoy instance corresponding to the given id
-        
-        Raises:
-            VJoyError: if the vJoy device is not available
-            VJoyConcurrencyError: if a race condition could not be resolved with vJoy acquisition.
+            VJoy instance corresponding to the given id.
         """
         for attempt in range(1, 4):
             if index in VJoyProxy.vjoy_devices:
@@ -951,7 +950,8 @@ class VJoyProxy:
                 device = VJoy(index)
             except VJoyConcurrencyError as e:
                 logging.getLogger("system").info(
-                    f"Concurrent instantiation {attempt=} for vJoy {index=}, retrying..."
+                    f"Attempted concurrent instantiation {attempt} for vJoy "
+                    f"{index=}, retrying..."
                 )
                 time.sleep(0.05)
                 continue
@@ -963,10 +963,12 @@ class VJoyProxy:
             else:
                 VJoyProxy.vjoy_devices[index] = device
                 return device
-        raise VJoyConcurrencyError(f"Failed to resolve concurrent vJoy {index=} access")
+        raise VJoyConcurrencyError(
+            f"Failed to resolve concurrent vJoy {index} access"
+        )
 
     @classmethod
-    def reset(cls):
+    def reset(cls) -> None:
         """Relinquishes control over all held VJoy devices."""
         for device in VJoyProxy.vjoy_devices.values():
             device.invalidate()

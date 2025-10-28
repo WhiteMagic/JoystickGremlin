@@ -441,7 +441,7 @@ def create_property_node(
 def append_property_nodes(
         root_node: ElementTree.Element,
         properties: List[TypeVar("PropertyData", str, Any, PropertyType)]
-):
+) -> None:
     """Creates and adds property nodes to the given root node.
 
     Args:
