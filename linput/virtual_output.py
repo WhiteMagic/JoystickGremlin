@@ -86,73 +86,117 @@ class LinuxVirtualDevice:
         device_info = f"virtual:{device_id}:{self.name}"
         self.device_guid = uuid.uuid5(UUID_VIRTUAL, device_info)
     
+    def _check_uinput_permissions(self) -> None:
+        """Check if we have permission to use uinput.
+        
+        Raises:
+            UInputError: If uinput is not accessible
+        """
+        if not os.path.exists('/dev/uinput'):
+            raise UInputError("/dev/uinput not found. Make sure uinput module is loaded.")
+        
+        uinput_stat = os.stat('/dev/uinput')
+        has_permission = (uinput_stat.st_mode & stat.S_IWGRP or 
+                         uinput_stat.st_mode & stat.S_IWOTH)
+        
+        if not has_permission and os.getuid() != 0:  # Not root
+            self._logger.warning(
+                "May not have permission to access /dev/uinput. "
+                "Add user to 'input' group or run as root."
+            )
+
+    def _create_axis_events(self) -> list:
+        """Create axis event definitions.
+        
+        Returns:
+            List of axis event tuples
+        """
+        axis_events = [
+            uinput.ABS_X, uinput.ABS_Y,      # Left stick
+            uinput.ABS_RX, uinput.ABS_RY,    # Right stick  
+            uinput.ABS_Z, uinput.ABS_RZ,     # Triggers
+            uinput.ABS_THROTTLE, uinput.ABS_RUDDER  # Additional axes
+        ]
+        
+        events = []
+        for i in range(min(self.axis_count, len(axis_events))):
+            events.append((axis_events[i], (-32768, 32767, 0, 0)))
+            self._axis_values[i + 1] = 0.0
+        
+        return events
+
+    def _create_button_events(self) -> list:
+        """Create button event definitions.
+        
+        Returns:
+            List of button events
+        """
+        button_events = [
+            uinput.BTN_JOYSTICK, uinput.BTN_THUMB, uinput.BTN_THUMB2, uinput.BTN_TOP,
+            uinput.BTN_TOP2, uinput.BTN_PINKIE, uinput.BTN_BASE, uinput.BTN_BASE2,
+            uinput.BTN_BASE3, uinput.BTN_BASE4, uinput.BTN_BASE5, uinput.BTN_BASE6,
+            uinput.BTN_DEAD, uinput.BTN_A, uinput.BTN_B, uinput.BTN_C
+        ]
+        
+        events = []
+        for i in range(min(self.button_count, len(button_events))):
+            events.append(button_events[i])
+            self._button_states[i + 1] = False
+        
+        return events
+
+    def _create_hat_events(self) -> list:
+        """Create hat switch (D-pad) event definitions.
+        
+        Returns:
+            List of hat event tuples
+        """
+        hat_events = [
+            (uinput.ABS_HAT0X, (-1, 1, 0, 0)),
+            (uinput.ABS_HAT0Y, (-1, 1, 0, 0)),
+            (uinput.ABS_HAT1X, (-1, 1, 0, 0)), 
+            (uinput.ABS_HAT1Y, (-1, 1, 0, 0)),
+        ]
+        
+        events = []
+        for i in range(min(self.hat_count * 2, len(hat_events))):
+            events.append(hat_events[i])
+        
+        for i in range(self.hat_count):
+            self._hat_states[i + 1] = (0, 0)
+        
+        return events
+
+    def _create_uinput_device(self, events: list) -> None:
+        """Create the uinput device with specified events.
+        
+        Args:
+            events: List of event definitions
+        """
+        self._device = uinput.Device(events, name=self.name)
+        _register_device(self)
+        
+        # Small delay to let the device initialize
+        time.sleep(0.1)
+        
+        self._logger.info(f"Created virtual device: {self.name} (ID: {self.device_id})")
+
     def create(self) -> None:
         """Create the virtual device."""
         if self._device:
             return
         
         try:
-            # Check if we have permission to use uinput
-            if not os.path.exists('/dev/uinput'):
-                raise UInputError("/dev/uinput not found. Make sure uinput module is loaded.")
+            self._check_uinput_permissions()
             
-            uinput_stat = os.stat('/dev/uinput')
-            if not (uinput_stat.st_mode & stat.S_IWGRP or uinput_stat.st_mode & stat.S_IWOTH):
-                # Check if we're in the input group or have write permission
-                if os.getuid() != 0:  # Not root
-                    self._logger.warning(
-                        "May not have permission to access /dev/uinput. "
-                        "Add user to 'input' group or run as root."
-                    )
-            
-            # Define the capabilities for our virtual joystick
+            # Gather all event definitions
             events = []
+            events.extend(self._create_axis_events())
+            events.extend(self._create_button_events())
+            events.extend(self._create_hat_events())
             
-            # Add axes (analog sticks, triggers, etc.)
-            axis_events = [
-                uinput.ABS_X, uinput.ABS_Y,      # Left stick
-                uinput.ABS_RX, uinput.ABS_RY,    # Right stick  
-                uinput.ABS_Z, uinput.ABS_RZ,     # Triggers
-                uinput.ABS_THROTTLE, uinput.ABS_RUDDER  # Additional axes
-            ]
-            
-            for i in range(min(self.axis_count, len(axis_events))):
-                events.append((axis_events[i], (-32768, 32767, 0, 0)))
-                self._axis_values[i + 1] = 0.0
-            
-            # Add buttons
-            button_events = [
-                uinput.BTN_JOYSTICK, uinput.BTN_THUMB, uinput.BTN_THUMB2, uinput.BTN_TOP,
-                uinput.BTN_TOP2, uinput.BTN_PINKIE, uinput.BTN_BASE, uinput.BTN_BASE2,
-                uinput.BTN_BASE3, uinput.BTN_BASE4, uinput.BTN_BASE5, uinput.BTN_BASE6,
-                uinput.BTN_DEAD, uinput.BTN_A, uinput.BTN_B, uinput.BTN_C
-            ]
-            
-            for i in range(min(self.button_count, len(button_events))):
-                events.append(button_events[i])
-                self._button_states[i + 1] = False
-            
-            # Add hat switches (D-pads)
-            hat_events = [
-                (uinput.ABS_HAT0X, (-1, 1, 0, 0)),
-                (uinput.ABS_HAT0Y, (-1, 1, 0, 0)),
-                (uinput.ABS_HAT1X, (-1, 1, 0, 0)), 
-                (uinput.ABS_HAT1Y, (-1, 1, 0, 0)),
-            ]
-            
-            for i in range(min(self.hat_count * 2, len(hat_events))):
-                events.append(hat_events[i])
-            
-            for i in range(self.hat_count):
-                self._hat_states[i + 1] = (0, 0)
-              # Create the virtual device
-            self._device = uinput.Device(events, name=self.name)
-            _register_device(self)
-            
-            # Small delay to let the device initialize
-            time.sleep(0.1)
-            
-            self._logger.info(f"Created virtual device: {self.name} (ID: {self.device_id})")
+            # Create the virtual device
+            self._create_uinput_device(events)
             
         except Exception as e:
             self._logger.error(f"Failed to create virtual device: {e}")

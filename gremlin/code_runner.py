@@ -224,15 +224,13 @@ class CallbackObject:
             self._binding.root_action
         )
 
-    def _virtual_event_setup(self) -> None:
-        """Configures the callback object for virtual button handling.
-
-        This creates callbacks that emit virtual button events in reaction to
-        the input items physical events. The actions bound to the input item
-        in turn will trigger in response to the emitted virtual events.
+    def _create_virtual_event_template(self) -> event_handler.Event:
+        """Create template virtual event for button handling.
+        
+        Returns:
+            Template virtual event
         """
-        # Create template virtual event
-        virtual_event = event_handler.Event(
+        return event_handler.Event(
             event_type=InputType.VirtualButton,
             identifier=self._virtual_identifier,
             device_guid=dill.GUID_Virtual,
@@ -241,10 +239,21 @@ class CallbackObject:
             raw_value=False
         )
 
-        # Create virtual button instance and virtual event generator
-        vb_instance = self._binding.virtual_button
+    def _create_virtual_button_functor(self, vb_instance, virtual_event) -> VirtualButtonFunctor:
+        """Create functor for virtual button based on instance type.
+        
+        Args:
+            vb_instance: Virtual button profile instance
+            virtual_event: Virtual event template
+            
+        Returns:
+            VirtualButtonFunctor for the button type
+            
+        Raises:
+            GremlinError: If virtual button is not configured
+        """
         if isinstance(vb_instance, profile.VirtualAxisButton):
-            self._functor = VirtualButtonFunctor(
+            return VirtualButtonFunctor(
                 VirtualAxisButton(
                     vb_instance.lower_limit,
                     vb_instance.upper_limit,
@@ -253,7 +262,7 @@ class CallbackObject:
                 virtual_event
             )
         elif isinstance(vb_instance, profile.VirtualHatButton):
-            self._functor = VirtualButtonFunctor(
+            return VirtualButtonFunctor(
                 VirtualHatButton(vb_instance.directions),
                 virtual_event
             )
@@ -263,11 +272,12 @@ class CallbackObject:
                 "button is configured."
             )
 
-        # Create new callback entries for the virtual button event to execute
-        # the actions. This requires the creation of "fake" InputItem and
-        # InputItemBinding instances to create another CallbackObject to
-        # handle the virtual button events.
-        # Create virtual InputItem instance
+    def _create_virtual_input_item(self) -> profile.InputItem:
+        """Create virtual InputItem for button event handling.
+        
+        Returns:
+            Virtual InputItem instance
+        """
         virt_item = profile.InputItem(self._binding.input_item.library)
         virt_item.device_id = dill.GUID_Virtual
         virt_item.input_type = InputType.VirtualButton
@@ -275,15 +285,30 @@ class CallbackObject:
         virt_item.mode = self._binding.input_item.mode
         virt_item.action_sequences = [self._binding]
         virt_item.is_active = self._binding.input_item.is_active
+        return virt_item
 
-        # Create virtual InputItemBinding instance
+    def _create_virtual_binding(self, virt_item: profile.InputItem) -> profile.InputItemBinding:
+        """Create virtual InputItemBinding mirroring the original.
+        
+        Args:
+            virt_item: Virtual input item
+            
+        Returns:
+            Virtual InputItemBinding instance
+        """
         virt_binding = profile.InputItemBinding(virt_item)
         virt_binding.root_action = self._binding.root_action
         virt_binding.behavior = InputType.JoystickButton
         virt_binding.virtual_button = None
+        return virt_binding
 
-        # Create callback reacting to the virtual button event using the new
-        # virtual binding that mirrors the original physical one
+    def _register_virtual_callback(self, virt_binding: profile.InputItemBinding, virtual_event) -> None:
+        """Register callback for virtual button event.
+        
+        Args:
+            virt_binding: Virtual binding instance
+            virtual_event: Virtual event template
+        """
         eh = event_handler.EventHandler()
         eh.add_callback(
             dill.GUID_Virtual,
@@ -291,6 +316,25 @@ class CallbackObject:
             virtual_event,
             CallbackObject(virt_binding)
         )
+
+    def _virtual_event_setup(self) -> None:
+        """Configures the callback object for virtual button handling.
+
+        This creates callbacks that emit virtual button events in reaction to
+        the input items physical events. The actions bound to the input item
+        in turn will trigger in response to the emitted virtual events.
+        """
+        # Create template and functor
+        virtual_event = self._create_virtual_event_template()
+        vb_instance = self._binding.virtual_button
+        self._functor = self._create_virtual_button_functor(vb_instance, virtual_event)
+
+        # Create virtual item and binding
+        virt_item = self._create_virtual_input_item()
+        virt_binding = self._create_virtual_binding(virt_item)
+
+        # Register callback for virtual events
+        self._register_virtual_callback(virt_binding, virtual_event)
 
     def _generate_values(self, event):
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
