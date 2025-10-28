@@ -670,6 +670,72 @@ class Profile:
 
         return 0
 
+    def _validate_input_specification(self, device_guid, input_type, input_id, mode):
+        """Validate input specification types.
+        
+        Args:
+            device_guid: Device GUID
+            input_type: Input type
+            input_id: Input ID
+            mode: Mode name
+            
+        Raises:
+            ProfileError: If specification is invalid
+        """
+        if not (
+                isinstance(device_guid, uuid.UUID) and
+                isinstance(input_type, InputType) and
+                type(input_id) in [int, uuid.UUID] and
+                isinstance(mode, str)
+        ):
+            raise error.ProfileError("Invalid input specification provided.")
+
+    def _find_existing_item(self, device_guid, input_type, input_id, mode):
+        """Find existing input item.
+        
+        Args:
+            device_guid: Device GUID
+            input_type: Input type
+            input_id: Input ID
+            mode: Mode name
+            
+        Returns:
+            InputItem if found, None otherwise
+        """
+        if device_guid not in self.inputs:
+            return None
+        
+        for item in self.inputs[device_guid]:
+            if item.input_type == input_type and \
+                    item.input_id == input_id and \
+                    item.mode == mode:
+                return item
+        
+        return None
+
+    def _create_new_item(self, device_guid, input_type, input_id, mode):
+        """Create new input item.
+        
+        Args:
+            device_guid: Device GUID
+            input_type: Input type
+            input_id: Input ID
+            mode: Mode name
+            
+        Returns:
+            Newly created InputItem
+        """
+        if device_guid not in self.inputs:
+            self.inputs[device_guid] = []
+        
+        item = InputItem(self.library)
+        item.device_id = device_guid
+        item.input_type = input_type
+        item.input_id = input_id
+        item.mode = mode
+        self.inputs[device_guid].append(item)
+        return item
+
     def get_input_item(
             self,
             device_guid: uuid.UUID,
@@ -691,37 +757,16 @@ class Profile:
         Returns:
             InputItem corresponding to the given information
         """
-        # Verify provided information has correct type information
-        if not (
-                isinstance(device_guid, uuid.UUID) and
-                isinstance(input_type, InputType) and
-                type(input_id) in [int, uuid.UUID] and
-                isinstance(mode, str)
-        ):
-            raise error.ProfileError("Invalid input specification provided.")
-
-        if device_guid not in self.inputs:
-            if create_if_missing:
-                self.inputs[device_guid] = []
-            else:
-                return None
-
-        for item in self.inputs[device_guid]:
-            if item.input_type == input_type and \
-                    item.input_id == input_id and \
-                    item.mode == mode:
-                return item
-
+        self._validate_input_specification(device_guid, input_type, input_id, mode)
+        
+        existing_item = self._find_existing_item(device_guid, input_type, input_id, mode)
+        if existing_item:
+            return existing_item
+        
         if create_if_missing:
-            item = InputItem(self.library)
-            item.device_id = device_guid
-            item.input_type = input_type
-            item.input_id = input_id
-            item.mode = mode
-            self.inputs[device_guid].append(item)
-            return item
-        else:
-            return None
+            return self._create_new_item(device_guid, input_type, input_id, mode)
+        
+        return None
 
     def remove_action(
         self,
