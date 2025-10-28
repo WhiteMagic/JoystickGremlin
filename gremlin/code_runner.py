@@ -329,6 +329,90 @@ class CodeRunner:
         """
         return self._running
 
+    def _determine_start_mode(self, start_mode: str) -> str:
+        """Determine the actual start mode based on profile settings.
+        
+        Args:
+            start_mode: Initial start mode
+            
+        Returns:
+            Final start mode to use
+        """
+        settings = self._profile.settings
+        if settings.startup_mode is not None:
+            if settings.startup_mode in self._profile.modes.mode_names():
+                return settings.startup_mode
+        return start_mode
+
+    def _configure_macro_settings(self) -> None:
+        """Configure macro action default delay."""
+        macro.MacroManager().default_delay = self._profile.settings.default_delay
+
+    def _add_empty_mode_callbacks(self) -> None:
+        """Add fake callbacks to empty modes to make them 'present'."""
+        for mode_name in self._profile.modes.mode_names():
+            self.event_handler.add_callback(
+                0,
+                mode_name,
+                None,
+                lambda x: x
+            )
+
+    def _register_user_callbacks(self) -> int:
+        """Register all user script callbacks.
+        
+        Returns:
+            Number of callbacks registered
+        """
+        callback_count = 0
+        for dev_id, modes in user_script.callback_registry.registry.items():
+            for mode, events in modes.items():
+                for event, callback_list in events.items():
+                    for callback in callback_list.values():
+                        self.event_handler.add_callback(
+                            dev_id,
+                            mode,
+                            event,
+                            callback
+                        )
+                        callback_count += 1
+        return callback_count
+
+    def _initialize_vjoy_defaults(self) -> None:
+        """Set vJoy axis default values from profile settings."""
+        for vid, data in self._profile.settings.vjoy_initial_values.items():
+            vjoy_proxy = VJoyProxy()[vid]
+            for aid, value in data.items():
+                vjoy_proxy.axis(linear_index=aid).set_absolute_value(value)
+
+    def _connect_event_listeners(self) -> None:
+        """Connect event listener signals to event handler."""
+        evt_listener = event_handler.EventListener()
+        evt_listener.keyboard_event.connect(
+            self.event_handler.process_event
+        )
+        evt_listener.joystick_event.connect(
+            self.event_handler.process_event
+        )
+        evt_listener.virtual_event.connect(
+            self.event_handler.process_event
+        )
+        evt_listener.gremlin_active = True
+
+    def _start_managers(self, start_mode: str) -> None:
+        """Start all managers and switch to initial mode.
+        
+        Args:
+            start_mode: Mode to switch to on startup
+        """
+        user_script.periodic_registry.start()
+        macro.MacroManager().start()
+        mode_manager.ModeManager().switch_to(
+            mode_manager.Mode(start_mode, "global")
+        )
+        self.event_handler.resume()
+        sendinput.MouseController().start()
+
     def start(self, profile: profile.Profile, start_mode: str) -> None:
         """Starts listening to events and loads all existing callbacks.
 
@@ -339,80 +423,28 @@ class CodeRunner:
         self._profile = profile
         self._reset_state()
 
-        # Check if we want to override the start mode as determined by the
-        # heuristic
-        settings = self._profile.settings
-        if settings.startup_mode is not None:
-            if settings.startup_mode in self._profile.modes.mode_names():
-                start_mode = settings.startup_mode
-
-        # Set default macro action delay
-        macro.MacroManager().default_delay = settings.default_delay
+        # Determine actual start mode
+        start_mode = self._determine_start_mode(start_mode)
+        self._configure_macro_settings()
 
         try:
-            # Process actions define in user plugins
+            # Setup user scripts and callbacks
             self._setup_user_scripts()
+            self._add_empty_mode_callbacks()
+            self._register_user_callbacks()
 
-            # Add a fake keyboard action which does nothing to the callbacks
-            # in every mode in order to have empty modes be "present"
-            for mode_name in self._profile.modes.mode_names():
-                self.event_handler.add_callback(
-                    0,
-                    mode_name,
-                    None,
-                    lambda x: x
-                )
-
-            # Create callbacks fom the user code
-            callback_count = 0
-            for dev_id, modes in user_script.callback_registry.registry.items():
-                for mode, events in modes.items():
-                    for event, callback_list in events.items():
-                        for callback in callback_list.values():
-                            self.event_handler.add_callback(
-                                dev_id,
-                                mode,
-                                event,
-                                callback
-                            )
-                            callback_count += 1
-
-            # Process action sequences defined via the UI
+            # Setup profile actions and inheritance
             self._setup_profile()
-
-            # Use inheritance to build duplicate parent actions in children
-            # if the child mode does not override the parent's action
             self.event_handler.build_event_lookup(self._profile.modes.mode_list())
 
-            # Set vJoy axis default values
-            for vid, data in settings.vjoy_initial_values.items():
-                vjoy_proxy = VJoyProxy()[vid]
-                for aid, value in data.items():
-                    vjoy_proxy.axis(linear_index=aid).set_absolute_value(value)
+            # Initialize hardware and connect listeners
+            self._initialize_vjoy_defaults()
+            self._connect_event_listeners()
 
-            # Connect signals
-            evt_listener = event_handler.EventListener()
-            evt_listener.keyboard_event.connect(
-                self.event_handler.process_event
-            )
-            evt_listener.joystick_event.connect(
-                self.event_handler.process_event
-            )
-            evt_listener.virtual_event.connect(
-                self.event_handler.process_event
-            )
-            evt_listener.gremlin_active = True
-
-            user_script.periodic_registry.start()
-            macro.MacroManager().start()
-
-            mode_manager.ModeManager().switch_to(
-                mode_manager.Mode(start_mode, "global")
-            )
-            self.event_handler.resume()
+            # Start all managers
+            self._start_managers(start_mode)
             self._running = True
 
-            sendinput.MouseController().start()
         except ImportError as e:
             util.display_error(
                 "Unable to launch due to missing user plugin: {}"

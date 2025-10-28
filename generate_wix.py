@@ -201,16 +201,14 @@ def create_feature(data):
     return node
 
 
-def create_document():
-    """Creates the basic XML document layout.
-
-    :return top level document
+def _create_product_node():
+    """Create product node with metadata.
+    
+    Returns:
+        Product XML node
     """
-    doc = ElementTree.Element("Wix")
-    doc.set("xmlns", "http://schemas.microsoft.com/wix/2006/wi")
-
     # https://www.uuidgenerator.net/
-    prod = create_node(
+    return create_node(
         "Product",
         {
             "Name": "Joystick Gremlin",
@@ -236,13 +234,15 @@ def create_document():
             "Codepage": "1252",
             "Version": "13.1.0"
         })
-    mug = create_node("MajorUpgrade",
-        {
-            "DowngradeErrorMessage":
-                "Cannot directly downgrade, uninstall current version first."
-        }
-    )
-    pkg = create_node(
+
+
+def _create_package_node():
+    """Create package node with installer metadata.
+    
+    Returns:
+        Package XML node
+    """
+    return create_node(
         "Package",
         {
             "Id": "*",
@@ -256,31 +256,73 @@ def create_document():
         }
     )
 
-    # Package needs to be added before media
-    prod.append(pkg)
-    prod.append(mug)
-    prod.append(create_node(
+
+def _create_upgrade_node():
+    """Create major upgrade node with downgrade protection.
+    
+    Returns:
+        MajorUpgrade XML node
+    """
+    return create_node("MajorUpgrade",
+        {
+            "DowngradeErrorMessage":
+                "Cannot directly downgrade, uninstall current version first."
+        }
+    )
+
+
+def _create_media_node():
+    """Create media node for installer cabinet.
+    
+    Returns:
+        Media XML node
+    """
+    return create_node(
         "Media",
         {
             "Id": "1",
             "Cabinet": "joystick_gremlin.cab",
             "EmbedCab": "yes"
         }
-    ))
+    )
 
-    # Add the icon to the software center
-    prod.append(create_node(
-        "Property",
-        {"Id": "ARPPRODUCTICON", "Value": "icon.ico"}
-    ))
-    # Remvoe the repair option from the installer
-    prod.append(create_node(
-        "Property",
-        {"Id": "ARPNOREPAIR", "Value": "yes", "Secure": "yes"}
-    ))
+
+def _create_property_nodes():
+    """Create property nodes for installer configuration.
+    
+    Returns:
+        List of property nodes
+    """
+    return [
+        create_node(
+            "Property",
+            {"Id": "ARPPRODUCTICON", "Value": "icon.ico"}
+        ),
+        create_node(
+            "Property",
+            {"Id": "ARPNOREPAIR", "Value": "yes", "Secure": "yes"}
+        )
+    ]
+
+
+def create_document():
+    """Creates the basic XML document layout.
+
+    :return top level document
+    """
+    doc = ElementTree.Element("Wix")
+    doc.set("xmlns", "http://schemas.microsoft.com/wix/2006/wi")
+
+    # Create product node and add components
+    prod = _create_product_node()
+    prod.append(_create_package_node())
+    prod.append(_create_upgrade_node())
+    prod.append(_create_media_node())
+    
+    for prop_node in _create_property_nodes():
+        prod.append(prop_node)
 
     doc.append(prod)
-
     return doc
 
 
