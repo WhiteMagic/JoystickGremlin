@@ -80,9 +80,8 @@ def test_read_action_id():
         gremlin.util.read_action_id(doc)
 
 
-def test_read_property():
-    doc = ElementTree.fromstring(xml_doc)
-
+def _test_valid_properties(doc):
+    """Test reading valid properties."""
     assert gremlin.util.read_property(
         doc, "description", gremlin.types.PropertyType.String
     ) == "This is a test"
@@ -97,15 +96,24 @@ def test_read_property():
     ) == True
 
 
+def _test_missing_property(doc):
+    """Test reading non-existent property."""
     with pytest.raises(gremlin.error.ProfileError, match=r"A property named"):
         gremlin.util.read_property(
             doc, "does not exist", gremlin.types.PropertyType.Bool
         )
+
+
+def _test_property_type_mismatch(doc):
+    """Test reading property with wrong type."""
     with pytest.raises(gremlin.error.ProfileError, match=r"Property type mismatch"):
         gremlin.util.read_property(
             doc, "lies", gremlin.types.PropertyType.Float
         )
 
+
+def _test_invalid_value_parsing():
+    """Test parsing invalid property value."""
     xml_bad = """
         <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
             <property type="int">
@@ -120,6 +128,9 @@ def test_read_property():
             doc, "value", gremlin.types.PropertyType.Int
         )
 
+
+def _test_missing_value_element():
+    """Test missing value element in property."""
     xml_bad = """
         <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
             <property type="int">
@@ -133,6 +144,9 @@ def test_read_property():
             doc, "value", gremlin.types.PropertyType.Int
         )
 
+
+def _test_missing_type_attribute():
+    """Test missing type attribute in property."""
     xml_bad = """
         <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="description">
             <property>
@@ -146,3 +160,15 @@ def test_read_property():
         gremlin.util.read_property(
             doc, "value", gremlin.types.PropertyType.Int
         )
+
+
+def test_read_property():
+    """Test reading properties from XML with various scenarios."""
+    doc = ElementTree.fromstring(xml_doc)
+    
+    _test_valid_properties(doc)
+    _test_missing_property(doc)
+    _test_property_type_mismatch(doc)
+    _test_invalid_value_parsing()
+    _test_missing_value_element()
+    _test_missing_type_attribute()

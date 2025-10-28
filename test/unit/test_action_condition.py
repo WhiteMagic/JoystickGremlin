@@ -59,18 +59,15 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert cond.is_valid()
 
 
-def test_from_xml_complex(xml_dir: pathlib.Path):
-    p = Profile()
-    p.from_xml(str(xml_dir / "action_condition_complex.xml"))
-
-    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
-
-    # General information
+def _verify_general_info(a):
+    """Verify general action information."""
     assert len(a.conditions) == 4
     assert a.logical_operator == condition.LogicalOperator.Any
     assert a.is_valid()
 
-    # Input item data
+
+def _verify_input_items(a):
+    """Verify input item data."""
     assert len(a.conditions[0]._inputs) == 2
     in1 = a.conditions[0]._inputs[0]
     assert in1.event_type == InputType.JoystickButton
@@ -88,8 +85,9 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     in4.scan_code = 42
     in4.is_extended = True
 
-    # Condition data
-    assert len(a.conditions[0]._inputs) == 2
+
+def _verify_joystick_conditions(a):
+    """Verify joystick condition data."""
     c1 = a.conditions[0]
     assert isinstance(c1, condition.JoystickCondition)
     assert isinstance(c1._comparator, condition.comparator.PressedComparator)
@@ -114,10 +112,25 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     assert c3._comparator.directions[1] == HatDirection.East
     assert c3._comparator.directions[2] == HatDirection.NorthEast
 
+
+def _verify_keyboard_condition(a):
+    """Verify keyboard condition data."""
     c4 = a.conditions[3]
     assert isinstance(c4, condition.KeyboardCondition)
     assert isinstance(c4._comparator, condition.comparator.PressedComparator)
     assert c4._comparator.is_pressed == False
+
+
+def test_from_xml_complex(xml_dir: pathlib.Path):
+    """Test parsing complex condition from XML."""
+    p = Profile()
+    p.from_xml(str(xml_dir / "action_condition_complex.xml"))
+    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+
+    _verify_general_info(a)
+    _verify_input_items(a)
+    _verify_joystick_conditions(a)
+    _verify_keyboard_condition(a)
 
 
 def test_to_xml():
