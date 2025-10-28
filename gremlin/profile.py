@@ -447,46 +447,58 @@ class Library(ILibrary):
         """
         return key in self._actions
 
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Parses a library node to populate this instance.
-
+    def _validate_action_entry(self, entry):
+        """Validate required attributes for action entry.
+        
         Args:
-            node: XML node containing the library information
+            entry: XML action entry
+            
+        Raises:
+            ProfileError: If entry is invalid
+        """
+        if not set(["id", "type"]).issubset(entry.keys()):
+            raise error.ProfileError(
+                "Incomplete library action specification"
+            )
+        
+        type_key = entry.get("type")
+        if type_key not in plugin_manager.PluginManager().tag_map:
+            action_id = safe_read(entry, "id", uuid.UUID)
+            raise error.ProfileError(
+                f"Unknown type '{type_key}' in action with id '{action_id}'"
+            )
+
+    def _parse_immediate_actions(self, node, can_parse):
+        """Parse actions that can be parsed immediately.
+        
+        Args:
+            node: XML node containing actions
+            can_parse: Callable to check if action can be parsed
+            
+        Returns:
+            List of actions that need delayed parsing
         """
         parse_later = []
-        can_parse = lambda entry: all([
-            aid in self._actions for aid in read_action_ids(entry)
-        ])
-
-        # Parse all actions
         for entry in node.findall("./library/action"):
-            # Ensure all required attributes are present
-            if not set(["id", "type"]).issubset(entry.keys()):
-                raise error.ProfileError(
-                    "Incomplete library action specification"
-                )
-
-            # Ensure the action type is known
-            type_key = entry.get("type")
-            if type_key not in plugin_manager.PluginManager().tag_map:
-                action_id = safe_read(entry, "id", uuid.UUID)
-                raise error.ProfileError(
-                    f"Unknown type '{type_key}' in action with id '{action_id}'"
-                )
-
-            # Check if all actions referenced by this action have already
-            # been parsed, if yes parse it otherwise attempt to process it
-            # again at a later stage.
+            self._validate_action_entry(entry)
+            
             if can_parse(entry):
                 self._parse_xml_action(entry)
             else:
                 parse_later.append(entry)
+        
+        return parse_later
 
-
-        # Parse all actions that have missing child actions and repeat this
-        # until no action with missing child actions remains.
+    def _parse_delayed_actions(self, parse_later, can_parse):
+        """Parse actions with dependencies.
+        
+        Args:
+            parse_later: List of actions to parse
+            can_parse: Callable to check if action can be parsed
+        """
         iterations = 0
         action_set = None
+        
         while len(parse_later) > 0:
             entry = parse_later.pop(0)
             if can_parse(entry):
@@ -495,7 +507,6 @@ class Library(ILibrary):
             else:
                 parse_later.append(entry)
 
-            # Compute a hash from all the actions to parse
             new_action_set = set(parse_later)
             if new_action_set != action_set:
                 new_action_set = action_set
@@ -506,6 +517,19 @@ class Library(ILibrary):
                         f"Loading profile failed due to action resolution chain"
                     )
                     break
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        """Parses a library node to populate this instance.
+
+        Args:
+            node: XML node containing the library information
+        """
+        can_parse = lambda entry: all([
+            aid in self._actions for aid in read_action_ids(entry)
+        ])
+
+        parse_later = self._parse_immediate_actions(node, can_parse)
+        self._parse_delayed_actions(parse_later, can_parse)
 
 
     def to_xml(self) -> ElementTree.Element:
