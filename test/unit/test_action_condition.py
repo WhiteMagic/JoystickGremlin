@@ -38,13 +38,17 @@ from action_plugins.description import DescriptionData
 import action_plugins.condition as condition
 
 _PROFILE_SIMPLE = "action_condition_simple.xml"
+_PROFILE_COMPLEX = "action_condition_complex.xml"
+_CONDITION_ACTION_UUID = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
+_INPUT_1_DEVICE_UUID = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+_INPUT_2_DEVICE_UUID = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540024")
 
 
 def test_from_xml(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_SIMPLE))
 
-    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+    a = p.library.get_action(_CONDITION_ACTION_UUID)
 
     assert len(a.conditions) == 1
     assert a.logical_operator == condition.LogicalOperator.All
@@ -62,9 +66,9 @@ def test_from_xml(xml_dir: pathlib.Path) -> None:
 
 def test_from_xml_complex(xml_dir: pathlib.Path) -> None:
     p = Profile()
-    p.from_xml(str(xml_dir / "action_condition_complex.xml"))
+    p.from_xml(str(xml_dir / _PROFILE_COMPLEX))
 
-    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+    a = p.library.get_action(_CONDITION_ACTION_UUID)
 
     # General information
     assert len(a.conditions) == 4
@@ -76,15 +80,15 @@ def test_from_xml_complex(xml_dir: pathlib.Path) -> None:
     in1 = a.conditions[0]._states[0]
     assert in1.input_type == InputType.JoystickButton
     assert in1.input_id == 2
-    assert in1.device_uuid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    assert in1.device_uuid == _INPUT_1_DEVICE_UUID
     in2 = a.conditions[0]._states[1]
     assert in2.input_type == InputType.JoystickButton
     assert in2.input_id == 42
-    assert in2.device_uuid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540024")
+    assert in2.device_uuid == _INPUT_2_DEVICE_UUID
     in3 = a.conditions[2]._states[0]
     assert in3.input_type == InputType.JoystickHat
     assert in3.input_id == 1
-    assert in3.device_uuid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    assert in3.device_uuid == _INPUT_1_DEVICE_UUID
     in4 = a.conditions[3]._states[0]
     in4.scan_code = 42
     in4.is_extended = True
@@ -127,7 +131,7 @@ def test_to_xml() -> None:
     JoyCond = action_plugins.condition.condition.JoystickCondition
     cond = JoyCond()
     state = JoyCond.State(
-        uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000"),
+        _INPUT_1_DEVICE_UUID,
         InputType.JoystickButton,
         37
     )
@@ -154,7 +158,7 @@ def test_action_methods(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_SIMPLE))
 
-    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+    a = p.library.get_action(_CONDITION_ACTION_UUID)
 
     assert len(a.get_actions()[0]) == 3
     assert len(a.get_actions("true")[0]) == 2
@@ -181,3 +185,17 @@ def test_ctor() -> None:
     assert len(a.conditions) == 0
     assert a.logical_operator == condition.LogicalOperator.All
     assert a.is_valid() == True
+
+
+def test_swap_uuid(xml_dir: pathlib.Path):
+    p = Profile()
+    p.from_xml(str(xml_dir / _PROFILE_COMPLEX))
+
+    a = p.library.get_action(_CONDITION_ACTION_UUID)
+    new_device_uuid = uuid.uuid4()
+    a.swap_uuid(_INPUT_1_DEVICE_UUID, new_device_uuid)
+    assert a.conditions[0]._states[0].device_uuid == new_device_uuid
+    assert a.conditions[0]._states[1].device_uuid == _INPUT_2_DEVICE_UUID
+    assert a.conditions[1]._states[0].device_uuid == new_device_uuid
+    assert a.conditions[2]._states[0].device_uuid == new_device_uuid
+    

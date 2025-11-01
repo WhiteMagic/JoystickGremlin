@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import enum
 from itertools import count
-from typing import Any, List, Optional, TYPE_CHECKING, override
+from typing import Any, List, override, TYPE_CHECKING
 from unittest import case
 from xml.etree import ElementTree
 
@@ -909,6 +909,14 @@ class MacroData(AbstractActionData):
         new_behavior: InputType
     ) -> None:
         pass
+
+    @override
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        performed_swap = False
+        for action in self.actions:
+            if action.swap_uuid(old_uuid, new_uuid):
+                performed_swap = True
+        return performed_swap
 
 
 create = MacroData

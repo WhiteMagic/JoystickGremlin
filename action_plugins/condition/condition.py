@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, override, TYPE_CHECKING
 import uuid
 from xml.etree import ElementTree
 
@@ -255,6 +255,10 @@ class AbstractCondition(QtCore.QObject):
             self._states = state_list
             self.statesChanged.emit(self.states)
 
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        """Swaps occurrences of the old UUID with the new one for this condition."""
+        return False
+
 
 @QtQml.QmlElement
 class VJoyCondition(AbstractCondition):
@@ -491,6 +495,9 @@ class JoystickCondition(AbstractCondition):
             self.input_type = input_type
             self.input_id = input_id
             self.joystick = None
+            self.update_for_device()
+        
+        def update_for_device(self):
             try:
                 self.joystick = Joystick()[self.device_uuid]
             except error.GremlinError:
@@ -606,6 +613,16 @@ class JoystickCondition(AbstractCondition):
         # No need to change the comparator as we don't rely on the input's
         # type for condition checks.
         pass
+
+    @override
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        performed_swap = False
+        for state in self._states:
+            if state.device_uuid == old_uuid:
+                state.device_uuid = new_uuid
+                state.update_for_device()
+                performed_swap = True
+        return performed_swap
 
 
 @QtQml.QmlElement

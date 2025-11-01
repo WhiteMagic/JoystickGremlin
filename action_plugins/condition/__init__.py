@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, TYPE_CHECKING, override
+from typing import List, override, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -332,5 +332,14 @@ class ConditionData(AbstractActionData):
         if old_behavior != new_behavior:
             for condition in self.conditions:
                 condition.set_input_type(new_behavior)
+
+    @override
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        performed_swap = False
+        for condition in self.conditions:
+            if condition.swap_uuid(old_uuid, new_uuid):
+                performed_swap = True
+        return performed_swap
+
 
 create = ConditionData

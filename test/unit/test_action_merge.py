@@ -23,6 +23,12 @@ import pytest
 import uuid
 from xml.etree import ElementTree
 
+# Test UUIDs
+_ACTION_ID = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
+_DESCRIPTION_ID = uuid.UUID("fbe6be7b-07c9-4400-94f2-caa245ebcc7e")
+_DEVICE_GUID_1 = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540001")
+_DEVICE_GUID_2 = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540002")
+
 from gremlin.types import DataInsertionMode
 from gremlin.error import GremlinError
 from gremlin.profile import Library, Profile
@@ -47,31 +53,31 @@ def test_from_xml(xml_dir: pathlib.Path):
     p = Profile()
     p.from_xml(str(xml_dir / "action_merge_axis.xml"))
 
-    a = p.library.get_action(uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609"))
+    a = p.library.get_action(_ACTION_ID)
 
     assert len(a.children) == 1
     assert a.label == "test axis merge"
     assert a.operation == merge_axis.MergeOperation.Minimum
-    assert a.axis_in1.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540001")
+    assert a.axis_in1.device_guid == _DEVICE_GUID_1
     assert a.axis_in1.input_type == types.InputType.JoystickAxis
     assert a.axis_in1.input_id == 1
-    assert a.axis_in2.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540002")
+    assert a.axis_in2.device_guid == _DEVICE_GUID_2
     assert a.axis_in2.input_type == types.InputType.JoystickAxis
     assert a.axis_in2.input_id ==  2
 
 
 def test_to_xml():
     d = DescriptionData()
-    d._id = uuid.UUID("fbe6be7b-07c9-4400-94f2-caa245ebcc7e")
+    d._id = _DESCRIPTION_ID
 
     a = merge_axis.MergeAxisData(types.InputType.JoystickAxis)
     a.label = "This is a test"
     a.operation = merge_axis.MergeOperation.Maximum
     a.insert_action(d, "children")
 
-    a.axis_in1.device_guid = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540001")
+    a.axis_in1.device_guid = _DEVICE_GUID_1
     a.axis_in1.input_type = types.InputType.JoystickAxis
-    a.axis_in2.device_guid = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540002")
+    a.axis_in2.device_guid = _DEVICE_GUID_2
     a.axis_in1.input_id = 1
     a.axis_in2.input_type = types.InputType.JoystickAxis
     a.axis_in2.input_id =  2
@@ -86,6 +92,29 @@ def test_to_xml():
     assert node.find(
             "./property/name[.='axis1-axis']/../value"
         ).text == "1"
-    assert node.find(
-        "./property/name[.='axis1-guid']/../value"
-    ).text.upper() == "4DCB3090-97EC-11EB-8003-444553540001"
+    assert (
+        node.find("./property/name[.='axis1-guid']/../value").text.upper()
+        == str(_DEVICE_GUID_1).upper()
+    )
+
+
+def test_swap_first_uuid(xml_dir: pathlib.Path):
+    p = Profile()
+    p.from_xml(str(xml_dir / "action_merge_axis.xml"))
+
+    a = p.library.get_action(_ACTION_ID)
+    new_device_uuid = uuid.uuid4()
+    a.swap_uuid(_DEVICE_GUID_1, new_device_uuid)
+    assert a.axis_in1.device_guid == new_device_uuid
+    assert a.axis_in2.device_guid == _DEVICE_GUID_2
+
+
+def test_swap_second_uuid(xml_dir: pathlib.Path):
+    p = Profile()
+    p.from_xml(str(xml_dir / "action_merge_axis.xml"))
+
+    a = p.library.get_action(_ACTION_ID)
+    new_device_uuid = uuid.uuid4()
+    a.swap_uuid(_DEVICE_GUID_2, new_device_uuid)
+    assert a.axis_in1.device_guid == _DEVICE_GUID_1
+    assert a.axis_in2.device_guid == new_device_uuid

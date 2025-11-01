@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" ?>
+<profile version="14">
+    <library>
+        <action id="8a089715-2007-4612-955f-20b9763402a4" type="root">
+            <actions>
+                <action-id>20465c1e-afb3-49f9-9e43-1d7087f0e8ce</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="20465c1e-afb3-49f9-9e43-1d7087f0e8ce" type="dual-axis-deadzone">
+            <property type="string">
+                <name>label</name>
+                <value/>
+            </property>
+            <property type="float">
+                <name>inner-deadzone</name>
+                <value>0.0</value>
+            </property>
+            <property type="float">
+                <name>outer-deadzone</name>
+                <value>1.0</value>
+            </property>
+            <property type="uuid">
+                <name>axis1-guid</name>
+                <value>97b77b40-07d8-11f0-8028-444553540000</value>
+            </property>
+            <property type="int">
+                <name>axis1-axis</name>
+                <value>1</value>
+            </property>
+            <property type="uuid">
+                <name>axis2-guid</name>
+                <value>97b77b40-07d8-11f0-8028-444553540001</value>
+            </property>
+            <property type="int">
+                <name>axis2-axis</name>
+                <value>2</value>
+            </property>
+            <output1-actions>
+                <action-id>ff520daf-1c55-4da0-aedf-c08c101c0996</action-id>
+            </output1-actions>
+            <output2-actions>
+                <action-id>2899b1c3-0466-409f-a9bf-fa710bf70451</action-id>
+            </output2-actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Dual Axis Deadzone</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="ff520daf-1c55-4da0-aedf-c08c101c0996" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>1</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>1</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>absolute</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.0</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to vJoy</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="2899b1c3-0466-409f-a9bf-fa710bf70451" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>1</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>2</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>axis</value>
+            </property>
+            <property type="axis_mode">
+                <name>axis-mode</name>
+                <value>absolute</value>
+            </property>
+            <property type="float">
+                <name>axis-scaling</name>
+                <value>1.0</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to vJoy</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+    </library>
+    <modes>
+        <mode>Default</mode>
+    </modes>
+    <scripts/>
+</profile>

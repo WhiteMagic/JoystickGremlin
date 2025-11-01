@@ -17,6 +17,7 @@
 
 import pathlib
 import pytest
+import uuid
 
 from gremlin import profile, shared_state, types, user_script
 from test.unit.conftest import get_fake_device_guid
@@ -359,3 +360,17 @@ class TestScript:
             var_from_xml.from_xml(var.to_xml())
             assert var_from_xml.is_valid()
             assert var_from_xml.value == var.value
+
+    def test_swap_uuid(self, script_for_test: user_script.Script):
+        var = script_for_test.get_variable("A physical axis input variable")
+        existing_device_uuid = get_fake_device_guid(is_virtual=False).uuid
+        var.value = (
+            existing_device_uuid,
+            types.InputType.JoystickAxis,
+            1,
+        )
+        assert var.is_valid()
+        assert var.value[0] == existing_device_uuid
+        new_device_uuid = uuid.uuid4()
+        assert script_for_test.swap_uuid(existing_device_uuid, new_device_uuid)
+        assert var.value[0] == new_device_uuid

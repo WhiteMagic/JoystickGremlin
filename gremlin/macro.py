@@ -23,7 +23,7 @@ import functools
 import logging
 import time
 from threading import Event, Lock, Thread
-from typing import Tuple
+from typing import override, Tuple
 import uuid
 from xml.etree import ElementTree
 
@@ -378,6 +378,10 @@ class AbstractAction(ABC):
         node.set("type", type_name)
         return node
 
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        """Swaps occurrences of the old UUID with the new one for this action."""
+        return False
+
 
 class JoystickAction(AbstractAction):
 
@@ -494,6 +498,13 @@ class JoystickAction(AbstractAction):
             self.value = util.read_property(
                 node, "value", PropertyType.HatDirection
             )
+
+    @override
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        if self.device_guid == old_uuid:
+            self.device_guid = new_uuid
+            return True
+        return False
 
 
 class KeyAction(AbstractAction):

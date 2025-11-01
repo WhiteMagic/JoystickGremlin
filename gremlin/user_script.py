@@ -25,13 +25,12 @@ import importlib
 import inspect
 import logging
 import numbers
-import os
 from pathlib import Path
 import random
 import string
 import threading
 import time
-from typing import Any, Callable
+from typing import Any, Callable, override
 import uuid
 from xml.etree import ElementTree
 
@@ -567,6 +566,14 @@ class Script:
                     )
                 self.variables[value.name] = copy.deepcopy(value)
 
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        """Swaps occurrences of the old UUID with the new one for this action."""
+        swap_done = False
+        for variable in self.variables.values():
+            if variable.swap_uuid(old_uuid, new_uuid):
+                swap_done = True
+        return swap_done
+
 
 class AbstractVariable(ABC):
 
@@ -642,6 +649,10 @@ class AbstractVariable(ABC):
         var = Script.variable_registry.get(idx, self.name)
         if isinstance(var, AbstractVariable):
             self._assign_value_from(var)
+
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        """Swaps occurrences of the old UUID with the new one for this variable."""
+        return False
 
 
 class BoolVariable(AbstractVariable):
@@ -1017,6 +1028,13 @@ class PhysicalInputVariable(AbstractVariable):
         self._device_guid = other.device_guid
         self._input_type = other.input_type
         self._input_id = other.input_id
+
+    @override
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        if self._device_guid == old_uuid:
+            self._device_guid = new_uuid
+            return True
+        return False
 
 
 class VirtualInputVariable(AbstractVariable):

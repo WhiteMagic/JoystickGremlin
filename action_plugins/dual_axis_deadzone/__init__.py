@@ -22,7 +22,7 @@ import collections
 import copy
 import logging
 import math
-from typing import Any, TYPE_CHECKING, override
+from typing import override, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtGui, QtQml
@@ -360,6 +360,17 @@ class DualAxisDeadzoneData(AbstractActionData):
             return self.output1_actions
         elif selector == "second":
             return self.output2_actions
+
+    @override
+    def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
+        performed_swap = False
+        if self.axis1.device_guid == old_uuid:
+            self.axis1.device_guid = new_uuid
+            performed_swap = True
+        if self.axis2.device_guid == old_uuid:
+            self.axis2.device_guid = new_uuid
+            performed_swap = True
+        return performed_swap
 
     @override
     def _handle_behavior_change(
