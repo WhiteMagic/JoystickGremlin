@@ -110,7 +110,7 @@ class InputListenerModel(QtCore.QObject):
                 InputType.JoystickButton in self._event_types or \
                 InputType.JoystickHat in self._event_types:
             event_listener.joystick_event.connect(self._joy_event_cb)
-        elif InputType.Mouse in self._event_types:
+        if InputType.Mouse in self._event_types:
             windows_event_hook.MouseHook().start()
             event_listener.mouse_event.connect(self._mouse_event_cb)
 
@@ -120,14 +120,18 @@ class InputListenerModel(QtCore.QObject):
             event_listener.keyboard_event.disconnect(self._kb_event_cb)
         except RuntimeError as e:
             pass
-        try:
-            event_listener.joystick_event.disconnect(self._joy_event_cb)
-        except RuntimeError as e:
-            pass
-        try:
-            event_listener.mouse_event.disconnect(self._mouse_event_cb)
-        except RuntimeError as e:
-            pass
+        if InputType.JoystickAxis in self._event_types or \
+                InputType.JoystickButton in self._event_types or \
+                InputType.JoystickHat in self._event_types:
+            try:
+                event_listener.joystick_event.disconnect(self._joy_event_cb)
+            except RuntimeError as e:
+                pass
+        if InputType.Mouse in self._event_types:
+            try:
+                event_listener.mouse_event.disconnect(self._mouse_event_cb)
+            except RuntimeError as e:
+                pass
 
         # Stop mouse hook in case it is running
         # FIXME: can this break things?

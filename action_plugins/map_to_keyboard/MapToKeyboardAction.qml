@@ -50,11 +50,14 @@ Item {
             }
 
             InputListener {
-                callback: _root.action.updateInputs
+                callback: (inputs) => { _root.action.updateInputs(inputs) }
                 multipleInputs: true
                 eventTypes: ["key"]
 
-                buttonLabel: Helpers.safeText(_root.action.keyCombination, "Record Keys")
+                buttonLabel: Helpers.safeText(
+                    _root.action.keyCombination,
+                    "Record Keys"
+                )
             }
         }
     }

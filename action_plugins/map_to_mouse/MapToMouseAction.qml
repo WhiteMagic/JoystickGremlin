@@ -90,7 +90,7 @@ Item {
             }
 
             InputListener {
-                callback: _root.action.updateInputs
+                callback: (inputs) => { _root.action.updateInputs(inputs) }
                 multipleInputs: false
                 eventTypes: ["mouse"]
 

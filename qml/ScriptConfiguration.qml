@@ -225,7 +225,7 @@ JGListView {
                     Layout.alignment: Qt.AlignRight
 
                     buttonLabel: modelData.label
-                    callback: modelData.updateJoystick
+                    callback: (inputs) => { modelData.updateJoystick(inputs) }
                     multipleInputs: false
                     eventTypes: modelData.validTypes
                 }

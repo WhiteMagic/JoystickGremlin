@@ -175,7 +175,9 @@ Item {
                 actionItem: RowLayout {
                     InputListener {
                         buttonLabel: modelData.label
-                        callback: modelData.updateJoystick
+                        callback: (inputs) => {
+                            modelData.updateJoystick(inputs)
+                        }
                         multipleInputs: false
                         eventTypes: ["axis", "button", "hat"]
                     }
@@ -245,7 +247,7 @@ Item {
                 actionItem: RowLayout {
                     InputListener {
                         buttonLabel: modelData.key
-                        callback: modelData.updateKey
+                        callback: (inputs) => { modelData.updateKey(inputs) }
                         multipleInputs: false
                         eventTypes: ["key"]
                     }
@@ -273,7 +275,7 @@ Item {
                 actionItem: RowLayout {
                     InputListener {
                         buttonLabel: modelData.button
-                        callback: modelData.updateButton
+                        callback: (inputs) => { modelData.updateButton(inputs) }
                         multipleInputs: false
                         eventTypes: ["mouse"]
                     }
