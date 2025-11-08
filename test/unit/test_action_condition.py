@@ -40,7 +40,7 @@ import action_plugins.condition as condition
 _PROFILE_SIMPLE = "action_condition_simple.xml"
 
 
-def test_from_xml(xml_dir: pathlib.Path):
+def test_from_xml(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_SIMPLE))
 
@@ -50,17 +50,17 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert a.logical_operator == condition.LogicalOperator.All
     assert a.is_valid()
 
-    assert len(a.conditions[0]._inputs) == 1
+    assert len(a.conditions[0]._states) == 1
 
     cond = a.conditions[0]
     assert isinstance(cond, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(cond._comparator, condition.comparator.PressedComparator)
-    assert cond._inputs[0].event_type == InputType.JoystickButton
+    assert cond._states[0].input_type == InputType.JoystickButton
     assert cond._comparator.is_pressed == False
     assert cond.is_valid()
 
 
-def test_from_xml_complex(xml_dir: pathlib.Path):
+def test_from_xml_complex(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / "action_condition_complex.xml"))
 
@@ -72,36 +72,36 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     assert a.is_valid()
 
     # Input item data
-    assert len(a.conditions[0]._inputs) == 2
-    in1 = a.conditions[0]._inputs[0]
-    assert in1.event_type == InputType.JoystickButton
-    assert in1.identifier == 2
-    assert in1.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
-    in2 = a.conditions[0]._inputs[1]
-    assert in2.event_type == InputType.JoystickButton
-    assert in2.identifier == 42
-    assert in2.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540024")
-    in3 = a.conditions[2]._inputs[0]
-    assert in3.event_type == InputType.JoystickHat
-    assert in3.identifier == 1
-    assert in3.device_guid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
-    in4 = a.conditions[3]._inputs[0]
+    assert len(a.conditions[0]._states) == 2
+    in1 = a.conditions[0]._states[0]
+    assert in1.input_type == InputType.JoystickButton
+    assert in1.input_id == 2
+    assert in1.device_uuid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    in2 = a.conditions[0]._states[1]
+    assert in2.input_type == InputType.JoystickButton
+    assert in2.input_id == 42
+    assert in2.device_uuid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540024")
+    in3 = a.conditions[2]._states[0]
+    assert in3.input_type == InputType.JoystickHat
+    assert in3.input_id == 1
+    assert in3.device_uuid == uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000")
+    in4 = a.conditions[3]._states[0]
     in4.scan_code = 42
     in4.is_extended = True
 
     # Condition data
-    assert len(a.conditions[0]._inputs) == 2
+    assert len(a.conditions[0]._states) == 2
     c1 = a.conditions[0]
     assert isinstance(c1, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(c1._comparator, condition.comparator.PressedComparator)
-    assert c1._inputs[0].event_type == InputType.JoystickButton
+    assert c1._states[0].input_type == InputType.JoystickButton
     assert c1._comparator.is_pressed == False
     assert c1.is_valid()
 
     c2 = a.conditions[1]
     assert isinstance(c2, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(c2._comparator, condition.comparator.RangeComparator)
-    assert c2._inputs[0].event_type == InputType.JoystickAxis
+    assert c2._states[0].input_type == InputType.JoystickAxis
     assert c2._comparator.lower == 0.2
     assert c2._comparator.upper == 0.9
     assert c2.is_valid()
@@ -109,7 +109,7 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     c3 = a.conditions[2]
     assert isinstance(c3, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(c3._comparator, condition.comparator.DirectionComparator)
-    assert c3._inputs[0].event_type == InputType.JoystickHat
+    assert c3._states[0].input_type == InputType.JoystickHat
     assert len(c3._comparator.directions) == 3
     assert c3._comparator.directions[0] == HatDirection.North
     assert c3._comparator.directions[1] == HatDirection.East
@@ -121,17 +121,17 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     assert c4._comparator.is_pressed == False
 
 
-def test_to_xml():
+def test_to_xml() -> None:
     a = condition.ConditionData(InputType.JoystickButton)
 
-    cond = action_plugins.condition.condition.JoystickCondition()
-    input_dev = Event(
-        InputType.JoystickButton,
-        37,
+    JoyCond = action_plugins.condition.condition.JoystickCondition
+    cond = JoyCond()
+    state = JoyCond.State(
         uuid.UUID("4DCB3090-97EC-11EB-8003-444553540000"),
-        "Default"
+        InputType.JoystickButton,
+        37
     )
-    cond._inputs.append(input_dev)
+    cond._states = [state]
     cond._comparator = condition.comparator.PressedComparator(True)
     a.conditions.append(cond)
 
@@ -150,7 +150,7 @@ def test_to_xml():
         ).text == "True"
 
 
-def test_action_methods(xml_dir: pathlib.Path):
+def test_action_methods(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_SIMPLE))
 
@@ -175,7 +175,7 @@ def test_action_methods(xml_dir: pathlib.Path):
     assert a.get_actions("false")[0][0] == d2
 
 
-def test_ctor():
+def test_ctor() -> None:
     a = ConditionData(InputType.JoystickButton)
 
     assert len(a.conditions) == 0

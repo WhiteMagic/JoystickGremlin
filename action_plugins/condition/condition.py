@@ -490,12 +490,21 @@ class JoystickCondition(AbstractCondition):
             self.device_uuid = device_uuid
             self.input_type = input_type
             self.input_id = input_id
-            self.joystick = Joystick()[self.device_uuid]
+            self.joystick = None
+            try:
+                self.joystick = Joystick()[self.device_uuid]
+            except error.GremlinError:
+                pass
             self.device_lookup = DeviceDatabase().get_mapping_by_uuid(
                 self.device_uuid
             )
 
         def get(self) -> bool | float | HatDirection:
+            if self.joystick is None:
+                raise error.GremlinError(
+                    f"ConditionAction: Joystick with UUID {self.device_uuid} "
+                    "not present."
+                )
             match self.input_type:
                 case InputType.JoystickAxis:
                     return self.joystick.axis(self.input_id).value
