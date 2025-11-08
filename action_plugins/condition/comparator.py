@@ -17,7 +17,8 @@
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from abc import abstractmethod, ABCMeta
+from typing import Any, List, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtQml
@@ -25,6 +26,7 @@ from PySide6.QtCore import Property, Signal
 
 from gremlin import error, event_handler, input_cache, keyboard, util
 from gremlin.base_classes import Value
+from gremlin.common import SingletonMetaclass
 from gremlin.input_cache import Keyboard
 from gremlin.types import HatDirection, InputType, PropertyType
 from gremlin.ui.profile import HatDirectionModel
@@ -38,13 +40,14 @@ QML_IMPORT_NAME = "Gremlin.ActionPlugins"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-class AbstractComparator(QtCore.QObject):
+class AbstractComparatorModel(QtCore.QObject):
 
-    """Base class of all condition comparators.
+    """Base class for comparator QML models.
 
-    Provides information needed for UI presentation as well as the logic to
-    execute the condition comparison.
+    Provides information needed for UI presentation.
     """
+
+    name : str = ""
 
     typeChanged = Signal(str)
 
@@ -56,42 +59,6 @@ class AbstractComparator(QtCore.QObject):
         """
         super().__init__(parent)
 
-    def __call__(self, value: Value, events: List[event_handler.Event]) -> bool:
-        """Evaluates the comparison returning a truth state.
-
-        This method has to be implemented in all subclasses.
-
-        Args:
-            value: input value to use in the comparison
-            events: events to check for validity
-
-        Returns:
-            True if the condition evaluates to True, False otherwise
-        """
-        raise error.MissingImplementationError(
-            "Comparator.__call__ not implemented in subclass"
-        )
-
-    def from_xml(self, node: ElementTree.Element) -> None:
-        """Populates the comparator's information using the XML node's data.
-
-        Args:
-            node: XML node representing the comparator's content
-        """
-        raise error.MissingImplementationError(
-            "Comparator.from_xml not implemented in subclass"
-        )
-
-    def to_xml(self) -> ElementTree.Element:
-        """Returns the comparator's information as an XML node.
-
-        Returns:
-            XML node representing the comparator
-        """
-        raise error.MissingImplementationError(
-            "Comparator.to_xml not implemented in subclass"
-        )
-
     @Property(str, notify=typeChanged)
     def typeName(self) -> str:
         """Returns the comparator's type name.
@@ -99,23 +66,128 @@ class AbstractComparator(QtCore.QObject):
         Returns:
             Name of the comparator
         """
-        return self._comparator_type()
-
-    def _comparator_type(self) -> str:
-        raise error.MissingImplementationError(
-            "Comparator._comparator_type not implemented in subclass"
-        )
+        return self.name
 
 
 @QtQml.QmlElement
-class RangeComparator(AbstractComparator):
+class RangeComparatorModel(AbstractComparatorModel):
 
     """Compares the state of an axis to a specific range."""
+
+    name = "range"
 
     lowerLimitChanged = Signal()
     upperLimitChanged = Signal()
 
-    def __init__(self, lower: float, upper: float) -> None:
+    def __init__(self, data: RangeComparator) -> None:
+        """Creates a new axis range comparison object.
+
+        Args:
+            lower: lower value of the axis range
+            high: upper value of the axis range
+        """
+        super().__init__()
+
+        self.data = data
+
+    def _set_lower_limit(self, value: float) -> None:
+        if self.data.lower != value:
+            self.data.lower = value
+            self.lowerLimitChanged.emit()
+
+    def _set_upper_limit(self, value: float) -> None:
+        if self.data.upper != value:
+            self.data.upper = value
+            self.upperLimitChanged.emit()
+
+    @Property(float, fset=_set_lower_limit, notify=lowerLimitChanged)
+    def lowerLimit(self) -> float:
+        return self.data.lower
+
+    @Property(float, fset=_set_upper_limit, notify=upperLimitChanged)
+    def upperLimit(self) -> float:
+        return self.data.upper
+
+
+@QtQml.QmlElement
+class PressedComparatorModel(AbstractComparatorModel):
+
+    """Compares the state of a button to a specific state."""
+
+    name = "pressed"
+
+    isPressedChanged = Signal()
+
+    def __init__(self, data: PressedComparator) -> None:
+        """Creates a new comparator instance.
+
+        Args:
+            is_pressed: state in which the button should be in
+        """
+        super().__init__()
+
+        self.data = data
+
+    def _set_is_pressed(self, value: str) -> None:
+        is_pressed = (value == "Pressed")
+        if self.data.is_pressed != is_pressed:
+            self.data.is_pressed = is_pressed
+            self.isPressedChanged.emit()
+
+    @Property(str, fset=_set_is_pressed, notify=isPressedChanged)
+    def isPressed(self) -> str:
+        return "Pressed" if self.data.is_pressed else "Released"
+
+
+@QtQml.QmlElement
+class DirectionComparatorModel(AbstractComparatorModel):
+
+    """Compares the state of a hat to the specified states."""
+
+    name = "direction"
+
+    directionsChanged = Signal()
+
+    def __init__(self, data: DirectionComparator) -> None:
+        """Creates a new comparator instance.
+
+        Args:
+            directions: list of valid directions
+        """
+        super().__init__()
+
+        self.data = data
+        self._model = HatDirectionModel(self.data.directions)
+
+    @Property(HatDirectionModel, notify=directionsChanged)
+    def model(self) -> HatDirectionModel:
+        return self._model
+
+
+class AbstractComparator(metaclass=ABCMeta):
+
+    """Base class of all comparators, provides logic and data."""
+
+    @abstractmethod
+    def from_xml(self, node: ElementTree.Element) -> None:
+        pass
+
+    @abstractmethod
+    def to_xml(self) -> ElementTree.Element:
+        pass
+
+    @abstractmethod
+    def __call__(self, value: Value, states: List[Any]) -> bool:
+        pass
+
+
+class RangeComparator(AbstractComparator):
+
+    """Compares the state of an axis to a specific range."""
+
+    model = RangeComparatorModel
+
+    def __init__(self, lower: float=-1.0, upper: float=1.0) -> None:
         """Creates a new axis range comparison object.
 
         Args:
@@ -129,7 +201,7 @@ class RangeComparator(AbstractComparator):
         self.lower = lower
         self.upper = upper
 
-    def __call__(self, value: Value, events: List[event_handler.Event]) -> bool:
+    def __call__(self, value: Value, states: List[Any]) -> bool:
         """Returns whether or not the provided values is within the range.
 
         Args:
@@ -140,24 +212,7 @@ class RangeComparator(AbstractComparator):
             True if the value is between the lower and upper value,
             False otherwise
         """
-        # Check whether to use events or value
-        if len(events) == 0:
-            return self.lower <= value.current <= self.upper
-
-        # Retrieve state of the events which should be just one
-        if len(events) > 1:
-            raise error.GremlinError(
-                "More than a single device in a range comparator"
-            )
-        if events[0].event_type != InputType.JoystickAxis:
-            raise error.GremlinError(
-                f"Received type other than an axis in a range comparator."
-            )
-
-        axis = input_cache.Joystick()[events[0].device_guid].axis(
-            events[0].identifier
-        )
-        return self.lower <= axis.value <= self.upper
+        return self.lower <= states[0] <= self.upper
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.lower = util.read_property(node, "lower-limit", PropertyType.Float)
@@ -165,42 +220,20 @@ class RangeComparator(AbstractComparator):
 
     def to_xml(self) -> ElementTree.Element:
         entries = [
-            ("comparator-type", self._comparator_type(), PropertyType.String),
+            ("comparator-type", "range", PropertyType.String),
             ("lower-limit", self.lower, PropertyType.Float),
             ("upper-limit", self.upper, PropertyType.Float)
         ]
         return util.create_node_from_data("comparator", entries)
 
-    def _comparator_type(self) -> str:
-        return "range"
 
-    def _set_lower_limit(self, value: float) -> None:
-        if self.lower != value:
-            self.lower = value
-            self.lowerLimitChanged.emit()
-
-    def _set_upper_limit(self, value: float) -> None:
-        if self.upper != value:
-            self.upper = value
-            self.upperLimitChanged.emit()
-
-    @Property(float, fset=_set_lower_limit, notify=lowerLimitChanged)
-    def lowerLimit(self) -> float:
-        return self.lower
-
-    @Property(float, fset=_set_upper_limit, notify=upperLimitChanged)
-    def upperLimit(self) -> float:
-        return self.upper
-
-
-@QtQml.QmlElement
 class PressedComparator(AbstractComparator):
 
     """Compares the state of a button to a specific state."""
 
-    isPressedChanged = Signal()
+    model = PressedComparatorModel
 
-    def __init__(self, is_pressed: bool) -> None:
+    def __init__(self, is_pressed: bool=False) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -210,7 +243,7 @@ class PressedComparator(AbstractComparator):
 
         self.is_pressed = is_pressed
 
-    def __call__(self, value: Value, events: List[event_handler.Event]) -> bool:
+    def __call__(self, value: Value, states: List[Any]) -> bool:
         """Returns True if the button states match, False otherwise.
 
         Args:
@@ -220,26 +253,7 @@ class PressedComparator(AbstractComparator):
         Returns:
             True if the button has matching state, False otherwise
         """
-        # Check whether to use events or value
-        if len(events) == 0:
-            return self._process_value(value)
-
-        # Ensure all events are of the same type
-        if len(set([evt.event_type for evt in events])) > 1:
-            raise error.GremlinError(
-                "More than a single event type in condition"
-            )
-
-        if events[0].event_type == InputType.JoystickButton:
-            return self._process_button(events)
-        elif events[0].event_type == InputType.Keyboard:
-            return self._process_keyboard(events)
-        else:
-            raise error.GremlinError(
-                "Unsupported event type (" \
-                f"{InputType.to_string(events[0].event_type)}" \
-                ") in PressedComparator"
-            )
+        return states[0] == self.is_pressed
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.is_pressed = \
@@ -247,80 +261,19 @@ class PressedComparator(AbstractComparator):
 
     def to_xml(self) -> ElementTree.Element:
         entries = [
-            ("comparator-type", self._comparator_type(), PropertyType.String),
+            ("comparator-type", "pressed", PropertyType.String),
             ("is-pressed", self.is_pressed, PropertyType.Bool)
         ]
         return util.create_node_from_data("comparator", entries)
 
-    def _comparator_type(self) -> str:
-        return "pressed"
 
-    def _set_is_pressed(self, value: str) -> None:
-        is_pressed = value == "Pressed"
-        if is_pressed != self.is_pressed:
-            self.is_pressed = is_pressed
-            self.isPressedChanged.emit()
-
-    @Property(str, fset=_set_is_pressed, notify=isPressedChanged)
-    def isPressed(self) -> str:
-        return "Pressed" if self.is_pressed else "Released"
-
-    def _process_value(self, value: Value) -> bool:
-        """Processes the comparator against the provided value.
-
-        Args:
-            Value instance of the activating input.
-
-        Returns:
-            True if the pressed state matches, False otherwise
-        """
-        return value.current == self.is_pressed
-
-    def _process_button(self, events: List[event_handler.Event]) -> bool:
-        """Processess the comparator for a set of buttons.
-
-        Args:
-            events: joystick buttons to check in the comparator
-
-        Returns:
-            True if the comparator holds for all buttons, False if at least one
-            button fails the comparator
-        """
-        joystick = input_cache.Joystick()
-        is_pressed = True
-        for event in events:
-            button = joystick[event.device_guid].button(event.identifier)
-            is_pressed &= button.is_pressed == self.is_pressed
-        return is_pressed
-
-    def _process_keyboard(self, events: List[event_handler.Event]) -> bool:
-        """Processes the comparator for a set of keys.
-
-        Args:
-            events: list of keys whose state is to be evaluated
-
-        Returns:
-            True if the comparator holds for all keys, False if at least one
-            key fails the comparator
-        """
-        is_pressed = True
-        for event in events:
-            key = keyboard.key_from_code(
-                event.identifier[0],
-                event.identifier[1]
-            )
-            is_pressed &= Keyboard().is_pressed(key) == self.is_pressed
-        return is_pressed
-
-
-@QtQml.QmlElement
 class DirectionComparator(AbstractComparator):
 
     """Compares the state of a hat to the specified states."""
 
-    directionsChanged = Signal()
+    model = DirectionComparatorModel
 
-    def __init__(self, directions: List[HatDirection]) -> None:
+    def __init__(self, directions: List[HatDirection]=[]) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -329,27 +282,9 @@ class DirectionComparator(AbstractComparator):
         super().__init__()
 
         self.directions = directions
-        self._model = HatDirectionModel(self.directions)
 
-    def __call__(self, value: Value, events: List[event_handler.Event]) -> bool:
-        # Check whether to use events or value
-        if len(events) == 0:
-            return value.current in self.directions
-
-        # Retrieve state of the events which should be just one
-        if len(events) > 1:
-            raise error.GremlinError(
-                "More than a single device in a direction comparator"
-            )
-        if events[0].event_type != InputType.JoystickHat:
-            raise error.GremlinError(
-                f"Received type other than a hat in a direction comparator."
-            )
-
-        hat = input_cache.Joystick()[events[0].device_guid].hat(
-            events[0].identifier
-        )
-        return hat.direction in self.directions
+    def __call__(self, value: Value, states: List[Any]) -> bool:
+        return states[0] in self.directions
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.directions = util.read_properties(
@@ -360,69 +295,8 @@ class DirectionComparator(AbstractComparator):
 
     def to_xml(self) -> ElementTree.Element:
         entries = [
-            ("comparator-type", self._comparator_type(), PropertyType.String)
+            ("comparator-type", "direction", PropertyType.String)
         ]
         for direction in self.directions:
             entries.append(("direction", direction, PropertyType.HatDirection))
         return util.create_node_from_data("comparator", entries)
-
-    def _comparator_type(self) -> str:
-        return "direction"
-
-    @Property(HatDirectionModel, notify=directionsChanged)
-    def model(self) -> HatDirectionModel:
-        return self._model
-
-
-def create_default_comparator(comparator_type: str) -> AbstractComparator:
-    """Creates a comparator object of appropriate type with default values.
-
-    Args:
-        comparator_type: type of comparator to create
-
-    Returns:
-        Default initialized comparator
-    """
-    if comparator_type == "pressed":
-        return PressedComparator(True)
-    elif comparator_type == "range":
-        return RangeComparator(0.0, 1.0)
-    elif comparator_type == "direction":
-        return DirectionComparator([HatDirection.North])
-    else:
-        raise error.ProfileError(
-            f"Unable to create comparator, type \"{comparator_type}\" is unknown."
-        )
-
-
-def create_comparator_from_xml(node: ElementTree.Element) -> AbstractComparator:
-    """Returns a comparator object for the specified data.
-
-    Args:
-        node: XML node storing the condition information
-
-    Returns:
-        Comparator instance representing the stored information
-    """
-    comparator_type = util.read_property(
-        node,
-        "comparator-type",
-        PropertyType.String
-    )
-    if comparator_type == "pressed":
-        return PressedComparator(
-            util.read_property(node, "is-pressed", PropertyType.Bool)
-        )
-    elif comparator_type == "range":
-        return RangeComparator(
-            util.read_property(node, "lower-limit", PropertyType.Float),
-            util.read_property(node, "upper-limit", PropertyType.Float)
-        )
-    elif comparator_type == "direction":
-        return DirectionComparator(
-            util.read_properties(node, "direction", PropertyType.HatDirection)
-        )
-    else:
-        raise error.ProfileError(
-            f"Unable to create comparator, type \"{comparator_type}\" is unknown."
-        )

@@ -24,8 +24,10 @@ import QtQuick.Window
 
 import QtQuick.Controls.Universal
 
-import Gremlin.Profile
 import Gremlin.ActionPlugins
+import Gremlin.Profile
+import Gremlin.Util
+
 import "../../qml"
 
 
@@ -33,8 +35,14 @@ Item {
     id: _root
 
     property ConditionModel action
+    readonly property int conditionLabelWidth: 150
 
     implicitHeight: _content.height
+
+    // Turns the list of entries into an unordered HTML element.
+    function toUnorderedList(entries) {
+        return entries.join("<br>")
+    }
 
     ColumnLayout {
         id: _content
@@ -96,24 +104,8 @@ Item {
         Repeater {
             model: _root.action.conditions
 
-            delegate: RowLayout {
-                property int conditionIndex: index
-
-                ConditionComparatorUI {
-                    Layout.fillWidth: true
-
-                    model: modelData
-                }
-                IconButton {
-                    text: bsi.icons.trash
-                    Layout.alignment: Qt.AlignTop
-                    Layout.topMargin: 4
-
-                    onClicked: () => {
-                        _root.action.removeCondition(conditionIndex)
-                    }
-                }
-            }
+            delegate: _conditionDelegate
+            // delegate: _moreDelegation
         }
 
         // +-------------------------------------------------------------------
@@ -197,6 +189,213 @@ Item {
         }
     }
 
+    Component {
+        id: _moreDelegation
+
+        Item {
+        Loader {
+            active: modelData.conditionType === "vjoy"
+
+            sourceComponent: RowLayout {
+                Label {
+                    Layout.preferredWidth: conditionLabelWidth
+                    text: "vJoy Condition"
+                }
+
+                VJoySelector {
+                    validTypes: ["axis", "button", "hat"]
+
+                    onVjoyInputIdChanged: () => {
+                        modelData.vjoyInputId = vjoyInputId
+                    }
+                    onVjoyDeviceIdChanged: () => {
+                        modelData.vjoyDeviceId = vjoyDeviceId
+                    }
+                    onVjoyInputTypeChanged: () => {
+                        modelData.vjoyInputType = vjoyInputType
+                    }
+
+                    Component.onCompleted: () => {
+                        vjoyInputType = modelData.vjoyInputType
+                        vjoyInputId = modelData.vjoyInputId
+                        vjoyDeviceId = modelData.vjoyDeviceId
+                    }
+                }
+
+                Label { text: "<b>True</b> when" }
+
+                Comparator {
+                    comparator: modelData.comparator
+                }
+            }
+        }
+        }
+    }
+
+    DelegateChooser {
+        id: _conditionDelegate
+
+        role: "conditionType"
+
+        DelegateChoice {
+            roleValue: "current_input"
+
+            ConditionComponent {
+                conditionItem: RowLayout {
+                    Label {
+                        Layout.preferredWidth: conditionLabelWidth
+
+                        text: "Current Input"
+                    }
+
+                    Comparator {
+                        comparator: modelData.comparator
+                    }
+
+                    LayoutHorizontalSpacer {}
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "joystick"
+
+            ConditionComponent {
+                conditionItem: RowLayout {
+                    Label {
+                        Layout.preferredWidth: conditionLabelWidth
+
+                        text: "Joystick"
+                    }
+
+                    Label {
+                        text: toUnorderedList(modelData.states)
+                    }
+
+                    Comparator {
+                        comparator: modelData.comparator
+                    }
+
+                    LayoutHorizontalSpacer {}
+
+                    InputListener {
+                        callback: (inputs) => {
+                            modelData.updateFromUserInput(inputs)
+                        }
+                        multipleInputs: true
+                        eventTypes: ["axis", "button", "hat"]
+                    }
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "keyboard"
+
+            ConditionComponent {
+                conditionItem: RowLayout {
+
+                    Label {
+                        Layout.preferredWidth: conditionLabelWidth
+
+                        text: "Keyboard"
+                    }
+
+                    Label {
+                        text: toUnorderedList(modelData.states)
+                    }
+
+                    Comparator {
+                        comparator: modelData.comparator
+                    }
+
+                    LayoutHorizontalSpacer {}
+
+                    InputListener {
+                        callback: (inputs) => {
+                            modelData.updateFromUserInput(inputs)
+                        }
+                        multipleInputs: true
+                        eventTypes: ["key"]
+                    }
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "logical_device"
+
+            ConditionComponent {
+                conditionItem: RowLayout {
+                    Label {
+                        Layout.preferredWidth: conditionLabelWidth
+                        text: "Logical Device"
+                    }
+
+                    LogicalDeviceSelector {
+                        // The ordering is important, swapping it will result in the
+                        // wrong item being displayed.
+                        validTypes: ["axis", "button", "hat"]
+                        logicalInputIdentifier: modelData.logicalInputIdentifier
+
+                        onLogicalInputIdentifierChanged: () => {
+                            modelData.logicalInputIdentifier = logicalInputIdentifier
+                        }
+                    }
+
+                    Label { text: "<b>True</b> when" }
+
+                    Comparator {
+                        comparator: modelData.comparator
+                    }
+
+                    LayoutHorizontalSpacer {}
+                }
+            }
+        }
+
+        DelegateChoice {
+            roleValue: "vjoy"
+
+            ConditionComponent {
+                conditionItem: RowLayout {
+                    Label {
+                        Layout.preferredWidth: conditionLabelWidth
+                        text: "vJoy Condition"
+                    }
+
+                    VJoySelector {
+                        validTypes: ["axis", "button", "hat"]
+
+                        onVjoyInputIdChanged: () => {
+                            modelData.vjoyInputId = vjoyInputId
+                        }
+                        onVjoyDeviceIdChanged: () => {
+                            modelData.vjoyDeviceId = vjoyDeviceId
+                        }
+                        onVjoyInputTypeChanged: () => {
+                            modelData.vjoyInputType = vjoyInputType
+                        }
+
+                        Component.onCompleted: () => {
+                            vjoyInputType = modelData.vjoyInputType
+                            vjoyInputId = modelData.vjoyInputId
+                            vjoyDeviceId = modelData.vjoyDeviceId
+                        }
+                    }
+
+                    Label { text: "<b>True</b> when" }
+
+                    Comparator {
+                        comparator: modelData.comparator
+                    }
+
+                    LayoutHorizontalSpacer {}
+                }
+            }
+        }
+    }
+
     // Drop action for insertion into empty/first slot of the true actions
     ActionDragDropArea {
         target: _trueDivider
@@ -211,5 +410,32 @@ Item {
         dropCallback: (drop) => {
             modelData.dropAction(drop.text, modelData.sequenceIndex, "false");
         }
+    }
+
+    component DeleteConditionButton : IconButton {
+        text: bsi.icons.remove
+        font.pixelSize: 16
+
+        onClicked: () => _root.action.removeCondition(index)
+    }
+
+    component ConditionComponent : RowLayout {
+        property alias conditionItem: _actionLoader.sourceComponent
+
+        Label {
+            text: bsi.icons.bullet_point
+            font.family: "bootstrap-icons"
+            font.pixelSize: 24
+        }
+
+        // Contains the specific condition component.
+        Loader {
+            id: _actionLoader
+            Layout.fillWidth: true
+        }
+
+        LayoutHorizontalSpacer {}
+
+        DeleteConditionButton {}
     }
 }

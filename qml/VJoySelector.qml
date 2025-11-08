@@ -35,8 +35,7 @@ Item {
     implicitWidth: _content.implicitWidth
 
     // React to the validTypes value being changed from an external source
-    onValidTypesChanged: function()
-    {
+    onValidTypesChanged: () => {
         _vjoy.validTypes = validTypes
     }
 

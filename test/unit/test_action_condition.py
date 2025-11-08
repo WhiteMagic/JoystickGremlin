@@ -17,6 +17,7 @@
 
 import sys
 
+import action_plugins.condition.condition
 from gremlin import event_handler
 sys.path.append(".")
 
@@ -52,7 +53,7 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert len(a.conditions[0]._inputs) == 1
 
     cond = a.conditions[0]
-    assert isinstance(cond, condition.JoystickCondition)
+    assert isinstance(cond, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(cond._comparator, condition.comparator.PressedComparator)
     assert cond._inputs[0].event_type == InputType.JoystickButton
     assert cond._comparator.is_pressed == False
@@ -91,14 +92,14 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     # Condition data
     assert len(a.conditions[0]._inputs) == 2
     c1 = a.conditions[0]
-    assert isinstance(c1, condition.JoystickCondition)
+    assert isinstance(c1, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(c1._comparator, condition.comparator.PressedComparator)
     assert c1._inputs[0].event_type == InputType.JoystickButton
     assert c1._comparator.is_pressed == False
     assert c1.is_valid()
 
     c2 = a.conditions[1]
-    assert isinstance(c2, condition.JoystickCondition)
+    assert isinstance(c2, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(c2._comparator, condition.comparator.RangeComparator)
     assert c2._inputs[0].event_type == InputType.JoystickAxis
     assert c2._comparator.lower == 0.2
@@ -106,7 +107,7 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     assert c2.is_valid()
 
     c3 = a.conditions[2]
-    assert isinstance(c3, condition.JoystickCondition)
+    assert isinstance(c3, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(c3._comparator, condition.comparator.DirectionComparator)
     assert c3._inputs[0].event_type == InputType.JoystickHat
     assert len(c3._comparator.directions) == 3
@@ -115,7 +116,7 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
     assert c3._comparator.directions[2] == HatDirection.NorthEast
 
     c4 = a.conditions[3]
-    assert isinstance(c4, condition.KeyboardCondition)
+    assert isinstance(c4, action_plugins.condition.condition.KeyboardCondition)
     assert isinstance(c4._comparator, condition.comparator.PressedComparator)
     assert c4._comparator.is_pressed == False
 
@@ -123,7 +124,7 @@ def test_from_xml_complex(xml_dir: pathlib.Path):
 def test_to_xml():
     a = condition.ConditionData(InputType.JoystickButton)
 
-    cond = condition.JoystickCondition()
+    cond = action_plugins.condition.condition.JoystickCondition()
     input_dev = Event(
         InputType.JoystickButton,
         37,

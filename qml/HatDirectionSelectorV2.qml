@@ -18,6 +18,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import Gremlin.Profile
 
@@ -30,10 +31,8 @@ Item {
     implicitHeight: _checkboxes.height
     implicitWidth: _checkboxes.width
 
-    Row {
+    RowLayout {
         id: _checkboxes
-
-        spacing: 10
 
         IconCheckBox {
             image: "../gfx/hat_n.png"
