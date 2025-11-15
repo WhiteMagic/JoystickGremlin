@@ -155,6 +155,10 @@ ApplicationWindow {
                 onTriggered: Helpers.createComponent("DialogAutoMapper.qml")
             }
             MenuItem {
+                text: qsTr("Swap Devices")
+                onTriggered: Helpers.createComponent("DialogSwapDevices.qml")
+            }
+            MenuItem {
                 text: qsTr("Device Information")
                 onTriggered: Helpers.createComponent("DialogDeviceInformation.qml")
             }

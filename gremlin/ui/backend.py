@@ -36,6 +36,7 @@ from gremlin.ui.auto_mapper import AutoMapper
 from gremlin.ui.device import InputIdentifier, LogicalDeviceManagementModel
 from gremlin.ui.profile import InputItemModel, ModeHierarchyModel
 from gremlin.ui.script import ScriptListModel
+from gremlin.ui.swap_devices import SwapDevices
 from gremlin.audio_player import AudioPlayer
 
 
@@ -334,6 +335,10 @@ class Backend(QtCore.QObject):
     @Slot(result=AutoMapper)
     def getAutoMapper(self) -> AutoMapper:
         return AutoMapper(self)
+
+    @Slot(result=SwapDevices)
+    def getSwapDevices(self) -> SwapDevices:
+        return SwapDevices(self)
 
     @Slot(str, int, result=bool)
     def isActionExpanded(self, uuid_str: str, index: int) -> bool:

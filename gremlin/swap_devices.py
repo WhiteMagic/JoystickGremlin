@@ -54,6 +54,9 @@ class SwapDevicesResult:
     action_swaps: int
     input_swaps: int
 
+    def as_string(self) -> str:
+        return f"Swapped {self.action_swaps} actions and {self.input_swaps} inputs."
+
 
 def _swap_device_inputs(
     profile: profile.Profile,
