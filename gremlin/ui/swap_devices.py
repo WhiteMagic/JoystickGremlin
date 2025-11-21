@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from typing import Any
 import uuid
 
 from PySide6 import QtCore
@@ -32,9 +33,17 @@ QML_IMPORT_MAJOR_VERSION = 1
 @QtQml.QmlElement
 class ProfileDeviceListModel(QtCore.QAbstractListModel):
     """Model listing devices with bindings in the profile."""
+    selectedIndexChanged = QtCore.Signal()
+
+    roles = {
+        QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
+        QtCore.Qt.UserRole + 2: QtCore.QByteArray("uuid".encode()),
+        QtCore.Qt.UserRole + 3: QtCore.QByteArray("numBindings".encode())
+    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._selected_index = -1
         self._devices: list[swap_devices.ProfileDeviceInfo] = []
         self.update_model()
         event_handler.EventListener().device_change_event.connect(self.update_model)
@@ -50,15 +59,24 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
 
     def data(
         self, index: QtCore.QModelIndex, role: int = QtCore.Qt.DisplayRole
-    ) -> swap_devices.ProfileDeviceInfo | None:
+    ) -> Any:
         if not index.isValid() or not (0 <= index.row() < len(self._devices)):
             return None
+
         device = self._devices[index.row()]
-        if role == QtCore.Qt.DisplayRole:
-            if device.name:
-                return f"{device.name}: {device.num_bindings} bindings"
-            return f"{device.device_uuid}: {device.num_bindings} bindings"
-        return None
+        if role in ProfileDeviceListModel.roles:
+            role_name = ProfileDeviceListModel.roles[role].data().decode()
+            match role_name:
+                case "name":
+                    return device.name
+                case "uuid":
+                    return str(device.device_uuid)
+                case "numBindings":
+                    return device.num_bindings
+        raise ValueError(f"Unknown {role=}")
+        
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
+        return ProfileDeviceListModel.roles
 
     @QtCore.Slot(int, result=str)
     def uuidAtIndex(self, index: int) -> str:
@@ -68,6 +86,16 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
             raise GremlinError("Provided index out of range")
 
         return str(self._devices[index].device_uuid)
+    
+    @QtCore.Property(int)
+    def selectedIndex(self):
+        return self._selected_index
+    
+    @selectedIndex.setter
+    def selectedIndex(self, index):
+        if 0 <= index < len(self._devices):
+            self._selected_index = index
+            self.selectedIndexChanged.emit()
 
 
 @QtQml.QmlElement

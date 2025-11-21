@@ -47,10 +47,6 @@ Window {
         id: swapDevices
     }
 
-    // Properties to track the selected devices.
-    property var selectedTargetDevice: ""
-    property var selectedSourceDevice: ""
-
     property string statusMessage: "Select devices, and click the Swap Bindings button"
 
     ColumnLayout {
@@ -85,10 +81,7 @@ Window {
                     model: physicalDevices
                     textRole: "name"
                     Layout.fillWidth: true
-                    onActivated: selectedTargetDevice = physicalDevices.guidAtIndex(currentIndex)
-                    Component.onCompleted: {
-                        selectedTargetDevice = physicalDevices.guidAtIndex(0) || ""
-                    }
+                    onActivated: physicalDevices.selectedIndex = currentIndex
                 }
             }
 
@@ -100,13 +93,14 @@ Window {
                 }
                 
                 ComboBox {
-                    id: secondDeviceCombo
                     model: profileDevices
-                    textRole: "display"
+                    textRole: "uuid"
                     Layout.fillWidth: true
-                    onActivated: selectedSourceDevice = profileDevices.uuidAtIndex(currentIndex)
-                    Component.onCompleted: {
-                        selectedSourceDevice = profileDevices.uuidAtIndex(0) || ""
+                    onActivated: profileDevices.selectedIndex = currentIndex
+
+                    delegate: ItemDelegate {
+                        width: parent.width
+                        text: `${model.name || model.uuid}: ${model.numBindings} ${model.numBindings === 1 ? 'binding' : 'bindings'}`
                     }
                 }
             }
@@ -121,7 +115,8 @@ Window {
                 text: qsTr("Swap Bindings")
                 onClicked: {
                     statusMessage = swapDevices.swapDevices(
-                        selectedSourceDevice, selectedTargetDevice);
+                        profileDevices.uuidAtIndex(profileDevices.selectedIndex),
+                        physicalDevices.uuidAtIndex(physicalDevices.selectedIndex));
                 }
             }
 

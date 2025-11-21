@@ -22,7 +22,8 @@ Performs a simple swap of two devices in the profile.
 import dataclasses
 import uuid
 
-from gremlin import device_initialization, profile
+import gremlin.profile
+from gremlin import device_initialization
 
 
 @dataclasses.dataclass
@@ -32,9 +33,9 @@ class ProfileDeviceInfo:
     num_bindings: int = 0
 
 
-def get_profile_devices(pr: profile.Profile) -> list[ProfileDeviceInfo]:
+def get_profile_devices(profile: gremlin.profile.Profile) -> list[ProfileDeviceInfo]:
     profile_devices = {}
-    for device_uuid, inputs in pr.inputs.items():
+    for device_uuid, inputs in profile.inputs.items():
         if device_uuid in profile_devices:
             profile_devices[device_uuid].num_bindings += len(inputs)
         else:
@@ -53,13 +54,17 @@ def get_profile_devices(pr: profile.Profile) -> list[ProfileDeviceInfo]:
 class SwapDevicesResult:
     action_swaps: int
     input_swaps: int
+    user_script_swaps: int
 
     def as_string(self) -> str:
-        return f"Swapped {self.action_swaps} actions and {self.input_swaps} inputs."
+        return (
+            f"Swapped {self.action_swaps} actions, "
+            f"{self.input_swaps} inputs, and {self.user_script_swaps} user script vars."
+        )
 
 
 def _swap_device_inputs(
-    profile: profile.Profile,
+    profile: gremlin.profile.Profile,
     source_device_uuid: uuid.UUID,
     target_device_uuid: uuid.UUID,
 ) -> int:
@@ -81,7 +86,7 @@ def _swap_device_inputs(
 
 
 def _swap_device_actions(
-    profile: profile.Profile,
+    profile: gremlin.profile.Profile,
     source_device_uuid: uuid.UUID,
     target_device_uuid: uuid.UUID,
 ) -> int:
@@ -91,8 +96,19 @@ def _swap_device_actions(
     return swap_count
 
 
+def _swap_device_user_script_vars(
+    profile: gremlin.profile.Profile,
+    source_device_uuid: uuid.UUID,
+    target_device_uuid: uuid.UUID,
+) -> int:
+    swap_count = 0
+    for script in profile.scripts.scripts:
+        swap_count += script.swap_uuid(source_device_uuid, target_device_uuid)
+    return swap_count
+
+
 def swap_devices(
-    profile: profile.Profile,
+    profile: gremlin.profile.Profile,
     source_device_uuid: uuid.UUID,
     target_device_uuid: uuid.UUID,
 ) -> SwapDevicesResult:
@@ -111,4 +127,5 @@ def swap_devices(
     return SwapDevicesResult(
         _swap_device_actions(profile, source_device_uuid, target_device_uuid),
         _swap_device_inputs(profile, source_device_uuid, target_device_uuid),
+        _swap_device_user_script_vars(profile, source_device_uuid, target_device_uuid),
     )

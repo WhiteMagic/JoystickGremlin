@@ -18,16 +18,17 @@
 import pathlib
 import uuid
 
-from gremlin import profile, swap_devices
+import gremlin.profile
+from gremlin import swap_devices
 
 _PROFILE_DEVICE_UUID = uuid.UUID('97b77b40-07d8-11f0-8028-444553540000')
 
 
 def test_swap_devices_from_data_xml(xml_dir: pathlib.Path):
-    p = profile.Profile()
+    profile = gremlin.profile.Profile()
     existing_uuid = _PROFILE_DEVICE_UUID
     new_uuid = uuid.uuid4()
-    p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
-    result = swap_devices.swap_devices(p, existing_uuid, new_uuid)
+    profile.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
+    result = swap_devices.swap_devices(profile, existing_uuid, new_uuid)
     assert result.input_swaps == 9
     assert result.action_swaps == 2

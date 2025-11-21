@@ -94,8 +94,8 @@ class InputIdentifier(QtCore.QObject):
 
 @QtQml.QmlElement
 class DeviceListModel(QtCore.QAbstractListModel):
-
     """Model containing basic information about all connected devices."""
+    selectedIndexChanged = QtCore.Signal()
 
     roles = {
         QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
@@ -123,6 +123,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._selected_index = -1
         self._devices = device_initialization.physical_devices()
 
         event_handler.EventListener().device_change_event.connect(
@@ -154,13 +155,13 @@ class DeviceListModel(QtCore.QAbstractListModel):
         return DeviceListModel.roles
 
     @Slot(int, result=str)
-    def guidAtIndex(self, index: int) -> str:
+    def uuidAtIndex(self, index: int) -> str:
         if len(self._devices) == 0:
             return str(dill.UUID_Invalid)
         if not(0 <= index < len(self._devices)):
             raise GremlinError("Provided index out of range")
 
-        return str(self._devices[index].device_guid)
+        return str(self._devices[index].device_guid.uuid)
 
     def _change_device_type(self, types: str) -> None:
         """Sets which device types are going to be used.
@@ -184,6 +185,16 @@ class DeviceListModel(QtCore.QAbstractListModel):
         new_count = len(self._devices)
         self.rowsRemoved.emit(self.parent(), 0, new_count)
         self.rowsInserted.emit(self.parent(), 0, new_count)
+    
+    @QtCore.Property(int)
+    def selectedIndex(self):
+        return self._selected_index
+        
+    @selectedIndex.setter
+    def selectedIndex(self, index):
+        if 0 <= index < len(self._devices):
+            self._selected_index = index
+            self.selectedIndexChanged.emit()
 
     deviceType = Property(
         str,
