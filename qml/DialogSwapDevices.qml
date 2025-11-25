@@ -43,8 +43,8 @@ Window {
         id: profileDevices
     }
 
-    SwapDevices {
-        id: swapDevices
+    Tools {
+        id: tools
     }
 
     property string statusMessage: "Select devices, and click the Swap Bindings button"
@@ -82,6 +82,7 @@ Window {
                     textRole: "name"
                     Layout.fillWidth: true
                     onActivated: physicalDevices.selectedIndex = currentIndex
+                    Component.onCompleted: physicalDevices.selectedIndex = currentIndex
                 }
             }
 
@@ -97,6 +98,7 @@ Window {
                     textRole: "uuid"
                     Layout.fillWidth: true
                     onActivated: profileDevices.selectedIndex = currentIndex
+                    Component.onCompleted: profileDevices.selectedIndex = currentIndex
 
                     delegate: ItemDelegate {
                         width: parent.width
@@ -114,7 +116,7 @@ Window {
                 id: _swapButton
                 text: qsTr("Swap Bindings")
                 onClicked: {
-                    statusMessage = swapDevices.swapDevices(
+                    statusMessage = tools.swapDevices(
                         profileDevices.uuidAtIndex(profileDevices.selectedIndex),
                         physicalDevices.uuidAtIndex(physicalDevices.selectedIndex));
                 }

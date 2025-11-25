@@ -16,20 +16,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import uuid
 
 from PySide6 import QtCore
 from PySide6 import QtQml
 
 import dill
-from gremlin import auto_mapper
+from gremlin import auto_mapper, swap_devices
 from gremlin.ui import backend
+from gremlin.ui.profile_devices_model import ProfileDeviceListModel
 
 QML_IMPORT_NAME = "Gremlin.Tools"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
 @QtQml.QmlElement
-class AutoMapper(QtCore.QObject):
+class Tools(QtCore.QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -63,3 +65,25 @@ class AutoMapper(QtCore.QObject):
             [int(vjoy_id) for (vjoy_id, chosen) in vjoy_devices.items() if chosen],
             auto_mapper.AutoMapperOptions(mode, repeat, overwrite),
         )
+
+    @QtCore.Slot(str, str, result=str)
+    def swapDevices(self, source_device_uuid: str, target_device_uuid: str) -> str:
+        """
+        Swaps the specified two devices in the profile.
+
+        Args:
+            source_device_uuid: The UUID of the source (from profile) device.
+            target_device_uuid: The UUID of the target (connected) device.
+
+        Returns:
+            The number of action and input swaps performed.
+        """
+        logging.getLogger("system").info(
+            f"Swapping devices {source_device_uuid} and {target_device_uuid}"
+        )
+        result = swap_devices.swap_devices(
+            backend.Backend().profile,
+            uuid.UUID(source_device_uuid),
+            uuid.UUID(target_device_uuid),
+        )
+        return result.as_string()

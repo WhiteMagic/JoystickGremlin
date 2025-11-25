@@ -44,8 +44,8 @@ Window {
         deviceType: "virtual"
     }
 
-    AutoMapper {
-        id: autoMapper
+    Tools {
+        id: tools
     }
 
     // Properties to track the selected devices and user selections.
@@ -192,7 +192,7 @@ Window {
                 Layout.preferredWidth: implicitWidth + 20
                 Layout.preferredHeight: 30
                 onClicked: {
-                    statusMessage = autoMapper.createMappings(
+                    statusMessage = tools.createMappings(
                         selectedMode,
                         selectedPhysicalDevices, selectedVJoyDevices,
                         overwriteNonEmpty, repeatVJoy);

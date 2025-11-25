@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 from typing import Any
-import uuid
 
 from PySide6 import QtCore
 from PySide6 import QtQml
 
 import dill
 from gremlin import event_handler, swap_devices
+from gremlin.error import GremlinError
 from gremlin.ui import backend
 
 QML_IMPORT_NAME = "Gremlin.Tools"
@@ -83,7 +82,7 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
         if len(self._devices) == 0:
             return str(dill.UUID_Invalid)
         if not (0 <= index < len(self._devices)):
-            raise GremlinError("Provided index out of range")
+            raise GremlinError(f"Provided {index=} out of range")
 
         return str(self._devices[index].device_uuid)
     
@@ -96,31 +95,3 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
         if 0 <= index < len(self._devices):
             self._selected_index = index
             self.selectedIndexChanged.emit()
-
-
-@QtQml.QmlElement
-class SwapDevices(QtCore.QObject):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    @QtCore.Slot(str, str, result=str)
-    def swapDevices(self, source_device_uuid: str, target_device_uuid: str) -> str:
-        """
-        Swaps the specified two devices in the profile.
-
-        Args:
-            source_device_uuid: The UUID of the source (from profile) device.
-            target_device_uuid: The UUID of the target (connected) device.
-
-        Returns:
-            The number of action and input swaps performed.
-        """
-        logging.getLogger("system").info(
-            f"Swapping devices {source_device_uuid} and {target_device_uuid}"
-        )
-        result = swap_devices.swap_devices(
-            backend.Backend().profile,
-            uuid.UUID(source_device_uuid),
-            uuid.UUID(target_device_uuid),
-        )
-        return result.as_string()
