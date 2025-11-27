@@ -17,11 +17,11 @@
 
 from __future__ import annotations
 
-import typing
 from abc import abstractmethod, ABC
 import copy
 import time
-from typing import Any, List, Tuple, Optional
+import typing
+from typing import Any, List, Self, Tuple, Type, Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -84,11 +84,11 @@ class AbstractActionData(ABC):
     # Fields expected to be present in every action plugin. These define
     # information required by the plugin manager as well as UI and behavior
     # logic.
-    version : int = -1
-    name : str = ""
-    tag : str = ""
-    icon : str = ""
-    functor = None
+    version : int
+    name : str
+    tag : str
+    icon : str
+    functor: Type[AbstractFunctor]
     model = None
     properties: Tuple[ActionProperty, ...] = ()
     input_types: Tuple[InputType, ...] = ()
@@ -216,13 +216,13 @@ class AbstractActionData(ABC):
         )
         self._from_xml(node, library)
 
-    def to_xml(self) -> ElementTree.Element:
+    def to_xml(self) -> Optional[ElementTree.Element]:
         """Returns an XML node representing the instance's contents.
 
         Calls the implementation specific serialization routine.
 
         Returns:
-            XML node containing the instance's contents
+            XML node containing the instance's contents, or None if invalid
         """
         if not self.is_valid():
             print(f"This node is invalid {self.id}")
@@ -336,7 +336,7 @@ class AbstractActionData(ABC):
         else:
             if not (0 <= anchor <= len(container)):
                 raise GremlinError(
-                    f"{self.name}: specified anchor index '{anchor.id}' is " +
+                    f"{self.name}: specified anchor index '{anchor}' is " +
                     f"not present in container '{selector}'"
                 )
             if mode == DataInsertionMode.Append:
@@ -393,7 +393,7 @@ class AbstractActionData(ABC):
             cls,
             mode: DataCreationMode,
             behavior_type: InputType
-    ) -> AbstractActionData:
+    ) -> Self:
         """Allows customization of instance creation in derived classes.
 
         Args:
@@ -403,7 +403,7 @@ class AbstractActionData(ABC):
         Returns:
             Newly created instance
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _valid_selectors(self) -> List[str]:
