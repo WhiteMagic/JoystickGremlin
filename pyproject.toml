@@ -29,3 +29,12 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 lint.select = ["ANN"]
 lint.ignore = ["ANN401"]
+
+[tool.pyright]
+include = ["action_plugins", "gremlin", "joystick_gremlin.py"]
+exclude = ["**/__pycache__", "**/.git", "**/.venv", "**/venv"]
+reportMissingImports = true
+reportMissingTypeStubs = false
+pythonVersion = "3.12"
+pythonPlatform = "Windows"
+typeCheckingMode = "basic"
