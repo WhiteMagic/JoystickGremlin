@@ -22,7 +22,7 @@ import collections
 import copy
 import logging
 import math
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore, QtGui, QtQml
@@ -56,6 +56,7 @@ class DualAxisDeadzoneFunctor(AbstractFunctor):
 
         self.joy = Joystick()
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -280,6 +281,7 @@ class DualAxisDeadzoneData(AbstractActionData):
         self.output1_actions = []
         self.output2_actions = []
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
 
@@ -316,6 +318,7 @@ class DualAxisDeadzoneData(AbstractActionData):
         self.output2_actions = \
             [library.get_action(aid) for aid in output2_actions]
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(DualAxisDeadzoneData.tag, self._id)
 
@@ -341,20 +344,24 @@ class DualAxisDeadzoneData(AbstractActionData):
 
         return node
 
+    @override
     def is_valid(self) -> bool:
         axis_valid = self.axis1.isValid and self.axis2.isValid
         deadzone_valid = abs(self.outer_deadzone - self.inner_deadzone) >= 0.01
         return axis_valid and deadzone_valid
 
+    @override
     def _valid_selectors(self) -> list[str]:
         return ["first", "second"]
 
+    @override
     def _get_container(self, selector: str) -> list[AbstractActionData]:
         if selector == "first":
             return self.output1_actions
         elif selector == "second":
             return self.output2_actions
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -48,6 +48,7 @@ class PlaySoundFunctor(AbstractFunctor):
     def __init__(self, action: PlaySoundData):
         super().__init__(action)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -147,6 +148,7 @@ class PlaySoundData(AbstractActionData):
         self.sound_filename: str = ""
         self.sound_volume: int = 50
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
 
@@ -162,6 +164,7 @@ class PlaySoundData(AbstractActionData):
                 f"{self.sound_filename} does not exists or is not accessible."
             )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(PlaySoundData.tag, self._id)
         util.append_property_nodes(
@@ -173,15 +176,19 @@ class PlaySoundData(AbstractActionData):
         )
         return node
 
+    @override
     def is_valid(self) -> bool:
         return file_exists_and_is_accessible(self.sound_filename)
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

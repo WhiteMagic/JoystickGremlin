@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -155,6 +155,7 @@ class ReferenceData(AbstractActionData):
     ):
         super().__init__(behavior_type)
 
+    @override
     def _from_xml(
             self,
             node: ElementTree.Element,
@@ -162,18 +163,23 @@ class ReferenceData(AbstractActionData):
     ) -> None:
         pass
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         return ElementTree.Element()
 
+    @override
     def is_valid(self) -> bool:
         return False
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

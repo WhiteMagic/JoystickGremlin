@@ -22,7 +22,7 @@ import copy
 import logging
 import threading
 import time
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -51,6 +51,7 @@ class DoubleTapFunctor(AbstractFunctor):
         self.event_press = None
         self.fsm = self._create_fsm()
 
+    @override
     def __call__(
             self,
             event: event_handler.Event,
@@ -233,6 +234,7 @@ class DoubleTapData(AbstractActionData):
         self.threshold = Configuration().value("action", "double-tap", "duration")
         self.activate_on = "exclusive"
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         short_ids = util.read_action_ids(node.find("single-actions"))
@@ -250,6 +252,7 @@ class DoubleTapData(AbstractActionData):
                 f"Invalid activat-on value present: {self.activate_on}"
             )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         """Returns an XML node representing this container's data.
 
@@ -271,12 +274,15 @@ class DoubleTapData(AbstractActionData):
 
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return ["single", "double"]
 
+    @override
     def _get_container(
             self,
             selector: Optional[str] = None
@@ -286,6 +292,7 @@ class DoubleTapData(AbstractActionData):
         elif selector == "double":
             return self.double_actions
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

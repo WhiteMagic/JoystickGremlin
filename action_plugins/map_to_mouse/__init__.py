@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import enum
 import math
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -61,6 +61,7 @@ class MapToMouseFunctor(AbstractFunctor):
 
         self.mouse_controller = sendinput.MouseController()
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -314,6 +315,7 @@ class MapToMouseData(AbstractActionData):
         self.max_speed = 15
         self.time_to_max_speed = 1.0
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.mode = MapToMouseMode.lookup(util.read_property(
@@ -331,6 +333,7 @@ class MapToMouseData(AbstractActionData):
                 node, "time-to-max-speed", PropertyType.Float
             )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToMouseData.tag, self._id)
         entries = [
@@ -351,15 +354,19 @@ class MapToMouseData(AbstractActionData):
         util.append_property_nodes(node, entries)
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

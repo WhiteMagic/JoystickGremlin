@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, override
 import uuid
 from xml.etree import ElementTree
 
@@ -49,6 +49,7 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
         self._logical = LogicalDevice()
         self._event_listener = EventListener()
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -246,6 +247,7 @@ class MapToLogicalDeviceData(AbstractActionData):
         self.axis_scaling = 1.0
         self.button_inverted = False
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.logical_input_id = util.read_property(
@@ -266,6 +268,7 @@ class MapToLogicalDeviceData(AbstractActionData):
                 node, "button-inverted", PropertyType.Bool
             )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToLogicalDeviceData.tag, self._id)
         node.append(util.create_property_node(
@@ -287,15 +290,19 @@ class MapToLogicalDeviceData(AbstractActionData):
             ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

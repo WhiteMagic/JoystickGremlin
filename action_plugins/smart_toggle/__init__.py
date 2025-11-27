@@ -22,7 +22,7 @@ import copy
 import logging
 import threading
 import time
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -80,6 +80,7 @@ class SmartToggleFunctor(AbstractFunctor):
         self.timer = threading.Timer(self.data.delay, self._timeout)
         self.timer.start()
 
+    @override
     def __call__(
             self,
             event: event_handler.Event,
@@ -170,12 +171,14 @@ class SmartToggleData(AbstractActionData):
         self.delay = Configuration().value("action", "smart-toggle", "duration")
         self.children = []
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         child_ids = util.read_action_ids(node.find("actions"))
         self.children = [library.get_action(aid) for aid in child_ids]
         self.delay = util.read_property(node, "delay", PropertyType.Float)
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(SmartToggleData.tag, self._id)
         node.append(util.create_action_ids(
@@ -187,16 +190,20 @@ class SmartToggleData(AbstractActionData):
         ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return ["children"]
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         if selector == "children":
             return self.children
 
+    @override
     def _handle_behavior_change(
             self,
             old_behavior: InputType,

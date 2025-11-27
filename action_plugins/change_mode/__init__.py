@@ -22,7 +22,7 @@ import enum
 import logging
 import threading
 import time
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -77,6 +77,7 @@ class ChangeModeFunctor(AbstractFunctor):
             self._mode_sequence = \
                 mode_manager.ModeSequence(self.data._target_modes)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -268,6 +269,7 @@ class ChangeModeData(AbstractActionData):
 
         self._target_modes = value
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self._change_type = ChangeType.lookup(util.read_property(
@@ -279,6 +281,7 @@ class ChangeModeData(AbstractActionData):
                 entry, "name", PropertyType.String
             ))
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(ChangeModeData.tag, self._id)
         node.append(util.create_property_node(
@@ -290,15 +293,19 @@ class ChangeModeData(AbstractActionData):
             ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise error.GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
             self,
             old_behavior: InputType,

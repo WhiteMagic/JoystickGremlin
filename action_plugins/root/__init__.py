@@ -22,7 +22,7 @@ import copy
 import logging
 import threading
 import time
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -48,6 +48,7 @@ class RootFunctor(AbstractFunctor):
     def __init__(self, action: RootData) -> None:
         super().__init__(action)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -115,11 +116,13 @@ class RootData(AbstractActionData):
 
         self.children = []
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         child_ids = util.read_action_ids(node.find("actions"))
         self.children = [library.get_action(aid) for aid in child_ids]
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(RootData.tag, self._id)
         node.append(util.create_action_ids(
@@ -128,16 +131,20 @@ class RootData(AbstractActionData):
         ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return ["children"]
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         if selector == "children":
             return self.children
 
+    @override
     def _handle_behavior_change(
             self,
             old_behavior: InputType,

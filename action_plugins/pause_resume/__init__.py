@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import enum
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -60,6 +60,7 @@ class PauseResumeFunctor(AbstractFunctor):
     def __init__(self, action: PauseResumeData):
         super().__init__(action)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -146,12 +147,14 @@ class PauseResumeData(AbstractActionData):
         # Model variables
         self.operation = PauseResumeType.Pause
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.operation = PauseResumeType.lookup(util.read_property(
             node, "operation", PropertyType.String
         ))
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(PauseResumeData.tag, self._id)
         node.append(util.create_property_node(
@@ -159,15 +162,19 @@ class PauseResumeData(AbstractActionData):
         ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

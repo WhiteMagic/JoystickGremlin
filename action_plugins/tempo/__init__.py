@@ -22,7 +22,7 @@ import copy
 import logging
 import threading
 import time
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -53,6 +53,7 @@ class TempoFunctor(AbstractFunctor):
         self.event_press = None
         self.fsm = self._create_fsm()
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -221,6 +222,7 @@ class TempoData(AbstractActionData):
         self.threshold = Configuration().value("action", "tempo", "duration")
         self.activate_on = "release"
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         short_ids = util.read_action_ids(node.find("short-actions"))
@@ -238,6 +240,7 @@ class TempoData(AbstractActionData):
                 f"Invalid activat-on value present: {self.activate_on}"
             )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(TempoData.tag, self._id)
         node.append(util.create_action_ids(
@@ -255,12 +258,15 @@ class TempoData(AbstractActionData):
 
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return ["long", "short"]
 
+    @override
     def _get_container(
             self,
             selector: Optional[str] = None
@@ -270,6 +276,7 @@ class TempoData(AbstractActionData):
         elif selector == "long":
             return self.long_actions
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

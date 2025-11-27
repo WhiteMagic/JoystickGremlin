@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -58,6 +58,7 @@ class MapToVjoyFunctor(AbstractFunctor):
         self.axis_delta_value = 0.0
         self.axis_value = 0.0
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -309,9 +310,11 @@ class MapToVjoyData(AbstractActionData):
         self.button_inverted = False
 
     @classmethod
+    @override
     def can_create(cls) -> bool:
         return len(device_initialization.vjoy_devices()) > 0
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.vjoy_device_id = util.read_property(
@@ -335,6 +338,7 @@ class MapToVjoyData(AbstractActionData):
                 node, "button-inverted", PropertyType.Bool
             )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToVjoyData.tag, self._id)
         node.append(util.create_property_node(
@@ -359,15 +363,19 @@ class MapToVjoyData(AbstractActionData):
             ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise error.GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

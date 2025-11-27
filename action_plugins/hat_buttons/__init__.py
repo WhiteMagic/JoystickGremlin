@@ -20,7 +20,7 @@ from __future__ import annotations
 import copy
 import time
 from collections.abc import Callable
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -85,6 +85,7 @@ class DirectionalButton:
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -239,6 +240,7 @@ class HatButtonsData(AbstractActionData):
         for name in HatButtonsData. name_list[self.button_count]:
             self.direction[name] = []
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.button_count = util.read_property(
@@ -253,6 +255,7 @@ class HatButtonsData(AbstractActionData):
             action_ids = util.read_action_ids(elem)
             self.direction[key] = [library.get_action(aid) for aid in action_ids]
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(HatButtonsData.tag, self._id)
         node.append(util.create_property_node(
@@ -264,17 +267,21 @@ class HatButtonsData(AbstractActionData):
             ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return list(self.direction.keys())
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         if selector not in self.direction:
             raise GremlinError(f"Key {selector} invalid as hat direction")
         return self.direction[selector]
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import enum
 import math
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -49,6 +49,7 @@ class MapToKeyboardFunctor(AbstractFunctor):
         for key in reversed(self.data.keys):
             self.release.release(key)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -142,6 +143,7 @@ class MapToKeyboardData(AbstractActionData):
 
         self.keys = []
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         for key_node in node.findall("input"):
@@ -151,6 +153,7 @@ class MapToKeyboardData(AbstractActionData):
             )
             self.keys.append(key)
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToKeyboardData.tag, self._id)
         for key in self.keys:
@@ -163,15 +166,19 @@ class MapToKeyboardData(AbstractActionData):
             ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return len(self.keys) > 0
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

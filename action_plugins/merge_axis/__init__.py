@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 import uuid
 from xml.etree import ElementTree
 
@@ -96,6 +96,7 @@ class MergeAxisFunctor(AbstractFunctor):
     def __init__(self, action: MergeAxisData):
         super().__init__(action)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -353,6 +354,7 @@ class MergeAxisData(AbstractActionData):
 
         self.children = []
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.label = util.read_property(node, "label", PropertyType.String)
@@ -376,6 +378,7 @@ class MergeAxisData(AbstractActionData):
         child_ids = util.read_action_ids(node.find("actions"))
         self.children = [library.get_action(aid) for aid in child_ids]
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MergeAxisData.tag, self._id)
         entries = [
@@ -397,9 +400,11 @@ class MergeAxisData(AbstractActionData):
         ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:
         performed_swap = False
         if self.axis_in1.device_guid == old_uuid:
@@ -411,6 +416,7 @@ class MergeAxisData(AbstractActionData):
         return performed_swap
 
     @classmethod
+    @override
     def _do_create(
             cls,
             mode: DataCreationMode,
@@ -425,13 +431,16 @@ class MergeAxisData(AbstractActionData):
             else:
                 return all_actions[0]
 
+    @override
     def _valid_selectors(self) -> list[str]:
         return ["children"]
 
+    @override
     def _get_container(self, selector: str) -> list[AbstractActionData]:
         if selector == "children":
             return self.children
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

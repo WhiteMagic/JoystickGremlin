@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -40,6 +40,7 @@ class SplitAxisFunctor(AbstractFunctor):
     def __init__(self, action: SplitAxisData) -> None:
         super().__init__(action)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -121,6 +122,7 @@ class SplitAxisData(AbstractActionData):
         self.upper_actions: List[AbstractActionData] = []
         self.split_value: float = 0.0
 
+    @override
     def _from_xml(
             self,
             node: ElementTree.Element,
@@ -135,6 +137,7 @@ class SplitAxisData(AbstractActionData):
             node, "split-value", PropertyType.Float
         )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(self.tag, self._id)
         node.append(util.create_property_node(
@@ -148,12 +151,15 @@ class SplitAxisData(AbstractActionData):
         ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return ["lower", "upper"]
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         match selector:
             case "lower":
@@ -165,6 +171,7 @@ class SplitAxisData(AbstractActionData):
                     f"{self.name}: has no container with name {selector}"
                 )
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

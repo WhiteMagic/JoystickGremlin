@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -50,6 +50,7 @@ class ConditionFunctor(AbstractFunctor):
     def __init__(self, action: ConditionModel) -> None:
         super().__init__(action)
 
+    @override
     def __call__(
             self,
             event: event_handler.Event,
@@ -243,6 +244,7 @@ class ConditionData(AbstractActionData):
         self.false_actions = []
         self.conditions = []
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         # Parse IF action ids
@@ -282,6 +284,7 @@ class ConditionData(AbstractActionData):
                 cond_obj.from_xml(entry)
                 self.conditions.append(cond_obj)
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(ConditionData.tag, self._id)
         node.append(util.create_property_node(
@@ -300,12 +303,15 @@ class ConditionData(AbstractActionData):
 
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return ["true", "false"]
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         match selector:
             case "true":
@@ -317,6 +323,7 @@ class ConditionData(AbstractActionData):
                     f"{self.name}: has no container with name {selector}"
                 )
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

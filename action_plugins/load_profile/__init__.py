@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -48,6 +48,7 @@ class LoadProfileFunctor(AbstractFunctor):
     def __init__(self, action: LoadProfileData):
         super().__init__(action)
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -138,6 +139,7 @@ class LoadProfileData(AbstractActionData):
         # Model variables
         self.profile_filename = ""
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.profile_filename = util.read_property(
@@ -147,6 +149,7 @@ class LoadProfileData(AbstractActionData):
         if not self.is_valid():
             raise GremlinError(f"{self.profile_filename} does not exists or is not accessible.")
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(LoadProfileData.tag, self._id)
         node.append(util.create_property_node(
@@ -154,15 +157,19 @@ class LoadProfileData(AbstractActionData):
         ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return file_exists_and_is_accessible(self.profile_filename)
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

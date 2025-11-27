@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import enum
 from itertools import count
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING, override
 from unittest import case
 from xml.etree import ElementTree
 
@@ -630,6 +630,7 @@ class MacroFunctor(AbstractFunctor):
                     self.data.repeat_data.delay
                 )
 
+    @override
     def __call__(
             self,
             event: event_handler.Event,
@@ -835,6 +836,7 @@ class MacroData(AbstractActionData):
         self.repeat_mode = MacroRepeatModes.Single
         self.repeat_data = MacroRepeatData()
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         type_lookup = {
             "joystick": macro.JoystickAction.create,
@@ -872,6 +874,7 @@ class MacroData(AbstractActionData):
                     f"id {self._id}"
                 )
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MacroData.tag, self._id)
         util.append_property_nodes(
@@ -887,15 +890,19 @@ class MacroData(AbstractActionData):
             node.append(entry.to_xml())
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return []
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,

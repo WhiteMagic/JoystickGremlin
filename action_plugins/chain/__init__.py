@@ -24,6 +24,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
+from typing import override
 from gremlin import event_handler, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
     Value
@@ -47,6 +48,7 @@ class ChainFunctor(AbstractFunctor):
         self.current_index = 0
         self.last_execution = 0.0
 
+    @override
     def __call__(
             self,
             event: Event,
@@ -153,6 +155,7 @@ class ChainData(AbstractActionData):
         self.chain_sequences = [[],]
         self.timeout = 0.0
 
+    @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.timeout = util.read_property(node, "timeout", PropertyType.Float)
@@ -166,6 +169,7 @@ class ChainData(AbstractActionData):
         for idx in sorted(chain_dict.keys()):
             self.chain_sequences.append(chain_dict[idx])
 
+    @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(ChainData.tag, self._id)
         for i, chain in enumerate(self.chain_sequences):
@@ -177,18 +181,22 @@ class ChainData(AbstractActionData):
         ))
         return node
 
+    @override
     def is_valid(self) -> bool:
         return True
 
+    @override
     def _valid_selectors(self) -> List[str]:
         return [str(i) for i in range(len(self.chain_sequences))]
 
+    @override
     def _get_container(self, selector: str) -> List[AbstractActionData]:
         index = int(selector)
         if index < 0 or index >= len(self.chain_sequences):
             raise GremlinError(f"Index {index} invalid as chain container")
         return self.chain_sequences[index]
 
+    @override
     def _handle_behavior_change(
         self,
         old_behavior: InputType,
