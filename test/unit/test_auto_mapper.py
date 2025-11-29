@@ -51,15 +51,15 @@ def register_profile_device() -> dill.DeviceSummary:
         )
     )
 
-    for mocked_dev in device_initialization._joystick_devices:
+    for mocked_dev in device_initialization._joystick_devices.values():
         if mocked_dev.device_guid == dev.device_guid:
             yield dev
     else:
-        device_initialization._joystick_devices.append(dev)
+        device_initialization._joystick_devices[dev.device_guid.uuid] = dev
         yield dev
-    for i, mocked_dev in enumerate(device_initialization._joystick_devices):
+    for mocked_dev in list(device_initialization._joystick_devices.values()):
         if mocked_dev.device_guid == dev.device_guid:
-            device_initialization._joystick_devices.pop(i)
+            device_initialization._joystick_devices.pop(mocked_dev.device_guid.uuid)
             break
 
 

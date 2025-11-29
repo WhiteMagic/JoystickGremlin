@@ -1,5 +1,7 @@
+import collections
 import logging
 import threading
+import uuid
 
 import dill
 from gremlin import error, util
@@ -7,7 +9,7 @@ from vjoy.vjoy import VJoyProxy
 from vjoy import vjoy
 
 
-_joystick_devices = []
+_joystick_devices: dict[uuid.UUID, dill.DeviceSummary] = collections.OrderedDict()
 _joystick_init_lock = threading.Lock()
 
 
@@ -152,8 +154,9 @@ def joystick_devices_initialization() -> None:
         [dev for dev in devices if dev.is_virtual],
         key=lambda x: x.vjoy_id
     ))
-
-    _joystick_devices = sorted_devices
+    _joystick_devices.clear()
+    for dev in sorted_devices:
+        _joystick_devices[dev.device_guid.uuid] = dev
     _joystick_init_lock.release()
 
 
@@ -163,7 +166,7 @@ def joystick_devices() -> list[dill.DeviceSummary]:
     Returns:
         List containing information about all joystick devices
     """
-    return _joystick_devices
+    return list(_joystick_devices.values())
 
 
 def vjoy_devices() -> list[dill.DeviceSummary]:
@@ -172,7 +175,7 @@ def vjoy_devices() -> list[dill.DeviceSummary]:
     Returns:
         List of vJoy devices
     """
-    return [dev for dev in _joystick_devices if dev.is_virtual]
+    return [dev for dev in _joystick_devices.values() if dev.is_virtual]
 
 
 def physical_devices() -> list[dill.DeviceSummary]:
@@ -181,4 +184,4 @@ def physical_devices() -> list[dill.DeviceSummary]:
     Returns:
         List of physical devices
     """
-    return [dev for dev in _joystick_devices if not dev.is_virtual]
+    return [dev for dev in _joystick_devices.values() if not dev.is_virtual]
