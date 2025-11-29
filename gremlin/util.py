@@ -316,6 +316,7 @@ _type_lookup = {
 
 _element_parsers = {
     "device-id": lambda x: uuid.UUID(x.text),
+    "device-name": lambda x: str(x.text),
     "input-type": lambda x: InputType.to_enum(x.text),
     "input-id": lambda x: parse_id_or_uuid(x.text),
     "mode": lambda x: str(x.text),
@@ -332,6 +333,7 @@ _element_parsers = {
 
 _element_types = {
     "device-id": [uuid.UUID],
+    "device-name": [str],
     "input-type": [InputType],
     "input-id": [int, uuid.UUID],
     "mode": [str],
@@ -348,6 +350,7 @@ _element_types = {
 
 _element_to_string = {
     "device-id": str,
+    "device-name": str,
     "input-type": lambda x: InputType.to_string(x),
     "input-id": str,
     "mode": str,

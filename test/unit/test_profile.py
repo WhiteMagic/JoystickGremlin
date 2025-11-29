@@ -16,18 +16,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
+
+from gremlin import profile
 sys.path.append(".")
 
 import pathlib
 import pytest
+import tempfile
 import uuid
+from xml.etree import ElementTree
 
 import gremlin.plugin_manager
 from gremlin.config import Configuration
 from gremlin.types import AxisMode, InputType
-from gremlin import shared_state
+from gremlin import device_initialization, shared_state
 
 from gremlin.profile import Profile
+from test.unit.conftest import get_fake_device_guid
 
 # Ensure config entries are generated
 import action_plugins.tempo
@@ -45,7 +50,7 @@ def test_simple_action(xml_dir: pathlib.Path):
     p = Profile()
     p.from_xml(str(xml_dir / "profile_simple.xml"))
 
-    guid = uuid.UUID("{af3d9175-30a7-4d77-aed5-e1b5e0b71efc}")
+    guid = get_fake_device_guid(is_virtual=False).uuid
 
     action_sequences = p.inputs[guid][0].action_sequences
     assert len(action_sequences) == 1
@@ -129,3 +134,32 @@ def test_script_manager(test_root_dir: pathlib.Path, subtests):
     with subtests.test("script remove"):
         p.scripts.remove_script(script_path, "New Name")
         assert not p.scripts.scripts
+
+
+def test_device_database(xml_dir: pathlib.Path, subtests):
+    database = profile.DeviceDatabase()
+    with subtests.test("create database"):
+        uuids = [dev.device_guid.uuid for dev in device_initialization.physical_devices()]
+        database.update_for_uuids(uuids)
+        assert len(database._devices) == len(uuids)
+
+    with subtests.test("xml_conversion"):
+        new_database = profile.DeviceDatabase()
+        xml_root = ElementTree.Element("profile")
+        xml_root.append(database.to_xml())
+        new_database.from_xml(xml_root)
+        assert new_database._devices == database._devices
+
+    with subtests.test("in_profile"):
+        p = Profile()
+        p.from_xml(str(xml_dir / "profile_hierarchy.xml"))
+        p.device_database.update_for_uuids(uuids)
+        assert database._devices == p.device_database._devices
+
+    with subtests.test("profile_xml"):
+        new_profile = Profile()
+        with tempfile.NamedTemporaryFile(delete_on_close=False) as tmp:
+            tmp.close()
+            p.to_xml(tmp.name)
+            new_profile.from_xml(tmp.name)
+        assert new_profile.device_database._devices == database._devices

@@ -17,17 +17,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from abc import abstractmethod, ABCMeta
 import codecs
+import dataclasses
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set, TYPE_CHECKING, Callable
+from typing import Dict, List, Optional, Self, Set, TYPE_CHECKING, Callable
 import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
 
+import dill
+
 from gremlin.types import AxisButtonDirection, InputType, HatDirection
-from gremlin import error, plugin_manager
+from gremlin import device_initialization, error, plugin_manager
 from gremlin.logical_device import LogicalDevice
 from gremlin.tree import TreeNode
 from gremlin.user_script import Script
@@ -371,7 +375,6 @@ class Library:
                 actions.append(action)
         return actions
 
-
     def get_action(self, key: uuid.UUID) -> AbstractActionData:
         """Returns the action specified by the key.
 
@@ -433,7 +436,6 @@ class Library:
             else:
                 parse_later.append(entry)
 
-
         # Parse all actions that have missing child actions and repeat this
         # until no action with missing child actions remains.
         iterations = 0
@@ -457,7 +459,6 @@ class Library:
                         "Loading profile failed due to action resolution chain"
                     )
                     break
-
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node encoding the content of this library.
@@ -498,6 +499,81 @@ class Library:
         self._actions[action_obj.id] = action_obj
 
 
+@dataclasses.dataclass
+class DeviceInfo:
+    """Captures information about a generic device."""
+    XML_TAG = "device"
+
+    device_uuid: uuid.UUID = dill.UUID_Invalid
+    name: str = ''
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        """Sets attributes from an XML node.
+
+        Args:
+            node: XML node containing the device information
+        """
+        self.device_uuid = read_subelement(node, "device-id")
+        self.name=read_subelement(node, "device-name")
+
+    def to_xml(self) -> ElementTree.Element:
+        """Returns an XML node representing this device information.
+
+        Returns:
+            XML node containing the device's information
+        """
+        node = ElementTree.Element(self.XML_TAG)
+        node.append(create_subelement_node("device-id", self.device_uuid))
+        node.append(create_subelement_node("device-name", self.name))
+        return node
+
+
+class DeviceDatabase:
+    """Database tracking devices used in a profile.
+
+    This information can be useful when a device present in a profile is disconnected.
+    """
+    XML_TAG = "devices"
+
+    def __init__(self) -> None:
+        self._devices: dict[uuid.UUID, DeviceInfo] = {}
+
+    def update_for_uuids(self, uuids: Iterable[uuid.UUID]):
+        """Update information for given UUIDs for any connected devices."""
+        for device_uuid in uuids:
+            try:
+                dev = device_initialization.device_for_uuid(device_uuid)
+            except KeyError:
+                # Device is not connected, we have no information to add.
+                continue
+            self._devices[device_uuid] = DeviceInfo(
+                device_uuid=device_uuid, name=dev.name
+            )
+
+    def from_xml(self, node: ElementTree.Element) -> None:
+        """Populates the device database from an XML node.
+
+        Args:
+            node: XML node containing device information
+        """
+        self._devices.clear()
+        for device_node in node.findall(f"./{self.XML_TAG}/{DeviceInfo.XML_TAG}"):
+            device_info = DeviceInfo()
+            device_info.from_xml(device_node)
+            self._devices[device_info.device_uuid] = device_info
+
+    def to_xml(self) -> ElementTree.Element:
+        """Returns an XML node representing all devices in the database.
+
+        Returns:
+            XML node containing all device information
+        """
+        node = ElementTree.Element(self.XML_TAG)
+        for device_info in self._devices.values():
+            node.append(device_info.to_xml())
+        return node
+
+
 class Profile:
 
     """Stores the contents and an entire configuration profile."""
@@ -507,6 +583,7 @@ class Profile:
     def __init__(self) -> None:
         self.inputs: dict[uuid.UUID, list[InputItem]] = {}
         self.library = Library()
+        self.device_database = DeviceDatabase()
         self.settings = Settings(self)
         self.modes = ModeHierarchy(self)
         self.scripts = ScriptManager(self)
@@ -528,6 +605,7 @@ class Profile:
         # self.settings.from_xml(root)
         self._logical_devices_from_xml(root)
         self.library.from_xml(root)
+        self.device_database.from_xml(root)
         self.modes.from_xml(root)
         self.scripts.from_xml(root)
 
@@ -552,6 +630,9 @@ class Profile:
                 if len(input_data.action_sequences) > 0:
                     inputs.append(input_data.to_xml())
         root.append(inputs)
+        # Device database.
+        self.device_database.update_for_uuids(self.inputs)
+        root.append(self.device_database.to_xml())
 
         # Managed content
         # root.append(self.settings.to_xml())

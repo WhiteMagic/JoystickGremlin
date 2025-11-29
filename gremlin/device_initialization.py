@@ -185,3 +185,7 @@ def physical_devices() -> list[dill.DeviceSummary]:
         List of physical devices
     """
     return [dev for dev in _joystick_devices.values() if not dev.is_virtual]
+
+
+def device_for_uuid(device_uuid: uuid.UUID) -> dill.DeviceSummary:
+    return _joystick_devices[device_uuid]
