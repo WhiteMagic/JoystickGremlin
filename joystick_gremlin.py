@@ -159,6 +159,21 @@ def register_config_options() -> None:
     )
 
 
+def configure_loggers() -> None:
+    # Configure logging for system and user events
+    configure_logger({
+        "name": "system",
+        "level": logging.DEBUG,
+        "logfile": os.path.join(gremlin.util.userprofile_path(), "system.log"),
+        "format": "%(asctime)s %(levelname)10s %(message)s"
+    })
+    configure_logger({
+        "name": "user",
+        "level": logging.DEBUG,
+        "logfile": os.path.join(gremlin.util.userprofile_path(), "user.log"),
+        "format": "%(asctime)s %(message)s"
+    })
+
 def update_action_priorities() -> None:
     cfg = gremlin.config.Configuration()
     key = ["global", "general", "action_priorities"]
@@ -183,6 +198,165 @@ def update_action_priorities() -> None:
 
     cfg.set(*key, priorities)
 
+
+class JoystickGremlinApp(QtWidgets.QApplication):
+
+    def __init__(self, argv: List[str]) -> None:
+        super().__init__(argv)
+
+        # Setup the configuration system
+        register_config_options()
+
+        # Show unhandled exceptions to the user when running a compiled version
+        # of Joystick Gremlin
+        executable_name = os.path.split(sys.executable)[-1]
+        if executable_name == "joystick_gremlin.exe":
+            sys.excepthook = exception_hook
+
+
+        # +-------------------------------------------------------------------------
+        # | Initialize QT system
+        # +-------------------------------------------------------------------------
+
+        # debug = QtQml.QQmlDebuggingEnabler()
+        QtCore.QLoggingCategory.setFilterRules("qt.qml.binding.removal.info=true")
+
+        # Initialize QT components
+        #QtWebEngine.QtWebEngine.initialize()
+
+        # Prevent blurry fonts that Qt seems to like
+        QtQuick.QQuickWindow.setTextRenderType(
+            QtQuick.QQuickWindow.NativeTextRendering
+        )
+        # Use software rendering to prevent flickering on variable refresh rate
+        # displays
+        # QtQuick.QQuickWindow.setSceneGraphBackend("software")
+        QtQuick.QQuickWindow.setGraphicsApi(QtQuick.QSGRendererInterface.OpenGL)
+
+        configure_loggers()
+        syslog = logging.getLogger("system")
+
+        # Create user interface
+        app_id = u"joystick.gremlin"
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+        self.setWindowIcon(QtGui.QIcon("gfx/icon.png"))
+        self.setApplicationDisplayName("Joystick Gremlin")
+
+        # Configure QSettings to keep QT happy
+        self.setOrganizationName("H2IK")
+        self.setOrganizationDomain("https://whitemagic.github.io/JoystickGremlin/")
+        self.setApplicationName("Joystick Gremlin")
+
+        # Change application wide font
+        self.setFont(QtGui.QFont("Segoe UI", 11))
+
+        # Ensure joystick devices are correctly setup
+        dill.DILL.init()
+        gremlin.device_initialization.joystick_devices_initialization()
+
+        # Create application and UI engine
+        self.engine = QtQml.QQmlApplicationEngine(parent=self)
+        self.engine.addImportPath(".")
+        QtCore.QDir.addSearchPath(
+            "core_plugins",
+            gremlin.util.resource_path("action_plugins/")
+        )
+        QtCore.QDir.addSearchPath("qml", gremlin.util.resource_path("qml/"))
+        self.cfg = Configuration()
+        user_plugins_path = Path(self.cfg.value("global", "general", "plugin_directory"))
+        if user_plugins_path.is_dir():
+            QtCore.QDir.addSearchPath(
+                "user_plugins",
+                str(user_plugins_path)
+            )
+
+
+        # +-------------------------------------------------------------------------
+        # | Register data types for use in QML
+        # +-------------------------------------------------------------------------
+
+        # Create and register backend and signal objects
+        self.backend = gremlin.ui.backend.Backend(self.engine)
+        self.backend.newProfile()
+        self.engine.rootContext().setContextProperty("backend", self.backend)
+        self.engine.rootContext().setContextProperty("uiState", self.backend.ui_state)
+        self.engine.rootContext().setContextProperty("signal", gremlin.signal.signal)
+
+        # Load plugin code and UI elements
+        syslog.info("Initializing plugins")
+        gremlin.plugin_manager.PluginManager()
+
+        # Purgre configuration options that have not been registered and update
+        # the action priority information
+        self.cfg.purge_unused()
+        update_action_priorities()
+
+        # +-------------------------------------------------------------------------
+        # | Start Gremlin UI
+        # +-------------------------------------------------------------------------
+
+        # Load icon fonts
+        if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:
+            syslog.error("Failed to load BootstrapIcons")
+
+        # Initialize main UI
+        self.engine.load(QtCore.QUrl.fromLocalFile(
+            gremlin.util.resource_path("qml/Main.qml"))
+        )
+        if not self.engine.rootObjects():
+            sys.exit(-1)
+
+        # Check if vJoy is properly setup and if not display an error
+        # and terminate Gremlin
+        # try:
+        #     syslog.info("Checking vJoy installation")
+        #     vjoy_working = len([
+        #         dev for dev in gremlin.device_initialization.joystick_devices()
+        #         if dev.is_virtual
+        #     ]) != 0
+        #
+        #     if not vjoy_working:
+        #         logging.getLogger("system").error(
+        #             "vJoy is not present or incorrectly setup."
+        #         )
+        #         raise gremlin.error.GremlinError(
+        #             "vJoy is not present or incorrectly setup."
+        #         )
+        #
+        # except (gremlin.error.GremlinError, dill.DILLError) as e:
+        #     error_display = QtWidgets.QMessageBox(
+        #         QtWidgets.QMessageBox.Critical,
+        #         "Error",
+        #         e.value,
+        #         QtWidgets.QMessageBox.Ok
+        #     )
+        #     error_display.show()
+        #     app.exec_()
+        #
+        #     vjoy.vjoy.VJoyProxy.reset()
+        #     event_listener = gremlin.event_handler.EventListener()
+        #     event_listener.terminate()
+        #     sys.exit(0)
+
+        # Load the profile specified by the user on the command line, otherwise
+        # attempt to load the previously loaded profile
+        # if args.profile is not None and os.path.isfile(args.profile):
+        #     backend.loadProfile(args.profile)
+        # else:
+        #     last_profile = Path(Configuration().value(
+        #         "global", "internal", "last_profile")
+        #     )
+        #     if last_profile.is_file():
+        #         backend.loadProfile(str(last_profile))
+
+        # if args.enable:
+        #     backend.activate_gremlin(True)
+        # if args.start_minimized:
+        #     backend.minimize()
+
+        # Run UI
+        syslog.info("Gremlin UI launching")
+        self.aboutToQuit.connect(shutdown_cleanup)
 
 def make_gremlin_app(argv: List[str]) -> QtWidgets.QApplication:
     # Parse command line arguments
@@ -374,7 +548,8 @@ def make_gremlin_app(argv: List[str]) -> QtWidgets.QApplication:
 
 
 if __name__ == "__main__":
-    app = make_gremlin_app(sys.argv)
+    # app = make_gremlin_app(sys.argv)
+    app = JoystickGremlinApp(sys.argv)
     app.exec()
     syslog = logging.getLogger("system")
     syslog.info("Gremlin UI terminated")

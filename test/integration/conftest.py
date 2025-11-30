@@ -23,6 +23,7 @@ from collections.abc import Iterator
 import logging
 import pathlib
 import tempfile
+from typing import Generator
 
 from PySide6 import QtWidgets
 import pytest
@@ -30,6 +31,7 @@ import pytest
 import dill
 import gremlin.device_initialization
 import gremlin.error
+import gremlin.event_handler
 import gremlin.logical_device
 import gremlin.profile
 import gremlin.ui.backend
@@ -174,16 +176,6 @@ def vjoy_ids_or_skip() -> list[int]:
 
 
 # Do not use directly, see app_tester fixture instead.
-@pytest.fixture(scope="package")
-def _gremlin_app() -> Iterator[QtWidgets.QApplication]:
-    """Yields the Gremlin app."""
-    argv = [sys.argv[0]]
-    app = joystick_gremlin.make_gremlin_app(argv)
-    yield app
-    app.exit()
-
-
-# Do not use directly, see app_tester fixture instead.
 @pytest.fixture(scope="module", autouse=True)
 def _activate_gremlin(edited_profile_path: str) -> Iterator[None]:
     """Activates Gremlin."""
@@ -208,5 +200,7 @@ def tear_down() -> Iterator[None]:
 
 
 @pytest.fixture
-def tester(_gremlin_app: QtWidgets.QApplication) -> app_tester.GremlinAppTester:
-    return app_tester.GremlinAppTester(_gremlin_app)
+def tester(qapp: joystick_gremlin.JoystickGremlinApp) -> Generator[app_tester.GremlinAppTester]:
+    gremlin_app = app_tester.GremlinAppTester(qapp)
+    yield gremlin_app
+    gremlin.event_handler.EventListener().terminate()

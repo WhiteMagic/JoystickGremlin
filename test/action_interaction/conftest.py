@@ -30,6 +30,7 @@ from gremlin import mode_manager
 import gremlin.profile
 from gremlin.types import InputType, HatDirection
 from gremlin.util import clamp
+import gremlin.ui.backend
 
 
 LDIdentifier = LogicalDevice.Input.Identifier
@@ -120,6 +121,7 @@ class GremlinBot:
 @pytest.fixture
 def jgbot(qtbot: QtBot) -> Generator[GremlinBot]:
     hg = GremlinBot(qtbot)
+    gremlin.ui.backend.Backend().minimize()
     yield hg
     hg.stop()
 

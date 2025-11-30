@@ -16,8 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import pathlib
-
 import pytest
+
+import gremlin.ui.backend
+from joystick_gremlin import JoystickGremlinApp
+
+
+@pytest.fixture(scope="session")
+def qapp_cls() -> type[JoystickGremlinApp]:
+    return JoystickGremlinApp
 
 
 @pytest.fixture(scope="session")
