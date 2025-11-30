@@ -17,13 +17,21 @@
 
 from typing import Any
 
-from PySide6 import QtCore
-from PySide6 import QtQml
+from PySide6 import (
+    QtCore,
+    QtQml,
+)
 
 import dill
-from gremlin import event_handler, swap_devices
+from gremlin import (
+    event_handler,
+    swap_devices,
+)
 from gremlin.error import GremlinError
-from gremlin.ui import backend
+from gremlin.ui import (
+    backend,
+    type_aliases,
+)
 
 QML_IMPORT_NAME = "Gremlin.Tools"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -53,19 +61,18 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
         # Ensure the entire model is refreshed
         self.modelReset.emit()
 
-    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
+    def rowCount(self, parent: type_aliases.MI = QtCore.QModelIndex()) -> int:
         return len(self._devices)
 
     def data(
-        self, index: QtCore.QModelIndex, role: int = QtCore.Qt.DisplayRole
+        self, index: type_aliases.MI, role: int = QtCore.Qt.DisplayRole
     ) -> Any:
         if not index.isValid() or not (0 <= index.row() < len(self._devices)):
             return None
 
         device = self._devices[index.row()]
-        if role in ProfileDeviceListModel.roles:
-            role_name = ProfileDeviceListModel.roles[role].data().decode()
-            match role_name:
+        if role in self.roles:
+            match self.roles[role]:
                 case "name":
                     return device.name
                 case "uuid":
@@ -75,7 +82,7 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
         raise ValueError(f"Unknown {role=}")
         
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
-        return ProfileDeviceListModel.roles
+        return self.roles
 
     @QtCore.Slot(int, result=str)
     def uuidAtIndex(self, index: int) -> str:
@@ -86,12 +93,12 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
 
         return str(self._devices[index].device_uuid)
     
-    @QtCore.Property(int)
+    @QtCore.Property(int, notify=selectedIndexChanged)
     def selectedIndex(self):
         return self._selected_index
     
     @selectedIndex.setter
     def selectedIndex(self, index):
-        if 0 <= index < len(self._devices):
+        if 0 <= index < len(self._devices) and index != self._selected_index:
             self._selected_index = index
-            self.selectedIndexChanged.emit()
+        self.selectedIndexChanged.emit()

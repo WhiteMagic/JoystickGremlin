@@ -186,15 +186,14 @@ class DeviceListModel(QtCore.QAbstractListModel):
         self.rowsRemoved.emit(self.parent(), 0, new_count)
         self.rowsInserted.emit(self.parent(), 0, new_count)
     
-    @QtCore.Property(int)
+    @QtCore.Property(int, notify=selectedIndexChanged)
     def selectedIndex(self):
         return self._selected_index
         
     @selectedIndex.setter
     def selectedIndex(self, index):
-        if 0 <= index < len(self._devices):
+        if 0 <= index < len(self._devices) and index != self._selected_index:
             self._selected_index = index
-            self.selectedIndexChanged.emit()
 
     deviceType = Property(
         str,

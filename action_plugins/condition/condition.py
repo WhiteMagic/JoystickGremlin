@@ -491,19 +491,20 @@ class JoystickCondition(AbstractCondition):
             input_type: InputType,
             input_id: int
         ) -> None:
-            self.device_uuid = device_uuid
+            self.device_uuid: uuid.UUID
             self.input_type = input_type
             self.input_id = input_id
             self.joystick = None
-            self.update_for_device()
+            self.initialize_for_uuid(device_uuid)
         
-        def update_for_device(self):
+        def initialize_for_uuid(self, device_uuid: uuid.UUID):
             try:
-                self.joystick = Joystick()[self.device_uuid]
+                self.joystick = Joystick()[device_uuid]
             except error.GremlinError:
                 pass
+            self.device_uuid = device_uuid
             self.device_lookup = DeviceDatabase().get_mapping_by_uuid(
-                self.device_uuid
+                device_uuid
             )
 
         def get(self) -> bool | float | HatDirection:
@@ -619,8 +620,7 @@ class JoystickCondition(AbstractCondition):
         performed_swap = False
         for state in self._states:
             if state.device_uuid == old_uuid:
-                state.device_uuid = new_uuid
-                state.update_for_device()
+                state.initialize_for_uuid(new_uuid)
                 performed_swap = True
         return performed_swap
 

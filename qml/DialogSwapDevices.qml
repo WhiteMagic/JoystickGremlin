@@ -35,16 +35,16 @@ Window {
     title: "Swap devices: Swaps bindings between two devices"
 
     DeviceListModel {
-        id: physicalDevices
+        id: _physicalDevices
         deviceType: "physical"
     }
 
     ProfileDeviceListModel {
-        id: profileDevices
+        id: _profileDevices
     }
 
     Tools {
-        id: tools
+        id: _tools
     }
 
     property string statusMessage: "Select devices, and click the Swap Bindings button"
@@ -77,12 +77,11 @@ Window {
                 }
                 
                 ComboBox {
-                    id: firstDeviceCombo
-                    model: physicalDevices
+                    model: _physicalDevices
                     textRole: "name"
                     Layout.fillWidth: true
-                    onActivated: physicalDevices.selectedIndex = currentIndex
-                    Component.onCompleted: physicalDevices.selectedIndex = currentIndex
+                    onActivated: _physicalDevices.selectedIndex = currentIndex
+                    Component.onCompleted: _physicalDevices.selectedIndex = currentIndex
                 }
             }
 
@@ -94,11 +93,11 @@ Window {
                 }
                 
                 ComboBox {
-                    model: profileDevices
+                    model: _profileDevices
                     textRole: "uuid"
                     Layout.fillWidth: true
-                    onActivated: profileDevices.selectedIndex = currentIndex
-                    Component.onCompleted: profileDevices.selectedIndex = currentIndex
+                    onActivated: _profileDevices.selectedIndex = currentIndex
+                    Component.onCompleted: _profileDevices.selectedIndex = currentIndex
 
                     delegate: ItemDelegate {
                         width: parent.width
@@ -113,17 +112,15 @@ Window {
             spacing: 10
 
             Button {
-                id: _swapButton
                 text: qsTr("Swap Bindings")
                 onClicked: {
-                    statusMessage = tools.swapDevices(
-                        profileDevices.uuidAtIndex(profileDevices.selectedIndex),
-                        physicalDevices.uuidAtIndex(physicalDevices.selectedIndex));
+                    statusMessage = _tools.swapDevices(
+                        _profileDevices.uuidAtIndex(_profileDevices.selectedIndex),
+                        _physicalDevices.uuidAtIndex(_physicalDevices.selectedIndex));
                 }
             }
 
             TextOutputBox {
-                id: _statusNotification
                 Layout.fillWidth: true
                 Layout.preferredHeight: 30
                 text: statusMessage
