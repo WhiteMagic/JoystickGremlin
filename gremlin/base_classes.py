@@ -20,18 +20,17 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 import copy
 import time
-import typing
-from typing import Any, List, Self, Tuple, Type, Optional
+from typing import Any, List, Self, Tuple, Type, TYPE_CHECKING, Optional
 import uuid
 from xml.etree import ElementTree
 
 from gremlin import util, event_handler
-from gremlin.error import GremlinError
+from gremlin.error import GremlinError, MissingImplementationError
 from gremlin.profile import Library
 from gremlin.types import ActionActivationMode, ActionProperty, InputType, \
     PropertyType, DataInsertionMode, DataCreationMode
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from gremlin.event_handler import Event
     from gremlin.ui.action_model import ActionModel
 
@@ -403,7 +402,8 @@ class AbstractActionData(ABC):
         Returns:
             Newly created instance
         """
-        raise NotImplementedError
+        raise MissingImplementationError(
+            f"{cls._do_create.__name__} not implemented by derived class {cls.__name__}")
 
     @abstractmethod
     def _valid_selectors(self) -> List[str]:

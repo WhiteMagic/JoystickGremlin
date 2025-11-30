@@ -31,7 +31,7 @@ lint.select = ["ANN"]
 lint.ignore = ["ANN401"]
 
 [tool.pyright]
-include = ["action_plugins", "gremlin", "joystick_gremlin.py"]
+include = ["action_plugins", "dill", "gremlin", "joystick_gremlin.py", "vjoy"]
 exclude = ["**/__pycache__", "**/.git", "**/.venv", "**/venv"]
 reportMissingImports = true
 reportMissingTypeStubs = false
