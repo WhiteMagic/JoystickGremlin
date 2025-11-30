@@ -19,7 +19,6 @@ debug.txt
 /doc/build
 /doc/api
 /dist
-/gremlin/old/
-/gremlin/ui_old/
 /releases
 /venv
+/.venv

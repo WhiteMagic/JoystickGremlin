@@ -17,6 +17,7 @@ PyInstaller = ">=6.10"
 pywin32 = ">=308"
 pytest = ">=8.3"
 pytest-subtests = "^0.10.0"
+pytest-qt = ">=4.5.0"
 
 [tool.pytest.ini_options]
 pythonpath = "."

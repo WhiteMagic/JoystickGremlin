@@ -856,7 +856,7 @@ class InputItem:
         """
         return f"{self.device_id}: {InputType.to_string(self.input_type)} " \
                f"{self.input_id}"
-    
+
     def add_item_binding(self) -> InputItemBinding:
         """Adds a new binding to this input item and returns it."""
         p_manager = plugin_manager.PluginManager()
@@ -881,7 +881,7 @@ class InputItemBinding:
 
     """Links together a LibraryItem and it's activation behavior."""
 
-    def __init__(self, input_item: InputItem):
+    def __init__(self, input_item: InputItem) -> None:
         self.input_item = input_item
         self.root_action: AbstractActionData | None = None
         self.behavior = None

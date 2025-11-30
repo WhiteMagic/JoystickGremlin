@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" ?>
+<profile version="14">
+    <inputs/>
+    <logical-device>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>1</input-id>
+            <label>Input Axis 1</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>2</input-id>
+            <label>Input Axis 2</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>3</input-id>
+            <label>Input Axis 3</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>4</input-id>
+            <label>Input Axis 4</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>11</input-id>
+            <label>Output Axis 1</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>12</input-id>
+            <label>Output Axis 2</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>13</input-id>
+            <label>Output Axis 3</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>14</input-id>
+            <label>Output Axis 4</label>
+        </input>
+
+        <input>
+            <input-type>button</input-type>
+            <input-id>1</input-id>
+            <label>Input Button 1</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>2</input-id>
+            <label>Input Button 2</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>3</input-id>
+            <label>Input Button 3</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>4</input-id>
+            <label>Input Button 4</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>11</input-id>
+            <label>Output Button 1</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>12</input-id>
+            <label>Output Button 2</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>13</input-id>
+            <label>Output Button 3</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>14</input-id>
+            <label>Output Button 4</label>
+        </input>
+
+        <input>
+            <input-type>hat</input-type>
+            <input-id>1</input-id>
+            <label>Input Hat 1</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>2</input-id>
+            <label>Input Hat 2</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>3</input-id>
+            <label>Input Hat 3</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>4</input-id>
+            <label>Input Hat 4</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>11</input-id>
+            <label>Output Hat 1</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>12</input-id>
+            <label>Output Hat 2</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>13</input-id>
+            <label>Output Hat 3</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>14</input-id>
+            <label>Output Hat 4</label>
+        </input>
+    </logical-device>
+    <library/>
+    <modes>
+        <mode>Default</mode>
+    </modes>
+    <scripts/>
+</profile>
