@@ -20,8 +20,9 @@ from __future__ import annotations
 from pathlib import Path
 import pytest
 from pytestqt.qtbot import QtBot
+from pytestqt.wait_signal import SignalBlocker
 import threading
-from typing import cast, Generator
+from typing import Any, Generator, cast
 
 from gremlin import code_runner
 from gremlin import event_handler
@@ -36,6 +37,41 @@ import gremlin.ui.backend
 LDIdentifier = LogicalDevice.Input.Identifier
 
 
+class EventSpec:
+
+    def __init__(self, event_type: InputType, input_id: int, expected_value: float | bool | HatDirection) -> None:
+        self.event_type = event_type
+        self.input_id = input_id
+        self.expected_value = expected_value
+
+    def __repr__(self) -> str:
+        return f"EventSpec({self.event_type}, {self.input_id}, {self.expected_value})"
+
+    def _repr_compare(self, other: Any) -> list[str]:
+        return [
+            "comparison failed",
+            f"Obtained: {other}",
+            f"Expected: {self}",
+        ]
+
+    def __eq__(self, event: Any) -> bool:
+        if self.event_type != event.event_type:
+            return False
+        if self.input_id != event.identifier:
+            return False
+        match self.event_type:
+            case InputType.JoystickAxis:
+                return self.expected_value == event.value
+            case InputType.JoystickButton:
+                return self.expected_value == event.is_pressed
+            case InputType.JoystickHat:
+                return self.expected_value == event.raw_value
+        return False
+
+    def __ne__(self, event: Any) -> bool:
+        return not (event == self)
+
+
 class GremlinBot:
 
     def __init__(self, qtbot: QtBot) -> None:
@@ -46,6 +82,10 @@ class GremlinBot:
         self._logical_device = LogicalDevice()
         self._logical_device.reset()
         self._mode_manager = mode_manager.ModeManager()
+
+        self._logged_data = []
+        self._ignore_data = []
+        self._event_listener.joystick_event.connect(self._data_logger)
 
     def load_profile(self, profile_path: str | Path) -> None:
         self._logical_device.reset()
@@ -62,6 +102,22 @@ class GremlinBot:
 
     def wait(self, duration: float) -> None:
         self._qtbot.wait(int(duration * 1000))
+
+    def next_event(self) -> event_handler.Event:
+        # Wait to receive a new event, if we timeout the test will fail.
+        if not self._logged_data:
+            self._qtbot.waitSignal(
+                self._event_listener.joystick_event,
+                timeout=500
+            ).wait()
+        return self._logged_data.pop(0)
+
+    def _data_logger(self, event: event_handler.Event) -> None:
+        for evt in self._ignore_data:
+            if evt == event:
+                self._ignore_data.remove(evt)
+                return
+        self._logged_data.append(event)
 
     def send_button(self, button_id: int, pressed: bool) -> None:
         self.emit_event(InputType.JoystickButton, button_id, pressed)
@@ -115,6 +171,7 @@ class GremlinBot:
             is_pressed=value if input_type == InputType.JoystickButton else None,
             raw_value=value
         )
+        self._ignore_data.append(evt)
         self._event_listener.joystick_event.emit(evt)
 
 
@@ -136,27 +193,3 @@ def ldev() -> Generator[LogicalDevice]:
 @pytest.fixture(scope="session")
 def profile_dir() -> Path:
     return Path(__file__).parent / "profiles"
-
-
-def axis_value(input_id: int) -> float:
-    input = cast(
-        LogicalDevice.Axis,
-        LogicalDevice()[LDIdentifier(InputType.JoystickAxis, input_id)]
-    )
-    return input.value
-
-
-def button_state(input_id: int) -> bool:
-    input = cast(
-        LogicalDevice.Button,
-        LogicalDevice()[LDIdentifier(InputType.JoystickButton, input_id)]
-    )
-    return input.is_pressed
-
-
-def hat_direction(input_id: int) -> HatDirection:
-    input = cast(
-        LogicalDevice.Hat,
-        LogicalDevice()[LDIdentifier(InputType.JoystickHat, input_id)]
-    )
-    return input.direction

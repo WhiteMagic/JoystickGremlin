@@ -147,6 +147,11 @@ class Event:
     def __str__(self) -> str:
         return f"{self.device_guid}: {self.event_type} {self.identifier}"
 
+    def __repr__(self) -> str:
+        return f"Event({self.event_type}, {self.identifier}, " + \
+            f"{self.device_guid}, {self.mode}, {self.value}, " + \
+            f"{self.is_pressed}, {self.raw_value})"
+
     def __hash__(self) -> int:
         """Computes the hash value of this event.
 
