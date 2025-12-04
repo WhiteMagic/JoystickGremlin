@@ -18,8 +18,8 @@
 import pathlib
 import pytest
 
-import gremlin.ui.backend
 from joystick_gremlin import JoystickGremlinApp
+import gremlin.ui.backend
 
 
 @pytest.fixture(scope="session")
