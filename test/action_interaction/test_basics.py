@@ -22,47 +22,47 @@ from pathlib import Path
 
 from gremlin.types import HatDirection
 
-from test.action_interaction.conftest import axis_value, button_state, hat_direction, GremlinBot
-from test.action_interaction.input_definitions import *
+from .conftest import GremlinBot
+from .input_definitions import *
 
 
 def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "remap_basic.xml")
 
     jgbot.press_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True
     jgbot.release_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False
 
     jgbot.set_axis_absolute(IN_AXIS_1, 0.5)
-    assert axis_value(OUT_AXIS_1) == 0.5
+    assert jgbot.axis(OUT_AXIS_1) == 0.5
     jgbot.set_axis_absolute(IN_AXIS_1, -0.5)
-    assert axis_value(OUT_AXIS_1) == -0.5
+    assert jgbot.axis(OUT_AXIS_1) == -0.5
 
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.NorthWest)
-    assert hat_direction(OUT_HAT_1) == HatDirection.NorthWest
+    assert jgbot.hat(OUT_HAT_1) == HatDirection.NorthWest
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.SouthEast)
-    assert hat_direction(OUT_HAT_1) == HatDirection.SouthEast
+    assert jgbot.hat(OUT_HAT_1) == HatDirection.SouthEast
 
 
 def test_button_advanced(jgbot: GremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "remap_basic.xml")
 
     jgbot.tap_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False
 
     jgbot.hold_button(IN_BUTTON_1, 0.5)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True
     jgbot.wait(0.4)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True
     jgbot.wait(0.2)
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False
 
 
 def test_remap_inverse(jgbot: GremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "remap_invert.xml")
 
     jgbot.press_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False
     jgbot.release_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True

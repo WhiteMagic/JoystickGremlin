@@ -20,10 +20,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gremlin.types import HatDirection
-
-from test.action_interaction.conftest import axis_value, button_state, hat_direction, GremlinBot
-from test.action_interaction.input_definitions import *
+from .conftest import GremlinBot
+from .input_definitions import *
 
 
 def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
@@ -31,22 +29,22 @@ def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
 
     # Simple tap behavior toggles on and off.
     jgbot.tap_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True
     jgbot.tap_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False
 
     # Holding close to toggle threshold still toggles on and off.
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False
     jgbot.hold_button(IN_BUTTON_1, 0.4)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True
     jgbot.wait(0.5)
     jgbot.tap_button(IN_BUTTON_1)
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False
 
     # Holding beyond toggle threshold releases on button release.
     jgbot.hold_button(IN_BUTTON_1, 0.7)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True
     jgbot.wait(0.5)
-    assert button_state(OUT_BUTTON_1) == True
+    assert jgbot.button(OUT_BUTTON_1) == True
     jgbot.wait(0.3)
-    assert button_state(OUT_BUTTON_1) == False
+    assert jgbot.button(OUT_BUTTON_1) == False

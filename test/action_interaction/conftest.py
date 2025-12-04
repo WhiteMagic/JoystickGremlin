@@ -113,11 +113,33 @@ class GremlinBot:
         return self._logged_data.pop(0)
 
     def _data_logger(self, event: event_handler.Event) -> None:
+        print(f"Received event: {repr(event)}")
         for evt in self._ignore_data:
             if evt == event:
                 self._ignore_data.remove(evt)
                 return
         self._logged_data.append(event)
+
+    def axis(self, input_id: int) -> float:
+        input = cast(
+            LogicalDevice.Axis,
+            self._logical_device[LDIdentifier(InputType.JoystickAxis, input_id)]
+        )
+        return input.value
+
+    def button(self, input_id: int) -> bool:
+        input = cast(
+            LogicalDevice.Button,
+            self._logical_device[LDIdentifier(InputType.JoystickButton, input_id)]
+        )
+        return input.is_pressed
+
+    def hat(self, input_id: int) -> HatDirection:
+        input = cast(
+            LogicalDevice.Hat,
+            self._logical_device[LDIdentifier(InputType.JoystickHat, input_id)]
+        )
+        return input.direction
 
     def send_button(self, button_id: int, pressed: bool) -> None:
         self.emit_event(InputType.JoystickButton, button_id, pressed)
