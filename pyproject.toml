@@ -11,12 +11,11 @@ repository = "https://github.com/WhiteMagic/JoystickGremlin"
 
 [tool.poetry.dependencies]
 jsonschema = ">=4.25"
-python = ">=3.10, <3.13"
+python = ">=3.13, <3.14"
 PySide6 = ">=6.8"
 PyInstaller = ">=6.10"
 pywin32 = ">=308"
-pytest = ">=8.3"
-pytest-subtests = "^0.10.0"
+pytest = ">=9.0"
 pytest-qt = ">=4.5.0"
 
 [tool.pytest.ini_options]
@@ -36,6 +35,6 @@ include = ["action_plugins", "dill", "gremlin", "joystick_gremlin.py", "vjoy"]
 exclude = ["**/__pycache__", "**/.git", "**/.venv", "**/venv"]
 reportMissingImports = true
 reportMissingTypeStubs = false
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 pythonPlatform = "Windows"
 typeCheckingMode = "basic"
