@@ -22,14 +22,21 @@ from pathlib import Path
 import pytest
 import pytestqt.qtbot
 
-from gremlin.types import HatDirection, InputType
+from gremlin.types import InputType
 from gremlin.macro import MacroManager
 
-from .conftest import GremlinBot, EventSpec
+from .conftest import (
+    JoystickGremlinBot,
+    EventSpec,
+)
 from .input_definitions import *
 
 
-def test_cycling_option1(jgbot: GremlinBot, profile_dir: Path, subtests: pytest.Subtests) -> None:
+def test_cycling_option1(
+    jgbot: JoystickGremlinBot,
+    profile_dir: Path,
+    subtests: pytest.Subtests
+) -> None:
     jgbot.load_profile(profile_dir / "chain.xml")
     MacroManager().default_delay = 0.0
 
@@ -56,7 +63,11 @@ def test_cycling_option1(jgbot: GremlinBot, profile_dir: Path, subtests: pytest.
         jgbot.next_event()
 
 
-def test_cycling_option2(jgbot: GremlinBot, profile_dir: Path, subtests: pytest.Subtests) -> None:
+def test_cycling_option2(
+    jgbot: JoystickGremlinBot,
+    profile_dir: Path,
+    subtests: pytest.Subtests
+) -> None:
     jgbot.load_profile(profile_dir / "chain.xml")
     MacroManager().default_delay = 0.0
 
@@ -79,7 +90,11 @@ def test_cycling_option2(jgbot: GremlinBot, profile_dir: Path, subtests: pytest.
         assert jgbot.button(OUT_BUTTON_3) == False
 
 
-def test_timeout_reset(jgbot: GremlinBot, profile_dir: Path, subtests: pytest.Subtests) -> None:
+def test_timeout_reset(
+    jgbot: JoystickGremlinBot,
+    profile_dir: Path,
+    subtests: pytest.Subtests
+) -> None:
     jgbot.load_profile(profile_dir / "chain.xml")
 
     with subtests.test("Chain 1"):

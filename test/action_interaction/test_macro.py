@@ -21,14 +21,20 @@ from __future__ import annotations
 from pathlib import Path
 import pytest
 
-from gremlin.types import HatDirection, InputType
+from gremlin.types import (
+    HatDirection,
+    InputType,
+)
 from gremlin.macro import MacroManager
 
-from .conftest import GremlinBot, EventSpec
+from .conftest import (
+    JoystickGremlinBot,
+    EventSpec
+)
 from .input_definitions import *
 
 
-def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_simple(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "macro.xml")
     MacroManager().default_delay = 0.0
 
@@ -47,7 +53,11 @@ def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
     for entry in expected_event_sequence:
         assert entry == jgbot.next_event()
 
-def test_repeat(jgbot: GremlinBot, profile_dir: Path, subtests: pytest.Subtests) -> None:
+def test_repeat(
+    jgbot: JoystickGremlinBot,
+    profile_dir: Path,
+    subtests: pytest.Subtests
+) -> None:
     jgbot.load_profile(profile_dir / "macro.xml")
     MacroManager().default_delay = 0.05
 

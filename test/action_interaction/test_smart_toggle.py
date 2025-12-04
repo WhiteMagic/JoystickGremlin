@@ -20,11 +20,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .conftest import GremlinBot
+from .conftest import JoystickGremlinBot
 from .input_definitions import *
 
 
-def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_simple(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "remap_smart_toggle.xml")
 
     # Simple tap behavior toggles on and off.

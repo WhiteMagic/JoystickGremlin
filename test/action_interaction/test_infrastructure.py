@@ -22,10 +22,10 @@ from pathlib import Path
 
 from gremlin.types import HatDirection
 
-from .conftest import GremlinBot
+from .conftest import JoystickGremlinBot
 from .input_definitions import *
 
-def test_button_basic(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_button_basic(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")
 
     assert jgbot.button(IN_BUTTON_1) == False
@@ -39,7 +39,7 @@ def test_button_basic(jgbot: GremlinBot, profile_dir: Path) -> None:
     assert jgbot.button(IN_BUTTON_2) == False
 
 
-def test_button_hold(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_button_hold(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")
 
     assert jgbot.button(IN_BUTTON_1) == False
@@ -55,7 +55,7 @@ def test_button_hold(jgbot: GremlinBot, profile_dir: Path) -> None:
     assert jgbot.button(IN_BUTTON_1) == False
     assert jgbot.button(IN_BUTTON_2) == False
 
-def test_button_tap(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_button_tap(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")
 
     assert jgbot.button(IN_BUTTON_1) == False
@@ -68,7 +68,7 @@ def test_button_tap(jgbot: GremlinBot, profile_dir: Path) -> None:
     assert jgbot.button(IN_BUTTON_2) == False
 
 
-def test_axis_basic(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_axis_basic(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")
 
     assert jgbot.axis(IN_AXIS_1) == 0.0
@@ -78,7 +78,7 @@ def test_axis_basic(jgbot: GremlinBot, profile_dir: Path) -> None:
     assert jgbot.axis(IN_AXIS_2) == 0.0
 
 
-def test_axis_relative(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_axis_relative(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")
 
     assert jgbot.axis(IN_AXIS_1) == 0.0
@@ -94,7 +94,7 @@ def test_axis_relative(jgbot: GremlinBot, profile_dir: Path) -> None:
     assert jgbot.axis(IN_AXIS_2) == 0.0
 
 
-def test_hat_basic(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_hat_basic(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")
 
     assert jgbot.hat(IN_HAT_1) == HatDirection.Center

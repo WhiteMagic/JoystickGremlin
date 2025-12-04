@@ -22,11 +22,11 @@ from pathlib import Path
 
 from gremlin.types import HatDirection
 
-from .conftest import GremlinBot
+from .conftest import JoystickGremlinBot
 from .input_definitions import *
 
 
-def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_simple(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "remap_basic.xml")
 
     jgbot.press_button(IN_BUTTON_1)
@@ -45,7 +45,7 @@ def test_simple(jgbot: GremlinBot, profile_dir: Path) -> None:
     assert jgbot.hat(OUT_HAT_1) == HatDirection.SouthEast
 
 
-def test_button_advanced(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_button_advanced(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "remap_basic.xml")
 
     jgbot.tap_button(IN_BUTTON_1)
@@ -59,7 +59,7 @@ def test_button_advanced(jgbot: GremlinBot, profile_dir: Path) -> None:
     assert jgbot.button(OUT_BUTTON_1) == False
 
 
-def test_remap_inverse(jgbot: GremlinBot, profile_dir: Path) -> None:
+def test_remap_inverse(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "remap_invert.xml")
 
     jgbot.press_button(IN_BUTTON_1)

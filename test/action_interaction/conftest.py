@@ -143,7 +143,7 @@ class EventLogger:
         # Wait to receive a new event, if we timeout an exception is raised.
         if not self.logged_events:
             self._qtbot.waitSignal(
-                event_handler.EventHandler().joystick_event,
+                event_handler.EventListener().joystick_event,
                 timeout=500
             ).wait()
         return self.logged_events.pop(0)
