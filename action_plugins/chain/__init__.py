@@ -38,11 +38,11 @@ if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
-class ChainFunctor(AbstractFunctor):
+class ChainFunctor(AbstractFunctor["ChainData"]):
 
     """Implements the function executed of the Description action at runtime."""
 
-    def __init__(self, action: ChainData):
+    def __init__(self, action: ChainData) -> None:
         super().__init__(action)
 
         self.current_index = 0
@@ -51,7 +51,7 @@ class ChainFunctor(AbstractFunctor):
     @override
     def __call__(
             self,
-            event: Event,
+            event: event_handler.Event,
             value: Value,
             properties: list[ActionProperty]=[]
     ) -> None:

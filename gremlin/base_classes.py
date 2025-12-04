@@ -20,7 +20,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 import copy
 import time
-from typing import Any, List, Self, Tuple, Type, TYPE_CHECKING, Optional
+from typing import Any, Generic, List, Self, Tuple, Type, TypeVar, TYPE_CHECKING, Optional
 import uuid
 from xml.etree import ElementTree
 
@@ -497,18 +497,20 @@ class AbstractActionData(ABC):
             storage.insert(index, value)
 
 
-class AbstractFunctor(ABC):
+T = TypeVar("T", bound="AbstractActionData")
+
+class AbstractFunctor(Generic[T], ABC):
 
     """Abstract base class defining the interface for functor like classes."""
 
-    def __init__(self, instance: AbstractActionData) -> None:
+    def __init__(self, instance: T) -> None:
         """Creates a new instance, extracting needed information.
 
         Args:
             instance the object which contains the information needed to
             execute it later on
         """
-        self.data = instance
+        self.data: T = instance
         self.functors = {}
 
         # Recursively generate all functors
