@@ -47,13 +47,13 @@ def joystick_devices_initialization() -> None:
     device_added = False
     device_removed = False
     for new_dev in devices:
-        if new_dev not in _joystick_devices:
+        if new_dev.device_guid.uuid not in _joystick_devices:
             device_added = True
             syslog.debug("Added: name={} guid={}".format(
                 new_dev.name,
                 new_dev.device_guid
             ))
-    for old_dev in _joystick_devices:
+    for old_dev in _joystick_devices.values():
         if old_dev not in devices:
             device_removed = True
             syslog.debug("Removed: name={} guid={}".format(
