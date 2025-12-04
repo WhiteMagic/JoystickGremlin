@@ -148,9 +148,10 @@ class Event:
         return f"{self.device_guid}: {self.event_type} {self.identifier}"
 
     def __repr__(self) -> str:
+        value = self.is_pressed if self.event_type in \
+            [InputType.JoystickButton, InputType.Keyboard] else self.value
         return f"Event({self.event_type}, {self.identifier}, " + \
-            f"{self.device_guid}, {self.mode}, {self.value}, " + \
-            f"{self.is_pressed}, {self.raw_value})"
+            f"{self.device_guid}, {self.mode}, {value})"
 
     def __hash__(self) -> int:
         """Computes the hash value of this event.
