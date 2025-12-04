@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
@@ -26,11 +26,10 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from typing import override
 from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
-    Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, PropertyType, DataCreationMode
+from gremlin.types import ActionProperty, InputType, PropertyType
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
 
@@ -63,7 +62,7 @@ class ChainFunctor(AbstractFunctor["ChainData"]):
         for functor in self.functors[str(self.current_index)]:
             functor(event, value, properties)
 
-        if value.current:
+        if not value.current:
             self.current_index = \
                 (self.current_index + 1) % len(self.data.chain_sequences)
 
@@ -80,7 +79,7 @@ class ChainModel(ActionModel):
             action_index: SequenceIndex,
             parent_index: SequenceIndex,
             parent: QtCore.QObject
-    ):
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
@@ -126,6 +125,7 @@ class ChainModel(ActionModel):
         notify=changed
     )
 
+
 class ChainData(AbstractActionData):
 
     """Model of a description action."""
@@ -138,18 +138,18 @@ class ChainData(AbstractActionData):
     functor = ChainFunctor
     model = ChainModel
 
-    properties = [
-        ActionProperty.ActivateDisabled
-    ]
-    input_types = [
+    properties = (
+        ActionProperty.ActivateDisabled,
+    )
+    input_types = (
         InputType.JoystickButton,
         InputType.Keyboard
-    ]
+    )
 
     def __init__(
             self,
             behavior_type: InputType=InputType.JoystickButton
-    ):
+    ) -> None:
         super().__init__(behavior_type)
 
         self.chain_sequences = [[],]
