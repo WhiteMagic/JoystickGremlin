@@ -16,26 +16,58 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import annotations
+
 import logging
 import os
 import sys
-from typing import List
+from typing import (
+    List,
+    TYPE_CHECKING,
+)
 import uuid
 
-from PySide6 import QtCore, QtQml, QtGui
-from PySide6.QtCore import Property, Signal, Slot
+from PySide6 import (
+    QtCore,
+    QtQml,
+    QtGui,
+)
+from PySide6.QtCore import (
+    Property,
+    Signal,
+    Slot,
+)
 
 import dill
 
-from gremlin import code_runner, common, config, device_initialization, error, \
-    event_handler, mode_manager, profile, shared_state
+from gremlin import (
+    code_runner,
+    common,
+    config,
+    device_initialization,
+    error,
+    event_handler,
+    mode_manager,
+    profile,
+    shared_state,
+)
 from gremlin.logical_device import LogicalDevice
 from gremlin.signal import signal
 
-from gremlin.ui.device import InputIdentifier, LogicalDeviceManagementModel
-from gremlin.ui.profile import InputItemModel, ModeHierarchyModel
+from gremlin.ui.device import (
+    InputIdentifier,
+    LogicalDeviceManagementModel,
+)
+from gremlin.ui.profile import (
+    InputItemModel,
+    ModeHierarchyModel,
+)
 from gremlin.ui.script import ScriptListModel
 from gremlin.audio_player import AudioPlayer
+
+
+if TYPE_CHECKING:
+    import gremlin.ui.type_aliases as ta
 
 
 QML_IMPORT_NAME = "Gremlin.UI"
@@ -56,7 +88,7 @@ class UIState(QtCore.QObject):
     modeChanged = Signal()
     tabChanged = Signal()
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: ta.OQO=None) -> None:
         super().__init__(parent)
 
         self._current_device = dill.UUID_Invalid
@@ -166,14 +198,20 @@ class Backend(QtCore.QObject):
     propertyChanged = Signal()
     uiChanged = Signal()
 
-    def __init__(self, engine: QtQml.QQmlApplicationEngine, parent=None):
+    def __init__(
+        self,
+        engine: QtQml.QQmlApplicationEngine,
+        parent: ta.OQO=None
+    ) -> None:
         super().__init__(parent)
 
         self.engine = engine
         self.profile = profile.Profile()
+        shared_state.current_profile = self.profile
         self._last_error = ""
         self._action_state = {}
         self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
+        # self._profile_settings = ProfileSettingsModel(self.profile, self)
         self.runner = code_runner.CodeRunner()
         self.ui_state = UIState(self)
 
@@ -184,6 +222,7 @@ class Backend(QtCore.QObject):
         self.profileChanged.connect(
             lambda: self.ui_state.setCurrentMode(mm.current.name)
         )
+        self.profileChanged.connect(self._profile_change_handler)
 
         event_handler.EventHandler().is_active.connect(
             lambda: self.activityChanged.emit()
@@ -191,6 +230,25 @@ class Backend(QtCore.QObject):
         event_handler.EventListener().device_change_event.connect(
             self._device_change
         )
+
+        self.profileChanged.emit()
+
+    def _profile_change_handler(self) -> None:
+        # Create profile dependant models.
+        del self._mode_hierarchy
+        self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
+        # self._profile_settings = ProfileSettingsModel(self.profile, self)
+
+        self._mode_hierarchy.modesChanged.connect(
+            lambda: signal.modesChanged.emit()
+        )
+
+        # Connect event handlers.
+        shared_state.current_profile = self.profile
+        self.windowTitleChanged.emit()
+
+        signal.reloadUi.emit()
+        signal.profileChanged.emit()
 
     def _device_change(self) -> None:
         behavior = config.Configuration().value(
@@ -373,9 +431,6 @@ class Backend(QtCore.QObject):
         """Creates a new profile."""
         self.activate_gremlin(False)
         self.profile = profile.Profile()
-        self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
-        shared_state.current_profile = self.profile
-        self.windowTitleChanged.emit()
         self.profileChanged.emit()
         signal.reloadUi.emit()
 
@@ -408,10 +463,7 @@ class Backend(QtCore.QObject):
         """
         self._load_profile(fpath)
         config.Configuration().set("global", "internal", "last_profile", fpath)
-        self._mode_hierarchy = ModeHierarchyModel(self.profile.modes, self)
         self.profileChanged.emit()
-        signal.reloadUi.emit()
-        signal.profileChanged.emit()
 
     @Property(type=ScriptListModel, notify=profileChanged)
     def scriptListModel(self) -> ScriptListModel:
@@ -491,8 +543,6 @@ class Backend(QtCore.QObject):
             self.profile = new_profile
             # self._profile_fname = fname
             # self._update_window_title()
-            shared_state.current_profile = self.profile
-            self.windowTitleChanged.emit()
 
             # Save the profile at this point if it was converted from a prior
             # profile version, as otherwise the change detection logic will

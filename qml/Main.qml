@@ -492,7 +492,7 @@ ApplicationWindow {
             InputConfiguration {
                 id: _inputConfigurationPanel
 
-                visible: uiState.currentTab !== "scripts"
+                visible: !["scripts", "settings"].includes(uiState.currentTab)
 
                 SplitView.fillWidth: true
                 SplitView.fillHeight: true
@@ -505,13 +505,22 @@ ApplicationWindow {
 
             Layout.fillHeight: true
             Layout.fillWidth: true
-
-            scriptListModel: backend.scriptListModel
-
             // Without this the height bugs out
             Layout.verticalStretchFactor: 10
 
             visible: uiState.currentTab === "scripts"
+
+            scriptListModel: backend.scriptListModel
+        }
+
+        ProfileSettings {
+            id: _profileSettings
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.verticalStretchFactor: 10
+
+            visible: uiState.currentTab === "settings"
         }
     }
 

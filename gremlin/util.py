@@ -389,6 +389,16 @@ def create_subelement_node(
     return node
 
 
+def create_subelement_node_custom(
+    name: str,
+    value: Any,
+    to_string: Callable[[Any], str]
+) -> ElementTree.Element:
+    node = ElementTree.Element(name)
+    node.text = to_string(value)
+    return node
+
+
 def create_node_from_data(
         node_name: str,
         properties: List[Tuple[str, Any, PropertyType]]
@@ -562,6 +572,21 @@ def read_subelement(node: ElementTree.Element, name: str) -> Any:
 
     # Parse subelement
     return _element_parsers[name](element)
+
+
+def read_subelement_custom(
+    node: ElementTree.Element,
+    name: str,
+    validate_and_parse: Callable[[ElementTree.Element], Any]
+) -> Any:
+    element = node.find(name)
+    if element is None:
+        raise error.ProfileError(
+            f"Element {node.tag} has no subelement with name {name}"
+        )
+
+    return validate_and_parse(element)
+
 
 
 def read_property(

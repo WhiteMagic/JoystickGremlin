@@ -112,5 +112,22 @@ Item {
             }
         }
 
+        JGTabButton {
+            id: _profileSettingsButton
+
+            text: "Settings"
+            width: _metricProfileSettings.width + 50
+            checked: uiState.currentTab === "settings"
+
+            onClicked: () => { uiState.setCurrentTab("settings") }
+
+            TextMetrics {
+                id: _metricProfileSettings
+
+                font: _profileSettingsButton.font
+                text: _profileSettingsButton.text
+            }
+        }
+
     }
 }

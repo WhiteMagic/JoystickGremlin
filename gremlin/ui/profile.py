@@ -21,23 +21,51 @@ from __future__ import annotations
 import logging
 import uuid
 
-from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import (
+    cast,
+    override,
+    Any,
+    Dict,
+    List,
+    Optional,
+    TYPE_CHECKING,
+)
 
-from PySide6 import QtCore, QtQml
-from PySide6.QtCore import Property, Signal, Slot
+from PySide6 import (
+    QtCore,
+    QtQml,
+)
+from PySide6.QtCore import (
+    Property,
+    Signal,
+    Slot,
+)
 
-import gremlin.profile
 from gremlin.error import GremlinError
 from gremlin.plugin_manager import PluginManager
+import gremlin.profile
+from gremlin import (
+    device_initialization,
+    shared_state,
+)
 from gremlin.signal import signal
-from gremlin.types import AxisButtonDirection, HatDirection, InputType, DataInsertionMode
+from gremlin.types import (
+    AxisButtonDirection,
+    HatDirection,
+    InputType,
+    DataInsertionMode,
+)
 from gremlin.util import clamp
 
-from gremlin.ui.action_model import ActionModel, SequenceIndex
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 
 if TYPE_CHECKING:
     from action_plugins.root import RootModel
     from gremlin.base_classes import AbstractActionData
+    import gremlin.ui.type_aliases as ta
 
 
 QML_IMPORT_NAME = "Gremlin.Profile"
@@ -57,8 +85,8 @@ class VirtualButtonModel(QtCore.QObject):
     def __init__(
         self,
         virtual_button: gremlin.profile.AbstractVirtualButton,
-        parent: Optional[QtCore.QObject]=None
-    ):
+        parent: ta.OQO=None
+    ) -> None:
         """Creates a new instance.
 
         Args:
@@ -270,8 +298,8 @@ class InputItemBindingModel(QtCore.QObject):
     def __init__(
             self,
             input_item_binding: gremlin.profile.InputItemBinding,
-            parent=None
-    ):
+            parent: ta.OQO = None
+    ) -> None:
         super().__init__(parent)
 
         self._input_item_binding = input_item_binding
@@ -598,7 +626,7 @@ class InputItemBindingModel(QtCore.QObject):
             signal.reloadUi.emit()
 
     @property
-    def behavior_type(self):
+    def behavior_type(self) -> None:
         return self._input_item_binding.behavior
 
     behavior = Property(
@@ -630,8 +658,8 @@ class InputItemModel(QtCore.QAbstractListModel):
         self,
         input_item: gremlin.profile.InputItem,
         enumeration_index: int,
-        parent=None
-    ):
+        parent: ta.OQO = None
+    ) -> None:
         """Exposes the list of all action sequences to the UI.
 
         Args:
@@ -725,7 +753,11 @@ class ModeListModel(QtCore.QAbstractListModel):
         QtCore.Qt.UserRole + 3: QtCore.QByteArray("depth".encode()),
     }
 
-    def __init__(self, modes: gremlin.profile.ModeHierarchy, parent=None):
+    def __init__(
+        self,
+        modes: gremlin.profile.ModeHierarchy,
+        parent: ta.OQO = None
+    ) -> None:
         super().__init__(parent)
 
         self._modes = modes
@@ -739,7 +771,11 @@ class ModeListModel(QtCore.QAbstractListModel):
     def rowCount(self, parent: QtCore.QModelIndex) -> int:
         return len(self._lookup)
 
-    def data(self, index: QtCore.QModelIndex, role: int=...) -> Any:
+    def data(
+        self,
+        index: ta.ModelIndex,
+        role: int=QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
         if role not in self.roleNames():
             raise GremlinError(f"Invalid role {role} in ModeListModel")
 
@@ -765,7 +801,11 @@ class ModeHierarchyModel(QtCore.QAbstractListModel):
 
     modesChanged = Signal()
 
-    def __init__(self, modes: gremlin.profile.ModeHierarchy, parent=None):
+    def __init__(
+        self,
+        modes: gremlin.profile.ModeHierarchy,
+        parent: ta.OQO = None
+    ) -> None:
         super().__init__(parent)
 
         self._modes = modes
@@ -830,8 +870,8 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
             values: List[str],
             bootstrap: List[str]=[],
             icons: List[str]=[],
-            parent=None
-    ):
+            parent: ta.OQO = None
+    ) -> None:
         super().__init__(parent)
 
         assert len(values) == len(labels)
@@ -893,3 +933,206 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
         fget=_get_current_selection_index,
         notify=selectionChanged
     )
+
+
+@QtQml.QmlElement
+class StartupModeModel(QtCore.QAbstractListModel):
+
+    """Model representing the startup mode setting of the current profile."""
+
+    selectionChanged = Signal()
+
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("label".encode()),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("value".encode()),
+    }
+
+    def __init__(self, parent: ta.OQO=None) -> None:
+        super().__init__(parent)
+
+        self._profile = cast(gremlin.profile.Profile, shared_state.current_profile)
+        self._valid_names = ["Use Heuristic", "Last Active"] + \
+            self._profile.modes.mode_names()
+        signal.profileChanged.connect(self._reset)
+        signal.modesChanged.connect(self._reset)
+
+    def _reset(self) -> None:
+        self.beginResetModel()
+        self._profile = cast(gremlin.profile.Profile, shared_state.current_profile)
+        self._valid_names = ["Use Heuristic", "Last Active"] + \
+            self._profile.modes.mode_names()
+        self.endResetModel()
+        self.selectionChanged.emit()
+
+    @override
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        return len(self._valid_names)
+
+    @override
+    def data(
+            self,
+            index: ta.ModelIndex,
+            role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if not index.isValid() or index.row() >= len(self._valid_names):
+            return None
+        
+        match self.roles[role]:
+            case "label":
+                return self._valid_names[index.row()]
+            case "value":
+                return index.row()
+
+    @override
+    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+        return self.roles
+
+    def _get_current_selection_index(self) -> int:
+        return self._valid_names.index(
+            self._profile.settings.startup_mode
+        )
+
+    def _set_current_selection_index(self, index: int) -> None:
+        if index != self._get_current_selection_index():
+            self._profile.settings.startup_mode = self._valid_names[index]
+            self.selectionChanged.emit()
+
+    currentSelectionIndex = Property(
+        int,
+        fget=_get_current_selection_index,
+        fset=_set_current_selection_index,
+        notify=selectionChanged
+    )
+
+
+@QtQml.QmlElement
+class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
+
+    """Model representign if a vJoy device is treated as input or output
+    device."""
+
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("vid".encode()),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("isOutput".encode()),
+    }
+
+    def __init__(self, parent: ta.OQO=None) -> None:
+        super().__init__(parent)
+
+        self._profile = shared_state.current_profile
+        self._vjoy_devices = device_initialization.vjoy_devices()
+        signal.profileChanged.connect(self._reset)
+
+    def _reset(self) -> None:
+        self.beginResetModel()
+        self._profile = shared_state.current_profile
+        self._vjoy_devices = device_initialization.vjoy_devices()
+        self.endResetModel()
+
+    @override
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        return len(device_initialization.vjoy_devices())
+    
+    @override
+    def data(
+            self,
+            index: ta.ModelIndex,
+            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if not index.isValid() or index.row() >= len(self._vjoy_devices):
+            return None
+
+        match self.roles[role]:
+            case "vid":
+                return self._vjoy_devices[index.row()].vjoy_id
+            case "isOutput":
+                vid = self._vjoy_devices[index.row()].vjoy_id
+                return not self._profile.settings.vjoy_as_input.get(vid, False)
+            case _:
+                return None
+
+    @override
+    def setData(
+            self,
+            index: ta.ModelIndex,
+            value: Any,
+            role: int=QtCore.Qt.ItemDataRole.EditRole
+    ) -> bool:
+        match self.roles[role]:
+            case "isOutput":
+                vid = self._vjoy_devices[index.row()].vjoy_id
+                self._profile.settings.vjoy_as_input[vid] = not bool(value)
+                return True
+            case _:
+                return False
+
+    @override
+    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+        return self.roles
+
+
+@QtQml.QmlElement
+class VJoyInitialValuesModel(QtCore.QAbstractItemModel):
+
+    """Model representing the initial vJoy values of the current profile."""
+
+    def __init__(self, parent: ta.OQO=None) -> None:
+        super().__init__(parent)
+
+        self._profile = shared_state.current_profile
+        self._vjoy_devices = device_initialization.vjoy_devices()
+        signal.profileChanged.connect(self._reset)
+
+    def _reset(self) -> None:
+        # self.beginResetModel()
+        self._profile = shared_state.current_profile
+        self._vjoy_devices = device_initialization.vjoy_devices()
+        # self.endResetModel()
+
+    @override
+    def index(
+        self,
+        row: int,
+        column: int,
+        parent: ta.MI = QtCore.QModelIndex()
+    ) -> QtCore.QModelIndex:
+        return self.createIndex(row, column, parent)
+
+    @override
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        # Total number of output vJoy devices.
+        if not parent.isValid():
+            return len(self._vjoy_devices)
+        # Number of axes of a specific vJoy device.
+        else:
+            return self._vjoy_devices[parent.row()].axis_count
+
+    @override
+    def columnCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        if not parent.isValid():
+            return 1
+        else:
+            return 2
+    
+    @override
+    def data(
+            self,
+            index: ta.ModelIndex,
+            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if not index.isValid():
+            return None
+
+        return "blerb"
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+            # vJoy device row.
+            if not index.parent().isValid():
+                return f"vJoy {self._vjoy_devices[index.row()].vjoy_id}"
+            # Axis row.
+            else:
+                device = self._vjoy_devices[index.parent().row()]
+                axis_id = index.row()
+                if index.column() == 0:
+                    return axis_id
+                elif index.column() == 1:
+                    return 0.25

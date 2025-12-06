@@ -35,8 +35,15 @@ from gremlin import device_initialization, error, plugin_manager
 from gremlin.logical_device import LogicalDevice
 from gremlin.tree import TreeNode
 from gremlin.user_script import Script
-from gremlin.util import safe_read, safe_format, read_action_ids, \
-    read_subelement, create_subelement_node
+from gremlin.util import (
+    create_subelement_node,
+    create_subelement_node_custom,
+    safe_read,
+    safe_format,
+    read_action_ids,
+    read_subelement,
+    read_subelement_custom,
+)
 
 
 if TYPE_CHECKING:
@@ -163,8 +170,7 @@ class Settings:
         self.parent = parent
         self.vjoy_as_input = {}
         self.vjoy_initial_values = {}
-        self.startup_mode = None
-        self.default_delay = 0.05
+        self.startup_mode : str = "Use Heuristic"
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the data storage with the XML node's contents.
@@ -172,34 +178,31 @@ class Settings:
         Args:
             node the node containing the settings data
         """
-        if not node:
-            return
+        settings_node = node.find("settings")
+        if settings_node is None:
+            raise error.ProfileError("Missing settings node in profile.")
 
-        # Startup mode
-        self.startup_mode = None
-        if node.find("startup-mode") is not None:
-            self.startup_mode = node.find("startup-mode").text
-
-        # Default delay
-        self.default_delay = 0.05
-        if node.find("default-delay") is not None:
-            self.default_delay = float(node.find("default-delay").text)
+        self.startup_mode = read_subelement_custom(
+            settings_node,
+            "startup-mode",
+            lambda x: str(x.text)
+        )
 
         # vJoy as input settings
         self.vjoy_as_input = {}
-        for vjoy_node in node.findall("vjoy-input"):
-            vid = safe_read(vjoy_node, "id", int)
+        for vjoy_node in settings_node.findall("vjoy-input-id"):
+            vid = int(vjoy_node.text)
             self.vjoy_as_input[vid] = True
 
         # vjoy initialization values
-        self.vjoy_initial_values = {}
-        for vjoy_node in node.findall("vjoy"):
-            vid = safe_read(vjoy_node, "id", int)
-            self.vjoy_initial_values[vid] = {}
-            for axis_node in vjoy_node.findall("axis"):
-                aid = safe_read(axis_node, "id", int)
-                value = safe_read(axis_node, "value", float, 0.0)
-                self.vjoy_initial_values[vid][aid] = value
+        # self.vjoy_initial_values = {}
+        # for vjoy_node in node.findall("vjoy"):
+        #     vid = safe_read(vjoy_node, "id", int)
+        #     self.vjoy_initial_values[vid] = {}
+        #     for axis_node in vjoy_node.findall("axis"):
+        #         aid = safe_read(axis_node, "id", int)
+        #         value = safe_read(axis_node, "value", float, 0.0)
+        #         self.vjoy_initial_values[vid][aid] = value
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the settings.
@@ -209,34 +212,27 @@ class Settings:
         """
         node = ElementTree.Element("settings")
 
-        # Startup mode
-        if self.startup_mode is not None:
-            mode_node = ElementTree.Element("startup-mode")
-            mode_node.text = safe_format(self.startup_mode, str)
-            node.append(mode_node)
-
-        # Default delay
-        delay_node = ElementTree.Element("default-delay")
-        delay_node.text = safe_format(self.default_delay, float)
-        node.append(delay_node)
-
+        node.append(create_subelement_node_custom(
+            "startup-mode", self.startup_mode, str
+        ))
+        
         # Process vJoy as input settings
         for vid, value in self.vjoy_as_input.items():
             if value is True:
-                vjoy_node = ElementTree.Element("vjoy-input")
-                vjoy_node.set("id", safe_format(vid, int))
-                node.append(vjoy_node)
+                node.append(create_subelement_node_custom(
+                    "vjoy-input-id", vid, str
+                ))
 
         # Process vJoy axis initial values
-        for vid, data in self.vjoy_initial_values.items():
-            vjoy_node = ElementTree.Element("vjoy")
-            vjoy_node.set("id", safe_format(vid, int))
-            for aid, value in data.items():
-                axis_node = ElementTree.Element("axis")
-                axis_node.set("id", safe_format(aid, int))
-                axis_node.set("value", safe_format(value, float))
-                vjoy_node.append(axis_node)
-            node.append(vjoy_node)
+        # for vid, data in self.vjoy_initial_values.items():
+        #     vjoy_node = ElementTree.Element("vjoy")
+        #     vjoy_node.set("id", safe_format(vid, int))
+        #     for aid, value in data.items():
+        #         axis_node = ElementTree.Element("axis")
+        #         axis_node.set("id", safe_format(aid, int))
+        #         axis_node.set("value", safe_format(value, float))
+        #         vjoy_node.append(axis_node)
+        #     node.append(vjoy_node)
 
         return node
 
@@ -596,20 +592,20 @@ class Profile:
         Args:
             fpath: path to the XML file to parse
         """
-        # Parse file into an XML document
+        # Parse file into an XML document.
         self.fpath = fpath
         tree = ElementTree.parse(fpath)
         root = tree.getroot()
 
-        # Create library entries and modes
-        # self.settings.from_xml(root)
+        # Create library entries and modes.
+        self.settings.from_xml(root)
         self._logical_devices_from_xml(root)
         self.library.from_xml(root)
         self.device_database.from_xml(root)
         self.modes.from_xml(root)
         self.scripts.from_xml(root)
 
-        # Parse individual inputs
+        # Parse individual inputs.
         for node in root.findall("./inputs/input"):
             self._process_input(node)
 
@@ -622,26 +618,26 @@ class Profile:
         root = ElementTree.Element("profile")
         root.set("version", str(Profile.current_version))
 
-        # Serilize inputs entries
+        # Serialize inputs entries.
         inputs = ElementTree.Element("inputs")
-        # Physical inputs
+        
+        # Process physical inputs.
         for device_data in self.inputs.values():
             for input_data in device_data:
                 if len(input_data.action_sequences) > 0:
                     inputs.append(input_data.to_xml())
         root.append(inputs)
-        # Device database.
-        self.device_database.update_for_uuids(self.inputs)
-        root.append(self.device_database.to_xml())
-
-        # Managed content
-        # root.append(self.settings.to_xml())
+        
+        # Managed content.
+        root.append(self.settings.to_xml())
         root.append(self._logical_devices_to_xml())
         root.append(self.library.to_xml())
         root.append(self.modes.to_xml())
         root.append(self.scripts.to_xml())
+        self.device_database.update_for_uuids(self.inputs)
+        root.append(self.device_database.to_xml())
 
-        # Serialize XML document
+        # Serialize XML document.
         ugly_xml = ElementTree.tostring(root, encoding="utf-8")
         dom_xml = minidom.parseString(ugly_xml)
         with codecs.open(fpath, "w", "utf-8-sig") as out:
