@@ -172,6 +172,7 @@ class Settings:
         self.vjoy_as_input = {}
         self.vjoy_initial_values = {}
         self.startup_mode : str = "Use Heuristic"
+        self.macro_default_delay : float = 0.05
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the data storage with the XML node's contents.

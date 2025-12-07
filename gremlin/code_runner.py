@@ -342,7 +342,7 @@ class CodeRunner:
                 start_mode = settings.startup_mode
 
         # Set default macro action delay
-        macro.MacroManager().default_delay = settings.default_delay
+        macro.MacroManager().default_delay = settings.macro_default_delay
 
         try:
             # Process actions define in user plugins
