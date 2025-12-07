@@ -33,119 +33,141 @@ Item {
     readonly property int userEntryColumnWidth: 350
     readonly property int userEntryColumnPadding: 50
 
-    ColumnLayout {
+    ScrollView {
         anchors.fill: parent
-        anchors.margins: 10
+
+        contentWidth: availableWidth
+        padding: 10
+
+        ScrollBar.vertical.interactive: true
 
         ColumnLayout {
-            UIHeader {
-                text: "Startup Mode"
-            }
+            anchors.fill: parent
+            anchors.margins: 10
 
-            RowLayout {
-                ComboBox {
-                    Layout.preferredWidth: userEntryColumnWidth
-                    Layout.rightMargin: userEntryColumnPadding
+            ColumnLayout {
+                Layout.fillWidth: true
 
-                    model: StartupModeModel {}
+                UIHeader {
+                    text: "Startup Mode"
+                }
 
-                    textRole: "label"
-                    valueRole: "value"
-                    currentIndex: model.currentSelectionIndex
+                RowLayout {
+                    ComboBox {
+                        Layout.preferredWidth: userEntryColumnWidth
+                        Layout.rightMargin: userEntryColumnPadding
 
-                    onActivated: () => {
-                        model.currentSelectionIndex = currentIndex
+                        model: StartupModeModel {}
+
+                        textRole: "label"
+                        valueRole: "value"
+                        currentIndex: model.currentSelectionIndex
+
+                        onActivated: () => {
+                            model.currentSelectionIndex = currentIndex
+                        }
                     }
-                }
 
-                UIText {
-                    text: "Selection defines what mode Gremlin should start " +
-                        "in when the profile is activated. \"Use Heuristic\" " +
-                        "lets Gremlin decide, otherwise the selected mode is " +
-                        "used."
-                }
-            }
-
-        }
-
-        ColumnLayout {
-            UIHeader {
-                text: "vJoy Behavior"
-            }
-
-            RowLayout {
-                ListView {
-                    Layout.preferredWidth: userEntryColumnWidth
-                    Layout.rightMargin: userEntryColumnPadding
-                    implicitHeight: contentHeight
-
-                    model: VJoyInputOrOutputModel {}
-
-                    delegate: Switch {
-                        text: `vJoy ${vid} as output`
-
-                        checked: isOutput
-                        onToggled: () => { isOutput = checked }
-                    }
-                }
-
-                UIText {
-                    text: "Determines if a vJoy devices are treated as an" +
-                        "input or output device by Gremlin. If treated " +
-                        "as an output device it can be used with the " +
-                        "'Map to vJoy' action. If treated as an input device" +
-                        "the vJoy device is treated as if it was any other " +
-                        "joystick. This is useful when multiple vJoy " +
-                        "devices exist and are used by different programs."
-                }
-            }
-        }
-
-        ColumnLayout {
-            UIHeader {
-                text: "vJoy Initial Values"
-            }
-
-            RowLayout {
-                JGListView {
-                    Layout.preferredWidth: userEntryColumnWidth
-                    Layout.rightMargin: userEntryColumnPadding
-                    implicitHeight: contentHeight
-
-                    spacing: 20
-
-                    model: OutputVJoyListModel {}
-
-                    delegate: ColumnLayout {
+                    UIText {
                         Layout.fillWidth: true
 
-                        Label {
-                            text: `vJoy ${vjoyId}`
-                        }
-
-                        HorizontalDivider {
-                            Layout.fillWidth: true
-
-                            dividerColor: Universal.baseLowColor
-                            lineWidth: 2
-                            spacing: 2
-                        }
-
-                        OutputVJoyInitialValueEntryDelegate {
-                            dataModel: initialValuesModel
-                        }
+                        text: "Selection defines what mode Gremlin should start " +
+                            "in when the profile is activated. \"Use Heuristic\" " +
+                            "lets Gremlin decide, otherwise the selected mode is " +
+                            "used."
                     }
                 }
 
-                UIText {
-                    text: "Defines the initial values for vJoy axes to use " +
-                        "when a profile is activated."
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+
+                UIHeader {
+                    text: "vJoy Behavior"
+                }
+
+                RowLayout {
+                    ListView {
+                        Layout.preferredWidth: userEntryColumnWidth
+                        Layout.rightMargin: userEntryColumnPadding
+                        implicitHeight: contentHeight
+
+                        model: VJoyInputOrOutputModel {}
+
+                        delegate: Switch {
+                            text: `vJoy ${vid} as output`
+
+                            checked: isOutput
+                            onToggled: () => { isOutput = checked }
+                        }
+                    }
+
+                    UIText {
+                        Layout.fillWidth: true
+
+                        text: "Determines if a vJoy devices are treated as an" +
+                            "input or output device by Gremlin. If treated " +
+                            "as an output device it can be used with the " +
+                            "'Map to vJoy' action. If treated as an input device" +
+                            "the vJoy device is treated as if it was any other " +
+                            "joystick. This is useful when multiple vJoy " +
+                            "devices exist and are used by different programs."
+                    }
                 }
             }
-        }
 
-        ColumnLayout {
-            Layout.fillHeight: true
+            ColumnLayout {
+                Layout.fillWidth: true
+
+                UIHeader {
+                    text: "vJoy Initial Values"
+                }
+
+                RowLayout {
+                    JGListView {
+                        Layout.preferredWidth: userEntryColumnWidth
+                        Layout.rightMargin: userEntryColumnPadding
+                        implicitHeight: contentHeight
+
+                        spacing: 20
+
+                        model: OutputVJoyListModel {}
+
+                        delegate: ColumnLayout {
+                            Layout.fillWidth: true
+
+                            Label {
+                                text: `vJoy ${vjoyId}`
+                            }
+
+                            HorizontalDivider {
+                                Layout.fillWidth: true
+
+                                dividerColor: Universal.baseLowColor
+                                lineWidth: 2
+                                spacing: 2
+                            }
+
+                            OutputVJoyInitialValueEntryDelegate {
+                                dataModel: initialValuesModel
+                            }
+                        }
+                    }
+
+                    UIText {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignTop
+
+                        text: "Defines the initial values for vJoy axes to use " +
+                            "when a profile is activated."
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillHeight: true
+            }
         }
     }
 
