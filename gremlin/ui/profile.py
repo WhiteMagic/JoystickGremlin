@@ -41,10 +41,12 @@ from PySide6.QtCore import (
     Slot,
 )
 
+import dill
 from gremlin.error import GremlinError
 from gremlin.plugin_manager import PluginManager
 import gremlin.profile
 from gremlin import (
+    common,
     device_initialization,
     shared_state,
 )
@@ -1031,7 +1033,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
 
     @override
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
-        return len(device_initialization.vjoy_devices())
+        return len(self._vjoy_devices)
     
     @override
     def data(
@@ -1062,6 +1064,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
             case "isOutput":
                 vid = self._vjoy_devices[index.row()].vjoy_id
                 self._profile.settings.vjoy_as_input[vid] = not bool(value)
+                signal.profileChanged.emit()
                 return True
             case _:
                 return False
@@ -1072,67 +1075,134 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
 
 
 @QtQml.QmlElement
-class VJoyInitialValuesModel(QtCore.QAbstractItemModel):
+class OutputVJoyListModel(QtCore.QAbstractListModel):
 
     """Model representing the initial vJoy values of the current profile."""
+
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("vjoyId".encode()),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("initialValuesModel".encode()),
+    }
 
     def __init__(self, parent: ta.OQO=None) -> None:
         super().__init__(parent)
 
         self._profile = shared_state.current_profile
-        self._vjoy_devices = device_initialization.vjoy_devices()
+        self._vjoy_devices = self._output_devices()
         signal.profileChanged.connect(self._reset)
 
     def _reset(self) -> None:
-        # self.beginResetModel()
+        self.beginResetModel()
         self._profile = shared_state.current_profile
-        self._vjoy_devices = device_initialization.vjoy_devices()
-        # self.endResetModel()
-
-    @override
-    def index(
-        self,
-        row: int,
-        column: int,
-        parent: ta.MI = QtCore.QModelIndex()
-    ) -> QtCore.QModelIndex:
-        return self.createIndex(row, column, parent)
+        self._vjoy_devices = self._output_devices()
+        print("asdas")
+        self.endResetModel()
 
     @override
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
-        # Total number of output vJoy devices.
-        if not parent.isValid():
-            return len(self._vjoy_devices)
-        # Number of axes of a specific vJoy device.
-        else:
-            return self._vjoy_devices[parent.row()].axis_count
+        val = len(self._vjoy_devices)
+        print(val)
+        return val
 
-    @override
-    def columnCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
-        if not parent.isValid():
-            return 1
-        else:
-            return 2
-    
     @override
     def data(
             self,
             index: ta.ModelIndex,
             role: int=QtCore.Qt.ItemDataRole.DisplayRole
     ) -> Any:
-        if not index.isValid():
+        if not index.isValid() or index.row() >= len(self._vjoy_devices):
             return None
 
-        return "blerb"
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
-            # vJoy device row.
-            if not index.parent().isValid():
-                return f"vJoy {self._vjoy_devices[index.row()].vjoy_id}"
-            # Axis row.
-            else:
-                device = self._vjoy_devices[index.parent().row()]
-                axis_id = index.row()
-                if index.column() == 0:
-                    return axis_id
-                elif index.column() == 1:
-                    return 0.25
+        match self.roles[role]:
+            case "vjoyId":
+                return self._vjoy_devices[index.row()].vjoy_id
+            case "initialValuesModel":
+                return OutputVJoyInitialValuesModel(
+                    self._vjoy_devices[index.row()], self
+                )
+
+    @override
+    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+        return self.roles
+    
+    def _output_devices(self) -> List[dill.DeviceSummary]:
+        return [
+            d for d in device_initialization.vjoy_devices() if
+            self._profile.settings.vjoy_as_input.get(d.vjoy_id, False) is False
+        ]
+
+@QtQml.QmlElement
+class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
+
+    """Model representing the initial vJoy values for a specific vJoy device."""
+
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("label".encode()),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("value".encode()),
+    }
+
+    def __init__(
+        self,
+        device: dill.DeviceSummary,
+        parent: ta.OQO = None
+    ) -> None:
+        super().__init__(parent)
+
+        self._device = device
+        self._profile = shared_state.current_profile
+        signal.profileChanged.connect(self._reset)
+
+    def _reset(self) -> None:
+        self.beginResetModel()
+        self._profile = shared_state.current_profile
+        self.endResetModel()
+
+    @override
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        return self._device.axis_count
+
+    @override
+    def data(
+            self,
+            index: ta.ModelIndex,
+            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if not index.isValid() or index.row() >= self._device.axis_count:
+            return None
+
+        match cast(str, self.roles[role]):
+            case "label":
+                return common.input_to_ui_string(
+                    InputType.JoystickAxis,
+                    self._device.axis_map[index.row()].axis_index
+                )
+            case "value":
+                return self._profile.settings.get_initial_vjoy_axis_value(
+                    self._device.vjoy_id,
+                    self._device.axis_map[index.row()].axis_index
+                )
+
+    @override
+    def setData(
+            self,
+            index: ta.ModelIndex,
+            value: Any,
+            role: int=QtCore.Qt.ItemDataRole.EditRole
+    ) -> bool:
+        if not index.isValid() or index.row() >= self._device.axis_count:
+            return False
+
+        match cast(str, self.roles[role]):
+            case "value":
+                self._profile.settings.set_initial_vjoy_axis_value(
+                    self._device.vjoy_id,
+                    self._device.axis_map[index.row()].axis_index,
+                    value
+                )
+                return True
+            case _:
+                return False
+
+    @override
+    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+        return self.roles

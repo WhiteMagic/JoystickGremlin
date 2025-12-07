@@ -195,14 +195,14 @@ class Settings:
             self.vjoy_as_input[vid] = True
 
         # vjoy initialization values
-        # self.vjoy_initial_values = {}
-        # for vjoy_node in node.findall("vjoy"):
-        #     vid = safe_read(vjoy_node, "id", int)
-        #     self.vjoy_initial_values[vid] = {}
-        #     for axis_node in vjoy_node.findall("axis"):
-        #         aid = safe_read(axis_node, "id", int)
-        #         value = safe_read(axis_node, "value", float, 0.0)
-        #         self.vjoy_initial_values[vid][aid] = value
+        self.vjoy_initial_values = {}
+        for vjoy_node in node.findall("vjoy"):
+            vid = safe_read(vjoy_node, "id", int)
+            self.vjoy_initial_values[vid] = {}
+            for axis_node in vjoy_node.findall("axis"):
+                aid = safe_read(axis_node, "id", int)
+                value = safe_read(axis_node, "value", float, 0.0)
+                self.vjoy_initial_values[vid][aid] = value
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the settings.
@@ -224,15 +224,15 @@ class Settings:
                 ))
 
         # Process vJoy axis initial values
-        # for vid, data in self.vjoy_initial_values.items():
-        #     vjoy_node = ElementTree.Element("vjoy")
-        #     vjoy_node.set("id", safe_format(vid, int))
-        #     for aid, value in data.items():
-        #         axis_node = ElementTree.Element("axis")
-        #         axis_node.set("id", safe_format(aid, int))
-        #         axis_node.set("value", safe_format(value, float))
-        #         vjoy_node.append(axis_node)
-        #     node.append(vjoy_node)
+        for vid, data in self.vjoy_initial_values.items():
+            vjoy_node = ElementTree.Element("vjoy")
+            vjoy_node.set("id", safe_format(vid, int))
+            for aid, value in data.items():
+                axis_node = ElementTree.Element("axis")
+                axis_node.set("id", safe_format(aid, int))
+                axis_node.set("value", safe_format(value, float))
+                vjoy_node.append(axis_node)
+            node.append(vjoy_node)
 
         return node
 

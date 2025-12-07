@@ -30,7 +30,7 @@ import "helpers.js" as Helpers
 Item {
     id: _root
 
-    readonly property int userEntryColumnWidth: 250
+    readonly property int userEntryColumnWidth: 350
     readonly property int userEntryColumnPadding: 50
 
     ColumnLayout {
@@ -82,10 +82,7 @@ Item {
                     model: VJoyInputOrOutputModel {}
 
                     delegate: Switch {
-                        required property int vid
-                        required property bool isOutput
-
-                        text: `vJoy ${vid} as output ${isOutput}`
+                        text: `vJoy ${vid} as output`
 
                         checked: isOutput
                         onToggled: () => { isOutput = checked }
@@ -110,25 +107,35 @@ Item {
             }
 
             RowLayout {
-                TreeView {
+                JGListView {
                     Layout.preferredWidth: userEntryColumnWidth
                     Layout.rightMargin: userEntryColumnPadding
                     implicitHeight: contentHeight
 
-                    model: VJoyInitialValuesModel {}
+                    spacing: 20
 
-                    // delegate: TreeViewDelegate {
-                    //     Label {
-                    //         text: "Just some test"
-                    //     }
-                    // }
-                    delegate: TreeViewDelegate {
-                        contentItem: Label {
-                            text: "model.display"
+                    model: OutputVJoyListModel {}
+
+                    delegate: ColumnLayout {
+                        Layout.fillWidth: true
+
+                        Label {
+                            text: `vJoy ${vjoyId}`
+                        }
+
+                        HorizontalDivider {
+                            Layout.fillWidth: true
+
+                            dividerColor: Universal.baseLowColor
+                            lineWidth: 2
+                            spacing: 2
+                        }
+
+                        OutputVJoyInitialValueEntryDelegate {
+                            dataModel: initialValuesModel
                         }
                     }
                 }
-                
 
                 UIText {
                     text: "Defines the initial values for vJoy axes to use " +
@@ -157,5 +164,29 @@ Item {
 
         font.pointSize: 11
         font.family: "Segoe UI"
+    }
+
+    component OutputVJoyInitialValueEntryDelegate : ColumnLayout {
+        property alias dataModel : _repeater.model
+
+        Repeater {
+            id: _repeater
+
+            delegate: RowLayout {
+                Text {
+                    text: label
+                    Layout.preferredWidth: 100
+                }
+
+                FloatSpinBox {
+                    minValue: -1.0
+                    maxValue: 1.0
+                    stepSize: 0.05
+
+                    value: model.value
+                    onValueModified: (newValue) => { model.value = newValue }
+                }
+            }
+        }
     }
 }
