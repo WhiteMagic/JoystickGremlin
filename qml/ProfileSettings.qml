@@ -183,6 +183,8 @@ Item {
                     maxValue: 1.0
                     stepSize: 0.05
 
+                    internalWidth: 130
+
                     value: model.value
                     onValueModified: (newValue) => { model.value = newValue }
                 }

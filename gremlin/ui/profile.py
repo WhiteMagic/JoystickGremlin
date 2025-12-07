@@ -978,7 +978,7 @@ class StartupModeModel(QtCore.QAbstractListModel):
     ) -> Any:
         if not index.isValid() or index.row() >= len(self._valid_names):
             return None
-        
+
         match self.roles[role]:
             case "label":
                 return self._valid_names[index.row()]
@@ -1034,7 +1034,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
     @override
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._vjoy_devices)
-    
+
     @override
     def data(
             self,
@@ -1095,14 +1095,11 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
         self.beginResetModel()
         self._profile = shared_state.current_profile
         self._vjoy_devices = self._output_devices()
-        print("asdas")
         self.endResetModel()
 
     @override
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
-        val = len(self._vjoy_devices)
-        print(val)
-        return val
+        return len(self._vjoy_devices)
 
     @override
     def data(
@@ -1124,7 +1121,7 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
     @override
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
-    
+
     def _output_devices(self) -> List[dill.DeviceSummary]:
         return [
             d for d in device_initialization.vjoy_devices() if

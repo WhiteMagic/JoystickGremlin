@@ -36,6 +36,7 @@ from gremlin.logical_device import LogicalDevice
 from gremlin.tree import TreeNode
 from gremlin.user_script import Script
 from gremlin.util import (
+    clamp,
     create_subelement_node,
     create_subelement_node_custom,
     safe_read,
@@ -196,13 +197,20 @@ class Settings:
 
         # vjoy initialization values
         self.vjoy_initial_values = {}
-        for vjoy_node in node.findall("vjoy"):
-            vid = safe_read(vjoy_node, "id", int)
-            self.vjoy_initial_values[vid] = {}
-            for axis_node in vjoy_node.findall("axis"):
-                aid = safe_read(axis_node, "id", int)
-                value = safe_read(axis_node, "value", float, 0.0)
-                self.vjoy_initial_values[vid][aid] = value
+        for vjoy_node in settings_node.findall("vjoy-initial-value"):
+            vid = read_subelement_custom(
+                vjoy_node, "vjoy-id", lambda x: int(x.text)
+            )
+            aid = read_subelement_custom(
+                vjoy_node, "axis-id", lambda x: int(x.text)
+            )
+            value = read_subelement_custom(
+                vjoy_node, "value", lambda x: float(x.text)
+            )
+
+            if vid not in self.vjoy_initial_values:
+                self.vjoy_initial_values[vid] = {}
+            self.vjoy_initial_values[vid][aid] = clamp(value, -1.0, 1.0)
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the settings.
@@ -215,24 +223,22 @@ class Settings:
         node.append(create_subelement_node_custom(
             "startup-mode", self.startup_mode, str
         ))
-        
-        # Process vJoy as input settings
+
+        # Process vJoy as input settings.
         for vid, value in self.vjoy_as_input.items():
             if value is True:
                 node.append(create_subelement_node_custom(
                     "vjoy-input-id", vid, str
                 ))
 
-        # Process vJoy axis initial values
+        # Process vJoy axis initial values.
         for vid, data in self.vjoy_initial_values.items():
-            vjoy_node = ElementTree.Element("vjoy")
-            vjoy_node.set("id", safe_format(vid, int))
             for aid, value in data.items():
-                axis_node = ElementTree.Element("axis")
-                axis_node.set("id", safe_format(aid, int))
-                axis_node.set("value", safe_format(value, float))
-                vjoy_node.append(axis_node)
-            node.append(vjoy_node)
+                e_node = ElementTree.Element("vjoy-initial-value")
+                e_node.append(create_subelement_node_custom("vjoy-id", vid, str))
+                e_node.append(create_subelement_node_custom("axis-id", aid, str))
+                e_node.append(create_subelement_node_custom("value", value, str))
+                node.append(e_node)
 
         return node
 
@@ -620,14 +626,14 @@ class Profile:
 
         # Serialize inputs entries.
         inputs = ElementTree.Element("inputs")
-        
+
         # Process physical inputs.
         for device_data in self.inputs.values():
             for input_data in device_data:
                 if len(input_data.action_sequences) > 0:
                     inputs.append(input_data.to_xml())
         root.append(inputs)
-        
+
         # Managed content.
         root.append(self.settings.to_xml())
         root.append(self._logical_devices_to_xml())

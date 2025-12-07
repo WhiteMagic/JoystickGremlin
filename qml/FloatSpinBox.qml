@@ -28,6 +28,7 @@ Item {
     property real stepSize: 0.1
     property real value: 0.0
     property int decimals: 2
+    property alias internalWidth: _spinbox.width
 
     readonly property int decimalFactor: Math.pow(10, _root.decimals)
 
