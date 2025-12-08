@@ -33,13 +33,21 @@ Item {
     readonly property int userEntryColumnWidth: 350
     readonly property int userEntryColumnPadding: 50
 
+    property ProfileSettingsModel settingsModel
+
+
     ScrollView {
         anchors.fill: parent
 
+        // Ensure the content doesn't cause horizontal scrolling.
         contentWidth: availableWidth
         padding: 10
 
+        // Disable annoying mobile device scrolling behaviors.
         ScrollBar.vertical.interactive: true
+        Component.onCompleted: {
+            contentItem.boundsMovement = Flickable.StopAtBounds
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -54,6 +62,7 @@ Item {
 
                 RowLayout {
                     ComboBox {
+                        Layout.alignment: Qt.AlignTop
                         Layout.preferredWidth: userEntryColumnWidth
                         Layout.rightMargin: userEntryColumnPadding
 
@@ -84,11 +93,46 @@ Item {
                 Layout.fillWidth: true
 
                 UIHeader {
+                    text: "Macro Default Delay"
+                }
+
+                RowLayout {
+                    FloatSpinBox {
+                        Layout.alignment: Qt.AlignTop
+                        Layout.preferredWidth: userEntryColumnWidth
+                        Layout.rightMargin: userEntryColumnPadding
+
+                        minValue: 0.0
+                        maxValue: 10.0
+                        stepSize: 0.1
+                        decimals: 3
+
+                        value: settingsModel.macroDefaultDelay
+                        onValueModified: (newValue) => {
+                            settingsModel.macroDefaultDelay = newValue
+                        }
+                    }
+
+
+                    UIText {
+                        Layout.fillWidth: true
+
+                        text: "Delay inserted between macro actions in " +
+                            "seconds if no pause action is present."
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+
+                UIHeader {
                     text: "vJoy Behavior"
                 }
 
                 RowLayout {
                     ListView {
+                        Layout.alignment: Qt.AlignTop
                         Layout.preferredWidth: userEntryColumnWidth
                         Layout.rightMargin: userEntryColumnPadding
                         implicitHeight: contentHeight

@@ -1203,3 +1203,34 @@ class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
     @override
     def roleNames(self) -> Dict[int, QtCore.QByteArray]:
         return self.roles
+
+
+@QtQml.QmlElement
+class ProfileSettingsModel(QtCore.QObject):
+
+    """QML model exposing profile settings to the UI."""
+
+    settingsChanged = Signal()
+
+    def __init__(self, parent: ta.OQO=None) -> None:
+        super().__init__(parent)
+
+        self._profile = shared_state.current_profile
+        signal.profileChanged.connect(self._reset)
+
+    def _reset(self) -> None:
+        self._profile = shared_state.current_profile
+        self.settingsChanged.emit()
+
+    def _set_macro_default_delay(self, delay: float) -> None:
+        if delay >= 0.0 and delay != self._profile.settings.macro_default_delay:
+            self._profile.settings.macro_default_delay = delay
+            self.settingsChanged.emit()
+
+    macroDefaultDelay = Property(
+        float,
+        fget=lambda self: self._profile.settings.macro_default_delay,
+        fset=_set_macro_default_delay,
+        notify=settingsChanged
+    )
+

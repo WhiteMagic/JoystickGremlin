@@ -190,6 +190,12 @@ class Settings:
             lambda x: str(x.text)
         )
 
+        self.macro_default_delay = read_subelement_custom(
+            settings_node,
+            "macro-default-delay",
+            lambda x: float(x.text)
+        )
+
         # vJoy as input settings
         self.vjoy_as_input = {}
         for vjoy_node in settings_node.findall("vjoy-input-id"):
@@ -223,6 +229,9 @@ class Settings:
 
         node.append(create_subelement_node_custom(
             "startup-mode", self.startup_mode, str
+        ))
+        node.append(create_subelement_node_custom(
+            "macro-default-delay", self.macro_default_delay, str
         ))
 
         # Process vJoy as input settings.

@@ -521,6 +521,8 @@ ApplicationWindow {
             Layout.verticalStretchFactor: 10
 
             visible: uiState.currentTab === "settings"
+
+            settingsModel: ProfileSettingsModel {}
         }
     }
 
