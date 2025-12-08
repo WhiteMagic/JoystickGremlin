@@ -6,4 +6,8 @@
             <mode>Default</mode>
         </input>
     </inputs>
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
 </profile>

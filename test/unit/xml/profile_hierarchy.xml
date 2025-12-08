@@ -1,4 +1,8 @@
 <profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
     <inputs>
         <input>
             <device-id>23AB4520-6C28-11EA-8001-444553540000</device-id>

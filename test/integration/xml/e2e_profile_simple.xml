@@ -52,6 +52,10 @@
             </action-configuration>
         </input>
     </inputs>
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
     <library>
         <action id="6b1ff14a-83f9-4229-9add-89bc88b05a69" type="map-to-vjoy">
             <property type="int">

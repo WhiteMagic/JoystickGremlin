@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" ?>
 <profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
     <library>
         <action id="8759f48d-8879-488a-9895-07503bf0dc0c" type="macro">
             <property type="bool">

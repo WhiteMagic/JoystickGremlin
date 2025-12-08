@@ -13,6 +13,10 @@
         </input>
     </inputs>
     <devices/>
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
     <logical-device>
         <input>
             <input-type>axis</input-type>

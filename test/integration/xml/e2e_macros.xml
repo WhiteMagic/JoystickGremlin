@@ -12,6 +12,10 @@
             </action-configuration>
         </input>
     </inputs>
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
     <logical-device/>
     <library>
         <action id="5daa1184-c5e9-4316-9a66-c4143c51a6b9" type="macro">

@@ -1,4 +1,8 @@
 <profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
     <library>
         <action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="condition">
             <true-actions>

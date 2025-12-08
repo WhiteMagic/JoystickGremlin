@@ -1,5 +1,9 @@
 <?xml version="1.0" ?>
 <profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
     <inputs>
         <input>
             <device-id>684e9af0-03c4-11ef-8005-444553540000</device-id>
