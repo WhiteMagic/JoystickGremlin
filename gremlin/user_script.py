@@ -531,10 +531,14 @@ class Script:
         return node
 
     def reload(self):
+        """Reloads this script.
+
+        Calling reload will currently register duplicate callbacks in the
+        periodic registry. The workaround is to clear all periodic callbacks
+        and then reload all scripts.
+        """
         Script.variable_registry.register_script(self)
         self.module._script_id = self.id
-        # Clear periodic registry to avoid duplicate entries.
-        periodic_registry.clear()
         self.spec.loader.exec_module(self.module)
 
     def _retrieve_variable_definitions(self):

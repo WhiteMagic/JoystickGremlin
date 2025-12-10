@@ -454,6 +454,7 @@ class CodeRunner:
         # Retrieve the list of current paths searched by Python
         system_paths = [os.path.normcase(os.path.abspath(p)) for p in sys.path]
 
+        user_script.periodic_registry.clear()
         # Populate custom module variable registry <-- nope
         # Update system path for the user scripts
         for script in self._profile.scripts.scripts:
