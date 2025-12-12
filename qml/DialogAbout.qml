@@ -1,69 +1,45 @@
-// -*- coding: utf-8; -*-
-//
-// Copyright (C) 2015 - 2020 Lionel Ott
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+// SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-// import QtWebView
+import QtWebView
 
 import QtQuick.Controls.Universal
 
+import Gremlin.About
 
 Window {
-    minimumWidth: 640
-    minimumHeight: 480
+    minimumWidth: 500
+    minimumHeight: 300
     color: Universal.background
     title: qsTr("About")
+
 
     ColumnLayout {
         anchors.fill: parent
 
-        TabBar {
-            id: bar
-
-            TabButton {
-                text: qsTr("About")
-            }
-            TabButton {
-                text: qsTr("License")
-            }
-            TabButton {
-                text: qsTr("3rd Party Licenses")
-            }
+        DisplayLabel {
+            text: "<b>Joystick Gremlin</b>"
+            font.pointSize: 36
         }
 
-        // StackLayout {
-        //     currentIndex: bar.currentIndex
+        DisplayLabel {
+            text: "Release 14"
+            font.pointSize: 14
+        }
 
-        //     WebView {
-        //         id: aboutTab
-        //         url: "../about/about.html"
-        //     }
-        //     WebView {
-        //         id: licenseTab
-        //         url: "../about/joystick_gremlin.html"
-        //     }
-        //     WebView {
-        //         id: thirdpartyTab
+        DisplayLabel {
+            text: "<html><a href='https://whitemagic.github.io/JoystickGremlin/'>https://whitemagic.github.io/JoystickGremlin/</a></html>"
+            font.pointSize: 14
+            onLinkActivated: (url) => { Qt.openUrlExternally(url) }
+        }
+    }
 
-        //         url: "../about/third_party_licenses.html"
-        //     }
-        // }
+    component DisplayLabel : Label {
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
+        horizontalAlignment: Text.AlignHCenter
     }
 }
