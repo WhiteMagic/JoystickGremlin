@@ -259,7 +259,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         key = (section, group, name)
         if key not in self._data:
-            raise error.GremlinError(f"No parameter with key '{key}' exists")
+            raise error.GremlinError(f"No parameter with key '{key}' exists: {_config_file_path}")
 
         _, is_valid = util.determine_value_type(
             value,
@@ -481,7 +481,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         key = (section, group, name)
         if key not in self._data:
-            raise error.GremlinError(f"No parameter with key {key} exists")
+            raise error.GremlinError(f"No parameter with key {key} exists: {open(_config_file_path, "r").read()}")
 
         return self._data[key][entry]
 
