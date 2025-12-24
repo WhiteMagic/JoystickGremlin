@@ -26,6 +26,7 @@ gremlin.util.userprofile_path = Mock(return_value=tempfile.mkdtemp())
 
 import joystick_gremlin
 import gremlin.ui.backend
+import gremlin.mode_manager
 
 # Import and execute modules to ensure configuration is happy
 
