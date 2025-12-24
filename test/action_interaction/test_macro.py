@@ -133,6 +133,7 @@ def test_hat_toggle(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     MacroManager().default_delay = 0.0
 
     jgbot.set_axis_absolute(OUT_AXIS_1, -0.15)
+    jgbot.wait(0.05)
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.South)
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.Center)
 

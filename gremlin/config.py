@@ -63,6 +63,9 @@ class Configuration(metaclass=common.SingletonMetaclass):
         if self._should_skip_reload():
             return
 
+        logging.getLogger("system") \
+            .info(f"Loading configuration from {_config_file_path}.")
+
         # Attempt to load the configuration file if this fails set
         # default empty values.
         load_successful = False

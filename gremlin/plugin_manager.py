@@ -167,6 +167,7 @@ class PluginManager(metaclass=SingletonMetaclass):
             is_core: Whether the folder is part of the core Gremlin or user
                 specified.
         """
+        logging.getLogger("system").info(f"Discovering plugins in {path}.")
         if not is_core:
             sys.path.insert(0, str(path))
 

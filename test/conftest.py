@@ -18,6 +18,12 @@
 import pathlib
 import pytest
 
+# Mock before any imports happen
+from unittest.mock import Mock
+import tempfile
+import gremlin.util
+gremlin.util.userprofile_path = Mock(return_value=tempfile.mkdtemp())
+
 from joystick_gremlin import JoystickGremlinApp
 import gremlin.ui.backend
 

@@ -443,13 +443,3 @@ def ldev() -> Generator[LogicalDevice]:
 @pytest.fixture(scope="session")
 def profile_dir() -> Path:
     return Path(__file__).parent / "profiles"
-
-
-@pytest.fixture(autouse=True)
-def mock_config_file(tmp_path, monkeypatch):
-    import gremlin.config
-    monkeypatch.setattr(
-        gremlin.config,
-        "_config_file_path",
-        str(tmp_path / "configuration.json")
-    )
