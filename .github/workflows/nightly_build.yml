@@ -21,7 +21,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Set up poetry for dependency management
-      uses: abatilo/actions-poetry@v3
+      uses: abatilo/actions-poetry@v2
       with:
         poetry-version: ${{ matrix.poetry-version }}
     - name: Install the project dependencies with poetry
