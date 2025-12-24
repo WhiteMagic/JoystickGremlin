@@ -173,8 +173,6 @@ class Configuration(metaclass=common.SingletonMetaclass):
                 f"{str(data_type)} in {key}"
             )
 
-        logging.getLogger("system").debug(f"Registering key={key} with value {initial_value}")
-
         # Ensure all required properties are present
         if data_type in _required_properties:
             for req_prop, req_type in _required_properties[data_type].items():
@@ -264,7 +262,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         key = (section, group, name)
         if key not in self._data:
-            raise error.GremlinError(f"No parameter with key '{key}' exists: {_config_file_path}")
+            raise error.GremlinError(f"No parameter with key '{key}' exists.")
 
         _, is_valid = util.determine_value_type(
             value,
@@ -486,7 +484,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         key = (section, group, name)
         if key not in self._data:
-            raise error.GremlinError(f"No parameter with key {key} exists ({_config_file_path}): {open(_config_file_path, "r").read()}")
+            raise error.GremlinError(f"No parameter with key {key} exists.")
 
         return self._data[key][entry]
 
