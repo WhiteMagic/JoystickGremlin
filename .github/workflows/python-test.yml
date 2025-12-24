@@ -37,5 +37,11 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      - name: Run tests
-        run: poetry run pytest test/unit test/integration/action_plugins test/action_interaction
+      - name: Run unit tests
+        run: poetry run pytest test/unit
+
+      - name: Run integration tests
+        run: poetry run pytest test/integration/action_plugins
+
+      - name: Run action_interaction tests
+        run: poetry run pytest test/action_interaction
