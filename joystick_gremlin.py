@@ -62,6 +62,7 @@ import gremlin.config
 import gremlin.error
 import gremlin.device_initialization
 import gremlin.event_handler
+import gremlin.mode_manager
 import gremlin.plugin_manager
 import gremlin.types
 import gremlin.signal

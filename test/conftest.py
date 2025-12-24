@@ -24,13 +24,14 @@ import tempfile
 import gremlin.util
 gremlin.util.userprofile_path = Mock(return_value=tempfile.mkdtemp())
 
-from joystick_gremlin import JoystickGremlinApp
+import joystick_gremlin
 import gremlin.ui.backend
 
+# Import and execute modules to ensure configuration is happy
 
 @pytest.fixture(scope="session")
-def qapp_cls() -> type[JoystickGremlinApp]:
-    return JoystickGremlinApp
+def qapp_cls() -> type[joystick_gremlin.JoystickGremlinApp]:
+    return joystick_gremlin.JoystickGremlinApp
 
 
 @pytest.fixture(scope="session")
