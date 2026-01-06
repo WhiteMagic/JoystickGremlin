@@ -1,0 +1,35 @@
+# Site settings
+title: Joystick Gremlin
+url: "https://whitemagic.github.io/JoystickGremlin"
+
+# Generic settings
+name: Joystick Gremlin
+description:  A tool for configuring and managing joystick devices
+
+theme: just-the-docs
+color_scheme: gremlin
+
+# Build settings
+markdown: kramdown
+#highlighter: rogue
+
+defaults:
+  - values:
+      layout: "default"
+
+sass:
+  # https://github.com/just-the-docs/just-the-docs/issues/1541
+  quiet_deps: true
+  # https://github.com/just-the-docs/just-the-docs/issues/1607
+  silence_deprecations: ['import']
+
+callouts:
+  warning:
+    title: Warning
+    color: red
+  note:
+    title: Note
+    color: green
+  important:
+    title: important
+    color: yellow

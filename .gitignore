@@ -10,6 +10,7 @@ __pycache__
 .pytest_cache
 .qt_for_python
 .vscode
+.jekyll_cache
 
 # Logfiles
 dill_debug.log
@@ -22,3 +23,4 @@ dill_debug.log
 /releases
 /venv
 /.venv
+/gh_page/_site
