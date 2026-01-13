@@ -26,6 +26,7 @@ QtObject {
     readonly property string instance: "\uF227"
     readonly property string configure: "\uF56B"
     readonly property string bullet_point: "\uF309"
+    readonly property string help: "\uF50B"
 
     // Macro action types.
     readonly property string icon_mouse: "\uF49D"

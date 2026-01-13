@@ -36,6 +36,7 @@ from gremlin import (
     device_initialization,
     event_handler,
     shared_state,
+    swap_devices,
     tree,
 )
 from gremlin.signal import signal
@@ -1229,3 +1230,54 @@ class ProfileSettingsModel(QtCore.QObject):
         notify=settingsChanged
     )
 
+
+@QtQml.QmlElement
+class ProfileDeviceListModel(QtCore.QAbstractListModel):
+
+    """Model listing devices with bindings in the profile."""
+
+    selectedIndexChanged = QtCore.Signal()
+
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"nameAndActions"),
+        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"uuid"),
+    }
+
+    def __init__(self, parent: ta.OQO = None) -> None:
+        super().__init__(parent)
+
+        self._devices: list[swap_devices.ProfileDeviceInfo] = []
+        self.update_model()
+        event_handler.EventListener().device_change_event.connect(self.update_model)
+
+    def update_model(self) -> None:
+        """Updates the model if the connected devices change."""
+        self.beginResetModel()
+        self._devices = \
+            swap_devices.get_profile_devices(shared_state.current_profile)
+        self.endResetModel()
+
+    def rowCount(self, parent: ta.MI = QtCore.QModelIndex()) -> int:
+        return len(self._devices)
+
+    def data(
+        self, index: ta.MI, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if not index.isValid() or not (0 <= index.row() < len(self._devices)):
+            return None
+
+        device = self._devices[index.row()]
+        match self.roles[role]:
+            case "name":
+                return device.name
+            case "nameAndActions":
+                if device.name:
+                    return f"{device.name} - {device.num_bindings} actions"
+                else:
+                    return f"{device.device_uuid} - {device.num_bindings} actions"
+            case "uuid":
+                return str(device.device_uuid)
+
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
+        return self.roles

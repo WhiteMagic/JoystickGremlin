@@ -31,7 +31,7 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 @QtQml.QmlElement
-class ProfileDeviceListModel(QtCore.QAbstractListModel):
+class ProfileDeviceListModel222(QtCore.QAbstractListModel):
 
     # TODO: Make this obsolete by augmenting the existing DeviceListModel.
 

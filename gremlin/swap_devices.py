@@ -20,7 +20,11 @@ class ProfileDeviceInfo:
     num_bindings: int = 0
 
 
-def get_profile_devices(profile: gremlin.profile.Profile) -> list[ProfileDeviceInfo]:
+def get_profile_devices(
+    profile: gremlin.profile.Profile
+) -> list[ProfileDeviceInfo]:
+    # Retrieve all devices that have input bindings in the profile and count
+    # the number of bindings for each.
     profile_devices = {}
     for device_uuid, inputs in profile.inputs.items():
         if device_uuid in profile_devices:
@@ -30,10 +34,11 @@ def get_profile_devices(profile: gremlin.profile.Profile) -> list[ProfileDeviceI
                 device_uuid, num_bindings=len(inputs)
             )
 
-    # We can get names for connected devices (only).
-    for d in device_initialization.physical_devices():
-        if d.device_guid.uuid in profile_devices:
-            profile_devices[d.device_guid.uuid].name = d.name
+    # Attempt to retrieve device name from the database.
+    for dev_info in profile.device_database.devices.values():
+        if dev_info.device_uuid in profile_devices:
+            profile_devices[dev_info.device_uuid].name = dev_info.name
+
     return list(profile_devices.values())
 
 

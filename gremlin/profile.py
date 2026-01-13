@@ -519,8 +519,8 @@ class Library:
 
 @dataclasses.dataclass
 class DeviceInfo:
+
     """Captures information about a generic device."""
-    XML_TAG = "device"
 
     device_uuid: uuid.UUID = dill.UUID_Invalid
     name: str = ''
@@ -532,7 +532,7 @@ class DeviceInfo:
             node: XML node containing the device information
         """
         self.device_uuid = read_subelement(node, "device-id")
-        self.name=read_subelement(node, "device-name")
+        self.name = read_subelement(node, "device-name")
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node representing this device information.
@@ -540,7 +540,7 @@ class DeviceInfo:
         Returns:
             XML node containing the device's information
         """
-        node = ElementTree.Element(self.XML_TAG)
+        node = ElementTree.Element("device")
         node.append(create_subelement_node("device-id", self.device_uuid))
         node.append(create_subelement_node("device-name", self.name))
         return node
@@ -549,24 +549,22 @@ class DeviceInfo:
 class DeviceDatabase:
     """Database tracking devices used in a profile.
 
-    This information can be useful when a device present in a profile is disconnected.
+    This information can be useful when a device present in a profile is
+    disconnected.
     """
-    XML_TAG = "devices"
 
     def __init__(self) -> None:
-        self._devices: dict[uuid.UUID, DeviceInfo] = {}
+        self.devices: dict[uuid.UUID, DeviceInfo] = {}
 
-    def update_for_uuids(self, uuids: Iterable[uuid.UUID]):
+    def update_for_uuids(self, uuids: Iterable[uuid.UUID]) -> None:
         """Update information for given UUIDs for any connected devices."""
         for device_uuid in uuids:
             try:
                 dev = device_initialization.device_for_uuid(device_uuid)
+                self.devices[device_uuid] = DeviceInfo(device_uuid, dev.name)
             except KeyError:
                 # Device is not connected, we have no information to add.
                 continue
-            self._devices[device_uuid] = DeviceInfo(
-                device_uuid=device_uuid, name=dev.name
-            )
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the device database from an XML node.
@@ -574,11 +572,11 @@ class DeviceDatabase:
         Args:
             node: XML node containing device information
         """
-        self._devices.clear()
-        for device_node in node.findall(f"./{self.XML_TAG}/{DeviceInfo.XML_TAG}"):
+        self.devices.clear()
+        for device_node in node.findall("./devices/device"):
             device_info = DeviceInfo()
             device_info.from_xml(device_node)
-            self._devices[device_info.device_uuid] = device_info
+            self.devices[device_info.device_uuid] = device_info
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node representing all devices in the database.
@@ -586,8 +584,8 @@ class DeviceDatabase:
         Returns:
             XML node containing all device information
         """
-        node = ElementTree.Element(self.XML_TAG)
-        for device_info in self._devices.values():
+        node = ElementTree.Element("devices")
+        for device_info in self.devices.values():
             node.append(device_info.to_xml())
         return node
 

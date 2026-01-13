@@ -13,16 +13,17 @@ import Gremlin.Style
 import Gremlin.Tools
 
 Window {
-    minimumWidth: 900
-    minimumHeight: 300
+    width: 800
+    height: _content.implicitHeight + 30
 
     color: Style.background
     Universal.theme: Style.theme
 
-    title: "Swap devices"
+    title: "Swap Devices"
 
     DeviceListModel {
         id: _physicalDevices
+
         deviceType: "physical"
     }
 
@@ -37,79 +38,66 @@ Window {
     property string statusMessage: "Select devices, and click the Swap Bindings button"
 
     ColumnLayout {
+        id: _content
+
         anchors.fill: parent
         anchors.margins: 10
 
-        // Description/Manual Section
-        TextOutputBox {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 100
-            text: qsTr("<ul>" +
-                    "<li>Select the devices to swap bindings between" +
-                    "<li>Click 'Swap' to swap the bindings between the selected devices" +
-                    "<li>Resulting bindings may be invalid if devices have different numbers " +
-                    "of inputs" +
-                    "</ul>")
-        }
-
-        // Main content area with device dropdowns.
         RowLayout {
-            spacing: 10
+            Label {
+                Layout.preferredWidth: 200
 
-            // First ("Connected") Device Column
-            ColumnLayout {
-                Label {
-                    text: qsTr("Select connected device")
-                    font.bold: true
-                }
-
-                ComboBox {
-                    model: _physicalDevices
-                    textRole: "name"
-                    Layout.fillWidth: true
-                    onActivated: _physicalDevices.selectedIndex = currentIndex
-                    Component.onCompleted: _physicalDevices.selectedIndex = currentIndex
-                }
+                text: "From profile device"
+                font.bold: true
             }
 
-            // Second ("Profile") Device Column
-            ColumnLayout {
-                Label {
-                    text: qsTr("Select device in profile")
-                    font.bold: true
-                }
+            ComboBox {
+                id: _profileDeviceSelection
 
-                ComboBox {
-                    model: _profileDevices
-                    textRole: "uuid"
-                    Layout.fillWidth: true
-                    onActivated: _profileDevices.selectedIndex = currentIndex
-                    Component.onCompleted: _profileDevices.selectedIndex = currentIndex
+                Layout.fillWidth: true
 
-                    delegate: ItemDelegate {
-                        width: parent.width
-                        text: `${model.name || model.uuid}: ${model.numBindings} ${model.numBindings === 1 ? 'binding' : 'bindings'}`
-                    }
-                }
+                model: _profileDevices
+
+                textRole: "nameAndActions"
+                valueRole: "uuid"
             }
         }
 
-        // Action bar with button and status
         RowLayout {
-            spacing: 10
+            Label {
+                Layout.preferredWidth: 200
+
+                text: "To connected device"
+                font.bold: true
+            }
+
+            ComboBox {
+                id: _physicalDeviceSelection
+                Layout.fillWidth: true
+
+                model: _physicalDevices
+
+                textRole: "name"
+                valueRole: "uuid"
+            }
+        }
+
+        RowLayout {
+            Layout.topMargin: 10
 
             Button {
-                text: qsTr("Swap Bindings")
-                onClicked: {
+                text: "Swap Bindings"
+                onClicked: () => {
                     statusMessage = _tools.swapDevices(
-                        _profileDevices.uuidAtIndex(_profileDevices.selectedIndex),
-                        _physicalDevices.uuidAtIndex(_physicalDevices.selectedIndex));
+                        _profileDeviceSelection.currentValue,
+                        _physicalDeviceSelection.currentValue
+                    )
                 }
             }
 
             TextOutputBox {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 30
+
                 text: statusMessage
             }
         }

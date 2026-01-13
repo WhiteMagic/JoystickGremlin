@@ -22,13 +22,17 @@ Window {
     title: "Auto Mapper"
 
     DeviceListModel {
-        id: physicalDevices
+        id: _physicalDevices
         deviceType: "physical"
     }
 
     DeviceListModel {
-        id: virtualDevices
+        id: _virtualDevices
         deviceType: "virtual"
+    }
+
+    ModeListModel {
+        id: _modeList
     }
 
     Tools {
@@ -47,150 +51,146 @@ Window {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
-        spacing: 10
 
-        // Description/Manual Section
-        TextOutputBox {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 100
-            text: qsTr("<ul>" +
-                    "<li>Select mode to create bindings in" +
-                    "<li>Select source physical devices and target vJoy devices" +
-                    "<li>Click 'Create 1:1 mappings' to map from physical to virtual inputs" +
-                    "<li>Enable 'Overwrite non-empty' to replace existing mappings in the profile" +
-                    "<li>Enable 'Repeat vJoy' to cycle through vJoy inputs, if needed to map all physical inputs" +
-                    "</ul>")
-        }
-
-        // Mode selection.
         RowLayout {
-            spacing: 10
-
-            Rectangle {
+            ColumnLayout {
                 Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.rightMargin: 10
+
+                RowLayout {
+                    Label {
+                        text: "Physical Devices"
+                    }
+
+                    LayoutHorizontalSpacer {
+                        Layout.preferredHeight: 1
+                        color: Style.accent
+                    }
+                }
+
+                JGListView {
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+
+                    model: _physicalDevices
+                    scrollbarAlwaysVisible: true
+
+                    delegate: CheckBox {
+                        width: ListView.view.width - 10
+
+                        text: model.name
+                        checked: false
+
+                        onCheckedChanged: () => {
+                            selectedPhysicalDevices[model.guid] = checked
+                        }
+                    }
+                }
             }
 
-            TextOutputBox {
-                Layout.preferredWidth: 100
-                Layout.preferredHeight: 30
-                border.color: Style.background
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                RowLayout {
+                    Label {
+                        text: "vJoy Devices"
+                    }
+
+                    LayoutHorizontalSpacer {
+                        Layout.preferredHeight: 1
+                        color: Style.accent
+                    }
+                }
+
+                JGListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    model: _virtualDevices
+                    scrollbarAlwaysVisible: true
+
+                    delegate: CheckBox {
+                        width: ListView.view.width - 10
+
+                        text: model.name
+                        checked: false
+
+                        onCheckedChanged: () => {
+                            selectedVJoyDevices[model.vjoy_id] = checked
+                        }
+                    }
+                }
+            }
+        }
+
+        RowLayout {
+            Label {
                 text: "Select Mode"
             }
 
             ComboBox {
-                model: backend.modeHierarchy.modeList
+                model: _modeList
+
                 textRole: "name"
-                onActivated: selectedMode = currentText
-                Component.onCompleted: selectedMode = currentText
+
+                onActivated: () => { selectedMode = currentText }
+            }
+
+            LayoutHorizontalSpacer {}
+
+            Switch {
+                text: "Overwrite non-empty physical inputs"
+
+                onToggled: () => { overwriteNonEmpty = checked }
+            }
+
+            Switch {
+                text: "Repeat vJoy devices"
+
+                onToggled: () => { repeatVJoy = checked }
             }
         }
 
-        // Main content area with device lists
         RowLayout {
-            spacing: 10
-
-            // Physical Devices Column
-            ColumnLayout {
-                spacing: 5
-
-                GroupBox {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    title: qsTr("Physical Devices")
-
-                    JGListView {
-                        anchors.fill: parent
-                        model: physicalDevices
-                        delegate: CheckBox {
-                            width: ListView.view.width - 10
-                            text: model.name
-                            checked: false
-                            onCheckedChanged: {
-                                selectedPhysicalDevices[model.guid] = checked;
-                            }
-                        }
-                    }
-                }
-
-                Switch {
-                    id: _overwriteSwitch
-                    text: qsTr("Overwrite non-empty physical inputs")
-
-                    ToolTip {
-                        visible: parent.hovered
-                        text: qsTr("Overwrite non-empty physical inputs")
-                        delay: 500
-                    }
-
-                    onToggled: function() {
-                        overwriteNonEmpty = checked;
-                    }
-                }
-            }
-
-            // vJoy Devices Column
-            ColumnLayout {
-                spacing: 5
-
-                GroupBox {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    title: qsTr("vJoy Devices")
-
-                    JGListView {
-                        anchors.fill: parent
-                        model: virtualDevices
-                        delegate: CheckBox {
-                            width: ListView.view.width - 10
-                            text: model.name + model.vjoy_id
-                            checked: false
-                            onCheckedChanged: {
-                                selectedVJoyDevices[model.vjoy_id] = checked;
-                            }
-                        }
-                    }
-                }
-
-                Switch {
-                    id: _repeatSwitch
-                    text: qsTr("Repeat vJoy devices")
-
-                    ToolTip {
-                        visible: parent.hovered
-                        text: qsTr("Repeat vJoy devices")
-                        delay: 500
-                    }
-
-                    onToggled: function() {
-                        repeatVJoy = checked;
-                    }
-                }
-            }
-        }
-
-        // Action bar with button and status
-        RowLayout {
-            Layout.preferredHeight: 35
-            spacing: 10
+            Layout.topMargin: 10
 
             Button {
-                id: _createButton
-                text: qsTr("Create 1:1 mappings")
-                Layout.preferredWidth: implicitWidth + 20
-                Layout.preferredHeight: 30
-                onClicked: {
+                text: "Create 1:1 mappings"
+
+                onClicked: () => {
                     statusMessage = tools.createMappings(
                         selectedMode,
-                        selectedPhysicalDevices, selectedVJoyDevices,
-                        overwriteNonEmpty, repeatVJoy);
+                        selectedPhysicalDevices,
+                        selectedVJoyDevices,
+                        overwriteNonEmpty,
+                        repeatVJoy
+                    )
                 }
             }
 
             TextOutputBox {
-                id: _statusNotification
                 Layout.fillWidth: true
-                Layout.preferredHeight: 30
+
                 text: statusMessage
+            }
+
+            IconButton {
+                text: bsi.icons.help
+                font.pixelSize: 24
+
+                ToolTip {
+                    text: "- Select mode to create bindings in.
+- Select source physical devices and target vJoy devices.
+- Click \"Create 1:1 mappings\" button.
+
+Overwrite non-empty: Replaces existing mappings in the profile.
+Repeat vJoy: Cycles through vJoy inputs, if needed to map all physical inputs."
+
+                    visible: parent.hovered
+                    delay: 500
+                }
             }
         }
     }
