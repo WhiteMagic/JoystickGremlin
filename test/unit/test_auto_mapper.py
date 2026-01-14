@@ -370,10 +370,10 @@ def test_auto_map(subtests, xml_dir: pathlib.Path, register_profile_device: dill
                 [register_profile_device.device_guid],
                 [1],
                 auto_mapper.AutoMapperOptions(),
-        ) == "Created 2 mappings; 9 previous bindings retained."
+        ) == "Created 2 mappings, retained 9 previous bindings."
     with subtests.test("EmptyMode"):
         assert mapper.generate_mappings(
                 [register_profile_device.device_guid],
                 [1],
                 auto_mapper.AutoMapperOptions(mode="EmptyMode"),
-        ) == "Created 13 mappings; 0 previous bindings retained."
+        ) == "Created 13 mappings, retained 0 previous bindings."

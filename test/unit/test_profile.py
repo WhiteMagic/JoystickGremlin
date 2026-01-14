@@ -128,20 +128,20 @@ def test_device_database(xml_dir: pathlib.Path, subtests):
     with subtests.test("create database"):
         uuids = [dev.device_guid.uuid for dev in device_initialization.physical_devices()]
         database.update_for_uuids(uuids)
-        assert len(database._devices) == len(uuids)
+        assert len(database.devices) == len(uuids)
 
     with subtests.test("xml_conversion"):
         new_database = profile.DeviceDatabase()
         xml_root = ElementTree.Element("profile")
         xml_root.append(database.to_xml())
         new_database.from_xml(xml_root)
-        assert new_database._devices == database._devices
+        assert new_database.devices == database.devices
 
     with subtests.test("in_profile"):
         p = Profile()
         p.from_xml(str(xml_dir / "profile_hierarchy.xml"))
         p.device_database.update_for_uuids(uuids)
-        assert database._devices == p.device_database._devices
+        assert database.devices == p.device_database.devices
 
     with subtests.test("profile_xml"):
         new_profile = Profile()
@@ -149,4 +149,4 @@ def test_device_database(xml_dir: pathlib.Path, subtests):
             tmp.close()
             p.to_xml(tmp.name)
             new_profile.from_xml(tmp.name)
-        assert new_profile.device_database._devices == database._devices
+        assert new_profile.device_database.devices == database.devices

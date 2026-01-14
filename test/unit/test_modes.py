@@ -122,7 +122,7 @@ class TestModeManager:
 
         mm = ModeManager()
         cfg = Configuration()
-        cfg.set("action", "change-mode", "resolution-mode", "oldest")
+        cfg.set("action", "change-mode", "resolution-mode", "Oldest")
         mm.reset()
         del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
@@ -135,7 +135,7 @@ class TestModeManager:
         assert ml[0].name == "A"
         assert ml[1].name == "B"
 
-        cfg.set("action", "change-mode", "resolution-mode", "newest")
+        cfg.set("action", "change-mode", "resolution-mode", "Newest")
         mm.reset()
         del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
@@ -156,7 +156,9 @@ class TestModeManager:
         mm = ModeManager()
 
         # Simple case with oldest mode retainment
-        cfg = Configuration().set("action", "change-mode", "resolution-mode", "oldest")
+        cfg = Configuration().set(
+            "action", "change-mode", "resolution-mode", "Oldest"
+        )
         mm.reset()
         del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))
@@ -177,7 +179,9 @@ class TestModeManager:
         assert ml[3].is_temporary
 
         # Newest mode retainment with requirement to keep some older modes
-        cfg = Configuration().set("action", "change-mode", "resolution-mode", "newest")
+        cfg = Configuration().set(
+            "action", "change-mode", "resolution-mode", "Newest"
+        )
         mm.reset()
         del mm._mode_stack[0]
         mm.switch_to(Mode("A", None))

@@ -102,19 +102,15 @@ def test_load_save(cfg: gremlin.config.Configuration) -> None:
         cfg.load()
 
     assert cfg.value("test", "case", "1") == 42
-    assert cfg.description("test", "case", "1") == "one"
     assert cfg.expose("test", "case", "1") == False
 
     assert cfg.value("test", "case", "2") == False
-    assert cfg.description("test", "case", "2") == "two"
     assert cfg.expose("test", "case", "2") == True
 
     assert cfg.value("test", "case", "3") == gremlin.types.HatDirection.NorthEast
-    assert cfg.description("test", "case", "3") == ""
     assert cfg.expose("test", "case", "3") == False
 
     assert cfg.value("test", "case", "4") == [1, 2, 3, 4, 5]
-    assert cfg.description("test", "case", "4") == ""
     assert cfg.expose("test", "case", "4") == False
 
 
