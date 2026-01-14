@@ -27,6 +27,17 @@ Item {
         }
     }
 
+    Connections {
+        target: signal
+
+        function onReloadCurrentInputItem() {
+            _root.inputItemModel = backend.getInputItem(
+                uiState.currentInput,
+                uiState.currentInputIndex
+            )
+        }
+    }
+
     // Widget content
     ColumnLayout {
         id: _content

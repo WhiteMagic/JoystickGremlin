@@ -35,7 +35,6 @@ Window {
         id: _tools
     }
 
-    property string statusMessage: "Select devices, and click the Swap Bindings button"
 
     ColumnLayout {
         id: _content
@@ -73,12 +72,22 @@ Window {
 
             ComboBox {
                 id: _physicalDeviceSelection
+
                 Layout.fillWidth: true
 
                 model: _physicalDevices
 
                 textRole: "name"
-                valueRole: "uuid"
+                valueRole: "guid"
+
+                displayText: currentText + " : " + currentValue
+                delegate: ItemDelegate {
+                    text: model.name + " : " + model.guid
+
+                    width: ListView.view.width
+                    font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
+                    highlighted: control.highlightedIndex === index
+                }
             }
         }
 
@@ -88,17 +97,20 @@ Window {
             Button {
                 text: "Swap Bindings"
                 onClicked: () => {
-                    statusMessage = _tools.swapDevices(
+                    _statusMessage.text = _tools.swapDevices(
                         _profileDeviceSelection.currentValue,
                         _physicalDeviceSelection.currentValue
                     )
                 }
             }
 
-            TextOutputBox {
-                Layout.fillWidth: true
+            Label {
+                id: _statusMessage
 
-                text: statusMessage
+                Layout.fillWidth: true
+                Layout.leftMargin: 10
+
+                text: "Select devices, then click the button."
             }
         }
     }

@@ -31,22 +31,13 @@ Window {
         deviceType: "virtual"
     }
 
-    ModeListModel {
-        id: _modeList
-    }
-
     Tools {
         id: tools
     }
 
     // Properties to track the selected devices and user selections.
-    property string selectedMode: ""
     property var selectedPhysicalDevices: ({})
     property var selectedVJoyDevices: ({})
-    property bool overwriteNonEmpty: false
-    property bool repeatVJoy: false
-
-    property string statusMessage: "Select devices, options and click the Create button"
 
     ColumnLayout {
         anchors.fill: parent
@@ -131,22 +122,26 @@ Window {
             }
 
             ComboBox {
-                model: _modeList
+                id: _modeSelector
+
+                model: ModeListModel {}
 
                 textRole: "name"
-
-                onActivated: () => { selectedMode = currentText }
             }
 
             LayoutHorizontalSpacer {}
 
             Switch {
+                id: _overwriteNonEmpty
+
                 text: "Overwrite non-empty physical inputs"
 
                 onToggled: () => { overwriteNonEmpty = checked }
             }
 
             Switch {
+                id: _repeatDevices
+
                 text: "Repeat vJoy devices"
 
                 onToggled: () => { repeatVJoy = checked }
@@ -160,20 +155,24 @@ Window {
                 text: "Create 1:1 mappings"
 
                 onClicked: () => {
-                    statusMessage = tools.createMappings(
-                        selectedMode,
+                    _statusMessage.text = tools.createMappings(
+                        _modeSelector.currentText,
                         selectedPhysicalDevices,
                         selectedVJoyDevices,
-                        overwriteNonEmpty,
-                        repeatVJoy
+                        _overwriteNonEmpty.checked,
+                        _repeatDevices.checked
                     )
                 }
             }
 
-            TextOutputBox {
-                Layout.fillWidth: true
+            Label {
+                id: _statusMessage
 
-                text: statusMessage
+                Layout.fillWidth: true
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+
+                text: "Select devices, options and then click the button."
             }
 
             IconButton {

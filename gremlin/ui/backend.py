@@ -456,6 +456,7 @@ class Backend(QtCore.QObject):
         self.activate_gremlin(False)
         self.profile = profile.Profile()
         self.profileChanged.emit()
+        signal.reloadCurrentInputItem.emit()
         signal.reloadUi.emit()
 
     @Slot(str)

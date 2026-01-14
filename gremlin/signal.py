@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 from PySide6 import QtCore
-from PySide6.QtCore import Signal
 
 from gremlin import common
 
@@ -11,19 +10,19 @@ from gremlin import common
 @common.SingletonDecorator
 class Signal(QtCore.QObject):
 
-    reloadUi = Signal()
+    reloadUi = QtCore.Signal()
 
-    reloadCurrentInputItem = Signal()
+    reloadCurrentInputItem = QtCore.Signal()
 
-    inputItemChanged = Signal(int)
+    inputItemChanged = QtCore.Signal(int)
 
-    modesChanged = Signal()
+    modesChanged = QtCore.Signal()
 
-    profileChanged = Signal()
+    profileChanged = QtCore.Signal()
 
-    logicalDeviceModified = Signal()
+    logicalDeviceModified = QtCore.Signal()
 
-    configChanged = Signal()
+    configChanged = QtCore.Signal()
 
 
 signal = Signal()

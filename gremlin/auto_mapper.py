@@ -9,51 +9,65 @@ Auto-mapping from physical DirectInput to vJoy devices.
 from collections.abc import Iterable
 import dataclasses
 import itertools
-from typing import Self
+from typing import (
+    List,
+    Self,
+)
 
-from action_plugins import map_to_vjoy, root
+from action_plugins import (
+    map_to_vjoy,
+    root,
+)
 import dill
-from gremlin import device_initialization, plugin_manager, profile, shared_state, types
+from gremlin import (
+    device_initialization,
+    plugin_manager,
+    profile,
+    shared_state,
+    types,
+)
 
 
 @dataclasses.dataclass
 class AutoMapperOptions:
-    """Options for the auto-mapper.
 
-    More flags may be added here to further customize auto-mapper behavior.
-    """
+    """Options for the auto-mapper."""
+
     mode: str = "Default"
     repeat_vjoy_inputs: bool = False
     overwrite_used_inputs: bool = False
 
 
 class AutoMapper:
-    """Generates "map to vJoy' actions for physical input devices.
+
+    """Generates "Map to vJoy" actions for physical input devices.
 
     The primary purpose is to help users with new profiles get started with
-    simple mappings for their input devices. The common use case is to map "available"
-    physical inputs to "available" vJoy inputs.
+    simple mappings for their input devices. The common use case is to map
+    "available" physical inputs to "available" vJoy inputs.
 
-    To keep things simple, a vJoy input is considered "available" even if there's a binding
-    to it in the profile, but:
+    To keep things simple, a vJoy input is considered "available" even if
+    there's a binding to it in the profile, but:
     1. The binding is from a disconnected device.
-    2. The binding is not a direct vJoy mapping (e.g. from a macro, a sub-action like temp,
-       chain, or condition), or in a user script.
+    2. The binding is not a direct vJoy mapping (e.g. from a macro, a
+       sub-action like temp, chain, or condition), or in a user script.
 
-    A physical input is considered "available" if it has no binding/actions in the profile.
-    An option is provided to overwrite unavailable inputs, in which case any existing bindings
-    are removed.
+    A physical input is considered "available" if it has no binding/actions
+    in the profile. An option is provided to overwrite unavailable inputs, in
+    which case any existing bindings are removed.
 
-    Bindings are generated for the specified mode only; bindings from other modes are
-    not checked (i.e. any physical and vJoy inputs used only in other modes are considered
-    available in the specified mode).
+    Bindings are generated for the specified mode only, bindings from other
+    modes are not checked (i.e. any physical and vJoy inputs used only in other
+    modes are considered available in the specified mode).
 
-    This class should be instantiated after the current profile has been loaded/generated.
-    Functions should be called after device initialization is complete.
+    This class should be instantiated after the current profile has been
+    loaded/generated. Functions should be called after device initialization
+    is complete.
     """
 
-    def __init__(self, profile: profile.Profile):
+    def __init__(self, profile: profile.Profile) -> None:
         self._profile = profile
+
         # For debug, testing and creating a report for the user.
         self._created_mappings: list[map_to_vjoy.MapToVjoyData] = []
         self._num_retained_bindings = 0
@@ -64,15 +78,17 @@ class AutoMapper:
 
     def generate_mappings(
         self,
-        input_devices_guids: list[dill.GUID],
-        output_vjoy_ids: list[int],
+        input_devices_guids: List[dill.GUID],
+        output_vjoy_ids: List[int],
         options: AutoMapperOptions,
     ) -> str:
         """Generates mappings for the profile.
 
         Args:
-            input_devices_guids: List of GUIDs representing the input devices to map from.
-            output_vjoy_ids: List of DeviceSummary objects representing the vJoy devices to map to.
+            input_devices_guids: List of GUIDs representing the input devices to
+                map from.
+            output_vjoy_ids: List of DeviceSummary objects representing the vJoy
+                devices to map to.
             options: Options for the auto-mapper.
 
         Returns:
@@ -113,8 +129,10 @@ class AutoMapper:
         return self._create_mappings_report()
 
     def _prepare_profile(
-        self, input_devices: list[dill.DeviceSummary], options: AutoMapperOptions
-    ):
+        self,
+        input_devices: list[dill.DeviceSummary],
+        options: AutoMapperOptions
+    ) -> None:
         """Prepares the profile for an auto-map run."""
         if options.overwrite_used_inputs:
             for dev in input_devices:
@@ -125,7 +143,8 @@ class AutoMapper:
         input_devices: list[dill.DeviceSummary],
         options: AutoMapperOptions,
     ) -> Iterable[profile.InputItem]:
-        """Iterates over physical axes that need to be mapped in a prepared profile."""
+        """Iterates over physical axes that need to be mapped in a prepared
+        profile."""
         for dev in input_devices:
             for linear_index in range(dev.axis_count):
                 axis_index = dev.axis_map[linear_index].axis_index
@@ -146,7 +165,8 @@ class AutoMapper:
         input_devices: list[dill.DeviceSummary],
         options: AutoMapperOptions,
     ) -> Iterable[profile.InputItem]:
-        """Iterates over physical buttons that need to be mapped in a prepared profile."""
+        """Iterates over physical buttons that need to be mapped in a prepared
+        profile."""
         for dev in input_devices:
             for button in range(1, dev.button_count + 1):
                 input_item = self._profile.get_input_item(
@@ -166,7 +186,8 @@ class AutoMapper:
         input_devices: list[dill.DeviceSummary],
         options: AutoMapperOptions,
     ) -> Iterable[profile.InputItem]:
-        """Iterates over physical hats that need to be mapped in a prepared profile."""
+        """Iterates over physical hats that need to be mapped in a prepared
+        profile."""
         for dev in input_devices:
             for hat in range(1, dev.hat_count + 1):
                 input_item = self._profile.get_input_item(
@@ -182,10 +203,12 @@ class AutoMapper:
                     self._num_retained_bindings += 1
 
     def _get_used_vjoy_inputs(self, mode: str) -> list[types.VjoyInput]:
-        """Returns a list of all vJoy inputs that are already used in the prepared profile."""
+        """Returns a list of all vJoy inputs that are already used in the
+        prepared profile."""
         used_vjoy_inputs = []
         connected_device_uuids = [
-            dev.device_guid.uuid for dev in device_initialization.physical_devices()
+            dev.device_guid.uuid for dev
+            in device_initialization.physical_devices()
         ]
         for device_uuid, input_items in self._profile.inputs.items():
             if device_uuid not in connected_device_uuids:
@@ -206,14 +229,15 @@ class AutoMapper:
                                     child_action.vjoy_input_id,
                                 )
                             )
-                        # vJoy mappings from any other kinds of actions/sequences are
+                        # vJoy mappings from any other kind of action are
                         # considered unused.
         return used_vjoy_inputs
 
     def _iter_unused_vjoy_axes(
         self, vjoy_ids: list[int], used_vjoy_inputs: set[types.VjoyInput]
     ) -> Iterable[types.VjoyInput]:
-        """Returns a list of all vJoy inputs that are not used in the prepared profile."""
+        """Returns a list of all vJoy inputs that are not used in the prepared
+        profile."""
         for vjoy_dev in device_initialization.vjoy_devices():
             if vjoy_dev.vjoy_id not in vjoy_ids:
                 continue
@@ -252,8 +276,10 @@ class AutoMapper:
                     yield vjoy_hat
 
     def _create_new_mapping(
-        self, physical_input: profile.InputItem, vjoy_input: types.VjoyInput
-    ):
+        self,
+        physical_input: profile.InputItem,
+        vjoy_input: types.VjoyInput
+    ) -> None:
         """Creates a new mapping from physical_input to vjoy_input."""
         vjoy_action = plugin_manager.PluginManager().create_instance(
             map_to_vjoy.MapToVjoyData.name, physical_input.input_type
@@ -268,6 +294,6 @@ class AutoMapper:
     def _create_mappings_report(self) -> str:
         """Creates a text report for the user after a mapping operation."""
         return (
-            f"Created {len(self._created_mappings)} mappings; "
-            f"{self._num_retained_bindings} previous bindings retained."
+            f"Created {len(self._created_mappings)} mappings, "
+            f"retained {self._num_retained_bindings} previous bindings."
         )

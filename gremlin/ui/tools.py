@@ -20,8 +20,9 @@ import dill
 
 from gremlin import (
     auto_mapper,
-    swap_devices,
     shared_state,
+    signal,
+    swap_devices,
 )
 
 if TYPE_CHECKING:
@@ -59,7 +60,7 @@ class Tools(QtCore.QObject):
             A string report for the user summarizing new mappings.
         """
         mapper = auto_mapper.AutoMapper(shared_state.current_profile)
-        return mapper.generate_mappings(
+        feedback_string = mapper.generate_mappings(
             [
                 dill.GUID.from_str(guid)
                 for (guid, chosen) in physical_devices.items() if chosen
@@ -70,6 +71,9 @@ class Tools(QtCore.QObject):
             ],
             auto_mapper.AutoMapperOptions(mode, repeat, overwrite),
         )
+        signal.signal.profileChanged.emit()
+        signal.signal.reloadCurrentInputItem.emit()
+        return feedback_string
 
     @QtCore.Slot(str, str, result=str)
     def swapDevices(self, source_uuid_str: str, target_uuid_str: str) -> str:
@@ -86,14 +90,17 @@ class Tools(QtCore.QObject):
         try:
             source_uuid = uuid.UUID(source_uuid_str)
             target_uuid = uuid.UUID(target_uuid_str)
+            result = swap_devices.swap_devices(
+                shared_state.current_profile,
+                source_uuid,
+                target_uuid
+            )
+            signal.signal.profileChanged.emit()
+            signal.signal.reloadCurrentInputItem.emit()
+            return result.as_string()
         except ValueError as e:
             logging.getLogger("system").error(
                 f"Invalid UUID provided for swapping devices: "
                 f"{source_uuid_str}, {target_uuid_str}"
             )
-        result = swap_devices.swap_devices(
-            shared_state.current_profile,
-            source_uuid,
-            target_uuid
-        )
-        return result.as_string()
+            return "Failed to swap devices: Invalid UUID provided."
