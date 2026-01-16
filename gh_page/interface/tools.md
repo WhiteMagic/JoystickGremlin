@@ -29,7 +29,14 @@ The calibration dialog allows calibrating the physical devices used by Gremlin. 
 {: .text-center }
 ![Auto Mapper](/assets/images/ui/auto_mapper.png)
 
-The auto mapper tool allows to create simply 1 to 1 mappings that add *Map to vJoy* actions between the selected physical input and the selected vJoy output.
+The auto mapper tool allows to create simply 1 to 1 mappings that add *Map to vJoy* actions between the selected physical input and the selected vJoy output. Select the physical devices and vJoy devices to use before clicking the "Create 1:1 mappings" button. The two options have enable the following behaviours.
+
+<dl>
+    <dt>Overwrite non-empty physical inputs</dt>
+    <dd>Normally inputs with configured actions are skipped, if this option is activated the existing actions are removed and a new mapping is added.</dd>
+    <dt>Repeat vJoy devices</dt>
+    <dd>If more vJoy outputs are required than available, this option will reuse already assigned vJoy inputs.</dd>
+</dl>
 
 
 ## Swap Devices
@@ -38,3 +45,5 @@ The auto mapper tool allows to create simply 1 to 1 mappings that add *Map to vJ
 ![Swap Devices](/assets/images/ui/swap_devices.png)
 
 This tool allows assigning contents from a profile to an existing physical device. It can be used when migrating to a new machine where device identifiers have changed or when using a profile made by someone else. The assigning of profile mappings to a device only allows the mapping to a device that has the correct number of inputs required by the configuration.
+
+Pick the source device that exists in a profile and the target device that is currently connected, then press the "Swap Bindings" button.
