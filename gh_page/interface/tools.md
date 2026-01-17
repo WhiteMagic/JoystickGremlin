@@ -11,7 +11,7 @@ Gremlin comes with a variety of tools to both manage Gremlin and its profiles bu
 ## Input Viewer
 
 {: .text-center }
-![Input Viewer](/assets/images/ui/input_viewer.png)
+![Input Viewer]({{ site.baseurl }}/assets/images/ui/input_viewer.png)
 
 The Input Viewer shows the inputs received by Gremlin from all sources. It can show axes values either as a time series or the current state while button and hats can be visualized as their current state.
 
@@ -19,7 +19,7 @@ The Input Viewer shows the inputs received by Gremlin from all sources. It can s
 ## Calibration
 
 {: .text-center }
-![Calibration](/assets/images/ui/calibration.png)
+![Calibration]({{ site.baseurl }}/assets/images/ui/calibration.png)
 
 The calibration dialog allows calibrating the physical devices used by Gremlin. The calibration information is applied to every reading Gremlin receives from the physical device before processing it further. The dialog shows the raw as well as the post-calibration values directly in the UI. The values can be recorded simply by moving the axis with the input fields permitting manual adjustments to the recorded values.
 
@@ -27,7 +27,7 @@ The calibration dialog allows calibrating the physical devices used by Gremlin. 
 ## Auto Mapper
 
 {: .text-center }
-![Auto Mapper](/assets/images/ui/auto_mapper.png)
+![Auto Mapper]({{ site.baseurl }}/assets/images/ui/auto_mapper.png)
 
 The auto mapper tool allows to create simply 1 to 1 mappings that add *Map to vJoy* actions between the selected physical input and the selected vJoy output. Select the physical devices and vJoy devices to use before clicking the "Create 1:1 mappings" button. The two options have enable the following behaviours.
 
@@ -42,7 +42,7 @@ The auto mapper tool allows to create simply 1 to 1 mappings that add *Map to vJ
 ## Swap Devices
 
 {: .text-center }
-![Swap Devices](/assets/images/ui/swap_devices.png)
+![Swap Devices]({{ site.baseurl }}/assets/images/ui/swap_devices.png)
 
 This tool allows assigning contents from a profile to an existing physical device. It can be used when migrating to a new machine where device identifiers have changed or when using a profile made by someone else. The assigning of profile mappings to a device only allows the mapping to a device that has the correct number of inputs required by the configuration.
 

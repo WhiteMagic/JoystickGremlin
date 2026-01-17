@@ -12,7 +12,7 @@ Every axis and hat action sequence has a toggle at the top that allows treating 
 
 ## Axis
 
-![Virtual axis button](/assets/images/virtual_axis_button.png)
+![Virtual axis button]({{ site.baseurl }}/assets/images/virtual_axis_button.png)
 {: .text-center }
 
 Actions associated with axis inputs have a range based setup which simulates a button press when the axis enters the specified range and releases the virtual button when it leaves the range. In addition to being able to specify the range for the button you can also specify the direction from which the range has to be entered to be triggered. This allows triggering two different actions for the same range depending on the direction it is traversed.
@@ -20,7 +20,7 @@ Actions associated with axis inputs have a range based setup which simulates a b
 
 ## Hat
 
-![Virtual hat button](/assets/images/virtual_hat_button.png)
+![Virtual hat button]({{ site.baseurl }}/assets/images/virtual_hat_button.png)
 {: .text-center }
 
 The eight directions of POV hats can be treated as states in which the virtual button is considered pressed. It is possible to select multiple directions at once and any one of the selected directions will be considered as part of a single virtual button.

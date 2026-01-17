@@ -1,6 +1,7 @@
 # Site settings
 title: Joystick Gremlin
-url: "https://whitemagic.github.io/JoystickGremlin"
+url: "https://whitemagic.github.io/"
+baseurl: "/JoystickGremlin"
 
 # Generic settings
 name: Joystick Gremlin

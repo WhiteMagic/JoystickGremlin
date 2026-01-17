@@ -9,7 +9,7 @@ nav_order: 5
 Options that could change based on the specific profile can be set in the *Settings* tab. This allows you to configure the following aspects:
 
 {: .text-center }
-![Profile Settings](/assets/images/ui/profile_settings.png)<br>
+![Profile Settings]({{ site.baseurl }}/assets/images/ui/profile_settings.png)<br>
 *The settings tab allows configuring options specific to the current profile.*
 
 

@@ -9,7 +9,7 @@ nav_order: 6
 The options window shows the various options that Gremlin allows to be configured. Each entry has a short explanation of what the particular option does.
 
 {: .text-center }
-![Options Window](/assets/images/ui/options.png)<br>
+![Options Window]({{ site.baseurl }}/assets/images/ui/options.png)<br>
 *The options window exposes all the settings one can change in Gremlin.*
 
 The options are grouped into three sections which contain the following aspects:

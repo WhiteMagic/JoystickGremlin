@@ -9,7 +9,7 @@ nav_order: 2
 The following section introduces the terminology used by Joystick Gremlin and explains their meaning.
 
 {: .text-center }
-![Concepts diagram](/assets/images/concepts.png)<br>
+![Concepts diagram]({{ site.baseurl }}/assets/images/concepts.png)<br>
 *The image shows how the different components of a profile and how they relate to each other. The figure omits the physical or logical device inputs that would trigger the configured inputs and result in the configured actions to run.*
 
 

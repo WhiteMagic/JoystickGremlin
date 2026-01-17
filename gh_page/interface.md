@@ -10,7 +10,7 @@ In the following the various components of the user interface are introduced and
 The following is a short overview of the different components that make up the main user interface, shown in the following image.
 
 {: .text-center }
-![Main Window](/assets/images/joystick_gremlin_main_window.png)<br>
+![Main Window]({{ site.baseurl }}/assets/images/joystick_gremlin_main_window.png)<br>
 *Joystick Gremlin UI*
 
 1. Overview of all the inputs available for a given physical device. The small icons on the far right of each input indicate the type of actions associated with the input. The icons and their meaning are summarised in the table below.

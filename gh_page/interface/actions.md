@@ -21,7 +21,7 @@ Actions are what allow Gremlin to perform all its functions. They can be arbitra
 
 ## Chain
 
-![Chain action](/assets/images/actions/chain.png)
+![Chain action]({{ site.baseurl }}/assets/images/actions/chain.png)
 {: .text-center }
 
 This action holds several independent groups of actions. Each time the action is activated the next group's actions are executed. When the last group in the chain is reached the first group is executed again. Additionally, a timeout can be set, after which the chain is resets to the first entry.
@@ -29,7 +29,7 @@ This action holds several independent groups of actions. Each time the action is
 
 ## Change Mode
 
-![Change Mode action](/assets/images/actions/change_mode.png)
+![Change Mode action]({{ site.baseurl }}/assets/images/actions/change_mode.png)
 {: .text-center }
 
 Allows controlling which mode Gremlin is in at any point in time. In the simplest use case a user simply swaps between named modes. However, significantly more complex setups are possible. Internally Gremlin has a stack of modes that is used to drive the entire mode change functionality. The following actions are available to interact with it:
@@ -54,7 +54,7 @@ Allows controlling which mode Gremlin is in at any point in time. In the simples
 
 ## Condition
 
-![Condition action](/assets/images/actions/condition.png)
+![Condition action]({{ site.baseurl }}/assets/images/actions/condition.png)
 {: .text-center }
 
 The condition action consists of three parts.
@@ -68,7 +68,7 @@ Depending on the outcome of the evaluation of the conditions when the action is 
 
 ## Description
 
-![Description action](/assets/images/actions/description.png)
+![Description action]({{ site.baseurl }}/assets/images/actions/description.png)
 {: .text-center }
 
 Allows providing additional description about a set of actions.
@@ -76,7 +76,7 @@ Allows providing additional description about a set of actions.
 
 ## Double Tap
 
-![Double Tap action](/assets/images/actions/double_tap.png)
+![Double Tap action]({{ site.baseurl }}/assets/images/actions/double_tap.png)
 {: .text-center }
 
 The action executes two different sets of actions depending on whether the button was pressed once or twice in quick succession. The double tap time is configurable. If the *exclusive* mode is selected the single tap will automatically execute once the double tap threshold is exceeded. Using the *combined* mode will result in a double tap executing the single tap actions as well.
@@ -84,7 +84,7 @@ The action executes two different sets of actions depending on whether the butto
 
 ## Dual-Axis Deadzone
 
-![Dual-Axis Deadzone action](/assets/images/actions/dual_axis_deadzone.png)
+![Dual-Axis Deadzone action]({{ site.baseurl }}/assets/images/actions/dual_axis_deadzone.png)
 {: .text-center }
 
 Specifies a deadzone designed to work with coupled axis, such as typically found on the X and Y axis of joysticks. This applies a circular deadzone around the resting point of the axes and a square deadzone around the maximum deflection of the axes. The action is configure by:
@@ -101,7 +101,7 @@ Without a Map to vJoy action the deadzone applied by the action has no visible e
 
 ## Hat Buttons
 
-![Hat Buttons action](/assets/images/actions/hat_as_buttons.png)
+![Hat Buttons action]({{ site.baseurl }}/assets/images/actions/hat_as_buttons.png)
 {: .text-center }
 
 Turns a hat into a set of four or eight buttons without the need to use the virtual button feature. Each of the hat directions can be assigned an arbitrary number of actions that react to button presses and releases.
@@ -109,7 +109,7 @@ Turns a hat into a set of four or eight buttons without the need to use the virt
 
 ## Load Profile
 
-![Load Profile action](/assets/images/actions/load_profile.png)
+![Load Profile action]({{ site.baseurl }}/assets/images/actions/load_profile.png)
 {: .text-center }
 
 Loads and activates the specified profile.
@@ -117,7 +117,7 @@ Loads and activates the specified profile.
 
 ## Macro
 
-![Macro action](/assets/images/actions/macro.png)
+![Macro action]({{ site.baseurl }}/assets/images/actions/macro.png)
 {: .text-center }
 
 The macro dialogue allows the creation of macros capable of emitting keyoard, mouse, joystick, logical device, and vJoy events with timing information between individual events.
@@ -153,7 +153,7 @@ Each macro is executed independently, which means that multiple long running mac
 
 ## Map to Keyboard
 
-![Map to Keyboard action](/assets/images/actions/map_to_keyboard.png)
+![Map to Keyboard action]({{ site.baseurl }}/assets/images/actions/map_to_keyboard.png)
 {: .text-center }
 
 The map to keyboard action allows an arbitrary keyboard key sequence to be linked to a single physical input, such as a button. The two switches allow modifying if the activation behavior. By default the keyboard key is pressed and released in sync with the associated action.
@@ -161,7 +161,7 @@ The map to keyboard action allows an arbitrary keyboard key sequence to be linke
 
 ## Map to Logical Device
 
-![Map to Logical Device action](/assets/images/actions/map_to_logical_device.png)
+![Map to Logical Device action]({{ site.baseurl }}/assets/images/actions/map_to_logical_device.png)
 {: .text-center }
 
 Maps an input to a logical device input. Buttons can control the activation behavior via the differnt switches, while an axis can decide if the change is applied as an absolute value or a relative change.
@@ -169,7 +169,7 @@ Maps an input to a logical device input. Buttons can control the activation beha
 
 ## Map to Mouse
 
-![Map to Mouse action](/assets/images/actions/map_to_mouse.png)
+![Map to Mouse action]({{ site.baseurl }}/assets/images/actions/map_to_mouse.png)
 {: .text-center }
 
 Allows controlling mouse events using axis, buttons, and hats. Buttons can trigger both mouse presses and motions while axis and hat inputs can only control the motion of the mouse.
@@ -177,8 +177,8 @@ Allows controlling mouse events using axis, buttons, and hats. Buttons can trigg
 
 ## Map to vJoy
 
-![Map to vJoy action](/assets/images/actions/map_to_vjoy.png)
-![Map to vJoy action](/assets/images/actions/map_to_vjoy_axis.png)
+![Map to vJoy action]({{ site.baseurl }}/assets/images/actions/map_to_vjoy.png)
+![Map to vJoy action]({{ site.baseurl }}/assets/images/actions/map_to_vjoy_axis.png)
 {: .text-center }
 
 Maps an input to a logical device input. Buttons can control the activation behavior via the differnt switches, while an axis can decide if the change is applied as an absolute value or a relative change. The relative axis option also allows specifying a scaling factor to increase or decrease the amount applied.
@@ -186,7 +186,7 @@ Maps an input to a logical device input. Buttons can control the activation beha
 
 ## Merge Axis
 
-![Merge Axis action](/assets/images/actions/merge_axis.png)
+![Merge Axis action]({{ site.baseurl }}/assets/images/actions/merge_axis.png)
 {: .text-center }
 
 Combines the values of two axes into a single value that can then be processed further by other actions. To use this action perform the following steps:
@@ -217,7 +217,7 @@ The manner in which the axes values are combined is governed by the *Merge opera
 
 ## Pause & Resume
 
-![Pause & Resume action](/assets/images/actions/pause_and_resume.png)
+![Pause & Resume action]({{ site.baseurl }}/assets/images/actions/pause_and_resume.png)
 {: .text-center }
 
 This action allows to pause and resume the execution of actions in response to physical input events by Gremlin. When the execution is paused only *Pause & Resume* actions are executed.
@@ -225,7 +225,7 @@ This action allows to pause and resume the execution of actions in response to p
 
 ## Play Sound
 
-![Play Sound action](/assets/images/actions/play_sound.png)
+![Play Sound action]({{ site.baseurl }}/assets/images/actions/play_sound.png)
 {: .text-center }
 
 Triggers the playback of a designated sound file. The volume of the playback can be controlled via the volume field.
@@ -233,7 +233,7 @@ Triggers the playback of a designated sound file. The volume of the playback can
 
 ## Reference
 
-![Reference action](/assets/images/actions/reference.png)
+![Reference action]({{ site.baseurl }}/assets/images/actions/reference.png)
 {: .text-center }
 
 This action allows you to select an existing action and to then add that action as either a reference or copy. The two options behave as follows:
@@ -249,7 +249,7 @@ This action allows you to select an existing action and to then add that action 
 
 ## Response Curve
 
-![Response Curve action](/assets/images/actions/response_curve.png)
+![Response Curve action]({{ site.baseurl }}/assets/images/actions/response_curve.png)
 {: .text-center }
 
 The response curve dialogue allows the customisation of the response produced by the joystick using the curve editor. The shape of the curve is controlled using a set of control points.
@@ -280,14 +280,14 @@ In order for response curves to work properly the game has to be configured to u
 
 ## Smart Toggle
 
-![Smart Toggle action](/assets/images/actions/smart_toggle.png)
+![Smart Toggle action]({{ site.baseurl }}/assets/images/actions/smart_toggle.png)
 {: .text-center }
 
 The smart toggle container allows for a single group of actions that have on and off states, i.e. *Map to vJoy*, *Map to Keyboard*, and *Map to Logical Device*, to have two different behaviours. If the input is held down the action will perform as a typical *Map to X* action would, i.e. staying active as long as the input is pressed. However, when a short button press is detected, specified by the *Toggle delay*, then the first press toggles the down state, i.e. holding the action down, and the second short press releases the action again.
 
 ## Split Axis
 
-![Split Axis action](/assets/images/actions/split_axis.png)
+![Split Axis action]({{ site.baseurl }}/assets/images/actions/split_axis.png)
 {: .text-center }
 
 This action allows splitting a single axis into two parts. The value at which the axis is split can be adjusted by the user. Afterwards the two halves can haver be further processed with other actions.
@@ -295,7 +295,7 @@ This action allows splitting a single axis into two parts. The value at which th
 
 ## Tempo
 
-![Tempo action](/assets/images/actions/tempo.png)
+![Tempo action]({{ site.baseurl }}/assets/images/actions/tempo.png)
 {: .text-center }
 
 This container holds two groups of actions that get executed under different conditions. The first one is run when the input is pressed for a duration shorter then the specified delay. The second group is run when the input is pressed for longer then the specified delay.  Whether the first group is executed with the input being pressed or only when it is released can be controlled by the activation setting.

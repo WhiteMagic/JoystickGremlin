@@ -9,7 +9,7 @@ nav_order: 3
 Gremlin has an internal fake device, known as *Logical Device* that is capable of representing an infinite number of axis, buttons, and hats. This fake device is only visible inside of Gremlin but can be used to combine multiple axes, store logical state, and things I haven't thought of.
 
 {: .text-center }
-![Logical Device](/assets/images/logical_device.png)
+![Logical Device]({{ site.baseurl }}/assets/images/logical_device.png)
 
 The *Logical Deivce* is shown in the list of device tabs and functions like any other physical device in that actions can be assigned to it and will be executed as usual. The difference is that the user can add any number of inputs to this device and name them to their liking.
 
@@ -23,5 +23,5 @@ A good example of where the *Logical Device* is needed is when one wants to merg
 
 The image below illustrates how such a setup would look like.
 
-![Merge axis with logical device example](/assets/images/logical_device_example.png)
+![Merge axis with logical device example]({{ site.baseurl }}/assets/images/logical_device_example.png)
 {: .text-center }

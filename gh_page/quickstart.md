@@ -10,7 +10,7 @@ nav_order: 2
 On most sytems installing Joystick Gremlin only requires the installation of [vJoy](https://github.com/jshafer817/vJoy/releases/tag/v2.1.9.1){:target="_blank"} and [Joystick Gremlin](/download) itself. Once vJoy is installed it is advisable to configure the vJoy device(s), using <kbd>vJoyConf</kbd>, to contain the desired number of axes, buttons, and hats.
 
 {: .text-center }
-![VJoy configuration dialog](/assets/images/vjoy_configuration.png)<br>
+![VJoy configuration dialog]({{ site.baseurl }}/assets/images/vjoy_configuration.png)<br>
 *VJoy configuration dialog with settings required for proper Joystick Gremlin operation.*
 
 {: .warning }
@@ -31,7 +31,7 @@ The following is intended as a simple guide that introduces the concepts used in
 This is also reflected by the design of the UI which is divided into two halves. The left side lists all the physical inputs of a particular joystick, such as axes, buttons, and hats. The right side lists the actions associated with a particular physical input. Going back to the above idea the left hand side contains the *"When I do"* part while the right hand side reflects the *"Gremlin does"* part.
 
 {: .text-center }
-![Main Window](/assets/images/joystick_gremlin_main_window.png)<br>
+![Main Window]({{ site.baseurl }}/assets/images/joystick_gremlin_main_window.png)<br>
 *Joystick Gremlin UI*
 
 The next few sections describe in simple terms some of the functionality provided by Gremlin that is the most useful for a basic setup. A more complete description is provided in [Interface](/interface). It is also worht getting familiar with the [Concepts](/introduction/concepts) used in Gremlin and the terms, as they are used throughout this documentation.
