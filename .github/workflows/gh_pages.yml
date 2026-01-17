@@ -3,7 +3,7 @@ name: Deploy GitHub Page
 on:
   # Runs on pushes targeting the default branch and can be triggered manually.
   push:
-    branches: ["feature/gh_page"]
+    branches: [$default-branch]
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages.
