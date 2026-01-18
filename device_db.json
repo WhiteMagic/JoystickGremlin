@@ -66,6 +66,12 @@
             "product_id": 45322,
             "name": "Thrustmaster T.16000M",
             "mapping": "tm_t16000m"
+        },
+        {
+            "vendor_id": 1103,
+            "product_id": 45937,
+            "name": "T-LCM PEDALS",
+            "mapping": "t_lcm_pedals"
         }
     ],
     "mapping": {
@@ -438,6 +444,11 @@
             "Button 3": "Top Left Button",
             "Button 4": "Top Right Button",
             "Hat 1": "POV Hat"
+        },
+        "t_lcm_pedals": {
+            "Axis 1": "Right Pedal",
+            "Axis 2": "Left Pedal",
+            "Axis 3": "Center Pedal"
         }
     }
 }
