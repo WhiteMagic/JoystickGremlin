@@ -42,6 +42,7 @@ from gremlin.types import (
 from gremlin import (
     error,
     event_handler,
+    keyboard,
     shared_state,
     util,
 )
@@ -591,10 +592,10 @@ class AbstractVariable(ABC):
 
     def __init__(
             self,
-            name: str|None=None,
-            description: str="",
-            is_optional: bool=True
-    ):
+            name: str | None = None,
+            description: str = "",
+            is_optional: bool = True
+    ) -> None:
         self.name = name
         self.description = description
         self.is_optional = is_optional
@@ -810,6 +811,57 @@ class IntegerVariable(AbstractVariable):
         self._value = other.value
 
 
+class KeyboardVariable(AbstractVariable):
+
+    xml_tag = "keyboard"
+
+    def __init__(
+            self,
+            name: str,
+            description: str,
+            is_optional: bool,
+            valid_types: List[InputType],
+    ) -> None:
+        super().__init__(name, description, is_optional)
+
+        self._value = None
+        self._initialize_from_registry()
+
+    @property
+    def value(self) -> keyboard.Key:
+        return self._value
+
+    @value.setter
+    def value(self, value: keyboard.Key) -> None:
+        self._value = value
+
+    def is_valid(self) -> bool:
+        return isinstance(self._value, keyboard.Key)
+
+    def _from_xml(self, node: ElementTree.Element) -> None:
+        self._value = keyboard.key_from_scan_code(
+            util.read_property(node, "scan-code", PropertyType.Int),
+            util.read_property(node, "is-extended", PropertyType.Bool)
+        )
+
+    def _to_xml(self, node: ElementTree.Element) -> None:
+        assert isinstance(self._value, keyboard.Key)
+        util.append_property_nodes(
+            node,
+            [
+                ["scan-code", self._value.scan_code, PropertyType.Int],
+                ["is-extended", self._value.is_extended, PropertyType.Bool],
+            ]
+        )
+
+    def _assign_value_from(self, other: KeyboardVariable) -> None:
+        self._value = other.value
+
+    def decorator(self, mode: ModeVariable) -> Callable:
+        assert isinstance(self._value, keyboard.Key)
+        return keyboard(self._value.name, mode.value)
+
+
 class LogicalDeviceVariable(AbstractVariable):
 
     xml_tag = "logical-device"
@@ -820,7 +872,7 @@ class LogicalDeviceVariable(AbstractVariable):
             description: str,
             is_optional: bool,
             valid_types: List[InputType],
-    ):
+    ) -> None:
         super().__init__(name, description, is_optional)
 
         self._ld = LogicalDevice()

@@ -10,7 +10,7 @@ from typing import List
 import win32api
 import win32con
 
-import gremlin
+from gremlin.error import KeyboardError
 
 
 def _create_function(lib_name, fn_name, param_types, return_type):
@@ -126,7 +126,7 @@ class Key:
     @lookup_name.setter
     def lookup_name(self, name):
         if self._lookup_name is not None:
-            raise gremlin.error.KeyboardError("Setting lookup name repeatedly")
+            raise KeyboardError("Setting lookup name repeatedly")
         self._lookup_name = name
 
     def __eq__(self, other):
@@ -267,9 +267,7 @@ def key_from_name(name):
         logging.getLogger("system").warning(
             "Invalid key name specified \"{}\"".format(name)
         )
-        raise gremlin.error.KeyboardError(
-            "Invalid key specified, {}".format(name)
-        )
+        raise KeyboardError(f"Invalid key specified: {name}")
     else:
         g_scan_code_to_key[(key.scan_code, key.is_extended)] = key
         g_name_to_key[key_name] = key
@@ -305,10 +303,8 @@ def key_from_code(scan_code: int, is_extended: bool) -> Key:
                 scan_code, is_extended
             )
         )
-        raise gremlin.error.KeyboardError(
-            "Invalid scan code specified ({}, {})".format(
-                    scan_code, is_extended
-            )
+        raise KeyboardError(
+            f"Invalid scan code specified ({scan_code}, {is_extended})"
         )
     else:
         key = Key(name, scan_code, is_extended, virtual_code)
