@@ -83,6 +83,10 @@ class ActionModel(QtCore.QObject):
         self._sequence_index = action_index
         self._parent_sequence_index = parent_index
 
+        self._binding_model.behaviorChanged.connect(
+            lambda: self.actionChanged.emit()
+        )
+
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
             "ActionModel._qml_path_impl not implemented in subclass"
@@ -222,7 +226,7 @@ class ActionModel(QtCore.QObject):
 
     def _action_behavior(self) -> str:
         raise MissingImplementationError(
-            "ActionModel._qml_path_impl not implemented in subclass"
+            "ActionModel._action_behavior not implemented in subclass"
         )
 
     def _get_action_label(self) -> str:
@@ -368,7 +372,7 @@ class ActionPriorityListModel(QtCore.QAbstractListModel):
 
     def __init__(self, parent: QtCore.QObject=...) -> None:
         super().__init__(parent)
-        self._config = gremlin.config.Configuration()
+        self._config = Configuration()
         self._cfg_key = ["global", "general", "action-priorities"]
 
     def rowCount(self, parent:QtCore.QModelIndex=...) -> int:

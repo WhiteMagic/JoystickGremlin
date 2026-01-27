@@ -18,6 +18,14 @@ Item {
     implicitHeight: _content.height
     implicitWidth: _button.width + _combobox.width + 13
 
+    Connections {
+        target: actionNode
+
+        function onActionChanged() {
+            _combobox.model = actionNode.compatibleActions
+        }
+    }
+
     onActionNodeChanged: {
         _combobox.model = actionNode.compatibleActions
     }
