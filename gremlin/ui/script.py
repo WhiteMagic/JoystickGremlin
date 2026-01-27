@@ -18,7 +18,8 @@ from gremlin.types import InputType
 from gremlin.ui.device import InputIdentifier
 
 
-QML_IMPORT_NAME = "Gremlin.Plugin"
+
+QML_IMPORT_NAME = "Gremlin.Script"
 QML_IMPORT_MAJOR_VERSION = 1
 
 

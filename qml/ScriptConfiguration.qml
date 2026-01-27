@@ -7,7 +7,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
-import Gremlin.Plugin
+import Gremlin.Script
 import Gremlin.Style
 
 JGListView {
