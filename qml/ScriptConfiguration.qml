@@ -7,6 +7,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
+import Gremlin.Profile
 import Gremlin.Script
 import Gremlin.Style
 
@@ -182,8 +183,7 @@ JGListView {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignRight
 
-                    model: backend.modeHierarchy.modeList
-
+                    model: ModeListModel {}
                     textRole: "name"
                     valueRole: "name"
 
