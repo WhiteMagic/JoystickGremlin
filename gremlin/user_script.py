@@ -33,6 +33,7 @@ from gremlin.input_cache import (
     Joystick,
     Keyboard,
 )
+import gremlin.keyboard
 from gremlin.logical_device import LogicalDevice
 from gremlin.types import (
     HatDirection,
@@ -42,7 +43,6 @@ from gremlin.types import (
 from gremlin import (
     error,
     event_handler,
-    keyboard,
     shared_state,
     util,
 )
@@ -481,6 +481,7 @@ class Script:
             "bool": BoolVariable,
             "float": FloatVariable,
             "int": IntegerVariable,
+            "keyboard": KeyboardVariable,
             "logical-device": LogicalDeviceVariable,
             "mode": ModeVariable,
             "physical-input": PhysicalInputVariable,
@@ -819,33 +820,31 @@ class KeyboardVariable(AbstractVariable):
             self,
             name: str,
             description: str,
-            is_optional: bool,
-            valid_types: List[InputType],
+            is_optional: bool
     ) -> None:
         super().__init__(name, description, is_optional)
 
-        self._value = None
+        self._value : None | gremlin.keyboard.Key = None
         self._initialize_from_registry()
 
     @property
-    def value(self) -> keyboard.Key:
+    def value(self) -> gremlin.keyboard.Key | None:
         return self._value
 
     @value.setter
-    def value(self, value: keyboard.Key) -> None:
-        self._value = value
+    def value(self, data: gremlin.keyboard.Key) -> None:
+        self._value = data
 
     def is_valid(self) -> bool:
-        return isinstance(self._value, keyboard.Key)
-
+        return isinstance(self._value, gremlin.keyboard.Key)
     def _from_xml(self, node: ElementTree.Element) -> None:
-        self._value = keyboard.key_from_scan_code(
+        self._value = gremlin.keyboard.key_from_code(
             util.read_property(node, "scan-code", PropertyType.Int),
             util.read_property(node, "is-extended", PropertyType.Bool)
         )
 
     def _to_xml(self, node: ElementTree.Element) -> None:
-        assert isinstance(self._value, keyboard.Key)
+        assert isinstance(self._value, gremlin.keyboard.Key)
         util.append_property_nodes(
             node,
             [
@@ -858,8 +857,12 @@ class KeyboardVariable(AbstractVariable):
         self._value = other.value
 
     def decorator(self, mode: ModeVariable) -> Callable:
-        assert isinstance(self._value, keyboard.Key)
-        return keyboard(self._value.name, mode.value)
+        if self._value is None:
+            # Return a no-op decorator.
+            return lambda f: f
+        else:
+            assert isinstance(self._value, gremlin.keyboard.Key)
+            return keyboard(self._value.name, mode.value)
 
 
 class LogicalDeviceVariable(AbstractVariable):

@@ -108,6 +108,33 @@ JGListView {
         }
 
         DelegateChoice {
+            roleValue: "keyboard"
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 10
+
+                DescriptiveText {
+                    text: modelData.name
+                    description: modelData.description
+                    isValid: modelData.isValid
+                }
+
+                InputListener {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignRight
+
+                    buttonLabel: modelData.label
+                    buttonWidth: width
+                    callback: (inputs) => { modelData.updateKeyboard(inputs) }
+                    multipleInputs: false
+                    eventTypes: ["key"]
+                }
+            }
+        }
+
+        DelegateChoice {
             roleValue: "logical-device"
 
             RowLayout {

@@ -29,6 +29,12 @@ int_var = user_script.IntegerVariable(
     max_value=10,
 )
 
+key_var = user_script.KeyboardVariable(
+    "A keyboard variable",
+    "Example keyboard variable",
+    is_optional=True,
+)
+
 mode_var = user_script.ModeVariable(
     "A mode variable",
     "Example mode variable",
@@ -108,3 +114,7 @@ def button_handler(event):
 def hat_handler(event):
     """Forwards the input hat unmodified to output hat."""
     virtual_input_hat_var.remap(event.value)
+
+@key_var.decorator(mode_var)
+def keyboard_handler(event):
+    print("Keyboard event:", event)

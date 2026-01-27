@@ -5,18 +5,28 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import (
+    Any,
+    List,
+    TYPE_CHECKING,
+)
 
 from PySide6 import QtCore, QtQml
 from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import user_script
+from gremlin import (
+    event_handler,
+    keyboard,
+    user_script,
+)
 from gremlin.error import GremlinError
 from gremlin.logical_device import LogicalDevice
 from gremlin.profile import ScriptManager
 from gremlin.types import InputType
 from gremlin.ui.device import InputIdentifier
 
+if TYPE_CHECKING:
+    import gremlin.ui.type_aliases as ta
 
 
 QML_IMPORT_NAME = "Gremlin.Script"
@@ -30,7 +40,11 @@ class AbstractVariableModel(QtCore.QObject):
 
     validityChanged = Signal()
 
-    def __init__(self, variable: user_script.AbstractVariable, parent=None):
+    def __init__(
+        self,
+        variable: user_script.AbstractVariable,
+        parent: ta.OQO = None
+    ) -> None:
         super().__init__(parent)
 
         self._variable = variable
@@ -148,6 +162,37 @@ class IntegerVariableModel(AbstractVariableModel):
         fset=_set_value,
         notify=changed
     )
+
+
+@QtQml.QmlElement
+class KeyboardVariableModel(AbstractVariableModel):
+
+    changed = Signal()
+
+    def __init__(
+            self,
+            variable: user_script.KeyboardVariable,
+            parent: ta.OQO = None
+    ) -> None:
+        super().__init__(variable, parent)
+
+    @Property(str, notify=changed)
+    def label(self) -> str:
+        return "Record" if self._variable.value is None else self._variable.value.name
+
+    @Slot(list)
+    def updateKeyboard(self, data: List[event_handler.Event]) -> None:
+        """Receives the events corresponding to joystick events.
+
+        We only expect to receive a single input item, thus only store
+        the first element of the list.
+
+        Args:
+            data: list of joystick events
+        """
+        self._variable.value = keyboard.key_from_code(*data[0].identifier)
+        self.changed.emit()
+        self.evaluate_validity()
 
 
 @QtQml.QmlElement
@@ -400,6 +445,7 @@ class ScriptListModel(QtCore.QAbstractListModel):
         user_script.BoolVariable: BoolVariableModel,
         user_script.FloatVariable: FloatVariableModel,
         user_script.IntegerVariable: IntegerVariableModel,
+        user_script.KeyboardVariable: KeyboardVariableModel,
         user_script.LogicalDeviceVariable: LogicalDeviceModel,
         user_script.ModeVariable: ModeVariableModel,
         user_script.SelectionVariable: SelectionVariableModel,
