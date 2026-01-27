@@ -206,10 +206,16 @@ def update_action_priorities() -> None:
     if cfg.exists(*key):
         priorities = cfg.value(*key)
     priority_names = [v[0] for v in priorities]
+
+    # Obtain the list of currently available plugins with an alphabetical
+    # order for all but the most important actions.
+    priority_actions = ["Map to vJoy", "Macro", "Response Curve"]
     plugin_names = [
         p.name for p in
         gremlin.plugin_manager.PluginManager().repository.values()
     ]
+    plugin_names = [n for n in priority_actions if n in plugin_names] + \
+        sorted([n for n in plugin_names if n not in priority_actions])
 
     for tag in plugin_names:
         if tag not in priority_names:
