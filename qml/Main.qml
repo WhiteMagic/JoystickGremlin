@@ -287,10 +287,17 @@ ApplicationWindow {
 
             LayoutHorizontalSpacer {}
 
+            Label {
+                Layout.rightMargin: 10
+
+                text: "Configuring mode"
+            }
+
             JGComboBox {
                 id: _modeSelector
 
                 Layout.preferredWidth: 200
+                Layout.rightMargin: 10
 
                 model: ModeListModel {}
                 textRole: "name"
@@ -355,7 +362,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 padding: 5
 
-                text: "<B>Current mode: </B>" + backend.currentMode
+                text: "<B>Executing mode: </B>" + backend.currentMode
             }
         }
     }
