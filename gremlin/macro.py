@@ -17,7 +17,7 @@ from xml.etree import ElementTree
 import dill
 from vjoy.vjoy import VJoyProxy
 
-from gremlin import event_handler, mode_manager, util
+from gremlin import event_handler, mode_manager, sendinput, util
 from gremlin.common import SingletonDecorator
 from gremlin.config import Configuration
 from gremlin.keyboard import send_key_down, send_key_up, key_from_code, \
@@ -681,14 +681,14 @@ class MouseButtonAction(AbstractAction):
 
     def __call__(self) -> None:
         if self.button == MouseButton.WheelDown:
-            gremlin.sendinput.mouse_wheel(1)
+            sendinput.mouse_wheel(1)
         elif self.button == MouseButton.WheelUp:
-            gremlin.sendinput.mouse_wheel(-1)
+            sendinput.mouse_wheel(-1)
         else:
             if self.is_pressed:
-                gremlin.sendinput.mouse_press(self.button)
+                sendinput.mouse_press(self.button)
             else:
-                gremlin.sendinput.mouse_release(self.button)
+                sendinput.mouse_release(self.button)
 
     def to_xml(self) -> ElementTree.Element:
         node = self._create_node(self.tag)
@@ -731,7 +731,7 @@ class MouseMotionAction(AbstractAction):
         return MouseMotionAction(0, 0)
 
     def __call__(self) -> None:
-        gremlin.sendinput.mouse_relative_motion(self.dx, self.dy)
+        sendinput.mouse_relative_motion(self.dx, self.dy)
 
     def to_xml(self) -> ElementTree.Element:
         node = self._create_node(self.tag)
