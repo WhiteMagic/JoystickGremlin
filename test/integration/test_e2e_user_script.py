@@ -23,7 +23,6 @@ def profile_name() -> str:
 def edited_profile(
     profile_from_file: profile.Profile,
     vjoy_di_device: dill.DeviceSummary,
-    vjoy_control_device,
 ) -> profile.Profile:
     """Replaces the input device loaded from file with the vJoy device."""
     script = profile_from_file.scripts.scripts[0]

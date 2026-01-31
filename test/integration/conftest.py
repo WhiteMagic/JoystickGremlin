@@ -53,7 +53,7 @@ def vjoy_di_device(
 
 
 @pytest.fixture(scope="module")
-def vjoy_control_device_id(vjoy_ids_or_skip: list[int]) -> vjoy.VJoy:
+def vjoy_control_device_id(vjoy_ids_or_skip: list[int]) -> int:
     """Returns the vJoy control device to be used for this test."""
     assert vjoy_ids_or_skip
     for vjoy_id in vjoy_ids_or_skip:
@@ -66,7 +66,7 @@ def vjoy_control_device_id(vjoy_ids_or_skip: list[int]) -> vjoy.VJoy:
 def edited_profile(
     profile_from_file: gremlin.profile.Profile,
     vjoy_di_device: dill.DeviceSummary,
-    vjoy_control_device: vjoy.VJoy,
+    vjoy_control_device_id: int,
 ) -> gremlin.profile.Profile:
     """Replaces input/output devices in the profile."""
     # Replace the (only) input device.
@@ -78,7 +78,7 @@ def edited_profile(
 
     # Replace the output device(s) with the single vJoy control device.
     for action in profile_from_file.library.actions_by_type(map_to_vjoy.MapToVjoyData):
-        action.vjoy_device_id = vjoy_control_device.vjoy_id
+        action.vjoy_device_id = vjoy_control_device_id
 
     return profile_from_file
 
