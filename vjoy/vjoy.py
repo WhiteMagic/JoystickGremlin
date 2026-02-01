@@ -15,7 +15,7 @@ import os
 from vjoy.vjoy_interface import VJoyState, VJoyInterface
 
 from gremlin.error import VJoyConcurrencyError, VJoyError
-from gremlin.types import AxisNames, HatDirection
+from gremlin.types import AxisNames, HatDirection, InputType
 import gremlin.spline
 
 
