@@ -488,6 +488,15 @@ ApplicationWindow {
                 }
             }
 
+            KeyboardInputList {
+                id: _keyboardInputList
+
+                visible: uiState.currentTab === "keyboard"
+                SplitView.minimumWidth: 250
+
+                // device: _deviceModel
+            }
+
             // List of the actions associated with the currently selected input.
             InputConfiguration {
                 id: _inputConfigurationPanel

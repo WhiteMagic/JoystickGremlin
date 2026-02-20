@@ -34,10 +34,12 @@ from gremlin.types import (
     AxisButtonDirection,
     InputType,
     HatDirection,
+    ScanCode,
 )
 from gremlin import (
     device_initialization,
     error,
+    keyboard,
     plugin_manager,
     signal,
 )
@@ -678,7 +680,7 @@ class Profile:
             self,
             device_guid: uuid.UUID,
             input_type: InputType,
-            input_id: int,
+            input_id: int | ScanCode,
             mode: str
     ) -> int:
         """Returns the number of InputItem instances corresponding to the
@@ -707,7 +709,7 @@ class Profile:
             self,
             device_guid: uuid.UUID,
             input_type: InputType,
-            input_id: int | uuid.UUID,
+            input_id: int | ScanCode,
             mode: str,
             create_if_missing: bool=False
     ) -> InputItem | None:
@@ -728,7 +730,7 @@ class Profile:
         if not (
                 isinstance(device_guid, uuid.UUID) and
                 isinstance(input_type, InputType) and
-                type(input_id) in [int, uuid.UUID] and
+                type(input_id) in [int, tuple] and
                 isinstance(mode, str)
         ):
             raise error.ProfileError("Invalid input specification provided.")
@@ -851,7 +853,7 @@ class InputItem:
         self.device_id: uuid.UUID | None = None
         self.input_type: InputType | None = None
         # Int for joysticks, tuple of two ints for keyboard.
-        self.input_id: int | tuple[int, int] | None = None
+        self.input_id: int | ScanCode | None = None
         self.mode: str | None = None
         self.library = library
         self.action_sequences: list[InputItemBinding] = []
@@ -866,7 +868,7 @@ class InputItem:
         # If the input is from a keyboard convert the input id into
         # the scan code and extended input flag
         if self.input_type == InputType.Keyboard:
-            self.input_id = (self.input_id & 0xFF, self.input_id >> 8)
+            self.input_id = (self.input_id & 0xFF, self.input_id >> 8 == 1)
 
         # Parse every action configuration entry
         for entry in node.findall("action-configuration"):
@@ -886,6 +888,7 @@ class InputItem:
         # To convert keyboard input tuples (scan_code, extended_bit) to integer:
         # input_id = extended_bit << 8 | scan_code
         if self.input_type == InputType.Keyboard:
+            assert isinstance(self.input_id, tuple) and len(self.input_id) == 2
             input_id = self.input_id[1] << 8 | self.input_id[0]
         node.append(create_subelement_node("input-id", input_id))
 

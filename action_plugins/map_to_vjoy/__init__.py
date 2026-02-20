@@ -72,7 +72,10 @@ class MapToVjoyFunctor(AbstractFunctor):
                     )
                     self.thread.start()
 
-        elif self.data.vjoy_input_type == InputType.JoystickButton:
+        elif self.data.vjoy_input_type in [
+            InputType.JoystickButton,
+            InputType.Keyboard
+        ]:
             is_pressed = value.current
             if self.data.button_inverted:
                 is_pressed = not is_pressed

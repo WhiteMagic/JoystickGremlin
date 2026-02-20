@@ -2,9 +2,24 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    TypeVar
+)
+
 from gremlin import error
-from gremlin.keyboard import key_from_code
-from gremlin.types import InputType, AxisNames
+from gremlin.keyboard import (
+    key_from_code,
+    Key
+)
+from gremlin.types import (
+    AxisNames,
+    InputType,
+    ScanCode,
+)
 
 
 class SingletonDecorator:
@@ -35,12 +50,13 @@ class SingletonMetaclass(type):
         return cls._instances[cls]
 
 
-def input_to_ui_string(input_type: InputType, input_id: int) -> str:
+def input_to_ui_string(input_type: InputType, input_id: int | ScanCode) -> str:
     """Returns a string for UI usage of an input.
 
     Args:
         input_type: Type of the input
-        input_id: Index of the input
+        input_id: Identifier of the input, usually a numerical index but for
+            keyboard keys it is the key's scan code
 
     Returns:
         String for UI usage of the given data.
@@ -51,6 +67,7 @@ def input_to_ui_string(input_type: InputType, input_id: int) -> str:
         except error.GremlinError:
             return "Axis {:d}".format(input_id)
     elif input_type == InputType.Keyboard:
+        assert isinstance(input_id, tuple) and len(input_id) == 2
         return key_from_code(*input_id).name
     else:
         return "{} {}".format(

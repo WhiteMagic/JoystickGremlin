@@ -9,7 +9,6 @@ import inspect
 import logging
 import time
 import threading
-import traceback
 from typing import (
     Any,
     Callable,
@@ -39,7 +38,10 @@ from gremlin.input_cache import (
     Joystick,
     Keyboard,
 )
-from gremlin.types import InputType
+from gremlin.types import (
+    InputType,
+    ScanCode,
+)
 
 
 if TYPE_CHECKING:
@@ -69,7 +71,7 @@ class Event:
     def __init__(
             self,
             event_type: InputType,
-            identifier: Any,
+            identifier: int | ScanCode,
             device_guid: uuid.UUID,
             mode: str,
             value: Any | None=None,
@@ -175,8 +177,8 @@ class Event:
             return hash((
                 self.device_guid,
                 self.event_type.value,
-                self.identifier,
-                1 if self.identifier[1] else 0
+                self.identifier[0],
+                int(self.identifier[1])
             ))
         else:
             return hash((

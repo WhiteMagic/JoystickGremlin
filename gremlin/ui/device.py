@@ -35,6 +35,7 @@ from gremlin import (
     common,
     device_initialization,
     event_handler,
+    keyboard,
     signal,
     shared_state,
     util,
@@ -43,11 +44,14 @@ from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.input_cache import DeviceDatabase
 from gremlin.logical_device import LogicalDevice
+from gremlin.profile import InputItem
 from gremlin.signal import signal
 from gremlin.types import (
     InputType,
     PropertyType,
+    ScanCode,
 )
+from gremlin.ui import backend
 
 if TYPE_CHECKING:
     import gremlin.ui.type_aliases as ta
@@ -68,7 +72,7 @@ class InputIdentifier(QtCore.QObject):
             self,
             device_guid: uuid.UUID | None=None,
             input_type: InputType | None=None,
-            input_id: int | None=None,
+            input_id: int | ScanCode | None=None,
             parent: ta.OQO=None
     ) -> None:
         super().__init__(parent)
@@ -82,6 +86,8 @@ class InputIdentifier(QtCore.QObject):
         if self.isValid:
             if self.device_guid == dill.UUID_LogicalDevice:
                 dev_name = "Logical Device"
+            elif self.device_guid == dill.UUID_Keyboard:
+                dev_name = "Keyboard"
             else:
                 dev_name = dill.DILL.get_device_name(
                     dill.GUID.from_uuid(self.device_guid)
@@ -600,7 +606,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         all_labels = self._logical.labels_of_type()
         return all_labels.index(label)
 
-    def roleNames(self) -> Dict:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
     guid = Property(str, fget=_get_guid)
@@ -720,6 +726,104 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
 
 
 @QtQml.QmlElement
+class KeyboardManagerModel(QtCore.QAbstractListModel):
+
+    """Model providing information about and managing keyboard inputs."""
+
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionCount"),
+    }
+
+    def __init__(self, parent: ta.OQO=None) -> None:
+        super().__init__(parent)
+
+        self._profile = shared_state.current_profile
+        signal.profileChanged.connect(self._profile_changed_cb)
+        signal.inputItemChanged.connect(self.refreshInput)
+
+    def _profile_changed_cb(self) -> None:
+        self._profile = shared_state.current_profile
+        self.beginResetModel()
+        self.endResetModel()
+
+    def _event_to_key(self, event: event_handler.Event) -> keyboard.Key:
+        return keyboard.key_from_code(*event.identifier)
+
+    @Slot(int, result=InputIdentifier)
+    def inputIdentifier(self, index: int) -> InputIdentifier:
+        identifier = InputIdentifier(parent=self)
+        identifier.device_guid = dill.UUID_Keyboard
+        identifier.input_type = InputType.Keyboard
+        identifier.input_id = self._all_keyboard_inputs()[index].input_id
+
+        return identifier
+
+    @Slot(int)
+    def deleteInput(self, index: int) -> None:
+        self.beginResetModel()
+        item = self._all_keyboard_inputs()[index]
+        self._profile.inputs[dill.UUID_Keyboard].remove(item)
+        self.endResetModel()
+
+    @Slot(list)
+    def addKey(self, data: List[event_handler.Event]) -> None:
+        if not data:
+            return
+
+        self.beginResetModel()
+        self._profile.get_input_item(
+            dill.UUID_Keyboard,
+            InputType.Keyboard,
+            data[0].identifier,
+            backend.Backend().ui_state.currentMode,
+            True
+        )
+        self.endResetModel()
+
+    @Slot(int)
+    def refreshInput(self, index: int) -> None:
+        """Refreshes the input at the given index.
+
+        Args:
+            index: linear index of the input to refresh
+        """
+        self.dataChanged.emit(
+            self.createIndex(index, 0),
+            self.createIndex(index, 0)
+        )
+
+    def _all_keyboard_inputs(self) -> list[InputItem]:
+        return sorted(
+            self._profile.inputs.get(dill.UUID_Keyboard, []),
+            key=lambda item: keyboard.key_from_code(*item.input_id).virtual_code
+        )
+
+    def rowCount(self, parent: ta.ModelIndex=QtCore.QModelIndex()) -> int:
+        return len(self._all_keyboard_inputs())
+
+    def data(
+            self,
+            index: ta.ModelIndex,
+            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if role not in self.roles:
+            return "Unknown"
+
+        item = self._all_keyboard_inputs()[index.row()]
+        match cast(str, self.roles[role]):
+            case "name":
+                return keyboard.key_from_code(*item.input_id).name
+            case "actionCount":
+                return len(item.action_sequences)
+            case _:
+                return ""
+
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
+        return self.roles
+
+
+@QtQml.QmlElement
 class VJoyDevices(QtCore.QObject):
 
     """vJoy model used together with the VJoySelector QML.
@@ -791,7 +895,7 @@ class VJoyDevices(QtCore.QObject):
                self._current_input_type is not None
 
     @Slot(int, int, str)
-    def setSelection(self, vjoy_id: int, input_id: int, input_type: str) -> None:
+    def setSelection(self, vjoy_id: int, input_id: int, input_type_str: str) -> None:
         """Sets the internal index state based on the model id data.
 
         Args:
@@ -813,11 +917,12 @@ class VJoyDevices(QtCore.QObject):
         if vjoy_index == -1:
             raise GremlinError(f"Could not find vJoy device with id {vjoy_id}")
 
-        # Find the index corresponding to the provided input_type and input_id.
-        input_label = common.input_to_ui_string(
-            InputType.to_enum(input_type),
-            input_id
-        )
+        # Derive the name the vJoy input should have given the type and index.
+        # In case of a keyboard key, the input type becomes JoystickButton.
+        input_type = InputType.to_enum(input_type_str)
+        if input_type == InputType.Keyboard:
+            input_type = InputType.JoystickButton
+        input_label = common.input_to_ui_string(input_type, input_id)
         try:
             self._set_input_index(self._input_items.index(input_label))
         except ValueError:
@@ -835,7 +940,7 @@ class VJoyDevices(QtCore.QObject):
         input_count = {
             InputType.JoystickAxis: lambda x: x.axis_count,
             InputType.JoystickButton: lambda x: x.button_count,
-            InputType.JoystickHat: lambda x: x.hat_count
+            InputType.JoystickHat: lambda x: x.hat_count,
         }
 
         if not self._devices:
@@ -863,13 +968,16 @@ class VJoyDevices(QtCore.QObject):
         return [InputType.to_string(entry) for entry in self._valid_types]
 
     def _set_valid_types(self, valid_types: List[str]) -> None:
-        type_list = [InputType.to_enum(entry) for entry in sorted(valid_types)]
         if not self._devices:
             self._current_vjoy_index = 0
             self._current_input_index = 0
             self._current_input_type = InputType.JoystickButton
             return
 
+        type_list = [InputType.to_enum(entry) for entry in sorted(valid_types)]
+        if InputType.Keyboard in type_list:
+            type_list.remove(InputType.Keyboard)
+            type_list.append(InputType.JoystickButton)
         if type_list != self._valid_types:
             self._valid_types = type_list
 

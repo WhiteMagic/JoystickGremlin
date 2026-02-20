@@ -18,7 +18,7 @@ Item {
     RowLayout {
         id: _content
 
-        visible: _root.inputBinding.inputType != "button"
+        visible: !["button", "key"].includes(_root.inputBinding.inputType)
 
         Label {
             leftPadding: 20

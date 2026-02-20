@@ -6,9 +6,20 @@ from __future__ import annotations
 
 import enum
 import logging
-from typing import Generic, NamedTuple, Tuple, TypeVar, Union
+from typing import (
+    Generic,
+    NamedTuple,
+    Tuple,
+    TypeAlias,
+    TypeVar,
+    Union,
+)
 
 import gremlin.error
+
+
+# Type alias for a keyboard scan code.
+ScanCode : TypeAlias = Tuple[int, bool]
 
 
 class ActivationRule(enum.Enum):

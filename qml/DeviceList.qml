@@ -52,6 +52,26 @@ Item {
         }
 
         JGTabButton {
+            id: _keyboardButton
+
+            text: "Keyboard"
+            width: _metricKeyboard.width + 50
+            checked: uiState.currentTab === "keyboard"
+
+            onClicked: () => {
+                uiState.setCurrentTab("keyboard")
+                uiState.setCurrentDevice("6f1d2b61-d5a0-11cf-bfc7-444553540000")
+            }
+
+            TextMetrics {
+                id: _metricKeyboard
+
+                font: _logicalButton.font
+                text: _logicalButton.text
+            }
+        }
+
+        JGTabButton {
             id: _logicalButton
 
             text: "Logical Device"
