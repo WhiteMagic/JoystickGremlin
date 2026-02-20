@@ -66,8 +66,8 @@ Item {
             TextMetrics {
                 id: _metricKeyboard
 
-                font: _logicalButton.font
-                text: _logicalButton.text
+                font: _keyboardButton.font
+                text: _keyboardButton.text
             }
         }
 

@@ -403,7 +403,7 @@ ApplicationWindow {
         target: backend
 
         function onProfileChanged() {
-            // Not use at the moment.
+            // Not used at the moment.
         }
     }
     Connections {
@@ -492,8 +492,6 @@ ApplicationWindow {
 
                 visible: uiState.currentTab === "keyboard"
                 SplitView.minimumWidth: 250
-
-                // device: _deviceModel
             }
 
             // List of the actions associated with the currently selected input.

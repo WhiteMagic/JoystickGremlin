@@ -10,7 +10,6 @@ from typing import (
     Generic,
     NamedTuple,
     Tuple,
-    TypeAlias,
     TypeVar,
     Union,
 )
@@ -19,7 +18,7 @@ import gremlin.error
 
 
 # Type alias for a keyboard scan code.
-ScanCode : TypeAlias = Tuple[int, bool]
+type ScanCode = tuple[int, bool]
 
 
 class ActivationRule(enum.Enum):

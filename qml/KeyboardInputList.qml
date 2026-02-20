@@ -31,7 +31,6 @@ Item {
             delegate: _entryDelegate
 
             onCurrentIndexChanged: () => {
-                console.log("Selected input index: " + currentIndex)
                 uiState.setCurrentInput(
                     model.inputIdentifier(currentIndex),
                     currentIndex
@@ -82,7 +81,7 @@ Item {
                     onClicked: () => { view.currentIndex = index }
                 }
 
-                // User specified name assigned to this output.
+                // User specified name assigned to this input.
                 Label {
                     text: name
                     font.weight: 600
@@ -114,7 +113,7 @@ Item {
                     anchors.rightMargin: 5
                     anchors.topMargin: 5
 
-                    onClicked: () => { model.deleteInput(name) }
+                    onClicked: () => { model.deleteInput(index) }
                 }
 
             }

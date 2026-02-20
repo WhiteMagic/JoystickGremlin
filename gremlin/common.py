@@ -30,9 +30,9 @@ class SingletonDecorator(Generic[T]):
 
     def __init__(self, klass: type[T]) -> None:
         self.klass = klass
-        self.instance : T | None = None
+        self.instance: T | None = None
 
-    def __call__(self, *args: List, **kwargs: Dict) -> T:
+    def __call__(self, *args, **kwargs) -> T:
         if self.instance is None:
             self.instance = self.klass(*args, **kwargs)
         return self.instance
@@ -42,9 +42,9 @@ class SingletonMetaclass(type):
 
     # https://stackoverflow.com/a/6798042
 
-    _instances : Dict[type, Any] = {}
+    _instances: dict[type, Any] = {}
 
-    def __call__(cls, *args: List, **kwargs: Dict) -> Any:
+    def __call__(cls, *args, **kwargs) -> Any:
         if cls not in cls._instances:
             cls._instances[cls] = \
                 super(SingletonMetaclass, cls).__call__(*args, **kwargs)

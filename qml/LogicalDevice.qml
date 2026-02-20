@@ -15,9 +15,9 @@ import Gremlin.Style
 Item {
     id: _root
 
-    // property LogicalDeviceManagementModel device
     property int inputIndex
     property InputIdentifier inputIdentifier
+    property alias device: _inputList.model
 
     // Modal window to allow renaming of inputs.
     TextInputDialog {
@@ -77,7 +77,7 @@ Item {
                 backgroundColor: Universal.chromeMediumColor
 
                 onClicked: () => {
-                    device.createInput(_input_type.currentValue)
+                    _inputList.model.createInput(_input_type.currentValue)
                 }
             }
         }
@@ -157,7 +157,7 @@ Item {
                     anchors.rightMargin: 5
                     anchors.topMargin: 5
 
-                    onClicked: () => { device.deleteInput(label) }
+                    onClicked: () => { model.deleteInput(label) }
                 }
 
                 // Button enabling the editing of the input's label.
@@ -174,7 +174,7 @@ Item {
                     onClicked: () => {
                         _textInput.text = label
                         _textInput.callback = (value) => {
-                            device.changeName(label, value)
+                            model.changeName(label, value)
                         }
                         _textInput.visible = true
                     }
