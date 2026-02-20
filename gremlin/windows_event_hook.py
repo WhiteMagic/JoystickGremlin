@@ -292,7 +292,10 @@ class KeyboardHook(metaclass=SingletonMetaclass):
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
 
-        user32.UnhookWindowsHookEx(hook_id)
+        try:
+            user32.UnhookWindowsHookEx(hook_id)
+        except Exception as e:
+            pass
 
 
 class MouseHook(metaclass=SingletonMetaclass):

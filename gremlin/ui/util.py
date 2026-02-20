@@ -67,8 +67,6 @@ class InputListenerModel(QtCore.QObject):
         # Flag indicating whether the listener is active or not.
         self._is_enabled = False
 
-        # self.listeningTerminated.connect(self._reenable_input_highlighting)
-
     def _connect_listeners(self) -> None:
         # Start listening to user inputs.
         event_listener = event_handler.EventListener()
@@ -85,10 +83,7 @@ class InputListenerModel(QtCore.QObject):
 
     def _disconnect_listeners(self) -> None:
         event_listener = event_handler.EventListener()
-        try:
-            event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        except RuntimeError as e:
-            pass
+        event_listener.keyboard_event.disconnect(self._kb_event_cb)
         if InputType.JoystickAxis in self._event_types or \
                 InputType.JoystickButton in self._event_types or \
                 InputType.JoystickHat in self._event_types:
@@ -248,7 +243,6 @@ class InputListenerModel(QtCore.QObject):
                 self._inputs = []
                 self._connect_listeners()
             else:
-                self._disconnect_listeners()
                 shared_state.set_suspend_input_highlighting_delayed()
             self.enabledChanged.emit(self._is_enabled)
 

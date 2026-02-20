@@ -403,8 +403,7 @@ ApplicationWindow {
         target: backend
 
         function onProfileChanged() {
-            _logicalDeviceList.device =
-                backend.getLogicalDeviceManagementModel()
+            // Not use at the moment.
         }
     }
     Connections {

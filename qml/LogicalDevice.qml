@@ -15,7 +15,7 @@ import Gremlin.Style
 Item {
     id: _root
 
-    property LogicalDeviceManagementModel device
+    // property LogicalDeviceManagementModel device
     property int inputIndex
     property InputIdentifier inputIdentifier
 
@@ -48,12 +48,12 @@ Item {
             Layout.fillWidth: true
             scrollbarAlwaysVisible: true
 
-            model: device
+            model: LogicalDeviceManagementModel {}
             delegate: _entryDelegate
 
             onCurrentIndexChanged: () => {
                 inputIndex = currentIndex
-                inputIdentifier = device.inputIdentifier(currentIndex)
+                inputIdentifier = model.inputIdentifier(currentIndex)
             }
         }
 
@@ -97,6 +97,7 @@ Item {
             required property string label
             required property int actionCount
             property ListView view: ListView.view
+            property LogicalDeviceManagementModel model: view.model
 
             // Renders the entire "button" area of the singular input.
             Rectangle {

@@ -46,10 +46,7 @@ from gremlin.signal import (
     display_error,
     signal,
 )
-from gremlin.ui.device import (
-    InputIdentifier,
-    LogicalDeviceManagementModel,
-)
+from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import InputItemModel
 from gremlin.ui.script import ScriptListModel
 
@@ -456,10 +453,6 @@ class Backend(QtCore.QObject):
     @QtCore.Slot()
     def resumeInputHighlighting(self) -> None:
         shared_state.set_suspend_input_highlighting(False)
-
-    @Slot(result=LogicalDeviceManagementModel)
-    def getLogicalDeviceManagementModel(self) -> LogicalDeviceManagementModel:
-        return LogicalDeviceManagementModel(self)
 
     @Slot(str, int, result=bool)
     def isActionExpanded(self, uuid_str: str, index: int) -> bool:
