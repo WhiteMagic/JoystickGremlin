@@ -6,21 +6,42 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import List, TYPE_CHECKING, override
+from typing import (
+    override,
+    List,
+    TYPE_CHECKING,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal
 
 from vjoy.vjoy import VJoyProxy
 
-from gremlin import device_helpers, device_initialization, error, \
-    event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin import (
+    device_helpers,
+    device_initialization,
+    error,
+    event_handler,
+    util
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    Value,
+)
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, AxisMode, InputType, PropertyType, DataCreationMode
+from gremlin.types import (
+    ActionProperty,
+    AxisMode,
+    InputType,
+    PropertyType,
+    DataCreationMode,
+)
 
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -33,7 +54,7 @@ class MapToVjoyFunctor(AbstractFunctor):
     SCALING_MULTIPLIER = 1 / 1000.0
     THREAD_SLEEP_DURATION_S = 0.01
 
-    def __init__(self, action: MapToVjoyData):
+    def __init__(self, action: MapToVjoyData) -> None:
         super().__init__(action)
 
         self.needs_auto_release = False #self._check_for_auto_release(action)
@@ -47,7 +68,7 @@ class MapToVjoyFunctor(AbstractFunctor):
     @override
     def __call__(
             self,
-            event: Event,
+            event: event_handler.Event,
             value: Value,
             properties: list[ActionProperty]=[]
     ) -> None:
@@ -131,12 +152,12 @@ class MapToVjoyFunctor(AbstractFunctor):
 class MapToVjoyModel(ActionModel):
 
     # Signals emitted when properties change
-    vjoyDeviceIdChanged = Signal()
-    vjoyInputIdChanged = Signal()
-    inputTypeChanged = Signal()
-    axisModeChanged = Signal()
-    axisScalingChanged = Signal()
-    buttonInvertedChanged = Signal()
+    vjoyDeviceIdChanged = QtCore.Signal()
+    vjoyInputIdChanged = QtCore.Signal()
+    inputTypeChanged = QtCore.Signal()
+    axisModeChanged = QtCore.Signal()
+    axisScalingChanged = QtCore.Signal()
+    buttonInvertedChanged = QtCore.Signal()
 
     def __init__(
             self,
@@ -145,7 +166,7 @@ class MapToVjoyModel(ActionModel):
             action_index: SequenceIndex,
             parent_index: SequenceIndex,
             parent: QtCore.QObject
-    ):
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
@@ -215,37 +236,37 @@ class MapToVjoyModel(ActionModel):
         self.buttonInvertedChanged.emit()
 
     # Define properties
-    vjoyDeviceId = Property(
+    vjoyDeviceId = QtCore.Property(
         int,
         fget=_get_vjoy_device_id,
         fset=_set_vjoy_device_id,
         notify=vjoyDeviceIdChanged
     )
-    vjoyInputId = Property(
+    vjoyInputId = QtCore.Property(
         int,
         fget=_get_vjoy_input_id,
         fset=_set_vjoy_input_id,
         notify=vjoyInputIdChanged
     )
-    vjoyInputType = Property(
+    vjoyInputType = QtCore.Property(
         str,
         fget=_get_vjoy_input_type,
         fset=_set_vjoy_input_type,
         notify=inputTypeChanged
     )
-    axisMode = Property(
+    axisMode = QtCore.Property(
         str,
         fget=_get_axis_mode,
         fset=_set_axis_mode,
         notify=axisModeChanged
     )
-    axisScaling = Property(
+    axisScaling = QtCore.Property(
         float,
         fget=_get_axis_scaling,
         fset=_set_axis_scaling,
         notify=axisScalingChanged
     )
-    buttonInverted = Property(
+    buttonInverted = QtCore.Property(
         bool,
         fget=_get_button_inverted,
         fset=_set_button_inverted,
@@ -267,20 +288,20 @@ class MapToVjoyData(AbstractActionData):
     functor = MapToVjoyFunctor
     model = MapToVjoyModel
 
-    properties = [
-        ActionProperty.ActivateOnBoth
-    ]
-    input_types = [
+    properties = (
+        ActionProperty.ActivateOnBoth,
+    )
+    input_types = (
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
-        InputType.Keyboard
-    ]
+        InputType.Keyboard,
+    )
 
     def __init__(
             self,
             behavior_type: InputType=InputType.JoystickButton
-    ):
+    ) -> None:
         super().__init__(behavior_type)
 
         # Select an initially valid vJoy input

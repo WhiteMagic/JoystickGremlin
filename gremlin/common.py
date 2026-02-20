@@ -21,29 +21,30 @@ from gremlin.types import (
     ScanCode,
 )
 
+T = TypeVar("T")
 
-class SingletonDecorator:
+
+class SingletonDecorator(Generic[T]):
 
     """Decorator turning a class into a singleton."""
 
-    def __init__(self, klass):
+    def __init__(self, klass: type[T]) -> None:
         self.klass = klass
-        self.instance = None
+        self.instance : T | None = None
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: List, **kwargs: Dict) -> T:
         if self.instance is None:
             self.instance = self.klass(*args, **kwargs)
         return self.instance
-
 
 
 class SingletonMetaclass(type):
 
     # https://stackoverflow.com/a/6798042
 
-    _instances = {}
+    _instances : Dict[type, Any] = {}
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls, *args: List, **kwargs: Dict) -> Any:
         if cls not in cls._instances:
             cls._instances[cls] = \
                 super(SingletonMetaclass, cls).__call__(*args, **kwargs)
