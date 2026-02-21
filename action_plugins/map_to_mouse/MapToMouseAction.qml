@@ -46,10 +46,7 @@ Item {
                 visible: inputBinding.behavior === "button"
 
                 checked: _root.action.mode === "Button"
-                onClicked: function () {
-                    _root.action.mode = "Button"
-                }
-
+                onClicked: () => { _root.action.mode = "Button" }
             }
 
             RadioButton {
@@ -60,9 +57,7 @@ Item {
                 text: "Motion"
 
                 checked: _root.action.mode === "Motion"
-                onClicked: function () {
-                    _root.action.mode = "Motion"
-                }
+                onClicked: () => { _root.action.mode = "Motion" }
             }
         }
 

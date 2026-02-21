@@ -572,6 +572,8 @@ class InputItemBindingModel(QtCore.QObject):
         return self._input_item_binding
 
     def _get_behavior(self) -> str:
+        if self._input_item_binding.behavior == InputType.Keyboard:
+            return InputType.to_string(InputType.JoystickButton)
         return InputType.to_string(self._input_item_binding.behavior)
 
     def _set_behavior(self, text: str) -> None:
