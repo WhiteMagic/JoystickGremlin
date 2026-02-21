@@ -13,6 +13,8 @@ T.TabBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
+    property bool scrollbarAlwaysVisible: true
+
     contentItem: ListView {
         model: control.contentModel
         currentIndex: control.currentIndex
@@ -22,9 +24,10 @@ T.TabBar {
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.AutoFlickIfNeeded
         snapMode: ListView.SnapToItem
+        clip: true
 
         ScrollBar.horizontal: ScrollBar {
-            policy: ScrollBar.AlwaysOn
+            policy: control.scrollbarAlwaysVisible ? ScrollBar.AlwaysOn : ScrollBar.AsNeeded
         }
 
         highlightMoveDuration: 100

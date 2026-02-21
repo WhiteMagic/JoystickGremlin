@@ -450,6 +450,67 @@ ApplicationWindow {
 
                 deviceListModel: _deviceListModel
             }
+
+            ColumnLayout {
+                IconButton {
+                    text: "\uF285"
+                    font.pixelSize: 14
+
+                    onClicked: () => { _deviceList.currentIndex = Math.min(
+                            _deviceList.count - 1,
+                            _deviceList.currentIndex + 1
+                        )
+                    }
+                }
+                IconButton {
+                    text: "\uF284"
+                    font.pixelSize: 14
+
+                    onClicked: () => { _deviceList.currentIndex = Math.max(
+                            0,
+                            _deviceList.currentIndex - 1
+                        )
+                    }
+                }
+            }
+
+            DeviceTabBar {
+                scrollbarAlwaysVisible: false
+
+                JGTabButton {
+                    id: _scriptButton
+
+                    text: "Scripts"
+                    width: _metricScripts.width + 50
+                    checked: uiState.currentTab === "scripts"
+
+                    onClicked: () => { uiState.setCurrentTab("scripts") }
+
+                    TextMetrics {
+                        id: _metricScripts
+
+                        font: _scriptButton.font
+                        text: _scriptButton.text
+                    }
+                }
+
+                JGTabButton {
+                    id: _profileSettingsButton
+
+                    text: "Settings"
+                    width: _metricProfileSettings.width + 50
+                    checked: uiState.currentTab === "settings"
+
+                    onClicked: () => { uiState.setCurrentTab("settings") }
+
+                    TextMetrics {
+                        id: _metricProfileSettings
+
+                        font: _profileSettingsButton.font
+                        text: _profileSettingsButton.text
+                    }
+                }
+            }
         }
 
         // Main UI which contains the active device's inputs on the left and

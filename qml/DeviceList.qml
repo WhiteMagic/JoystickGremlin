@@ -17,6 +17,8 @@ Item {
     id: _root
 
     property DeviceListModel deviceListModel
+    property alias currentIndex: _deviceList.currentIndex
+    property alias count: _deviceList.count
 
     DeviceTabBar {
         id: _deviceList
@@ -25,6 +27,7 @@ Item {
 
         Component.onCompleted: { itemAt(0).clicked() }
 
+        // Show joystick devices used as inputs.
         Repeater {
             id: _physicalInputs
             model: deviceListModel
@@ -51,6 +54,7 @@ Item {
             }
         }
 
+        // Keyboard and logical device buttons.
         JGTabButton {
             id: _keyboardButton
 
@@ -88,46 +92,6 @@ Item {
 
                 font: _logicalButton.font
                 text: _logicalButton.text
-            }
-        }
-
-        // Empty item to push the script tab to the right
-        JGTabButton {
-            Layout.fillWidth: true
-            height: 0
-        }
-
-        JGTabButton {
-            id: _scriptButton
-
-            text: "Scripts"
-            width: _metricScripts.width + 50
-            checked: uiState.currentTab === "scripts"
-
-            onClicked: () => { uiState.setCurrentTab("scripts") }
-
-            TextMetrics {
-                id: _metricScripts
-
-                font: _scriptButton.font
-                text: _scriptButton.text
-            }
-        }
-
-        JGTabButton {
-            id: _profileSettingsButton
-
-            text: "Settings"
-            width: _metricProfileSettings.width + 50
-            checked: uiState.currentTab === "settings"
-
-            onClicked: () => { uiState.setCurrentTab("settings") }
-
-            TextMetrics {
-                id: _metricProfileSettings
-
-                font: _profileSettingsButton.font
-                text: _profileSettingsButton.text
             }
         }
     }

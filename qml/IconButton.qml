@@ -4,11 +4,25 @@
 import QtQuick
 import QtQuick.Controls
 
+import Gremlin.Style
+
 Button {
     property alias backgroundColor: _bg.color
+    property alias textColor: _text.color
 
     font.family: "bootstrap-icons"
     font.pixelSize: 17
+
+    contentItem: Text {
+        id: _text
+
+        text: parent.text
+        font: parent.font
+        color: parent.hovered ? Style.accent : parent.palette.buttonText
+
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+    }
 
     background: Rectangle {
         id: _bg
