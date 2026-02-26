@@ -52,6 +52,7 @@ import gremlin.plugin_manager
 import gremlin.types
 import gremlin.signal
 
+import gremlin.ui.action_image_generator
 import gremlin.ui.backend
 import gremlin.ui.option
 import gremlin.ui.tools
@@ -412,6 +413,12 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         # Create and register backend and signal objects
         self.backend = gremlin.ui.backend.Backend(self.engine)
         self.backend.newProfile()
+
+        # Register image provider for action summaries
+        action_image_provider = \
+            gremlin.ui.action_image_generator.ActionSummaryImageProvider()
+        self.engine.addImageProvider("action_summary", action_image_provider)
+
         self.engine.rootContext().setContextProperty("backend", self.backend)
         self.engine.rootContext().setContextProperty(
             "uiState", self.backend.ui_state

@@ -269,7 +269,7 @@ class Device(QtCore.QAbstractListModel):
 
     roles = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
-        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceInfo"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceDescriptor"),
         QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"description"),
     }
 
@@ -358,22 +358,23 @@ class Device(QtCore.QAbstractListModel):
                         self._mode
                     )
                     return str(count) if count > 0 else ""
-                else:
-                    item = shared_state.current_profile.get_input_item(
-                        self._device.device_guid.uuid,
-                        input_info[0],
-                        input_info[1],
-                        self._mode
-                    )
+            case "actionSequenceDescriptor":
+                input_info = self._convert_index(index.row())
+                item = shared_state.current_profile.get_input_item(
+                    self._device.device_guid.uuid,
+                    input_info[0],
+                    input_info[1],
+                    self._mode
+                )
 
-                    icons = []
-                    if item is not None:
-                        for seq in item.action_sequences:
-                            [
-                                self.collect_action_icons(action, icons)
-                                for action in seq.root_action.get_actions()[0]
-                            ]
-                    return "".join(icons)
+                icons = []
+                if item is not None:
+                    for seq in item.action_sequences:
+                        [
+                            self.collect_action_icons(action, icons)
+                            for action in seq.root_action.get_actions()[0]
+                        ]
+                return ":".join(icons)
             case "description":
                 input_info = self._convert_index(index.row())
                 item = shared_state.current_profile.get_input_item(
@@ -395,10 +396,17 @@ class Device(QtCore.QAbstractListModel):
 
     def collect_action_icons(self, action: AbstractActionData, icons: list[str]) -> None:
         icons.append(action.icon)
+        if action.tag == "map-to-vjoy":
+            type_lookup = {
+                InputType.JoystickAxis: "A",
+                InputType.JoystickButton: "B",
+                InputType.JoystickHat: "H",
+            }
+            icons[-1] += f"{action.vjoy_device_id}{type_lookup[action.vjoy_input_type]}{action.vjoy_input_id}"
         for selector in action._valid_selectors():
-            icons.append("\uF27A")
+            icons.append("(")
             [self.collect_action_icons(child, icons) for child in action._get_container(selector)]
-            icons.append("\uF27B")
+            icons.append(")")
 
     @Slot(int, result=InputIdentifier)
     def inputIdentifier(self, index: int) -> InputIdentifier:

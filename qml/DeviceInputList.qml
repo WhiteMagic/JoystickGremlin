@@ -99,9 +99,25 @@ Item {
                 anchors.topMargin: 5
             }
 
-            Label {
+            // Label {
+            //     id: _inputOverview
+            //     text: actionSequenceInfo
+
+            //     horizontalAlignment: Text.AlignRight
+            //     verticalAlignment: Text.AlignVCenter
+
+            //     anchors.top: parent.top
+            //     anchors.right: _inputDisplay.right
+            //     anchors.rightMargin: 20
+            //     anchors.topMargin: 5
+            // }
+            Image {
                 id: _inputOverview
-                text: actionSequenceInfo
+                source: "image://action_summary/" + actionSequenceDescriptor
+                asynchronous: true
+                cache: false
+                width: sourceSize.width
+                height: sourceSize.height
 
                 anchors.top: parent.top
                 anchors.right: _inputDisplay.right
