@@ -71,6 +71,8 @@ Item {
         // +-------------------------------------------------------------------
         RowLayout {
             Label {
+                Layout.preferredWidth: 150
+
                 text: "Deadzone instance"
             }
 
@@ -99,46 +101,48 @@ Item {
 
                 onClicked: () => { _dialog.open() }
             }
+        }
 
-            LayoutHorizontalSpacer {}
+        // Deadzone configuration
+        RowLayout {
+            Label {
+                Layout.preferredWidth: 150
 
-            // Deadzone configuration
-            RowLayout {
-                JGText {
-                    text: "Deadzone limits: "
+                text: "Deadzone limits"
+            }
+
+            Label {
+                text: "Inner"
+            }
+
+            FloatSpinBox {
+                id: _innerValue
+
+                value: _root.action.innerDeadzone
+                minValue: 0.0
+                maxValue: 1.0
+
+                onValueModified: (newValue) => {
+                    _root.action.innerDeadzone = newValue
                 }
+            }
 
-                JGText {
-                    text: "Inner"
-                }
+            Label {
+                Layout.leftMargin: 20
 
-                FloatSpinBox {
-                    id: _innerValue
+                text: "Outer"
+            }
 
-                    value: _root.action.innerDeadzone
-                    minValue: 0.0
-                    maxValue: 1.0
+            FloatSpinBox {
+                id: _outerValue
 
-                    onValueModified: (newValue) => {
-                        _root.action.innerDeadzone = newValue
-                    }
-                }
+                value: _root.action.outerDeadzone
+                minValue: 0.0
+                maxValue: 1.0
 
-                JGText {
-                    text: "Outer"
-                }
+                onValueModified: (newValue) => {
+                    _root.action.outerDeadzone = newValue
 
-                FloatSpinBox {
-                    id: _outerValue
-
-                    value: _root.action.outerDeadzone
-                    minValue: 0.0
-                    maxValue: 1.0
-
-                    onValueModified: (newValue) => {
-                        _root.action.outerDeadzone = newValue
-
-                    }
                 }
             }
         }

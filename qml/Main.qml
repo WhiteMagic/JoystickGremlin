@@ -20,6 +20,8 @@ ApplicationWindow {
 
     // Basic application setup.
     title: backend.windowTitle
+    minimumWidth: 1200
+    minimumHeight: 700
     width: 1400
     height: 900
     visible: true
@@ -530,7 +532,7 @@ ApplicationWindow {
                 id: _deviceInputList
 
                 visible: uiState.currentTab === "physical"
-                SplitView.minimumWidth: 250
+                SplitView.minimumWidth: 400
 
                 device: _deviceModel
             }
@@ -540,7 +542,7 @@ ApplicationWindow {
                 id: _logicalDeviceList
 
                 visible: uiState.currentTab === "logical"
-                SplitView.minimumWidth: 250
+                SplitView.minimumWidth: 400
 
                 // Trigger a model update on the InputConfiguration
                 onInputIdentifierChanged: () => {
@@ -552,7 +554,7 @@ ApplicationWindow {
                 id: _keyboardInputList
 
                 visible: uiState.currentTab === "keyboard"
-                SplitView.minimumWidth: 250
+                SplitView.minimumWidth: 400
             }
 
             // List of the actions associated with the currently selected input.
@@ -563,7 +565,7 @@ ApplicationWindow {
 
                 SplitView.fillWidth: true
                 SplitView.fillHeight: true
-                SplitView.minimumWidth: 600
+                SplitView.minimumWidth: 800
             }
         }
 

@@ -237,14 +237,22 @@ Item {
                         eventTypes: ["key"]
                     }
 
-                    LayoutHorizontalSpacer {}
+                    ButtonStateSelector {
+                        isPressed: modelData.isPressed
 
-                    PressOrRelease {
-                        checked: modelData.isPressed
-                        onCheckedChanged: () => {
-                            modelData.isPressed = checked
-                        }
+                        // onIsPressedChanged: () => {
+                        //     modelData.isPressed = isPressed
+                        // }
                     }
+
+                    // LayoutHorizontalSpacer {}
+
+                    // PressOrRelease {
+                    //     checked: modelData.isPressed
+                    //     onCheckedChanged: () => {
+                    //         modelData.isPressed = checked
+                    //     }
+                    // }
                 }
             }
         }
@@ -441,6 +449,8 @@ Item {
 
                 actionItem: RowLayout {
                     VJoySelector {
+                        Layout.alignment: Qt.AlignTop
+
                         validTypes: ["axis", "button", "hat"]
 
                         onVjoyInputIdChanged: { modelData.inputId = vjoyInputId }
@@ -465,7 +475,7 @@ Item {
                             modelData.isPressed = checked
                         }
                     }
-                    RowLayout {
+                    ColumnLayout {
                         visible: modelData.inputType === "axis"
 
                         FloatSpinBox {
@@ -477,16 +487,18 @@ Item {
                                 modelData.axisValue = newValue
                             }
                         }
-                        Label {
-                            Layout.leftMargin: 50
-                            text: "Mode: Relative"
-                        }
-                        Switch {
-                            text:"Absolute"
-                            checked: modelData.axisMode === "absolute"
 
-                            onToggled: () => {
-                                modelData.axisMode = checked ? "absolute" : "relative"
+                        ComboBox {
+                            model: ["Absolute", "Relative"]
+
+                            Component.onCompleted: () => {
+                                currentIndex = find(
+                                    Helpers.capitalize(modelData.axisMode)
+                                )
+                            }
+
+                            onActivated: () => {
+                                modelData.axisMode = currentValue
                             }
                         }
                     }
@@ -656,12 +668,16 @@ Item {
             Icon {
                 id: _icon
 
+                Layout.alignment: Qt.AlignTop
+
                 iconName: icon
                 target: _draggableAction
             }
 
             Label {
-                Layout.preferredWidth: 150
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: 125
+
                 text: label
             }
 
@@ -669,15 +685,18 @@ Item {
             Loader {
                 id: _actionLoader
 
-                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+                // Layout.fillWidth: true
             }
+
+            LayoutHorizontalSpacer {}
 
             DeleteButton {}
         }
 
         ActionDrop {
-            Layout.topMargin: -10
             Layout.bottomMargin: -10
+            Layout.topMargin: -10
 
             targetIndex: index
         }
