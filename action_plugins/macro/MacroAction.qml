@@ -168,12 +168,12 @@ Item {
                     LayoutHorizontalSpacer {}
 
                     // Show different components based on input
-                    PressOrRelease {
+                    ButtonStateSelector {
                         visible: modelData.inputType === "button"
 
-                        checked: modelData.isPressed
-                        onCheckedChanged: () => {
-                            modelData.isPressed = checked
+                        isPressed: modelData.isPressed
+                        onStateModified: (isPressed) => {
+                            modelData.isPressed = isPressed
                         }
                     }
                     FloatSpinBox {
@@ -239,20 +239,10 @@ Item {
 
                     ButtonStateSelector {
                         isPressed: modelData.isPressed
-
-                        // onIsPressedChanged: () => {
-                        //     modelData.isPressed = isPressed
-                        // }
+                        onStateModified: (isPressed) => {
+                            modelData.isPressed = isPressed
+                        }
                     }
-
-                    // LayoutHorizontalSpacer {}
-
-                    // PressOrRelease {
-                    //     checked: modelData.isPressed
-                    //     onCheckedChanged: () => {
-                    //         modelData.isPressed = checked
-                    //     }
-                    // }
                 }
             }
         }
@@ -280,12 +270,12 @@ Item {
                     LayoutHorizontalSpacer {}
 
                     // Show different components based on input
-                    PressOrRelease {
+                    ButtonStateSelector {
                         visible: modelData.inputType === "button"
 
-                        checked: modelData.isPressed
-                        onCheckedChanged: () => {
-                            modelData.isPressed = checked
+                        isPressed: modelData.isPressed
+                        onStateModified: (isPressed) => {
+                            modelData.isPressed = isPressed
                         }
                     }
                     RowLayout {
@@ -367,10 +357,10 @@ Item {
 
                     LayoutHorizontalSpacer {}
 
-                    PressOrRelease {
-                        checked: modelData.isPressed
-                        onCheckedChanged: () => {
-                            modelData.isPressed = checked
+                    ButtonStateSelector {
+                        isPressed: modelData.isPressed
+                        onStateModified: (isPressed) => {
+                            modelData.isPressed = isPressed
                         }
                     }
                 }
@@ -466,13 +456,13 @@ Item {
 
                     LayoutHorizontalSpacer {}
 
-                    // Show different components based on input
-                    PressOrRelease {
+                    // Show different components based on input.
+                    ButtonStateSelector {
                         visible: modelData.inputType === "button"
 
-                        checked: modelData.isPressed
-                        onCheckedChanged: () => {
-                            modelData.isPressed = checked
+                        isPressed: modelData.isPressed
+                        onStateModified: (isPressed) => {
+                            modelData.isPressed = isPressed
                         }
                     }
                     ColumnLayout {
@@ -543,25 +533,6 @@ Item {
         font.pixelSize: 16
 
         onClicked: () => { _root.action.removeAction(index) }
-    }
-
-    // Switch with press/release labels for button action indication
-    component PressOrRelease : Item {
-        property alias checked: _porSwitch.checked
-
-        implicitWidth: _porLayout.width
-        implicitHeight: _porLayout.height
-
-        RowLayout {
-            id: _porLayout
-            Label {
-                text: "Release"
-            }
-            Switch {
-                id: _porSwitch
-                text: "Press"
-            }
-        }
     }
 
     // Displays an icon and also acts as the drag handle for the drag&drop
@@ -669,6 +640,7 @@ Item {
                 id: _icon
 
                 Layout.alignment: Qt.AlignTop
+                font.family: "bootstrap-icons"
 
                 iconName: icon
                 target: _draggableAction

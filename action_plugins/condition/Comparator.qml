@@ -27,13 +27,10 @@ Item {
             Layout.preferredWidth: active ? implicitWidth : 0
 
             sourceComponent: RowLayout {
-                ComboBox {
-                    model: ["Pressed", "Released"]
-                    onActivated: () => {
-                        comparator.isPressed = currentValue
-                    }
-                    Component.onCompleted: () => {
-                        currentIndex = active ? indexOfValue(comparator.isPressed) : 0
+                ButtonStateSelector {
+                    isPressed: comparator.isPressed
+                    onStateModified: (isPressed) => {
+                        comparator.isPressed = isPressed
                     }
                 }
             }

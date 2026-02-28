@@ -115,15 +115,14 @@ class PressedComparatorModel(AbstractComparatorModel):
 
         self.data = data
 
-    def _set_is_pressed(self, value: str) -> None:
-        is_pressed = (value == "Pressed")
+    def _set_is_pressed(self, is_pressed: bool) -> None:
         if self.data.is_pressed != is_pressed:
             self.data.is_pressed = is_pressed
             self.isPressedChanged.emit()
 
-    @Property(str, fset=_set_is_pressed, notify=isPressedChanged)
-    def isPressed(self) -> str:
-        return "Pressed" if self.data.is_pressed else "Released"
+    @Property(bool, fset=_set_is_pressed, notify=isPressedChanged)
+    def isPressed(self) -> bool:
+        return self.data.is_pressed
 
 
 @QtQml.QmlElement
