@@ -28,45 +28,11 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-
         RowLayout {
             Layout.fillWidth: true
 
             Label {
-                text: "<B>Macro Actions</B>"
-            }
-
-            ComboBox {
-                id: _macroAction
-
-                Layout.preferredWidth: 150
-
-                textRole: "text"
-                valueRole: "value"
-
-                model: [
-                    {value: "joystick", text: "Joystick"},
-                    {value: "key", text: "Keyboard"},
-                    {value: "logical-device", text: "Logical Device"},
-                    {value: "mouse-button", text: "Mouse Button"},
-                    {value: "mouse-motion", text: "Mouse Motion"},
-                    {value: "pause", text: "Pause"},
-                    {value: "vjoy", text: "vJoy"}
-                ]
-            }
-
-            Button {
-                text: "Add Action"
-
-                onClicked: () => {
-                    _root.action.addAction(_macroAction.currentValue)
-                }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Label {
-                text: "Repeat Mode"
+                text: "<b>Repeat Mode</b>"
             }
 
             ComboBox {
@@ -119,7 +85,6 @@ Item {
                 checked: _root.action.isExclusive
                 onClicked: () => { _root.action.isExclusive = checked }
             }
-
         }
 
         ActionDrop {
@@ -136,6 +101,40 @@ Item {
 
             model: _root.action.actions
             delegate: _delegateChooser
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: 10
+
+            ComboBox {
+                id: _macroAction
+
+                Layout.preferredWidth: 150
+
+                textRole: "text"
+                valueRole: "value"
+
+                model: [
+                    {value: "joystick", text: "Joystick"},
+                    {value: "key", text: "Keyboard"},
+                    {value: "logical-device", text: "Logical Device"},
+                    {value: "mouse-button", text: "Mouse Button"},
+                    {value: "mouse-motion", text: "Mouse Motion"},
+                    {value: "pause", text: "Pause"},
+                    {value: "vjoy", text: "vJoy"}
+                ]
+            }
+
+            Button {
+                text: "Add Action"
+
+                onClicked: () => {
+                    _root.action.addAction(_macroAction.currentValue)
+                }
+            }
+
+            LayoutHorizontalSpacer {}
         }
     }
 
@@ -290,16 +289,18 @@ Item {
                                 modelData.axisValue = newValue
                             }
                         }
-                        Label {
-                            Layout.leftMargin: 50
-                            text: "Mode: Relative"
-                        }
-                        Switch {
-                            text:"Absolute"
-                            checked: modelData.axisMode === "absolute"
 
-                            onToggled: () => {
-                                modelData.axisMode = checked ? "absolute" : "relative"
+                        ComboBox {
+                            model: ["Absolute", "Relative"]
+
+                            Component.onCompleted: () => {
+                                currentIndex = find(
+                                    Helpers.capitalize(modelData.axisMode)
+                                )
+                            }
+
+                            onActivated: () => {
+                                modelData.axisMode = currentValue
                             }
                         }
                     }
