@@ -114,7 +114,7 @@ Item {
             Image {
                 id: _inputOverview
                 source: "image://action_summary/" + actionSequenceDescriptor
-                asynchronous: true
+                asynchronous: false
                 cache: false
                 width: sourceSize.width
                 height: sourceSize.height

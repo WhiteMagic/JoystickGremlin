@@ -347,17 +347,6 @@ class Device(QtCore.QAbstractListModel):
         match cast(str, self.roles[role]):
             case "name":
                 return self._name(self._convert_index(index.row()))
-            case "actionSequenceInfo":
-                key = ("global", "general", "action-sequence-information")
-                input_info = self._convert_index(index.row())
-                if Configuration().value(*key) == "Count":
-                    count = shared_state.current_profile.get_input_count(
-                        self._device.device_guid.uuid,
-                        input_info[0],
-                        input_info[1],
-                        self._mode
-                    )
-                    return str(count) if count > 0 else ""
             case "actionSequenceDescriptor":
                 input_info = self._convert_index(index.row())
                 item = shared_state.current_profile.get_input_item(
@@ -402,7 +391,7 @@ class Device(QtCore.QAbstractListModel):
                 InputType.JoystickButton: "B",
                 InputType.JoystickHat: "H",
             }
-            icons[-1] += f"{action.vjoy_device_id}{type_lookup[action.vjoy_input_type]}{action.vjoy_input_id}"
+            icons[-1] += f",{action.vjoy_device_id},{type_lookup[action.vjoy_input_type]},{action.vjoy_input_id}"
         for selector in action._valid_selectors():
             icons.append("(")
             [self.collect_action_icons(child, icons) for child in action._get_container(selector)]

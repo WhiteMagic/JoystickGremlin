@@ -42,7 +42,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         self._glyph_height = 21
 
         # Set up fonts and metrics for rendering.
-        self._bootstrap_font = QtGui.QFont("BootstrapIcons")
+        self._bootstrap_font = QtGui.QFont("bootstrap-icons")
         self._bootstrap_font.setPixelSize(15)
         self._bootstrap_metrics = QtGui.QFontMetrics(self._bootstrap_font)
 
@@ -122,7 +122,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
                     x_offset += glyph_width + self._spacing
                 elif token.startswith("\uF448"):
                     glyph_width = \
-                        self._render_vjoy_glyph(token, painter, x_offset)
+                        self._render_vjoy_glyph(token.split(","), painter, x_offset)
                     x_offset += glyph_width + self._spacing
                 elif len(token) == 1:
                     painter.setFont(self._bootstrap_font)
@@ -165,13 +165,13 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
 
     def _render_vjoy_glyph(
         self,
-        token: str,
+        token: list[str],
         painter: QtGui.QPainter,
         x_offset: int
     ) -> int:
         """Renders a vJoy token.
 
-        Token format: <vjoy_icon><device_id><type_letter><input_number>
+        Token format: <vjoy_icon>,<device_id>,<type_letter>,<input_number>
         - vjoy_icon: Bootstrap icon character (\uF448)
         - device_id: vJoy device number
         - type_letter: A = Axis, B = Button, H = Hat
@@ -193,7 +193,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         vjoy_icon = token[0]
         vjoy_id = int(token[1])
         input_type = lookup[token[2]]
-        input_id = int(token[3:])
+        input_id = int(token[3])
 
         # Calculate component widths
         icon_width = self._bootstrap_metrics.horizontalAdvance(vjoy_icon)
