@@ -5,9 +5,10 @@ import QtQuick.Controls
 
 ComboBox {
     property bool isPressed: true
+    signal stateModified(bool isPressed)
 
     model: ["Press", "Release"]
 
-    onActivated: () => { isPressed = currentText === "Press" }
+    onActivated: () => { stateModified(currentText === "Press") }
     onIsPressedChanged: () => { currentIndex = isPressed ? 0 : 1 }
 }

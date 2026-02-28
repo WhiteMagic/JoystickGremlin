@@ -32,12 +32,6 @@ Item {
         return value * decimalFactor
     }
 
-    onValueChanged: () => {
-        _internalUpdate = true
-        _spinbox.value = toInt(value)
-        _internalUpdate = false
-    }
-
     // Calculate the width needed for the widest possible value.
     Component.onCompleted: {
         var testValues = [
