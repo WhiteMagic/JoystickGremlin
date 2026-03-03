@@ -22,6 +22,7 @@ from gremlin import (
     device_initialization,
     error,
     event_handler,
+    signal,
     util
 )
 from gremlin.base_classes import (
@@ -187,6 +188,9 @@ class MapToVjoyModel(ActionModel):
             return
         self._data.vjoy_device_id = vjoy_device_id
         self.vjoyDeviceIdChanged.emit()
+        signal.signal.inputItemChanged.emit(
+            self._binding_model.parent().enumeration_index
+        )
 
     def _get_vjoy_input_id(self) -> int:
         return self._data.vjoy_input_id
@@ -196,6 +200,9 @@ class MapToVjoyModel(ActionModel):
             return
         self._data.vjoy_input_id = vjoy_input_id
         self.vjoyInputIdChanged.emit()
+        signal.signal.inputItemChanged.emit(
+            self._binding_model.parent().enumeration_index
+        )
 
     def _get_vjoy_input_type(self) -> str:
         return InputType.to_string(self._data.vjoy_input_type)
@@ -206,6 +213,9 @@ class MapToVjoyModel(ActionModel):
             return
         self._data.vjoy_input_type = input_type_tmp
         self.inputTypeChanged.emit()
+        signal.signal.inputItemChanged.emit(
+            self._binding_model.parent().enumeration_index
+        )
 
     def _get_axis_mode(self) -> str:
         return AxisMode.to_string(self._data.axis_mode)
