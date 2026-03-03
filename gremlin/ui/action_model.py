@@ -185,6 +185,9 @@ class ActionModel(QtCore.QObject):
         if action:
             self._data.insert_action(action, selector)
             self._binding_model.sync_data()
+            signal.inputItemChanged.emit(
+                self._binding_model.parent().enumeration_index
+            )
         else:
             logging.getLogger("system").error(
                 f"Failed to create action of type {action_name}"
@@ -214,6 +217,10 @@ class ActionModel(QtCore.QObject):
         if target == 0:
             signal.reloadCurrentInputItem.emit()
 
+        signal.inputItemChanged.emit(
+            self._binding_model.parent().enumeration_index
+        )
+
     @Slot(int)
     def removeAction(self, index: int) -> None:
         """Removes the given action from the specified container.
@@ -222,6 +229,9 @@ class ActionModel(QtCore.QObject):
             index: sequence index corresponding to the action to remove
         """
         self._binding_model.remove_action(index)
+        signal.inputItemChanged.emit(
+            self._binding_model.parent().enumeration_index
+        )
 
     @property
     def action_data(self) -> AbstractActionData:

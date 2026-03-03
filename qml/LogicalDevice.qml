@@ -43,13 +43,43 @@ Item {
         JGListView {
             id: _inputList
 
-            Layout.minimumWidth: 250
             Layout.fillHeight: true
             Layout.fillWidth: true
+            Layout.leftMargin: 10
+
             scrollbarAlwaysVisible: true
+            spacing: 5
 
             model: LogicalDeviceManagementModel {}
-            delegate: _entryDelegate
+            delegate: InputButton {
+                width: _inputList.width - 30
+                height: 50
+
+                selected: model.index === _inputList.currentIndex
+                onClicked: () => { _inputList.currentIndex = model.index }
+
+                editButton: IconButton {
+                    text: bsi.icons.edit
+                    font.pixelSize: 12
+                    width: 15
+
+                    onClicked: () => {
+                        _textInput.text = label
+                        _textInput.callback = (value) => {
+                            _inputList.model.changeName(label, value)
+                        }
+                        _textInput.visible = true
+                    }
+                }
+
+                deleteButton: IconButton {
+                    text: bsi.icons.remove
+                    font.pixelSize: 12
+                    width: 15
+
+                    onClicked: () => { _inputList.model.deleteInput(label) }
+                }
+            }
 
             onCurrentIndexChanged: () => {
                 inputIndex = currentIndex
@@ -78,106 +108,6 @@ Item {
 
                 onClicked: () => {
                     _inputList.model.createInput(_input_type.currentValue)
-                }
-            }
-        }
-    }
-
-    Component {
-        id: _entryDelegate
-
-        Item {
-            id: _delegate
-
-            height: _inputDisplay.height
-            width: _inputDisplay.width
-
-            required property int index
-            required property string name
-            required property string label
-            required property int actionCount
-            property ListView view: ListView.view
-            property LogicalDeviceManagementModel model: view.model
-
-            // Renders the entire "button" area of the singular input.
-            Rectangle {
-                id: _inputDisplay
-
-                implicitWidth: view.width - _inputList.ScrollBar.vertical.width
-                height: 50
-
-                color: index == view.currentIndex
-                    ? Universal.chromeMediumColor : Universal.background
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: () => { view.currentIndex = index }
-                }
-
-                // User specified name assigned to this output.
-                Label {
-                    text: label
-                    font.weight: 600
-
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.leftMargin: 5
-                    anchors.topMargin: 5
-                }
-
-                // Internally assigned sequential name.
-                JGText {
-                    text: name
-                    anchors.leftMargin: 5
-                    anchors.topMargin: 5
-
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 2
-                }
-
-                Label {
-                    text: actionCount ? actionCount : ""
-
-                    anchors.top: parent.top
-                    anchors.right: _btnTrash.left
-                    anchors.rightMargin: 5
-                    anchors.topMargin: 5
-                }
-
-                // Button to remove an input
-                IconButton {
-                    id: _btnTrash
-                    text: bsi.icons.remove
-                    font.pixelSize: 12
-
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.rightMargin: 5
-                    anchors.topMargin: 5
-
-                    onClicked: () => { model.deleteInput(label) }
-                }
-
-                // Button enabling the editing of the input's label.
-                IconButton {
-                    id: _btnEdit
-                    text: bsi.icons.edit
-                    font.pixelSize: 12
-
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.rightMargin: 5
-                    anchors.bottomMargin: 2
-
-                    onClicked: () => {
-                        _textInput.text = label
-                        _textInput.callback = (value) => {
-                            model.changeName(label, value)
-                        }
-                        _textInput.visible = true
-                    }
                 }
             }
         }

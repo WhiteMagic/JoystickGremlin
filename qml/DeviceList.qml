@@ -25,8 +25,6 @@ Item {
 
         anchors.fill: parent
 
-        Component.onCompleted: { itemAt(0).clicked() }
-
         // Show joystick devices used as inputs.
         Repeater {
             id: _physicalInputs

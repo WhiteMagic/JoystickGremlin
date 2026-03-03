@@ -62,6 +62,43 @@ QML_IMPORT_NAME = "Gremlin.Device"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
+def _generate_action_sequence_descriptor(item: InputItem) -> str:
+    icons = []
+    if item is not None:
+        for seq in item.action_sequences:
+            [
+                _collect_action_icons(action, icons)
+                for action in seq.root_action.get_actions()[0]
+            ]
+    return ":".join(icons)
+
+
+def _collect_action_icons(action: AbstractActionData, icons: list[str]) -> None:
+    icons.append(action.icon)
+    if action.tag == "map-to-vjoy":
+        type_lookup = {
+            InputType.JoystickAxis: "A",
+            InputType.JoystickButton: "B",
+            InputType.JoystickHat: "H",
+        }
+        icons[-1] += f",{action.vjoy_device_id},{type_lookup[action.vjoy_input_type]},{action.vjoy_input_id}"
+    for selector in action._valid_selectors():
+        icons.append("(")
+        [_collect_action_icons(child, icons) for child in action._get_container(selector)]
+        icons.append(")")
+
+
+def _description_from_item(item: InputItem) -> str:
+    if item and len(item.action_sequences) > 0:
+        labels = filter(
+            lambda x: x != "Root",
+            [seq.root_action.action_label for seq in item.action_sequences]
+        )
+        return " / ".join(labels)
+    else:
+        return ""
+
+
 @QtQml.QmlElement
 class InputIdentifier(QtCore.QObject):
 
@@ -269,8 +306,10 @@ class Device(QtCore.QAbstractListModel):
 
     roles = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
-        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceDescriptor"),
-        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceCount"),
+        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"actionSequenceDescriptor"),
+        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(b"actionSequenceDisplayMode"),
+        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
     }
 
     deviceChanged = Signal()
@@ -344,58 +383,30 @@ class Device(QtCore.QAbstractListModel):
         if role not in self.roles:
             return "Unknown"
 
+        input_info = self._convert_index(index.row())
+        input_item = shared_state.current_profile.get_input_item(
+            self._device.device_guid.uuid,
+            input_info[0],
+            input_info[1],
+            self._mode
+        )
         match cast(str, self.roles[role]):
             case "name":
-                return self._name(self._convert_index(index.row()))
+                return self._name(input_info)
+            case "actionSequenceCount":
+                return len(input_item.action_sequences) if input_item else 0
             case "actionSequenceDescriptor":
-                input_info = self._convert_index(index.row())
-                item = shared_state.current_profile.get_input_item(
-                    self._device.device_guid.uuid,
-                    input_info[0],
-                    input_info[1],
-                    self._mode
+                return _generate_action_sequence_descriptor(input_item) if input_item else ""
+            case "actionSequenceDisplayMode":
+                return Configuration().value(
+                    "global",
+                    "general",
+                    "action-sequence-information"
                 )
-
-                icons = []
-                if item is not None:
-                    for seq in item.action_sequences:
-                        [
-                            self.collect_action_icons(action, icons)
-                            for action in seq.root_action.get_actions()[0]
-                        ]
-                return ":".join(icons)
             case "description":
-                input_info = self._convert_index(index.row())
-                item = shared_state.current_profile.get_input_item(
-                    self._device.device_guid.uuid,
-                    input_info[0],
-                    input_info[1],
-                    self._mode
-                )
-                if item and len(item.action_sequences) > 0:
-                    labels = filter(
-                        lambda x: x != "Root",
-                        [seq.root_action.action_label for seq in item.action_sequences]
-                    )
-                    return " / ".join(labels)
-                else:
-                    return ""
+                return _description_from_item(input_item) if input_item else ""
             case _:
                 return ""
-
-    def collect_action_icons(self, action: AbstractActionData, icons: list[str]) -> None:
-        icons.append(action.icon)
-        if action.tag == "map-to-vjoy":
-            type_lookup = {
-                InputType.JoystickAxis: "A",
-                InputType.JoystickButton: "B",
-                InputType.JoystickHat: "H",
-            }
-            icons[-1] += f",{action.vjoy_device_id},{type_lookup[action.vjoy_input_type]},{action.vjoy_input_id}"
-        for selector in action._valid_selectors():
-            icons.append("(")
-            [self.collect_action_icons(child, icons) for child in action._get_container(selector)]
-            icons.append(")")
 
     @Slot(int, result=InputIdentifier)
     def inputIdentifier(self, index: int) -> InputIdentifier:
@@ -463,8 +474,11 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
 
     roles = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
-        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionCount"),
-        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"label"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"label"),
+        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"actionSequenceCount"),
+        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(b"actionSequenceDescriptor"),
+        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"actionSequenceDisplayMode"),
+        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"description"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -554,20 +568,33 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         if role not in self.roles:
             return "Unknown"
 
-        input = self._index_to_input(index.row())
+        input_info = self._index_to_input(index.row())
+        input_item = shared_state.current_profile.get_input_item(
+            self._logical.device_guid,
+            input_info.type,
+            input_info.id,
+            self._mode
+        )
         match cast(str, self.roles[role]):
             case "name":
-                return f"{InputType.to_string(input.type).capitalize()} " \
-                    f"{input.id}"
-            case "actionCount":
-                return shared_state.current_profile.get_input_count(
-                    self._logical.device_guid,
-                    input.type,
-                    input.id,
-                    self._mode
-                )
+                return f"{InputType.to_string(input_info.type).capitalize()} " \
+                    f"{input_info.id} - {input_info.label}"
             case "label":
-                return input.label
+                return input_info.label
+            case "actionSequenceCount":
+                return len(input_item.action_sequences) if input_item else 0
+            case "actionSequenceDescriptor":
+                return _generate_action_sequence_descriptor(input_item) if input_item else ""
+            case "actionSequenceDisplayMode":
+                return Configuration().value(
+                    "global",
+                    "general",
+                    "action-sequence-information"
+                )
+            case "description":
+                return _description_from_item(input_item) if input_item else ""
+            case _:
+                return ""
 
     @Slot(str, result=List[str])
     def validLabels(self, type_str: str) -> List[str]:
@@ -755,7 +782,10 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
 
     roles = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
-        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionCount"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"actionSequenceCount"),
+        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"actionSequenceDescriptor"),
+        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(b"actionSequenceDisplayMode"),
+        QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
     }
 
     def __init__(self, parent: ta.OQO=None) -> None:
@@ -833,12 +863,22 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
         if role not in self.roles:
             return "Unknown"
 
-        item = self._all_keyboard_inputs()[index.row()]
+        input_item = self._all_keyboard_inputs()[index.row()]
         match cast(str, self.roles[role]):
             case "name":
-                return keyboard.key_from_code(*item.input_id).name
-            case "actionCount":
-                return len(item.action_sequences)
+                return keyboard.key_from_code(*input_item.input_id).name
+            case "actionSequenceCount":
+                return len(input_item.action_sequences) if input_item else 0
+            case "actionSequenceDescriptor":
+                return _generate_action_sequence_descriptor(input_item) if input_item else ""
+            case "actionSequenceDisplayMode":
+                return Configuration().value(
+                    "global",
+                    "general",
+                    "action-sequence-information"
+                )
+            case "description":
+                return _description_from_item(input_item) if input_item else ""
             case _:
                 return ""
 
@@ -1672,10 +1712,10 @@ Configuration().register(
     "general",
     "action-sequence-information",
     PropertyType.Selection,
-    "Sequence",
+    "Full",
     "Defines how action sequences associated with inputs are displayed.",
     {
-        "valid_options": ["Sequence", "Count"]
+        "valid_options": ["Full", "Count"]
     },
     True
 )

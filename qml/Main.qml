@@ -400,6 +400,11 @@ ApplicationWindow {
             _logicalDeviceList.device.setMode(uiState.currentMode)
             _modeSelector.currentIndex = _modeSelector.find(uiState.currentMode)
         }
+        function onTabChanged() {
+            // Deal with the settings and scripts tab.
+            _scriptButton.checked = uiState.currentTab === "scripts"
+            _profileSettingsButton.checked = uiState.currentTab === "settings"
+        }
     }
     Connections {
         target: backend
@@ -458,7 +463,8 @@ ApplicationWindow {
                     text: "\uF285"
                     font.pixelSize: 14
 
-                    onClicked: () => { _deviceList.currentIndex = Math.min(
+                    onClicked: () => {
+                        _deviceList.currentIndex = Math.min(
                             _deviceList.count - 1,
                             _deviceList.currentIndex + 1
                         )
@@ -468,7 +474,8 @@ ApplicationWindow {
                     text: "\uF284"
                     font.pixelSize: 14
 
-                    onClicked: () => { _deviceList.currentIndex = Math.max(
+                    onClicked: () => {
+                        _deviceList.currentIndex = Math.max(
                             0,
                             _deviceList.currentIndex - 1
                         )
@@ -479,12 +486,14 @@ ApplicationWindow {
             DeviceTabBar {
                 scrollbarAlwaysVisible: false
 
+                Component.onCompleted: () => { _scriptButton.checked = false }
+
                 JGTabButton {
                     id: _scriptButton
 
                     text: "Scripts"
                     width: _metricScripts.width + 50
-                    checked: uiState.currentTab === "scripts"
+                    checked: false
 
                     onClicked: () => { uiState.setCurrentTab("scripts") }
 
@@ -501,7 +510,7 @@ ApplicationWindow {
 
                     text: "Settings"
                     width: _metricProfileSettings.width + 50
-                    checked: uiState.currentTab === "settings"
+                    checked: false
 
                     onClicked: () => { uiState.setCurrentTab("settings") }
 
@@ -544,7 +553,7 @@ ApplicationWindow {
                 visible: uiState.currentTab === "logical"
                 SplitView.minimumWidth: 400
 
-                // Trigger a model update on the InputConfiguration
+                // Trigger a model update on the InputConfiguration.
                 onInputIdentifierChanged: () => {
                     uiState.setCurrentInput(inputIdentifier, inputIndex)
                 }
@@ -562,6 +571,13 @@ ApplicationWindow {
                 id: _inputConfigurationPanel
 
                 visible: !["scripts", "settings"].includes(uiState.currentTab)
+
+                Component.onCompleted: () => {
+                    inputItemModel = backend.getInputItem(
+                        uiState.currentInput,
+                        uiState.currentInputIndex
+                    )
+                }
 
                 SplitView.fillWidth: true
                 SplitView.fillHeight: true

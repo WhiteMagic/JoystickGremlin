@@ -16,7 +16,6 @@ Item {
     id: _root
 
     property Device device
-    property int minimumWidth: _inputList.minimumWidth
 
     // Sychronize input selection when the underlying device changes.
     Connections {
@@ -41,103 +40,34 @@ Item {
     // List of all the inputs available on the device
     JGListView {
         id: _inputList
-        anchors.fill: parent
-        scrollbarAlwaysVisible: true
 
-        property int minimumWidth: 250
+        anchors.fill: parent
+        anchors.leftMargin: 10
+
+        scrollbarAlwaysVisible: true
+        spacing: 5
 
         model: device
-        delegate: _deviceDelegate
+        delegate: InputButton {
+            width: _inputList.width - 20
+            height: 50
+
+            selected: model.index === _inputList.currentIndex
+            onClicked: () => { _inputList.currentIndex = model.index }
+        }
+
+        Component.onCompleted: () => {
+            uiState.setCurrentInput(
+                device.inputIdentifier(currentIndex),
+                currentIndex
+            )
+        }
 
         onCurrentIndexChanged: () => {
             uiState.setCurrentInput(
                 device.inputIdentifier(currentIndex),
                 currentIndex
             )
-        }
-    }
-
-    // Renders the information about a single input, including name and
-    // overview of the associated actions.
-    Component {
-        id: _deviceDelegate
-
-        Rectangle {
-            id: _inputDisplay
-
-            width: _inputList.width
-            implicitWidth: _inputLabel.width + _inputOverview.width + 50
-            height: 50
-
-            // Dynamically compute the minimum width required to fully display
-            // the input information. This is used to properly configure the
-            // SplitView component.
-            Component.onCompleted: {
-                _inputList.minimumWidth = Math.max(
-                    _inputList.minimumWidth,
-                    implicitWidth
-                )
-            }
-
-            color: model.index === _inputList.currentIndex
-                ? Universal.chromeMediumColor : Style.background
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: () => { _inputList.currentIndex = model.index }
-            }
-
-            Label {
-                id: _inputLabel
-                text: name
-                font.weight: 600
-
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: 5
-                anchors.topMargin: 5
-            }
-
-            // Label {
-            //     id: _inputOverview
-            //     text: actionSequenceInfo
-
-            //     horizontalAlignment: Text.AlignRight
-            //     verticalAlignment: Text.AlignVCenter
-
-            //     anchors.top: parent.top
-            //     anchors.right: _inputDisplay.right
-            //     anchors.rightMargin: 20
-            //     anchors.topMargin: 5
-            // }
-            Image {
-                id: _inputOverview
-                source: "image://action_summary/" + actionSequenceDescriptor
-                asynchronous: false
-                cache: false
-                width: sourceSize.width
-                height: sourceSize.height
-
-                anchors.top: parent.top
-                anchors.right: _inputDisplay.right
-                anchors.rightMargin: 20
-                anchors.topMargin: 5
-            }
-
-            JGText {
-                id: _inputDescription
-                text: description
-                font.italic: true
-
-                width: parent.width - 30
-                elide: Text.ElideRight
-
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                anchors.leftMargin: 5
-                anchors.bottomMargin: 5
-            }
         }
     }
 }
