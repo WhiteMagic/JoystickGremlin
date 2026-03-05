@@ -45,7 +45,7 @@ Button {
     }
 
     function updateWidths() {
-        let imageWidth = _actionSequenceFull ? _actionSequenceFull.item.sourceSize.width : 0
+        let imageWidth = _actionSequenceFull.item ? _actionSequenceFull.item.sourceSize.width : 0
         let widths = computeWidths(imageWidth, _inputDescription.text)
 
         _actionTruncated = widths[1] < imageWidth

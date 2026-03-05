@@ -384,18 +384,14 @@ class Device(QtCore.QAbstractListModel):
             return "Unknown"
 
         input_info = self._convert_index(index.row())
-        input_item = shared_state.current_profile.get_input_item(
-            self._device.device_guid.uuid,
-            input_info[0],
-            input_info[1],
-            self._mode
-        )
         match cast(str, self.roles[role]):
             case "name":
                 return self._name(input_info)
             case "actionSequenceCount":
+                input_item = self._get_input_item(input_info)
                 return len(input_item.action_sequences) if input_item else 0
             case "actionSequenceDescriptor":
+                input_item = self._get_input_item(input_info)
                 return _generate_action_sequence_descriptor(input_item) if input_item else ""
             case "actionSequenceDisplayMode":
                 return Configuration().value(
@@ -404,6 +400,7 @@ class Device(QtCore.QAbstractListModel):
                     "action-sequence-information"
                 )
             case "description":
+                input_item = self._get_input_item(input_info)
                 return _description_from_item(input_item) if input_item else ""
             case _:
                 return ""
@@ -455,6 +452,14 @@ class Device(QtCore.QAbstractListModel):
                 InputType.JoystickHat,
                 index + 1 - axis_count - button_count
             )
+
+    def _get_input_item(self, input_info: Tuple[InputType, int]) -> InputItem:
+        return shared_state.current_profile.get_input_item(
+            self._device.device_guid.uuid,
+            input_info[0],
+            input_info[1],
+            self._mode
+        )
 
     def roleNames(self) -> Dict:
         return self.roles

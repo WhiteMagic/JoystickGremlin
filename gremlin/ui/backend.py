@@ -543,7 +543,6 @@ class Backend(QtCore.QObject):
         self.config.set("global", "internal", "last-profile", fpath)
         self.profileChanged.emit()
         signal.reloadCurrentInputItem.emit()
-        signal.reloadUi.emit()
 
     @Property(bool, notify=propertyChanged)
     def profileContainsUnsavedChanges(self) -> bool:
