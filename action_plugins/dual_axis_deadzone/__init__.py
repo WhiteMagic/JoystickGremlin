@@ -19,7 +19,7 @@ from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
 from gremlin.error import GremlinError, ProfileError
 from gremlin.input_cache import Joystick
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, PropertyType
+from gremlin.types import ActionProperty, DataCreationMode, InputType, PropertyType
 from gremlin.util import clamp
 
 from gremlin.ui.action_model import SequenceIndex, ActionModel
