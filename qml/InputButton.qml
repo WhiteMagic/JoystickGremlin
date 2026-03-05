@@ -25,7 +25,24 @@ Button {
         }
     }
 
+    Connections {
+        target: signal
+
+        function onInputItemChanged(itemIndex) {
+            if (itemIndex === index) {
+                delayedUpdate.start()
+            }
+        }
+    }
+
     Component.onCompleted: () => { updateWidths() }
+
+    Timer {
+        id: delayedUpdate
+        interval: 50
+        repeat: false
+        onTriggered: updateWidths()
+    }
 
     function updateWidths() {
         let imageWidth = _actionSequenceFull ? _actionSequenceFull.item.sourceSize.width : 0
