@@ -8,6 +8,7 @@ import QtQuick.Layouts
 
 import Gremlin.Profile
 import Gremlin.Style
+import "helpers.js" as Helpers
 
 
 Item {
@@ -195,6 +196,15 @@ Item {
 
                 text: bsi.icons.error
                 color: Style.error
+
+                HoverHandler {
+                    id: _hover
+                }
+
+                ToolTip {
+                    visible: _hover.hovered
+                    text: Helpers.formatUserFeedback(_root.action.userFeedback)
+                }
             }
 
             IconButton {

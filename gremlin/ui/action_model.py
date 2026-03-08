@@ -121,6 +121,11 @@ class ActionModel(QtCore.QObject):
     def icon(self) -> str:
         return self._data.icon
 
+    @Property(type=list, notify=actionChanged)
+    def userFeedback(self) -> list[tuple[int, str]]:
+        data = self._data.user_feedback()
+        return [(entry.feedback_type.value, entry.message) for entry in data]
+
     @Property(type=bool, notify=actionChanged)
     def isValid(self) -> bool:
         return self._data.is_valid()
