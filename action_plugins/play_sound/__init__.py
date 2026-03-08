@@ -21,6 +21,7 @@ from gremlin.audio_player import AudioPlayer
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
+    UserFeedback,
     Value,
 )
 from gremlin.config import Configuration
@@ -176,8 +177,15 @@ class PlaySoundData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return util.file_exists_and_is_accessible(self.sound_filename)
+    def user_feedback(self) -> List[UserFeedback]:
+        messages = []
+        if not util.file_exists_and_is_accessible(self.sound_filename):
+            messages.append(UserFeedback(
+                UserFeedback.FeedbackType.Error,
+                f"File '{self.sound_filename}' does not exist or is "
+                f"not accessible.",
+            ))
+        return messages
 
     @override
     def _valid_selectors(self) -> list[str]:

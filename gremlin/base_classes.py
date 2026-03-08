@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from abc import abstractmethod, ABC
 import copy
+from enum import Enum
 import logging
 import time
 from typing import Any, Generic, List, Self, Tuple, Type, TypeVar, TYPE_CHECKING, Optional
@@ -21,6 +22,19 @@ from gremlin.types import ActionActivationMode, ActionProperty, InputType, \
 if TYPE_CHECKING:
     from gremlin.event_handler import Event
     from gremlin.ui.action_model import ActionModel
+
+
+class UserFeedback:
+
+    class FeedbackType(Enum):
+
+        Info = 1
+        Warning = 2
+        Error = 3
+
+    def __init__(self, feedback_type: FeedbackType, message: str) -> None:
+        self.feedback_type = feedback_type
+        self.message = message
 
 
 class Value:
@@ -231,6 +245,18 @@ class AbstractActionData(ABC):
             print(f"Received invalid node in {self.id}")
         return node
 
+    def is_valid(self) -> bool:
+        """Returns whether the instance is in a valid state.
+
+        Returns:
+            True if the instance is in a valid state, False otherwise
+        """
+        return not any([
+            uf.feedback_type == UserFeedback.FeedbackType.Error for
+            uf in self.user_feedback()
+        ])
+
+
     # Interface that all actions have to support, even if only an empty noop
     # implementation is provided.
 
@@ -258,11 +284,14 @@ class AbstractActionData(ABC):
         pass
 
     @abstractmethod
-    def is_valid(self) -> bool:
-        """Returns whether the instance is in a valid state.
+    def user_feedback(self) -> list[UserFeedback]:
+        """Returns a list of user feedback instances.
+
+        The user feedback provides information to the user about actual or
+        potential issues with the configuration of an action.
 
         Returns:
-            True if the instance is in a valid state, False otherwise
+            List of user feedback instances.
         """
         pass
 
@@ -532,7 +561,7 @@ class AbstractFunctor(Generic[T], ABC):
         event: event_handler.Event,
         value: Value,
         properties: list[ActionProperty]=[]
-    ):
+    ) -> None:
         """Processes the provided event data with every provided functor.
 
         Args:
@@ -551,7 +580,7 @@ class AbstractFunctor(Generic[T], ABC):
             event_press: event_handler.Event,
             value_press: Value,
             properties: List[ActionProperty] = []
-    ):
+    ) -> None:
         """Processes the provided event as a pulse with every provided functor.
 
         This assumes that the provided event and value correspond to an input

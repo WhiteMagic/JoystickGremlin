@@ -10,7 +10,7 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.error import GremlinError
 from gremlin.event_handler import Event
 from gremlin.profile import Library
@@ -148,8 +148,8 @@ class SplitAxisData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return True
+    def user_feedback(self) -> list[UserFeedback]:
+        return []
 
     @override
     def _valid_selectors(self) -> List[str]:

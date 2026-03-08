@@ -32,6 +32,7 @@ from gremlin import (
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
+    UserFeedback,
     Value,
 )
 from gremlin.error import (
@@ -630,11 +631,11 @@ class ResponseCurveData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return True
+    def user_feedback(self) -> list[UserFeedback]:
+        return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return []
 
     @override

@@ -12,7 +12,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import error, event_handler, plugin_manager, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.profile import Library
 from gremlin.tree import TreeNode
 from gremlin.types import ActionProperty, ConditionType, InputType, \
@@ -298,8 +298,8 @@ class ConditionData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return True
+    def user_feedback(self) -> List[UserFeedback]:
+        return []
 
     @override
     def _valid_selectors(self) -> List[str]:

@@ -13,7 +13,7 @@ from PySide6.QtCore import Property, Signal, Slot
 
 from typing import override
 from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.error import GremlinError
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType
@@ -169,8 +169,8 @@ class ChainData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return True
+    def user_feedback(self) -> List[UserFeedback]:
+        return []
 
     @override
     def _valid_selectors(self) -> List[str]:

@@ -12,7 +12,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, \
     Value
 
 from gremlin.profile import Library
@@ -146,6 +146,17 @@ class LoadProfileData(AbstractActionData):
     @override
     def is_valid(self) -> bool:
         return file_exists_and_is_accessible(self.profile_filename)
+
+    @override
+    def user_feedback(self) -> List[UserFeedback]:
+        messages = []
+        if not file_exists_and_is_accessible(self.profile_filename):
+            messages.append(UserFeedback(
+                UserFeedback.FeedbackType.Error,
+                f"Profile file '{self.profile_filename}' does not exist or "
+                f"is not accessible.",
+            ))
+        return messages
 
     @override
     def _valid_selectors(self) -> List[str]:

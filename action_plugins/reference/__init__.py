@@ -12,7 +12,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal, Slot
 
 from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, \
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, \
     Value
 from gremlin.error import GremlinError
 from gremlin.macro import AbstractAction
@@ -155,8 +155,11 @@ class ReferenceData(AbstractActionData):
         return ElementTree.Element()
 
     @override
-    def is_valid(self) -> bool:
-        return False
+    def user_feedback(self) -> List[UserFeedback]:
+        return [UserFeedback(
+            UserFeedback.FeedbackType.Error,
+            "Always invalid, use to insert an existing action into the profile."
+        )]
 
     @override
     def _valid_selectors(self) -> List[str]:

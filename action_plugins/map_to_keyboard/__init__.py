@@ -4,21 +4,39 @@
 
 from __future__ import annotations
 
-import enum
-import math
-from typing import Any, List, Optional, TYPE_CHECKING, override
+from typing import (
+    override,
+    List,
+    TYPE_CHECKING,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import event_handler, keyboard, macro, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin import (
+    event_handler,
+    keyboard,
+    macro,
+    util,
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    UserFeedback,
+    Value,
+)
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, MouseButton, PropertyType
+from gremlin.types import (
+    ActionProperty,
+    InputType,
+    PropertyType,
+)
 
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
@@ -54,7 +72,7 @@ class MapToKeyboardFunctor(AbstractFunctor):
 class MapToKeyboardModel(ActionModel):
 
     # Signal emitted when the description variable's content changes
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
             self,
@@ -76,11 +94,11 @@ class MapToKeyboardModel(ActionModel):
             self._parent_sequence_index.index
         ).actionBehavior
 
-    @Property(str, notify=changed)
+    @QtCore.Property(str, notify=changed)
     def keyCombination(self) -> str:
         return " + ".join([key.name for key in self._data.keys])
 
-    @Slot(list)
+    @QtCore.Slot(list)
     def updateInputs(self, data: List[event_handler.Event]) -> None:
         """Receives the events corresponding to mouse button presses.
 
@@ -156,8 +174,14 @@ class MapToKeyboardData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return len(self.keys) > 0
+    def user_feedback(self) -> List[UserFeedback]:
+        messages = []
+        if len(self.keys) == 0:
+            messages.append(UserFeedback(
+                UserFeedback.FeedbackType.Error,
+                "Mapping has no keys assigned to it."
+            ))
+        return messages
 
     @override
     def _valid_selectors(self) -> List[str]:

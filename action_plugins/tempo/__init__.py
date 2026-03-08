@@ -30,6 +30,7 @@ from gremlin.error import (
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
+    UserFeedback,
     Value,
 )
 from gremlin.config import Configuration
@@ -287,8 +288,8 @@ class TempoData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return True
+    def user_feedback(self) -> list[UserFeedback]:
+        return []
 
     @override
     def _valid_selectors(self) -> List[str]:

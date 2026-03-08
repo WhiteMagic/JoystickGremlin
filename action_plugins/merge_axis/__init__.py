@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import (
+    List,
     override,
     TYPE_CHECKING,
 )
@@ -24,6 +25,7 @@ from gremlin import (
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
+    UserFeedback,
     Value,
 )
 from gremlin.error import GremlinError
@@ -348,7 +350,7 @@ class MergeAxisData(AbstractActionData):
         InputType.JoystickAxis,
     )
 
-    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
+    def __init__(self, behavior_type: InputType=InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.label = ""
@@ -407,6 +409,16 @@ class MergeAxisData(AbstractActionData):
     @override
     def is_valid(self) -> bool:
         return self.axis_in1.isValid and self.axis_in2.isValid
+
+    @override
+    def user_feedback(self) -> List[UserFeedback]:
+        messages = []
+        if not (self.axis_in1.isValid and self.axis_in2.isValid):
+            messages.append(UserFeedback(
+                UserFeedback.FeedbackType.Error,
+                "Both axes have to be assigned."
+            ))
+        return messages
 
     @override
     def swap_uuid(self, old_uuid: uuid.UUID, new_uuid: uuid.UUID) -> bool:

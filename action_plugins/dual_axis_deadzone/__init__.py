@@ -15,7 +15,7 @@ from PySide6 import QtCore, QtGui, QtQml
 from PySide6.QtCore import Property, Signal, Slot, QCborTag
 
 from gremlin import event_handler, spline, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.error import GremlinError, ProfileError
 from gremlin.input_cache import Joystick
 from gremlin.profile import Library
@@ -331,10 +331,19 @@ class DualAxisDeadzoneData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        axis_valid = self.axis1.isValid and self.axis2.isValid
-        deadzone_valid = abs(self.outer_deadzone - self.inner_deadzone) >= 0.01
-        return axis_valid and deadzone_valid
+    def user_feedback(self) -> list[UserFeedback]:
+        messages = []
+        if not (self.axis1.isValid and self.axis2.isValid):
+            messages.append(UserFeedback(
+                UserFeedback.FeedbackType.Error,
+                "Both axes must be assigned."
+            ))
+        if abs(self.outer_deadzone - self.inner_deadzone) < 0.01:
+            messages.append(UserFeedback(
+                UserFeedback.FeedbackType.Error,
+                "Outer and inner deadzone are too close to each other."
+            ))
+        return messages
 
     @override
     def _valid_selectors(self) -> list[str]:

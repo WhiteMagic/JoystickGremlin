@@ -15,7 +15,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Property, Signal
 
 from gremlin import event_handler, fsm, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, Value
+from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.config import Configuration
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType
@@ -177,8 +177,8 @@ class SmartToggleData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return True
+    def user_feedback(self) -> list[UserFeedback]:
+        return []
 
     @override
     def _valid_selectors(self) -> List[str]:

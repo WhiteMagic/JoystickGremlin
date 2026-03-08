@@ -21,6 +21,7 @@ from gremlin import event_handler, sendinput, util
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
+    UserFeedback,
     Value,
 )
 from gremlin.error import GremlinError
@@ -382,8 +383,8 @@ class MapToMouseData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return True
+    def user_feedback(self) -> List[UserFeedback]:
+        return []
 
     @override
     def _valid_selectors(self) -> List[str]:
