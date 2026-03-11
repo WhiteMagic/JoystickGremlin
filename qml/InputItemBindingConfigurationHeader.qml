@@ -7,6 +7,7 @@ import QtQuick.Controls.Universal
 import QtQuick.Layouts
 
 import Gremlin.Profile
+import "helpers.js" as Helpers
 
 Item {
     id: _root
@@ -73,6 +74,26 @@ Item {
                 actionNode: _root.inputBinding.rootAction
                 callback: (x) => { actionNode.appendAction(x, "children") }
             }
+
+            Label {
+                visible: _root.inputBinding.userFeedback.length > 0
+
+                font.family: "bootstrap-icons"
+                font.pixelSize: 24
+
+                text: bsi.icons.error
+                color: Style.error
+
+                HoverHandler {
+                    id: _hover
+                }
+
+                ToolTip {
+                    visible: _hover.hovered
+                    text: Helpers.formatUserFeedback(_root.inputBinding.userFeedback)
+                }
+            }
+
 
             IconButton {
                 text: bsi.icons.remove

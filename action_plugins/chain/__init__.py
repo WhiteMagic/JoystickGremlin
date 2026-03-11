@@ -169,15 +169,15 @@ class ChainData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return [str(i) for i in range(len(self.chain_sequences))]
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         index = int(selector)
         if index < 0 or index >= len(self.chain_sequences):
             raise GremlinError(f"Index {index} invalid as chain container")

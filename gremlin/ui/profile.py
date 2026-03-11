@@ -28,8 +28,8 @@ from PySide6.QtCore import (
 )
 
 import dill
+from gremlin.base_classes import UserFeedback
 from gremlin.error import GremlinError
-from gremlin.plugin_manager import PluginManager
 import gremlin.profile
 from gremlin import (
     common,
@@ -281,10 +281,11 @@ class InputItemBindingModel(QtCore.QObject):
 
     """Model representing an ActionTree instance."""
 
-    behaviorChanged = Signal()
-    virtualButtonChanged = Signal()
-    rootActionChanged = Signal()
-    inputTypeChanged = Signal()
+    behaviorChanged = QtCore.Signal()
+    virtualButtonChanged = QtCore.Signal()
+    rootActionChanged = QtCore.Signal()
+    inputTypeChanged = QtCore.Signal()
+    userFeedbackChanged = QtCore.Signal()
 
     def __init__(
             self,
@@ -352,7 +353,7 @@ class InputItemBindingModel(QtCore.QObject):
             self,
             index: SequenceIndex | int,
             container: str
-    ) -> List[ActionModel]:
+    ) -> list[ActionModel]:
         if isinstance(index, int):
             index = self._index_lookup[index]
         return self._child_lookup.get((index.index, container), [])
@@ -549,19 +550,24 @@ class InputItemBindingModel(QtCore.QObject):
         return self._container_index_lookup[index] >= indices[-1]
 
 
-    @Property(type=str, notify=inputTypeChanged)
+    @QtCore.Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
         return InputType.to_string(
             self._input_item_binding.input_item.input_type
         )
 
-    @Property(type=VirtualButtonModel, notify=virtualButtonChanged)
+    @QtCore.Property(type=VirtualButtonModel, notify=virtualButtonChanged)
     def virtualButton(self) -> VirtualButtonModel:
         return self._virtual_button_model
 
-    @Property(type=ActionModel, notify=rootActionChanged)
+    @QtCore.Property(type=ActionModel, notify=rootActionChanged)
     def rootAction(self) -> RootModel:
         return self._action_models[self._index_lookup[0]]
+
+    @QtCore.Property(type=list, notify=userFeedbackChanged)
+    def userFeedback(self) -> list[UserFeedback]:
+        data = [UserFeedback(UserFeedback.FeedbackType.Warning, "Just a test")]
+        return [(entry.feedback_type.value, entry.message) for entry in data]
 
     @property
     def root_action(self) -> AbstractActionData:
