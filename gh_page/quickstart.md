@@ -19,6 +19,9 @@ Using a vJoy variant other than the one linked here has the potential to be non-
 {: .warning }
 When configuring the hat instances make sure to select **continuous** for their type.
 
+{: .warning }
+For multiple vJoy devices, each one needs a unique number of buttons/axes/hats (just changing button count is recommended).
+
 ## How Gremlin Works
 
 The following is intended as a simple guide that introduces the concepts used in Joystick Gremlin by way of examples of how common tasks are achieved. One can think of Gremlin as a system that reacts to the user's input. This means that when the user does something Gremlin will react as configured by the user. In a sense the following summarizes the way Gremlin operates:
