@@ -19,8 +19,8 @@ Using a vJoy variant other than the one linked here has the potential to be non-
 {: .warning }
 When configuring the hat instances make sure to select **continuous** for their type.
 
-{: .warning }
-For multiple vJoy devices, each one needs a unique number of buttons/axes/hats (just changing button count is recommended).
+{: .note }
+When configuring multiple vJoy devices, make sure they differ at least in one of the number of axes, buttons, or hats. If this is not the case Gremlin cannot correctly map from vJoy device identifiers to DirectInput device identifiers and will fail to start.
 
 ## How Gremlin Works
 
