@@ -934,7 +934,7 @@ class InputItemBinding:
     def __init__(self, input_item: InputItem) -> None:
         self.input_item = input_item
         self.root_action: AbstractActionData | None = None
-        self.behavior = None
+        self.behavior: InputType | None = None
         self.virtual_button = None
 
     def from_xml(self, node: ElementTree.Element) -> None:

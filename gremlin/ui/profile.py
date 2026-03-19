@@ -32,6 +32,7 @@ from gremlin.base_classes import UserFeedback
 from gremlin.error import GremlinError
 import gremlin.profile
 from gremlin import (
+    action_analysis,
     common,
     device_initialization,
     event_handler,
@@ -565,9 +566,12 @@ class InputItemBindingModel(QtCore.QObject):
         return self._action_models[self._index_lookup[0]]
 
     @QtCore.Property(type=list, notify=userFeedbackChanged)
-    def userFeedback(self) -> list[UserFeedback]:
-        data = [UserFeedback(UserFeedback.FeedbackType.Warning, "Just a test")]
-        return [(entry.feedback_type.value, entry.message) for entry in data]
+    def userFeedback(self) -> list[dict]:
+        data = action_analysis.action_sequence_feedback(self._input_item_binding)
+        return [{
+            "type": entry.feedback_type.value,
+            "message": entry.message
+        } for entry in data]
 
     @property
     def root_action(self) -> AbstractActionData:

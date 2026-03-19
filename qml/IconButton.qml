@@ -18,7 +18,7 @@ Button {
 
         text: parent.text
         font: parent.font
-        color: parent.hovered ? Style.accent : parent.palette.buttonText
+        color: parent.hovered ? Style.accent : Style.foreground
 
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

@@ -198,12 +198,13 @@ Item {
                 color: Style.error
 
                 HoverHandler {
-                    id: _hover
-                }
-
-                ToolTip {
-                    visible: _hover.hovered
-                    text: Helpers.formatUserFeedback(_root.action.userFeedback)
+                    onHoveredChanged: () => {
+                        _hintsTooltip.parent = parent
+                        _hintsTooltip.x = -_hintsTooltip.width - 5
+                        _hintsTooltip.y = parent.height + 5
+                        _hintsTooltip.hints = _root.action.userFeedback
+                        _hintsTooltip.visible = hovered
+                    }
                 }
             }
 

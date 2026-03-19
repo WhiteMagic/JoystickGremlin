@@ -35,9 +35,60 @@ function safeText(text, backup)
     return !text ? backup : text
 }
 
+function hintIcon(type) {
+    switch(type) {
+        case 1:
+            return "\uF433";
+        case 2:
+            return "\uF33B";
+        case 3:
+            return "\uF337";
+        default:
+            return "\uF505";
+    }
+}
+
+function hintColor(type) {
+    switch(type) {
+        case 1:
+            return "#3E65FF";
+        case 2:
+            return "#F0A30A";
+        case 3:
+            return "#A20025";
+        default:
+            return "#74008b";
+    }
+}
+
+function determineHintIcon(userFeedback) {
+    // Extract the highest severity feedback type from the list of user
+    // feedback entries.
+    let highestSeverity = 0;
+    for (let i = 0; i < userFeedback.length; i++) {
+        if (userFeedback[i]["type"] > highestSeverity) {
+            highestSeverity = userFeedback[i]["type"];
+        }
+    }
+    return hintIcon(highestSeverity)
+}
+
+function determineHintColor(userFeedback) {
+    // Extract the highest severity feedback type from the list of user
+    // feedback entries.
+    let highestSeverity = 0;
+    for (let i = 0; i < userFeedback.length; i++) {
+        if (userFeedback[i]["type"] > highestSeverity) {
+            highestSeverity = userFeedback[i]["type"];
+        }
+    }
+    return hintColor(highestSeverity)
+}
+
+
 function formatUserFeedback(userFeedback)
 {
-    if (!userFeedback || userFeedback.length === 0) {
+    if (userFeedback.length === 0) {
         return "";
     }
 
@@ -52,7 +103,7 @@ function formatUserFeedback(userFeedback)
     for (let i = 0; i < userFeedback.length; i++) {
         let color = "";
         let icon = "";
-        switch(userFeedback[i][0]) {
+        switch(userFeedback[i]["type"]) {
             case FeedbackType.Info:
                 color = "#4A9EFF";
                 icon = "ℹ";
@@ -70,10 +121,11 @@ function formatUserFeedback(userFeedback)
                 icon = "•";
         }
 
+
         // Use padding-left and text-indent to create hanging indent for wrapped text.
         html += `<li style='padding-left: 1.5em; text-indent: -1.5em;'>`;
-        html += `<font color='${color}'>${icon}</font> ${userFeedback[i][1]}`;
-        html += `</li>`;
+        html += `<font color='${color}'>${icon}</font> ${userFeedback[i]["message"]}`;
+        html += `</li></br>`;
     }
     html += "</ul>";
 

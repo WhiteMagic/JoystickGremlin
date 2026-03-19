@@ -81,19 +81,19 @@ Item {
                 font.family: "bootstrap-icons"
                 font.pixelSize: 24
 
-                text: bsi.icons.error
-                color: Style.error
+                text: Helpers.determineHintIcon(_root.inputBinding.userFeedback)
+                color: Helpers.determineHintColor(_root.inputBinding.userFeedback)
 
                 HoverHandler {
-                    id: _hover
-                }
-
-                ToolTip {
-                    visible: _hover.hovered
-                    text: Helpers.formatUserFeedback(_root.inputBinding.userFeedback)
+                    onHoveredChanged: () => {
+                        _hintsTooltip.parent = parent
+                        _hintsTooltip.x = -_hintsTooltip.width - 5
+                        _hintsTooltip.y = parent.height + 5
+                        _hintsTooltip.hints = _root.inputBinding.userFeedback
+                        _hintsTooltip.visible = hovered
+                    }
                 }
             }
-
 
             IconButton {
                 text: bsi.icons.remove
