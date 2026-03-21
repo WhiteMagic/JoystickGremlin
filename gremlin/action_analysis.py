@@ -76,8 +76,6 @@ def _vjoy_analysis(
 
             rc_after = TAG_RESPONSE_CURVE in path_tags[vjoy_index:]
             darc_after = TAG_DUAL_AXIS in path_tags[vjoy_index:]
-            # mm_before = TAG_MAP_TO_MOUSE in path_tags[:vjoy_index] \
-            #     and behavior == InputType.JoystickAxis
 
             if rc_after or darc_after:
                 feedback.append(UserFeedback(
@@ -85,8 +83,6 @@ def _vjoy_analysis(
                     "Actions are executed sequentially, the Map to vJoy action "
                     "will not be affected by actions after it."
                 ))
-            # if mm_before:
-            #     pass
         except ValueError:
             continue
 
