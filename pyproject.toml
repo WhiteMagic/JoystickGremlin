@@ -19,6 +19,8 @@ pywin32 = ">=308"
 pytest = ">=9.0"
 pytest-qt = ">=4.5.0"
 pytest-rerunfailures = ">= 16.0"
+ruff = "^0.15.7"
+pyright = "^1.1.408"
 
 [tool.pytest.ini_options]
 pythonpath = "."
