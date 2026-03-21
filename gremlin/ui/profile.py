@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import uuid
 
+import time
 from typing import (
     cast,
     override,
@@ -300,6 +301,9 @@ class InputItemBindingModel(QtCore.QObject):
             self._input_item_binding.virtual_button
         )
 
+        self._last_feedback_check = 0.0
+        signal.inputItemChanged.connect(self._check_user_feedback)
+
         self._action_models = {}
         self._index_lookup = {}
         self._child_lookup = {}
@@ -572,6 +576,12 @@ class InputItemBindingModel(QtCore.QObject):
             "type": entry.feedback_type.value,
             "message": entry.message
         } for entry in data]
+
+    def _check_user_feedback(self) -> None:
+        # Rate limit updates on user feedback.
+        if time.time() - self._last_feedback_check > 0.1:
+            self._last_feedback_check = time.time()
+            self.userFeedbackChanged.emit()
 
     @property
     def root_action(self) -> AbstractActionData:

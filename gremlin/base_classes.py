@@ -36,6 +36,14 @@ class UserFeedback:
         self.feedback_type = feedback_type
         self.message = message
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UserFeedback):
+            return False
+        return self.message == other.message
+
+    def __hash__(self) -> int:
+        return hash(self.message)
+
 
 class Value:
 
