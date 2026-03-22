@@ -18,35 +18,33 @@ AnalysisFunction = Callable[[InputItemBinding, InputType], list[UserFeedback]]
 
 # Definition of action tags. Actions are not imported due to their significant
 # dependencies, especially on Qt.
-TAG_DUAL_AXIS = "dual-axis-deadzone"
+TAG_DUAL_AXIS_DEADZONE = "dual-axis-deadzone"
 TAG_MAP_TO_MOUSE = "map-to-mouse"
 TAG_RESPONSE_CURVE = "response-curve"
 TAG_VJOY = "map-to-vjoy"
 
 
-_CACHE_TTL = 0.1
+_CACHE_TTL = 0.25
 _feedback_cache : dict[uuid.UUID, tuple[float, list[UserFeedback]]] = {}
 
 
 def action_sequence_feedback(binding: InputItemBinding) -> list[UserFeedback]:
-    functions = [
+    analysis_functions = [
         _dual_axis_response_curve_analysis,
         _map_to_mouse_analysis,
         _vjoy_analysis
     ]
 
-    cache_key = binding.root_action.id
+    cache_key = binding.root_action.id if binding.root_action else uuid.UUID(int=0)
     if cache_key in _feedback_cache:
         cache_time, cached_feedback = _feedback_cache[cache_key]
         if time.time() - cache_time < _CACHE_TTL:
-            _feedback_cache[cache_key] = (time.time(), cached_feedback)
-            print("Using cached feedback")
             return cached_feedback
 
     feedback = []
     if binding.root_action:
         paths = _extract_sequences(binding.root_action)
-        for fn in functions:
+        for fn in analysis_functions:
             feedback.extend(fn(paths, binding.behavior))
     feedback = list(set(feedback))
     _feedback_cache[cache_key] = (time.time(), feedback)
@@ -58,6 +56,11 @@ def _map_to_mouse_analysis(
     paths: list[list[AbstractActionData]],
     behavior: InputType
 ) -> list[UserFeedback]:
+    """Verifies the following aspects relating to the Map to Mouse action:
+
+    - Warn when a joystick axis maps to a mouse movement and an axis value
+      modifying action appears afterward.
+    """
     if behavior != InputType.JoystickAxis:
         return []
 
@@ -68,9 +71,9 @@ def _map_to_mouse_analysis(
         try:
             mm_index = path_tags.index(TAG_MAP_TO_MOUSE)
             rc_after = TAG_RESPONSE_CURVE in path_tags[mm_index:]
-            darc_after = TAG_DUAL_AXIS in path_tags[mm_index:]
+            dadz_after = TAG_DUAL_AXIS_DEADZONE in path_tags[mm_index:]
 
-            if rc_after or darc_after:
+            if rc_after or dadz_after:
                 feedback.append(UserFeedback(
                     UserFeedback.FeedbackType.Warning,
                     "Actions are executed sequentially, the Map to Mouse action "
@@ -85,6 +88,14 @@ def _vjoy_analysis(
     paths: list[list[AbstractActionData]],
     behavior: InputType
 ) -> list[UserFeedback]:
+    """Verifies the following aspects relating to the Map to vJoy action:
+
+    - Warn when a Map to vJoy action is used with an axis value modifying action
+      appearing afterward.
+    """
+    if behavior != InputType.JoystickAxis:
+        return []
+
     feedback = []
     for path in paths:
         path_tags = _path_as_tags(path)
@@ -93,9 +104,9 @@ def _vjoy_analysis(
             vjoy_index = path_tags.index(TAG_VJOY)
 
             rc_after = TAG_RESPONSE_CURVE in path_tags[vjoy_index:]
-            darc_after = TAG_DUAL_AXIS in path_tags[vjoy_index:]
+            dadz_after = TAG_DUAL_AXIS_DEADZONE in path_tags[vjoy_index:]
 
-            if rc_after or darc_after:
+            if rc_after or dadz_after:
                 feedback.append(UserFeedback(
                     UserFeedback.FeedbackType.Warning,
                     "Actions are executed sequentially, the Map to vJoy action "
@@ -111,6 +122,11 @@ def _dual_axis_response_curve_analysis(
     paths: list[list[AbstractActionData]],
     behavior: InputType
 ) -> list[UserFeedback]:
+    """Verifies the following aspects relating to the Dual Axis Deadzone action:
+
+    - Warn when both a response curve and a dual axis deadzone action
+      are present.
+    """
     if behavior != InputType.JoystickAxis:
         return []
 
@@ -118,7 +134,7 @@ def _dual_axis_response_curve_analysis(
     for path in paths:
         path_tags = _path_as_tags(path)
 
-        if TAG_RESPONSE_CURVE in path_tags and TAG_DUAL_AXIS in path_tags:
+        if TAG_RESPONSE_CURVE in path_tags and TAG_DUAL_AXIS_DEADZONE in path_tags:
             feedback.append(UserFeedback(
                 UserFeedback.FeedbackType.Info,
                 "Applying deadzones both in \"Response Curve\" and "

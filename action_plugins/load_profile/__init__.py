@@ -144,10 +144,6 @@ class LoadProfileData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return file_exists_and_is_accessible(self.profile_filename)
-
-    @override
     def user_feedback(self) -> List[UserFeedback]:
         messages = []
         if not file_exists_and_is_accessible(self.profile_filename):

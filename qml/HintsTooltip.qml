@@ -34,11 +34,6 @@ Popup {
         Repeater {
             model: _tooltip.hints
 
-            onModelChanged: {
-                implicitWidth:  Math.min(_content.implicitWidth, maxWidth)
-                implicitHeight: _content.implicitHeight + 2 * padding
-            }
-
             delegate: RowLayout {
                 spacing: 8
                 Layout.fillWidth: true

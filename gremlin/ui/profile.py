@@ -577,7 +577,11 @@ class InputItemBindingModel(QtCore.QObject):
             "message": entry.message
         } for entry in data]
 
-    def _check_user_feedback(self) -> None:
+    def _check_user_feedback(self, index: int) -> None:
+        # Only perform updates for matchin items.
+        if self.parent().enumeration_index != index:
+            return
+
         # Rate limit updates on user feedback.
         if time.time() - self._last_feedback_check > 0.1:
             self._last_feedback_check = time.time()
@@ -648,8 +652,6 @@ class InputItemBindingModel(QtCore.QObject):
         fset=_set_behavior,
         notify=behaviorChanged
     )
-
-
 
 
 @QtQml.QmlElement

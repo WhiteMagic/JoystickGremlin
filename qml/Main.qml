@@ -114,11 +114,7 @@ ApplicationWindow {
     HintsTooltip {
         id: _hintsTooltip
 
-        hints: [
-            { "type": 2, text: "Value must be between 1 and 100." },
-            { "type": 3, text: "This field is required for processing your request." },
-            { "type": 1, text: "Changes are saved automatically when you leave this field." }
-        ]
+        hints: []
     }
 
     // Menu bar with all its entries.

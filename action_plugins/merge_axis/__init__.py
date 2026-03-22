@@ -407,10 +407,6 @@ class MergeAxisData(AbstractActionData):
         return node
 
     @override
-    def is_valid(self) -> bool:
-        return self.axis_in1.isValid and self.axis_in2.isValid
-
-    @override
     def user_feedback(self) -> List[UserFeedback]:
         messages = []
         if not (self.axis_in1.isValid and self.axis_in2.isValid):

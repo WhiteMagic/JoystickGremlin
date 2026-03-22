@@ -935,7 +935,7 @@ class InputItemBinding:
         self.input_item = input_item
         self.root_action: AbstractActionData | None = None
         self.behavior: InputType | None = None
-        self.virtual_button = None
+        self.virtual_button: AbstractVirtualButton | None = None
 
     def from_xml(self, node: ElementTree.Element) -> None:
         root_id = read_subelement(node, "root-action")
