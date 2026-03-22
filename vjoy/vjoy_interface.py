@@ -2,12 +2,11 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
-import ctypes
 import enum
-import os
 import sys
 
 from gremlin.error import GremlinError
+from vjoy.platform.base.backend import AbstractVJoyBackend
 
 
 class VJoyState(enum.Enum):
@@ -21,156 +20,116 @@ class VJoyState(enum.Enum):
     Unknown = 4     # Unknown type of error
 
 
+# ---------------------------------------------------------------------------
+# Platform backend selection
+# ---------------------------------------------------------------------------
+
+if sys.platform == "win32":
+    from vjoy.platform.windows.backend import WindowsVJoyBackend
+    _vjoy_backend: AbstractVJoyBackend = WindowsVJoyBackend()
+elif sys.platform.startswith("linux"):
+    from vjoy.platform.linux.backend import LinuxVJoyBackend
+    _vjoy_backend: AbstractVJoyBackend = LinuxVJoyBackend()
+else:
+    raise GremlinError(f"Unsupported platform: {sys.platform}")
+
+
+# ---------------------------------------------------------------------------
+# Facade — preserves the VJoyInterface.Xxx() call sites in vjoy.py unchanged
+# ---------------------------------------------------------------------------
+
 class VJoyInterface:
 
-    """Allows low level interaction with VJoy devices via ctypes."""
+    """Thin facade that delegates all vJoy operations to the platform backend."""
 
-    # Attempt to find the correct location of the dll for development
-    # and installed use cases.
-    dev_path = os.path.join(os.path.dirname(__file__), "vJoyInterface.dll")
-    if os.path.isfile("vJoyInterface.dll"):
-        dll_path = "vJoyInterface.dll"
-    if "_MEIPASS" in sys.__dict__:
-        dll_path = os.path.join(sys._MEIPASS, "vJoyInterface.dll")
-    elif os.path.isfile(dev_path):
-        dll_path = dev_path
-    else:
-        raise GremlinError("Unable to locate vjoy dll")
+    @staticmethod
+    def vJoyEnabled() -> bool:
+        return _vjoy_backend.vjoy_enabled()
 
-    vjoy_dll_loaded = False
-    try:
-        vjoy_dll = ctypes.cdll.LoadLibrary(dll_path)
-        vjoy_dll_loaded = True
-    except OSError as e:
-        print("Failed loading vJoy dll, {}".format(e))
+    @staticmethod
+    def GetvJoyVersion() -> int:
+        return _vjoy_backend.get_version()
 
-    # Declare argument and return types for all the functions
-    # exposed by the dll
-    api_functions = {
-        # General vJoy information
-        "GetvJoyVersion": {
-            "arguments": [],
-            "returns": ctypes.c_short
-        },
-        "vJoyEnabled": {
-            "arguments": [],
-            "returns": ctypes.c_bool
-        },
-        "GetvJoyProductString": {
-            "arguments": [],
-            "returns": ctypes.c_wchar_p
-        },
-        "GetvJoyManufacturerString": {
-            "arguments": [],
-            "returns": ctypes.c_wchar_p
-        },
-        "GetvJoySerialNumberString": {
-            "arguments": [],
-            "returns": ctypes.c_wchar_p
-        },
+    @staticmethod
+    def GetvJoyProductString() -> str:
+        return _vjoy_backend.get_product_string()
 
-        # Device properties
-        "GetVJDButtonNumber": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        "GetVJDDiscPovNumber": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        "GetVJDContPovNumber": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        # API claims this should return a bool, however, this is untrue and
-        # is an int, see:
-        # http://vjoystick.sourceforge.net/site/index.php/forum/5-Discussion/1026-bug-with-getvjdaxisexist
-        "GetVJDAxisExist": {
-            "arguments": [ctypes.c_uint, ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        "GetVJDAxisMax": {
-            "arguments": [ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p],
-            "returns": ctypes.c_bool
-        },
-        "GetVJDAxisMin": {
-            "arguments": [ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p],
-            "returns": ctypes.c_bool
-        },
+    @staticmethod
+    def GetvJoyManufacturerString() -> str:
+        return _vjoy_backend.get_manufacturer_string()
 
-        # Device management
-        "GetOwnerPid": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        "AcquireVJD": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
-        "RelinquishVJD": {
-            "arguments": [ctypes.c_uint],
-            "returns": None,
-        },
-        "UpdateVJD": {
-            "arguments": [ctypes.c_uint, ctypes.c_void_p],
-            "returns": ctypes.c_bool
-        },
-        "GetVJDStatus": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
+    @staticmethod
+    def GetvJoySerialNumberString() -> str:
+        return _vjoy_backend.get_serial_number_string()
 
-        # Reset functions
-        "ResetVJD": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
-        "ResetAll": {
-            "arguments": [],
-            "returns": None
-        },
-        "ResetButtons": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
-        "ResetPovs": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
+    @staticmethod
+    def GetVJDStatus(vjoy_id: int) -> int:
+        return _vjoy_backend.get_vjd_status(vjoy_id)
 
-        # Set values
-        "SetAxis": {
-            "arguments": [ctypes.c_long, ctypes.c_uint, ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
-        "SetBtn": {
-            "arguments": [ctypes.c_bool, ctypes.c_uint, ctypes.c_ubyte],
-            "returns": ctypes.c_bool
-        },
-        "SetDiscPov": {
-            "arguments": [ctypes.c_int, ctypes.c_uint, ctypes.c_ubyte],
-            "returns": ctypes.c_bool
-        },
-        "SetContPov": {
-            "arguments": [ctypes.c_ulong, ctypes.c_uint, ctypes.c_ubyte],
-            "returns": ctypes.c_bool
-        },
-    }
+    @staticmethod
+    def GetOwnerPid(vjoy_id: int) -> int:
+        return _vjoy_backend.get_owner_pid(vjoy_id)
 
-    @classmethod
-    def initialize(cls):
-        """Initializes the functions as class methods."""
-        if not cls.vjoy_dll_loaded:
-            return
+    @staticmethod
+    def AcquireVJD(vjoy_id: int) -> bool:
+        return _vjoy_backend.acquire_vjd(vjoy_id)
 
-        for fn_name, params in cls.api_functions.items():
-            dll_fn = getattr(cls.vjoy_dll, fn_name)
-            if "arguments" in params:
-                dll_fn.argtypes = params["arguments"]
-            if "returns" in params:
-                dll_fn.restype = params["returns"]
-            setattr(cls, fn_name, dll_fn)
+    @staticmethod
+    def RelinquishVJD(vjoy_id: int) -> None:
+        _vjoy_backend.relinquish_vjd(vjoy_id)
 
+    @staticmethod
+    def GetVJDButtonNumber(vjoy_id: int) -> int:
+        return _vjoy_backend.get_vjd_button_number(vjoy_id)
 
-# Initialize the class
-VJoyInterface.initialize()
+    @staticmethod
+    def GetVJDDiscPovNumber(vjoy_id: int) -> int:
+        return _vjoy_backend.get_vjd_disc_pov_number(vjoy_id)
+
+    @staticmethod
+    def GetVJDContPovNumber(vjoy_id: int) -> int:
+        return _vjoy_backend.get_vjd_cont_pov_number(vjoy_id)
+
+    @staticmethod
+    def GetVJDAxisExist(vjoy_id: int, axis_id: int) -> int:
+        return _vjoy_backend.get_vjd_axis_exist(vjoy_id, axis_id)
+
+    @staticmethod
+    def GetVJDAxisMax(vjoy_id: int, axis_id: int) -> int:
+        return _vjoy_backend.get_vjd_axis_max(vjoy_id, axis_id)
+
+    @staticmethod
+    def GetVJDAxisMin(vjoy_id: int, axis_id: int) -> int:
+        return _vjoy_backend.get_vjd_axis_min(vjoy_id, axis_id)
+
+    @staticmethod
+    def ResetVJD(vjoy_id: int) -> bool:
+        return _vjoy_backend.reset_vjd(vjoy_id)
+
+    @staticmethod
+    def ResetAll() -> None:
+        _vjoy_backend.reset_all()
+
+    @staticmethod
+    def ResetButtons(vjoy_id: int) -> bool:
+        return _vjoy_backend.reset_buttons(vjoy_id)
+
+    @staticmethod
+    def ResetPovs(vjoy_id: int) -> bool:
+        return _vjoy_backend.reset_povs(vjoy_id)
+
+    @staticmethod
+    def SetAxis(value: int, vjoy_id: int, axis_id: int) -> bool:
+        return _vjoy_backend.set_axis(value, vjoy_id, axis_id)
+
+    @staticmethod
+    def SetBtn(pressed: bool, vjoy_id: int, btn_id: int) -> bool:
+        return _vjoy_backend.set_btn(pressed, vjoy_id, btn_id)
+
+    @staticmethod
+    def SetDiscPov(direction: int, vjoy_id: int, hat_id: int) -> bool:
+        return _vjoy_backend.set_disc_pov(direction, vjoy_id, hat_id)
+
+    @staticmethod
+    def SetContPov(degrees: int, vjoy_id: int, hat_id: int) -> bool:
+        return _vjoy_backend.set_cont_pov(degrees, vjoy_id, hat_id)

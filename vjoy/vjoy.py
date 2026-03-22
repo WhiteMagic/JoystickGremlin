@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import ctypes
 import enum
 import logging
 import threading
@@ -239,26 +238,9 @@ class Axis:
         self._cache = VJoyStateCache()
 
         # Retrieve axis minimum and maximum values
-        tmp = ctypes.c_ulong()
-        VJoyInterface.GetVJDAxisMin(
-            self.vjoy_id,
-            self.axis_id,
-            ctypes.byref(tmp)
-        )
-        self._min_value = tmp.value
-        VJoyInterface.GetVJDAxisMax(
-            self.vjoy_id,
-            self.axis_id,
-            ctypes.byref(tmp)
-        )
-        self._max_value = tmp.value
+        self._min_value = VJoyInterface.GetVJDAxisMin(self.vjoy_id, self.axis_id)
+        self._max_value = VJoyInterface.GetVJDAxisMax(self.vjoy_id, self.axis_id)
         self._half_range = (self._max_value - self._min_value) / 2
-
-        # If this is not the case our value setter needs to change
-        if self._min_value != 0:
-            raise VJoyError("vJoy axis minimum value is not 0  - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._min_value)
-            ))
 
     @property
     def value(self) -> float:
@@ -293,7 +275,7 @@ class Axis:
 
         if not VJoyInterface.SetAxis(
                 # Built-in rounding is "bankers rounding" which we don't want.
-                int(self._half_range + self._half_range * self._value + 0.5),
+                int(self._min_value + self._half_range + self._half_range * self._value + 0.5),
                 self.vjoy_id,
                 self.axis_id
         ):
@@ -520,7 +502,10 @@ class VJoy:
                 "Running incompatible vJoy version, 2.1.8 or higher required"
             )
             raise VJoyError("Running incompatible vJoy version, 2.1.8 or higher required")
-        elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
+        elif VJoyInterface.GetVJDStatus(vjoy_id) not in [
+            VJoyState.Free.value,
+            VJoyState.Missing.value,   # Linux: device created on first acquire
+        ]:
             if VJoyInterface.GetOwnerPid(vjoy_id) == os.getpid():
                 raise VJoyConcurrencyError(
                     f"vJoy device {vjoy_id} is already acquired by this process"

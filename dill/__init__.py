@@ -5,13 +5,27 @@
 from __future__ import annotations
 
 import copy
-import ctypes
-import ctypes.wintypes as ctwt
 from enum import Enum
-import os
 import sys
 from typing import Callable
 import uuid
+
+from gremlin.app_platform import app_backend as _app_backend
+
+# Import the portable ctypes struct definitions from the PAL base layer.
+# They are defined once here so that WindowsDillBackend and LinuxDillBackend
+# can both produce _DeviceSummary / _JoystickInputData instances that are
+# the *same Python class* — crucial for isinstance() and ctypes field access.
+from dill.platform.base.types import (
+    _GUID,
+    _AxisMap,
+    _DeviceSummary,
+    _JoystickInputData,
+    ctwt,           # noqa: F401 — re-exported public API
+    C_EVENT_CALLBACK,           # noqa: F401 — re-exported public API
+    C_DEVICE_CHANGE_CALLBACK,   # noqa: F401 — re-exported public API
+)
+from dill.platform.base.backend import AbstractDillBackend
 
 
 class DILLError(Exception):
@@ -27,18 +41,6 @@ class DILLError(Exception):
         super().__init__(value)
 
 
-class _GUID(ctypes.Structure):
-
-    """Strcture mapping C information into a set of Python readable values."""
-
-    _fields_ = [
-        ("Data1", ctypes.c_ulong),
-        ("Data2", ctypes.c_ushort),
-        ("Data3", ctypes.c_ushort),
-        ("Data4", ctypes.c_uint8 * 8)
-    ]
-
-
 def _attempt_decoding_device_name(data: bytes) -> str:
     """Attempts to decode the device name using the system's ANSI code page.
 
@@ -51,9 +53,7 @@ def _attempt_decoding_device_name(data: bytes) -> str:
     Returns:
         The decoded device name.
     """
-    ansi_code_page = f"cp{ctypes.windll.kernel32.GetACP()}"
-    return data.decode(ansi_code_page, errors="ignore")
-
+    return data.decode(_app_backend.ansi_code_page(), errors="ignore")
 
 
 _GUID_SysKeyboard = _GUID()
@@ -107,45 +107,6 @@ _GUID_Invalid.Data4[4] = 0x00
 _GUID_Invalid.Data4[5] = 0x00
 _GUID_Invalid.Data4[6] = 0x00
 _GUID_Invalid.Data4[7] = 0x00
-
-
-class _JoystickInputData(ctypes.Structure):
-
-    """Mapping for the JoystickInputData C structure."""
-
-    _fields_ = [
-        ("device_guid", _GUID),
-        ("input_type", ctypes.c_uint8),
-        ("input_index", ctypes.c_uint8),
-        ("value", ctwt.LONG)
-    ]
-
-
-class _AxisMap(ctypes.Structure):
-
-    """Mapping for the AxisMap C structure."""
-
-    _fields_ = [
-        ("linear_index", ctwt.DWORD),
-        ("axis_index", ctwt.DWORD)
-    ]
-
-
-class _DeviceSummary(ctypes.Structure):
-
-    """Mapping for the DeviceSummary C structure."""
-
-    _fields_ = [
-        ("device_guid", _GUID),
-        ("vendor_id", ctwt.DWORD),
-        ("product_id", ctwt.DWORD),
-        ("joystick_id", ctwt.DWORD),
-        ("name", ctypes.c_char * ctwt.MAX_PATH),
-        ("axis_count", ctwt.DWORD),
-        ("button_count", ctwt.DWORD),
-        ("hat_count", ctwt.DWORD),
-        ("axis_map", _AxisMap * 8)
-    ]
 
 
 class GUID:
@@ -403,7 +364,7 @@ class DeviceSummary:
         self.joystick_id = data.joystick_id
         # The name of devices is encoded based on the system's local code page.
         # Thus we attempt to decode them, but failures simply result in
-        # dropper characters.
+        # dropped characters.
         self.name = _attempt_decoding_device_name(data.name)
         self.axis_count = data.axis_count
         self.button_count = data.button_count
@@ -440,95 +401,38 @@ class DeviceSummary:
         self.vjoy_id = vjoy_id
 
 
-C_EVENT_CALLBACK = ctypes.CFUNCTYPE(None, _JoystickInputData)
-C_DEVICE_CHANGE_CALLBACK = ctypes.CFUNCTYPE(None, _DeviceSummary, ctypes.c_uint8)
+# ---------------------------------------------------------------------------
+# Platform backend selection
+# ---------------------------------------------------------------------------
 
-_dll_path = os.path.join(os.path.dirname(__file__), "dill.dll")
-if "_MEIPASS" in sys.__dict__:
-    _dll_path = os.path.join(sys._MEIPASS, "dill.dll")
-_di_listener_dll = ctypes.cdll.LoadLibrary(_dll_path)
+if sys.platform == "win32":
+    from dill.platform.windows.backend import WindowsDillBackend
+    _dill_backend: AbstractDillBackend = WindowsDillBackend()
+elif sys.platform.startswith("linux"):
+    from dill.platform.linux.backend import LinuxDillBackend
+    _dill_backend: AbstractDillBackend = LinuxDillBackend()
+else:
+    raise DILLError(f"Unsupported platform: {sys.platform}")
 
-_di_listener_dll.get_device_information_by_index.argtypes = [ctypes.c_uint]
-_di_listener_dll.get_device_information_by_index.restype = _DeviceSummary
 
+# ---------------------------------------------------------------------------
+# Public API — thin wrapper that delegates to the platform backend
+# ---------------------------------------------------------------------------
 
 class DILL:
 
-    """Exposes functions of the DILL library in an easy to use manner."""
+    """Exposes joystick-device functions via a platform-appropriate backend."""
 
-    # Attempt to find the correct location of the dll for development
-    # and installed use cases.
-    _dev_path = os.path.join(os.path.dirname(__file__), "dill.dll")
-    if os.path.isfile("dill.dll"):
-        _dll_path = "dill.dll"
-    elif "_MEIPASS" in sys.__dict__:
-        _dll_path = os.path.join(sys._MEIPASS, "dill.dll")
-    elif os.path.isfile(_dev_path):
-        _dll_path = _dev_path
-    else:
-        raise DILLError("Unable to locate dill.dll library")
-
-    _dll = ctypes.cdll.LoadLibrary(_dll_path)
-    # Should only be initialized once in a process's lifetime.
     _dill_initialized = False
-
-    # Storage for the callback functions
-    device_change_callback_fn = None
-    input_event_callback_fn = None
-
-    # Declare argument and return types for all the functions
-    # exposed by the dll
-    api_functions = {
-        "init": {
-            "arguments": [],
-            "returns": None
-        },
-        "set_input_event_callback": {
-            "arguments": [C_EVENT_CALLBACK],
-            "returns": None
-        },
-        "set_device_change_callback": {
-            "arguments": [C_DEVICE_CHANGE_CALLBACK],
-            "returns": None
-        },
-        "get_device_information_by_index": {
-            "arguments": [ctypes.c_uint],
-            "returns": _DeviceSummary
-        },
-        "get_device_information_by_guid": {
-            "arguments": [_GUID],
-            "returns": _DeviceSummary
-        },
-        "get_device_count": {
-            "arguments": [],
-            "returns": ctypes.c_uint
-        },
-        "device_exists": {
-            "arguments": [_GUID],
-            "returns": ctypes.c_bool
-        },
-        "get_axis": {
-            "arguments": [_GUID, ctwt.DWORD],
-            "returns": ctwt.LONG
-        },
-        "get_button": {
-            "arguments": [_GUID, ctwt.DWORD],
-            "returns": ctypes.c_bool
-        },
-        "get_hat": {
-            "arguments": [_GUID, ctwt.DWORD],
-            "returns": ctwt.LONG
-        }
-    }
 
     @staticmethod
     def init() -> None:
-        """Initializes the DILL library.
+        """Initializes the DILL backend.
 
         This has to be called before any other DILL interactions can take place.
         """
         if not DILL._dill_initialized:
-            DILL._dll.init()
+            _dill_backend.init()
             DILL._dill_initialized = True
 
     @staticmethod
@@ -542,10 +446,7 @@ class DILL:
         Args:
             callback: function to execute when an event occurs
         """
-        DILL.input_event_callback_fn = C_EVENT_CALLBACK(callback)
-        DILL._dll.set_input_event_callback(
-            DILL.input_event_callback_fn
-        )
+        _dill_backend.set_input_event_callback(callback)
 
     @staticmethod
     def set_device_change_callback(
@@ -559,11 +460,7 @@ class DILL:
         Args:
             callback: function to execute when an event occurs
         """
-        DILL.device_change_callback_fn = \
-            C_DEVICE_CHANGE_CALLBACK(callback)
-        DILL._dll.set_device_change_callback(
-            DILL.device_change_callback_fn
-        )
+        _dill_backend.set_device_change_callback(callback)
 
     @staticmethod
     def get_device_count() -> int:
@@ -572,7 +469,7 @@ class DILL:
         Returns:
             The number of devices connected
         """
-        return DILL._dll.get_device_count()
+        return _dill_backend.get_device_count()
 
     @staticmethod
     def get_device_information_by_index(index: int) -> DeviceSummary:
@@ -584,9 +481,7 @@ class DILL:
         Returns:
             Structure containing detailed information about the desired device
         """
-        return DeviceSummary(
-            DILL._dll.get_device_information_by_index(index)
-        )
+        return DeviceSummary(_dill_backend.get_device_information_by_index(index))
 
     @staticmethod
     def get_device_information_by_guid(guid: GUID) -> DeviceSummary:
@@ -599,11 +494,11 @@ class DILL:
             Structure containing detailed information about the desired device
         """
         return DeviceSummary(
-            DILL._dll.get_device_information_by_guid(guid.ctypes)
+            _dill_backend.get_device_information_by_guid(guid.ctypes)
         )
 
     @staticmethod
-    def get_axis(guid: GUID, index: int) -> float:
+    def get_axis(guid: GUID, index: int) -> int:
         """Returns the state of the specified axis for a specific device.
 
         Args:
@@ -613,7 +508,7 @@ class DILL:
         Returns:
             Current value of the specific axis for the desired device
         """
-        return DILL._dll.get_axis(guid.ctypes, index)
+        return _dill_backend.get_axis(guid.ctypes, index)
 
     @staticmethod
     def get_button(guid: GUID, index: int) -> bool:
@@ -626,7 +521,7 @@ class DILL:
         Returns:
             Current value of the specific button for the desired device
         """
-        return DILL._dll.get_button(guid.ctypes, index)
+        return _dill_backend.get_button(guid.ctypes, index)
 
     @staticmethod
     def get_hat(guid: GUID, index: int) -> int:
@@ -639,7 +534,7 @@ class DILL:
         Returns:
             Current value of the specific hat for the desired device
         """
-        return DILL._dll.get_hat(guid.ctypes, index)
+        return _dill_backend.get_hat(guid.ctypes, index)
 
     @staticmethod
     def get_device_name(guid: GUID) -> str:
@@ -651,10 +546,9 @@ class DILL:
         Returns:
             Name of the specified device
         """
-        info = DeviceSummary(
-            DILL._dll.get_device_information_by_guid(guid.ctypes)
-        )
-        return info.name
+        return DeviceSummary(
+            _dill_backend.get_device_information_by_guid(guid.ctypes)
+        ).name
 
     @staticmethod
     def device_exists(guid: GUID) -> bool:
@@ -666,18 +560,4 @@ class DILL:
         Returns:
             True if the device is connected, False otherwise
         """
-        return DILL._dll.device_exists(guid.ctypes)
-
-    @staticmethod
-    def initialize_capi() -> None:
-        """Initializes the functions as class methods."""
-        for fn_name, params in DILL.api_functions.items():
-            dll_fn = getattr(DILL._dll, fn_name)
-            if "arguments" in params:
-                dll_fn.argtypes = params["arguments"]
-            if "returns" in params:
-                dll_fn.restype = params["returns"]
-
-
-# Initialize the class
-DILL.initialize_capi()
+        return _dill_backend.device_exists(guid.ctypes)
