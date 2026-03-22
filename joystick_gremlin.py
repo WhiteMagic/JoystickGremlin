@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import argparse
-import ctypes
 import logging
 import logging.handlers
 import os
@@ -23,6 +22,7 @@ import resources
 
 import dill
 import vjoy.vjoy
+from gremlin.app_platform import app_backend as _app_backend
 from gremlin.config import Configuration
 from gremlin.types import PropertyType
 
@@ -366,7 +366,7 @@ class JoystickGremlinApp(QtWidgets.QApplication):
 
         # Set application information.
         app_id = u"joystick.gremlin"
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+        _app_backend.configure_app(app_id)
         self.setWindowIcon(
             QtGui.QIcon(gremlin.util.resource_path("gfx/icon.png"))
         )
@@ -377,8 +377,8 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         )
         self.setApplicationName("Joystick Gremlin")
 
-        # Change application wide font.
-        self.setFont(QtGui.QFont("Segoe UI", 11))
+        # Change application wide font (family chosen by the platform backend).
+        self.setFont(QtGui.QFont(_app_backend.font_family(), 11))
 
         # Load font used for icons.
         if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:

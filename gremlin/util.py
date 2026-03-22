@@ -2,7 +2,6 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
-import ctypes
 import importlib
 import json
 import logging
@@ -27,6 +26,7 @@ from gremlin import (
     error,
     signal,
 )
+from gremlin.app_platform import app_backend as _app_backend
 from gremlin.types import AxisButtonDirection, AxisMode, HatDirection, \
     InputType, Point2D, PropertyType, ActionActivationMode, ScriptVariableType
 
@@ -749,13 +749,13 @@ def all_properties_present(keys: List[str], properties: Dict[str, Any]) -> bool:
     return True
 
 
-def is_user_admin():
+def is_user_admin() -> bool:
     """Returns if the user has admin privileges.
 
     Returns:
         True if user has admin rights, False otherwise
     """
-    return ctypes.windll.shell32.IsUserAnAdmin() == 1
+    return _app_backend.is_user_admin()
 
 
 def with_center_calibration(
@@ -871,12 +871,12 @@ def truncate(text: str, left_size: int, right_size: int) -> str:
 
 
 def userprofile_path() -> str:
-    """Returns the path to the user's profile folder, %userprofile%.
+    """Returns the path to the Joystick Gremlin user data folder.
 
     Returns:
-        Path to the user's profile folder
+        Path to the user data folder
     """
-    return str((Path(os.getenv("userprofile")) / "Joystick Gremlin").resolve())
+    return str(_app_backend.user_data_dir().resolve())
 
 
 def resource_path(relative_path: str) -> str:

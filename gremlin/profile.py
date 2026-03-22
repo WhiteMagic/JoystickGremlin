@@ -43,6 +43,7 @@ from gremlin import (
     plugin_manager,
     signal,
 )
+from gremlin.app_platform import app_backend as _app_backend
 from gremlin.logical_device import LogicalDevice
 from gremlin.tree import TreeNode
 from gremlin.user_script import Script
@@ -796,7 +797,7 @@ class Profile:
         if self.fpath is None:
             return True
         else:
-            tmp_path = os.path.join(os.getenv("temp"), "gremlin.xml")
+            tmp_path = str(_app_backend.temp_dir() / "gremlin.xml")
             self.to_xml(tmp_path)
             current_sha = hashlib.sha256(
                 open(tmp_path).read().encode("utf-8")

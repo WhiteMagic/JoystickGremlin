@@ -41,6 +41,7 @@ from gremlin import (
     shared_state,
     util,
 )
+from gremlin.app_platform import app_backend as _app_backend
 from gremlin.logical_device import LogicalDevice
 from gremlin.signal import (
     display_error,
@@ -81,6 +82,10 @@ class UIState(QtCore.QObject):
         self._current_input = {}
         self._current_mode = "Default"
         self._current_tab = "physical"
+        # Stable default InputIdentifier — kept alive by this strong reference
+        # so PySide6 never receives a transiently-created QObject that Python's
+        # GC could collect before QML finishes using it.
+        self._default_identifier = InputIdentifier(parent=self)
 
         event_handler.EventListener().device_change_event.connect(
             self._device_change
@@ -142,7 +147,7 @@ class UIState(QtCore.QObject):
     def currentInput(self) -> InputIdentifier:
         return self._current_input.get(
             self._current_device,
-            (InputIdentifier(), 0)
+            (self._default_identifier, 0)
         )[0]
 
     @Property(int, notify=inputChanged)
@@ -482,6 +487,11 @@ class Backend(QtCore.QObject):
             is_expanded: True if the action is expanded, False otherwise
         """
         self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
+
+    @Property(str, constant=True)
+    def executableFileFilter(self) -> str:
+        """File-dialog name filter for executable files (platform-dependent)."""
+        return _app_backend.executable_file_filter()
 
     @Property(bool, notify=propertyChanged)
     def useDarkMode(self) -> bool:

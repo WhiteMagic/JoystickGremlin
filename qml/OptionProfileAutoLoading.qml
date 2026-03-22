@@ -34,7 +34,7 @@ Item {
 
         property var associatedField
 
-        nameFilters: ["Executable files (*.exe)"]
+        nameFilters: [backend.executableFileFilter]
         title: "Select an Executable"
 
         onAccepted: () => {
