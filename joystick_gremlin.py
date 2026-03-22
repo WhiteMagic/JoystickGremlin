@@ -279,10 +279,9 @@ class JoystickGremlinApp(QtWidgets.QApplication):
 
         # Ensure unhandled exceptions are shown to the user when running a
         # compiled version of Joystick Gremlin.
-        executable_name = os.path.split(sys.executable)[-1]
-        if executable_name == "joystick_gremlin.exe":
+        # PyInstaller sets sys.frozen=True on all platforms when bundled.
+        if getattr(sys, "frozen", False):
             sys.excepthook = exception_hook
-        sys.excepthook = exception_hook
 
 
         # Initialize joystick device handling.
