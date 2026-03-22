@@ -254,12 +254,6 @@ class Axis:
         self._max_value = tmp.value
         self._half_range = (self._max_value - self._min_value) / 2
 
-        # If this is not the case our value setter needs to change
-        if self._min_value != 0:
-            raise VJoyError("vJoy axis minimum value is not 0  - {}".format(
-                    _error_string(self.vjoy_id, self.axis_id, self._min_value)
-            ))
-
     @property
     def value(self) -> float:
         """Returns the axis position as a value between [-1, 1]"
@@ -293,7 +287,7 @@ class Axis:
 
         if not VJoyInterface.SetAxis(
                 # Built-in rounding is "bankers rounding" which we don't want.
-                int(self._half_range + self._half_range * self._value + 0.5),
+                int(self._min_value + self._half_range + self._half_range * self._value + 0.5),
                 self.vjoy_id,
                 self.axis_id
         ):
