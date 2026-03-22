@@ -5,7 +5,7 @@
 import threading
 import time
 
-from PyQt5 import QtCore
+from PySide6 import QtCore
 
 from gremlin import common, device_helpers, device_initialization, event_handler
 from gremlin.types import InputType

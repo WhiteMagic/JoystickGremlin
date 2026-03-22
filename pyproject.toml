@@ -15,7 +15,8 @@ miniaudio = ">=1.61"
 python = ">=3.13, <3.14"
 PySide6 = ">=6.8"
 PyInstaller = ">=6.10"
-pywin32 = ">=308"
+pywin32 = {version = ">=308", markers = "sys_platform == 'win32'"}
+evdev = {version = ">=1.7", markers = "sys_platform == 'linux'"}
 pytest = ">=9.0"
 pytest-qt = ">=4.5.0"
 pytest-rerunfailures = ">= 16.0"
