@@ -34,7 +34,7 @@ def test_extract_sequences(xml_dir: pathlib.Path) -> None:
     axis_sequences = _extract_sequences(axis_root)
     assert len(axis_sequences) == 1
     assert get_sequence_types(axis_sequences[0]) == [
-        "root", "response-curve", "map-to-vjoy"
+        "root", "map-to-vjoy", "map-to-mouse", "response-curve"
     ]
 
     button_input = input_items[1]
