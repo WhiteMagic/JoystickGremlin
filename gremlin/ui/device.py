@@ -925,11 +925,7 @@ class VJoyDevices(QtCore.QObject):
         )
 
         # Information used to determine what to show in the UI.
-        self._valid_types = [
-            InputType.JoystickAxis,
-            InputType.JoystickButton,
-            InputType.JoystickHat
-        ]
+        self._valid_types = []
         self._input_items = []
         self._input_data = []
 
@@ -977,7 +973,13 @@ class VJoyDevices(QtCore.QObject):
             input_type: type of input being selected by the input_id
         """
         # If no vJoy devices are present, do not perform any action.
-        if not self._devices or input_id == 0:
+        if not self._devices or vjoy_id == 0 or input_id == 0:
+            logging.getLogger("system").debug(
+                f"Attempted to set selection of VJoyDevices model with no valid "
+                f"vJoy devices present or invalid vJoy input specification: "
+                f"vjoy_id={vjoy_id}, input_id={input_id}, "
+                f"input_type={input_type_str}."
+            )
             return
 
         # Find vjoy_index corresponding to the provided id.
@@ -1051,15 +1053,23 @@ class VJoyDevices(QtCore.QObject):
         if InputType.Keyboard in type_list:
             type_list.remove(InputType.Keyboard)
             type_list.append(InputType.JoystickButton)
-        if type_list != self._valid_types:
+        if len(type_list) > 0 and type_list != self._valid_types:
             self._valid_types = type_list
 
             # When changing the input type attempt to preserve the existing
             # selection if the input type is part of the new set of valid
             # types. If this is not possible, the selection is set to the
-            # first entry of the available values.
-            old_input_id  = self._get_input_id()
-            old_input_type = self._get_input_type()
+            # first entry of the available values. In the case the the previous
+            # list of valid types is entry we have no prior selection and
+            # need to pick sensible defaults.
+            if self._is_state_valid():
+                old_vjoy_id = self._get_vjoy_id()
+                old_input_type = self._get_input_type()
+                old_input_id  = self._get_input_id()
+            else:
+                old_vjoy_id = self._devices[0].vjoy_id if self._devices else 0
+                old_input_id = 1
+                old_input_type = InputType.to_string(type_list[0])
 
             # Refresh the UI elements.
             self.inputModel
@@ -1071,7 +1081,7 @@ class VJoyDevices(QtCore.QObject):
             )
             if input_label in self._input_items:
                 self.setSelection(
-                    self._get_vjoy_id(),
+                    old_vjoy_id,
                     old_input_id,
                     old_input_type
                 )
@@ -1140,6 +1150,8 @@ class VJoyDevices(QtCore.QObject):
                 self.inputIndexChanged.emit()
 
     def _get_input_type(self) -> str:
+        if not self._is_state_valid():
+            return ""
         return InputType.to_string(self._current_input_type)
 
     def _has_valid_vjoy_devices(self) -> bool:
