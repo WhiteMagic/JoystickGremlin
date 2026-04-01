@@ -43,6 +43,7 @@ class InputType(enum.Enum):
     JoystickHat = 4
     Mouse = 5
     VirtualButton = 6
+    Invalid = 7
 
     @staticmethod
     def to_string(value: InputType) -> str:
