@@ -27,7 +27,7 @@ Item {
 
         Component.onCompleted: () => {
             validTypes = _root.validTypes
-            setSelection(
+            setInitialState(
                 _root.vjoyDeviceId,
                 _root.vjoyInputId,
                 _root.vjoyInputType

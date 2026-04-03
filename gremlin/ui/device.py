@@ -949,7 +949,7 @@ class VJoyDevices(QtCore.QObject):
         )
         signal.profileChanged.connect(self._update_vjoy_devices)
 
-    def _is_state_valid(self) -> bool:
+    def _is_model_ready(self) -> bool:
         """Checks if the selection model is in a valid state.
 
         The state is valid if output vJoy devices exist and the selection
@@ -963,7 +963,15 @@ class VJoyDevices(QtCore.QObject):
             0 <= self._selected_input_index < len(self._input_data) and \
             self._selected_input_type != InputType.Invalid and \
             self._selected_input_type in self._valid_types
-        return selection_values_valid
+        if not selection_values_valid:
+            logging.getLogger("system").debug(
+                "Attempted to read from invalid VJoyDevices instance."
+            )
+        if not self._is_initialized:
+            logging.getLogger("system").debug(
+                "Attempted to read from an uninitialize VJoyDevices instance."
+            )
+        return selection_values_valid and self._is_initialized
 
     def _reset(self) -> None:
         """Resets the internal state of the model."""
@@ -974,6 +982,9 @@ class VJoyDevices(QtCore.QObject):
         self._selected_vjoy_index = 0
         self._selected_input_index = 0
         self._selected_input_type = InputType.Invalid
+
+        self._update_vjoy_devices()
+        self._update_input_items()
 
         self._is_initialized = False
 
@@ -1013,13 +1024,17 @@ class VJoyDevices(QtCore.QObject):
                 self._input_data.append((input_type, input_id))
 
     @QtCore.Slot(int, int, str)
-    def setSelection(
+    def setInitialState(
         self,
         vjoy_id: int,
         input_id: int,
         input_type_str: str
     ) -> None:
-        """Sets the internal index state based on the model id data.
+        """Sets the internal index state based on the model id data as an
+        initialization process.
+
+        This is only called from the actual VJoySelector QML code to initialize
+        the whole model.
 
         Args:
             vjoy_id: id of the vjoy device
@@ -1031,6 +1046,7 @@ class VJoyDevices(QtCore.QObject):
                 f"Attempted to set selection of VJoyDevices model with no "
                 f"valid vJoy devices present."
             )
+            self._reset()
             return
 
         # Attempt to find the vjoy_index corresponding to the provided vJoy id.
@@ -1041,6 +1057,7 @@ class VJoyDevices(QtCore.QObject):
                 vjoy_found = True
         if not vjoy_found:
             # raise GremlinError(f"Could not find vJoy device with id {vjoy_id}")
+            self._reset()
             return
 
         # Derive the name the vJoy input should have given the type and id, then
@@ -1058,6 +1075,7 @@ class VJoyDevices(QtCore.QObject):
                 f"Expected input named \"{input_label}\" is not present."
             )
             self._set_input_index(0)
+        self._is_initialized = True
 
     def _get_device_model(self) -> list[str]:
         return ["vJoy Device {:d}".format(dev.vjoy_id) for dev in self._devices]
@@ -1091,7 +1109,7 @@ class VJoyDevices(QtCore.QObject):
             # first entry of the available values. In the case that the previous
             # list of valid types is empty, we have no prior selection and
             # need to pick sensible defaults.
-            if self._is_state_valid():
+            if self._is_model_ready():
                 old_vjoy_id = self._get_vjoy_id()
                 old_input_type = self._get_input_type()
                 old_input_id  = self._get_input_id()
@@ -1142,24 +1160,21 @@ class VJoyDevices(QtCore.QObject):
             self.inputModelChanged.emit()
 
     def _get_vjoy_id(self) -> int:
-        if not self._is_state_valid():
-            logging.getLogger("system").debug(
-                "Attempted to read from invalid VJoyDevices instance."
-            )
-            return 0
-        return self._devices[self._selected_vjoy_index].vjoy_id
+        if self._is_model_ready():
+            return self._devices[self._selected_vjoy_index].vjoy_id
+        return 0
 
     def _get_vjoy_index(self) -> int:
-        if not self._is_state_valid():
-            logging.getLogger("system").debug(
-                "Attempted to read from invalid VJoyDevices instance."
-            )
-            return 0
-        return self._selected_vjoy_index
+        if self._is_model_ready():
+            return self._selected_vjoy_index
+        return 0
 
     def _set_vjoy_index(self, index: int) -> None:
+        if not self._is_model_ready():
+            return
+
         if index != self._selected_vjoy_index:
-            if index >= len(self._devices):
+            if index > len(self._devices):
                 raise GremlinError(
                     f"Invalid device index, vJoy device with index {index} "
                     f"does not exist"
@@ -1171,22 +1186,19 @@ class VJoyDevices(QtCore.QObject):
             self.inputModelChanged.emit()
 
     def _get_input_id(self) -> int:
-        if not self._is_state_valid():
-            logging.getLogger("system").debug(
-                "Attempted to read from invalid VJoyDevices instance."
-            )
-            return 0
-        return self._input_data[self._selected_input_index][1]
+        if self._is_model_ready():
+            return self._input_data[self._selected_input_index][1]
+        return 0
 
     def _get_input_index(self) -> int:
-        if not self._is_state_valid():
-            logging.getLogger("system").debug(
-                "Attempted to read from invalid VJoyDevices instance."
-            )
-            return 0
-        return self._selected_input_index
+        if self._is_model_ready():
+            return self._selected_input_index
+        return 0
 
     def _set_input_index(self, index: int) -> None:
+        if not self._is_model_ready():
+            return
+
         if index != self._selected_input_index:
             if index > len(self._input_data):
                 raise GremlinError(
@@ -1203,9 +1215,9 @@ class VJoyDevices(QtCore.QObject):
                     self.inputTypeChanged.emit()
 
     def _get_input_type(self) -> str:
-        if not self._is_state_valid():
-            return InputType.to_string(InputType.Invalid)
-        return InputType.to_string(self._selected_input_type)
+        if self._is_model_ready():
+            return InputType.to_string(self._selected_input_type)
+        return InputType.to_string(InputType.Invalid)
 
     def _has_valid_vjoy_devices(self) -> bool:
         return len(self._devices) > 0
