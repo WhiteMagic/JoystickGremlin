@@ -13,22 +13,33 @@ import re
 import sys
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    TypeVar
+)
 import urllib.request
 import uuid
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
 
-import dill
-from dill import GUID
-
-from gremlin import (
-    error,
-    signal,
+from dill import (
+    DeviceSummary,
+    GUID
 )
-from gremlin.types import AxisButtonDirection, AxisMode, HatDirection, \
-    InputType, Point2D, PropertyType, ActionActivationMode, ScriptVariableType
+
+from gremlin import error
+from gremlin.types import (
+    AxisButtonDirection,
+    AxisMode,
+    HatDirection,
+    InputType,
+    Point2D,
+    PropertyType,
+    ActionActivationMode,
+    ScriptVariableType
+)
 
 # Table storing which modules have been imported already
 g_loaded_modules = {}
@@ -150,8 +161,8 @@ def parse_bool(value: str, default_value: bool = False) -> bool:
 def safe_read(
         node: ElementTree.Element,
         key: str,
-        type_cast: Optional[Callable[[str], Any]] = None,
-        default_value: Optional[Any] = None
+        type_cast: Callable[[str], Any] | None = None,
+        default_value: Any | None = None
 ) -> Any:
     """Safely reads an attribute from an XML node.
 
@@ -393,7 +404,7 @@ def create_subelement_node_custom(
 
 def create_node_from_data(
         node_name: str,
-        properties: List[Tuple[str, Any, PropertyType]]
+        properties: list[tuple[str, Any, PropertyType]]
 ) -> ElementTree.Element:
     """Returns an XML node with the given name and property elements.
 
@@ -413,7 +424,7 @@ def create_node_from_data(
 def create_property_node(
         name: str,
         value: Any,
-        property_type: PropertyType | List[PropertyType]
+        property_type: PropertyType | list[PropertyType]
 ) -> ElementTree.Element:
     """Creates a <property> profile element.
 
@@ -445,7 +456,7 @@ def create_property_node(
 
 def append_property_nodes(
         root_node: ElementTree.Element,
-        properties: List[TypeVar("PropertyData", str, Any, PropertyType)]
+        properties: list[TypeVar("PropertyData", str, Any, PropertyType)]
 ) -> None:
     """Creates and adds property nodes to the given root node.
 
@@ -584,7 +595,7 @@ def read_subelement_custom(
 def read_property(
         action_node: ElementTree.Element,
         name: str,
-        property_type: PropertyType | List[PropertyType]
+        property_type: PropertyType | list[PropertyType]
 ) -> Any:
     """Returns the value of the property with the given name.
 
@@ -609,8 +620,8 @@ def read_property(
 def read_properties(
         action_node: ElementTree.Element,
         name: str,
-        property_type: PropertyType | List[PropertyType]
-) -> List[Any]:
+        property_type: PropertyType | list[PropertyType]
+) -> list[Any]:
     """Returns the values of all properties with the given name.
 
     Args:
@@ -631,7 +642,7 @@ def read_properties(
 def _process_property(
         property_node: ElementTree.Element,
         name: str,
-        property_types: List[PropertyType]
+        property_types: list[PropertyType]
 ) -> Any:
     """Processes a single XML node corresponding to a specific property.
 
@@ -671,7 +682,7 @@ def _process_property(
         ) from e
 
 
-def read_action_ids(node: ElementTree.Element) -> List[uuid.UUID]:
+def read_action_ids(node: ElementTree.Element) -> list[uuid.UUID]:
     """Returns all action-id child nodes from the provided node.
 
     Args:
@@ -686,7 +697,7 @@ def read_action_ids(node: ElementTree.Element) -> List[uuid.UUID]:
     return ids
 
 
-def create_action_ids(name: str, action_ids: List[uuid.UUID]) -> ElementTree.Element:
+def create_action_ids(name: str, action_ids: list[uuid.UUID]) -> ElementTree.Element:
     """Returns a node containing the given action ids.
 
     Args:
@@ -705,8 +716,8 @@ def create_action_ids(name: str, action_ids: List[uuid.UUID]) -> ElementTree.Ele
 
 def determine_value_type(
         value: Any,
-        property_type: PropertyType | List[PropertyType]
-) -> [PropertyType, bool]:
+        property_type: PropertyType | list[PropertyType]
+) -> tuple[PropertyType, bool]:
     """Returns whether a value is of the correct type and the type..
 
     Args:
@@ -732,7 +743,7 @@ def determine_value_type(
     return value_type, is_valid
 
 
-def all_properties_present(keys: List[str], properties: Dict[str, Any]) -> bool:
+def all_properties_present(keys: list[str], properties: dict[str, Any]) -> bool:
     """Checks if all listed keys are present in the properties dictionary.
 
     Args:
@@ -1043,7 +1054,7 @@ def file_exists_and_is_accessible(filename: str) -> bool:
         os.access(filename, os.R_OK)
         )
 
-def latest_gremlin_version() -> Optional[str]:
+def latest_gremlin_version() -> str | None:
     """Returns the latest Gremlin version available online.
 
     Returns:
@@ -1089,3 +1100,29 @@ def get_code_release() -> str:
         return f"R{version[0]}"
     else:
         return f"R{version[0]}.{version[1]}"
+
+
+def first_available_input(
+    devices: list[DeviceSummary],
+    input_types: list[InputType]
+) -> tuple[DeviceSummary, InputType, int] | None:
+    """Returns the first available input of the given type.
+
+    Args:
+        devices: list of devices to check for the input
+        input_type: type of input to find
+
+    Returns:
+        Tuple containing the device, input type and input id of the first
+        available input of the given type, or None if no such input is found
+    """
+    input_counts = {
+        InputType.JoystickAxis: lambda x: x.axis_count,
+        InputType.JoystickButton: lambda x: x.button_count,
+        InputType.JoystickHat: lambda x: x.hat_count,
+    }
+    for device in devices:
+        for input_type in input_types:
+            if input_counts[input_type](device) > 0:
+                return (device, input_type, 0)
+    return None
