@@ -1022,7 +1022,7 @@ class VJoyDevices(QtCore.QObject):
                 ))
                 self._input_data.append((input_type, input_id))
 
-    def _transfer_current_selection_if_possible(self) -> None:
+    def _transfer_current_selection_if_possible(self, input_id: int) -> None:
         # When changing the input type, attempt to preserve the current
         # selection if it exists and update the internal state accordingly.
         # If that is not possible, ensure valid state by selecting the first
@@ -1030,7 +1030,7 @@ class VJoyDevices(QtCore.QObject):
         if self._selected_input_type in self._valid_types:
             input_label = common.input_to_ui_string(
                 self._selected_input_type,
-                self._input_data[self._selected_input_index][1]
+                input_id
             )
             if input_label in self._input_items:
                 self._selected_input_index = self._input_items.index(input_label)
@@ -1070,8 +1070,10 @@ class VJoyDevices(QtCore.QObject):
         vjoy_found = False
         for i, dev in enumerate(self._devices):
             if dev.vjoy_id == vjoy_id:
-                self._set_vjoy_index(i)
+                self._selected_vjoy_index = i
+                self._update_input_items()
                 vjoy_found = True
+                break
         if not vjoy_found:
             # raise GremlinError(f"Could not find vJoy device with id {vjoy_id}")
             self._reset()
@@ -1087,12 +1089,24 @@ class VJoyDevices(QtCore.QObject):
         )
         self._is_initialized = True
         try:
-            self._set_input_index(self._input_items.index(input_label))
+            self._selected_input_type = input_type
+            self._selected_input_index = self._input_items.index(input_label)
         except ValueError:
             logging.getLogger("system").warning(
                 f"Expected input named \"{input_label}\" is not present."
             )
-            self._set_input_index(0)
+            if len(self._input_data) > 0:
+                self._selected_input_type = self._input_data[0][0]
+                self._selected_input_index = 0
+            else:
+                logging.getLogger("system").warning(
+                    f"No valid inputs present to select for vJoy {vjoy_id}."
+                )
+
+        self.inputModelChanged.emit()
+        self.vjoySelectionIndexChanged.emit()
+        self.inputSelectionIndexChanged.emit()
+
 
     def _get_device_model(self) -> list[str]:
         return ["vJoy Device {:d}".format(dev.vjoy_id) for dev in self._devices]
@@ -1117,16 +1131,16 @@ class VJoyDevices(QtCore.QObject):
             type_list.remove(InputType.Keyboard)
             type_list.append(InputType.JoystickButton)
 
-        if len(type_list) > 0 and type_list != self._valid_types:
+        # If the model hasn't been initialized we will not attempt to
+        # select a specific entry but rather let the UI default.
+        if not self._is_initialized:
             self._valid_types = type_list
             self._update_input_items()
-
-            # If the model hasn't been initialized we will not attempt to
-            # select a specific entry but rather let the UI default.
-            if not self._is_initialized:
-                return
-
-            self._transfer_current_selection_if_possible()
+        elif len(type_list) > 0 and type_list != self._valid_types:
+            self._valid_types = type_list
+            prev_input_id = self._input_data[self._selected_input_index][1]
+            self._update_input_items()
+            self._transfer_current_selection_if_possible(prev_input_id)
 
             # Emit all events related to the change of the valid types and
             # subsequent potential update of selection status.
@@ -1158,8 +1172,9 @@ class VJoyDevices(QtCore.QObject):
                 )
 
             self._selected_vjoy_index = index
+            prev_input_id = self._input_data[self._selected_input_index][1]
             self._update_input_items()
-            self._transfer_current_selection_if_possible()
+            self._transfer_current_selection_if_possible(prev_input_id)
 
             self.vjoyIdChanged.emit()
             self.vjoySelectionIndexChanged.emit()

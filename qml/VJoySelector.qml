@@ -14,31 +14,24 @@ Item {
     property string vjoyInputType
     property int vjoyDeviceId
     property int vjoyInputId
-    property var validTypes
+    property alias validTypes: _vjoy.validTypes
 
     implicitHeight: _content.height
     implicitWidth: _content.implicitWidth
 
     // React to the validTypes value being changed from an external source.
-    onValidTypesChanged: () => { _vjoy.validTypes = validTypes }
+    // onValidTypesChanged: () => { _vjoy.validTypes = validTypes }
+    function initialize(vjoy_id, input_type, input_id) {
+        _vjoy.setInitialState(vjoy_id, input_id, input_type)
+    }
 
     VJoyDevices {
         id: _vjoy
 
-        Component.onCompleted: () => {
-            validTypes = _root.validTypes
-            setInitialState(
-                _root.vjoyDeviceId,
-                _root.vjoyInputId,
-                _root.vjoyInputType
-            )
-        }
-
+        // Persist UI changes to the model.
         onVjoyIndexChanged: () => { _root.vjoyDeviceId = _vjoy.vjoyId }
-        onInputIndexChanged: () => {
-            _root.vjoyInputId = _vjoy.inputId
-            _root.vjoyInputType = _vjoy.inputType
-        }
+        onInputIndexChanged: () => { _root.vjoyInputId = _vjoy.inputId }
+        onInputTypeChanged: () => { _root.vjoyInputType = _vjoy.inputType }
     }
 
     RowLayout {
