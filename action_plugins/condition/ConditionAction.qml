@@ -198,9 +198,11 @@ Item {
                     }
 
                     Component.onCompleted: () => {
-                        vjoyInputType = modelData.vjoyInputType
-                        vjoyInputId = modelData.vjoyInputId
-                        vjoyDeviceId = modelData.vjoyDeviceId
+                        initialize(
+                            modelData.vjoyDeviceId,
+                            modelData.vjoyInputType,
+                            modelData.vjoyInputId
+                        )
                     }
                 }
 
@@ -360,9 +362,11 @@ Item {
                         }
 
                         Component.onCompleted: () => {
-                            vjoyInputType = modelData.vjoyInputType
-                            vjoyInputId = modelData.vjoyInputId
-                            vjoyDeviceId = modelData.vjoyDeviceId
+                            initialize(
+                                modelData.vjoyDeviceId,
+                                modelData.vjoyInputType,
+                                modelData.vjoyInputId
+                            )
                         }
                     }
 

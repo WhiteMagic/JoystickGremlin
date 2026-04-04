@@ -325,9 +325,11 @@ JGListView {
                     }
 
                     Component.onCompleted: () => {
-                        vjoyInputType = modelData.inputType
-                        vjoyInputId = modelData.inputId
-                        vjoyDeviceId = modelData.vjoyId
+                        initialize(
+                            modelData.vjoyId,
+                            modelData.inputType,
+                            modelData.inputId
+                        )
                     }
                 }
             }

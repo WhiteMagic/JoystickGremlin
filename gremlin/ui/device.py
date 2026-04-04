@@ -956,9 +956,6 @@ class VJoyDevices(QtCore.QObject):
             True if the state is valid, False otherwise.
         """
         if not self._is_initialized:
-            logging.getLogger("system").debug(
-                "Attempted to read from an uninitialize VJoyDevices instance."
-            )
             return False
 
         selection_values_valid = len(self._devices) > 0 and \
@@ -968,7 +965,9 @@ class VJoyDevices(QtCore.QObject):
             self._selected_input_type in self._valid_types
         if not selection_values_valid:
             logging.getLogger("system").debug(
-                "Attempted to read from invalid VJoyDevices instance."
+                f"Attempted to read from invalid VJoyDevices instance: "
+                f"{self._selected_vjoy_index}, {self._selected_input_type}, "
+                f"{self._selected_input_index}."
             )
         return selection_values_valid
 
@@ -1181,6 +1180,7 @@ class VJoyDevices(QtCore.QObject):
             self.inputModelChanged.emit()
             self.inputIdChanged.emit()
             self.inputSelectionIndexChanged.emit()
+            self.inputTypeChanged.emit()
 
     def _get_input_id(self) -> int:
         if self._is_model_ready():
