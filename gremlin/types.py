@@ -66,7 +66,8 @@ _InputType_to_string_lookup = {
     InputType.JoystickHat: "hat",
     InputType.Keyboard: "key",
     InputType.Mouse: "mouse",
-    InputType.VirtualButton: "virtual-button"
+    InputType.VirtualButton: "virtual-button",
+    InputType.Invalid: "invalid",
 }
 
 _InputType_to_enum_lookup = {
@@ -75,7 +76,8 @@ _InputType_to_enum_lookup = {
     "hat": InputType.JoystickHat,
     "key": InputType.Keyboard,
     "mouse": InputType.Mouse,
-    "virtual-button": InputType.VirtualButton
+    "virtual-button": InputType.VirtualButton,
+    "invalid": InputType.Invalid,
 }
 
 

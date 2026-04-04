@@ -906,18 +906,18 @@ class VJoyDevices(QtCore.QObject):
     state based on id values is supported via a slot method.
     """
 
-    deviceModelChanged = Signal()
-    inputModelChanged = Signal()
-    validTypesChanged = Signal()
+    deviceModelChanged = QtCore.Signal()
+    inputModelChanged = QtCore.Signal()
+    validTypesChanged = QtCore.Signal()
 
     # Selection indices are related to the index of the selected UI item from
     # the crop down selection.
-    vjoySelectionIndexChanged = Signal()
-    inputSelectionIndexChanged = Signal()
+    vjoySelectionIndexChanged = QtCore.Signal()
+    inputSelectionIndexChanged = QtCore.Signal()
     # Id values are the actual input and vjoy ids of the selected item.
-    vjoyIdChanged = Signal()
-    inputIdChanged = Signal()
-    inputTypeChanged = Signal()
+    vjoyIdChanged = QtCore.Signal()
+    inputIdChanged = QtCore.Signal()
+    inputTypeChanged = QtCore.Signal()
 
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
@@ -935,19 +935,16 @@ class VJoyDevices(QtCore.QObject):
         self._selected_vjoy_index : int = 0
         self._selected_input_index : int = 0
         self._selected_input_type : InputType = InputType.Invalid
+        self._is_initialized : bool = False
 
         # Refresh model data and initialize everything properly.
-        self._update_vjoy_devices()
-        self._update_input_items()
+        self._reset()
         if self._input_data:
             self._selected_input_type = self._input_data[0][0]
 
-        self._is_initialized = False
-
-        event_handler.EventListener().device_change_event.connect(
-            self._update_vjoy_devices
-        )
-        signal.profileChanged.connect(self._update_vjoy_devices)
+        # Connect event handlers to force refresh of the model.
+        event_handler.EventListener().device_change_event.connect(self._reset)
+        signal.profileChanged.connect(self._reset)
 
     def _is_model_ready(self) -> bool:
         """Checks if the selection model is in a valid state.
@@ -958,6 +955,12 @@ class VJoyDevices(QtCore.QObject):
         Returns:
             True if the state is valid, False otherwise.
         """
+        if not self._is_initialized:
+            logging.getLogger("system").debug(
+                "Attempted to read from an uninitialize VJoyDevices instance."
+            )
+            return False
+
         selection_values_valid = len(self._devices) > 0 and \
             0 <= self._selected_vjoy_index < len(self._devices) and \
             0 <= self._selected_input_index < len(self._input_data) and \
@@ -967,11 +970,7 @@ class VJoyDevices(QtCore.QObject):
             logging.getLogger("system").debug(
                 "Attempted to read from invalid VJoyDevices instance."
             )
-        if not self._is_initialized:
-            logging.getLogger("system").debug(
-                "Attempted to read from an uninitialize VJoyDevices instance."
-            )
-        return selection_values_valid and self._is_initialized
+        return selection_values_valid
 
     def _reset(self) -> None:
         """Resets the internal state of the model."""
@@ -1023,6 +1022,24 @@ class VJoyDevices(QtCore.QObject):
                 ))
                 self._input_data.append((input_type, input_id))
 
+    def _transfer_current_selection_if_possible(self) -> None:
+        # When changing the input type, attempt to preserve the current
+        # selection if it exists and update the internal state accordingly.
+        # If that is not possible, ensure valid state by selecting the first
+        # available entry.
+        if self._selected_input_type in self._valid_types:
+            input_label = common.input_to_ui_string(
+                self._selected_input_type,
+                self._input_data[self._selected_input_index][1]
+            )
+            if input_label in self._input_items:
+                self._selected_input_index = self._input_items.index(input_label)
+                return
+
+        if len(self._input_data) > 0:
+            self._selected_input_index = 0
+            self._selected_input_type = self._input_data[0][0]
+
     @QtCore.Slot(int, int, str)
     def setInitialState(
         self,
@@ -1068,6 +1085,7 @@ class VJoyDevices(QtCore.QObject):
                 else input_type,
             input_id
         )
+        self._is_initialized = True
         try:
             self._set_input_index(self._input_items.index(input_label))
         except ValueError:
@@ -1075,7 +1093,6 @@ class VJoyDevices(QtCore.QObject):
                 f"Expected input named \"{input_label}\" is not present."
             )
             self._set_input_index(0)
-        self._is_initialized = True
 
     def _get_device_model(self) -> list[str]:
         return ["vJoy Device {:d}".format(dev.vjoy_id) for dev in self._devices]
@@ -1093,71 +1110,31 @@ class VJoyDevices(QtCore.QObject):
             self._reset()
             return
 
-        type_list = [InputType.to_enum(entry) for entry in sorted(valid_types)]
         # Replace keyboard inputs by joystick buttons. This happens when
         # keyboard inputs use actions with the vJoy selector.
+        type_list = [InputType.to_enum(entry) for entry in sorted(valid_types)]
         if InputType.Keyboard in type_list:
             type_list.remove(InputType.Keyboard)
             type_list.append(InputType.JoystickButton)
 
         if len(type_list) > 0 and type_list != self._valid_types:
             self._valid_types = type_list
-
-            # When changing the input type, attempt to preserve the existing
-            # selection if the input type is part of the new set of valid
-            # types. If this is not possible, the selection is set to the
-            # first entry of the available values. In the case that the previous
-            # list of valid types is empty, we have no prior selection and
-            # need to pick sensible defaults.
-            if self._is_model_ready():
-                old_vjoy_id = self._get_vjoy_id()
-                old_input_type = self._get_input_type()
-                old_input_id  = self._get_input_id()
-            else:
-                old_vjoy_id = self._devices[0].vjoy_id
-                old_input_id = 1
-                old_input_type = InputType.to_string(type_list[0])
-
-            # Update valid selection options and then find the matching indices.
             self._update_input_items()
-            # old_input_index = self._selected_input_index
 
-            # If we can find an input entry that matches what was previously
-            # selected we select that, otherwise default to selecting the
-            # first entry.
-            input_label = common.input_to_ui_string(
-                InputType.to_enum(old_input_type),
-                old_input_id
-            )
-            if input_label in self._input_items:
-                self.setSelection(
-                    old_vjoy_id,
-                    old_input_id,
-                    old_input_type
-                )
-            else:
-                selection = util.first_available_input(
-                    self._devices, self._valid_types
-                )
-                # No valid selection available, reset and invalidate.
-                if selection is None:
-                    self._reset()
-                    return
-
-                self.setSelection(selection[0].vjoy_id, selection[2], selection[1])
-                self._selected_vjoy_index = 0
-                self._selected_input_index = 0
-                self._selected_input_type = self._valid_types[0]
-
-            # Emit once post-init only if the index actually changed.
-            # if self._is_initialized and \
-            #         self._selected_input_index != old_input_index:
-            #     self.inputSelectionIndexChanged.emit()
-            # else:
+            # If the model hasn't been initialized we will not attempt to
+            # select a specific entry but rather let the UI default.
             if not self._is_initialized:
-                self._is_initialized = True
+                return
+
+            self._transfer_current_selection_if_possible()
+
+            # Emit all events related to the change of the valid types and
+            # subsequent potential update of selection status.
             self.validTypesChanged.emit()
             self.inputModelChanged.emit()
+            self.inputIdChanged.emit()
+            self.inputSelectionIndexChanged.emit()
+            self.inputTypeChanged.emit()
 
     def _get_vjoy_id(self) -> int:
         if self._is_model_ready():
@@ -1181,9 +1158,14 @@ class VJoyDevices(QtCore.QObject):
                 )
 
             self._selected_vjoy_index = index
+            self._update_input_items()
+            self._transfer_current_selection_if_possible()
+
             self.vjoyIdChanged.emit()
             self.vjoySelectionIndexChanged.emit()
             self.inputModelChanged.emit()
+            self.inputIdChanged.emit()
+            self.inputSelectionIndexChanged.emit()
 
     def _get_input_id(self) -> int:
         if self._is_model_ready():
@@ -1202,17 +1184,16 @@ class VJoyDevices(QtCore.QObject):
         if index != self._selected_input_index:
             if index > len(self._input_data):
                 raise GremlinError(
-                    f"Invalid input index, input with index {index} does not "
+                    f"Invalid selection, input with index {index} does not "
                     f"exist"
                 )
 
-            old_input_index = self._selected_input_index
+            prev_item = self._input_data[self._selected_input_index]
             self._selected_input_index = index
             self._selected_input_type = self._input_data[index][0]
-            if self._is_initialized:
-                self.inputSelectionIndexChanged.emit()
-                if self._input_data[old_input_index][0] != self._selected_input_type:
-                    self.inputTypeChanged.emit()
+            self.inputSelectionIndexChanged.emit()
+            if prev_item[0] != self._selected_input_type:
+                self.inputTypeChanged.emit()
 
     def _get_input_type(self) -> str:
         if self._is_model_ready():
