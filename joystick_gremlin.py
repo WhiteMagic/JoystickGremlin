@@ -59,7 +59,7 @@ import gremlin.ui.tools
 import gremlin.ui.util
 
 
-def configure_logger(config: Dict[str, Any]) -> None:
+def configure_logger(config: dict[str, Any]) -> None:
     """Creates a new logger instance.
 
     Args:
@@ -67,20 +67,24 @@ def configure_logger(config: Dict[str, Any]) -> None:
     """
     logger = logging.getLogger(config["name"])
     logger.setLevel(config["level"])
-    handler = logging.handlers.RotatingFileHandler(
-        config["logfile"],
-        maxBytes=1 * 1024 * 1024,
-        backupCount=1
-    )
+    if config["mode"] == "rotate":
+        handler = logging.handlers.RotatingFileHandler(
+            config["logfile"],
+            maxBytes=1 * 1024 * 1024,
+            backupCount=1
+        )
+    elif config["mode"] == "session":
+        handler = logging.FileHandler(config["logfile"], mode="w")
     handler.setLevel(config["level"])
     formatter = logging.Formatter(config["format"], "%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    logger.debug("-" * 80)
-    logger.debug(time.strftime("%Y-%m-%d %H:%M"))
-    logger.debug(f"Starting Joystick Gremlin {gremlin.util.get_code_release()}")
-    logger.debug("-" * 80)
+    if config["mode"] != "session":
+        logger.debug("-" * 80)
+        logger.debug(time.strftime("%Y-%m-%d %H:%M"))
+        logger.debug(f"Starting Joystick Gremlin {gremlin.util.get_code_release()}")
+        logger.debug("-" * 80)
 
 
 def exception_hook(exception_type, value, trace) -> None:
@@ -207,13 +211,22 @@ def configure_loggers() -> None:
         "name": "system",
         "level": logging.DEBUG,
         "logfile": os.path.join(gremlin.util.userprofile_path(), "system.log"),
-        "format": "%(asctime)s %(levelname)10s %(message)s"
+        "format": "%(asctime)s %(levelname)10s %(message)s",
+        "mode": "rotate",
     })
     configure_logger({
         "name": "user",
         "level": logging.DEBUG,
         "logfile": os.path.join(gremlin.util.userprofile_path(), "user.log"),
-        "format": "%(asctime)s %(message)s"
+        "format": "%(asctime)s %(message)s",
+        "mode": "rotate"
+    })
+    configure_logger({
+        "name": "event",
+        "level": logging.DEBUG,
+        "logfile": os.path.join(gremlin.util.userprofile_path(), "event.log"),
+        "format": "%(asctime)s,%(levelname)s,%(message)s",
+        "mode": "session"
     })
 
 

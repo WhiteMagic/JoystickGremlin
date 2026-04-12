@@ -1083,7 +1083,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
             case "isInput":
                 vid = self._vjoy_devices[index.row()].vjoy_id
                 self._profile.settings.vjoy_as_input[vid] = bool(value)
-                signal.profileChanged.emit()
+                # signal.profileChanged.emit()
                 event_handler.EventListener().device_change_event.emit()
                 return True
             case _:

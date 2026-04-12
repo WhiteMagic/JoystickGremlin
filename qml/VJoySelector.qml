@@ -11,27 +11,43 @@ import Gremlin.Device
 Item {
     id: _root
 
-    property string vjoyInputType
     property int vjoyDeviceId
+    property string vjoyInputType
     property int vjoyInputId
     property alias validTypes: _vjoy.validTypes
+
+    signal selectionChanged(int deviceId, string inputType, int inputId)
 
     implicitHeight: _content.height
     implicitWidth: _content.implicitWidth
 
     // React to the validTypes value being changed from an external source.
-    // onValidTypesChanged: () => { _vjoy.validTypes = validTypes }
     function initialize(vjoy_id, input_type, input_id) {
-        _vjoy.setInitialState(vjoy_id, input_id, input_type)
+        _vjoy.setInitialState(vjoy_id, input_type, input_id)
     }
 
     VJoyDevices {
         id: _vjoy
 
         // Persist UI changes to the model.
-        onVjoyIndexChanged: () => { _root.vjoyDeviceId = _vjoy.vjoyId }
-        onInputIndexChanged: () => { _root.vjoyInputId = _vjoy.inputId }
-        onInputTypeChanged: () => { _root.vjoyInputType = _vjoy.inputType }
+        // onSelectionChanged: (vjoyId, inputType, inputId) => {
+        //     // Order matters, updating input id first results in the type
+        //     // possibly being uninitialized.
+        //     _root.vjoyDeviceId = _vjoy.vjoyId
+        //     _root.vjoyInputType = _vjoy.inputType
+        //     _root.vjoyInputId = _vjoy.inputId
+        // }
+        onVjoyIndexChanged: () => {
+            _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
+        }
+            //  _root.vjoyDeviceId =  }
+        onInputIndexChanged: () => {
+            // Order matters, updating input id first results in the type
+            // possibly being uninitialized.
+            // _root.vjoyInputType = _vjoy.inputType
+            // _root.vjoyInputId = _vjoy.inputId
+            _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
+        }
     }
 
     RowLayout {
@@ -47,7 +63,7 @@ Item {
             Layout.minimumWidth: 150
             Layout.fillWidth: true
 
-            model: _vjoy.deviceModel
+            model: _vjoy.vjoyDevices
             currentIndex: _vjoy.vjoyIndex
 
             onActivated: (index) => { _vjoy.vjoyIndex = index }
@@ -59,7 +75,7 @@ Item {
             Layout.minimumWidth: 150
             Layout.fillWidth: true
 
-            model: _vjoy.inputModel
+            model: _vjoy.inputChoices
             currentIndex: _vjoy.inputIndex
 
             onActivated: (index) =>  { _vjoy.inputIndex = index }

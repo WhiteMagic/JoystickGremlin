@@ -190,6 +190,9 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
             "B": "BTN",
             "H": "HAT"
         }
+        if token[2] not in lookup:
+            return 0
+
         vjoy_icon = token[0]
         vjoy_id = int(token[1])
         input_type = lookup[token[2]]

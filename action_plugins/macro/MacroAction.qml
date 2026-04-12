@@ -444,9 +444,11 @@ Item {
 
                         validTypes: ["axis", "button", "hat"]
 
-                        onVjoyInputIdChanged: { modelData.inputId = vjoyInputId }
-                        onVjoyDeviceIdChanged: { modelData.vjoyId = vjoyDeviceId }
-                        onVjoyInputTypeChanged: { modelData.inputType = vjoyInputType }
+                        onSelectionChanged: (vjoyId, inputType, inputId) => {
+                            modelData.vjoyId = vjoyId
+                            modelData.inputType = inputType
+                            modelData.inputId = inputId
+                        }
 
                         Component.onCompleted: () => {
                             initialize(
