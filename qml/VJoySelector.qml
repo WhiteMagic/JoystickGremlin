@@ -37,16 +37,23 @@ Item {
         //     _root.vjoyInputType = _vjoy.inputType
         //     _root.vjoyInputId = _vjoy.inputId
         // }
-        onVjoyIndexChanged: () => {
-            _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
-        }
-            //  _root.vjoyDeviceId =  }
-        onInputIndexChanged: () => {
-            // Order matters, updating input id first results in the type
-            // possibly being uninitialized.
-            // _root.vjoyInputType = _vjoy.inputType
-            // _root.vjoyInputId = _vjoy.inputId
-            _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
+        // onVjoyIndexChanged: () => {
+        //     _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
+        // }
+        //     //  _root.vjoyDeviceId =  }
+        // onInputIndexChanged: () => {
+        //     // Order matters, updating input id first results in the type
+        //     // possibly being uninitialized.
+        //     // _root.vjoyInputType = _vjoy.inputType
+        //     // _root.vjoyInputId = _vjoy.inputId
+        //     _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
+        // }
+
+        onCurrentSelectionChanged: (vjoy_id, input_type, input_id) => {
+            console.log(vjoy_id + " " + input_type + " " + input_id)
+
+            _device.currentIndex = _device.find("vJoy Device " + vjoy_id)
+            _input.currentIndex = ""
         }
     }
 
@@ -64,7 +71,7 @@ Item {
             Layout.fillWidth: true
 
             model: _vjoy.vjoyDevices
-            currentIndex: _vjoy.vjoyIndex
+            // currentIndex: _vjoy.vjoyIndex
 
             onActivated: (index) => { _vjoy.vjoyIndex = index }
         }
@@ -76,7 +83,7 @@ Item {
             Layout.fillWidth: true
 
             model: _vjoy.inputChoices
-            currentIndex: _vjoy.inputIndex
+            // currentIndex: _vjoy.inputIndex
 
             onActivated: (index) =>  { _vjoy.inputIndex = index }
         }
