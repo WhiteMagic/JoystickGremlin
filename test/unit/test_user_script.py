@@ -198,6 +198,16 @@ class TestScript:
         var_from_xml.from_xml(xml)
         assert var_from_xml.value == value
 
+    def test_selection_variable_with_invalid_default_raises(self):
+        with pytest.raises(ValueError):
+            user_script.SelectionVariable(
+                "Invalid Default Var",
+                "Selection variable with invalid default index",
+                True,
+                ["option1", "option2"],
+                default_index=5,
+            )
+
     def test_selection_variable(self, script_for_test: user_script.Script, subtests):
         """Test selection variable properties."""
         var = script_for_test.get_variable("A selection variable")
@@ -215,6 +225,19 @@ class TestScript:
             var.value = "selection2"
             assert var.value == "selection2"
             assert var.is_valid()
+
+        with subtests.test("handles reduced options"):
+            var.value = "selection3"
+            var_xml = var.to_xml()
+            assert var_xml is not None
+            # Make the selection in XML too large.
+            for child in var_xml:
+                if child.tag == "property" and child.get("name") == "index":
+                    child.text = "4"
+            var.from_xml(var_xml)
+            # Should still be valid with existing value
+            assert var.is_valid()
+            assert var.value == "selection3"  # Previous valid value.
 
     @pytest.mark.parametrize("value", ["selection1", "selection2", "selection3"])
     def test_selection_variable_xml_transforms(

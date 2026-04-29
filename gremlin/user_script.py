@@ -1004,9 +1004,22 @@ class SelectionVariable(AbstractVariable):
     ) -> None:
         super().__init__(name, description, is_optional)
 
+        if default_index >= len(option_list):
+            raise ValueError(
+                f"Default index {default_index} is out of range for option list "
+                f"of length {len(option_list)} for selection variable '{name}'"
+            )
         self._option_list = option_list
-        self._current_index = default_index
+        self._set_current_index(default_index)
         self._initialize_from_registry()
+    
+    def _set_current_index(self, index: int) -> None:
+        if index < len(self._option_list):
+            self._current_index = index
+        else:
+            logging.getLogger("user_script").error(
+                f"Ignoring invalid index {index} for selection variable '{self.name}'"
+            )
 
     @property
     def options(self) -> list[str]:
@@ -1024,9 +1037,9 @@ class SelectionVariable(AbstractVariable):
         return True
 
     def _from_xml(self, node: ElementTree.Element) -> None:
-        self._current_index = util.read_property(
+        self._set_current_index(util.read_property(
             node, "index", PropertyType.Int
-        )
+        ))
 
     def _to_xml(self, node: ElementTree.Element) -> None:
         node.append(util.create_property_node(
@@ -1034,7 +1047,7 @@ class SelectionVariable(AbstractVariable):
         ))
 
     def _assign_value_from(self, other: SelectionVariable) -> None:
-        self._current_index = other._current_index
+        self._set_current_index(other._current_index)
 
 
 class StringVariable(AbstractVariable):
