@@ -11,9 +11,6 @@ import Gremlin.Device
 Item {
     id: _root
 
-    property int vjoyDeviceId
-    property string vjoyInputType
-    property int vjoyInputId
     property alias validTypes: _vjoy.validTypes
 
     signal selectionChanged(int deviceId, string inputType, int inputId)
@@ -26,34 +23,20 @@ Item {
         _vjoy.setInitialState(vjoy_id, input_type, input_id)
     }
 
+    function updateState() {
+        _vjoy.setState(_device.currentText, _input.currentText)
+    }
+
     VJoyDevices {
         id: _vjoy
 
-        // Persist UI changes to the model.
-        // onSelectionChanged: (vjoyId, inputType, inputId) => {
-        //     // Order matters, updating input id first results in the type
-        //     // possibly being uninitialized.
-        //     _root.vjoyDeviceId = _vjoy.vjoyId
-        //     _root.vjoyInputType = _vjoy.inputType
-        //     _root.vjoyInputId = _vjoy.inputId
-        // }
-        // onVjoyIndexChanged: () => {
-        //     _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
-        // }
-        //     //  _root.vjoyDeviceId =  }
-        // onInputIndexChanged: () => {
-        //     // Order matters, updating input id first results in the type
-        //     // possibly being uninitialized.
-        //     // _root.vjoyInputType = _vjoy.inputType
-        //     // _root.vjoyInputId = _vjoy.inputId
-        //     _root.selectionChanged(_vjoy.vjoyId, _vjoy.inputType, _vjoy.inputId)
-        // }
+        onCurrentSelectionChanged: (vjoyId, inputType, inputId) => {
+            _root.selectionChanged(vjoyId, inputType, inputId)
+        }
 
-        onCurrentSelectionChanged: (vjoy_id, input_type, input_id) => {
-            console.log(vjoy_id + " " + input_type + " " + input_id)
-
-            _device.currentIndex = _device.find("vJoy Device " + vjoy_id)
-            _input.currentIndex = ""
+        onCurrentValuesChanged: (vjoy_name, input_name) => {
+            _device.currentIndex = _device.find(vjoy_name)
+            _input.currentIndex = _input.find(input_name)
         }
     }
 
@@ -71,9 +54,8 @@ Item {
             Layout.fillWidth: true
 
             model: _vjoy.vjoyDevices
-            // currentIndex: _vjoy.vjoyIndex
 
-            onActivated: (index) => { _vjoy.vjoyIndex = index }
+            onActivated: (index) => { updateState() }
         }
 
         BetterComboBox {
@@ -83,9 +65,8 @@ Item {
             Layout.fillWidth: true
 
             model: _vjoy.inputChoices
-            // currentIndex: _vjoy.inputIndex
 
-            onActivated: (index) =>  { _vjoy.inputIndex = index }
+            onActivated: (index) =>  { updateState() }
         }
 
         HorizontalDivider {}

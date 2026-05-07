@@ -75,3 +75,26 @@ def input_to_ui_string(input_type: InputType, input_id: int | ScanCode) -> str:
             InputType.to_string(input_type).capitalize(),
             input_id
         )
+
+
+def parse_ui_string(ui_str: str) -> tuple[InputType, int]:
+    """Parses a UI string into proper Python types.
+
+    Args:
+        ui_str: String from the UI to parse.
+
+    Returns:
+        Tuple containing the InputType and index/identifier of it.
+    """
+    if ui_str.startswith("Button") or ui_str.startswith("Hat"):
+        parts = ui_str.split(" ")
+        if parts[0] == "Button":
+            return InputType.JoystickButton, int(parts[1])
+        elif parts[0] == "Hat":
+            return InputType.JoystickHat, int(parts[1])
+        else:
+            raise error.GremlinError("Invalid input string: {}".format(ui_str))
+    try:
+        return InputType.JoystickAxis, AxisNames.to_enum(ui_str).value
+    except error.GremlinError:
+        raise error.GremlinError("Invalid input string: {}".format(ui_str))
