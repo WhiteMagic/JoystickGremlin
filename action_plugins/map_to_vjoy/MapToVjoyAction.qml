@@ -37,7 +37,6 @@ Item {
             }
 
             Component.onCompleted: {
-                console.log(_root.action.vjoyDeviceId, _root.action.actionBehavior, _root.action.vjoyInputId)
                 initialize(
                     _root.action.vjoyDeviceId,
                     _root.action.actionBehavior,

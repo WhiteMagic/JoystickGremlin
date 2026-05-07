@@ -1123,6 +1123,8 @@ def first_available_input(
     }
     for device in devices:
         for input_type in input_types:
+            if input_type not in input_counts:
+                continue
             if input_counts[input_type](device) > 0:
                 if input_type == InputType.JoystickAxis:
                     return (device, input_type, device.axis_map[0].axis_index)

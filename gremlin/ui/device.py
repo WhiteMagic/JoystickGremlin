@@ -17,8 +17,6 @@ from typing import (
     List,
     Optional,
     Tuple,
-    TypeVar,
-    TYPE_CHECKING,
 )
 
 from PySide6 import (
@@ -974,7 +972,6 @@ class VJoyDevices(QtCore.QObject):
             return
 
         self._transfer_current_selection_if_possible(new_selection)
-        # self._update_and_emit_state(new_selection)
 
     @QtCore.Slot(int, str, int)
     def setInitialState(
@@ -991,7 +988,7 @@ class VJoyDevices(QtCore.QObject):
 
         Args:
             vjoy_id: id of the vjoy device
-            input_type: type of input being selected by the input_id
+            input_type_str: type of input being selected by the input_id
             input_id: id of the input item
         """
         # Attempt to find the vjoy_index corresponding to the provided vJoy id.
@@ -1036,9 +1033,10 @@ class VJoyDevices(QtCore.QObject):
                             input_id
                         )
                     )
-        self.choicesChanged.emit()
         if self._current_selection.input_type != InputType.Invalid:
             self._transfer_current_selection_if_possible(self._current_selection)
+        else:
+            self.choicesChanged.emit()
 
     def _transfer_current_selection_if_possible(
         self,
@@ -1124,7 +1122,7 @@ class VJoyDevices(QtCore.QObject):
             vjoy_id = int(vjoy_str.split(" ")[-1])
             input_data = common.parse_ui_string(input_str)
             return VJoyDevices.InputOption(vjoy_id, input_data[0], input_data[1])
-        except (ValueError, IndexError):
+        except (ValueError, IndexError, GremlinError):
             return VJoyDevices.InputOption(0, InputType.Invalid, 0)
 
     def _get_device_model(self) -> list[str]:
