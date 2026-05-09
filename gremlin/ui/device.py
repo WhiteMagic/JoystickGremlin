@@ -992,11 +992,14 @@ class VJoyDevices(QtCore.QObject):
             input_id: id of the input item
         """
         # Attempt to find the vjoy_index corresponding to the provided vJoy id.
-        self._transfer_current_selection_if_possible(VJoyDevices.InputOption(
-            vjoy_id,
-            InputType.to_enum(input_type_str),
-            input_id
-        ))
+        self._transfer_current_selection_if_possible(
+            VJoyDevices.InputOption(
+                vjoy_id,
+                InputType.to_enum(input_type_str),
+                input_id
+            ),
+            False
+        )
 
     def _update_choices(self) -> None:
         """Updates the cached input item information."""
@@ -1040,7 +1043,8 @@ class VJoyDevices(QtCore.QObject):
 
     def _transfer_current_selection_if_possible(
         self,
-        selection: VJoyDevices.InputOption
+        selection: VJoyDevices.InputOption,
+        allow_invalid: bool = True
     ) -> None:
         # As the choices may have changed we need to first check if the
         # current selection is still available. If it is not an attempt is
@@ -1099,7 +1103,8 @@ class VJoyDevices(QtCore.QObject):
                     choice[2]
                 )
 
-        self._update_and_emit_state(new_selection)
+        if allow_invalid or new_selection.input_type != InputType.Invalid:
+            self._update_and_emit_state(new_selection)
 
     def _update_and_emit_state(self, selection: VJoyDevices.InputOption) -> None:
         # Determine if the input selection needs to update itself.
