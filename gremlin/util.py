@@ -2,6 +2,7 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from collections.abc import Callable
 import ctypes
 import importlib
 import json
@@ -15,7 +16,6 @@ import threading
 import time
 from typing import (
     Any,
-    Callable,
     TypeVar
 )
 import urllib.request
