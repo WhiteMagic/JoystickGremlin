@@ -16,10 +16,7 @@ Item {
     property string deviceGuid
     property string title
 
-    function compute_height(available_width)
-    {
-        return _list.height + _header.height + 10
-    }
+    implicitHeight: _content.implicitHeight
 
     function format_percentage(value)
     {
@@ -33,6 +30,8 @@ Item {
     }
 
     ColumnLayout {
+        id: _content
+
         anchors.left: parent.left
         anchors.right: parent.right
 

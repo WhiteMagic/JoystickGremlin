@@ -27,10 +27,7 @@ Item {
         "#9467bd",
     ]
 
-    function compute_height(available_width)
-    {
-        return _chart.height + _header.height
-    }
+    implicitHeight: _content.implicitHeight
 
     DeviceAxisSeries {
         id: _axis_series
@@ -64,6 +61,8 @@ Item {
     }
 
     ColumnLayout {
+        id: _content
+
         anchors.left: parent.left
         anchors.right: parent.right
 

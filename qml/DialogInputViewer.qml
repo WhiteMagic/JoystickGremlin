@@ -45,25 +45,19 @@ Window {
         deviceType: "all"
     }
 
-    function recompute_height() {
-        for(let i=0; i<_stateDisplay.children.length; ++i) {
-            let elem = _stateDisplay.children[i]
-            elem.implicitHeight = elem.compute_height(_stateDisplay.width)
-        }
-    }
-
     function create_widget(qml_path, guid, name) {
         let component = Qt.createComponent(Qt.resolvedUrl(qml_path))
-        let widget = component.createObject(
-            _stateDisplay,
-            {
-                deviceGuid: guid,
-                title: name
-            }
-        )
+        if (component.status == Component.Ready) {
+            var widget = component.createObject(
+                _stateDisplay,
+                {
+                    deviceGuid: guid,
+                    title: name,
+                    "Layout.fillWidth": true
+                }
+            );
+        }
 
-        widget.Layout.fillWidth = true
-        recompute_height()
         return widget
     }
 
@@ -76,7 +70,7 @@ Window {
             Layout.alignment: Qt.AlignTop
             Layout.rightMargin: 10
             Layout.minimumWidth: 250
-            Layout.fillWidth: false
+            Layout.maximumWidth: 400
             Layout.fillHeight: true
 
             ColumnLayout {
@@ -91,14 +85,14 @@ Window {
 
         // Dynamic scrollview that contains dynamically generated widgets.
         ScrollView  {
-            id: _dynamic_scroll
+            id: _dynamicScroll
 
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             Component.onCompleted: () => {
-                _dynamic_scroll.contentItem.boundsMovement = Flickable.StopAtBounds
-                _dynamic_scroll.contentItem.boundsBehavior = Flickable.StopAtBounds
+                _dynamicScroll.contentItem.boundsMovement = Flickable.StopAtBounds
+                _dynamicScroll.contentItem.boundsBehavior = Flickable.StopAtBounds
             }
 
             ColumnLayout {
@@ -106,8 +100,6 @@ Window {
 
                 anchors.left: parent.left
                 anchors.right: parent.right
-
-                onWidthChanged: () => { recompute_height() }
             }
         }
     }

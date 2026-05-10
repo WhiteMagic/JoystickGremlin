@@ -16,6 +16,8 @@ Item {
     property string deviceGuid
     property string title
 
+    implicitHeight: _content.implicitHeight
+
     function computeButtonHeight() {
         let columns =  Math.floor(
             Math.max(_button_grid.width, _button_grid.Layout.minimumWidth) /
@@ -25,12 +27,8 @@ Item {
         return rows * _button_grid.cellHeight
     }
 
-    function compute_height(available_width) {
-        let hat_rows = Math.ceil(_hat_grid.count / 2)
-        return Math.max(
-            computeButtonHeight(),
-            hat_rows * _hat_grid.cellHeight
-         ) + _header.height
+    function computeHatHeight(cellHeight) {
+        return Math.ceil(_hat_grid.count / 2) * cellHeight
     }
 
     DeviceButtonState {
@@ -46,6 +44,8 @@ Item {
     }
 
     ColumnLayout {
+        id: _content
+
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -110,7 +110,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 200
                 Layout.preferredWidth: 200
-                Layout.preferredHeight: _root.implicitHeight
+                Layout.minimumHeight: computeHatHeight(cellHeight)
                 Layout.alignment: Qt.AlignTop
 
                 boundsMovement: Flickable.StopAtBounds

@@ -1205,7 +1205,7 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         self._device_uuid = None
         self._state = []
 
-    def _event_callback(self, event: event_handler.Event):
+    def _event_callback(self, event: event_handler.Event) -> None:
         if event.device_guid != self._device_uuid:
             return
 
@@ -1215,6 +1215,9 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
         raise GremlinError(
             "AbstractDeviceState._event_handler_impl not implemented"
         )
+
+    def _get_guid(self) -> str:
+        return str(self._device.device_guid) if self._device is not None else ""
 
     def _set_guid(self, guid: str) -> None:
         if self._device is not None and guid == str(self._device.device_guid):
@@ -1251,6 +1254,7 @@ class AbstractDeviceState(QtCore.QAbstractListModel):
 
     guid = Property(
         str,
+        fget=_get_guid,
         fset=_set_guid,
         notify=deviceChanged
     )
@@ -1340,6 +1344,9 @@ class DeviceAxisSeries(QtCore.QObject):
         self._identifier_map = {}
         self._window_size = 20
 
+    def _get_guid(self) -> str:
+        return str(self._device.device_guid) if self._device is not None else ""
+
     def _set_guid(self, guid: str) -> None:
         if self._device is not None and guid == str(self._device.device_guid):
             return
@@ -1415,6 +1422,7 @@ class DeviceAxisSeries(QtCore.QObject):
 
     guid = Property(
         str,
+        fget=_get_guid,
         fset=_set_guid,
         notify=deviceChanged
     )
