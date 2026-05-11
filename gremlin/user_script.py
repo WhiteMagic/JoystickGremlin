@@ -1004,8 +1004,8 @@ class SelectionVariable(AbstractVariable):
     ) -> None:
         super().__init__(name, description, is_optional)
 
-        if default_index >= len(option_list):
-            raise ValueError(
+        if not (0 <= default_index < len(option_list)):
+            raise error.PluginError(
                 f"Default index {default_index} is out of range for option list "
                 f"of length {len(option_list)} for selection variable '{name}'"
             )
@@ -1014,10 +1014,10 @@ class SelectionVariable(AbstractVariable):
         self._initialize_from_registry()
     
     def _set_current_index(self, index: int) -> None:
-        if index < len(self._option_list):
+        if 0 <= index < len(self._option_list):
             self._current_index = index
         else:
-            logging.getLogger("user_script").error(
+            logging.getLogger("user_script").warning(
                 f"Ignoring invalid index {index} for selection variable '{self.name}'"
             )
 

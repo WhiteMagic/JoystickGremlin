@@ -6,7 +6,7 @@ import pathlib
 import pytest
 import uuid
 
-from gremlin import profile, shared_state, types, user_script
+from gremlin import error, profile, shared_state, types, user_script
 from test.unit.conftest import get_fake_device_guid
 
 
@@ -198,15 +198,25 @@ class TestScript:
         var_from_xml.from_xml(xml)
         assert var_from_xml.value == value
 
-    def test_selection_variable_with_invalid_default_raises(self):
-        with pytest.raises(ValueError):
-            user_script.SelectionVariable(
-                "Invalid Default Var",
-                "Selection variable with invalid default index",
-                True,
-                ["option1", "option2"],
-                default_index=5,
-            )
+    def test_selection_variable_with_invalid_default_raises(self, subtests):
+        with subtests.test("default too large"):
+            with pytest.raises(error.PluginError):
+                user_script.SelectionVariable(
+                    "Var With Default Index Too Large",
+                    "Selection variable with invalid default index",
+                    True,
+                    ["option1", "option2"],
+                    default_index=5,
+                )
+        with subtests.test("negative default index not allowed"):
+            with pytest.raises(error.PluginError):
+                user_script.SelectionVariable(
+                    "Var With Default Index Negative",
+                    "Selection variable with invalid default index",
+                    True,
+                    ["option1", "option2"],
+                    default_index=-1,
+                )
 
     def test_selection_variable(self, script_for_test: user_script.Script, subtests):
         """Test selection variable properties."""
