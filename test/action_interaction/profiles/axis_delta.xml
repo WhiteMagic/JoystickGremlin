@@ -1,0 +1,232 @@
+<?xml version="1.0" ?>
+<profile version="14">
+    <inputs>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>axis</input-type>
+            <mode>Default</mode>
+            <input-id>1</input-id>
+            <action-configuration>
+                <root-action>ffffffff-0000-4000-8000-000000000001</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+    <logical-device>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>1</input-id>
+            <label>Input Axis 1</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>2</input-id>
+            <label>Input Axis 2</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>3</input-id>
+            <label>Input Axis 3</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>4</input-id>
+            <label>Input Axis 4</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>11</input-id>
+            <label>Output Axis 1</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>12</input-id>
+            <label>Output Axis 2</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>13</input-id>
+            <label>Output Axis 3</label>
+        </input>
+        <input>
+            <input-type>axis</input-type>
+            <input-id>14</input-id>
+            <label>Output Axis 4</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>1</input-id>
+            <label>Input Button 1</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>2</input-id>
+            <label>Input Button 2</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>3</input-id>
+            <label>Input Button 3</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>4</input-id>
+            <label>Input Button 4</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>11</input-id>
+            <label>Output Button 1</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>12</input-id>
+            <label>Output Button 2</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>13</input-id>
+            <label>Output Button 3</label>
+        </input>
+        <input>
+            <input-type>button</input-type>
+            <input-id>14</input-id>
+            <label>Output Button 4</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>1</input-id>
+            <label>Input Hat 1</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>2</input-id>
+            <label>Input Hat 2</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>3</input-id>
+            <label>Input Hat 3</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>4</input-id>
+            <label>Input Hat 4</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>11</input-id>
+            <label>Output Hat 1</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>12</input-id>
+            <label>Output Hat 2</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>13</input-id>
+            <label>Output Hat 3</label>
+        </input>
+        <input>
+            <input-type>hat</input-type>
+            <input-id>14</input-id>
+            <label>Output Hat 4</label>
+        </input>
+    </logical-device>
+    <library>
+        <!-- map positive trigger → OUT_BUTTON_1 -->
+        <action id="ffffffff-0000-4000-8000-000000000002" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>11</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+
+        <!-- map negative trigger → OUT_BUTTON_2 -->
+        <action id="ffffffff-0000-4000-8000-000000000003" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>12</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+
+        <!-- axis-delta action: threshold=0.3 -->
+        <action id="ffffffff-0000-4000-8000-000000000004" type="axis-delta">
+            <property type="float">
+                <name>threshold</name>
+                <value>0.3</value>
+            </property>
+            <positive-actions>
+                <action-id>ffffffff-0000-4000-8000-000000000002</action-id>
+            </positive-actions>
+            <negative-actions>
+                <action-id>ffffffff-0000-4000-8000-000000000003</action-id>
+            </negative-actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Axis Delta</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <!-- root for IN_AXIS_1 -->
+        <action id="ffffffff-0000-4000-8000-000000000001" type="root">
+            <actions>
+                <action-id>ffffffff-0000-4000-8000-000000000004</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+    </library>
+    <modes>
+        <mode>Default</mode>
+    </modes>
+    <scripts/>
+    <devices/>
+</profile>

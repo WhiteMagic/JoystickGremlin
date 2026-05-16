@@ -1,0 +1,60 @@
+<profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+
+    <library>
+        <action id="a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d" type="axis-delta">
+            <property type="float">
+                <name>threshold</name>
+                <value>0.25</value>
+            </property>
+            <positive-actions>
+                <action-id>11111111-2222-4333-8444-555555555555</action-id>
+            </positive-actions>
+            <negative-actions>
+                <action-id>aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee</action-id>
+            </negative-actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="11111111-2222-4333-8444-555555555555" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>positive</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" type="description">
+            <property type="string">
+                <name>description</name>
+                <value>negative</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+    </library>
+
+</profile>
