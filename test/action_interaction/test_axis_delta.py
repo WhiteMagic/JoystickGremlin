@@ -14,7 +14,11 @@ from .conftest import (
     EventSpec,
     JoystickGremlinBot,
 )
-from .input_definitions import *
+from .input_definitions import (
+    IN_AXIS_1,
+    OUT_BUTTON_1,
+    OUT_BUTTON_2,
+)
 
 
 def test_positive_trigger(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
