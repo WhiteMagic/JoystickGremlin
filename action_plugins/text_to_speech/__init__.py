@@ -1,13 +1,13 @@
-﻿# -*- coding: utf-8; -*-
+# -*- coding: utf-8; -*-
 
 # SPDX-License-Identifier: GPL-3.0-only
 
 from __future__ import annotations
 
 from typing import (
-    override,
-    List,
     TYPE_CHECKING,
+    List,
+    override,
 )
 from xml.etree import ElementTree
 
@@ -55,16 +55,15 @@ def _get_engine() -> QTextToSpeech:
 
 
 class TextToSpeechFunctor(AbstractFunctor):
-
     def __init__(self, action: TextToSpeechData) -> None:
         super().__init__(action)
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if not self._should_execute(value):
             return
@@ -79,7 +78,6 @@ class TextToSpeechFunctor(AbstractFunctor):
 
 
 class TextToSpeechModel(ActionModel):
-
     textChanged = QtCore.Signal()
     interruptRunningChanged = QtCore.Signal()
     playbackRateChanged = QtCore.Signal()
@@ -87,19 +85,22 @@ class TextToSpeechModel(ActionModel):
     playbackPitchChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:text_to_speech/TextToSpeechAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile(
+                "core_plugins:text_to_speech/TextToSpeechAction.qml"
+            ).fileName()
+        )
 
     def _action_behavior(self) -> str:
         return self._binding_model.get_action_model_by_sidx(
@@ -146,44 +147,38 @@ class TextToSpeechModel(ActionModel):
             self._data.playback_pitch = value
             self.playbackPitchChanged.emit()
 
-    text = QtCore.Property(
-        str,
-        fget=_get_text,
-        fset=_set_text,
-        notify=textChanged
-    )
+    text = QtCore.Property(str, fget=_get_text, fset=_set_text, notify=textChanged)
 
     interruptRunning = QtCore.Property(
         bool,
         fget=_get_interrupt_running,
         fset=_set_interrupt_running,
-        notify=interruptRunningChanged
+        notify=interruptRunningChanged,
     )
 
     playbackRate = QtCore.Property(
         int,
         fget=_get_playback_rate,
         fset=_set_playback_rate,
-        notify=playbackRateChanged
+        notify=playbackRateChanged,
     )
 
     playbackVolume = QtCore.Property(
         int,
         fget=_get_playback_volume,
         fset=_set_playback_volume,
-        notify=playbackVolumeChanged
+        notify=playbackVolumeChanged,
     )
 
     playbackPitch = QtCore.Property(
         int,
         fget=_get_playback_pitch,
         fset=_set_playback_pitch,
-        notify=playbackPitchChanged
+        notify=playbackPitchChanged,
     )
 
 
 class TextToSpeechData(AbstractActionData):
-
     version = 1
     name = "Text to Speech"
     tag = "text-to-speech"
@@ -192,17 +187,10 @@ class TextToSpeechData(AbstractActionData):
     functor = TextToSpeechFunctor
     model = TextToSpeechModel
 
-    properties = (
-        ActionProperty.ActivateOnPress,
-    )
-    input_types = (
-        InputType.JoystickButton,
-    )
+    properties = (ActionProperty.ActivateOnPress,)
+    input_types = (InputType.JoystickButton,)
 
-    def __init__(
-            self,
-            behavior_type: InputType = InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.text: str = ""
@@ -218,9 +206,7 @@ class TextToSpeechData(AbstractActionData):
         self.interrupt_running = util.read_property(
             node, "interrupt-running", PropertyType.Bool
         )
-        self.playback_rate = util.read_property(
-            node, "playback-rate", PropertyType.Int
-        )
+        self.playback_rate = util.read_property(node, "playback-rate", PropertyType.Int)
         self.playback_volume = util.read_property(
             node, "playback-volume", PropertyType.Int
         )
@@ -231,22 +217,26 @@ class TextToSpeechData(AbstractActionData):
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(TextToSpeechData.tag, self._id)
-        util.append_property_nodes(node, [
-            ["text", self.text, PropertyType.String],
-            ["interrupt-running", self.interrupt_running, PropertyType.Bool],
-            ["playback-rate", self.playback_rate, PropertyType.Int],
-            ["playback-volume", self.playback_volume, PropertyType.Int],
-            ["playback-pitch", self.playback_pitch, PropertyType.Int],
-        ])
+        util.append_property_nodes(
+            node,
+            [
+                ["text", self.text, PropertyType.String],
+                ["interrupt-running", self.interrupt_running, PropertyType.Bool],
+                ["playback-rate", self.playback_rate, PropertyType.Int],
+                ["playback-volume", self.playback_volume, PropertyType.Int],
+                ["playback-pitch", self.playback_pitch, PropertyType.Int],
+            ],
+        )
         return node
 
     @override
     def user_feedback(self) -> List[UserFeedback]:
         if not self.text.strip():
-            return [UserFeedback(
-                UserFeedback.FeedbackType.Error,
-                "Text field must not be empty."
-            )]
+            return [
+                UserFeedback(
+                    UserFeedback.FeedbackType.Error, "Text field must not be empty."
+                )
+            ]
         return []
 
     @override
@@ -259,9 +249,7 @@ class TextToSpeechData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 
@@ -274,7 +262,7 @@ Configuration().register(
     "",
     "Name of the TTS voice to use for all Text to Speech actions.",
     {},
-    True
+    True,
 )
 
 create = TextToSpeechData
