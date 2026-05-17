@@ -27,8 +27,6 @@ Item {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: 150
-
                 text: "Text to speak"
             }
 
@@ -70,36 +68,10 @@ Item {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: 150
-
-                text: "Rate"
-            }
-
-            JGSpinBox {
-                Layout.preferredWidth: 100
-
-                value: _root.action !== null ? _root.action.playbackRate : 0
-                from: -10
-                to: 10
-
-                onValueModified: () => {
-                    if (_root.action !== null) {
-                        _root.action.playbackRate = value
-                    }
-                }
-            }
-        }
-
-        RowLayout {
-            Label {
-                Layout.preferredWidth: 150
-
                 text: "Volume"
             }
 
             JGSpinBox {
-                Layout.preferredWidth: 100
-
                 value: _root.action !== null ? _root.action.playbackVolume : 100
                 from: 0
                 to: 100
@@ -110,18 +82,32 @@ Item {
                     }
                 }
             }
-        }
 
-        RowLayout {
+            LayoutHorizontalSpacer {}
+
             Label {
-                Layout.preferredWidth: 150
+                text: "Rate"
+            }
 
+            JGSpinBox {
+                value: _root.action !== null ? _root.action.playbackRate : 0
+                from: -10
+                to: 10
+
+                onValueModified: () => {
+                    if (_root.action !== null) {
+                        _root.action.playbackRate = value
+                    }
+                }
+            }
+
+            LayoutHorizontalSpacer {}
+
+            Label {
                 text: "Pitch"
             }
 
             JGSpinBox {
-                Layout.preferredWidth: 100
-
                 value: _root.action !== null ? _root.action.playbackPitch : 0
                 from: -10
                 to: 10

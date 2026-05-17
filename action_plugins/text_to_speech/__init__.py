@@ -182,7 +182,7 @@ class TextToSpeechData(AbstractActionData):
     version = 1
     name = "Text to Speech"
     tag = "text-to-speech"
-    icon = ""
+    icon = "\uF484"
 
     functor = TextToSpeechFunctor
     model = TextToSpeechModel
