@@ -7,17 +7,17 @@
         <name>interrupt-running</name>
         <value>true</value>
     </property>
-    <property type="int">
+    <property type="float">
         <name>playback-rate</name>
-        <value>2</value>
+        <value>0.2</value>
     </property>
-    <property type="int">
+    <property type="float">
         <name>playback-volume</name>
-        <value>80</value>
+        <value>0.8</value>
     </property>
-    <property type="int">
+    <property type="float">
         <name>playback-pitch</name>
-        <value>-3</value>
+        <value>-0.3</value>
     </property>
     <property type="string">
         <name>action-label</name>

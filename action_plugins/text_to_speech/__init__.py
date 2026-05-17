@@ -71,9 +71,9 @@ class TextToSpeechFunctor(AbstractFunctor):
         engine = _get_engine()
         if self.data.interrupt_running:
             engine.stop()
-        engine.setRate(self.data.playback_rate / 10.0)
-        engine.setVolume(self.data.playback_volume / 100.0)
-        engine.setPitch(self.data.playback_pitch / 10.0)
+        engine.setRate(self.data.playback_rate)
+        engine.setVolume(self.data.playback_volume)
+        engine.setPitch(self.data.playback_pitch)
         engine.say(self.data.text)
 
 
@@ -123,26 +123,26 @@ class TextToSpeechModel(ActionModel):
             self._data.interrupt_running = value
             self.interruptRunningChanged.emit()
 
-    def _get_playback_rate(self) -> int:
+    def _get_playback_rate(self) -> float:
         return self._data.playback_rate
 
-    def _set_playback_rate(self, value: int) -> None:
+    def _set_playback_rate(self, value: float) -> None:
         if value != self._data.playback_rate:
             self._data.playback_rate = value
             self.playbackRateChanged.emit()
 
-    def _get_playback_volume(self) -> int:
+    def _get_playback_volume(self) -> float:
         return self._data.playback_volume
 
-    def _set_playback_volume(self, value: int) -> None:
+    def _set_playback_volume(self, value: float) -> None:
         if value != self._data.playback_volume:
             self._data.playback_volume = value
             self.playbackVolumeChanged.emit()
 
-    def _get_playback_pitch(self) -> int:
+    def _get_playback_pitch(self) -> float:
         return self._data.playback_pitch
 
-    def _set_playback_pitch(self, value: int) -> None:
+    def _set_playback_pitch(self, value: float) -> None:
         if value != self._data.playback_pitch:
             self._data.playback_pitch = value
             self.playbackPitchChanged.emit()
@@ -157,21 +157,21 @@ class TextToSpeechModel(ActionModel):
     )
 
     playbackRate = QtCore.Property(
-        int,
+        float,
         fget=_get_playback_rate,
         fset=_set_playback_rate,
         notify=playbackRateChanged,
     )
 
     playbackVolume = QtCore.Property(
-        int,
+        float,
         fget=_get_playback_volume,
         fset=_set_playback_volume,
         notify=playbackVolumeChanged,
     )
 
     playbackPitch = QtCore.Property(
-        int,
+        float,
         fget=_get_playback_pitch,
         fset=_set_playback_pitch,
         notify=playbackPitchChanged,
@@ -182,7 +182,7 @@ class TextToSpeechData(AbstractActionData):
     version = 1
     name = "Text to Speech"
     tag = "text-to-speech"
-    icon = "\uF484"
+    icon = "\uf484"
 
     functor = TextToSpeechFunctor
     model = TextToSpeechModel
@@ -195,9 +195,9 @@ class TextToSpeechData(AbstractActionData):
 
         self.text: str = ""
         self.interrupt_running: bool = True
-        self.playback_rate: int = 0
-        self.playback_volume: int = 100
-        self.playback_pitch: int = 0
+        self.playback_rate: float = 0.0
+        self.playback_volume: float = 1.0
+        self.playback_pitch: float = 0.0
 
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
@@ -206,12 +206,14 @@ class TextToSpeechData(AbstractActionData):
         self.interrupt_running = util.read_property(
             node, "interrupt-running", PropertyType.Bool
         )
-        self.playback_rate = util.read_property(node, "playback-rate", PropertyType.Int)
+        self.playback_rate = util.read_property(
+            node, "playback-rate", PropertyType.Float
+        )
         self.playback_volume = util.read_property(
-            node, "playback-volume", PropertyType.Int
+            node, "playback-volume", PropertyType.Float
         )
         self.playback_pitch = util.read_property(
-            node, "playback-pitch", PropertyType.Int
+            node, "playback-pitch", PropertyType.Float
         )
 
     @override
@@ -222,9 +224,9 @@ class TextToSpeechData(AbstractActionData):
             [
                 ["text", self.text, PropertyType.String],
                 ["interrupt-running", self.interrupt_running, PropertyType.Bool],
-                ["playback-rate", self.playback_rate, PropertyType.Int],
-                ["playback-volume", self.playback_volume, PropertyType.Int],
-                ["playback-pitch", self.playback_pitch, PropertyType.Int],
+                ["playback-rate", self.playback_rate, PropertyType.Float],
+                ["playback-volume", self.playback_volume, PropertyType.Float],
+                ["playback-pitch", self.playback_pitch, PropertyType.Float],
             ],
         )
         return node

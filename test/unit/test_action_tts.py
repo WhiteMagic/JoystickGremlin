@@ -6,6 +6,7 @@ import sys
 sys.path.append(".")
 
 import pathlib
+import pytest
 import uuid
 from xml.etree import ElementTree
 
@@ -22,9 +23,9 @@ def test_ctor() -> None:
 
     assert a.text == ""
     assert a.interrupt_running is True
-    assert a.playback_rate == 0
-    assert a.playback_volume == 100
-    assert a.playback_pitch == 0
+    assert a.playback_rate == 0.0
+    assert a.playback_volume == 1.0
+    assert a.playback_pitch == 0.0
 
 
 def test_from_xml(xml_dir: pathlib.Path) -> None:
@@ -38,9 +39,9 @@ def test_from_xml(xml_dir: pathlib.Path) -> None:
     assert a._id == _TTS_UUID
     assert a.text == "Gear up"
     assert a.interrupt_running is True
-    assert a.playback_rate == 2
-    assert a.playback_volume == 80
-    assert a.playback_pitch == -3
+    assert a.playback_rate == pytest.approx(0.2)
+    assert a.playback_volume == pytest.approx(0.8)
+    assert a.playback_pitch == pytest.approx(-0.3)
 
 
 def test_to_xml() -> None:
@@ -48,9 +49,9 @@ def test_to_xml() -> None:
     a._id = _TTS_UUID
     a.text = "Gear up"
     a.interrupt_running = True
-    a.playback_rate = 2
-    a.playback_volume = 80
-    a.playback_pitch = -3
+    a.playback_rate = 0.2
+    a.playback_volume = 0.8
+    a.playback_pitch = -0.3
 
     node = a._to_xml()
 
@@ -58,9 +59,9 @@ def test_to_xml() -> None:
     assert node.attrib["id"] == str(_TTS_UUID)
     assert node.find("./property/name[.='text']/../value").text == "Gear up"
     assert node.find("./property/name[.='interrupt-running']/../value").text == "True"
-    assert node.find("./property/name[.='playback-rate']/../value").text == "2"
-    assert node.find("./property/name[.='playback-volume']/../value").text == "80"
-    assert node.find("./property/name[.='playback-pitch']/../value").text == "-3"
+    assert node.find("./property/name[.='playback-rate']/../value").text == "0.2"
+    assert node.find("./property/name[.='playback-volume']/../value").text == "0.8"
+    assert node.find("./property/name[.='playback-pitch']/../value").text == "-0.3"
 
 
 def test_roundtrip(xml_dir: pathlib.Path) -> None:

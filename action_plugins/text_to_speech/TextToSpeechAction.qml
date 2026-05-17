@@ -71,14 +71,15 @@ Item {
                 text: "Volume"
             }
 
-            JGSpinBox {
-                value: _root.action !== null ? _root.action.playbackVolume : 100
-                from: 0
-                to: 100
+            FloatSpinBox {
+                value: _root.action !== null ? _root.action.playbackVolume : 1.0
+                minValue: 0.0
+                maxValue: 1.0
+                stepSize: 0.05
 
-                onValueModified: () => {
+                onValueModified: (v) => {
                     if (_root.action !== null) {
-                        _root.action.playbackVolume = value
+                        _root.action.playbackVolume = v
                     }
                 }
             }
@@ -89,14 +90,15 @@ Item {
                 text: "Rate"
             }
 
-            JGSpinBox {
-                value: _root.action !== null ? _root.action.playbackRate : 0
-                from: -10
-                to: 10
+            FloatSpinBox {
+                value: _root.action !== null ? _root.action.playbackRate : 0.0
+                minValue: -1.0
+                maxValue: 1.0
+                stepSize: 0.1
 
-                onValueModified: () => {
+                onValueModified: (v) => {
                     if (_root.action !== null) {
-                        _root.action.playbackRate = value
+                        _root.action.playbackRate = v
                     }
                 }
             }
@@ -107,14 +109,15 @@ Item {
                 text: "Pitch"
             }
 
-            JGSpinBox {
-                value: _root.action !== null ? _root.action.playbackPitch : 0
-                from: -10
-                to: 10
+            FloatSpinBox {
+                value: _root.action !== null ? _root.action.playbackPitch : 0.0
+                minValue: -1.0
+                maxValue: 1.0
+                stepSize: 0.1
 
-                onValueModified: () => {
+                onValueModified: (v) => {
                     if (_root.action !== null) {
-                        _root.action.playbackPitch = value
+                        _root.action.playbackPitch = v
                     }
                 }
             }
