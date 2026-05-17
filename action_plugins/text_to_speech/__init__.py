@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from string import Template
 from typing import (
     TYPE_CHECKING,
     List,
@@ -14,7 +15,11 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 from PySide6.QtTextToSpeech import QTextToSpeech
 
-from gremlin import event_handler, util
+from gremlin import (
+    event_handler,
+    mode_manager,
+    util,
+)
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
@@ -74,7 +79,10 @@ class TextToSpeechFunctor(AbstractFunctor):
         engine.setRate(self.data.playback_rate)
         engine.setVolume(self.data.playback_volume)
         engine.setPitch(self.data.playback_pitch)
-        engine.say(self.data.text)
+        substitutions = {
+            "current_mode": mode_manager.ModeManager().current.name,
+        }
+        engine.say(Template(self.data.text).safe_substitute(substitutions))
 
 
 class TextToSpeechModel(ActionModel):

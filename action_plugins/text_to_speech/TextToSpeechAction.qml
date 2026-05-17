@@ -26,29 +26,16 @@ Item {
         anchors.right: parent.right
 
         RowLayout {
-            Label {
-                text: "Text to speak"
-            }
-
-            ScrollView {
+            TextArea {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 80
+                Layout.rightMargin: 10
 
-                ScrollBar.vertical.interactive: true
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                wrapMode: TextArea.Wrap
+                placeholderText: "Enter text to speak"
+                text: _root.action !== null ? _root.action.text : ""
+                selectByMouse: true
 
-                TextArea {
-                    wrapMode: TextArea.Wrap
-                    placeholderText: "Enter text to speak"
-                    text: _root.action !== null ? _root.action.text : ""
-                    selectByMouse: true
-
-                    onTextChanged: () => {
-                        if (_root.action !== null) {
-                            _root.action.text = text
-                        }
-                    }
-                }
+                onTextChanged: () => { _root.action.text = text }
             }
         }
 
@@ -58,16 +45,14 @@ Item {
 
                 checked: _root.action !== null ? _root.action.interruptRunning : false
 
-                onToggled: () => {
-                    if (_root.action !== null) {
-                        _root.action.interruptRunning = checked
-                    }
-                }
+                onToggled: () => { _root.action.interruptRunning = checked }
             }
-        }
 
-        RowLayout {
+            LayoutHorizontalSpacer {}
+
             Label {
+                Layout.rightMargin: 5
+
                 text: "Volume"
             }
 
@@ -77,16 +62,14 @@ Item {
                 maxValue: 1.0
                 stepSize: 0.05
 
-                onValueModified: (v) => {
-                    if (_root.action !== null) {
-                        _root.action.playbackVolume = v
-                    }
-                }
+                onValueModified: (val) => { _root.action.playbackVolume = val }
             }
 
             LayoutHorizontalSpacer {}
 
             Label {
+                Layout.rightMargin: 5
+
                 text: "Rate"
             }
 
@@ -96,30 +79,26 @@ Item {
                 maxValue: 1.0
                 stepSize: 0.1
 
-                onValueModified: (v) => {
-                    if (_root.action !== null) {
-                        _root.action.playbackRate = v
-                    }
-                }
+                onValueModified: (val) => { _root.action.playbackRate = val }
             }
 
             LayoutHorizontalSpacer {}
 
             Label {
+                Layout.rightMargin: 5
+
                 text: "Pitch"
             }
 
             FloatSpinBox {
+                Layout.rightMargin: 10
+
                 value: _root.action !== null ? _root.action.playbackPitch : 0.0
                 minValue: -1.0
                 maxValue: 1.0
                 stepSize: 0.1
 
-                onValueModified: (v) => {
-                    if (_root.action !== null) {
-                        _root.action.playbackPitch = v
-                    }
-                }
+                onValueModified: (val) => { _root.action.playbackPitch = val }
             }
         }
     }
