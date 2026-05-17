@@ -1,0 +1,30 @@
+<action id="ac905a47-9ad3-4b65-b702-fbae1d133609" type="text-to-speech">
+    <property type="string">
+        <name>text</name>
+        <value>Gear up</value>
+    </property>
+    <property type="bool">
+        <name>interrupt-running</name>
+        <value>true</value>
+    </property>
+    <property type="int">
+        <name>playback-rate</name>
+        <value>2</value>
+    </property>
+    <property type="int">
+        <name>playback-volume</name>
+        <value>80</value>
+    </property>
+    <property type="int">
+        <name>playback-pitch</name>
+        <value>-3</value>
+    </property>
+    <property type="string">
+        <name>action-label</name>
+        <value></value>
+    </property>
+    <property type="activation-mode">
+        <name>activation-mode</name>
+        <value>press</value>
+    </property>
+</action>
