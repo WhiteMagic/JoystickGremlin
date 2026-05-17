@@ -32,6 +32,7 @@ Item {
             Label {
                 text: "Change threshold"
             }
+
             FloatSpinBox {
                 minValue: 0.0001
                 maxValue: 2.0
@@ -42,6 +43,7 @@ Item {
                     _root.action.changeThreshold = newValue
                 }
             }
+
             LayoutHorizontalSpacer {}
         }
 
@@ -53,9 +55,7 @@ Item {
                 text: "Positive change"
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
+            LayoutHorizontalSpacer {}
 
             ActionSelector {
                 actionNode: _root.action
@@ -63,22 +63,25 @@ Item {
             }
         }
 
-        Rectangle {
+        HorizontalDivider {
             id: _positiveDivider
+
             Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
+
+            dividerColor: Style.lowColor
+            lineWidth: 2
+            spacing: 2
         }
 
         Repeater {
             model: _root.action.getActions("positive")
 
             delegate: ActionNode {
+                Layout.fillWidth: true
+
                 action: modelData
                 parentAction: _root.action
                 containerName: "positive"
-
-                Layout.fillWidth: true
             }
         }
 
@@ -90,9 +93,7 @@ Item {
                 text: "Negative change"
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
+            LayoutHorizontalSpacer {}
 
             ActionSelector {
                 actionNode: _root.action
@@ -100,22 +101,25 @@ Item {
             }
         }
 
-        Rectangle {
+        HorizontalDivider {
             id: _negativeDivider
+
             Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
+
+            dividerColor: Style.lowColor
+            lineWidth: 2
+            spacing: 2
         }
 
         Repeater {
             model: _root.action.getActions("negative")
 
             delegate: ActionNode {
+                Layout.fillWidth: true
+
                 action: modelData
                 parentAction: _root.action
                 containerName: "negative"
-
-                Layout.fillWidth: true
             }
         }
     }
