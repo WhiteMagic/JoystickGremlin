@@ -449,6 +449,7 @@ class CodeRunner:
         macro.MacroManager().stop()
         sendinput.MouseController().stop()
         audio_player.AudioPlayer().stop()
+        signal.profileStopped.emit()
 
         # Remove all claims on VJoy devices.
         VJoyProxy.reset()

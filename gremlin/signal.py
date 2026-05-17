@@ -31,6 +31,8 @@ class Signal(QtCore.QObject):
 
     profileChanged = QtCore.Signal()
 
+    profileStopped = QtCore.Signal()
+
     logicalDeviceModified = QtCore.Signal()
 
     configChanged = QtCore.Signal()

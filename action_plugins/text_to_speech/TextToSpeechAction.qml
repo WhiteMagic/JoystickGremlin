@@ -5,7 +5,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
@@ -35,7 +34,11 @@ Item {
                 text: _root.action !== null ? _root.action.text : ""
                 selectByMouse: true
 
-                onTextChanged: () => { _root.action.text = text }
+                onTextChanged: () => {
+                    if (_root.action !== null && _root.action.text !== text) {
+                        _root.action.text = text
+                    }
+                }
             }
         }
 

@@ -7,7 +7,6 @@ from __future__ import annotations
 from string import Template
 from typing import (
     TYPE_CHECKING,
-    List,
     override,
 )
 from xml.etree import ElementTree
@@ -18,6 +17,7 @@ from PySide6.QtTextToSpeech import QTextToSpeech
 from gremlin import (
     event_handler,
     mode_manager,
+    signal,
     util,
 )
 from gremlin.base_classes import (
@@ -49,13 +49,14 @@ _tts_engine: QTextToSpeech | None = None
 def _get_engine() -> QTextToSpeech:
     global _tts_engine
     if _tts_engine is None:
-        _tts_engine = QTextToSpeech()
+        _tts_engine = QTextToSpeech("winrt")
         voice_name = Configuration().value("action", "tts", "voice")
         if voice_name:
             for voice in _tts_engine.availableVoices():
                 if voice.name() == voice_name:
                     _tts_engine.setVoice(voice)
                     break
+        signal.Signal().profileStopped.connect(_tts_engine.stop)
     return _tts_engine
 
 
@@ -240,7 +241,7 @@ class TextToSpeechData(AbstractActionData):
         return node
 
     @override
-    def user_feedback(self) -> List[UserFeedback]:
+    def user_feedback(self) -> list[UserFeedback]:
         if not self.text.strip():
             return [
                 UserFeedback(
@@ -250,11 +251,11 @@ class TextToSpeechData(AbstractActionData):
         return []
 
     @override
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         return []
 
     @override
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         raise GremlinError(f"{self.name}: has no containers")
 
     @override
