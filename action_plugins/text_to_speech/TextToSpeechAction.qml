@@ -43,12 +43,21 @@ Item {
         }
 
         RowLayout {
-            CheckBox {
-                text: "Interrupt current speech"
+            ComboBox {
+                readonly property var _labels: ["Interrupt", "Queue Front", "Queue Back"]
+                readonly property var _values: ["interrupt", "queue-front", "queue-back"]
 
-                checked: _root.action !== null ? _root.action.interruptRunning : false
+                model: _labels
 
-                onToggled: () => { _root.action.interruptRunning = checked }
+                Component.onCompleted: function() {
+                    currentIndex = _values.indexOf(
+                        _root.action !== null ? _root.action.queueMode : "queue-back"
+                    )
+                }
+
+                onActivated: function() {
+                    _root.action.queueMode = _values[currentIndex]
+                }
             }
 
             LayoutHorizontalSpacer {}

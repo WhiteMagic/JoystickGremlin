@@ -12,12 +12,11 @@ from typing import (
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtTextToSpeech import QTextToSpeech
 
 from gremlin import (
     event_handler,
     mode_manager,
-    signal,
+    tts,
     util,
 )
 from gremlin.base_classes import (
@@ -26,7 +25,6 @@ from gremlin.base_classes import (
     UserFeedback,
     Value,
 )
-from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.profile import Library
 from gremlin.types import (
@@ -43,23 +41,6 @@ if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
-_tts_engine: QTextToSpeech | None = None
-
-
-def _get_engine() -> QTextToSpeech:
-    global _tts_engine
-    if _tts_engine is None:
-        _tts_engine = QTextToSpeech("winrt")
-        voice_name = Configuration().value("action", "tts", "voice")
-        if voice_name:
-            for voice in _tts_engine.availableVoices():
-                if voice.name() == voice_name:
-                    _tts_engine.setVoice(voice)
-                    break
-        signal.Signal().profileStopped.connect(_tts_engine.stop)
-    return _tts_engine
-
-
 class TextToSpeechFunctor(AbstractFunctor):
     def __init__(self, action: TextToSpeechData) -> None:
         super().__init__(action)
@@ -74,21 +55,21 @@ class TextToSpeechFunctor(AbstractFunctor):
         if not self._should_execute(value):
             return
 
-        engine = _get_engine()
-        if self.data.interrupt_running:
-            engine.stop()
-        engine.setRate(self.data.playback_rate)
-        engine.setVolume(self.data.playback_volume)
-        engine.setPitch(self.data.playback_pitch)
-        substitutions = {
-            "current_mode": mode_manager.ModeManager().current.name,
-        }
-        engine.say(Template(self.data.text).safe_substitute(substitutions))
+        substitutions = {"current_mode": mode_manager.ModeManager().current.name}
+        tts.TTSManager().enqueue(
+            tts.TTSRequest(
+                text=Template(self.data.text).safe_substitute(substitutions),
+                rate=self.data.playback_rate,
+                volume=self.data.playback_volume,
+                pitch=self.data.playback_pitch,
+            ),
+            tts.TTSQueueMode(self.data.queue_mode),
+        )
 
 
 class TextToSpeechModel(ActionModel):
     textChanged = QtCore.Signal()
-    interruptRunningChanged = QtCore.Signal()
+    queueModeChanged = QtCore.Signal()
     playbackRateChanged = QtCore.Signal()
     playbackVolumeChanged = QtCore.Signal()
     playbackPitchChanged = QtCore.Signal()
@@ -124,13 +105,13 @@ class TextToSpeechModel(ActionModel):
             self._data.text = value
             self.textChanged.emit()
 
-    def _get_interrupt_running(self) -> bool:
-        return self._data.interrupt_running
+    def _get_queue_mode(self) -> str:
+        return self._data.queue_mode
 
-    def _set_interrupt_running(self, value: bool) -> None:
-        if value != self._data.interrupt_running:
-            self._data.interrupt_running = value
-            self.interruptRunningChanged.emit()
+    def _set_queue_mode(self, value: str) -> None:
+        if value != self._data.queue_mode:
+            self._data.queue_mode = value
+            self.queueModeChanged.emit()
 
     def _get_playback_rate(self) -> float:
         return self._data.playback_rate
@@ -158,11 +139,11 @@ class TextToSpeechModel(ActionModel):
 
     text = QtCore.Property(str, fget=_get_text, fset=_set_text, notify=textChanged)
 
-    interruptRunning = QtCore.Property(
-        bool,
-        fget=_get_interrupt_running,
-        fset=_set_interrupt_running,
-        notify=interruptRunningChanged,
+    queueMode = QtCore.Property(
+        str,
+        fget=_get_queue_mode,
+        fset=_set_queue_mode,
+        notify=queueModeChanged,
     )
 
     playbackRate = QtCore.Property(
@@ -203,7 +184,7 @@ class TextToSpeechData(AbstractActionData):
         super().__init__(behavior_type)
 
         self.text: str = ""
-        self.interrupt_running: bool = True
+        self.queue_mode: str = tts.TTSQueueMode.QueueBack
         self.playback_rate: float = 0.0
         self.playback_volume: float = 1.0
         self.playback_pitch: float = 0.0
@@ -212,8 +193,8 @@ class TextToSpeechData(AbstractActionData):
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.text = util.read_property(node, "text", PropertyType.String)
-        self.interrupt_running = util.read_property(
-            node, "interrupt-running", PropertyType.Bool
+        self.queue_mode = util.read_property(
+            node, "queue-mode", PropertyType.String
         )
         self.playback_rate = util.read_property(
             node, "playback-rate", PropertyType.Float
@@ -232,7 +213,7 @@ class TextToSpeechData(AbstractActionData):
             node,
             [
                 ["text", self.text, PropertyType.String],
-                ["interrupt-running", self.interrupt_running, PropertyType.Bool],
+                ["queue-mode", self.queue_mode, PropertyType.String],
                 ["playback-rate", self.playback_rate, PropertyType.Float],
                 ["playback-volume", self.playback_volume, PropertyType.Float],
                 ["playback-pitch", self.playback_pitch, PropertyType.Float],
@@ -264,16 +245,5 @@ class TextToSpeechData(AbstractActionData):
     ) -> None:
         pass
 
-
-Configuration().register(
-    "action",
-    "tts",
-    "voice",
-    PropertyType.String,
-    "",
-    "Name of the TTS voice to use for all Text to Speech actions.",
-    {},
-    True,
-)
 
 create = TextToSpeechData

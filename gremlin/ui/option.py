@@ -31,6 +31,7 @@ from gremlin.error import (
     GremlinError,
     MissingImplementationError,
 )
+from gremlin.tts import TTSManager
 from gremlin.types import PropertyType
 
 if TYPE_CHECKING:
@@ -437,6 +438,64 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
             QtCore.QFile("qml:OptionProfileAutoLoading.qml").fileName()
 
 
+@QtQml.QmlElement
+class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
+
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
+    }
+
+    currentIndexChanged = QtCore.Signal()
+
+    def __init__(self, parent: Optional[QtCore.QObject] = None) -> None:
+        QtCore.QAbstractListModel.__init__(self, parent)
+        BaseMetaConfigOptionWidget.__init__(self)
+
+        TTSManager().start()
+        self._voices = [voice.name() for voice in TTSManager().available_voices()]
+        self._config = gremlin.config.Configuration()
+        self._cfg_key = ["action", "text-to-speech", "voice"]
+
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        return len(self._voices)
+
+    def data(
+            self,
+            index: ta.ModelIndex,
+            role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> Any:
+        if role == QtCore.Qt.ItemDataRole.UserRole + 1:
+            return self._voices[index.row()]
+        return None
+
+    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+        return self.roles
+
+    def _qml_path(self) -> str:
+        return "file:///" + \
+            QtCore.QFile("qml:OptionTTSVoiceSelection.qml").fileName()
+
+    def _get_current_index(self) -> int:
+        try:
+            return self._voices.index(self._config.value(*self._cfg_key))
+        except ValueError:
+            return 0
+
+    def _set_current_index(self, index: int) -> None:
+        if not (0 <= index < len(self._voices)):
+            return
+        self._config.set(*self._cfg_key, self._voices[index])
+        TTSManager().update_voice(self._voices[index])
+        self.currentIndexChanged.emit()
+
+    currentIndex = QtCore.Property(
+        int,
+        fget=_get_current_index,
+        fset=_set_current_index,
+        notify=currentIndexChanged,
+    )
+
+
 class MetaConfigOption(metaclass=SingletonMetaclass):
 
     def __init__(self) -> None:
@@ -603,4 +662,10 @@ MetaConfigOption().register(
     "can be changed manually if needed. This also allows specifying the path "
     "to an executable as a regular expression.",
     ProfileAutoLoadingModel
+)
+
+MetaConfigOption().register(
+    "action", "text-to-speech", "voice-selection",
+    "Voices available for use with Text to Speech actions.",
+    TTSVoiceSelectionModel
 )

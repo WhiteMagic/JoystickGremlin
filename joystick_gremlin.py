@@ -44,6 +44,7 @@ gremlin.util.setup_userprofile()
 
 import gremlin.audio_player
 import gremlin.config
+import gremlin.tts
 import gremlin.error
 import gremlin.device_initialization
 import gremlin.event_handler
@@ -118,6 +119,7 @@ def shutdown_cleanup() -> None:
     vjoy.vjoy.VJoyProxy.reset()
 
     gremlin.audio_player.AudioPlayer().stop()
+    gremlin.tts.TTSManager().stop()
 
 def register_config_options() -> None:
     cfg = gremlin.config.Configuration()

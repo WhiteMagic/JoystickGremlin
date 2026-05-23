@@ -30,6 +30,7 @@ from gremlin import (
     profile,
     sendinput,
     signal,
+    tts,
     user_script,
 )
 from gremlin.base_classes import Value
@@ -411,6 +412,7 @@ class CodeRunner:
             user_script.periodic_registry.start()
             macro.MacroManager().start()
             audio_player.AudioPlayer().start()
+            tts.TTSManager().start()
 
             mode_manager.ModeManager().switch_to(
                 mode_manager.Mode(start_mode, "Default")
@@ -449,7 +451,7 @@ class CodeRunner:
         macro.MacroManager().stop()
         sendinput.MouseController().stop()
         audio_player.AudioPlayer().stop()
-        signal.profileStopped.emit()
+        tts.TTSManager().stop()
 
         # Remove all claims on VJoy devices.
         VJoyProxy.reset()
