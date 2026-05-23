@@ -193,6 +193,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
                 self._data[key]["data_type"] = data_type
 
             self._data[key]["description"] = description
+            self._data[key]["expose"] = expose
         # Store new entry
         else:
             self._data[key] = {
