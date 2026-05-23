@@ -24,39 +24,38 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        RowLayout {
-            TextArea {
-                Layout.fillWidth: true
-                Layout.rightMargin: 10
+        JGTextField {
+            Layout.fillWidth: true
 
-                wrapMode: TextArea.Wrap
-                placeholderText: "Enter text to speak"
-                text: _root.action !== null ? _root.action.text : ""
-                selectByMouse: true
+            wrapMode: TextArea.Wrap
+            placeholderText: "Enter text to speak"
+            text: _root.action !== null ? _root.action.text : ""
+            selectByMouse: true
 
-                onTextChanged: () => {
-                    if (_root.action !== null && _root.action.text !== text) {
-                        _root.action.text = text
-                    }
+            onTextChanged: () => {
+                if (_root.action !== null && _root.action.text !== text) {
+                    _root.action.text = text
                 }
             }
         }
 
         RowLayout {
             ComboBox {
+                Layout.preferredWidth: 150
+
                 readonly property var _labels: ["Interrupt", "Queue Front", "Queue Back"]
                 readonly property var _values: ["interrupt", "queue-front", "queue-back"]
 
                 model: _labels
 
-                Component.onCompleted: function() {
-                    currentIndex = _values.indexOf(
-                        _root.action !== null ? _root.action.queueMode : "queue-back"
-                    )
-                }
+                currentIndex: _root.action !== null
+                    ? _values.indexOf(_root.action.queueMode)
+                    : _values.indexOf("queue-back")
 
-                onActivated: function() {
-                    _root.action.queueMode = _values[currentIndex]
+                onActivated: (index) => {
+                    if (_root.action !== null) {
+                        _root.action.queueMode = _values[index]
+                    }
                 }
             }
 
@@ -103,8 +102,6 @@ Item {
             }
 
             FloatSpinBox {
-                Layout.rightMargin: 10
-
                 value: _root.action !== null ? _root.action.playbackPitch : 0.0
                 minValue: -1.0
                 maxValue: 1.0

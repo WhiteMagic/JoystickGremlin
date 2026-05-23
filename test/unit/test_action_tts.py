@@ -22,7 +22,7 @@ def test_ctor() -> None:
     a = TextToSpeechData(InputType.JoystickButton)
 
     assert a.text == ""
-    assert a.interrupt_running is True
+    assert a.queue_mode == "queue-back"
     assert a.playback_rate == 0.0
     assert a.playback_volume == 1.0
     assert a.playback_pitch == 0.0
@@ -38,7 +38,7 @@ def test_from_xml(xml_dir: pathlib.Path) -> None:
 
     assert a._id == _TTS_UUID
     assert a.text == "Gear up"
-    assert a.interrupt_running is True
+    assert a.queue_mode == "interrupt"
     assert a.playback_rate == pytest.approx(0.2)
     assert a.playback_volume == pytest.approx(0.8)
     assert a.playback_pitch == pytest.approx(-0.3)
@@ -48,7 +48,7 @@ def test_to_xml() -> None:
     a = TextToSpeechData(InputType.JoystickButton)
     a._id = _TTS_UUID
     a.text = "Gear up"
-    a.interrupt_running = True
+    a.queue_mode = "interrupt"
     a.playback_rate = 0.2
     a.playback_volume = 0.8
     a.playback_pitch = -0.3
@@ -58,7 +58,7 @@ def test_to_xml() -> None:
     assert node.attrib["type"] == "text-to-speech"
     assert node.attrib["id"] == str(_TTS_UUID)
     assert node.find("./property/name[.='text']/../value").text == "Gear up"
-    assert node.find("./property/name[.='interrupt-running']/../value").text == "True"
+    assert node.find("./property/name[.='queue-mode']/../value").text == "interrupt"
     assert node.find("./property/name[.='playback-rate']/../value").text == "0.2"
     assert node.find("./property/name[.='playback-volume']/../value").text == "0.8"
     assert node.find("./property/name[.='playback-pitch']/../value").text == "-0.3"
@@ -78,7 +78,7 @@ def test_roundtrip(xml_dir: pathlib.Path) -> None:
     b.from_xml(node, l)
 
     assert b.text == a.text
-    assert b.interrupt_running == a.interrupt_running
+    assert b.queue_mode == a.queue_mode
     assert b.playback_rate == a.playback_rate
     assert b.playback_volume == a.playback_volume
     assert b.playback_pitch == a.playback_pitch

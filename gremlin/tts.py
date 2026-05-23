@@ -10,7 +10,10 @@ import dataclasses
 import enum
 from collections import deque
 
-from PySide6.QtTextToSpeech import QTextToSpeech
+from PySide6.QtTextToSpeech import (
+    QTextToSpeech,
+    QVoice
+)
 
 from gremlin.common import SingletonMetaclass
 from gremlin.config import Configuration
@@ -38,7 +41,6 @@ class TTSManager(metaclass=SingletonMetaclass):
         self._engine: QTextToSpeech | None = None
         self._queue: deque[TTSRequest] = deque()
         self._current_request: TTSRequest | None = None
-        self._current_done: bool = False
 
     def start(self) -> None:
         """Initialise the engine and wire signals.  Safe to call repeatedly."""
@@ -77,7 +79,7 @@ class TTSManager(metaclass=SingletonMetaclass):
                 force_speak = True
         self._speak_next(force_speak)
 
-    def available_voices(self) -> list:
+    def available_voices(self) -> list[QVoice]:
         if self._engine is None:
             return []
         return self._engine.availableVoices()

@@ -3,9 +3,9 @@
         <name>text</name>
         <value>Gear up</value>
     </property>
-    <property type="bool">
-        <name>interrupt-running</name>
-        <value>true</value>
+    <property type="string">
+        <name>queue-mode</name>
+        <value>interrupt</value>
     </property>
     <property type="float">
         <name>playback-rate</name>
