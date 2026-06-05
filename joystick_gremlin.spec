@@ -98,7 +98,10 @@ to_exclude = [
     "Qt6DataVisualizationQml.dll",
     "Qt6Graphs.dll",
     "Qt6Location.dll",
-    "Qt6Multimedia.dll",
+    # Keep Qt6Multimedia.dll: newer PySide6 (6.11+) makes QtTextToSpeech depend
+    # on it, and gremlin.tts imports QtTextToSpeech at startup, so excluding it
+    # breaks the frozen build with "DLL load failed while importing
+    # QtTextToSpeech". Qt6MultimediaQuick (QML multimedia) is still unused.
     "Qt6MultimediaQuick.dll",
     "Qt6Pdf.dll",
     "Qt6PdfQuick.dll",
