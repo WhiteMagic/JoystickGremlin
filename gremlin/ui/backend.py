@@ -493,14 +493,23 @@ class Backend(QtCore.QObject):
         """
         self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
 
-    @Property(bool, notify=propertyChanged)
-    def useDarkMode(self) -> bool:
-        """Returns whether or not dark mode is enabled.
+    @Property(str, notify=propertyChanged)
+    def colorMode(self) -> str:
+        """Returns the configured UI color mode.
 
         Returns:
-            True if dark mode is enabled, False otherwise
+            One of "Light", "Dark", or "High Contrast Dark"
         """
-        return self.config.value("global", "general", "dark-mode")
+        return self.config.value("global", "general", "color-mode")
+
+    @Property(bool, notify=propertyChanged)
+    def useDarkMode(self) -> bool:
+        """Returns whether or not a dark color mode is active.
+
+        Returns:
+            True for either dark variant, False for light
+        """
+        return self.config.value("global", "general", "color-mode") != "Light"
 
     @Property(type=list, notify=recentProfilesChanged)
     def recentProfiles(self) -> List[str]:

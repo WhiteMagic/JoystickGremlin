@@ -166,9 +166,10 @@ def register_config_options() -> None:
         {"valid_options": ["Disable", "Ignore", "Reload"]}, True
     )
     cfg.register(
-        "global", "general", "dark-mode",
-        PropertyType.Bool, False,
-        "Use the dark mode UI (requires restart).", {}, True
+        "global", "general", "color-mode",
+        PropertyType.Selection, "Light",
+        "UI color theme.",
+        {"valid_options": ["Light", "Dark", "High Contrast Dark"]}, True
     )
     cfg.register(
         "global", "general", "refresh-axis-on-activation",

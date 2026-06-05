@@ -152,7 +152,10 @@ Button {
             anchors.right: parent.right
 
             sourceComponent: Image {
+                // The "#" + colour mode suffix changes the URL when the theme
+                // switches, forcing QML to re-request the (re-coloured) image.
                 source: "image://action_summary/" + actionSequenceDescriptor
+                        + "#" + Style.colorMode
                 asynchronous: false
                 cache: false
                 clip: true

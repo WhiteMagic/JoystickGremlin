@@ -5,6 +5,8 @@ import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.Universal
 
+import Gremlin.Style
+
 T.TabBar {
     id: control
 
@@ -69,6 +71,8 @@ T.TabBar {
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 48
-        color: control.Universal.background
+        // Match the themed window background so the bar blends in rather than
+        // showing the darker Universal base colour as a patch behind tabs.
+        color: Style.background
     }
 }

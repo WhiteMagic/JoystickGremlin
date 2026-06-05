@@ -14,6 +14,16 @@ from PySide6 import (
     QtQuick,
 )
 
+from gremlin.config import Configuration
+
+# Glyph pen colour (R, G, B) per UI colour mode. Mirrors the foreground colours
+# in qml/Style.qml so the icons match the rest of the theme.
+_PEN_COLORS = {
+    "Light": (0, 0, 0),
+    "Dark": (0xD4, 0xD4, 0xD4),
+    "High Contrast Dark": (255, 255, 255),
+}
+
 
 class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
 
@@ -71,24 +81,41 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         Returns:
             A QImage representing the action summary
         """
-        with self._lock:
-            if image_id in self._cache:
-                self._cache.move_to_end(image_id)
-                return self._cache[image_id]
+        # The UI appends "#<colour mode>" to the id so the URL changes (and the
+        # image reloads) when the theme switches live; use that mode when
+        # present, otherwise fall back to the configured one. Caching per mode
+        # keeps a separate image for each theme.
+        if "#" in image_id:
+            descriptor, mode = image_id.rsplit("#", 1)
+        else:
+            descriptor, mode = image_id, self._color_mode()
+        cache_key = f"{mode}:{descriptor}"
 
-        image = self._render(image_id)
+        with self._lock:
+            if cache_key in self._cache:
+                self._cache.move_to_end(cache_key)
+                return self._cache[cache_key]
+
+        image = self._render(descriptor, mode)
 
         with self._lock:
             if len(self._cache) >= self._max_cache_size:
                 self._cache.popitem(last=False)
-            self._cache[image_id] = image
+            self._cache[cache_key] = image
             return image
 
-    def _render(self, action_string: str) -> QtGui.QImage:
+    @staticmethod
+    def _color_mode() -> str:
+        """Returns the active UI colour mode (see backend.colorMode)."""
+        return Configuration().value("global", "general", "color-mode")
+
+    def _render(self, action_string: str, mode: str) -> QtGui.QImage:
         """Renders an action sequence image.
 
         Args:
             action_string: The action sequence string to render
+            mode: The UI colour mode, used to pick the glyph pen colour so the
+                icons contrast with the themed input-list background
 
         Returns:
             A QImage containing the rendered action sequence
@@ -101,7 +128,8 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         try:
             painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
             painter.setRenderHint(QtGui.QPainter.RenderHint.TextAntialiasing)
-            painter.setPen(QtGui.QColor(0, 0, 0))
+            rgb = _PEN_COLORS.get(mode, _PEN_COLORS["Light"])
+            painter.setPen(QtGui.QColor(*rgb))
 
             x_offset = 0
             for token in tokens:
@@ -253,5 +281,8 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         with self._lock:
             if action_string is None:
                 self._cache.clear()
-            elif action_string in self._cache:
-                del self._cache[action_string]
+            else:
+                # Cache keys are prefixed with the colour mode, so drop the
+                # entry for this action string under every mode.
+                for mode in _PEN_COLORS:
+                    self._cache.pop(f"{mode}:{action_string}", None)

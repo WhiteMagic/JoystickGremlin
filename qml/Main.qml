@@ -28,8 +28,18 @@ ApplicationWindow {
     id: _root
 
     Component.onCompleted: () => {
-        Style.isDarkMode = backend.useDarkMode
+        Style.colorMode = backend.colorMode
     }
+
+    // Apply colour-mode changes live (e.g. picking a theme in Options) without
+    // requiring a restart.
+    Connections {
+        target: signal
+        function onConfigChanged() {
+            Style.colorMode = backend.colorMode
+        }
+    }
+
     Universal.theme: Style.theme
     color: Style.background
 
@@ -464,18 +474,20 @@ ApplicationWindow {
                 deviceListModel: _deviceListModel
             }
 
-            ColumnLayout {
-                IconButton {
-                    text: "\uF285"
-                    font.pixelSize: 14
+            RowLayout {
+                Layout.alignment: Qt.AlignVCenter
 
-                    onClicked: () => { _deviceList.nextTab() }
-                }
                 IconButton {
                     text: "\uF284"
                     font.pixelSize: 14
 
                     onClicked: () => { _deviceList.previousTab() }
+                }
+                IconButton {
+                    text: "\uF285"
+                    font.pixelSize: 14
+
+                    onClicked: () => { _deviceList.nextTab() }
                 }
             }
 

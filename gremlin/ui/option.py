@@ -27,6 +27,7 @@ from PySide6.QtCore import (
 
 import gremlin.config
 from gremlin.common import SingletonMetaclass
+from gremlin.signal import signal
 from gremlin.error import (
     GremlinError,
     MissingImplementationError,
@@ -250,6 +251,9 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
 
             self._config.set(*key, value)
             self.dataChanged.emit(index, index, {role})
+            # Notify the UI so options that react live (e.g. the colour theme)
+            # can update immediately instead of only on dialog close.
+            signal.configChanged.emit()
             return True
         return False
 
