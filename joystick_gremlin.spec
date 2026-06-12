@@ -14,6 +14,7 @@ for root, _, files in os.walk("action_plugins"):
 datas = [
     ("gfx", "gfx"),
     ("qml", "qml"),
+    ("theme", "theme"),
     ("device_db.json", "."),
     ("version.json", ".")
 ]
@@ -52,6 +53,7 @@ hidden_imports = [
     "action_plugins.smart_toggle",
     "action_plugins.split_axis",
     "action_plugins.tempo",
+    "action_plugins.text_to_speech",
     "gremlin.ui",
     "gremlin.ui.action_model",
     "gremlin.ui.backend",
@@ -98,8 +100,6 @@ to_exclude = [
     "Qt6DataVisualizationQml.dll",
     "Qt6Graphs.dll",
     "Qt6Location.dll",
-    "Qt6Multimedia.dll",
-    "Qt6MultimediaQuick.dll",
     "Qt6Pdf.dll",
     "Qt6PdfQuick.dll",
     "Qt6Positioning.dll",
