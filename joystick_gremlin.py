@@ -407,13 +407,11 @@ class JoystickGremlinApp(QtWidgets.QApplication):
 
         # Create application and UI engine.
         self.engine = QtQml.QQmlApplicationEngine(parent=self)
-        self.engine.addImportPath(".")
-        self.engine.addImportPath("qml")
-        self.engine.addImportPath("theme")
+        self.engine.addImportPath(gremlin.util.resource_path("theme"))
 
         QtQml.qmlRegisterSingletonType(
             QtCore.QUrl.fromLocalFile(
-                str(Path(__file__).parent / "qml" / "Style.qml")
+                gremlin.util.resource_path("qml/Style.qml")
             ),
             "Gremlin.Style", 1, 0, "Style"
         )
