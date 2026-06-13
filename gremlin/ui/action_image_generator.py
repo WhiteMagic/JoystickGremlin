@@ -14,6 +14,8 @@ from PySide6 import (
     QtQuick,
 )
 
+from gremlin.ui.util import ColorInformation
+
 
 class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
 
@@ -76,7 +78,10 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
                 self._cache.move_to_end(image_id)
                 return self._cache[image_id]
 
-        image = self._render(image_id)
+        # A "?<token>" suffix, bumped on a theme change, keeps the id (and thus
+        # the cache entry) distinct per theme; it is not part of the action
+        # string, so strip it before rendering.
+        image = self._render(image_id.split("?", 1)[0])
 
         with self._lock:
             if len(self._cache) >= self._max_cache_size:
@@ -101,7 +106,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         try:
             painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
             painter.setRenderHint(QtGui.QPainter.RenderHint.TextAntialiasing)
-            painter.setPen(QtGui.QColor(0, 0, 0))
+            painter.setPen(ColorInformation().foreground)
 
             x_offset = 0
             for token in tokens:

@@ -73,6 +73,7 @@ class UIState(QtCore.QObject):
     inputChanged = Signal()
     modeChanged = Signal()
     tabChanged = Signal()
+    themeRevisionChanged = Signal()
     selectIndex = Signal(int)
 
     def __init__(self, parent: ta.OQO=None) -> None:
@@ -82,6 +83,7 @@ class UIState(QtCore.QObject):
         self._current_input = {}
         self._current_mode = "Default"
         self._current_tab = "physical"
+        self._theme_revision = 0
 
         event_handler.EventListener().device_change_event.connect(
             self._device_change
@@ -135,6 +137,11 @@ class UIState(QtCore.QObject):
             self._current_tab = tab
             self.tabChanged.emit()
 
+    @Slot()
+    def bumpThemeRevision(self) -> None:
+        self._theme_revision += 1
+        self.themeRevisionChanged.emit()
+
     @Property(str, notify=deviceChanged)
     def currentDevice(self) -> str:
         return str(self._current_device).upper()
@@ -160,6 +167,15 @@ class UIState(QtCore.QObject):
     @Property(str, notify=tabChanged)
     def currentTab(self) -> str:
         return self._current_tab
+
+    @Property(int, notify=themeRevisionChanged)
+    def themeRevision(self) -> int:
+        """Counter bumped whenever the theme colours change.
+
+        Image sources that bake in a theme colour append it so a theme change
+        alters the URL and the image is re-requested in the new colour.
+        """
+        return self._theme_revision
 
     def __str__(self) -> str:
         cur_input = self._current_input.get(

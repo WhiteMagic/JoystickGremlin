@@ -153,6 +153,7 @@ Button {
 
             sourceComponent: Image {
                 source: "image://action_summary/" + actionSequenceDescriptor
+                    + "?r=" + uiState.themeRevision
                 asynchronous: false
                 cache: false
                 clip: true

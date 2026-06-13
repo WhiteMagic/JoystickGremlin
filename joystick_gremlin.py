@@ -357,14 +357,29 @@ class JoystickGremlinApp(QtWidgets.QApplication):
                 "Failed to find color information object in QML."
             )
         gremlin.ui.util.ColorInformation().update_colors(self.color_information_object)
-        self.color_information_object.isDarkThemeChanged.connect(
-            lambda: gremlin.ui.util.ColorInformation().update_colors(
-                self.color_information_object)
-        )
+        # Coalesce the colour change signals into a single update call that
+        # triggers only once the current event queue is empty.
+        self._theme_refresh_timer = QtCore.QTimer()
+        self._theme_refresh_timer.setSingleShot(True)
+        self._theme_refresh_timer.setInterval(0)
+        self._theme_refresh_timer.timeout.connect(self._on_theme_colors_changed)
+        for changed in (
+            self.color_information_object.foregroundChanged,
+            self.color_information_object.backgroundChanged,
+            self.color_information_object.accentChanged,
+        ):
+            changed.connect(self._theme_refresh_timer.start)
 
         # Run UI.
         self.syslog.info("Gremlin UI launching")
         self.aboutToQuit.connect(shutdown_cleanup)
+
+    def _on_theme_colors_changed(self) -> None:
+        """Refreshes the cached theme colours and asks QML to redraw."""
+        gremlin.ui.util.ColorInformation().update_colors(
+            self.color_information_object
+        )
+        self.backend.ui_state.bumpThemeRevision()
 
     def process_cmd_args(self, args: argparse.Namespace) -> None:
         # Load the profile specified by the user on the command line, otherwise
