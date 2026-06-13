@@ -31,6 +31,7 @@ ApplicationWindow {
     Component.onCompleted: () => {
         Style.isDarkMode = backend.useDarkMode
     }
+
     Universal.theme: Style.theme
     color: Style.background
 
@@ -426,6 +427,12 @@ ApplicationWindow {
     }
     Connections {
         target: signal
+
+        // Re-apply UI config (e.g. dark mode) live, so toggling it in the
+        // options takes effect immediately instead of needing a restart.
+        function onConfigChanged() {
+            Style.isDarkMode = backend.useDarkMode
+        }
 
         function onShowError(message, details) {
             _errorDialog.text = message

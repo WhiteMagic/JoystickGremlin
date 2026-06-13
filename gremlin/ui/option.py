@@ -31,6 +31,7 @@ from gremlin.error import (
     GremlinError,
     MissingImplementationError,
 )
+from gremlin.signal import signal
 from gremlin.tts import TTSManager
 from gremlin.types import PropertyType
 
@@ -250,6 +251,8 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
 
             self._config.set(*key, value)
             self.dataChanged.emit(index, index, {role})
+            # Enable other UI elements to react to configuration changes.
+            signal.configChanged.emit()
             return True
         return False
 

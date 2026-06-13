@@ -168,7 +168,7 @@ def register_config_options() -> None:
     cfg.register(
         "global", "general", "dark-mode",
         PropertyType.Bool, False,
-        "Use the dark mode UI (requires restart).", {}, True
+        "Use the dark mode UI.", {}, True
     )
     cfg.register(
         "global", "general", "refresh-axis-on-activation",
