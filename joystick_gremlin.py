@@ -348,6 +348,16 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         self.process_cmd_args(cmd_args)
         self.backend.check_for_updates()
 
+        # Retrieve color information from QML for Python usage.
+        self.main_window = self.engine.rootObjects()[0]
+        self.color_information_object = \
+            self.main_window.findChild(QtCore.QObject, "colorInformation")
+        gremlin.ui.util.ColorInformation().update_colors(self.color_information_object)
+        self.color_information_object.isDarkThemeChanged.connect(
+            lambda: gremlin.ui.util.ColorInformation().update_colors(
+                self.color_information_object)
+        )
+
         # Run UI.
         self.syslog.info("Gremlin UI launching")
         self.aboutToQuit.connect(shutdown_cleanup)

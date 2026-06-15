@@ -34,6 +34,10 @@ ApplicationWindow {
     Universal.theme: Style.theme
     color: Style.background
 
+    ColorInformation {
+        id: colorInformation
+    }
+
     ErrorDialog {
         id: _errorDialog
 
