@@ -17,6 +17,7 @@ from typing import (
 
 from PySide6 import (
     QtCore,
+    QtGui,
     QtQml,
 )
 
@@ -463,9 +464,10 @@ class ColorInformation(metaclass=SingletonMetaclass):
     """
 
     def __init__(self) -> None:
-        self._accent_color = QtCore.Qt.GlobalColor.red
-        self._background_color = QtCore.Qt.GlobalColor.white
-        self._foreground_color = QtCore.Qt.GlobalColor.black
+        self._accent_color = QtGui.QColor("blue")
+        self._background_color = QtGui.QColor("white")
+        self._foreground_color = QtGui.QColor("black")
+        self._is_dark_theme = False
 
     def update_colors(self, color_information: QtCore.QObject) -> None:
         self._accent_color = color_information.property("accent")
@@ -474,15 +476,15 @@ class ColorInformation(metaclass=SingletonMetaclass):
         self._is_dark_theme = color_information.property("isDarkTheme")
 
     @property
-    def accent(self) -> QtCore.Qt.GlobalColor:
+    def accent(self) -> QtGui.QColor:
         return self._accent_color
 
     @property
-    def background(self) -> QtCore.Qt.GlobalColor:
+    def background(self) -> QtGui.QColor:
         return self._background_color
 
     @property
-    def foreground(self) -> QtCore.Qt.GlobalColor:
+    def foreground(self) -> QtGui.QColor:
         return self._foreground_color
 
     @property

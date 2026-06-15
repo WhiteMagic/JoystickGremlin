@@ -352,6 +352,10 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         self.main_window = self.engine.rootObjects()[0]
         self.color_information_object = \
             self.main_window.findChild(QtCore.QObject, "colorInformation")
+        if self.color_information_object is None:
+            raise gremlin.error.GremlinError(
+                "Failed to find color information object in QML."
+            )
         gremlin.ui.util.ColorInformation().update_colors(self.color_information_object)
         self.color_information_object.isDarkThemeChanged.connect(
             lambda: gremlin.ui.util.ColorInformation().update_colors(
