@@ -450,9 +450,18 @@ class JoystickGremlinBot:
         )
 
         # Inform the event logger about the event we're about to emit, then
-        # emit the event.
+        # emit the event. PySide6 routes @Slot exceptions to sys.excepthook
+        # instead of propagating them, so we capture and re-raise here.
         self._event_logger.emitted_events.append(evt)
-        self._event_listener.joystick_event.emit(evt)
+        captured: list[BaseException] = []
+        original_hook = sys.excepthook
+        sys.excepthook = lambda _t, exc_value, _tb: captured.append(exc_value)
+        try:
+            self._event_listener.joystick_event.emit(evt)
+        finally:
+            sys.excepthook = original_hook
+        if captured:
+            raise captured[0]
 
 
 @pytest.fixture
