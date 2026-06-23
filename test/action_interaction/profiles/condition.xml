@@ -21,6 +21,16 @@
                 <behavior>button</behavior>
             </action-configuration>
         </input>
+        <input>
+            <device-id>f0af472f-8e17-493b-a1eb-7333ee8543f2</device-id>
+            <input-type>button</input-type>
+            <mode>Default</mode>
+            <input-id>2</input-id>
+            <action-configuration>
+                <root-action>53f9db3c-8e3b-46e2-afd2-265d5471d4d9</root-action>
+                <behavior>button</behavior>
+            </action-configuration>
+        </input>
     </inputs>
     <settings>
         <startup-mode>Default</startup-mode>
@@ -379,6 +389,153 @@
                 <value>disallowed</value>
             </property>
         </action>
+        <action id="53f9db3c-8e3b-46e2-afd2-265d5471d4d9" type="root">
+            <actions>
+                <action-id>72de7f02-1327-462f-8fd8-1234b1e55d1a</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value>Root</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="72de7f02-1327-462f-8fd8-1234b1e55d1a" type="condition">
+            <property type="string">
+                <name>logical-operator</name>
+                <value>all</value>
+            </property>
+            <condition>
+                <property type="string">
+                    <name>condition-type</name>
+                    <value>logical_device</value>
+                </property>
+                <comparator>
+                    <property type="string">
+                        <name>comparator-type</name>
+                        <value>pressed</value>
+                    </property>
+                    <property type="bool">
+                        <name>is-pressed</name>
+                        <value>True</value>
+                    </property>
+                </comparator>
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>button</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>4</value>
+                </property>
+            </condition>
+            <true-actions>
+                <action-id>dfb03b1f-44ce-4d03-85ac-e9fe9f49ab80</action-id>
+            </true-actions>
+            <false-actions/>
+            <property type="string">
+                <name>action-label</name>
+                <value>Condition</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="dfb03b1f-44ce-4d03-85ac-e9fe9f49ab80" type="tempo">
+            <short-actions/>
+            <long-actions>
+                <action-id>ee51bd8c-00e2-4992-9b11-fc351d9671f1</action-id>
+            </long-actions>
+            <property type="float">
+                <name>threshold</name>
+                <value>0.1</value>
+            </property>
+            <property type="string">
+                <name>activate-on</name>
+                <value>release</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Tempo</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+        <action id="5e80c7cb-12c5-43d6-8c6e-e945046206cf" type="map-to-vjoy">
+            <property type="int">
+                <name>vjoy-device-id</name>
+                <value>1</value>
+            </property>
+            <property type="int">
+                <name>vjoy-input-id</name>
+                <value>1</value>
+            </property>
+            <property type="input_type">
+                <name>vjoy-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to vJoy</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f066a9d3-1b9d-4498-bca1-05457f91cf6a" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>11</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="ee51bd8c-00e2-4992-9b11-fc351d9671f1" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>12</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
     </library>
     <modes>
         <mode>Default</mode>
@@ -388,6 +545,10 @@
         <device>
             <device-id>06fea9f0-1fe9-11f1-8007-444553540000</device-id>
             <device-name>T.16000M</device-name>
+        </device>
+        <device>
+            <device-id>06fed100-1fe9-11f1-800a-444553540000</device-id>
+            <device-name>CH PRO PEDALS USB </device-name>
         </device>
     </devices>
 </profile>

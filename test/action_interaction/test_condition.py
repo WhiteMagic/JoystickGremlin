@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import pytest
 
 from .conftest import JoystickGremlinBot
 from .input_definitions import *
@@ -54,3 +55,20 @@ def test_current_input(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.release_button(IN_BUTTON_3)
     jgbot.wait(0.01)
     assert jgbot.button(OUT_BUTTON_3) == False
+
+
+def test_condition_with_tempo(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
+    jgbot.load_profile(profile_dir / "condition.xml")
+
+    jgbot.press_button(IN_BUTTON_4)
+    jgbot.press_button(IN_BUTTON_2)
+    jgbot.wait(0.15)
+    assert jgbot.button(OUT_BUTTON_2) == True
+
+    jgbot.release_button(IN_BUTTON_4)
+    jgbot.release_button(IN_BUTTON_2)
+
+    assert jgbot.button(OUT_BUTTON_2) == True
+
+    jgbot.press_button(IN_BUTTON_4)
+    jgbot.press_button(IN_BUTTON_2)
