@@ -57,7 +57,6 @@ class TempoFunctor(AbstractFunctor):
     def __init__(self, action: TempoData) -> None:
         super().__init__(action)
 
-        # self.start_time = 0
         self.timer = None
         self.value_press : Value = Value(None)
         self.event_press : event_handler.Event | None = None
@@ -79,6 +78,13 @@ class TempoFunctor(AbstractFunctor):
 
         # Copy state when input is pressed
         if value.current:
+            # # If the FSM didn't return to wait (e.g. a prior release was
+            # # swallowed by an outer condition), clean up before starting fresh.
+            # if self.fsm.current_state != "wait":
+            #     if self.timer:
+            #         self.timer.cancel()
+            #     self.fsm.reset()
+
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
@@ -98,6 +104,11 @@ class TempoFunctor(AbstractFunctor):
         )
 
     def _reset_fsm_if_required(self, activating_mode: str) -> None:
+        if self.fsm.current_state != "wait":
+            if self.timer:
+                self.timer.cancel()
+            self.fsm.reset()
+
         if ModeManager().current.name != activating_mode:
             self.fsm.reset()
 

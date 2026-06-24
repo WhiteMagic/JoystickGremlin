@@ -365,7 +365,7 @@
                 <action-id>ce15159c-42f5-45e5-befa-d663c13335c0</action-id>
             </true-actions>
             <false-actions>
-                <action-id>a723de89-c59e-46bb-a5f6-eed8421a7bf2</action-id>
+                <action-id>f884884d-2b75-4101-a72b-9544c81afe86</action-id>
             </false-actions>
             <property type="string">
                 <name>action-label</name>
@@ -445,7 +445,9 @@
             </property>
         </action>
         <action id="dfb03b1f-44ce-4d03-85ac-e9fe9f49ab80" type="tempo">
-            <short-actions/>
+            <short-actions>
+                <action-id>bb920715-bdd4-4216-b7e3-6fc9f22db85c</action-id>
+            </short-actions>
             <long-actions>
                 <action-id>ee51bd8c-00e2-4992-9b11-fc351d9671f1</action-id>
             </long-actions>
@@ -536,6 +538,112 @@
                 <value>both</value>
             </property>
         </action>
+        <action id="5809f457-35ba-4edb-b57d-0a4ed8a655b5" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>1</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="e29915dd-0881-4a87-a3eb-347c6471a42b" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>1</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
+        <action id="f884884d-2b75-4101-a72b-9544c81afe86" type="macro">
+            <property type="bool">
+                <name>is-exclusive</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>repeat-mode</name>
+                <value>Single</value>
+            </property>
+            <property type="int">
+                <name>repeat-count</name>
+                <value>1</value>
+            </property>
+            <property type="float">
+                <name>repeat-delay</name>
+                <value>0.1</value>
+            </property>
+            <macro-action type="logical-device">
+                <property type="input_type">
+                    <name>input-type</name>
+                    <value>button</value>
+                </property>
+                <property type="int">
+                    <name>input-id</name>
+                    <value>13</value>
+                </property>
+                <property type="bool">
+                    <name>value</name>
+                    <value>False</value>
+                </property>
+            </macro-action>
+            <property type="string">
+                <name>action-label</name>
+                <value>Macro</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>release</value>
+            </property>
+        </action>
+        <action id="bb920715-bdd4-4216-b7e3-6fc9f22db85c" type="map-to-logical-device">
+            <property type="int">
+                <name>logical-input-id</name>
+                <value>11</value>
+            </property>
+            <property type="input_type">
+                <name>logical-input-type</name>
+                <value>button</value>
+            </property>
+            <property type="bool">
+                <name>button-inverted</name>
+                <value>False</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Map to Logical Device</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>both</value>
+            </property>
+        </action>
     </library>
     <modes>
         <mode>Default</mode>
@@ -549,6 +657,14 @@
         <device>
             <device-id>06fed100-1fe9-11f1-800a-444553540000</device-id>
             <device-name>CH PRO PEDALS USB </device-name>
+        </device>
+        <device>
+            <device-id>ac037ce0-1ffe-11f1-8002-444553540000</device-id>
+            <device-name>vJoy Device</device-name>
+        </device>
+        <device>
+            <device-id>07cebb20-215d-11f1-8009-444553540000</device-id>
+            <device-name>vJoy Device</device-name>
         </device>
     </devices>
 </profile>
