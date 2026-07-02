@@ -4,10 +4,7 @@
 
 from __future__ import annotations
 
-import copy
-import logging
 import threading
-import time
 from typing import List, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
@@ -17,6 +14,7 @@ from PySide6.QtCore import Property, Signal
 from gremlin import event_handler, fsm, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.config import Configuration
+from gremlin.event_helpers import ButtonReleaseActions, ModeMatch
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType
 
@@ -47,6 +45,7 @@ class SmartToggleFunctor(AbstractFunctor):
         transitions = {
             ("wait", "press"): T([process_event, self._start_timer], "down"),
             ("wait", "timeout"): T([noop], "wait"),
+            ("wait", "release"): T([noop], "wait"),
             ("down", "release"): T([noop], "toggle"),
             ("down", "timeout"): T([noop], "held"),
             ("held", "release"): T([process_event], "wait"),
@@ -73,12 +72,28 @@ class SmartToggleFunctor(AbstractFunctor):
             value: Value,
             properties: list[ActionProperty]=[]
     ) -> None:
-        self.fsm.perform(
-            "press" if value.current else "release",
-            event,
-            value,
-            properties + [ActionProperty.DisableAutoRelease]
-        )
+        if value.current:
+            ButtonReleaseActions().register_callback(
+                lambda release_event: self._send_release_action(
+                    release_event, event.mode
+                ),
+                event,
+                ModeMatch.IgnoreMode
+            )
+
+            self.fsm.perform(
+                "press",
+                event,
+                value,
+                properties + [ActionProperty.DisableAutoRelease]
+            )
+
+    def _send_release_action(
+            self,
+            release_event: event_handler.Event,
+            activating_mode: str
+    ) -> None:
+        self.fsm.perform("release", release_event, Value(False), [])
 
 
 class SmartToggleModel(ActionModel):
