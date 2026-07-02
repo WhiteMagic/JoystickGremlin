@@ -7,7 +7,6 @@ from __future__ import annotations
 import copy
 import logging
 import threading
-import time
 from typing import List, Optional, TYPE_CHECKING, override
 from xml.etree import ElementTree
 
@@ -18,6 +17,7 @@ from gremlin import event_handler, fsm, util
 from gremlin.error import GremlinError, ProfileError
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.config import Configuration
+from gremlin.event_helpers import ButtonReleaseActions, ModeMatch
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType
 
@@ -55,12 +55,18 @@ class DoubleTapFunctor(AbstractFunctor):
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
-        self.fsm.perform(
-            "press" if value.current else "release",
-            event,
-            value,
-            properties
-        )
+            ButtonReleaseActions().register_callback(
+                lambda release_event: self._release_cb(
+                    release_event, Value(False), properties
+                ),
+                event
+            )
+
+        action = "press" if value.current else "release"
+        if (self.fsm.current_state, action) not in self.fsm.transitions:
+            self._reset_fsm(event, value, properties)
+        else:
+            self.fsm.perform(action, event, value, properties)
 
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         # Define lambda functions for the needed actions
@@ -125,6 +131,34 @@ class DoubleTapFunctor(AbstractFunctor):
                 ("p2+t", "timeout"): T([noop], "p2+t")
             }
         return fsm.FiniteStateMachine("neutral", states, actions, transitions)
+
+    def _reset_fsm(
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty]
+    ) -> None:
+        logging.getLogger("event").warning(
+            "DoubleTap: Resetting due to invalid FSM transition."
+        )
+        if self.timer:
+           self.timer.cancel()
+        self.fsm.reset()
+        self._process_event(
+            self.functors["single"] + self.functors["double"],
+            event,
+            value,
+            properties
+        )
+
+    def _release_cb(
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty]
+    ) -> None:
+        if (self.fsm.current_state, "release") in self.fsm.transitions:
+            self._reset_fsm(event, value, properties)
 
     def _timeout(self) -> None:
         self.fsm.perform("timeout", self.event_press, self.value_press, [])
