@@ -14,8 +14,8 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    device_helpers,
     event_handler,
+    event_helpers,
     mode_manager,
     util,
 )
@@ -84,7 +84,7 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
 
                 if is_pressed \
                         and ActionProperty.DisableAutoRelease not in properties:
-                    device_helpers.ButtonReleaseActions() \
+                    event_helpers.ButtonReleaseActions() \
                         .register_logical_button_release(
                             input.id,
                             event,

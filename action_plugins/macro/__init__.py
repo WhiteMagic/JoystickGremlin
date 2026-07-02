@@ -19,8 +19,8 @@ from PySide6 import QtCore
 import dill
 from action_plugins import common
 from gremlin import (
-    device_helpers,
     event_handler,
+    event_helpers,
     keyboard,
     macro,
     util,
@@ -668,8 +668,8 @@ class MacroFunctor(AbstractFunctor):
         if self._should_execute(value):
             macro.MacroManager().queue_macro(self.macro)
             if self.data.repeat_mode == MacroRepeatModes.Hold:
-                device_helpers.ButtonReleaseActions().register_callback(
-                    lambda: macro.MacroManager().terminate_macro(self.macro),
+                event_helpers.ButtonReleaseActions().register_callback(
+                    lambda _event: macro.MacroManager().terminate_macro(self.macro),
                     event
                 )
 

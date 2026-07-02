@@ -19,10 +19,10 @@ from PySide6 import QtCore
 from vjoy.vjoy import VJoyProxy
 
 from gremlin import (
-    device_helpers,
     device_initialization,
     error,
     event_handler,
+    event_helpers,
     signal,
     util
 )
@@ -108,7 +108,7 @@ class MapToVjoyFunctor(AbstractFunctor):
                     .button(self.data.vjoy_input_id).is_pressed = is_pressed
 
                 if is_pressed and ActionProperty.DisableAutoRelease not in properties:
-                    device_helpers.ButtonReleaseActions().register_vjoy_button_release(
+                    event_helpers.ButtonReleaseActions().register_vjoy_button_release(
                         (self.data.vjoy_device_id, self.data.vjoy_input_id),
                         event,
                         self.data.button_inverted

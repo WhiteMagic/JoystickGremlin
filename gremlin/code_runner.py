@@ -19,10 +19,10 @@ from vjoy.vjoy import VJoyProxy
 
 from gremlin import (
     audio_player,
-    device_helpers,
     device_initialization,
     error,
     event_handler,
+    event_helpers,
     input_cache,
     fsm,
     macro,
@@ -461,7 +461,7 @@ class CodeRunner:
         self.event_handler._active_mode = self._profile.modes.first_mode
         self.event_handler._previous_mode = self._profile.modes.first_mode
         user_script.callback_registry.clear()
-        device_helpers.ButtonReleaseActions().reset()
+        event_helpers.ButtonReleaseActions().reset()
 
     def _refresh_axes(self) -> None:
         # Store state of all vJoy axes before we do anything.

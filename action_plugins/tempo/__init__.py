@@ -34,7 +34,7 @@ from gremlin.base_classes import (
     Value,
 )
 from gremlin.config import Configuration
-from gremlin.device_helpers import ButtonReleaseActions, ModeMatch
+from gremlin.event_helpers import ButtonReleaseActions, ModeMatch
 from gremlin.mode_manager import ModeManager
 from gremlin.profile import Library
 from gremlin.types import (
@@ -78,37 +78,41 @@ class TempoFunctor(AbstractFunctor):
 
         # Copy state when input is pressed
         if value.current:
-            # # If the FSM didn't return to wait (e.g. a prior release was
-            # # swallowed by an outer condition), clean up before starting fresh.
-            # if self.fsm.current_state != "wait":
-            #     if self.timer:
-            #         self.timer.cancel()
-            #     self.fsm.reset()
-
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
             # Register a button release event to reset the FSM should the
             # input be released in a different mode.
             ButtonReleaseActions().register_callback(
-                lambda: self._reset_fsm_if_required(event.mode),
+                lambda release_event: self._reset_fsm_if_required(
+                    release_event, event.mode
+                ),
                 event,
                 ModeMatch.IgnoreMode
             )
 
-        self.fsm.perform(
-            "press" if value.current else "release",
-            event,
-            value,
-            properties
-        )
-
-    def _reset_fsm_if_required(self, activating_mode: str) -> None:
-        if self.fsm.current_state != "wait":
-            if self.timer:
-                self.timer.cancel()
+        action = "press" if value.current else "release"
+        if (self.fsm.current_state, action) not in self.fsm.transitions:
+            logging.getLogger("event").warning(
+                f"Tempo: Invalid FSM transition: ({self.fsm.current_state}, {action})"
+            )
             self.fsm.reset()
+            return
 
+        self.fsm.perform(action, event, value, properties)
+
+    def _reset_fsm_if_required(
+            self,
+            release_event: event_handler.Event,
+            activating_mode: str
+    ) -> None:
+        if self.fsm.current_state == "long":
+            self.fsm.perform(
+                "release",
+                release_event,
+                Value(release_event.is_pressed),
+                []
+            )
         if ModeManager().current.name != activating_mode:
             self.fsm.reset()
 

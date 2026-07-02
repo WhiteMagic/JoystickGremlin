@@ -16,9 +16,9 @@ from xml.etree import ElementTree
 from PySide6 import QtCore
 
 from gremlin import (
-    device_helpers,
     error,
     event_handler,
+    event_helpers,
     mode_manager,
     shared_state,
     util,
@@ -115,8 +115,8 @@ class ChangeModeFunctor(AbstractFunctor):
                     True
                 ))
 
-                device_helpers.ButtonReleaseActions().register_callback(
-                    self._release_temporary_mode,
+                event_helpers.ButtonReleaseActions().register_callback(
+                    lambda _event: self._release_temporary_mode(),
                     event
                 )
             # Leave the temporary mode when the input is released while in the

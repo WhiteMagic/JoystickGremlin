@@ -26,6 +26,7 @@ from gremlin import (
     config,
     device_initialization,
     error,
+    event_helpers,
     keyboard,
     mode_manager,
     util,
@@ -560,6 +561,7 @@ class EventHandler(QtCore.QObject):
         Args:
             event: the event to process
         """
+        # Process callbacks defined via actions or scripts.
         for cb in self._matching_callbacks(event):
             try:
                 cb(event)
@@ -567,6 +569,9 @@ class EventHandler(QtCore.QObject):
                 signal.display_error("Error encountered with vJoy.", str(e))
                 logging.getLogger("system").exception(f"VJoy error: '{e}'")
                 self.pause()
+
+        # Call button release callbacks after basic event processing completes.
+        event_helpers.ButtonReleaseActions().process_release(event)
 
     def _matching_callbacks(
             self,
