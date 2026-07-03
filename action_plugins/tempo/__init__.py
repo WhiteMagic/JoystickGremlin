@@ -7,7 +7,6 @@ from __future__ import annotations
 import copy
 import logging
 import threading
-import time
 from typing import (
     override,
     List,
@@ -84,7 +83,7 @@ class TempoFunctor(AbstractFunctor):
             # Register a button release event to reset the FSM should the
             # input be released in a different mode.
             ButtonReleaseActions().register_callback(
-                lambda release_event: self._reset_fsm_if_required(
+                lambda release_event: self._release_cb(
                     release_event, event.mode
                 ),
                 event,
@@ -101,18 +100,13 @@ class TempoFunctor(AbstractFunctor):
 
         self.fsm.perform(action, event, value, properties)
 
-    def _reset_fsm_if_required(
+    def _release_cb(
             self,
-            release_event: event_handler.Event,
+            event: event_handler.Event,
             activating_mode: str
     ) -> None:
         if self.fsm.current_state == "long":
-            self.fsm.perform(
-                "release",
-                release_event,
-                Value(release_event.is_pressed),
-                []
-            )
+            self.fsm.perform("release", event, Value(False), [])
         if ModeManager().current.name != activating_mode:
             self.fsm.reset()
 

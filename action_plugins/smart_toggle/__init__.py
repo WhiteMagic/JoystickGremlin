@@ -74,7 +74,7 @@ class SmartToggleFunctor(AbstractFunctor):
     ) -> None:
         if value.current:
             ButtonReleaseActions().register_callback(
-                lambda release_event: self._send_release_action(
+                lambda release_event: self._release_cb(
                     release_event, event.mode
                 ),
                 event,
@@ -88,12 +88,12 @@ class SmartToggleFunctor(AbstractFunctor):
                 properties + [ActionProperty.DisableAutoRelease]
             )
 
-    def _send_release_action(
+    def _release_cb(
             self,
-            release_event: event_handler.Event,
+            event: event_handler.Event,
             activating_mode: str
     ) -> None:
-        self.fsm.perform("release", release_event, Value(False), [])
+        self.fsm.perform("release", event, Value(False), [])
 
 
 class SmartToggleModel(ActionModel):

@@ -209,9 +209,8 @@ class ButtonReleaseActions(QtCore.QObject):
                 case ModeMatch.MatchMode:
                     run_callback = self._current_mode == entry.registration_mode
 
-            if not run_callback:
-                pass
-            elif event.is_pressed == (entry.release_mode == ReleaseMode.OnPress):
+            if run_callback and \
+                    event.is_pressed == (entry.release_mode == ReleaseMode.OnPress):
                 entry.callback(event)
             else:
                 new_list.append(entry)

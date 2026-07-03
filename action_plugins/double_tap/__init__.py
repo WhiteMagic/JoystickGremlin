@@ -157,7 +157,7 @@ class DoubleTapFunctor(AbstractFunctor):
         value: Value,
         properties: list[ActionProperty]
     ) -> None:
-        if (self.fsm.current_state, "release") in self.fsm.transitions:
+        if (self.fsm.current_state, "press") not in self.fsm.transitions:
             self._reset_fsm(event, value, properties)
 
     def _timeout(self) -> None:
