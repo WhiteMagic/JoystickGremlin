@@ -67,10 +67,7 @@ def test_condition_with_tempo(jgbot: JoystickGremlinBot, profile_dir: Path) -> N
 
     jgbot.press_button(IN_BUTTON_4)
     jgbot.press_button(IN_BUTTON_2)
-    # jgbot.release_button(IN_BUTTON_4)
     jgbot.release_button(IN_BUTTON_2)
-    # jgbot.press_button(IN_BUTTON_4)
-    # jgbot.press_button(IN_BUTTON_2)
 
     assert EventSpec(
         InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
@@ -85,5 +82,3 @@ def test_condition_with_tempo(jgbot: JoystickGremlinBot, profile_dir: Path) -> N
 
     jgbot.release_button(IN_BUTTON_4)
     jgbot.release_button(IN_BUTTON_2)
-
-    # assert jgbot.button(OUT_BUTTON_2)

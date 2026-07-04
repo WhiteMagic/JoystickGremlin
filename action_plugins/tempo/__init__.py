@@ -34,7 +34,6 @@ from gremlin.base_classes import (
 )
 from gremlin.config import Configuration
 from gremlin.event_helpers import ButtonReleaseActions, ModeMatch
-from gremlin.mode_manager import ModeManager
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
@@ -80,35 +79,48 @@ class TempoFunctor(AbstractFunctor):
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
-            # Register a button release event to reset the FSM should the
-            # input be released in a different mode.
+            # React to button release events to perform a fallback release in
+            # case of invalid FSM state transitions due to action interactions.
             ButtonReleaseActions().register_callback(
                 lambda release_event: self._release_cb(
-                    release_event, event.mode
+                    release_event, Value(False), properties
                 ),
-                event,
-                ModeMatch.IgnoreMode
+                event
             )
 
         action = "press" if value.current else "release"
         if (self.fsm.current_state, action) not in self.fsm.transitions:
-            logging.getLogger("event").warning(
-                f"Tempo: Invalid FSM transition: ({self.fsm.current_state}, {action})"
-            )
-            self.fsm.reset()
-            return
+            self._reset_fsm(event, value, properties)
+        else:
+            self.fsm.perform(action, event, value, properties)
 
-        self.fsm.perform(action, event, value, properties)
+    def _reset_fsm(
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty]
+    ) -> None:
+        logging.getLogger("event").warning(
+            "Tempo: Resetting due to invalid FSM transition."
+        )
+        if self.timer:
+            self.timer.cancel()
+        self.fsm.reset()
+        self._process_event(
+            self.functors["short"] + self.functors["long"],
+            event,
+            value,
+            properties
+        )
 
     def _release_cb(
             self,
             event: event_handler.Event,
-            activating_mode: str
+            value: Value,
+            properties: List[ActionProperty]
     ) -> None:
-        if self.fsm.current_state == "long":
-            self.fsm.perform("release", event, Value(False), [])
-        if ModeManager().current.name != activating_mode:
-            self.fsm.reset()
+        if (self.fsm.current_state, "press") not in self.fsm.transitions:
+            self._reset_fsm(event, value, properties)
 
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         T = fsm.Transition

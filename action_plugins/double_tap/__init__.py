@@ -17,7 +17,7 @@ from gremlin import event_handler, fsm, util
 from gremlin.error import GremlinError, ProfileError
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.config import Configuration
-from gremlin.event_helpers import ButtonReleaseActions, ModeMatch
+from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType
 
@@ -55,6 +55,8 @@ class DoubleTapFunctor(AbstractFunctor):
             self.value_press = copy.deepcopy(value)
             self.event_press = event.clone()
 
+            # React to button release events to perform a fallback release in
+            # case of invalid FSM state transitions due to action interactions.
             ButtonReleaseActions().register_callback(
                 lambda release_event: self._release_cb(
                     release_event, Value(False), properties
