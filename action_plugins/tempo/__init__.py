@@ -89,10 +89,8 @@ class TempoFunctor(AbstractFunctor):
             )
 
         action = "press" if value.current else "release"
-        if (self.fsm.current_state, action) not in self.fsm.transitions:
+        if self.fsm.try_perform(action, event, value, properties) is None:
             self._reset_fsm(event, value, properties)
-        else:
-            self.fsm.perform(action, event, value, properties)
 
     def _reset_fsm(
         self,
@@ -188,7 +186,12 @@ class TempoFunctor(AbstractFunctor):
         )
 
     def _timeout(self) -> None:
-        self.fsm.perform("timeout", self.event_press, self.value_press, [])
+        if self.fsm.try_perform(
+            "timeout", self.event_press, self.value_press, []
+        ) is None:
+            logging.getLogger("event").warning(
+                "Tempo: Ignoring stale timeout for current FSM state."
+            )
 
 
 class TempoModel(ActionModel):

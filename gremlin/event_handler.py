@@ -571,7 +571,12 @@ class EventHandler(QtCore.QObject):
                 self.pause()
 
         # Call button release callbacks after basic event processing completes.
-        event_helpers.ButtonReleaseActions().process_release(event)
+        try:
+            event_helpers.ButtonReleaseActions().process_release(event)
+        except error.VJoyError as e:
+            signal.display_error("Error encountered with vJoy.", str(e))
+            logging.getLogger("system").exception(f"VJoy error: '{e}'")
+            self.pause()
 
     def _matching_callbacks(
             self,

@@ -64,3 +64,40 @@ def test_multi():
     assert sm.current_state == "1"
     assert sm.perform("sub", 10, 3) == [7, 30]
     assert sm.current_state == "3"
+
+
+def test_perform_invalid_transition_raises() -> None:
+    states = ["1", "2"]
+    actions = ["switch"]
+    transitions = {
+        ("1", "switch"): fsm.Transition([lambda: None], "2"),
+    }
+
+    sm = fsm.FiniteStateMachine("1", states, actions, transitions)
+
+    assert sm.perform("switch") == [None]
+    assert sm.current_state == "2"
+
+    # No transition exists from state "2", so this raises and leaves the
+    # state unchanged.
+    with pytest.raises(AssertionError):
+        sm.perform("switch")
+    assert sm.current_state == "2"
+
+
+def test_try_perform() -> None:
+    states = ["1", "2"]
+    actions = ["switch"]
+    transitions = {
+        ("1", "switch"): fsm.Transition([lambda: "ok"], "2"),
+    }
+
+    sm = fsm.FiniteStateMachine("1", states, actions, transitions)
+
+    assert sm.try_perform("switch") == ["ok"]
+    assert sm.current_state == "2"
+
+    # No transition exists from state "2", try_perform reports this via
+    # None instead of raising and leaves the state unchanged.
+    assert sm.try_perform("switch") is None
+    assert sm.current_state == "2"

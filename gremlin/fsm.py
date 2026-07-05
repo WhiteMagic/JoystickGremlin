@@ -79,25 +79,22 @@ class FiniteStateMachine:
             if state in self.states:
                 self.current_state = state
 
-    def perform(self, action: str, *args: List[Any]) -> list[Any]:
-        """Performs a state transition on the FSM.
+    def try_perform(self, action: str, *args: Any) -> list[Any] | None:
+        """Attempts a state transition, returning None if invalid instead
+        of raising.
 
         Args:
             action: name of the action to execute
 
         Returns:
-            Result of executing the state transition callback(s).
+            Result of executing the state transition callback(s), or None
+            if no transition exists for the current state and action.
         """
+        assert(action in self.actions)
         with self._lock:
             key = (self.current_state, action)
-
-            # Ensure the validity of the transition.
-            assert(action in self.actions)
             if key not in self.transitions:
-                logging.getLogger("system").exception(
-                    f"Missing transition: {key}: {self.transitions.keys()}"
-                )
-            assert(key in self.transitions)
+                return None
             assert(self.transitions[key].new_state in self.states)
 
             values = [cb(*args) for cb in self.transitions[key].callbacks]
@@ -108,3 +105,21 @@ class FiniteStateMachine:
                 )
             self.current_state = self.transitions[key].new_state
             return values
+
+    def perform(self, action: str, *args: Any) -> list[Any]:
+        """Performs a state transition on the FSM.
+
+        Args:
+            action: name of the action to execute
+
+        Returns:
+            Result of executing the state transition callback(s).
+        """
+        result = self.try_perform(action, *args)
+        if result is None:
+            key = (self.current_state, action)
+            logging.getLogger("system").exception(
+                f"Missing transition: {key}: {self.transitions.keys()}"
+            )
+            assert(key in self.transitions)
+        return result

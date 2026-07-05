@@ -65,10 +65,8 @@ class DoubleTapFunctor(AbstractFunctor):
             )
 
         action = "press" if value.current else "release"
-        if (self.fsm.current_state, action) not in self.fsm.transitions:
+        if self.fsm.try_perform(action, event, value, properties) is None:
             self._reset_fsm(event, value, properties)
-        else:
-            self.fsm.perform(action, event, value, properties)
 
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         # Define lambda functions for the needed actions
@@ -144,7 +142,7 @@ class DoubleTapFunctor(AbstractFunctor):
             "DoubleTap: Resetting due to invalid FSM transition."
         )
         if self.timer:
-           self.timer.cancel()
+            self.timer.cancel()
         self.fsm.reset()
         self._process_event(
             self.functors["single"] + self.functors["double"],
@@ -163,7 +161,12 @@ class DoubleTapFunctor(AbstractFunctor):
             self._reset_fsm(event, value, properties)
 
     def _timeout(self) -> None:
-        self.fsm.perform("timeout", self.event_press, self.value_press, [])
+        if self.fsm.try_perform(
+            "timeout", self.event_press, self.value_press, []
+        ) is None:
+            logging.getLogger("event").warning(
+                "DoubleTap: Ignoring stale timeout for current FSM state."
+            )
 
     def _start_timer(self, *args) -> None:
         if self.timer:
