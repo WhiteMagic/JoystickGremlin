@@ -14,7 +14,7 @@ from PySide6.QtCore import Property, Signal
 from gremlin import event_handler, fsm, util
 from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
 from gremlin.config import Configuration
-from gremlin.event_helpers import ButtonReleaseActions, ModeMatch
+from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
 from gremlin.types import ActionProperty, InputType, PropertyType
 
@@ -77,8 +77,7 @@ class SmartToggleFunctor(AbstractFunctor):
                 lambda release_event: self._release_cb(
                     release_event, Value(False), properties
                 ),
-                event,
-                ModeMatch.IgnoreMode
+                event
             )
 
             self.fsm.perform(
