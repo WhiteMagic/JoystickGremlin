@@ -722,11 +722,19 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
     def roleNames(self) -> Dict:
         return self.roles
 
+    def _get_valid_types(self) -> List[str]:
+        return [InputType.to_string(entry) for entry in self._valid_types]
+
     def _set_valid_types(self, valid_types: List[str]) -> None:
-        type_list = sorted(
-            [InputType.to_enum(entry) for entry in valid_types],
-            key=lambda x: x.value
-        )
+        # LogicalDevice has no keyboard-type input, keyboard presses behave
+        # like a button press/release, so map them onto a logical button.
+        type_list = [InputType.to_enum(entry) for entry in valid_types]
+        if InputType.Keyboard in type_list:
+            type_list.remove(InputType.Keyboard)
+            if InputType.JoystickButton not in type_list:
+                type_list.append(InputType.JoystickButton)
+
+        type_list = sorted(type_list, key=lambda x: x.value)
         if type_list != self._valid_types:
             is_initialized = len(self._valid_types) > 0
             self._valid_types = type_list
@@ -769,6 +777,7 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
 
     validTypes = Property(
         list,
+        fget=_get_valid_types,
         fset=_set_valid_types,
         notify=inputsChanged
     )
