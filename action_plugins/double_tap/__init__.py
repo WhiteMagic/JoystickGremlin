@@ -7,28 +7,50 @@ from __future__ import annotations
 import copy
 import logging
 import threading
-from typing import List, Optional, TYPE_CHECKING, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+    Optional,
+    override,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal
 
-from gremlin import event_handler, fsm, util
-from gremlin.error import GremlinError, ProfileError
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
+from gremlin import (
+    event_handler,
+    fsm,
+    util,
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    UserFeedback,
+    Value,
+)
 from gremlin.config import Configuration
+from gremlin.error import (
+    GremlinError,
+    ProfileError,
+)
 from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, PropertyType
-
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.types import (
+    ActionProperty,
+    InputType,
+    PropertyType,
+)
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
 class DoubleTapFunctor(AbstractFunctor):
-
     def __init__(self, action: DoubleTapData) -> None:
         super().__init__(action)
 
@@ -39,10 +61,10 @@ class DoubleTapFunctor(AbstractFunctor):
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
@@ -61,7 +83,7 @@ class DoubleTapFunctor(AbstractFunctor):
                 lambda release_event: self._release_cb(
                     release_event, Value(False), properties
                 ),
-                event
+                event,
             )
 
         action = "press" if value.current else "release"
@@ -71,31 +93,40 @@ class DoubleTapFunctor(AbstractFunctor):
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         # Define lambda functions for the needed actions
         T = fsm.Transition
-        noop = lambda *args: None
-        single_pulse = lambda e, v, p: self._pulse_event(
-            self.functors["single"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        single_press = lambda e, v, p: self._process_event(
-            self.functors["single"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        single_release = lambda e, v, p: self._process_event(
-            self.functors["single"], e, v, p
-        )
-        double_press = lambda e, v, p: self._process_event(
-            self.functors["double"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        double_release = lambda e, v, p: self._process_event(
-            self.functors["double"], e, v, p
-        )
+
+        def noop(*args: Any) -> None:  # noqa: ANN401
+            pass
+
+        def single_pulse(
+            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._pulse_event(
+                self.functors["single"], self.event_press, self.value_press, p
+            )
+
+        def single_press(
+            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(
+                self.functors["single"], self.event_press, self.value_press, p
+            )
+
+        def single_release(
+            e: event_handler.Event, v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(self.functors["single"], e, v, p)
+
+        def double_press(
+            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(
+                self.functors["double"], self.event_press, self.value_press, p
+            )
+
+        def double_release(
+            e: event_handler.Event, v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(self.functors["double"], e, v, p)
 
         states = ["neutral", "p1", "p1+t", "p2+t", "t"]
         actions = ["press", "release", "timeout"]
@@ -110,33 +141,24 @@ class DoubleTapFunctor(AbstractFunctor):
                 ("t", "press"): T([double_press], "p2+t"),
                 ("t", "timeout"): T([single_pulse], "neutral"),
                 ("p2+t", "release"): T([double_release], "neutral"),
-                ("p2+t", "timeout"): T([noop], "p2+t")
+                ("p2+t", "timeout"): T([noop], "p2+t"),
             }
         elif self.data.activate_on == "combined":
             transitions = {
-                ("neutral", "press"): T(
-                    [single_press, self._start_timer], "p1+t"
-                ),
+                ("neutral", "press"): T([single_press, self._start_timer], "p1+t"),
                 ("neutral", "timeout"): T([noop], "neutral"),
                 ("p1+t", "release"): T([single_release], "t"),
                 ("p1+t", "timeout"): T([noop], "p1"),
                 ("p1", "release"): T([single_release], "neutral"),
-                ("t", "press"): T(
-                    [single_press, double_press], "p2+t"
-                ),
+                ("t", "press"): T([single_press, double_press], "p2+t"),
                 ("t", "timeout"): T([noop], "neutral"),
-                ("p2+t", "release"): T(
-                    [single_release, double_release], "neutral"
-                ),
-                ("p2+t", "timeout"): T([noop], "p2+t")
+                ("p2+t", "release"): T([single_release, double_release], "neutral"),
+                ("p2+t", "timeout"): T([noop], "p2+t"),
             }
         return fsm.FiniteStateMachine("neutral", states, actions, transitions)
 
     def _reset_fsm(
-        self,
-        event: event_handler.Event,
-        value: Value,
-        properties: list[ActionProperty]
+        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         logging.getLogger("event").warning(
             "DoubleTap: Resetting due to invalid FSM transition."
@@ -145,30 +167,25 @@ class DoubleTapFunctor(AbstractFunctor):
             self.timer.cancel()
         self.fsm.reset()
         self._process_event(
-            self.functors["single"] + self.functors["double"],
-            event,
-            value,
-            properties
+            self.functors["single"] + self.functors["double"], event, value, properties
         )
 
     def _release_cb(
-        self,
-        event: event_handler.Event,
-        value: Value,
-        properties: list[ActionProperty]
+        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         if (self.fsm.current_state, "press") not in self.fsm.transitions:
             self._reset_fsm(event, value, properties)
 
     def _timeout(self) -> None:
-        if self.fsm.try_perform(
-            "timeout", self.event_press, self.value_press, []
-        ) is None:
+        if (
+            self.fsm.try_perform("timeout", self.event_press, self.value_press, [])
+            is None
+        ):
             logging.getLogger("event").warning(
                 "DoubleTap: Ignoring stale timeout for current FSM state."
             )
 
-    def _start_timer(self, *args) -> None:
+    def _start_timer(self, *args: Any) -> None:  # noqa: ANN401
         if self.timer:
             self.timer.cancel()
         self.timer = threading.Timer(self.data.threshold, self._timeout)
@@ -176,28 +193,28 @@ class DoubleTapFunctor(AbstractFunctor):
 
 
 class DoubleTapModel(ActionModel):
-
-    actionsChanged = Signal()
-    activateOnChanged = Signal()
-    thresholdChanged = Signal()
+    actionsChanged = QtCore.Signal()
+    activateOnChanged = QtCore.Signal()
+    thresholdChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:double_Tap/DoubleTapAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:double_Tap/DoubleTapAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -206,7 +223,7 @@ class DoubleTapModel(ActionModel):
             self._data.threshold = value
             self.thresholdChanged.emit()
 
-    @Property(float, fset=_set_threshold, notify=thresholdChanged)
+    @QtCore.Property(float, fset=_set_threshold, notify=thresholdChanged)
     def threshold(self) -> float:
         return self._data.threshold
 
@@ -218,13 +235,12 @@ class DoubleTapModel(ActionModel):
             self._data.activate_on = value
             self.activateOnChanged.emit()
 
-    @Property(str, fset=_set_activate_on, notify=activateOnChanged)
+    @QtCore.Property(str, fset=_set_activate_on, notify=activateOnChanged)
     def activateOn(self) -> str:
         return self._data.activate_on
 
 
 class DoubleTapData(AbstractActionData):
-
     """A container with two actions which are triggered based on whether the
     input is pressed once or twice in quick succession.
 
@@ -235,23 +251,15 @@ class DoubleTapData(AbstractActionData):
     version = 1
     name = "Double Tap"
     tag = "double-tap"
-    icon = "\uF26F"
+    icon = "\uf26f"
 
     functor = DoubleTapFunctor
     model = DoubleTapModel
 
-    properties = (
-        ActionProperty.ActivateDisabled,
-    )
-    input_types = (
-        InputType.JoystickButton,
-        InputType.Keyboard
-    )
+    properties = (ActionProperty.ActivateDisabled,)
+    input_types = (InputType.JoystickButton, InputType.Keyboard)
 
-    def __init__(
-        self,
-        behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.single_actions = []
@@ -266,16 +274,10 @@ class DoubleTapData(AbstractActionData):
         self.single_actions = [library.get_action(aid) for aid in short_ids]
         long_ids = util.read_action_ids(node.find("double-actions"))
         self.double_actions = [library.get_action(aid) for aid in long_ids]
-        self.threshold = util.read_property(
-            node, "threshold", PropertyType.Float
-        )
-        self.activate_on = util.read_property(
-            node, "activate-on", PropertyType.String
-        )
+        self.threshold = util.read_property(node, "threshold", PropertyType.Float)
+        self.activate_on = util.read_property(node, "activate-on", PropertyType.String)
         if self.activate_on not in ["exclusive", "combined"]:
-            raise ProfileError(
-                f"Invalid activat-on value present: {self.activate_on}"
-            )
+            raise ProfileError(f"Invalid activat-on value present: {self.activate_on}")
 
     @override
     def _to_xml(self) -> ElementTree.Element:
@@ -284,18 +286,24 @@ class DoubleTapData(AbstractActionData):
         :return XML node representing the data of this container
         """
         node = util.create_action_node(DoubleTapData.tag, self._id)
-        node.append(util.create_action_ids(
-            "single-actions", [action.id for action in self.single_actions]
-        ))
-        node.append(util.create_action_ids(
-            "double-actions", [action.id for action in self.double_actions]
-        ))
-        node.append(util.create_property_node(
-            "threshold", self.threshold, PropertyType.Float
-        ))
-        node.append(util.create_property_node(
-            "activate-on", self.activate_on, PropertyType.String
-        ))
+        node.append(
+            util.create_action_ids(
+                "single-actions", [action.id for action in self.single_actions]
+            )
+        )
+        node.append(
+            util.create_action_ids(
+                "double-actions", [action.id for action in self.double_actions]
+            )
+        )
+        node.append(
+            util.create_property_node("threshold", self.threshold, PropertyType.Float)
+        )
+        node.append(
+            util.create_property_node(
+                "activate-on", self.activate_on, PropertyType.String
+            )
+        )
 
         return node
 
@@ -309,8 +317,7 @@ class DoubleTapData(AbstractActionData):
 
     @override
     def _get_container(
-            self,
-            selector: Optional[str] = None
+        self, selector: Optional[str] = None
     ) -> List[AbstractActionData]:
         if selector == "single":
             return self.single_actions
@@ -319,9 +326,7 @@ class DoubleTapData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 
@@ -334,11 +339,8 @@ Configuration().register(
     "duration",
     PropertyType.Float,
     0.5,
-    "The time in seconds that can elapse between subsequent presses in order " \
-        "to trigger the double tap action.",
-    {
-        "min": 0.0,
-        "max": 10.0
-    },
-    True
+    "The time in seconds that can elapse between subsequent presses in order "
+    "to trigger the double tap action.",
+    {"min": 0.0, "max": 10.0},
+    True,
 )

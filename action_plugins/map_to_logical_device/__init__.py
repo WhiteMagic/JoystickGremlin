@@ -5,9 +5,9 @@
 from __future__ import annotations
 
 from typing import (
-    override,
-    List,
     TYPE_CHECKING,
+    List,
+    override,
 )
 from xml.etree import ElementTree
 
@@ -35,20 +35,17 @@ from gremlin.types import (
     InputType,
     PropertyType,
 )
-
 from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
 )
 from gremlin.ui.device import InputIdentifier
 
-
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
 class MapToLogicalDeviceFunctor(AbstractFunctor):
-
     def __init__(self, instance: MapToLogicalDeviceData) -> None:
         super().__init__(instance)
         self._logical = LogicalDevice()
@@ -56,17 +53,18 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty] = [],
     ) -> None:
         if not self._should_execute(value):
             return
-        input = self._logical[LogicalDevice.Input.Identifier(
-            self.data.logical_input_type,
-            self.data.logical_input_id
-        )]
+        input = self._logical[
+            LogicalDevice.Input.Identifier(
+                self.data.logical_input_type, self.data.logical_input_id
+            )
+        ]
 
         # Determine correct event values and update the logical device's
         # internal state.
@@ -82,14 +80,10 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
                     is_pressed = not is_pressed
                 input.update(is_pressed)
 
-                if is_pressed \
-                        and ActionProperty.DisableAutoRelease not in properties:
-                    event_helpers.ButtonReleaseActions() \
-                        .register_logical_button_release(
-                            input.id,
-                            event,
-                            self.data.button_inverted
-                        )
+                if is_pressed and ActionProperty.DisableAutoRelease not in properties:
+                    event_helpers.ButtonReleaseActions().register_logical_button_release(
+                        input.id, event, self.data.button_inverted
+                    )
             case InputType.JoystickHat:
                 input_value = value.current
                 input.update(input_value)
@@ -104,13 +98,12 @@ class MapToLogicalDeviceFunctor(AbstractFunctor):
                 mode=mode_manager.ModeManager().current.name,
                 value=input_value,
                 is_pressed=is_pressed,
-                raw_value=value.raw
+                raw_value=value.raw,
             )
         )
 
 
 class MapToLogicalDeviceModel(ActionModel):
-
     logicalInputIdentifierChanged = QtCore.Signal()
     logicalInputTypeChanged = QtCore.Signal()
     axisModeChanged = QtCore.Signal()
@@ -118,23 +111,26 @@ class MapToLogicalDeviceModel(ActionModel):
     buttonInvertedChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
         signal.logicalDeviceModified.emit()
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:map_to_logical_device/MapToLogicalDeviceAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile(
+                "core_plugins:map_to_logical_device/MapToLogicalDeviceAction.qml"
+            ).fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -143,7 +139,7 @@ class MapToLogicalDeviceModel(ActionModel):
             LogicalDevice().device_guid,
             self._data.logical_input_type,
             self._data.logical_input_id,
-            parent=self
+            parent=self,
         )
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
@@ -151,7 +147,7 @@ class MapToLogicalDeviceModel(ActionModel):
             LogicalDevice().device_guid,
             self._data.logical_input_type,
             self._data.logical_input_id,
-            parent=self
+            parent=self,
         )
         if new_identifier != identifier:
             self._data.logical_input_id = identifier.input_id
@@ -193,48 +189,37 @@ class MapToLogicalDeviceModel(ActionModel):
         InputIdentifier,
         fget=_get_logical_input_identifier,
         fset=_set_logical_input_identifier,
-        notify=logicalInputIdentifierChanged
+        notify=logicalInputIdentifierChanged,
     )
     logicalInputType = QtCore.Property(
-        str,
-        fget=_get_logical_input_type,
-        notify=logicalInputIdentifierChanged
+        str, fget=_get_logical_input_type, notify=logicalInputIdentifierChanged
     )
     axisMode = QtCore.Property(
-        str,
-        fget=_get_axis_mode,
-        fset=_set_axis_mode,
-        notify=axisModeChanged
+        str, fget=_get_axis_mode, fset=_set_axis_mode, notify=axisModeChanged
     )
     axisScaling = QtCore.Property(
-        float,
-        fget=_get_axis_scaling,
-        fset=_set_axis_scaling,
-        notify=axisScalingChanged
+        float, fget=_get_axis_scaling, fset=_set_axis_scaling, notify=axisScalingChanged
     )
     buttonInverted = QtCore.Property(
         bool,
         fget=_get_button_inverted,
         fset=_set_button_inverted,
-        notify=buttonInvertedChanged
+        notify=buttonInvertedChanged,
     )
 
 
 class MapToLogicalDeviceData(AbstractActionData):
-
     """Action propagating data to the logical device inputs."""
 
     version = 1
-    name  = "Map to Logical Device"
+    name = "Map to Logical Device"
     tag = "map-to-logical-device"
-    icon = "\uF6E7"
+    icon = "\uf6e7"
 
     functor = MapToLogicalDeviceFunctor
     model = MapToLogicalDeviceModel
 
-    properties = (
-        ActionProperty.ActivateOnBoth,
-    )
+    properties = (ActionProperty.ActivateOnBoth,)
     input_types = (
         InputType.JoystickAxis,
         InputType.JoystickButton,
@@ -242,16 +227,16 @@ class MapToLogicalDeviceData(AbstractActionData):
         InputType.Keyboard,
     )
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         # Select an initially valid logical input
         logical = LogicalDevice()
-        input_type = behavior_type if behavior_type != InputType.Keyboard \
+        input_type = (
+            behavior_type
+            if behavior_type != InputType.Keyboard
             else InputType.JoystickButton
+        )
         try:
             logical_input = logical.inputs_of_type([input_type])[0]
         except (GremlinError, IndexError):
@@ -289,23 +274,33 @@ class MapToLogicalDeviceData(AbstractActionData):
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToLogicalDeviceData.tag, self._id)
-        node.append(util.create_property_node(
-            "logical-input-id", self.logical_input_id, PropertyType.Int
-        ))
-        node.append(util.create_property_node(
-            "logical-input-type", self.logical_input_type, PropertyType.InputType
-        ))
+        node.append(
+            util.create_property_node(
+                "logical-input-id", self.logical_input_id, PropertyType.Int
+            )
+        )
+        node.append(
+            util.create_property_node(
+                "logical-input-type", self.logical_input_type, PropertyType.InputType
+            )
+        )
         if self.logical_input_type == InputType.JoystickAxis:
-            node.append(util.create_property_node(
-                "axis-mode", self.axis_mode, PropertyType.AxisMode
-            ))
-            node.append(util.create_property_node(
-                "axis-scaling", self.axis_scaling, PropertyType.Float
-            ))
+            node.append(
+                util.create_property_node(
+                    "axis-mode", self.axis_mode, PropertyType.AxisMode
+                )
+            )
+            node.append(
+                util.create_property_node(
+                    "axis-scaling", self.axis_scaling, PropertyType.Float
+                )
+            )
         if self.logical_input_type == InputType.JoystickButton:
-            node.append(util.create_property_node(
-                "button-inverted", self.button_inverted, PropertyType.Bool
-            ))
+            node.append(
+                util.create_property_node(
+                    "button-inverted", self.button_inverted, PropertyType.Bool
+                )
+            )
         return node
 
     @override
@@ -322,9 +317,7 @@ class MapToLogicalDeviceData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         self.logical_input_type = new_behavior
 

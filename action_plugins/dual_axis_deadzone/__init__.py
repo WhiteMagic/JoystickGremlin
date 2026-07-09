@@ -8,21 +8,37 @@ import collections
 import copy
 import logging
 import math
-from typing import override, TYPE_CHECKING
+import uuid
+from typing import (
+    TYPE_CHECKING,
+    override,
+)
 from xml.etree import ElementTree
 
-from PySide6 import QtCore, QtGui, QtQml
-from PySide6.QtCore import Property, Signal, Slot, QCborTag
+from PySide6 import QtCore
 
-from gremlin import event_handler, spline, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
-from gremlin.error import GremlinError, ProfileError
+from gremlin import (
+    event_handler,
+    util,
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    UserFeedback,
+    Value,
+)
 from gremlin.input_cache import Joystick
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, DataCreationMode, InputType, PropertyType
-from gremlin.util import clamp
-
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.types import (
+    ActionProperty,
+    DataCreationMode,
+    InputType,
+    PropertyType,
+)
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import LabelValueSelectionModel
 
@@ -34,35 +50,34 @@ Vector2 = collections.namedtuple("Vector2", ["x", "y"])
 
 
 class DualAxisDeadzoneFunctor(AbstractFunctor):
-
     """Implements the function executed of the Description action at runtime."""
 
-    def __init__(self, action: DualAxisDeadzoneData):
+    def __init__(self, action: DualAxisDeadzoneData) -> None:
         super().__init__(action)
 
         self.joy = Joystick()
 
     @override
     def __call__(
-            self,
-            event: Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         # Retrieve current joystick values
-        x_value = self.joy[self.data.axis1.device_guid].axis(
-            self.data.axis1.input_id
-        ).value
-        y_value = self.joy[self.data.axis2.device_guid].axis(
-            self.data.axis2.input_id
-        ).value
+        x_value = (
+            self.joy[self.data.axis1.device_guid].axis(self.data.axis1.input_id).value
+        )
+        y_value = (
+            self.joy[self.data.axis2.device_guid].axis(self.data.axis2.input_id).value
+        )
 
         # Apply the deadzones, a circular one around the center and a
         # rectangular around the outside.
         alpha = math.atan2(y_value, x_value)
         lower = Vector2(
             abs(math.cos(alpha) * self.data.inner_deadzone),
-            abs(math.sin(alpha) * self.data.inner_deadzone)
+            abs(math.sin(alpha) * self.data.inner_deadzone),
         )
         upper = Vector2(self.data.outer_deadzone, self.data.outer_deadzone)
 
@@ -84,47 +99,48 @@ class DualAxisDeadzoneFunctor(AbstractFunctor):
                 functor(event, value_y, properties)
         except ZeroDivisionError:
             logging.getLogger("system").error(
-                f"DualAxisDeadzone: ({self.data.label}) deadzone limits too " +
-                f"close to each other"
+                f"DualAxisDeadzone: ({self.data.label}) deadzone limits too "
+                + "close to each other"
             )
 
 
 class DualAxisDeadzoneModel(ActionModel):
-
-    modelChanged = Signal()
+    modelChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
-    ):
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:dual_axis_deadzone/DualAxisDeadzoneAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile(
+                "core_plugins:dual_axis_deadzone/DualAxisDeadzoneAction.qml"
+            ).fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
-    @Slot()
+    @QtCore.Slot()
     def newDeadzone(self) -> None:
         action = DualAxisDeadzoneData.create(
-            DataCreationMode.Create,
-            self._binding_model.behavior_type
+            DataCreationMode.Create, self._binding_model.behavior_type
         )
         action.label = "Dual Axis Deadzone"
 
         self.library.add_action(action)
         self.modelChanged.emit()
 
-    @Property(LabelValueSelectionModel, notify=modelChanged)
+    @QtCore.Property(LabelValueSelectionModel, notify=modelChanged)
     def deadzoneActionList(self) -> LabelValueSelectionModel:
         deadzone_actions = sorted(
             self.library.actions_by_type(DualAxisDeadzoneData),
@@ -134,7 +150,7 @@ class DualAxisDeadzoneModel(ActionModel):
         return LabelValueSelectionModel(
             [da.label for da in deadzone_actions],
             [str(da.id) for da in deadzone_actions],
-            parent=self
+            parent=self,
         )
 
     def _get_axis(self, idx: int) -> InputIdentifier:
@@ -160,11 +176,7 @@ class DualAxisDeadzoneModel(ActionModel):
 
         # Remove current input item assignments from the action being deselected
         item = self._binding_model.input_item_binding.input_item
-        identifier = InputIdentifier(
-            item.device_id,
-            item.input_type,
-            item.input_id
-        )
+        identifier = InputIdentifier(item.device_id, item.input_type, item.input_id)
 
         if self._data.axis1 == identifier:
             self._data.axis1 = InputIdentifier()
@@ -174,12 +186,12 @@ class DualAxisDeadzoneModel(ActionModel):
         # Update the library and action entries
         self._binding_model.append_action(
             self.library.get_action(util.parse_id_or_uuid(uuid_str)),
-            self.sequence_index
+            self.sequence_index,
         )
         self._binding_model.remove_action(self.sequence_index)
         self._binding_model.rootActionChanged.emit()
 
-    @Property(float, notify=modelChanged)
+    @QtCore.Property(float, notify=modelChanged)
     def innerDeadzone(self) -> float:
         return self._data.inner_deadzone
 
@@ -190,7 +202,7 @@ class DualAxisDeadzoneModel(ActionModel):
                 self._data.inner_deadzone = value
             self.modelChanged.emit()
 
-    @Property(str, notify=modelChanged)
+    @QtCore.Property(str, notify=modelChanged)
     def label(self) -> str:
         return self._data.label
 
@@ -200,7 +212,7 @@ class DualAxisDeadzoneModel(ActionModel):
             self._data.label = label
             self.modelChanged.emit()
 
-    @Property(float, notify=modelChanged)
+    @QtCore.Property(float, notify=modelChanged)
     def outerDeadzone(self) -> float:
         return self._data.outer_deadzone
 
@@ -211,51 +223,40 @@ class DualAxisDeadzoneModel(ActionModel):
                 self._data.outer_deadzone = value
             self.modelChanged.emit()
 
-    axis1 = Property(
+    axis1 = QtCore.Property(
         InputIdentifier,
         fget=lambda c: DualAxisDeadzoneModel._get_axis(c, 1),
         fset=lambda c, x: DualAxisDeadzoneModel._set_axis(c, 1, x),
-        notify=modelChanged
+        notify=modelChanged,
     )
 
-    axis2 = Property(
+    axis2 = QtCore.Property(
         InputIdentifier,
         fget=lambda c: DualAxisDeadzoneModel._get_axis(c, 2),
         fset=lambda c, x: DualAxisDeadzoneModel._set_axis(c, 2, x),
-        notify=modelChanged
+        notify=modelChanged,
     )
 
-    deadzone = Property(
-        str,
-        fget=_get_deadzone,
-        fset=_set_deadzone,
-        notify=modelChanged
+    deadzone = QtCore.Property(
+        str, fget=_get_deadzone, fset=_set_deadzone, notify=modelChanged
     )
 
 
 class DualAxisDeadzoneData(AbstractActionData):
-
     """Model of a description action."""
 
     version = 1
     name = "Dual Axis Deadzone"
     tag = "dual-axis-deadzone"
-    icon = "\uF18C"
+    icon = "\uf18c"
 
     functor = DualAxisDeadzoneFunctor
     model = DualAxisDeadzoneModel
 
-    properties = [
-        ActionProperty.ActivateDisabled,
-    ]
-    input_types = [
-        InputType.JoystickAxis,
-    ]
+    properties = (ActionProperty.ActivateDisabled,)
+    input_types = (InputType.JoystickAxis,)
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickAxis
-    ):
+    def __init__(self, behavior_type: InputType = InputType.JoystickAxis) -> None:
         super().__init__(behavior_type)
 
         self.label = ""
@@ -298,11 +299,9 @@ class DualAxisDeadzoneData(AbstractActionData):
 
         # Parse child actions
         output1_actions = util.read_action_ids(node.find("output1-actions"))
-        self.output1_actions = \
-            [library.get_action(aid) for aid in output1_actions]
+        self.output1_actions = [library.get_action(aid) for aid in output1_actions]
         output2_actions = util.read_action_ids(node.find("output2-actions"))
-        self.output2_actions = \
-            [library.get_action(aid) for aid in output2_actions]
+        self.output2_actions = [library.get_action(aid) for aid in output2_actions]
 
     @override
     def _to_xml(self) -> ElementTree.Element:
@@ -321,12 +320,16 @@ class DualAxisDeadzoneData(AbstractActionData):
         util.append_property_nodes(node, entries)
 
         # Write action ids
-        node.append(util.create_action_ids(
-            "output1-actions", [action.id for action in self.output1_actions]
-        ))
-        node.append(util.create_action_ids(
-            "output2-actions", [action.id for action in self.output2_actions]
-        ))
+        node.append(
+            util.create_action_ids(
+                "output1-actions", [action.id for action in self.output1_actions]
+            )
+        )
+        node.append(
+            util.create_action_ids(
+                "output2-actions", [action.id for action in self.output2_actions]
+            )
+        )
 
         return node
 
@@ -334,15 +337,18 @@ class DualAxisDeadzoneData(AbstractActionData):
     def user_feedback(self) -> list[UserFeedback]:
         messages = []
         if not (self.axis1.isValid and self.axis2.isValid):
-            messages.append(UserFeedback(
-                UserFeedback.FeedbackType.Error,
-                "Both axes must be assigned."
-            ))
+            messages.append(
+                UserFeedback(
+                    UserFeedback.FeedbackType.Error, "Both axes must be assigned."
+                )
+            )
         if abs(self.outer_deadzone - self.inner_deadzone) < 0.01:
-            messages.append(UserFeedback(
-                UserFeedback.FeedbackType.Error,
-                "Outer and inner deadzone are too close to each other."
-            ))
+            messages.append(
+                UserFeedback(
+                    UserFeedback.FeedbackType.Error,
+                    "Outer and inner deadzone are too close to each other.",
+                )
+            )
         return messages
 
     @override
@@ -369,9 +375,7 @@ class DualAxisDeadzoneData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 

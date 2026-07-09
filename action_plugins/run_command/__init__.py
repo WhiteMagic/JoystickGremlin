@@ -41,7 +41,6 @@ if TYPE_CHECKING:
 
 
 class RunCommandFunctor(AbstractFunctor):
-
     """Launches an external program in a fire-and-forget manner."""
 
     def __init__(self, action: RunCommandData) -> None:
@@ -70,7 +69,6 @@ class RunCommandFunctor(AbstractFunctor):
 
 
 class RunCommandModel(ActionModel):
-
     executableChanged = QtCore.Signal()
     argumentsChanged = QtCore.Signal()
 
@@ -85,9 +83,10 @@ class RunCommandModel(ActionModel):
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:run_command/RunCommandAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:run_command/RunCommandAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
         return self._binding_model.get_action_model_by_sidx(
@@ -126,7 +125,6 @@ class RunCommandModel(ActionModel):
 
 
 class RunCommandData(AbstractActionData):
-
     """Model for the run command action."""
 
     version = 1
@@ -137,18 +135,13 @@ class RunCommandData(AbstractActionData):
     functor = RunCommandFunctor
     model = RunCommandModel
 
-    properties = (
-        ActionProperty.ActivateOnPress,
-    )
+    properties = (ActionProperty.ActivateOnPress,)
     input_types = (
         InputType.JoystickButton,
         InputType.Keyboard,
     )
 
-    def __init__(
-        self,
-        behavior_type: InputType = InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         # Model variables
@@ -158,12 +151,8 @@ class RunCommandData(AbstractActionData):
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
-        self.executable = util.read_property(
-            node, "executable", PropertyType.String
-        )
-        self.arguments = util.read_property(
-            node, "arguments", PropertyType.String
-        )
+        self.executable = util.read_property(node, "executable", PropertyType.String)
+        self.arguments = util.read_property(node, "arguments", PropertyType.String)
 
     @override
     def _to_xml(self) -> ElementTree.Element:
@@ -173,7 +162,7 @@ class RunCommandData(AbstractActionData):
             [
                 ["executable", self.executable, PropertyType.String],
                 ["arguments", self.arguments, PropertyType.String],
-            ]
+            ],
         )
         return node
 
@@ -181,10 +170,12 @@ class RunCommandData(AbstractActionData):
     def user_feedback(self) -> List[UserFeedback]:
         messages = []
         if not self.executable.strip():
-            messages.append(UserFeedback(
-                UserFeedback.FeedbackType.Error,
-                "No executable specified.",
-            ))
+            messages.append(
+                UserFeedback(
+                    UserFeedback.FeedbackType.Error,
+                    "No executable specified.",
+                )
+            )
         return messages
 
     @override
@@ -197,9 +188,7 @@ class RunCommandData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 

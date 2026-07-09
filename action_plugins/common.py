@@ -2,19 +2,18 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import uuid
 
 import dill
+from gremlin.types import (
+    AxisNames,
+    InputType,
+)
 
-from gremlin.event_handler import Event
-from gremlin.types import AxisNames, InputType
 
-
-def joystick_label(
-        device_guid: uuid.UUID,
-        input_type: InputType,
-        input_id: int
-) -> str:
+def joystick_label(device_guid: uuid.UUID, input_type: InputType, input_id: int) -> str:
     device = dill.DILL().get_device_information_by_guid(
         dill.GUID.from_uuid(device_guid)
     )

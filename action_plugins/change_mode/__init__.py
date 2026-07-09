@@ -7,9 +7,9 @@ from __future__ import annotations
 import enum
 import logging
 from typing import (
-    override,
+    TYPE_CHECKING,
     List,
-    TYPE_CHECKING
+    override,
 )
 from xml.etree import ElementTree
 
@@ -32,15 +32,12 @@ from gremlin.base_classes import (
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
-    AxisMode,
     InputType,
     PropertyType,
-    DataCreationMode,
 )
-
 from gremlin.ui.action_model import (
-    SequenceIndex,
     ActionModel,
+    SequenceIndex,
 )
 
 if TYPE_CHECKING:
@@ -48,7 +45,6 @@ if TYPE_CHECKING:
 
 
 class ChangeType(enum.Enum):
-
     Switch = 1
     Cycle = 2
     Previous = 3
@@ -73,7 +69,6 @@ class ChangeType(enum.Enum):
 
 
 class ChangeModeFunctor(AbstractFunctor):
-
     """Executes a mode change action callback."""
 
     def __init__(self, action: ChangeModeData) -> None:
@@ -81,25 +76,24 @@ class ChangeModeFunctor(AbstractFunctor):
 
         self._mode_sequence = None
         if self.data.change_type == ChangeType.Cycle:
-            self._mode_sequence = \
-                mode_manager.ModeSequence(self.data._target_modes)
+            self._mode_sequence = mode_manager.ModeSequence(self.data._target_modes)
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty] = [],
     ) -> None:
-        if not self._should_execute(value) and self.data.change_type != ChangeType.Temporary:
+        if (
+            not self._should_execute(value)
+            and self.data.change_type != ChangeType.Temporary
+        ):
             return
 
         mm = mode_manager.ModeManager()
         if self.data.change_type == ChangeType.Switch:
-            mm.switch_to(mode_manager.Mode(
-                self.data.target_modes[0],
-                mm.current.name
-            ))
+            mm.switch_to(mode_manager.Mode(self.data.target_modes[0], mm.current.name))
         elif self.data.change_type == ChangeType.Previous:
             mm.previous()
         elif self.data.change_type == ChangeType.Cycle:
@@ -109,56 +103,54 @@ class ChangeModeFunctor(AbstractFunctor):
         elif self.data.change_type == ChangeType.Temporary:
             # Enter the temporary mode when the input is pressed
             if value.current:
-                mm.switch_to(mode_manager.Mode(
-                    self.data.target_modes[0],
-                    mm.current.name,
-                    True
-                ))
+                mm.switch_to(
+                    mode_manager.Mode(self.data.target_modes[0], mm.current.name, True)
+                )
 
                 event_helpers.ButtonReleaseActions().register_callback(
-                    lambda _event: self._release_temporary_mode(),
-                    event
+                    lambda _event: self._release_temporary_mode(), event
                 )
             # Leave the temporary mode when the input is released while in the
             # correct mode
             else:
-                if mm.current.name == self.data._target_modes[0] and \
-                        mm.current.is_temporary:
+                if (
+                    mm.current.name == self.data._target_modes[0]
+                    and mm.current.is_temporary
+                ):
                     mm.unwind()
 
         logging.getLogger("system").debug(
-            f"Mode Stack : [{', '.join(m.name for m in mm._mode_stack)}], " +
-            f"Action : {self.data.change_type.name}"
+            f"Mode Stack : [{', '.join(m.name for m in mm._mode_stack)}], "
+            + f"Action : {self.data.change_type.name}"
         )
 
     def _release_temporary_mode(self) -> None:
         mm = mode_manager.ModeManager()
-        if mm.current.name == self.data._target_modes[0] and \
-                mm.current.is_temporary:
+        if mm.current.name == self.data._target_modes[0] and mm.current.is_temporary:
             mm.unwind()
 
 
 class ChangeModeModel(ActionModel):
-
     modelChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
-    ):
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:change_mode/ChangeModeAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:change_mode/ChangeModeAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -211,44 +203,32 @@ class ChangeModeModel(ActionModel):
             self.modelChanged.emit()
 
     changeType = QtCore.Property(
-        str,
-        fget=_get_change_type,
-        fset=_set_change_type,
-        notify=modelChanged
+        str, fget=_get_change_type, fset=_set_change_type, notify=modelChanged
     )
 
     targetModes = QtCore.Property(
-        list,
-        fget=_get_target_modes,
-        fset=_set_target_modes,
-        notify=modelChanged
+        list, fget=_get_target_modes, fset=_set_target_modes, notify=modelChanged
     )
 
 
 class ChangeModeData(AbstractActionData):
-
     """Action permitting changing of modes."""
 
     version = 1
     name = "Change Mode"
     tag = "change-mode"
-    icon = "\uF544"
+    icon = "\uf544"
 
     functor = ChangeModeFunctor
     model = ChangeModeModel
 
-    properties = (
-        ActionProperty.ActivateOnPress,
-    )
+    properties = (ActionProperty.ActivateOnPress,)
     input_types = (
         InputType.JoystickButton,
         InputType.Keyboard,
     )
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self._change_type = ChangeType.Switch
@@ -266,9 +246,7 @@ class ChangeModeData(AbstractActionData):
         self._change_type = value
         match value:
             case ChangeType.Switch | ChangeType.Temporary:
-                self._target_modes = [
-                    shared_state.current_profile.modes.first_mode
-                ]
+                self._target_modes = [shared_state.current_profile.modes.first_mode]
             case ChangeType.Previous | ChangeType.Unwind | ChangeType.Cycle:
                 self._target_modes = []
 
@@ -278,11 +256,15 @@ class ChangeModeData(AbstractActionData):
 
     @target_modes.setter
     def target_modes(self, value: List[str]) -> None:
-        if len(value) > 0 and \
-                self._change_type in [ChangeType.Previous, ChangeType.Unwind]:
+        if len(value) > 0 and self._change_type in [
+            ChangeType.Previous,
+            ChangeType.Unwind,
+        ]:
             raise error.GremlinError("Too many modes for change type")
-        elif len(value) != 1 and \
-                self._change_type in [ChangeType.Switch, ChangeType.Temporary]:
+        elif len(value) != 1 and self._change_type in [
+            ChangeType.Switch,
+            ChangeType.Temporary,
+        ]:
             raise error.GremlinError("Incorrect number of modes for change type")
 
         self._target_modes = value
@@ -290,25 +272,29 @@ class ChangeModeData(AbstractActionData):
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
-        self._change_type = ChangeType.lookup(util.read_property(
-            node, "change-type", PropertyType.String
-        ))
+        self._change_type = ChangeType.lookup(
+            util.read_property(node, "change-type", PropertyType.String)
+        )
         self._target_modes = []
         for entry in node.iter("target-mode"):
-            self._target_modes.append(util.read_property(
-                entry, "name", PropertyType.String
-            ))
+            self._target_modes.append(
+                util.read_property(entry, "name", PropertyType.String)
+            )
 
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(ChangeModeData.tag, self._id)
-        node.append(util.create_property_node(
-            "change-type", self._change_type.name, PropertyType.String
-        ))
+        node.append(
+            util.create_property_node(
+                "change-type", self._change_type.name, PropertyType.String
+            )
+        )
         for mode_name in self._target_modes:
-            node.append(util.create_node_from_data(
-                "target-mode", [("name", mode_name, PropertyType.String)]
-            ))
+            node.append(
+                util.create_node_from_data(
+                    "target-mode", [("name", mode_name, PropertyType.String)]
+                )
+            )
         return node
 
     @override
@@ -325,9 +311,7 @@ class ChangeModeData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-            self,
-            old_behavior: InputType,
-            new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         self._vjoy_input_type = new_behavior
 

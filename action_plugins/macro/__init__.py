@@ -60,12 +60,7 @@ if TYPE_CHECKING:
 
 
 class AbstractActionModel(QtCore.QObject):
-
-    def __init__(
-        self,
-        action: macro.AbstractAction,
-        parent: ta.OQO=None
-    ) -> None:
+    def __init__(self, action: macro.AbstractAction, parent: ta.OQO = None) -> None:
         super().__init__(parent)
         self._action = action
 
@@ -80,14 +75,9 @@ class AbstractActionModel(QtCore.QObject):
 
 
 class JoystickActionModel(AbstractActionModel):
-
     changed = QtCore.Signal()
 
-    def __init__(
-        self,
-        action: macro.JoystickAction,
-        parent: ta.OQO=None
-    ) -> None:
+    def __init__(self, action: macro.JoystickAction, parent: ta.OQO = None) -> None:
         super().__init__(action, parent)
 
     def _action_type(self) -> str:
@@ -103,9 +93,7 @@ class JoystickActionModel(AbstractActionModel):
             return ""
         else:
             return common.joystick_label(
-                self._action.device_guid,
-                self._action.input_type,
-                self._action.input_id
+                self._action.device_guid, self._action.input_type, self._action.input_id
             )
 
     @QtCore.Slot(list)
@@ -168,32 +156,22 @@ class JoystickActionModel(AbstractActionModel):
             self.changed.emit()
 
     isPressed = QtCore.Property(
-        bool,
-        fget=_get_is_pressed,
-        fset=_set_is_pressed,
-        notify=changed
+        bool, fget=_get_is_pressed, fset=_set_is_pressed, notify=changed
     )
 
     axisValue = QtCore.Property(
-        float,
-        fget=_get_axis_value,
-        fset=_set_axis_value,
-        notify=changed
+        float, fget=_get_axis_value, fset=_set_axis_value, notify=changed
     )
 
     hatDirection = QtCore.Property(
-        str,
-        fget=_get_hat_direction,
-        fset=_set_hat_direction,
-        notify=changed
+        str, fget=_get_hat_direction, fset=_set_hat_direction, notify=changed
     )
 
 
 class KeyActionModel(AbstractActionModel):
-
     changed = QtCore.Signal()
 
-    def __init__(self, action: macro.KeyAction, parent: ta.OQO=None) -> None:
+    def __init__(self, action: macro.KeyAction, parent: ta.OQO = None) -> None:
         super().__init__(action, parent)
 
     def _action_type(self) -> str:
@@ -221,28 +199,23 @@ class KeyActionModel(AbstractActionModel):
             data: list of mouse button presses to store
         """
         # Sort keys such that modifiers are first
-        self._action.key = None if not data else \
-            keyboard.key_from_code(*data[0].identifier)
+        self._action.key = (
+            None if not data else keyboard.key_from_code(*data[0].identifier)
+        )
         self.changed.emit()
 
     isPressed = QtCore.Property(
-        bool,
-        fget=_get_is_pressed,
-        fset=_set_is_pressed,
-        notify=changed
+        bool, fget=_get_is_pressed, fset=_set_is_pressed, notify=changed
     )
 
     key = QtCore.Property(str, fget=_get_key, notify=changed)
 
 
 class LogicalDeviceActionModel(AbstractActionModel):
-
     changed = QtCore.Signal()
 
     def __init__(
-        self,
-        action: macro.LogicalDeviceAction,
-        parent: ta.OQO=None
+        self, action: macro.LogicalDeviceAction, parent: ta.OQO = None
     ) -> None:
         super().__init__(action, parent)
 
@@ -254,12 +227,13 @@ class LogicalDeviceActionModel(AbstractActionModel):
             LogicalDevice.device_guid,
             self._action.input_type,
             self._action.input_id,
-            parent=self
+            parent=self,
         )
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
-        if (identifier.input_type != self._action.input_type) or \
-                (identifier.input_id != self._action.input_id):
+        if (identifier.input_type != self._action.input_type) or (
+            identifier.input_id != self._action.input_id
+        ):
             self._action.input_id = identifier.input_id
             if identifier.input_type != self._action.input_type:
                 self._action.input_type = identifier.input_type
@@ -323,49 +297,32 @@ class LogicalDeviceActionModel(AbstractActionModel):
         InputIdentifier,
         fget=_get_logical_input_identifier,
         fset=_set_logical_input_identifier,
-        notify=changed
+        notify=changed,
     )
 
     inputType = QtCore.Property(str, fget=_get_input_type, notify=changed)
 
     isPressed = QtCore.Property(
-        bool,
-        fget=_get_is_pressed,
-        fset=_set_is_pressed,
-        notify=changed
+        bool, fget=_get_is_pressed, fset=_set_is_pressed, notify=changed
     )
 
     axisValue = QtCore.Property(
-        float,
-        fget=_get_axis_value,
-        fset=_set_axis_value,
-        notify=changed
+        float, fget=_get_axis_value, fset=_set_axis_value, notify=changed
     )
 
     axisMode = QtCore.Property(
-        str,
-        fget=_get_axis_mode,
-        fset=_set_axis_mode,
-        notify=changed
+        str, fget=_get_axis_mode, fset=_set_axis_mode, notify=changed
     )
 
     hatDirection = QtCore.Property(
-        str,
-        fget=_get_hat_direction,
-        fset=_set_hat_direction,
-        notify=changed
+        str, fget=_get_hat_direction, fset=_set_hat_direction, notify=changed
     )
 
 
 class MouseButtonActionModel(AbstractActionModel):
-
     changed = QtCore.Signal()
 
-    def __init__(
-        self,
-        action: macro.MouseButtonAction,
-        parent: ta.OQO=None
-    ) -> None:
+    def __init__(self, action: macro.MouseButtonAction, parent: ta.OQO = None) -> None:
         super().__init__(action, parent)
 
     def _action_type(self) -> str:
@@ -380,8 +337,11 @@ class MouseButtonActionModel(AbstractActionModel):
             self.changed.emit()
 
     def _get_button(self) -> str:
-        return "" if self._action.button is None else \
-            MouseButton.to_string(self._action.button)
+        return (
+            ""
+            if self._action.button is None
+            else MouseButton.to_string(self._action.button)
+        )
 
     @QtCore.Slot(list)
     def updateButton(self, data: List[event_handler.Event]) -> None:
@@ -397,24 +357,16 @@ class MouseButtonActionModel(AbstractActionModel):
         self.changed.emit()
 
     isPressed = QtCore.Property(
-        bool,
-        fget=_get_is_pressed,
-        fset=_set_is_pressed,
-        notify=changed
+        bool, fget=_get_is_pressed, fset=_set_is_pressed, notify=changed
     )
 
     button = QtCore.Property(str, fget=_get_button, notify=changed)
 
 
 class MouseMotionActionModel(AbstractActionModel):
-
     changed = QtCore.Signal()
 
-    def __init__(
-        self,
-        action: macro.MouseMotionAction,
-        parent: ta.OQO=None
-    ) -> None:
+    def __init__(self, action: macro.MouseMotionAction, parent: ta.OQO = None) -> None:
         super().__init__(action, parent)
 
     def _action_type(self) -> str:
@@ -441,10 +393,9 @@ class MouseMotionActionModel(AbstractActionModel):
 
 
 class PauseActionModel(AbstractActionModel):
-
     changed = QtCore.Signal()
 
-    def __init__(self, action: macro.PauseAction, parent: ta.OQO=None) -> None:
+    def __init__(self, action: macro.PauseAction, parent: ta.OQO = None) -> None:
         super().__init__(action, parent)
 
     def _action_type(self) -> str:
@@ -459,18 +410,14 @@ class PauseActionModel(AbstractActionModel):
             self.changed.emit()
 
     duration = QtCore.Property(
-        float,
-        fget=_get_duration,
-        fset=_set_duration,
-        notify=changed
+        float, fget=_get_duration, fset=_set_duration, notify=changed
     )
 
 
 class VJoyActionModel(AbstractActionModel):
-
     changed = QtCore.Signal()
 
-    def __init__(self, action: macro.VJoyAction, parent: ta.OQO=None) -> None:
+    def __init__(self, action: macro.VJoyAction, parent: ta.OQO = None) -> None:
         super().__init__(action, parent)
 
     def _action_type(self) -> str:
@@ -554,57 +501,33 @@ class VJoyActionModel(AbstractActionModel):
             self.changed.emit()
 
     inputType = QtCore.Property(
-        str,
-        fget=_get_input_type,
-        fset=_set_input_type,
-        notify=changed
+        str, fget=_get_input_type, fset=_set_input_type, notify=changed
     )
 
     inputId = QtCore.Property(
-        int,
-        fget=_get_input_id,
-        fset=_set_input_id,
-        notify=changed
+        int, fget=_get_input_id, fset=_set_input_id, notify=changed
     )
 
-    vjoyId = QtCore.Property(
-        int,
-        fget=_get_vjoy_id,
-        fset=_set_vjoy_id,
-        notify=changed
-    )
+    vjoyId = QtCore.Property(int, fget=_get_vjoy_id, fset=_set_vjoy_id, notify=changed)
 
     isPressed = QtCore.Property(
-        bool,
-        fget=_get_is_pressed,
-        fset=_set_is_pressed,
-        notify=changed
+        bool, fget=_get_is_pressed, fset=_set_is_pressed, notify=changed
     )
 
     axisValue = QtCore.Property(
-        float,
-        fget=_get_axis_value,
-        fset=_set_axis_value,
-        notify=changed
+        float, fget=_get_axis_value, fset=_set_axis_value, notify=changed
     )
 
     axisMode = QtCore.Property(
-        str,
-        fget=_get_axis_mode,
-        fset=_set_axis_mode,
-        notify=changed
+        str, fget=_get_axis_mode, fset=_set_axis_mode, notify=changed
     )
 
     hatDirection = QtCore.Property(
-        str,
-        fget=_get_hat_direction,
-        fset=_set_hat_direction,
-        notify=changed
+        str, fget=_get_hat_direction, fset=_set_hat_direction, notify=changed
     )
 
 
 class MacroRepeatModes(enum.Enum):
-
     Single = 1
     Count = 2
     Toggle = 3
@@ -626,14 +549,12 @@ class MacroRepeatModes(enum.Enum):
 
 
 class MacroRepeatData:
-
-    def __init__(self, delay: float=0.1, count: int=1) -> None:
+    def __init__(self, delay: float = 0.1, count: int = 1) -> None:
         self.count = count
         self.delay = delay
 
 
 class MacroFunctor(AbstractFunctor):
-
     """Implements the function executed of the Description action at runtime."""
 
     def __init__(self, action: MacroData) -> None:
@@ -646,31 +567,26 @@ class MacroFunctor(AbstractFunctor):
         match self.data.repeat_mode:
             case MacroRepeatModes.Count:
                 self.macro.repeat = macro.CountRepeat(
-                    self.data.repeat_data.count,
-                    self.data.repeat_data.delay
+                    self.data.repeat_data.count, self.data.repeat_data.delay
                 )
             case MacroRepeatModes.Hold:
-                self.macro.repeat = macro.HoldRepeat(
-                    self.data.repeat_data.delay
-                )
+                self.macro.repeat = macro.HoldRepeat(self.data.repeat_data.delay)
             case MacroRepeatModes.Toggle:
-                self.macro.repeat = macro.ToggleRepeat(
-                    self.data.repeat_data.delay
-                )
+                self.macro.repeat = macro.ToggleRepeat(self.data.repeat_data.delay)
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if self._should_execute(value):
             macro.MacroManager().queue_macro(self.macro)
             if self.data.repeat_mode == MacroRepeatModes.Hold:
                 event_helpers.ButtonReleaseActions().register_callback(
                     lambda _event: macro.MacroManager().terminate_macro(self.macro),
-                    event
+                    event,
                 )
 
 
@@ -688,9 +604,7 @@ class ActionListModel(QtCore.QAbstractListModel):
     }
 
     def __init__(
-            self,
-            actions: list[macro.AbstractAction],
-            parent: QtCore.QObject
+        self, actions: list[macro.AbstractAction], parent: QtCore.QObject
     ) -> None:
         super().__init__(parent)
         self._actions = actions
@@ -756,15 +670,21 @@ class ActionListModel(QtCore.QAbstractListModel):
             return
 
         if not self.beginMoveRows(
-            QtCore.QModelIndex(), source_index, source_index,
-            QtCore.QModelIndex(), destination_index
+            QtCore.QModelIndex(),
+            source_index,
+            source_index,
+            QtCore.QModelIndex(),
+            destination_index,
         ):
             return
 
         action = self._actions.pop(source_index)
         wrapper = self._wrappers.pop(source_index)
-        insert_pos = destination_index - 1 if destination_index > source_index \
+        insert_pos = (
+            destination_index - 1
+            if destination_index > source_index
             else destination_index
+        )
         self._actions.insert(insert_pos, action)
         self._wrappers.insert(insert_pos, wrapper)
         self.endMoveRows()
@@ -782,7 +702,6 @@ class ActionListModel(QtCore.QAbstractListModel):
 
 
 class MacroModel(ActionModel):
-
     # Signal emitted when the description variable's content changes
     changed = QtCore.Signal()
     recordingChanged = QtCore.Signal()
@@ -804,16 +723,16 @@ class MacroModel(ActionModel):
         "mouse-button": MouseButtonActionModel,
         "mouse-motion": MouseMotionActionModel,
         "pause": PauseActionModel,
-        "vjoy": VJoyActionModel
+        "vjoy": VJoyActionModel,
     }
 
     def __init__(
-            self,
-            data:  AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
         self._action_list_model = ActionListModel(cast(MacroData, data).actions, self)
@@ -824,15 +743,16 @@ class MacroModel(ActionModel):
             for s in Configuration().value("action", "macro", "record-event-types")
         ]
         self._record_timings: bool = Configuration().value(
-            "action", "macro", "record-timings")
+            "action", "macro", "record-timings"
+        )
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:macro/MacroAction.qml"
-        ).fileName()
+        return (
+            "file:///" + QtCore.QFile("core_plugins:macro/MacroAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -847,12 +767,7 @@ class MacroModel(ActionModel):
         self.changed.emit()
 
     @QtCore.Slot(int, int, str)
-    def dropCallback(
-        self,
-        target_index: int,
-        source_index: int,
-        mode: str
-    ) -> None:
+    def dropCallback(self, target_index: int, source_index: int, mode: str) -> None:
         match mode:
             case "append":
                 self._action_list_model.move_from_to(source_index, target_index + 1)
@@ -888,12 +803,15 @@ class MacroModel(ActionModel):
                         self._events_to_record.append(event_type)
             else:
                 self._events_to_record = [
-                    event_type for event_type in self._events_to_record
+                    event_type
+                    for event_type in self._events_to_record
                     if event_type not in types
                 ]
             Configuration().set(
-                "action", "macro", "record-event-types",
-                [InputType.to_string(t) for t in self._events_to_record]
+                "action",
+                "macro",
+                "record-event-types",
+                [InputType.to_string(t) for t in self._events_to_record],
             )
             self.recordingChanged.emit()
 
@@ -913,8 +831,10 @@ class MacroModel(ActionModel):
             return 1
 
     def _set_repeat_count(self, value: int) -> None:
-        if self._data.repeat_mode == MacroRepeatModes.Count and \
-                value != self._data.repeat_data.count:
+        if (
+            self._data.repeat_mode == MacroRepeatModes.Count
+            and value != self._data.repeat_data.count
+        ):
             self._data.repeat_data.count = value
             self.changed.emit()
 
@@ -925,8 +845,10 @@ class MacroModel(ActionModel):
             return 0.0
 
     def _set_repeat_delay(self, value: float) -> None:
-        if self._data.repeat_mode != MacroRepeatModes.Single and \
-                value != self._data.repeat_data.delay:
+        if (
+            self._data.repeat_mode != MacroRepeatModes.Single
+            and value != self._data.repeat_data.delay
+        ):
             self._data.repeat_data.delay = value
             self.changed.emit()
 
@@ -954,49 +876,35 @@ class MacroModel(ActionModel):
     )
 
     repeatCount = QtCore.Property(
-        int,
-        fget=_get_repeat_count,
-        fset=_set_repeat_count,
-        notify=changed
+        int, fget=_get_repeat_count, fset=_set_repeat_count, notify=changed
     )
 
     repeatDelay = QtCore.Property(
-        float,
-        fget=_get_repeat_delay,
-        fset=_set_repeat_delay,
-        notify=changed
+        float, fget=_get_repeat_delay, fset=_set_repeat_delay, notify=changed
     )
 
     repeatMode = QtCore.Property(
-        str,
-        fget=_get_repeat_mode,
-        fset=_set_repeat_mode,
-        notify=changed
+        str, fget=_get_repeat_mode, fset=_set_repeat_mode, notify=changed
     )
 
     isExclusive = QtCore.Property(
-        bool,
-        fget=_get_is_exclusive,
-        fset=_set_is_exclusive,
-        notify=changed
+        bool, fget=_get_is_exclusive, fset=_set_is_exclusive, notify=changed
     )
 
     isRecording = QtCore.Property(
-        bool,
-        fget=lambda self: self._recorder.is_recording,
-        notify=recordingChanged
+        bool, fget=lambda self: self._recorder.is_recording, notify=recordingChanged
     )
     recordKeyboard = QtCore.Property(
         bool,
         fget=lambda self: self._get_record_event(InputType.Keyboard),
         fset=lambda self, value: self._set_record_event(InputType.Keyboard, value),
-        notify=recordingChanged
+        notify=recordingChanged,
     )
     recordMouse = QtCore.Property(
         bool,
         fget=lambda self: self._get_record_event(InputType.Mouse),
         fset=lambda self, value: self._set_record_event(InputType.Mouse, value),
-        notify=recordingChanged
+        notify=recordingChanged,
     )
     recordJoystickButton = QtCore.Property(
         bool,
@@ -1004,52 +912,43 @@ class MacroModel(ActionModel):
         fset=lambda self, value: self._set_record_event(
             InputType.JoystickButton, value
         ),
-        notify=recordingChanged
+        notify=recordingChanged,
     )
     recordJoystickAxis = QtCore.Property(
         bool,
         fget=lambda self: self._get_record_event(InputType.JoystickAxis),
         fset=lambda self, value: self._set_record_event(InputType.JoystickAxis, value),
-        notify=recordingChanged
+        notify=recordingChanged,
     )
     recordJoystickHat = QtCore.Property(
         bool,
         fget=lambda self: self._get_record_event(InputType.JoystickHat),
         fset=lambda self, value: self._set_record_event(InputType.JoystickHat, value),
-        notify=recordingChanged
+        notify=recordingChanged,
     )
     recordTimings = QtCore.Property(
         bool,
         fget=_get_record_timings,
         fset=_set_record_timings,
-        notify=recordingChanged
+        notify=recordingChanged,
     )
 
 
 class MacroData(AbstractActionData):
-
     """Model of a macro action."""
 
     version = 1
     name = "Macro"
     tag = "macro"
-    icon = "\uF585"
+    icon = "\uf585"
 
     functor = MacroFunctor
     model = MacroModel
 
-    properties = (
-        ActionProperty.ActivateOnPress,
-    )
-    input_types = (
-        InputType.JoystickButton,
-        InputType.Keyboard
-    )
+    properties = (ActionProperty.ActivateOnPress,)
+    input_types = (InputType.JoystickButton, InputType.Keyboard)
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         # Model variables
@@ -1070,11 +969,9 @@ class MacroData(AbstractActionData):
             "vjoy": macro.VJoyAction.create,
         }
         self._id = util.read_action_id(node)
-        self.is_exclusive = util.read_property(
-            node, "is-exclusive", PropertyType.Bool
-        )
-        self.repeat_mode = MacroRepeatModes.lookup(util.read_property(
-            node, "repeat-mode", PropertyType.String)
+        self.is_exclusive = util.read_property(node, "is-exclusive", PropertyType.Bool)
+        self.repeat_mode = MacroRepeatModes.lookup(
+            util.read_property(node, "repeat-mode", PropertyType.String)
         )
         self.repeat_data.count = util.read_property(
             node, "repeat-count", PropertyType.Int
@@ -1092,8 +989,8 @@ class MacroData(AbstractActionData):
                 self.actions.append(action_obj)
             else:
                 raise ProfileError(
-                    f"Unknown action type {action_type} in Macro action with " +
-                    f"id {self._id}"
+                    f"Unknown action type {action_type} in Macro action with "
+                    + f"id {self._id}"
                 )
 
     @override
@@ -1106,7 +1003,7 @@ class MacroData(AbstractActionData):
                 ["repeat-mode", self.repeat_mode.name, PropertyType.String],
                 ["repeat-count", self.repeat_data.count, PropertyType.Int],
                 ["repeat-delay", self.repeat_data.delay, PropertyType.Float],
-            ]
+            ],
         )
         for entry in self.actions:
             if entry.is_valid():
@@ -1127,9 +1024,7 @@ class MacroData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 
@@ -1152,11 +1047,8 @@ Configuration().register(
     0.05,
     "Minimum amount of change required for a joystick axis event to be recorded "
     "during macro recording.",
-    {
-        "min": 0.0,
-        "max": 1.0
-    },
-    True
+    {"min": 0.0, "max": 1.0},
+    True,
 )
 
 Configuration().register(
@@ -1167,11 +1059,8 @@ Configuration().register(
     0.01,
     "Minimum time in seconds between subsequent axis events of the same input in order "
     "to record a new macro action.",
-    {
-        "min": 0.0,
-        "max": 100.0
-    },
-    True
+    {"min": 0.0, "max": 100.0},
+    True,
 )
 
 Configuration().register(
@@ -1182,7 +1071,7 @@ Configuration().register(
     ["axis", "button", "hat"],
     "Input event types recorded during macro recording.",
     {},
-    False
+    False,
 )
 
 Configuration().register(
@@ -1193,5 +1082,5 @@ Configuration().register(
     False,
     "Whether to record timing pauses between inputs during macro recording.",
     {},
-    False
+    False,
 )

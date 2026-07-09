@@ -8,10 +8,11 @@ import copy
 import logging
 import threading
 from typing import (
-    override,
+    TYPE_CHECKING,
+    Any,
     List,
     Optional,
-    TYPE_CHECKING,
+    override,
 )
 from xml.etree import ElementTree
 
@@ -22,10 +23,6 @@ from gremlin import (
     fsm,
     util,
 )
-from gremlin.error import (
-    GremlinError,
-    ProfileError,
-)
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
@@ -33,13 +30,16 @@ from gremlin.base_classes import (
     Value,
 )
 from gremlin.config import Configuration
-from gremlin.event_helpers import ButtonReleaseActions, ModeMatch
+from gremlin.error import (
+    GremlinError,
+    ProfileError,
+)
+from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
     InputType,
     PropertyType,
-    DataCreationMode,
 )
 from gremlin.ui.action_model import (
     ActionModel,
@@ -51,26 +51,24 @@ if TYPE_CHECKING:
 
 
 class TempoFunctor(AbstractFunctor):
-
     def __init__(self, action: TempoData) -> None:
         super().__init__(action)
 
         self.timer = None
-        self.value_press : Value = Value(None)
-        self.event_press : event_handler.Event | None = None
+        self.value_press: Value = Value(None)
+        self.event_press: event_handler.Event | None = None
         self.fsm = self._create_fsm()
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty] = [],
     ) -> None:
         if not isinstance(value.current, bool):
             logging.getLogger("system").warning(
-                f"Invalid data type received in Tempo container: "
-                f"{type(event.value)}"
+                f"Invalid data type received in Tempo container: {type(event.value)}"
             )
             return
 
@@ -85,7 +83,7 @@ class TempoFunctor(AbstractFunctor):
                 lambda release_event: self._release_cb(
                     release_event, Value(False), properties
                 ),
-                event
+                event,
             )
 
         action = "press" if value.current else "release"
@@ -93,10 +91,7 @@ class TempoFunctor(AbstractFunctor):
             self._reset_fsm(event, value, properties)
 
     def _reset_fsm(
-        self,
-        event: event_handler.Event,
-        value: Value,
-        properties: List[ActionProperty]
+        self, event: event_handler.Event, value: Value, properties: List[ActionProperty]
     ) -> None:
         logging.getLogger("event").warning(
             "Tempo: Resetting due to invalid FSM transition."
@@ -105,43 +100,49 @@ class TempoFunctor(AbstractFunctor):
             self.timer.cancel()
         self.fsm.reset()
         self._process_event(
-            self.functors["short"] + self.functors["long"],
-            event,
-            value,
-            properties
+            self.functors["short"] + self.functors["long"], event, value, properties
         )
 
     def _release_cb(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty]
+        self, event: event_handler.Event, value: Value, properties: List[ActionProperty]
     ) -> None:
         if (self.fsm.current_state, "press") not in self.fsm.transitions:
             self._reset_fsm(event, value, properties)
 
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         T = fsm.Transition
-        short_pulse = lambda e, v, p: self._short_pulse(p)
-        short_press = lambda e, v, p: self._process_event(
-            self.functors["short"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        short_release = lambda e, v, p: self._process_event(
-            self.functors["short"], e, v, p
-        )
-        long_press = lambda e, v, p: self._process_event(
-            self.functors["long"],
-            self.event_press,
-            self.value_press,
-            p
-        )
-        long_release = lambda e, v, p: self._process_event(
-            self.functors["long"], e, v, []
-        )
-        noop = lambda *args: None
+
+        def short_pulse(
+            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+        ) -> None:
+            return self._short_pulse(p)
+
+        def short_press(
+            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(
+                self.functors["short"], self.event_press, self.value_press, p
+            )
+
+        def short_release(
+            e: event_handler.Event, v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(self.functors["short"], e, v, p)
+
+        def long_press(
+            _e: event_handler.Event, _v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(
+                self.functors["long"], self.event_press, self.value_press, p
+            )
+
+        def long_release(
+            e: event_handler.Event, v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(self.functors["long"], e, v, [])
+
+        def noop(*args: Any) -> None:  # noqa: ANN401
+            pass
 
         states = ["wait", "short", "long"]
         actions = ["press", "release", "timeout"]
@@ -157,9 +158,7 @@ class TempoFunctor(AbstractFunctor):
             }
         elif self.data.activate_on == "press":
             transitions = {
-                ("wait", "press"): T(
-                    [self._start_timer, short_press], "short"
-                ),
+                ("wait", "press"): T([self._start_timer, short_press], "short"),
                 ("wait", "timeout"): T([noop], "wait"),
                 ("wait", "release"): T([noop], "wait"),
                 ("short", "release"): T([short_release], "wait"),
@@ -169,7 +168,7 @@ class TempoFunctor(AbstractFunctor):
 
         return fsm.FiniteStateMachine("wait", states, actions, transitions)
 
-    def _start_timer(self, *args) -> None:
+    def _start_timer(self, *args: Any) -> None:  # noqa: ANN401
         if self.timer:
             self.timer.cancel()
         self.timer = threading.Timer(self.data.threshold, self._timeout)
@@ -179,44 +178,41 @@ class TempoFunctor(AbstractFunctor):
         if self.timer:
             self.timer.cancel()
         self._pulse_event(
-            self.functors["short"],
-            self.event_press,
-            self.value_press,
-            properties
+            self.functors["short"], self.event_press, self.value_press, properties
         )
 
     def _timeout(self) -> None:
-        if self.fsm.try_perform(
-            "timeout", self.event_press, self.value_press, []
-        ) is None:
+        if (
+            self.fsm.try_perform("timeout", self.event_press, self.value_press, [])
+            is None
+        ):
             logging.getLogger("event").warning(
                 "Tempo: Ignoring stale timeout for current FSM state."
             )
 
 
 class TempoModel(ActionModel):
-
     actionsChanged = QtCore.Signal()
     activateOnChanged = QtCore.Signal()
     thresholdChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
-    ):
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:tempo/TempoAction.qml"
-        ).fileName()
+        return (
+            "file:///" + QtCore.QFile("core_plugins:tempo/TempoAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -243,7 +239,6 @@ class TempoModel(ActionModel):
 
 
 class TempoData(AbstractActionData):
-
     """A container with two actions which are triggered based on the duration
     of the activation.
 
@@ -254,20 +249,15 @@ class TempoData(AbstractActionData):
     version = 1
     name = "Tempo"
     tag = "tempo"
-    icon = "\uF580"
+    icon = "\uf580"
 
     functor = TempoFunctor
     model = TempoModel
 
-    properties = [
-        ActionProperty.ActivateDisabled
-    ]
-    input_types = [
-        InputType.JoystickButton,
-        InputType.Keyboard
-    ]
+    properties = [ActionProperty.ActivateDisabled]
+    input_types = [InputType.JoystickButton, InputType.Keyboard]
 
-    def __init__(self, behavior_type: InputType=InputType.JoystickButton):
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.short_actions = []
@@ -282,32 +272,32 @@ class TempoData(AbstractActionData):
         self.short_actions = [library.get_action(aid) for aid in short_ids]
         long_ids = util.read_action_ids(node.find("long-actions"))
         self.long_actions = [library.get_action(aid) for aid in long_ids]
-        self.threshold = util.read_property(
-            node, "threshold", PropertyType.Float
-        )
-        self.activate_on = util.read_property(
-            node, "activate-on", PropertyType.String
-        )
+        self.threshold = util.read_property(node, "threshold", PropertyType.Float)
+        self.activate_on = util.read_property(node, "activate-on", PropertyType.String)
         if self.activate_on not in ["press", "release"]:
-            raise ProfileError(
-                f"Invalid activat-on value present: {self.activate_on}"
-            )
+            raise ProfileError(f"Invalid activat-on value present: {self.activate_on}")
 
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(TempoData.tag, self._id)
-        node.append(util.create_action_ids(
-            "short-actions", [action.id for action in self.short_actions]
-        ))
-        node.append(util.create_action_ids(
-            "long-actions", [action.id for action in self.long_actions]
-        ))
-        node.append(util.create_property_node(
-            "threshold", self.threshold, PropertyType.Float
-        ))
-        node.append(util.create_property_node(
-            "activate-on", self.activate_on, PropertyType.String
-        ))
+        node.append(
+            util.create_action_ids(
+                "short-actions", [action.id for action in self.short_actions]
+            )
+        )
+        node.append(
+            util.create_action_ids(
+                "long-actions", [action.id for action in self.long_actions]
+            )
+        )
+        node.append(
+            util.create_property_node("threshold", self.threshold, PropertyType.Float)
+        )
+        node.append(
+            util.create_property_node(
+                "activate-on", self.activate_on, PropertyType.String
+            )
+        )
 
         return node
 
@@ -321,8 +311,7 @@ class TempoData(AbstractActionData):
 
     @override
     def _get_container(
-            self,
-            selector: Optional[str] = None
+        self, selector: Optional[str] = None
     ) -> List[AbstractActionData]:
         if selector == "short":
             return self.short_actions
@@ -331,9 +320,7 @@ class TempoData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 
@@ -347,9 +334,6 @@ Configuration().register(
     PropertyType.Float,
     0.5,
     "Default time before triggering the long press action.",
-    {
-        "min": 0.0,
-        "max": 10.0
-    },
-    True
+    {"min": 0.0, "max": 10.0},
+    True,
 )

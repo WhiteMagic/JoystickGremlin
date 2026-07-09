@@ -7,17 +7,19 @@ from __future__ import annotations
 import enum
 import math
 from typing import (
-    override,
-    Any,
-    List,
-    Optional,
     TYPE_CHECKING,
+    List,
+    override,
 )
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
 
-from gremlin import event_handler, sendinput, util
+from gremlin import (
+    event_handler,
+    sendinput,
+    util,
+)
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
@@ -33,10 +35,9 @@ from gremlin.types import (
     MouseButton,
     PropertyType,
 )
-
 from gremlin.ui.action_model import (
+    ActionModel,
     SequenceIndex,
-    ActionModel
 )
 
 if TYPE_CHECKING:
@@ -44,13 +45,12 @@ if TYPE_CHECKING:
 
 
 class MapToMouseMode(enum.Enum):
-
     Button = 1
     Motion = 2
 
     @staticmethod
     def lookup(value: str) -> MapToMouseMode:
-        match(value):
+        match value:
             case "Button":
                 return MapToMouseMode.Button
             case "Motion":
@@ -60,7 +60,6 @@ class MapToMouseMode(enum.Enum):
 
 
 class MapToMouseFunctor(AbstractFunctor):
-
     """Implements the function implementing MapToMouse behavior at runtime."""
 
     def __init__(self, action: MapToMouseData) -> None:
@@ -70,10 +69,10 @@ class MapToMouseFunctor(AbstractFunctor):
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if not self._should_execute(value):
             return
@@ -88,11 +87,7 @@ class MapToMouseFunctor(AbstractFunctor):
         else:
             self._perform_mouse_button(event, value)
 
-    def _perform_mouse_button(
-            self,
-            event: event_handler.Event,
-            value: Value
-    ) -> None:
+    def _perform_mouse_button(self, event: event_handler.Event, value: Value) -> None:
         """Processes mouse button presses.
 
         Args:
@@ -110,31 +105,24 @@ class MapToMouseFunctor(AbstractFunctor):
             else:
                 sendinput.mouse_release(self.data.button)
 
-    def _perform_axis_motion(
-        self,
-        event: event_handler.Event,
-        value: Value
-    ) -> None:
+    def _perform_axis_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes axis-controlled motion.
 
         Args:
             event: input event to process
             value: potentially modified input value
         """
-        delta_motion = self.data.min_speed + abs(value.current) * \
-                (self.data.max_speed - self.data.min_speed)
+        delta_motion = self.data.min_speed + abs(value.current) * (
+            self.data.max_speed - self.data.min_speed
+        )
         delta_motion = math.copysign(delta_motion, value.current)
         delta_motion = 0.0 if abs(value.current) < 1e-6 else delta_motion
 
         dx = delta_motion if self.data.direction == 90 else None
-        dy = delta_motion if self.data.direction == 0  else None
+        dy = delta_motion if self.data.direction == 0 else None
         self.mouse_controller.set_absolute_motion(dx, dy)
 
-    def _perform_button_motion(
-        self,
-        event: event_handler.Event,
-        value: Value
-    ) -> None:
+    def _perform_button_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes button-controlled motion.
 
         Args:
@@ -147,16 +135,12 @@ class MapToMouseFunctor(AbstractFunctor):
                 self.data.min_speed,
                 self.data.max_speed,
                 self.data.time_to_max_speed,
-                event
+                event,
             )
         else:
             self.mouse_controller.remove_accelerated_motion(event)
 
-    def _perform_hat_motion(
-        self,
-        event: event_handler.Event,
-        value: Value
-    ) -> None:
+    def _perform_hat_motion(self, event: event_handler.Event, value: Value) -> None:
         """Processes hat-controlled motion.
 
         Args:
@@ -182,32 +166,32 @@ class MapToMouseFunctor(AbstractFunctor):
                 self.data.min_speed,
                 self.data.max_speed,
                 self.data.time_to_max_speed,
-                event
+                event,
             )
 
 
 class MapToMouseModel(ActionModel):
-
     # Signal emitted when the description variable's content changes
     changed = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:map_to_mouse/MapToMouseAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:map_to_mouse/MapToMouseAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -269,68 +253,45 @@ class MapToMouseModel(ActionModel):
         self._data.button = data[0].identifier
         self.changed.emit()
 
-    mode = QtCore.Property(
-        str,
-        fget=_get_mode,
-        fset=_set_mode,
-        notify=changed
-    )
+    mode = QtCore.Property(str, fget=_get_mode, fset=_set_mode, notify=changed)
 
     direction = QtCore.Property(
-        int,
-        fget=_get_direction,
-        fset=_set_direction,
-        notify=changed
+        int, fget=_get_direction, fset=_set_direction, notify=changed
     )
 
     minSpeed = QtCore.Property(
-        int,
-        fget=_get_min_speed,
-        fset=_set_min_speed,
-        notify=changed
+        int, fget=_get_min_speed, fset=_set_min_speed, notify=changed
     )
 
     maxSpeed = QtCore.Property(
-        int,
-        fget=_get_max_speed,
-        fset=_set_max_speed,
-        notify=changed
+        int, fget=_get_max_speed, fset=_set_max_speed, notify=changed
     )
 
     timeToMaxSpeed = QtCore.Property(
-        float,
-        fget=_get_time_to_max_speed,
-        fset=_set_time_to_max_speed,
-        notify=changed
+        float, fget=_get_time_to_max_speed, fset=_set_time_to_max_speed, notify=changed
     )
 
 
 class MapToMouseData(AbstractActionData):
-
     """Model of a map to mouse action."""
 
     version = 1
     name = "Map to Mouse"
     tag = "map-to-mouse"
-    icon = "\uF49B"
+    icon = "\uf49b"
 
     functor = MapToMouseFunctor
     model = MapToMouseModel
 
-    properties = (
-        ActionProperty.ActivateOnBoth,
-    )
+    properties = (ActionProperty.ActivateOnBoth,)
     input_types = (
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
-        InputType.Keyboard
+        InputType.Keyboard,
     )
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         # Model variables
@@ -346,13 +307,13 @@ class MapToMouseData(AbstractActionData):
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
-        self.mode = MapToMouseMode.lookup(util.read_property(
-            node, "mode", PropertyType.String
-        ))
+        self.mode = MapToMouseMode.lookup(
+            util.read_property(node, "mode", PropertyType.String)
+        )
         if self.mode == MapToMouseMode.Button:
-            self.button = MouseButton.to_enum(util.read_property(
-                node, "button", PropertyType.String
-            ))
+            self.button = MouseButton.to_enum(
+                util.read_property(node, "button", PropertyType.String)
+            )
         else:
             self.direction = util.read_property(node, "direction", PropertyType.Int)
             self.min_speed = util.read_property(node, "min-speed", PropertyType.Int)
@@ -368,16 +329,18 @@ class MapToMouseData(AbstractActionData):
             ["mode", self.mode.name, PropertyType.String],
         ]
         if self.mode == MapToMouseMode.Button:
-            entries.append([
-                "button", MouseButton.to_string(self.button), PropertyType.String
-            ])
+            entries.append(
+                ["button", MouseButton.to_string(self.button), PropertyType.String]
+            )
         else:
-            entries.extend([
-                ["direction", self.direction, PropertyType.Int],
-                ["min-speed", self.min_speed, PropertyType.Int],
-                ["max-speed", self.max_speed, PropertyType.Int],
-                ["time-to-max-speed", self.time_to_max_speed, PropertyType.Float],
-            ])
+            entries.extend(
+                [
+                    ["direction", self.direction, PropertyType.Int],
+                    ["min-speed", self.min_speed, PropertyType.Int],
+                    ["max-speed", self.max_speed, PropertyType.Int],
+                    ["time-to-max-speed", self.time_to_max_speed, PropertyType.Float],
+                ]
+            )
 
         util.append_property_nodes(node, entries)
         return node
@@ -396,9 +359,7 @@ class MapToMouseData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         if new_behavior in [InputType.JoystickAxis, InputType.JoystickHat]:
             self.mode = MapToMouseMode.Motion

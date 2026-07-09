@@ -4,20 +4,29 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod, ABCMeta
-from typing import Any, List, TYPE_CHECKING
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+)
 from xml.etree import ElementTree
 
-from PySide6 import QtCore, QtQml
-from PySide6.QtCore import Property, Signal
+from PySide6 import (
+    QtCore,
+    QtQml,
+)
 
-from gremlin import error, event_handler, input_cache, keyboard, util
+from gremlin import util
 from gremlin.base_classes import Value
-from gremlin.common import SingletonMetaclass
-from gremlin.input_cache import Keyboard
-from gremlin.types import HatDirection, InputType, PropertyType
+from gremlin.types import (
+    HatDirection,
+    PropertyType,
+)
 from gremlin.ui.profile import HatDirectionModel
-
 
 if TYPE_CHECKING:
     import gremlin.ui.type_aliases as ta
@@ -28,17 +37,16 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 class AbstractComparatorModel(QtCore.QObject):
-
     """Base class for comparator QML models.
 
     Provides information needed for UI presentation.
     """
 
-    name : str = ""
+    name: str = ""
 
-    typeChanged = Signal(str)
+    typeChanged = QtCore.Signal(str)
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         """Creates a new instance.
 
         Args:
@@ -46,7 +54,7 @@ class AbstractComparatorModel(QtCore.QObject):
         """
         super().__init__(parent)
 
-    @Property(str, notify=typeChanged)
+    @QtCore.Property(str, notify=typeChanged)
     def typeName(self) -> str:
         """Returns the comparator's type name.
 
@@ -58,13 +66,12 @@ class AbstractComparatorModel(QtCore.QObject):
 
 @QtQml.QmlElement
 class RangeComparatorModel(AbstractComparatorModel):
-
     """Compares the state of an axis to a specific range."""
 
     name = "range"
 
-    lowerLimitChanged = Signal()
-    upperLimitChanged = Signal()
+    lowerLimitChanged = QtCore.Signal()
+    upperLimitChanged = QtCore.Signal()
 
     def __init__(self, data: RangeComparator) -> None:
         """Creates a new axis range comparison object.
@@ -87,23 +94,22 @@ class RangeComparatorModel(AbstractComparatorModel):
             self.data.upper = value
             self.upperLimitChanged.emit()
 
-    @Property(float, fset=_set_lower_limit, notify=lowerLimitChanged)
+    @QtCore.Property(float, fset=_set_lower_limit, notify=lowerLimitChanged)
     def lowerLimit(self) -> float:
         return self.data.lower
 
-    @Property(float, fset=_set_upper_limit, notify=upperLimitChanged)
+    @QtCore.Property(float, fset=_set_upper_limit, notify=upperLimitChanged)
     def upperLimit(self) -> float:
         return self.data.upper
 
 
 @QtQml.QmlElement
 class PressedComparatorModel(AbstractComparatorModel):
-
     """Compares the state of a button to a specific state."""
 
     name = "pressed"
 
-    isPressedChanged = Signal()
+    isPressedChanged = QtCore.Signal()
 
     def __init__(self, data: PressedComparator) -> None:
         """Creates a new comparator instance.
@@ -120,19 +126,18 @@ class PressedComparatorModel(AbstractComparatorModel):
             self.data.is_pressed = is_pressed
             self.isPressedChanged.emit()
 
-    @Property(bool, fset=_set_is_pressed, notify=isPressedChanged)
+    @QtCore.Property(bool, fset=_set_is_pressed, notify=isPressedChanged)
     def isPressed(self) -> bool:
         return self.data.is_pressed
 
 
 @QtQml.QmlElement
 class DirectionComparatorModel(AbstractComparatorModel):
-
     """Compares the state of a hat to the specified states."""
 
     name = "direction"
 
-    directionsChanged = Signal()
+    directionsChanged = QtCore.Signal()
 
     def __init__(self, data: DirectionComparator) -> None:
         """Creates a new comparator instance.
@@ -145,13 +150,12 @@ class DirectionComparatorModel(AbstractComparatorModel):
         self.data = data
         self._model = HatDirectionModel(self.data.directions)
 
-    @Property(HatDirectionModel, notify=directionsChanged)
+    @QtCore.Property(HatDirectionModel, notify=directionsChanged)
     def model(self) -> HatDirectionModel:
         return self._model
 
 
 class AbstractComparator(metaclass=ABCMeta):
-
     """Base class of all comparators, provides logic and data."""
 
     @abstractmethod
@@ -168,12 +172,11 @@ class AbstractComparator(metaclass=ABCMeta):
 
 
 class RangeComparator(AbstractComparator):
-
     """Compares the state of an axis to a specific range."""
 
     model = RangeComparatorModel
 
-    def __init__(self, lower: float=-1.0, upper: float=1.0) -> None:
+    def __init__(self, lower: float = -1.0, upper: float = 1.0) -> None:
         """Creates a new axis range comparison object.
 
         Args:
@@ -208,18 +211,17 @@ class RangeComparator(AbstractComparator):
         entries = [
             ("comparator-type", "range", PropertyType.String),
             ("lower-limit", self.lower, PropertyType.Float),
-            ("upper-limit", self.upper, PropertyType.Float)
+            ("upper-limit", self.upper, PropertyType.Float),
         ]
         return util.create_node_from_data("comparator", entries)
 
 
 class PressedComparator(AbstractComparator):
-
     """Compares the state of a button to a specific state."""
 
     model = PressedComparatorModel
 
-    def __init__(self, is_pressed: bool=False) -> None:
+    def __init__(self, is_pressed: bool = False) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -242,24 +244,22 @@ class PressedComparator(AbstractComparator):
         return states[0] == self.is_pressed
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        self.is_pressed = \
-            util.read_property(node, "is-pressed", PropertyType.Bool)
+        self.is_pressed = util.read_property(node, "is-pressed", PropertyType.Bool)
 
     def to_xml(self) -> ElementTree.Element:
         entries = [
             ("comparator-type", "pressed", PropertyType.String),
-            ("is-pressed", self.is_pressed, PropertyType.Bool)
+            ("is-pressed", self.is_pressed, PropertyType.Bool),
         ]
         return util.create_node_from_data("comparator", entries)
 
 
 class DirectionComparator(AbstractComparator):
-
     """Compares the state of a hat to the specified states."""
 
     model = DirectionComparatorModel
 
-    def __init__(self, directions: List[HatDirection]=[]) -> None:
+    def __init__(self, directions: List[HatDirection] = []) -> None:
         """Creates a new comparator instance.
 
         Args:
@@ -274,15 +274,11 @@ class DirectionComparator(AbstractComparator):
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.directions = util.read_properties(
-            node,
-            "direction",
-            PropertyType.HatDirection
+            node, "direction", PropertyType.HatDirection
         )
 
     def to_xml(self) -> ElementTree.Element:
-        entries = [
-            ("comparator-type", "direction", PropertyType.String)
-        ]
+        entries = [("comparator-type", "direction", PropertyType.String)]
         for direction in self.directions:
             entries.append(("direction", direction, PropertyType.HatDirection))
         return util.create_node_from_data("comparator", entries)

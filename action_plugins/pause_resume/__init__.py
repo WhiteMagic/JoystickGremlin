@@ -5,28 +5,42 @@
 from __future__ import annotations
 
 import enum
-from typing import Any, List, Optional, TYPE_CHECKING, override
+from typing import (
+    TYPE_CHECKING,
+    List,
+    override,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal
 
-from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, \
-    Value
+from gremlin import (
+    event_handler,
+    util,
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    UserFeedback,
+    Value,
+)
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, PropertyType, DataCreationMode
-
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.types import (
+    ActionProperty,
+    InputType,
+    PropertyType,
+)
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
-
 class PauseResumeType(enum.Enum):
-
     Pause = 1
     Resume = 2
     Toggle = 3
@@ -43,16 +57,15 @@ class PauseResumeType(enum.Enum):
 
 
 class PauseResumeFunctor(AbstractFunctor):
-
-    def __init__(self, action: PauseResumeData):
+    def __init__(self, action: PauseResumeData) -> None:
         super().__init__(action)
 
     @override
     def __call__(
-            self,
-            event: Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if self._should_execute(value):
             if self.data.operation == PauseResumeType.Pause:
@@ -64,26 +77,26 @@ class PauseResumeFunctor(AbstractFunctor):
 
 
 class PauseResumeModel(ActionModel):
-
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
-    ):
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:pause_resume/PauseResumeAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:pause_resume/PauseResumeAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -96,39 +109,32 @@ class PauseResumeModel(ActionModel):
             self._data.operation = operation_type
             self.changed.emit()
 
-    operation = Property(
-        str,
-        fget=_get_operation,
-        fset=_set_operation,
-        notify=changed
+    operation = QtCore.Property(
+        str, fget=_get_operation, fset=_set_operation, notify=changed
     )
 
 
 class PauseResumeData(AbstractActionData):
-
     """Model of a pause and resume action."""
 
     version = 1
     name = "Pause and Resume"
     tag = "pause-resume"
-    icon = "\uF4C4"
+    icon = "\uf4c4"
 
     functor = PauseResumeFunctor
     model = PauseResumeModel
 
-    properties = [
+    properties = (
         ActionProperty.AlwaysExecute,
-        ActionProperty.ActivateOnPress
-    ]
-    input_types = [
+        ActionProperty.ActivateOnPress,
+    )
+    input_types = (
         InputType.JoystickButton,
-        InputType.Keyboard
-    ]
+        InputType.Keyboard,
+    )
 
-    def __init__(
-            self,
-            behavior_type: InputType = InputType.JoystickButton
-    ):
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         # Model variables
@@ -137,16 +143,18 @@ class PauseResumeData(AbstractActionData):
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
-        self.operation = PauseResumeType.lookup(util.read_property(
-            node, "operation", PropertyType.String
-        ))
+        self.operation = PauseResumeType.lookup(
+            util.read_property(node, "operation", PropertyType.String)
+        )
 
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(PauseResumeData.tag, self._id)
-        node.append(util.create_property_node(
-            "operation", self.operation.name, PropertyType.String
-        ))
+        node.append(
+            util.create_property_node(
+                "operation", self.operation.name, PropertyType.String
+            )
+        )
         return node
 
     @override
@@ -163,12 +171,9 @@ class PauseResumeData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
-
 
 
 create = PauseResumeData

@@ -5,21 +5,29 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, List, Optional, TYPE_CHECKING, override
+from typing import (
+    TYPE_CHECKING,
+    List,
+    override,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, \
-    Value
+from gremlin.base_classes import (
+    AbstractActionData,
+    UserFeedback,
+)
 from gremlin.error import GremlinError
-from gremlin.macro import AbstractAction
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, PropertyType, DataCreationMode
-
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.types import (
+    ActionProperty,
+    InputType,
+)
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 from gremlin.ui.profile import LabelValueSelectionModel
 
 if TYPE_CHECKING:
@@ -27,26 +35,26 @@ if TYPE_CHECKING:
 
 
 class ReferenceModel(ActionModel):
-
-    modelChanged = Signal()
+    modelChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
-    ):
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
+    ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:reference/ReferenceAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:reference/ReferenceAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -56,9 +64,12 @@ class ReferenceModel(ActionModel):
         queue = [self._data.id]
         while len(queue) > 0:
             aid = queue.pop(0)
-            action_ids = [a.id for a in self.library.actions_by_predicate(
-                lambda x: aid in [v.id for v in x.get_actions()[0]]
-            )]
+            action_ids = [
+                a.id
+                for a in self.library.actions_by_predicate(
+                    lambda x: aid in [v.id for v in x.get_actions()[0]]
+                )
+            ]
             ancestor_action_ids.extend(action_ids)
             queue.extend(action_ids)
 
@@ -67,7 +78,7 @@ class ReferenceModel(ActionModel):
         # - result in circular inclusions
         # - are of an incompatible input type
         # - are a reference action
-        def selector(action) -> bool:
+        def selector(action: AbstractActionData) -> bool:
             # Only consider actions that are of a valid type
             if action.tag in ["reference"]:
                 return False
@@ -85,14 +96,14 @@ class ReferenceModel(ActionModel):
             [a.action_label for a in actions],
             [str(a.id) for a in actions],
             bootstrap=[a.icon for a in actions],
-            parent=self
+            parent=self,
         )
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def referenceAction(self, value: str) -> None:
         self._replace_reference(self.library.get_action(uuid.UUID(value)))
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def duplicateAction(self, value: str) -> None:
         # Retrieve action and duplicate it before adding it to the tree
         action = self.library.get_action(uuid.UUID(value)).clone()
@@ -107,59 +118,49 @@ class ReferenceModel(ActionModel):
         # Delete the reference action itself
         self.library.delete_action(self._data.id)
 
-    actions = Property(
-        LabelValueSelectionModel,
-        fget=_get_actions,
-        notify=modelChanged
+    actions = QtCore.Property(
+        LabelValueSelectionModel, fget=_get_actions, notify=modelChanged
     )
 
 
 class ReferenceData(AbstractActionData):
-
     """Data for the library reference action."""
 
     version = 1
     name = "Reference"
     tag = "reference"
-    icon = "\uF470"
+    icon = "\uf470"
 
     functor = None
     model = ReferenceModel
 
-    properties = [
-        ActionProperty.ActivateDisabled
-    ]
-    input_types = [
+    properties = (ActionProperty.ActivateDisabled,)
+    input_types = (
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
-        InputType.Keyboard
-    ]
+        InputType.Keyboard,
+    )
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ):
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
     @override
-    def _from_xml(
-            self,
-            node: ElementTree.Element,
-            library: Library
-    ) -> None:
+    def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         pass
 
     @override
     def _to_xml(self) -> ElementTree.Element:
-        return ElementTree.Element()
+        return ElementTree.Element("")
 
     @override
     def user_feedback(self) -> List[UserFeedback]:
-        return [UserFeedback(
-            UserFeedback.FeedbackType.Error,
-            "Always invalid, use to insert an existing action into the profile."
-        )]
+        return [
+            UserFeedback(
+                UserFeedback.FeedbackType.Error,
+                "Always invalid, use to insert an existing action into the profile.",
+            )
+        ]
 
     @override
     def _valid_selectors(self) -> List[str]:
@@ -171,9 +172,7 @@ class ReferenceData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 

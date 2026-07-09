@@ -5,9 +5,9 @@
 from __future__ import annotations
 
 from typing import (
-    override,
-    List,
     TYPE_CHECKING,
+    List,
+    override,
 )
 from xml.etree import ElementTree
 
@@ -32,7 +32,6 @@ from gremlin.types import (
     InputType,
     PropertyType,
 )
-
 from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
@@ -43,7 +42,6 @@ if TYPE_CHECKING:
 
 
 class MapToKeyboardFunctor(AbstractFunctor):
-
     def __init__(self, action: MapToKeyboardData) -> None:
         super().__init__(action)
 
@@ -55,12 +53,13 @@ class MapToKeyboardFunctor(AbstractFunctor):
         for key in reversed(self.data.keys):
             self.release.release(key)
             self.release.pause(0.0)
+
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if self._should_execute(value):
             if value.current:
@@ -70,27 +69,29 @@ class MapToKeyboardFunctor(AbstractFunctor):
 
 
 class MapToKeyboardModel(ActionModel):
-
     # Signal emitted when the description variable's content changes
     changed = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:map_to_keyboard/MapToKeyboardAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile(
+                "core_plugins:map_to_keyboard/MapToKeyboardAction.qml"
+            ).fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -123,29 +124,23 @@ class MapToKeyboardModel(ActionModel):
 
 
 class MapToKeyboardData(AbstractActionData):
-
     """Model of a map to keyboard action."""
 
     version = 1
     name = "Map to Keyboard"
     tag = "map-to-keyboard"
-    icon = "\uF451"
+    icon = "\uf451"
 
     functor = MapToKeyboardFunctor
     model = MapToKeyboardModel
 
-    properties = (
-        ActionProperty.ActivateOnBoth,
-    )
+    properties = (ActionProperty.ActivateOnBoth,)
     input_types = (
         InputType.JoystickButton,
         InputType.Keyboard,
     )
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.keys = []
@@ -156,7 +151,7 @@ class MapToKeyboardData(AbstractActionData):
         for key_node in node.findall("input"):
             key = keyboard.key_from_code(
                 util.read_property(key_node, "scan-code", PropertyType.Int),
-                util.read_property(key_node, "is-extended", PropertyType.Bool)
+                util.read_property(key_node, "is-extended", PropertyType.Bool),
             )
             self.keys.append(key)
 
@@ -164,23 +159,27 @@ class MapToKeyboardData(AbstractActionData):
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToKeyboardData.tag, self._id)
         for key in self.keys:
-            node.append(util.create_node_from_data(
-                "input",
-                [
-                    ("scan-code", key.scan_code, PropertyType.Int),
-                    ("is-extended", key.is_extended, PropertyType.Bool)
-                ]
-            ))
+            node.append(
+                util.create_node_from_data(
+                    "input",
+                    [
+                        ("scan-code", key.scan_code, PropertyType.Int),
+                        ("is-extended", key.is_extended, PropertyType.Bool),
+                    ],
+                )
+            )
         return node
 
     @override
     def user_feedback(self) -> List[UserFeedback]:
         messages = []
         if len(self.keys) == 0:
-            messages.append(UserFeedback(
-                UserFeedback.FeedbackType.Error,
-                "Mapping has no keys assigned to it."
-            ))
+            messages.append(
+                UserFeedback(
+                    UserFeedback.FeedbackType.Error,
+                    "Mapping has no keys assigned to it.",
+                )
+            )
         return messages
 
     @override
@@ -193,9 +192,7 @@ class MapToKeyboardData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 

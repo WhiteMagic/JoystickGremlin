@@ -5,27 +5,44 @@
 from __future__ import annotations
 
 import logging
-from typing import List, override, TYPE_CHECKING
+import uuid
+from typing import (
+    TYPE_CHECKING,
+    List,
+    override,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal, Slot
 
-from gremlin import error, event_handler, plugin_manager, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
+from gremlin import (
+    error,
+    event_handler,
+    plugin_manager,
+    util,
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    UserFeedback,
+    Value,
+)
 from gremlin.profile import Library
 from gremlin.tree import TreeNode
-from gremlin.types import ActionProperty, ConditionType, InputType, \
-    LogicalOperator, PropertyType
-
+from gremlin.types import (
+    ActionProperty,
+    ConditionType,
+    InputType,
+    LogicalOperator,
+    PropertyType,
+)
 from gremlin.ui.action_model import ActionModel
 
 from . import condition as ca
 
 if TYPE_CHECKING:
-    import gremlin.ui.type_aliases as ta
-    from gremlin.ui.profile import InputItemBindingModel
     from gremlin.ui.action_model import SequenceIndex
+    from gremlin.ui.profile import InputItemBindingModel
 
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
@@ -33,24 +50,26 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 class ConditionFunctor(AbstractFunctor):
-
     def __init__(self, action: ConditionModel) -> None:
         super().__init__(action)
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if not self._should_execute(value):
             return
 
         actions = []
         try:
-            actions = self.functors["true"] if \
-                self._condition_truth_state(value) else self.functors["false"]
+            actions = (
+                self.functors["true"]
+                if self._condition_truth_state(value)
+                else self.functors["false"]
+            )
         except error.GremlinError as e:
             logging.getLogger("system").error(
                 f"ConditionAction: Error executing condition - {e}"
@@ -76,38 +95,38 @@ class ConditionFunctor(AbstractFunctor):
                 return any(outcomes)
             case _:
                 raise error.GremlinError(
-                    "ConditionAction: Invalid logical operator present " +
-                    f"{self.data.logical_operator}"
+                    "ConditionAction: Invalid logical operator present "
+                    + f"{self.data.logical_operator}"
                 )
 
 
 class ConditionModel(ActionModel):
-
-    logicalOperatorChanged = Signal()
-    conditionsChanged = Signal()
-    actionsChanged = Signal()
+    logicalOperatorChanged = QtCore.Signal()
+    conditionsChanged = QtCore.Signal()
+    actionsChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:condition/ConditionAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:condition/ConditionAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
-    @Slot(int)
+    @QtCore.Slot(int)
     def addCondition(self, condition: int) -> None:
         """Adds a new condition.
 
@@ -131,7 +150,7 @@ class ConditionModel(ActionModel):
             self._data.conditions.append(cond)
         self.conditionsChanged.emit()
 
-    @Slot(str, str)
+    @QtCore.Slot(str, str)
     def addAction(self, action_name: str, branch: str) -> None:
         """Adds a new action to one of the two condition branches.
 
@@ -144,7 +163,9 @@ class ConditionModel(ActionModel):
             self._action_tree
         )
 
-        predicate = lambda x: True if x.value and x.value.id == self.id else False
+        def predicate(node: TreeNode) -> bool:
+            return True if node.value and node.value.id == self.id else False
+
         nodes = self._action_tree.root.nodes_matching(predicate)
         if len(nodes) != 1:
             raise error.GremlinError(f"Node with ID {self.id} has invalid state")
@@ -158,7 +179,7 @@ class ConditionModel(ActionModel):
 
         self.actionsChanged.emit()
 
-    @Slot(int)
+    @QtCore.Slot(int)
     def removeCondition(self, index: int) -> None:
         if index >= len(self._data.conditions):
             raise error.GremlinError("Attempting to remove a non-existent condition.")
@@ -166,21 +187,21 @@ class ConditionModel(ActionModel):
         del self._data.conditions[index]
         self.conditionsChanged.emit()
 
-    @Property(list, constant=True)
+    @QtCore.Property(list, constant=True)
     def logicalOperators(self) -> List[dict[str, str]]:
         return [
             {"value": str(e.value), "text": LogicalOperator.to_display(e)}
             for e in LogicalOperator
         ]
 
-    @Property(list, constant=True)
+    @QtCore.Property(list, constant=True)
     def conditionOperators(self) -> List[dict[str, str]]:
         return [
             {"value": str(e.value), "text": ConditionType.to_display(e)}
             for e in ConditionType
         ]
 
-    @Property(list, notify=conditionsChanged)
+    @QtCore.Property(list, notify=conditionsChanged)
     def conditions(self) -> list[ca.AbstractCondition]:
         return self._data.conditions
 
@@ -196,41 +217,35 @@ class ConditionModel(ActionModel):
             self.logicalOperatorChanged.emit()
         except ValueError as e:
             logging.getLogger("system").error(
-                f"Condition: Invalid logical operator value obtained: \"{e}\"."
+                f'Condition: Invalid logical operator value obtained: "{e}".'
             )
 
-    logicalOperator = Property(
+    logicalOperator = QtCore.Property(
         str,
         fget=_get_logical_operator,
         fset=_set_logical_operator,
-        notify=logicalOperatorChanged
+        notify=logicalOperatorChanged,
     )
 
 
 class ConditionData(AbstractActionData):
-
     version = 1
     name = "Condition"
     tag = "condition"
-    icon = "\uF109"
+    icon = "\uf109"
 
     functor = ConditionFunctor
     model = ConditionModel
 
-    properties = (
-        ActionProperty.ActivateOnBoth,
-    )
+    properties = (ActionProperty.ActivateOnBoth,)
     input_types = (
         InputType.JoystickAxis,
         InputType.JoystickButton,
         InputType.JoystickHat,
-        InputType.Keyboard
+        InputType.Keyboard,
     )
 
-    def __init__(
-        self,
-        behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.logical_operator = LogicalOperator.All
@@ -281,19 +296,25 @@ class ConditionData(AbstractActionData):
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(ConditionData.tag, self._id)
-        node.append(util.create_property_node(
-            "logical-operator",
-            LogicalOperator.to_string(self.logical_operator),
-            PropertyType.String
-        ))
+        node.append(
+            util.create_property_node(
+                "logical-operator",
+                LogicalOperator.to_string(self.logical_operator),
+                PropertyType.String,
+            )
+        )
         for condition in [cond for cond in self.conditions if cond.is_valid()]:
             node.append(condition.to_xml())
-        node.append(util.create_action_ids(
-            "true-actions", [action.id for action in self.true_actions]
-        ))
-        node.append(util.create_action_ids(
-            "false-actions", [action.id for action in self.false_actions]
-        ))
+        node.append(
+            util.create_action_ids(
+                "true-actions", [action.id for action in self.true_actions]
+            )
+        )
+        node.append(
+            util.create_action_ids(
+                "false-actions", [action.id for action in self.false_actions]
+            )
+        )
 
         return node
 
@@ -319,9 +340,7 @@ class ConditionData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         if old_behavior != new_behavior:
             for condition in self.conditions:

@@ -8,15 +8,13 @@ import logging
 import threading
 import time
 from typing import (
-    override,
-    List,
     TYPE_CHECKING,
+    List,
+    override,
 )
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-
-from vjoy.vjoy import VJoyProxy
 
 from gremlin import (
     device_initialization,
@@ -24,7 +22,7 @@ from gremlin import (
     event_handler,
     event_helpers,
     signal,
-    util
+    util,
 )
 from gremlin.base_classes import (
     AbstractActionData,
@@ -38,20 +36,18 @@ from gremlin.types import (
     AxisMode,
     InputType,
     PropertyType,
-    DataCreationMode,
 )
-
 from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
 )
+from vjoy.vjoy import VJoyProxy
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
 class MapToVjoyFunctor(AbstractFunctor):
-
     """Executes a map to vjoy action when called."""
 
     SCALING_MULTIPLIER = 1 / 1000.0
@@ -60,7 +56,7 @@ class MapToVjoyFunctor(AbstractFunctor):
     def __init__(self, action: MapToVjoyData) -> None:
         super().__init__(action)
 
-        self.needs_auto_release = False #self._check_for_auto_release(action)
+        self.needs_auto_release = False  # self._check_for_auto_release(action)
         self.thread_running = False
         self.should_stop_thread = False
         self.thread_last_update = time.time()
@@ -70,10 +66,10 @@ class MapToVjoyFunctor(AbstractFunctor):
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if not self._should_execute(value):
             return
@@ -81,8 +77,9 @@ class MapToVjoyFunctor(AbstractFunctor):
         try:
             if self.data.vjoy_input_type == InputType.JoystickAxis:
                 if self.data.axis_mode == AxisMode.Absolute:
-                    VJoyProxy()[self.data.vjoy_device_id] \
-                        .axis(self.data.vjoy_input_id).value = value.current
+                    VJoyProxy()[self.data.vjoy_device_id].axis(
+                        self.data.vjoy_input_id
+                    ).value = value.current
                 else:
                     self.should_stop_thread = abs(event.value) < 0.05
                     self.axis_delta_value = value.current * (
@@ -92,35 +89,34 @@ class MapToVjoyFunctor(AbstractFunctor):
                     if self.thread_running is False:
                         if isinstance(self.thread, threading.Thread):
                             self.thread.join()
-                        self.thread = threading.Thread(
-                            target=self.relative_axis_thread
-                        )
+                        self.thread = threading.Thread(target=self.relative_axis_thread)
                         self.thread.start()
 
             elif self.data.vjoy_input_type in [
                 InputType.JoystickButton,
-                InputType.Keyboard
+                InputType.Keyboard,
             ]:
                 is_pressed = value.current
                 if self.data.button_inverted:
                     is_pressed = not is_pressed
-                VJoyProxy()[self.data.vjoy_device_id] \
-                    .button(self.data.vjoy_input_id).is_pressed = is_pressed
+                VJoyProxy()[self.data.vjoy_device_id].button(
+                    self.data.vjoy_input_id
+                ).is_pressed = is_pressed
 
                 if is_pressed and ActionProperty.DisableAutoRelease not in properties:
                     event_helpers.ButtonReleaseActions().register_vjoy_button_release(
                         (self.data.vjoy_device_id, self.data.vjoy_input_id),
                         event,
-                        self.data.button_inverted
+                        self.data.button_inverted,
                     )
 
             elif self.data.vjoy_input_type == InputType.JoystickHat:
-                VJoyProxy()[self.data.vjoy_device_id] \
-                    .hat(self.data.vjoy_input_id).direction = value.current
+                VJoyProxy()[self.data.vjoy_device_id].hat(
+                    self.data.vjoy_input_id
+                ).direction = value.current
         except error.VJoyError as e:
             logging.getLogger("event").error(
-                f"Failed to execute {self.data.name} action due to "
-                f"vJoy error: {e}."
+                f"Failed to execute {self.data.name} action due to vJoy error: {e}."
             )
 
     def relative_axis_thread(self) -> None:
@@ -136,22 +132,21 @@ class MapToVjoyFunctor(AbstractFunctor):
             try:
                 # If the vjoy value has was changed from what we set it to
                 # in the last iteration, terminate the thread
-                change = vjoy_dev.axis(self.data.vjoy_input_id).value - \
-                        self.axis_value
+                change = vjoy_dev.axis(self.data.vjoy_input_id).value - self.axis_value
                 if abs(change) > 0.0001:
                     self.thread_running = False
                     self.should_stop_thread = True
                     return
 
                 self.axis_value = util.clamp(
-                    self.axis_value + self.axis_delta_value,
-                    -1.0,
-                    1.0
+                    self.axis_value + self.axis_delta_value, -1.0, 1.0
                 )
                 vjoy_dev.axis(self.data.vjoy_input_id).value = self.axis_value
 
-                if self.should_stop_thread and \
-                        self.thread_last_update + 1.0 < time.time():
+                if (
+                    self.should_stop_thread
+                    and self.thread_last_update + 1.0 < time.time()
+                ):
                     self.thread_running = False
                 time.sleep(self.THREAD_SLEEP_DURATION_S)
             except error.VJoyError:
@@ -159,7 +154,6 @@ class MapToVjoyFunctor(AbstractFunctor):
 
 
 class MapToVjoyModel(ActionModel):
-
     # Signals emitted when properties change
     vjoyDeviceIdChanged = QtCore.Signal()
     vjoyInputIdChanged = QtCore.Signal()
@@ -169,22 +163,23 @@ class MapToVjoyModel(ActionModel):
     buttonInvertedChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:map_to_vjoy/MapToVjoyAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:map_to_vjoy/MapToVjoyAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -258,42 +253,32 @@ class MapToVjoyModel(ActionModel):
         int,
         fget=_get_vjoy_device_id,
         fset=_set_vjoy_device_id,
-        notify=vjoyDeviceIdChanged
+        notify=vjoyDeviceIdChanged,
     )
     vjoyInputId = QtCore.Property(
-        int,
-        fget=_get_vjoy_input_id,
-        fset=_set_vjoy_input_id,
-        notify=vjoyInputIdChanged
+        int, fget=_get_vjoy_input_id, fset=_set_vjoy_input_id, notify=vjoyInputIdChanged
     )
     vjoyInputType = QtCore.Property(
         str,
         fget=_get_vjoy_input_type,
         fset=_set_vjoy_input_type,
-        notify=inputTypeChanged
+        notify=inputTypeChanged,
     )
     axisMode = QtCore.Property(
-        str,
-        fget=_get_axis_mode,
-        fset=_set_axis_mode,
-        notify=axisModeChanged
+        str, fget=_get_axis_mode, fset=_set_axis_mode, notify=axisModeChanged
     )
     axisScaling = QtCore.Property(
-        float,
-        fget=_get_axis_scaling,
-        fset=_set_axis_scaling,
-        notify=axisScalingChanged
+        float, fget=_get_axis_scaling, fset=_set_axis_scaling, notify=axisScalingChanged
     )
     buttonInverted = QtCore.Property(
         bool,
         fget=_get_button_inverted,
         fset=_set_button_inverted,
-        notify=buttonInvertedChanged
+        notify=buttonInvertedChanged,
     )
 
 
 class MapToVjoyData(AbstractActionData):
-
     """Action feeding a vJoy device."""
 
     DEFAULT_SCALING = 1.0
@@ -301,14 +286,12 @@ class MapToVjoyData(AbstractActionData):
     version = 1
     name = "Map to vJoy"
     tag = "map-to-vjoy"
-    icon = "\uF448"
+    icon = "\uf448"
 
     functor = MapToVjoyFunctor
     model = MapToVjoyModel
 
-    properties = (
-        ActionProperty.ActivateOnBoth,
-    )
+    properties = (ActionProperty.ActivateOnBoth,)
     input_types = (
         InputType.JoystickAxis,
         InputType.JoystickButton,
@@ -316,10 +299,7 @@ class MapToVjoyData(AbstractActionData):
         InputType.Keyboard,
     )
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         # Select an initially valid vJoy input
@@ -348,9 +328,7 @@ class MapToVjoyData(AbstractActionData):
         self.vjoy_device_id = util.read_property(
             node, "vjoy-device-id", PropertyType.Int
         )
-        self.vjoy_input_id = util.read_property(
-            node, "vjoy-input-id", PropertyType.Int
-        )
+        self.vjoy_input_id = util.read_property(node, "vjoy-input-id", PropertyType.Int)
         self.vjoy_input_type = util.read_property(
             node, "vjoy-input-type", PropertyType.InputType
         )
@@ -369,26 +347,38 @@ class MapToVjoyData(AbstractActionData):
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(MapToVjoyData.tag, self._id)
-        node.append(util.create_property_node(
-            "vjoy-device-id", self.vjoy_device_id, PropertyType.Int
-        ))
-        node.append(util.create_property_node(
-            "vjoy-input-id", self.vjoy_input_id, PropertyType.Int
-        ))
-        node.append(util.create_property_node(
-            "vjoy-input-type", self.vjoy_input_type, PropertyType.InputType
-        ))
+        node.append(
+            util.create_property_node(
+                "vjoy-device-id", self.vjoy_device_id, PropertyType.Int
+            )
+        )
+        node.append(
+            util.create_property_node(
+                "vjoy-input-id", self.vjoy_input_id, PropertyType.Int
+            )
+        )
+        node.append(
+            util.create_property_node(
+                "vjoy-input-type", self.vjoy_input_type, PropertyType.InputType
+            )
+        )
         if self.vjoy_input_type == InputType.JoystickAxis:
-            node.append(util.create_property_node(
-                "axis-mode", self.axis_mode, PropertyType.AxisMode
-            ))
-            node.append(util.create_property_node(
-                "axis-scaling", self.axis_scaling, PropertyType.Float
-            ))
+            node.append(
+                util.create_property_node(
+                    "axis-mode", self.axis_mode, PropertyType.AxisMode
+                )
+            )
+            node.append(
+                util.create_property_node(
+                    "axis-scaling", self.axis_scaling, PropertyType.Float
+                )
+            )
         if self.vjoy_input_type == InputType.JoystickButton:
-            node.append(util.create_property_node(
-                "button-inverted", self.button_inverted, PropertyType.Bool
-            ))
+            node.append(
+                util.create_property_node(
+                    "button-inverted", self.button_inverted, PropertyType.Bool
+                )
+            )
         return node
 
     @override
@@ -405,9 +395,7 @@ class MapToVjoyData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         self._vjoy_input_type = new_behavior
 

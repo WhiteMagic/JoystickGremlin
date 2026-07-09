@@ -4,25 +4,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
+from collections.abc import Callable
 from typing import (
-    override,
+    TYPE_CHECKING,
+    Any,
     Dict,
     List,
-    TYPE_CHECKING,
+    override,
 )
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import (
-    Property,
-    Signal,
-    Slot,
-)
 
 import dill
-from gremlin import event_handler, fsm, util
+from gremlin import (
+    event_handler,
+    fsm,
+    util,
+)
 from gremlin.base_classes import (
     AbstractActionData,
     AbstractFunctor,
@@ -39,15 +39,16 @@ from gremlin.types import (
     InputType,
     PropertyType,
 )
-
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
 class DirectionalButton:
-
     resolve_direction = {
         HatDirection.North: "North",
         HatDirection.NorthEast: "North East",
@@ -69,11 +70,7 @@ class DirectionalButton:
         "North West": HatDirection.NorthWest,
     }
 
-    def __init__(
-        self,
-        functors: Dict[str, List[Callable]],
-        direction: str
-    ) -> None:
+    def __init__(self, functors: Dict[str, List[Callable]], direction: str) -> None:
         self.functors = functors
         self.functor_direction = direction
         self.type_direction = DirectionalButton.resolve_direction[direction]
@@ -84,7 +81,9 @@ class DirectionalButton:
 
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         T = fsm.Transition
-        noop = lambda *args: None
+
+        def noop(*args: Any) -> None:  # noqa: ANN401
+            pass
 
         states = ["up", "down"]
         actions = ["press", "release"]
@@ -92,15 +91,15 @@ class DirectionalButton:
             ("up", "press"): T([self._execute], "down"),
             ("up", "release"): T([noop], "up"),
             ("down", "release"): T([self._execute], "up"),
-            ("down", "press"): T([noop], "down")
+            ("down", "press"): T([noop], "down"),
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty] = [],
     ) -> None:
         is_pressed = event.value == self.type_direction
         action = "press" if is_pressed else "release"
@@ -112,7 +111,7 @@ class DirectionalButton:
             device_guid=dill.UUID_Virtual,
             mode=event.mode,
             is_pressed=is_pressed,
-            raw_value=is_pressed
+            raw_value=is_pressed,
         )
         btn_value = Value(is_pressed)
 
@@ -120,17 +119,16 @@ class DirectionalButton:
         event_handler.EventListener().virtual_event.emit(virtual_btn_event)
 
     def _execute(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty] = [],
     ) -> None:
         for functor in self.functors[self.functor_direction]:
             functor(event, value, properties)
 
 
 class HatButtonsFunctor(AbstractFunctor):
-
     """Implements the function executed of the Description action at runtime."""
 
     def __init__(self, action: HatButtonsData) -> None:
@@ -141,19 +139,18 @@ class HatButtonsFunctor(AbstractFunctor):
             self.buttons.append(DirectionalButton(self.functors, direction))
 
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty] = [],
     ) -> None:
         for button in self.buttons:
             button(event, value, properties)
 
 
 class HatButtonsModel(ActionModel):
-
     # Signal emitted when the description variable's content changes
-    changed = Signal()
+    changed = QtCore.Signal()
 
     name_lookup = {
         (4, 0): "North",
@@ -167,28 +164,29 @@ class HatButtonsModel(ActionModel):
         (8, 4): "South",
         (8, 5): "South West",
         (8, 6): "West",
-        (8, 7): "North West"
+        (8, 7): "North West",
     }
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:hat_buttons/HatButtonsAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:hat_buttons/HatButtonsAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
         return "button"
 
-    @Slot(int, result=str)
+    @QtCore.Slot(int, result=str)
     def buttonName(self, index: int) -> str:
         key = (self._data.button_count, index)
         if key not in HatButtonsModel.name_lookup:
@@ -210,43 +208,41 @@ class HatButtonsModel(ActionModel):
         action_list = [entry for entry in action_list if entry.tag != "root"]
         return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
-    buttonCount = Property(
-        type=int,
-        fget=_get_button_count,
-        fset=_set_button_count,
-        notify=changed
+    buttonCount = QtCore.Property(
+        type=int, fget=_get_button_count, fset=_set_button_count, notify=changed
     )
 
 
 class HatButtonsData(AbstractActionData):
-
     """Model of a description action."""
 
     version = 1
     name = "Hat as Buttons"
     tag = "hat-buttons"
-    icon = "\uF687"
+    icon = "\uf687"
 
     functor = HatButtonsFunctor
     model = HatButtonsModel
 
-    properties = (
-        ActionProperty.ActivateDisabled,
-    )
-    input_types = (
-        InputType.JoystickHat,
-    )
+    properties = (ActionProperty.ActivateDisabled,)
+    input_types = (InputType.JoystickHat,)
 
     name_list = {
         4: ["North", "East", "South", "West", "Center"],
-        8: ["North", "North East", "East", "South East",
-            "South", "South West", "West", "North West", "Center"]
+        8: [
+            "North",
+            "North East",
+            "East",
+            "South East",
+            "South",
+            "South West",
+            "West",
+            "North West",
+            "Center",
+        ],
     }
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(InputType.JoystickButton)
 
         self.button_count = 4
@@ -264,9 +260,7 @@ class HatButtonsData(AbstractActionData):
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
-        self.button_count = util.read_property(
-            node, "button-count", PropertyType.Int
-        )
+        self.button_count = util.read_property(node, "button-count", PropertyType.Int)
         self.direction = {}
         for name in HatButtonsData.name_list[self.button_count]:
             self.direction[name] = []
@@ -279,13 +273,17 @@ class HatButtonsData(AbstractActionData):
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(HatButtonsData.tag, self._id)
-        node.append(util.create_property_node(
-            "button-count", self.button_count, PropertyType.Int
-        ))
+        node.append(
+            util.create_property_node(
+                "button-count", self.button_count, PropertyType.Int
+            )
+        )
         for direction, sequence in self.direction.items():
-            node.append(util.create_action_ids(
-                f"{direction}", [action.id for action in sequence]
-            ))
+            node.append(
+                util.create_action_ids(
+                    f"{direction}", [action.id for action in sequence]
+                )
+            )
         return node
 
     @override
@@ -304,9 +302,7 @@ class HatButtonsData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 

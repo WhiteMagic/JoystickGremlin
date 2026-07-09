@@ -4,18 +4,16 @@
 
 from __future__ import annotations
 
+import uuid
 from enum import Enum
 from typing import (
+    TYPE_CHECKING,
     List,
     override,
-    TYPE_CHECKING,
 )
-import uuid
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-
-import dill
 
 from gremlin import (
     event_handler,
@@ -31,17 +29,13 @@ from gremlin.base_classes import (
 from gremlin.error import GremlinError
 from gremlin.input_cache import Joystick
 from gremlin.plugin_manager import PluginManager
-from gremlin.profile import (
-    InputItemBinding,
-    Library,
-)
+from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
     DataCreationMode,
     InputType,
     PropertyType,
 )
-
 from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
@@ -54,7 +48,6 @@ if TYPE_CHECKING:
 
 
 class MergeOperation(Enum):
-
     """Represents the available merge operations."""
 
     Average = 0
@@ -75,9 +68,7 @@ class MergeOperation(Enum):
 
         res = lookup.get(value, None)
         if res is None:
-            raise GremlinError(
-                "MergeOperation: invalid value in lookup '{value}'"
-            )
+            raise GremlinError("MergeOperation: invalid value in lookup '{value}'")
         return res
 
     @classmethod
@@ -98,28 +89,25 @@ class MergeOperation(Enum):
 
 
 class MergeAxisFunctor(AbstractFunctor):
-
     def __init__(self, action: MergeAxisData) -> None:
         super().__init__(action)
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty] = []
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         joy = Joystick()
-        axis1 = joy[self.data.axis_in1.device_guid].axis(
-            self.data.axis_in1.input_id
-        ).value
-        axis2 = joy[self.data.axis_in2.device_guid].axis(
-            self.data.axis_in2.input_id
-        ).value
-
-        value.current = MergeAxisFunctor.actions[self.data.operation](
-            axis1, axis2
+        axis1 = (
+            joy[self.data.axis_in1.device_guid].axis(self.data.axis_in1.input_id).value
         )
+        axis2 = (
+            joy[self.data.axis_in2.device_guid].axis(self.data.axis_in2.input_id).value
+        )
+
+        value.current = MergeAxisFunctor.actions[self.data.operation](axis1, axis2)
 
         for functor in self.functors["children"]:
             functor(event, value, properties)
@@ -163,23 +151,23 @@ class MergeAxisFunctor(AbstractFunctor):
 
 
 class MergeAxisModel(ActionModel):
-
     modelChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:merge_axis/MergeAxisAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:merge_axis/MergeAxisAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
         return self._binding_model.get_action_model_by_sidx(
@@ -194,14 +182,13 @@ class MergeAxisModel(ActionModel):
             List of valid operation names
         """
         operations = sorted(
-            [e.name.capitalize() for e in MergeOperation
-                if not e.name.startswith("_MergeOperation")]
+            [
+                e.name.capitalize()
+                for e in MergeOperation
+                if not e.name.startswith("_MergeOperation")
+            ]
         )
-        return LabelValueSelectionModel(
-            operations,
-            operations,
-            parent=self
-        )
+        return LabelValueSelectionModel(operations, operations, parent=self)
 
     @QtCore.Property(LabelValueSelectionModel, notify=modelChanged)
     def mergeActionList(self) -> LabelValueSelectionModel:
@@ -213,7 +200,7 @@ class MergeAxisModel(ActionModel):
         return LabelValueSelectionModel(
             [ma.label for ma in merge_actions],
             [str(ma.id) for ma in merge_actions],
-            parent=self
+            parent=self,
         )
 
     def _get_label(self) -> str:
@@ -244,11 +231,7 @@ class MergeAxisModel(ActionModel):
 
         # Remove current input item assignments from the action being deselected
         item = self._binding_model.input_item_binding.input_item
-        identifier = InputIdentifier(
-            item.device_id,
-            item.input_type,
-            item.input_id
-        )
+        identifier = InputIdentifier(item.device_id, item.input_type, item.input_id)
 
         if self._data.axis_in1 == identifier:
             self._data.axis_in1 = InputIdentifier()
@@ -258,7 +241,7 @@ class MergeAxisModel(ActionModel):
         # Update the library and action entries
         self._binding_model.append_action(
             self.library.get_action(util.parse_id_or_uuid(uuid_str)),
-            self.sequence_index
+            self.sequence_index,
         )
         self._binding_model.remove_action(self.sequence_index)
         self._binding_model.rootActionChanged.emit()
@@ -288,56 +271,43 @@ class MergeAxisModel(ActionModel):
     @QtCore.Slot()
     def newMergeAxis(self) -> None:
         action = MergeAxisData.create(
-            DataCreationMode.Create,
-            self._binding_model.behavior_type
+            DataCreationMode.Create, self._binding_model.behavior_type
         )
         action.label = "New Merge Axis 123"
 
         self.library.add_action(action)
         self.modelChanged.emit()
 
-    label = QtCore.Property(
-        str,
-        fget=_get_label,
-        fset=_set_label,
-        notify=modelChanged
-    )
+    label = QtCore.Property(str, fget=_get_label, fset=_set_label, notify=modelChanged)
 
     mergeAction = QtCore.Property(
-        str,
-        fget=_get_merge_action,
-        fset=_set_merge_action,
-        notify=modelChanged
+        str, fget=_get_merge_action, fset=_set_merge_action, notify=modelChanged
     )
 
     firstAxis = QtCore.Property(
         InputIdentifier,
         fget=lambda c: MergeAxisModel._get_axis(c, 1),
         fset=lambda c, x: MergeAxisModel._set_axis(c, 1, x),
-        notify=modelChanged
+        notify=modelChanged,
     )
 
     secondAxis = QtCore.Property(
         InputIdentifier,
         fget=lambda c: MergeAxisModel._get_axis(c, 2),
         fset=lambda c, x: MergeAxisModel._set_axis(c, 2, x),
-        notify=modelChanged
+        notify=modelChanged,
     )
 
     operation = QtCore.Property(
-        str,
-        fget=_get_operation,
-        fset=_set_operation,
-        notify=modelChanged
+        str, fget=_get_operation, fset=_set_operation, notify=modelChanged
     )
 
 
 class MergeAxisData(AbstractActionData):
-
     version = 1
     name = "Merge Axis"
     tag = "merge-axis"
-    icon = "\uF85C"
+    icon = "\uf85c"
 
     functor = MergeAxisFunctor
     model = MergeAxisModel
@@ -346,11 +316,9 @@ class MergeAxisData(AbstractActionData):
         ActionProperty.ReuseByDefault,
         ActionProperty.ActivateDisabled,
     )
-    input_types = (
-        InputType.JoystickAxis,
-    )
+    input_types = (InputType.JoystickAxis,)
 
-    def __init__(self, behavior_type: InputType=InputType.JoystickButton) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.label = ""
@@ -378,9 +346,9 @@ class MergeAxisData(AbstractActionData):
         self.axis_in2.input_id = util.read_property(
             node, "axis2-axis", [PropertyType.Int, PropertyType.UUID]
         )
-        self.operation = MergeOperation.to_enum(util.read_property(
-            node, "operation", PropertyType.String
-        ))
+        self.operation = MergeOperation.to_enum(
+            util.read_property(node, "operation", PropertyType.String)
+        )
         child_ids = util.read_action_ids(node.find("actions"))
         self.children = [library.get_action(aid) for aid in child_ids]
 
@@ -390,30 +358,38 @@ class MergeAxisData(AbstractActionData):
         entries = [
             ["label", self.label, PropertyType.String],
             ["axis1-guid", self.axis_in1.device_guid, PropertyType.UUID],
-            ["axis1-axis", self.axis_in1.input_id, [PropertyType.Int, PropertyType.UUID]],
+            [
+                "axis1-axis",
+                self.axis_in1.input_id,
+                [PropertyType.Int, PropertyType.UUID],
+            ],
             ["axis2-guid", self.axis_in2.device_guid, PropertyType.UUID],
-            ["axis2-axis", self.axis_in2.input_id, [PropertyType.Int, PropertyType.UUID]],
+            [
+                "axis2-axis",
+                self.axis_in2.input_id,
+                [PropertyType.Int, PropertyType.UUID],
+            ],
             [
                 "operation",
                 MergeOperation.to_string(self.operation),
-                PropertyType.String
+                PropertyType.String,
             ],
         ]
         util.append_property_nodes(node, entries)
-        node.append(util.create_action_ids(
-            "actions",
-            [child.id for child in self.children]
-        ))
+        node.append(
+            util.create_action_ids("actions", [child.id for child in self.children])
+        )
         return node
 
     @override
     def user_feedback(self) -> List[UserFeedback]:
         messages = []
         if not (self.axis_in1.isValid and self.axis_in2.isValid):
-            messages.append(UserFeedback(
-                UserFeedback.FeedbackType.Error,
-                "Both axes have to be assigned."
-            ))
+            messages.append(
+                UserFeedback(
+                    UserFeedback.FeedbackType.Error, "Both axes have to be assigned."
+                )
+            )
         return messages
 
     @override
@@ -430,13 +406,11 @@ class MergeAxisData(AbstractActionData):
     @classmethod
     @override
     def _do_create(
-            cls,
-            mode: DataCreationMode,
-            behavior_type: InputType
+        cls, mode: DataCreationMode, behavior_type: InputType
     ) -> AbstractActionData:
         if mode == DataCreationMode.Reuse:
             all_actions = shared_state.current_profile.library.actions_by_type(
-            PluginManager().get_class(MergeAxisData.name)
+                PluginManager().get_class(MergeAxisData.name)
             )
             if len(all_actions) == 0:
                 return MergeAxisData(behavior_type)
@@ -454,9 +428,7 @@ class MergeAxisData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 

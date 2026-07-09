@@ -5,28 +5,43 @@
 from __future__ import annotations
 
 import threading
-from typing import List, TYPE_CHECKING, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+    override,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal
 
-from gremlin import event_handler, fsm, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
+from gremlin import (
+    event_handler,
+    fsm,
+    util,
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    UserFeedback,
+    Value,
+)
 from gremlin.config import Configuration
 from gremlin.event_helpers import ButtonReleaseActions
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, PropertyType
-
+from gremlin.types import (
+    ActionProperty,
+    InputType,
+    PropertyType,
+)
 from gremlin.ui.action_model import ActionModel
 
 if TYPE_CHECKING:
-    from gremlin.ui.profile import InputItemBindingModel
     from gremlin.ui.action_model import SequenceIndex
+    from gremlin.ui.profile import InputItemBindingModel
 
 
 class SmartToggleFunctor(AbstractFunctor):
-
     def __init__(self, action: SmartToggleData) -> None:
         super().__init__(action)
 
@@ -35,10 +50,14 @@ class SmartToggleFunctor(AbstractFunctor):
 
     def _create_fsm(self) -> fsm.FiniteStateMachine:
         T = fsm.Transition
-        noop = lambda *args: None
-        process_event = lambda e, v, p: self._process_event(
-            self.functors["children"], e, v, p
-        )
+
+        def noop(*args: Any) -> None:  # noqa: ANN401
+            pass
+
+        def process_event(
+            e: event_handler.Event, v: Value, p: List[ActionProperty]
+        ) -> None:
+            self._process_event(self.functors["children"], e, v, p)
 
         states = ["wait", "down", "held", "toggle"]
         actions = ["press", "release", "timeout"]
@@ -59,7 +78,7 @@ class SmartToggleFunctor(AbstractFunctor):
     def _timeout(self) -> None:
         self.fsm.perform("timeout", None, None, None)
 
-    def _start_timer(self, *args) -> None:
+    def _start_timer(self, *args: Any) -> None:  # noqa: ANN401
         if self.timer:
             self.timer.cancel()
         self.timer = threading.Timer(self.data.delay, self._timeout)
@@ -67,58 +86,49 @@ class SmartToggleFunctor(AbstractFunctor):
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if value.current:
             ButtonReleaseActions().register_callback(
                 lambda release_event: self._release_cb(
                     release_event, Value(False), properties
                 ),
-                event
+                event,
             )
 
             self.fsm.perform(
-                "press",
-                event,
-                value,
-                properties + [ActionProperty.DisableAutoRelease]
+                "press", event, value, properties + [ActionProperty.DisableAutoRelease]
             )
 
     def _release_cb(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty]
+        self, event: event_handler.Event, value: Value, properties: list[ActionProperty]
     ) -> None:
         self.fsm.perform(
-            "release",
-            event,
-            value,
-            properties + [ActionProperty.DisableAutoRelease]
+            "release", event, value, properties + [ActionProperty.DisableAutoRelease]
         )
 
 
 class SmartToggleModel(ActionModel):
-
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:smart_toggle/SmartToggleAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:smart_toggle/SmartToggleAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
         return self._binding_model.get_action_model_by_sidx(
@@ -133,16 +143,10 @@ class SmartToggleModel(ActionModel):
             self._data.delay = value
             self.changed.emit()
 
-    delay = Property(
-        float,
-        fget=_get_delay,
-        fset=_set_delay,
-        notify=changed
-    )
+    delay = QtCore.Property(float, fget=_get_delay, fset=_set_delay, notify=changed)
 
 
 class SmartToggleData(AbstractActionData):
-
     """Represents the root node of any action tree.
 
     This class mimicks the behavior of base_classes.AbstractActionModel but
@@ -154,7 +158,7 @@ class SmartToggleData(AbstractActionData):
     version = 1
     name = "Smart Toggle"
     tag = "smart-toggle"
-    icon = "\uF41E"
+    icon = "\uf41e"
 
     functor = SmartToggleFunctor
     model = SmartToggleModel
@@ -163,15 +167,9 @@ class SmartToggleData(AbstractActionData):
         ActionProperty.ActivateDisabled,
         ActionProperty.DisableAutoRelease,
     )
-    input_types = (
-        InputType.JoystickButton,
-        InputType.Keyboard
-    )
+    input_types = (InputType.JoystickButton, InputType.Keyboard)
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         self.delay = Configuration().value("action", "smart-toggle", "duration")
@@ -187,13 +185,10 @@ class SmartToggleData(AbstractActionData):
     @override
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(SmartToggleData.tag, self._id)
-        node.append(util.create_action_ids(
-            "actions",
-            [child.id for child in self.children]
-        ))
-        node.append(util.create_property_node(
-            "delay", self.delay, PropertyType.Float
-        ))
+        node.append(
+            util.create_action_ids("actions", [child.id for child in self.children])
+        )
+        node.append(util.create_property_node("delay", self.delay, PropertyType.Float))
         return node
 
     @override
@@ -211,9 +206,7 @@ class SmartToggleData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-            self,
-            old_behavior: InputType,
-            new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 
@@ -228,9 +221,6 @@ Configuration().register(
     PropertyType.Float,
     0.5,
     "Default time before triggering the toggle mode.",
-    {
-        "min": 0.0,
-        "max": 10.0
-    },
-    True
+    {"min": 0.0, "max": 10.0},
+    True,
 )

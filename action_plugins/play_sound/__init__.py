@@ -5,9 +5,9 @@
 from __future__ import annotations
 
 from typing import (
-    override,
-    List,
     TYPE_CHECKING,
+    List,
+    override,
 )
 from xml.etree import ElementTree
 
@@ -24,7 +24,6 @@ from gremlin.base_classes import (
     UserFeedback,
     Value,
 )
-from gremlin.config import Configuration
 from gremlin.error import GremlinError
 from gremlin.profile import Library
 from gremlin.types import (
@@ -32,10 +31,9 @@ from gremlin.types import (
     InputType,
     PropertyType,
 )
-
 from gremlin.ui.action_model import (
-    SequenceIndex,
     ActionModel,
+    SequenceIndex,
 )
 
 if TYPE_CHECKING:
@@ -43,7 +41,6 @@ if TYPE_CHECKING:
 
 
 class PlaySoundFunctor(AbstractFunctor):
-
     """Executes a Play Sound action callback."""
 
     def __init__(self, action: PlaySoundData) -> None:
@@ -51,10 +48,10 @@ class PlaySoundFunctor(AbstractFunctor):
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: List[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: List[ActionProperty] = [],
     ) -> None:
         if not self._should_execute(value):
             return
@@ -63,27 +60,27 @@ class PlaySoundFunctor(AbstractFunctor):
 
 
 class PlaySoundModel(ActionModel):
-
     soundFilenameChanged = QtCore.Signal()
     soundVolumeChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:play_sound/PlaySoundAction.qml"
-        ).fileName()
+        return (
+            "file:///"
+            + QtCore.QFile("core_plugins:play_sound/PlaySoundAction.qml").fileName()
+        )
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -107,41 +104,32 @@ class PlaySoundModel(ActionModel):
         str,
         fget=_get_sound_filename,
         fset=_set_sound_filename,
-        notify=soundFilenameChanged
+        notify=soundFilenameChanged,
     )
 
     soundVolume = QtCore.Property(
-        int,
-        fget=_get_sound_volume,
-        fset=_set_sound_volume,
-        notify=soundVolumeChanged
+        int, fget=_get_sound_volume, fset=_set_sound_volume, notify=soundVolumeChanged
     )
 
 
 class PlaySoundData(AbstractActionData):
-
     """Model for the play sound action."""
 
     version = 1
     name = "Play Sound"
     tag = "play-sound"
-    icon = "\uF49E"
+    icon = "\uf49e"
 
     functor = PlaySoundFunctor
     model = PlaySoundModel
 
-    properties = (
-        ActionProperty.ActivateOnPress,
-    )
+    properties = (ActionProperty.ActivateOnPress,)
     input_types = (
         InputType.JoystickButton,
         InputType.Keyboard,
     )
 
-    def __init__(
-            self,
-            behavior_type: InputType = InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
         # Model variables
@@ -152,12 +140,8 @@ class PlaySoundData(AbstractActionData):
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
 
-        self.sound_filename = util.read_property(
-            node, "filename", PropertyType.String
-        )
-        self.sound_volume = util.read_property(
-            node, "volume", PropertyType.Int
-        )
+        self.sound_filename = util.read_property(node, "filename", PropertyType.String)
+        self.sound_volume = util.read_property(node, "volume", PropertyType.Int)
 
         if not self.is_valid():
             raise GremlinError(
@@ -172,7 +156,7 @@ class PlaySoundData(AbstractActionData):
             [
                 ["filename", self.sound_filename, PropertyType.String],
                 ["volume", self.sound_volume, PropertyType.Int],
-            ]
+            ],
         )
         return node
 
@@ -180,11 +164,13 @@ class PlaySoundData(AbstractActionData):
     def user_feedback(self) -> List[UserFeedback]:
         messages = []
         if not util.file_exists_and_is_accessible(self.sound_filename):
-            messages.append(UserFeedback(
-                UserFeedback.FeedbackType.Error,
-                f"File '{self.sound_filename}' does not exist or is "
-                f"not accessible.",
-            ))
+            messages.append(
+                UserFeedback(
+                    UserFeedback.FeedbackType.Error,
+                    f"File '{self.sound_filename}' does not exist or is "
+                    f"not accessible.",
+                )
+            )
         return messages
 
     @override
@@ -197,9 +183,7 @@ class PlaySoundData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 

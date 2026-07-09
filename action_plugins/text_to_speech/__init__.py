@@ -193,9 +193,7 @@ class TextToSpeechData(AbstractActionData):
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         self._id = util.read_action_id(node)
         self.text = util.read_property(node, "text", PropertyType.String)
-        self.queue_mode = util.read_property(
-            node, "queue-mode", PropertyType.String
-        )
+        self.queue_mode = util.read_property(node, "queue-mode", PropertyType.String)
         self.playback_rate = util.read_property(
             node, "playback-rate", PropertyType.Float
         )

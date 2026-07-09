@@ -4,27 +4,30 @@
 
 from __future__ import annotations
 
+import uuid
 from abc import (
     ABCMeta,
     abstractmethod,
 )
 from typing import (
-    Any,
     List,
     Optional,
     override,
-    TYPE_CHECKING,
 )
-import uuid
 from xml.etree import ElementTree
 
 from PySide6 import (
     QtCore,
-    QtQml,
 )
 
-from vjoy.vjoy import VJoyProxy
-
+import gremlin.ui.type_aliases as ta
+from action_plugins.condition.comparator import (
+    AbstractComparator,
+    AbstractComparatorModel,
+    DirectionComparator,
+    PressedComparator,
+    RangeComparator,
+)
 from gremlin import (
     common,
     error,
@@ -45,25 +48,14 @@ from gremlin.types import (
     InputType,
     PropertyType,
 )
-
 from gremlin.ui.device import InputIdentifier
-import gremlin.ui.type_aliases as ta
-
-from action_plugins.condition.comparator import (
-    AbstractComparator,
-    AbstractComparatorModel,
-    DirectionComparator,
-    PressedComparator,
-    RangeComparator,
-)
-
+from vjoy.vjoy import VJoyProxy
 
 QML_IMPORT_NAME = "Gremlin.ActionPlugins"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
 class AbstractState(metaclass=ABCMeta):
-
     """Represents a state against which a comparator can be evaluated.
 
     Stores the information erquired to evaluate the state's value as well
@@ -71,7 +63,7 @@ class AbstractState(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def get(self, value: Value) -> Any:
+    def get(self, value: Value) -> float | bool | HatDirection:
         """Returns the current value of the state.
 
         Args:
@@ -93,26 +85,25 @@ class AbstractState(metaclass=ABCMeta):
 
 
 class AbstractCondition(QtCore.QObject):
-
     """Base class of all individual condition representations."""
 
     conditionTypeChanged = QtCore.Signal()
     comparatorChanged = QtCore.Signal()
     statesChanged = QtCore.Signal(list)
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         """Creates a new AbstractCondition instance."""
         super().__init__(parent)
 
         # Specific condition type needed for QT side of things. Every
         # subclass constructor sets this to the correct value.
-        self._condition_type : ConditionType = ConditionType.CurrentInput
+        self._condition_type: ConditionType = ConditionType.CurrentInput
         # Comparator object implementing the condition and the accompanying
         # UI model.
-        self._comparator : Optional[AbstractComparator] = None
-        self._comparator_ui : Optional[AbstractComparatorModel] = None
+        self._comparator: Optional[AbstractComparator] = None
+        self._comparator_ui: Optional[AbstractComparatorModel] = None
         # States whose values will be compared within the comparator.
-        self._states : List[AbstractState] = []
+        self._states: List[AbstractState] = []
 
     def __call__(self, value: Value) -> bool:
         """Evaluates the truth state of the condition.
@@ -213,8 +204,7 @@ class AbstractCondition(QtCore.QObject):
             input_type: The InputType the comparator should support.
         """
         raise error.GremlinError(
-            "AbstractCondition::_update_comparator_if_needed "
-            "implementation missing."
+            "AbstractCondition::_update_comparator_if_needed implementation missing."
         )
 
     def _comparator_from_xml(self, node: ElementTree.Element) -> None:
@@ -229,9 +219,7 @@ class AbstractCondition(QtCore.QObject):
                 "ConditionAction: Missing comparator node in condition XML."
             )
         comparator_type = util.read_property(
-            comp_node,
-            "comparator-type",
-            PropertyType.String
+            comp_node, "comparator-type", PropertyType.String
         )
         if comparator_type == "pressed":
             self._comparator = PressedComparator()
@@ -242,7 +230,7 @@ class AbstractCondition(QtCore.QObject):
         else:
             raise error.ProfileError(
                 "ConditionAction: Unable to create comparator of type "
-                f"\"{comparator_type}\"."
+                f'"{comparator_type}".'
             )
         self._comparator.from_xml(comp_node)
         self._comparator_ui = self._comparator.model(self._comparator)
@@ -260,11 +248,13 @@ class AbstractCondition(QtCore.QObject):
 
         node = util.create_node_from_data(
             "condition",
-            [(
-                "condition-type",
-                ConditionType.to_string(self._condition_type),
-                PropertyType.String
-            )]
+            [
+                (
+                    "condition-type",
+                    ConditionType.to_string(self._condition_type),
+                    PropertyType.String,
+                )
+            ],
         )
         node.append(self._comparator.to_xml())
         return node
@@ -305,19 +295,12 @@ class AbstractCondition(QtCore.QObject):
 
 @ta.QmlElement
 class VJoyCondition(AbstractCondition):
-
     """vJoy input state based condition."""
 
     vjoyConditionChanged = QtCore.Signal()
 
     class State(AbstractState):
-
-        def __init__(
-            self,
-            vjoy_id: int,
-            input_type: InputType,
-            input_id: int
-        ) -> None:
+        def __init__(self, vjoy_id: int, input_type: InputType, input_id: int) -> None:
             self.vjoy_id = vjoy_id
             self.input_type = input_type
             self.input_id = input_id
@@ -352,7 +335,7 @@ class VJoyCondition(AbstractCondition):
                         "in VJoyCondition."
                     )
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._states = [self.State(1, InputType.JoystickButton, 1)]
@@ -361,11 +344,13 @@ class VJoyCondition(AbstractCondition):
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._comparator_from_xml(node)
-        self._states = [self.State(
-            util.read_property(node, "vjoy-id", PropertyType.Int),
-            util.read_property(node, "input-type", PropertyType.InputType),
-            util.read_property(node, "input-id", PropertyType.Int)
-        )]
+        self._states = [
+            self.State(
+                util.read_property(node, "vjoy-id", PropertyType.Int),
+                util.read_property(node, "input-type", PropertyType.InputType),
+                util.read_property(node, "input-id", PropertyType.Int),
+            )
+        ]
 
     def to_xml(self) -> ElementTree.Element[str]:
         node = self._create_condition_node()
@@ -373,13 +358,9 @@ class VJoyCondition(AbstractCondition):
             node,
             [
                 ("vjoy-id", self._states[0].vjoy_id, PropertyType.Int),
-                (
-                    "input-type",
-                    self._states[0].input_type,
-                    PropertyType.InputType
-                ),
-                ("input-id", self._states[0].input_id, PropertyType.Int)
-            ]
+                ("input-type", self._states[0].input_type, PropertyType.InputType),
+                ("input-id", self._states[0].input_id, PropertyType.Int),
+            ],
         )
         return node
 
@@ -417,25 +398,24 @@ class VJoyCondition(AbstractCondition):
         int,
         fget=_get_vjoy_device_id,
         fset=_set_vjoy_device_id,
-        notify=vjoyConditionChanged
+        notify=vjoyConditionChanged,
     )
     vjoyInputId = QtCore.Property(
         int,
         fget=_get_vjoy_input_id,
         fset=_set_vjoy_input_id,
-        notify=vjoyConditionChanged
+        notify=vjoyConditionChanged,
     )
     vjoyInputType = QtCore.Property(
         str,
         fget=_get_vjoy_input_type,
         fset=_set_vjoy_input_type,
-        notify=vjoyConditionChanged
+        notify=vjoyConditionChanged,
     )
 
 
 @ta.QmlElement
 class KeyboardCondition(AbstractCondition):
-
     """Keyboard state based condition.
 
     The condition can contain a sequence of keys which will be treated as one
@@ -443,7 +423,6 @@ class KeyboardCondition(AbstractCondition):
     """
 
     class State(AbstractState):
-
         def __init__(self, scan_code: int, is_extended: bool) -> None:
             self.key = key_from_code(scan_code, is_extended)
             self.keyboard = Keyboard()
@@ -454,7 +433,7 @@ class KeyboardCondition(AbstractCondition):
         def display_name(self) -> str:
             return self.key.name
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         """Creates a new instance."""
         super().__init__(parent)
 
@@ -468,10 +447,12 @@ class KeyboardCondition(AbstractCondition):
         """
         self._comparator_from_xml(node)
         for item_node in node.findall("input"):
-            self._states.append(self.State(
-                util.read_property(item_node, "scan-code", PropertyType.Int),
-                util.read_property(item_node, "is-extended", PropertyType.Bool)
-            ))
+            self._states.append(
+                self.State(
+                    util.read_property(item_node, "scan-code", PropertyType.Int),
+                    util.read_property(item_node, "is-extended", PropertyType.Bool),
+                )
+            )
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the objects data.
@@ -481,13 +462,15 @@ class KeyboardCondition(AbstractCondition):
         """
         node = self._create_condition_node()
         for state in self._states:
-            node.append(util.create_node_from_data(
-                "input",
-                [
-                    ("scan-code", state.key.scan_code, PropertyType.Int),
-                    ("is-extended", state.key.is_extended, PropertyType.Bool)
-                ]
-            ))
+            node.append(
+                util.create_node_from_data(
+                    "input",
+                    [
+                        ("scan-code", state.key.scan_code, PropertyType.Int),
+                        ("is-extended", state.key.is_extended, PropertyType.Bool),
+                    ],
+                )
+            )
         return node
 
     @QtCore.Slot(list)
@@ -520,19 +503,14 @@ class KeyboardCondition(AbstractCondition):
 
 @ta.QmlElement
 class JoystickCondition(AbstractCondition):
-
     """Joystick input state based condition.
 
     This condition is based on the state of a joystick axis, button, or hat.
     """
 
     class State(AbstractState):
-
         def __init__(
-            self,
-            device_uuid: uuid.UUID,
-            input_type: InputType,
-            input_id: int
+            self, device_uuid: uuid.UUID, input_type: InputType, input_id: int
         ) -> None:
             self.device_uuid: uuid.UUID
             self.input_type = input_type
@@ -546,9 +524,7 @@ class JoystickCondition(AbstractCondition):
             except error.GremlinError:
                 pass
             self.device_uuid = device_uuid
-            self.device_lookup = DeviceDatabase().get_mapping_by_uuid(
-                device_uuid
-            )
+            self.device_lookup = DeviceDatabase().get_mapping_by_uuid(device_uuid)
 
         def get(self, value: Value) -> bool | float | HatDirection:
             if self.joystick is None:
@@ -570,10 +546,7 @@ class JoystickCondition(AbstractCondition):
                     )
 
         def display_name(self) -> str:
-            input_name = common.input_to_ui_string(
-                self.input_type,
-                self.input_id
-            )
+            input_name = common.input_to_ui_string(self.input_type, self.input_id)
             if self.device_lookup:
                 input_name = self.device_lookup.input_name(
                     (self.input_type, self.input_id)
@@ -583,7 +556,7 @@ class JoystickCondition(AbstractCondition):
             else:
                 return f"{self.joystick.name} - {input_name}"
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         """Creates a new instance."""
         super().__init__(parent)
 
@@ -597,11 +570,13 @@ class JoystickCondition(AbstractCondition):
         """
         self._comparator_from_xml(node)
         for entry in node.findall("input"):
-            self._states.append(self.State(
-                util.read_property(entry, "device-guid", PropertyType.UUID),
-                util.read_property(entry, "input-type", PropertyType.InputType),
-                util.read_property(entry, "input-id", PropertyType.Int)
-            ))
+            self._states.append(
+                self.State(
+                    util.read_property(entry, "device-guid", PropertyType.UUID),
+                    util.read_property(entry, "input-type", PropertyType.InputType),
+                    util.read_property(entry, "input-id", PropertyType.Int),
+                )
+            )
 
     def to_xml(self) -> ElementTree.Element:
         """Returns an XML node containing the objects data.
@@ -611,14 +586,16 @@ class JoystickCondition(AbstractCondition):
         """
         node = self._create_condition_node()
         for state in self._states:
-            node.append(util.create_node_from_data(
-                "input",
-                [
-                    ("device-guid", state.device_uuid, PropertyType.UUID),
-                    ("input-type", state.input_type, PropertyType.InputType),
-                    ("input-id", state.input_id, PropertyType.Int)
-                ]
-            ))
+            node.append(
+                util.create_node_from_data(
+                    "input",
+                    [
+                        ("device-guid", state.device_uuid, PropertyType.UUID),
+                        ("input-type", state.input_type, PropertyType.InputType),
+                        ("input-id", state.input_id, PropertyType.Int),
+                    ],
+                )
+            )
         return node
 
     @QtCore.Slot(list)
@@ -644,10 +621,12 @@ class JoystickCondition(AbstractCondition):
             self._create_comparator(input_types[0])
 
         # Create state objects and update.
-        self._update_states([
-            self.State(evt.device_guid, evt.event_type, evt.identifier)
-            for evt in data
-        ])
+        self._update_states(
+            [
+                self.State(evt.device_guid, evt.event_type, evt.identifier)
+                for evt in data
+            ]
+        )
 
     def _update_comparator_if_needed(self, input_type: InputType) -> None:
         # No need to change the comparator as we don't rely on the input's
@@ -666,21 +645,19 @@ class JoystickCondition(AbstractCondition):
 
 @ta.QmlElement
 class CurrentInputCondition(AbstractCondition):
-
     """Condition based on the current input state."""
 
     class State(AbstractState):
-
         def __init__(self) -> None:
             pass
 
-        def get(self, value: Value) -> Any:
+        def get(self, value: Value) -> float | bool | HatDirection:
             return value.current
 
         def display_name(self) -> str:
             return "Current Input"
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._condition_type = ConditionType.CurrentInput
@@ -701,22 +678,19 @@ class CurrentInputCondition(AbstractCondition):
 
 @ta.QmlElement
 class LogicalDeviceCondition(AbstractCondition):
-
     """Logical Device input state based condition."""
 
     logicalInputIdentifierChanged = QtCore.Signal()
 
     class State(AbstractState):
-
         def __init__(self, input_type: InputType, input_id: int) -> None:
             self.input_type = input_type
             self.input_id = input_id
-            self.input = LogicalDevice()[LogicalDevice.Input.Identifier(
-                self.input_type,
-                self.input_id
-            )]
+            self.input = LogicalDevice()[
+                LogicalDevice.Input.Identifier(self.input_type, self.input_id)
+            ]
 
-        def get(self, value: Value) -> Any:
+        def get(self, value: Value) -> float | bool | HatDirection:
             match self.input_type:
                 case InputType.JoystickAxis:
                     return self.input.value
@@ -733,7 +707,7 @@ class LogicalDeviceCondition(AbstractCondition):
         def display_name(self) -> str:
             return self.input.label
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         logical_input = LogicalDevice().inputs_of_type()[0]
@@ -743,23 +717,21 @@ class LogicalDeviceCondition(AbstractCondition):
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self._comparator_from_xml(node)
-        self._states = [self.State(
-            util.read_property(node, "input-type", PropertyType.InputType),
-            util.read_property(node, "input-id", PropertyType.Int)
-        )]
+        self._states = [
+            self.State(
+                util.read_property(node, "input-type", PropertyType.InputType),
+                util.read_property(node, "input-id", PropertyType.Int),
+            )
+        ]
 
     def to_xml(self) -> ElementTree.Element[str]:
         node = self._create_condition_node()
         util.append_property_nodes(
             node,
             [
-                (
-                    "input-type",
-                    self._states[0].input_type,
-                    PropertyType.InputType
-                ),
-                ("input-id", self._states[0].input_id, PropertyType.Int)
-            ]
+                ("input-type", self._states[0].input_type, PropertyType.InputType),
+                ("input-id", self._states[0].input_id, PropertyType.Int),
+            ],
         )
         return node
 
@@ -771,16 +743,14 @@ class LogicalDeviceCondition(AbstractCondition):
             LogicalDevice().device_guid,
             self._states[0].input_type,
             self._states[0].input_id,
-            parent=self
+            parent=self,
         )
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
-        if (identifier.input_type != self._states[0].input_type) or \
-                (identifier.input_id != self._states[0].input_id):
-            self._states[0] = self.State(
-                identifier.input_type,
-                identifier.input_id
-            )
+        if (identifier.input_type != self._states[0].input_type) or (
+            identifier.input_id != self._states[0].input_id
+        ):
+            self._states[0] = self.State(identifier.input_type, identifier.input_id)
             self.logicalInputIdentifierChanged.emit()
             self._create_comparator(self._states[0].input_type)
 
@@ -788,5 +758,5 @@ class LogicalDeviceCondition(AbstractCondition):
         InputIdentifier,
         fget=_get_logical_input_identifier,
         fset=_set_logical_input_identifier,
-        notify=logicalInputIdentifierChanged
+        notify=logicalInputIdentifierChanged,
     )

@@ -5,27 +5,41 @@
 from __future__ import annotations
 
 import time
-from typing import List, TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    override,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
-from PySide6.QtCore import Property, Signal, Slot
 
-from typing import override
-from gremlin import event_handler, util
-from gremlin.base_classes import AbstractActionData, AbstractFunctor, UserFeedback, Value
+from gremlin import (
+    event_handler,
+    util,
+)
+from gremlin.base_classes import (
+    AbstractActionData,
+    AbstractFunctor,
+    UserFeedback,
+    Value,
+)
 from gremlin.error import GremlinError
 from gremlin.profile import Library
-from gremlin.types import ActionProperty, InputType, PropertyType
-
-from gremlin.ui.action_model import SequenceIndex, ActionModel
+from gremlin.types import (
+    ActionProperty,
+    InputType,
+    PropertyType,
+)
+from gremlin.ui.action_model import (
+    ActionModel,
+    SequenceIndex,
+)
 
 if TYPE_CHECKING:
     from gremlin.ui.profile import InputItemBindingModel
 
 
 class ChainFunctor(AbstractFunctor["ChainData"]):
-
     """Implements the function executed of the Description action at runtime."""
 
     def __init__(self, action: ChainData) -> None:
@@ -36,10 +50,10 @@ class ChainFunctor(AbstractFunctor["ChainData"]):
 
     @override
     def __call__(
-            self,
-            event: event_handler.Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self,
+        event: event_handler.Event,
+        value: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         if self.data.timeout > 0.0:
             if self.last_execution + self.data.timeout < time.time():
@@ -50,40 +64,40 @@ class ChainFunctor(AbstractFunctor["ChainData"]):
             functor(event, value, properties)
 
         if not value.current:
-            self.current_index = \
-                (self.current_index + 1) % len(self.data.chain_sequences)
+            self.current_index = (self.current_index + 1) % len(
+                self.data.chain_sequences
+            )
 
 
 class ChainModel(ActionModel):
-
     # Signal emitted when the description variable's content changes
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(data, binding_model, action_index, parent_index, parent)
 
     def _qml_path_impl(self) -> str:
-        return "file:///" + QtCore.QFile(
-            "core_plugins:chain/ChainAction.qml"
-        ).fileName()
+        return (
+            "file:///" + QtCore.QFile("core_plugins:chain/ChainAction.qml").fileName()
+        )
 
-    @Property(int, notify=changed)
+    @QtCore.Property(int, notify=changed)
     def chainCount(self) -> int:
         return len(self._data.chain_sequences)
 
-    @Slot()
+    @QtCore.Slot()
     def addSequence(self) -> None:
         self._data.chain_sequences.append([])
         self.changed.emit()
 
-    @Slot(int)
+    @QtCore.Slot(int)
     def removeSequence(self, index: int) -> None:
         if index < 0 or index >= len(self._data.chain_sequences):
             raise GremlinError(f"Index {index} invalid as chain container")
@@ -93,7 +107,7 @@ class ChainModel(ActionModel):
         self._binding_model.sync_data()
 
     def _action_behavior(self) -> str:
-        return  self._binding_model.get_action_model_by_sidx(
+        return self._binding_model.get_action_model_by_sidx(
             self._parent_sequence_index.index
         ).actionBehavior
 
@@ -105,41 +119,31 @@ class ChainModel(ActionModel):
             self._data.timeout = value
             self.changed.emit()
 
-    timeout = Property(
-        type=float,
-        fget=_get_timeout,
-        fset=_set_timeout,
-        notify=changed
+    timeout = QtCore.Property(
+        type=float, fget=_get_timeout, fset=_set_timeout, notify=changed
     )
 
 
 class ChainData(AbstractActionData):
-
     """Model of a description action."""
 
     version = 1
     name = "Chain"
     tag = "chain"
-    icon = "\uF813"
+    icon = "\uf813"
 
     functor = ChainFunctor
     model = ChainModel
 
-    properties = (
-        ActionProperty.ActivateDisabled,
-    )
-    input_types = (
-        InputType.JoystickButton,
-        InputType.Keyboard
-    )
+    properties = (ActionProperty.ActivateDisabled,)
+    input_types = (InputType.JoystickButton, InputType.Keyboard)
 
-    def __init__(
-            self,
-            behavior_type: InputType=InputType.JoystickButton
-    ) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         super().__init__(behavior_type)
 
-        self.chain_sequences = [[],]
+        self.chain_sequences = [
+            [],
+        ]
         self.timeout = 0.0
 
     @override
@@ -160,12 +164,12 @@ class ChainData(AbstractActionData):
     def _to_xml(self) -> ElementTree.Element:
         node = util.create_action_node(ChainData.tag, self._id)
         for i, chain in enumerate(self.chain_sequences):
-            node.append(util.create_action_ids(
-                f"chain-{i}", [action.id for action in chain]
-            ))
-        node.append(util.create_property_node(
-            "timeout", self.timeout, PropertyType.Float
-        ))
+            node.append(
+                util.create_action_ids(f"chain-{i}", [action.id for action in chain])
+            )
+        node.append(
+            util.create_property_node("timeout", self.timeout, PropertyType.Float)
+        )
         return node
 
     @override
@@ -185,9 +189,7 @@ class ChainData(AbstractActionData):
 
     @override
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         pass
 
