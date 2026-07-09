@@ -3,6 +3,7 @@
 
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath("../.."))
 sys.setrecursionlimit(300)
 
@@ -19,24 +20,25 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
+
 MOCK_MODULES = [
-        "ctypes",
-        "dill",
-        "win32con",
-        "win32api",
-        "win32gui",
-        "win32process",
-        "win32com",
-        "win32com.client",
-        "reportlab",
-        "reportlab.lib",
-        "reportlab.lib.pagesizes",
-        "reportlab.lib.styles",
-        "reportlab.lib.units",
-        "reportlab.lib.colors",
-        "reportlab.platypus",
-        "ctypes.wintypes",
-        "winreg"
+    "ctypes",
+    "dill",
+    "win32con",
+    "win32api",
+    "win32gui",
+    "win32process",
+    "win32com",
+    "win32com.client",
+    "reportlab",
+    "reportlab.lib",
+    "reportlab.lib.pagesizes",
+    "reportlab.lib.styles",
+    "reportlab.lib.units",
+    "reportlab.lib.colors",
+    "reportlab.platypus",
+    "ctypes.wintypes",
+    "winreg",
 ]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
@@ -75,7 +77,7 @@ autodoc_default_options = {
     "special-members": "__init__",
     "members": True,
     "inherited-members": True,
-    "show-inheritance": True
+    "show-inheritance": True,
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -150,8 +152,13 @@ latex_elements = {}
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "JoystickGremlin.tex", "Joystick Gremlin Documentation",
-     "WhiteMagic", "manual"),
+    (
+        master_doc,
+        "JoystickGremlin.tex",
+        "Joystick Gremlin Documentation",
+        "WhiteMagic",
+        "manual",
+    ),
 ]
 
 
@@ -160,8 +167,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "joystickgremlin", "Joystick Gremlin Documentation",
-     [author], 1)
+    (master_doc, "joystickgremlin", "Joystick Gremlin Documentation", [author], 1)
 ]
 
 
@@ -171,9 +177,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, "JoystickGremlin", "Joystick Gremlin Documentation",
-     author, "JoystickGremlin", "One line description of project.",
-     "Miscellaneous"),
+    (
+        master_doc,
+        "JoystickGremlin",
+        "Joystick Gremlin Documentation",
+        author,
+        "JoystickGremlin",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
 
 

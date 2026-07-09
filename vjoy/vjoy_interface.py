@@ -11,18 +11,16 @@ from gremlin.error import GremlinError
 
 
 class VJoyState(enum.Enum):
-
     """Enumeration of the possible VJoy device states."""
 
-    Owned = 0       # The device is owned by the current application
-    Free = 1        # The device is not owned by any application
-    Bust = 2        # The device is owned by another application
-    Missing = 3     # The device is not present
-    Unknown = 4     # Unknown type of error
+    Owned = 0  # The device is owned by the current application
+    Free = 1  # The device is not owned by any application
+    Bust = 2  # The device is owned by another application
+    Missing = 3  # The device is not present
+    Unknown = 4  # Unknown type of error
 
 
 class VJoyInterface:
-
     """Allows low level interaction with VJoy devices via ctypes."""
 
     # Attempt to find the correct location of the dll for development
@@ -48,117 +46,68 @@ class VJoyInterface:
     # exposed by the dll
     api_functions = {
         # General vJoy information
-        "GetvJoyVersion": {
-            "arguments": [],
-            "returns": ctypes.c_short
-        },
-        "vJoyEnabled": {
-            "arguments": [],
-            "returns": ctypes.c_bool
-        },
-        "GetvJoyProductString": {
-            "arguments": [],
-            "returns": ctypes.c_wchar_p
-        },
-        "GetvJoyManufacturerString": {
-            "arguments": [],
-            "returns": ctypes.c_wchar_p
-        },
-        "GetvJoySerialNumberString": {
-            "arguments": [],
-            "returns": ctypes.c_wchar_p
-        },
-
+        "GetvJoyVersion": {"arguments": [], "returns": ctypes.c_short},
+        "vJoyEnabled": {"arguments": [], "returns": ctypes.c_bool},
+        "GetvJoyProductString": {"arguments": [], "returns": ctypes.c_wchar_p},
+        "GetvJoyManufacturerString": {"arguments": [], "returns": ctypes.c_wchar_p},
+        "GetvJoySerialNumberString": {"arguments": [], "returns": ctypes.c_wchar_p},
         # Device properties
-        "GetVJDButtonNumber": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        "GetVJDDiscPovNumber": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        "GetVJDContPovNumber": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
+        "GetVJDButtonNumber": {"arguments": [ctypes.c_uint], "returns": ctypes.c_int},
+        "GetVJDDiscPovNumber": {"arguments": [ctypes.c_uint], "returns": ctypes.c_int},
+        "GetVJDContPovNumber": {"arguments": [ctypes.c_uint], "returns": ctypes.c_int},
         # API claims this should return a bool, however, this is untrue and
         # is an int, see:
         # http://vjoystick.sourceforge.net/site/index.php/forum/5-Discussion/1026-bug-with-getvjdaxisexist
         "GetVJDAxisExist": {
             "arguments": [ctypes.c_uint, ctypes.c_uint],
-            "returns": ctypes.c_int
+            "returns": ctypes.c_int,
         },
         "GetVJDAxisMax": {
             "arguments": [ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_bool,
         },
         "GetVJDAxisMin": {
             "arguments": [ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_bool,
         },
-
         # Device management
-        "GetOwnerPid": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-        "AcquireVJD": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
+        "GetOwnerPid": {"arguments": [ctypes.c_uint], "returns": ctypes.c_int},
+        "AcquireVJD": {"arguments": [ctypes.c_uint], "returns": ctypes.c_bool},
         "RelinquishVJD": {
             "arguments": [ctypes.c_uint],
             "returns": None,
         },
         "UpdateVJD": {
             "arguments": [ctypes.c_uint, ctypes.c_void_p],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_bool,
         },
-        "GetVJDStatus": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_int
-        },
-
+        "GetVJDStatus": {"arguments": [ctypes.c_uint], "returns": ctypes.c_int},
         # Reset functions
-        "ResetVJD": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
-        "ResetAll": {
-            "arguments": [],
-            "returns": None
-        },
-        "ResetButtons": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
-        "ResetPovs": {
-            "arguments": [ctypes.c_uint],
-            "returns": ctypes.c_bool
-        },
-
+        "ResetVJD": {"arguments": [ctypes.c_uint], "returns": ctypes.c_bool},
+        "ResetAll": {"arguments": [], "returns": None},
+        "ResetButtons": {"arguments": [ctypes.c_uint], "returns": ctypes.c_bool},
+        "ResetPovs": {"arguments": [ctypes.c_uint], "returns": ctypes.c_bool},
         # Set values
         "SetAxis": {
             "arguments": [ctypes.c_long, ctypes.c_uint, ctypes.c_uint],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_bool,
         },
         "SetBtn": {
             "arguments": [ctypes.c_bool, ctypes.c_uint, ctypes.c_ubyte],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_bool,
         },
         "SetDiscPov": {
             "arguments": [ctypes.c_int, ctypes.c_uint, ctypes.c_ubyte],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_bool,
         },
         "SetContPov": {
             "arguments": [ctypes.c_ulong, ctypes.c_uint, ctypes.c_ubyte],
-            "returns": ctypes.c_bool
+            "returns": ctypes.c_bool,
         },
     }
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> None:
         """Initializes the functions as class methods."""
         if not cls.vjoy_dll_loaded:
             return

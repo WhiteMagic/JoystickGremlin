@@ -7,15 +7,10 @@ from __future__ import annotations
 import ctypes
 import enum
 import logging
+import os
 import threading
 import time
 from typing import Any
-import os
-
-from vjoy.vjoy_interface import (
-    VJoyState,
-    VJoyInterface,
-)
 
 from gremlin.common import SingletonMetaclass
 from gremlin.error import (
@@ -28,9 +23,13 @@ from gremlin.types import (
     InputType,
 )
 from gremlin.util import clamp
+from vjoy.vjoy_interface import (
+    VJoyInterface,
+    VJoyState,
+)
 
 
-def _error_string(vid: int, iid: int, value: Any) -> str:
+def _error_string(vid: int, iid: int, value: Any) -> str:  # noqa: ANN401
     """Creates an error string for the given inputs.
 
     Args:
@@ -45,7 +44,6 @@ def _error_string(vid: int, iid: int, value: Any) -> str:
 
 
 class AxisCode(enum.Enum):
-
     """Enumeration of the valid axis names."""
 
     X = 0x30
@@ -59,7 +57,6 @@ class AxisCode(enum.Enum):
 
 
 class HatType(enum.Enum):
-
     """Valid hat types."""
 
     Discrete = 0
@@ -156,9 +153,7 @@ def hat_configuration_valid(vjoy_id: int) -> bool:
     return continuous_count >= discrete_count
 
 
-
 class VJoyStateCache(metaclass=SingletonMetaclass):
-
     """Permanent storage cache of vJoy state across vJoy device acquisitions."""
 
     axis_lookup = {
@@ -169,7 +164,7 @@ class VJoyStateCache(metaclass=SingletonMetaclass):
         5: AxisCode.RY.value,
         6: AxisCode.RZ.value,
         7: AxisCode.SL0.value,
-        8: AxisCode.SL1.value
+        8: AxisCode.SL1.value,
     }
 
     def __init__(self) -> None:
@@ -178,8 +173,7 @@ class VJoyStateCache(metaclass=SingletonMetaclass):
     def get_axis(self, vjoy_id: int, index: int) -> float:
         self._init_vjoy_if_needed(vjoy_id)
         return self._cache[vjoy_id][InputType.JoystickAxis].get(
-            VJoyStateCache.axis_lookup[index],
-            0.0
+            VJoyStateCache.axis_lookup[index], 0.0
         )
 
     def get_button(self, vjoy_id: int, index: int) -> bool:
@@ -209,13 +203,11 @@ class VJoyStateCache(metaclass=SingletonMetaclass):
             self._cache[vjoy_id] = {
                 InputType.JoystickAxis: {},
                 InputType.JoystickButton: {},
-                InputType.JoystickHat: {}
+                InputType.JoystickHat: {},
             }
 
 
-
 class Axis:
-
     """Represents an analog axis in vJoy, allows setting the value
     of the axis."""
 
@@ -234,25 +226,19 @@ class Axis:
 
         # Retrieve axis minimum and maximum values
         tmp = ctypes.c_ulong()
-        VJoyInterface.GetVJDAxisMin(
-            self.vjoy_id,
-            self.axis_id,
-            ctypes.byref(tmp)
-        )
+        VJoyInterface.GetVJDAxisMin(self.vjoy_id, self.axis_id, ctypes.byref(tmp))
         self._min_value = tmp.value
-        VJoyInterface.GetVJDAxisMax(
-            self.vjoy_id,
-            self.axis_id,
-            ctypes.byref(tmp)
-        )
+        VJoyInterface.GetVJDAxisMax(self.vjoy_id, self.axis_id, ctypes.byref(tmp))
         self._max_value = tmp.value
         self._half_range = (self._max_value - self._min_value) / 2
 
         # If this is not the case our value setter needs to change
         if self._min_value != 0:
-            raise VJoyError("vJoy axis minimum value is not 0  - {}".format(
+            raise VJoyError(
+                "vJoy axis minimum value is not 0  - {}".format(
                     _error_string(self.vjoy_id, self.axis_id, self._min_value)
-            ))
+                )
+            )
 
     @property
     def value(self) -> float:
@@ -286,10 +272,10 @@ class Axis:
         self._cache.set_axis(self.vjoy_id, self.axis_id, self._value)
 
         if not VJoyInterface.SetAxis(
-                # Built-in rounding is "bankers rounding" which we don't want.
-                int(self._half_range + self._half_range * self._value + 0.5),
-                self.vjoy_id,
-                self.axis_id
+            # Built-in rounding is "bankers rounding" which we don't want.
+            int(self._half_range + self._half_range * self._value + 0.5),
+            self.vjoy_id,
+            self.axis_id,
         ):
             raise VJoyError(
                 "Failed setting axis value - {}".format(
@@ -300,7 +286,6 @@ class Axis:
 
 
 class Button:
-
     """Represents a button in vJoy, allows pressing and releasing it."""
 
     def __init__(self, vjoy_dev: VJoy, button_id: int) -> None:
@@ -333,15 +318,11 @@ class Button:
         Args:
             is_pressed: True if the button is pressed, False otherwise
         """
-        assert(isinstance(is_pressed, bool))
+        assert isinstance(is_pressed, bool)
         self.vjoy_dev.ensure_ownership()
         self._is_pressed = is_pressed
         self._cache.set_button(self.vjoy_id, self.button_id, is_pressed)
-        if not VJoyInterface.SetBtn(
-                self._is_pressed,
-                self.vjoy_id,
-                self.button_id
-        ):
+        if not VJoyInterface.SetBtn(self._is_pressed, self.vjoy_id, self.button_id):
             raise VJoyError(
                 "Failed setting button value - {}".format(
                     _error_string(self.vjoy_id, self.button_id, self._is_pressed)
@@ -351,7 +332,6 @@ class Button:
 
 
 class Hat:
-
     """Represents a discrete hat in vJoy, allows setting the direction
     of the hat."""
 
@@ -361,7 +341,7 @@ class Hat:
         HatDirection.NorthEast: 1,
         HatDirection.South: 2,
         HatDirection.West: 3,
-        HatDirection.Center: -1
+        HatDirection.Center: -1,
     }
 
     # Continuous directions, mapping 8-way *(x, y) coordinates to vJoy values
@@ -374,7 +354,7 @@ class Hat:
         HatDirection.South: 18000,
         HatDirection.SouthWest: 22500,
         HatDirection.West: 27000,
-        HatDirection.NorthWest: 31500
+        HatDirection.NorthWest: 31500,
     }
 
     def __init__(self, vjoy_dev: VJoy, hat_id: int, hat_type: HatType) -> None:
@@ -416,9 +396,11 @@ class Hat:
         elif self.hat_type == HatType.Continuous:
             self._set_continuous_direction(direction)
         else:
-            raise VJoyError("Invalid hat type specified - {}".format(
-                _error_string(self.vjoy_id, self.axis_id, self.direction)
-            ))
+            raise VJoyError(
+                "Invalid hat type specified - {}".format(
+                    _error_string(self.vjoy_id, self.axis_id, self.direction)
+                )
+            )
         self.vjoy_dev.used()
 
     def _set_discrete_direction(self, direction: HatDirection) -> None:
@@ -437,9 +419,7 @@ class Hat:
         self._direction = direction
         self._cache.set_hat(self.vjoy_id, self.hat_id, self._direction)
         if not VJoyInterface.SetDiscPov(
-                Hat.to_discrete_direction[direction],
-                self.vjoy_id,
-                self.hat_id
+            Hat.to_discrete_direction[direction], self.vjoy_id, self.hat_id
         ):
             raise VJoyError(
                 "Failed to set hat direction - {}".format(
@@ -463,9 +443,7 @@ class Hat:
         self._direction = direction
         self._cache.set_hat(self.vjoy_id, self.hat_id, self._direction)
         if not VJoyInterface.SetContPov(
-                Hat.to_continuous_direction[direction],
-                self.vjoy_id,
-                self.hat_id
+            Hat.to_continuous_direction[direction], self.vjoy_id, self.hat_id
         ):
             raise VJoyError(
                 "Failed to set hat direction - {}".format(
@@ -475,7 +453,6 @@ class Hat:
 
 
 class VJoy:
-
     """Represents a vJoy device present in the system."""
 
     # Duration of inactivity after which the keep alive routine is run
@@ -490,7 +467,7 @@ class VJoy:
         AxisCode.RY: 5,
         AxisCode.RZ: 6,
         AxisCode.SL0: 7,
-        AxisCode.SL1: 8
+        AxisCode.SL1: 8,
     }
 
     def __init__(self, vjoy_id: int) -> None:
@@ -515,7 +492,9 @@ class VJoy:
             logging.getLogger("system").error(
                 "Running incompatible vJoy version, 2.1.8 or higher required"
             )
-            raise VJoyError("Running incompatible vJoy version, 2.1.8 or higher required")
+            raise VJoyError(
+                "Running incompatible vJoy version, 2.1.8 or higher required"
+            )
         elif VJoyInterface.GetVJDStatus(vjoy_id) != VJoyState.Free.value:
             if VJoyInterface.GetOwnerPid(vjoy_id) == os.getpid():
                 raise VJoyConcurrencyError(
@@ -542,8 +521,7 @@ class VJoy:
         # Timestamp of the last time the device was used
         self._last_active = time.time()
         self._keep_alive_timer = threading.Timer(
-            VJoy.keep_alive_timeout,
-            self._keep_alive
+            VJoy.keep_alive_timeout, self._keep_alive
         )
         self._keep_alive_timer.start()
 
@@ -568,11 +546,13 @@ class VJoy:
                 logging.getLogger("system").error(
                     "Failed to re-acquire the vJoy device - vid: {}".format(
                         self.vjoy_id
-                ))
+                    )
+                )
                 raise VJoyError(
                     "Failed to re-acquire the vJoy device - vid: {}".format(
                         self.vjoy_id
-                ))
+                    )
+                )
 
     def is_owned(self) -> bool:
         """Returns True if the vJoy device is owned by the current process.
@@ -613,9 +593,7 @@ class VJoy:
         return len(self._hat)
 
     def axis_name(
-            self,
-            axis_id: int | None = None,
-            linear_index: int | None = None
+        self, axis_id: int | None = None, linear_index: int | None = None
     ) -> str:
         """Returns the textual name of the requested axis.
 
@@ -669,11 +647,7 @@ class VJoy:
 
         return self._axis_lookup[linear_index]
 
-    def axis(
-            self,
-            axis_id: int | None = None,
-            linear_index: int | None = None
-    ) -> Axis:
+    def axis(self, axis_id: int | None = None, linear_index: int | None = None) -> Axis:
         """Returns the axis object associated with the provided index.
 
         Args:
@@ -738,9 +712,7 @@ class VJoy:
         return self._hat[index]
 
     def is_axis_valid(
-            self,
-            axis_id: int | None = None,
-            linear_index: int | None = None
+        self, axis_id: int | None = None, linear_index: int | None = None
     ) -> bool:
         """Returns whether an axis is valid.
 
@@ -836,8 +808,7 @@ class VJoy:
         if self._last_active + VJoy.keep_alive_timeout < time.time():
             self.reset()
         self._keep_alive_timer = threading.Timer(
-            VJoy.keep_alive_timeout,
-            self._keep_alive
+            VJoy.keep_alive_timeout, self._keep_alive
         )
         self._keep_alive_timer.start()
 
@@ -851,10 +822,10 @@ class VJoy:
         axes = {}
         for i, axis in enumerate(AxisCode):
             if VJoyInterface.GetVJDAxisExist(self.vjoy_id, axis.value) > 0:
-                axes[i+1] = Axis(self, axis.value)
-                self._axis_names[i+1] = AxisNames.to_string(AxisNames(i + 1))
-                self._axis_lookup[len(self._axis_names)] = i+1
-                self._axis_lookup[axis] = i+1
+                axes[i + 1] = Axis(self, axis.value)
+                self._axis_names[i + 1] = AxisNames.to_string(AxisNames(i + 1))
+                self._axis_lookup[len(self._axis_names)] = i + 1
+                self._axis_lookup[axis] = i + 1
         return axes
 
     def _init_buttons(self) -> dict[int, Button]:
@@ -865,7 +836,7 @@ class VJoy:
             dictionary of Button objects
         """
         buttons = {}
-        for btn_id in range(1, VJoyInterface.GetVJDButtonNumber(self.vjoy_id)+1):
+        for btn_id in range(1, VJoyInterface.GetVJDButtonNumber(self.vjoy_id) + 1):
             buttons[btn_id] = Button(self, btn_id)
         return buttons
 
@@ -883,12 +854,14 @@ class VJoy:
         # We can't use discrete hats as such their existence is considered
         # an error.
         if VJoyInterface.GetVJDDiscPovNumber(self.vjoy_id) > 0:
-            error_msg = "vJoy is configured incorrectly. \n\n" \
-                    "Please ensure hats are configured as 'Continuous' " \
-                    "rather then '4 Directions'."
+            error_msg = (
+                "vJoy is configured incorrectly. \n\n"
+                "Please ensure hats are configured as 'Continuous' "
+                "rather then '4 Directions'."
+            )
             logging.getLogger("system").error(error_msg)
             raise VJoyError(error_msg)
-        for hat_id in range(1, VJoyInterface.GetVJDContPovNumber(self.vjoy_id)+1):
+        for hat_id in range(1, VJoyInterface.GetVJDContPovNumber(self.vjoy_id) + 1):
             hats[hat_id] = Hat(self, hat_id, HatType.Continuous)
         return hats
 
@@ -899,15 +872,11 @@ class VJoy:
             string representation of the vJoy device information
         """
         return "vJoyId={0:d} axis={1:d} buttons={2:d} hats={3:d}".format(
-            self.vjoy_id,
-            len(self._axis),
-            len(self._button),
-            len(self._hat)
+            self.vjoy_id, len(self._axis), len(self._button), len(self._hat)
         )
 
 
 class VJoyProxy:
-
     """Manages the usage of vJoy and allows shared access all callbacks."""
 
     vjoy_devices = {}
@@ -933,7 +902,7 @@ class VJoyProxy:
 
             try:
                 device = VJoy(index)
-            except VJoyConcurrencyError as e:
+            except VJoyConcurrencyError:
                 logging.getLogger("system").info(
                     f"Attempted concurrent instantiation {attempt} for vJoy "
                     f"{index=}, retrying..."
@@ -948,9 +917,7 @@ class VJoyProxy:
             else:
                 VJoyProxy.vjoy_devices[index] = device
                 return device
-        raise VJoyConcurrencyError(
-            f"Failed to resolve concurrent vJoy {index} access"
-        )
+        raise VJoyConcurrencyError(f"Failed to resolve concurrent vJoy {index} access")
 
     @classmethod
     def reset(cls) -> None:
@@ -961,11 +928,7 @@ class VJoyProxy:
 
 
 def deadzone(
-        value: float,
-        low: float,
-        low_center: float,
-        high_center: float,
-        high: float
+    value: float, low: float, low_center: float, high_center: float, high: float
 ) -> float:
     """Returns the mapped value taking the provided deadzone into
     account.

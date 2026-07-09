@@ -7,15 +7,14 @@ from __future__ import annotations
 import copy
 import ctypes
 import ctypes.wintypes as ctwt
-from enum import Enum
 import os
 import sys
-from typing import Callable
 import uuid
+from enum import Enum
+from typing import Callable
 
 
 class DILLError(Exception):
-
     """Exception raised when an error occurs within the DILL module."""
 
     def __init__(self, value: str) -> None:
@@ -28,14 +27,13 @@ class DILLError(Exception):
 
 
 class _GUID(ctypes.Structure):
-
     """Strcture mapping C information into a set of Python readable values."""
 
     _fields_ = [
         ("Data1", ctypes.c_ulong),
         ("Data2", ctypes.c_ushort),
         ("Data3", ctypes.c_ushort),
-        ("Data4", ctypes.c_uint8 * 8)
+        ("Data4", ctypes.c_uint8 * 8),
     ]
 
 
@@ -55,7 +53,6 @@ def _attempt_decoding_device_name(data: bytes) -> str:
     return data.decode(ansi_code_page, errors="ignore")
 
 
-
 _GUID_SysKeyboard = _GUID()
 _GUID_SysKeyboard.Data1 = 0x6F1D2B61
 _GUID_SysKeyboard.Data2 = 0xD5A0
@@ -70,16 +67,16 @@ _GUID_SysKeyboard.Data4[6] = 0x00
 _GUID_SysKeyboard.Data4[7] = 0x00
 
 _GUID_Virtual = _GUID()
-_GUID_Virtual.Data1 = 0x89d5e905
-_GUID_Virtual.Data2 = 0x1e26
-_GUID_Virtual.Data3 = 0x4c52
-_GUID_Virtual.Data4[0] = 0xad
+_GUID_Virtual.Data1 = 0x89D5E905
+_GUID_Virtual.Data2 = 0x1E26
+_GUID_Virtual.Data3 = 0x4C52
+_GUID_Virtual.Data4[0] = 0xAD
 _GUID_Virtual.Data4[1] = 0x46
-_GUID_Virtual.Data4[2] = 0x7b
-_GUID_Virtual.Data4[3] = 0xcc
+_GUID_Virtual.Data4[2] = 0x7B
+_GUID_Virtual.Data4[3] = 0xCC
 _GUID_Virtual.Data4[4] = 0x06
-_GUID_Virtual.Data4[5] = 0xdf
-_GUID_Virtual.Data4[6] = 0x4c
+_GUID_Virtual.Data4[5] = 0xDF
+_GUID_Virtual.Data4[6] = 0x4C
 _GUID_Virtual.Data4[7] = 0x20
 
 _GUID_LogicalDevice = _GUID()
@@ -110,29 +107,23 @@ _GUID_Invalid.Data4[7] = 0x00
 
 
 class _JoystickInputData(ctypes.Structure):
-
     """Mapping for the JoystickInputData C structure."""
 
     _fields_ = [
         ("device_guid", _GUID),
         ("input_type", ctypes.c_uint8),
         ("input_index", ctypes.c_uint8),
-        ("value", ctwt.LONG)
+        ("value", ctwt.LONG),
     ]
 
 
 class _AxisMap(ctypes.Structure):
-
     """Mapping for the AxisMap C structure."""
 
-    _fields_ = [
-        ("linear_index", ctwt.DWORD),
-        ("axis_index", ctwt.DWORD)
-    ]
+    _fields_ = [("linear_index", ctwt.DWORD), ("axis_index", ctwt.DWORD)]
 
 
 class _DeviceSummary(ctypes.Structure):
-
     """Mapping for the DeviceSummary C structure."""
 
     _fields_ = [
@@ -144,12 +135,11 @@ class _DeviceSummary(ctypes.Structure):
         ("axis_count", ctwt.DWORD),
         ("button_count", ctwt.DWORD),
         ("hat_count", ctwt.DWORD),
-        ("axis_map", _AxisMap * 8)
+        ("axis_map", _AxisMap * 8),
     ]
 
 
 class GUID:
-
     """Python GUID class."""
 
     def __init__(self, guid: _GUID) -> None:
@@ -165,9 +155,12 @@ class GUID:
             guid.Data2,
             guid.Data3,
             (guid.Data4[0] << 8) + guid.Data4[1],
-            (guid.Data4[2] << 40) + (guid.Data4[3] << 32) +
-            (guid.Data4[4] << 24) + (guid.Data4[5] << 16) +
-            (guid.Data4[6] << 8) + guid.Data4[7]
+            (guid.Data4[2] << 40)
+            + (guid.Data4[3] << 32)
+            + (guid.Data4[4] << 24)
+            + (guid.Data4[5] << 16)
+            + (guid.Data4[6] << 8)
+            + guid.Data4[7],
         )
 
     @staticmethod
@@ -232,11 +225,7 @@ class GUID:
             GUID string representation in hexadecimal
         """
         return "{:08X}-{:04X}-{:04X}-{:04X}-{:012X}".format(
-            self.guid[0],
-            self.guid[1],
-            self.guid[2],
-            self.guid[3],
-            self.guid[4]
+            self.guid[0], self.guid[1], self.guid[2], self.guid[3], self.guid[4]
         )
 
     def __eq__(self, other: GUID) -> bool:
@@ -267,19 +256,21 @@ class GUID:
         Returns:
             The has computed from this GUID
         """
-        return hash((
-            self._ctypes_guid.Data1,
-            self._ctypes_guid.Data2,
-            self._ctypes_guid.Data3,
-            self._ctypes_guid.Data4[0],
-            self._ctypes_guid.Data4[1],
-            self._ctypes_guid.Data4[2],
-            self._ctypes_guid.Data4[3],
-            self._ctypes_guid.Data4[4],
-            self._ctypes_guid.Data4[5],
-            self._ctypes_guid.Data4[6],
-            self._ctypes_guid.Data4[7]
-        ))
+        return hash(
+            (
+                self._ctypes_guid.Data1,
+                self._ctypes_guid.Data2,
+                self._ctypes_guid.Data3,
+                self._ctypes_guid.Data4[0],
+                self._ctypes_guid.Data4[1],
+                self._ctypes_guid.Data4[2],
+                self._ctypes_guid.Data4[3],
+                self._ctypes_guid.Data4[4],
+                self._ctypes_guid.Data4[5],
+                self._ctypes_guid.Data4[6],
+                self._ctypes_guid.Data4[7],
+            )
+        )
 
 
 # Expose set of pre-defined GUID instances
@@ -294,11 +285,10 @@ UUID_Invalid = GUID_Invalid.uuid
 
 
 class InputType(Enum):
-
     """Enumeration of valid input types that can be reported."""
 
-    Axis = 1,
-    Button = 2,
+    Axis = (1,)
+    Button = (2,)
     Hat = 3
 
     @staticmethod
@@ -322,7 +312,6 @@ class InputType(Enum):
 
 
 class DeviceActionType(Enum):
-
     """Represents the state change of a device."""
 
     Connected = 1
@@ -347,7 +336,6 @@ class DeviceActionType(Enum):
 
 
 class InputEvent:
-
     """Holds information about a single event.
 
     An event is an axis, button, or hat changing its state. The type of
@@ -367,7 +355,6 @@ class InputEvent:
 
 
 class AxisMap:
-
     """Holds information about a single axis map entry.
 
     An AxisMap holds a mapping from an axis' sequential index to the actual
@@ -385,7 +372,6 @@ class AxisMap:
 
 
 class DeviceSummary:
-
     """Holds information about a single device.
 
     This summary holds static information about a single device's layout.
@@ -439,6 +425,15 @@ class DeviceSummary:
         assert self.is_virtual is True
         self.vjoy_id = vjoy_id
 
+    @property
+    def device_uuid(self) -> uuid.UUID:
+        """Returns the unique identifier of this device as UUID.
+
+        Returns:
+            GUID of the device cast to UUID.
+        """
+        return self.device_guid.uuid
+
 
 C_EVENT_CALLBACK = ctypes.CFUNCTYPE(None, _JoystickInputData)
 C_DEVICE_CHANGE_CALLBACK = ctypes.CFUNCTYPE(None, _DeviceSummary, ctypes.c_uint8)
@@ -453,7 +448,6 @@ _di_listener_dll.get_device_information_by_index.restype = _DeviceSummary
 
 
 class DILL:
-
     """Exposes functions of the DILL library in an easy to use manner."""
 
     # Attempt to find the correct location of the dll for development
@@ -479,46 +473,25 @@ class DILL:
     # Declare argument and return types for all the functions
     # exposed by the dll
     api_functions = {
-        "init": {
-            "arguments": [],
-            "returns": None
-        },
-        "set_input_event_callback": {
-            "arguments": [C_EVENT_CALLBACK],
-            "returns": None
-        },
+        "init": {"arguments": [], "returns": None},
+        "set_input_event_callback": {"arguments": [C_EVENT_CALLBACK], "returns": None},
         "set_device_change_callback": {
             "arguments": [C_DEVICE_CHANGE_CALLBACK],
-            "returns": None
+            "returns": None,
         },
         "get_device_information_by_index": {
             "arguments": [ctypes.c_uint],
-            "returns": _DeviceSummary
+            "returns": _DeviceSummary,
         },
         "get_device_information_by_guid": {
             "arguments": [_GUID],
-            "returns": _DeviceSummary
+            "returns": _DeviceSummary,
         },
-        "get_device_count": {
-            "arguments": [],
-            "returns": ctypes.c_uint
-        },
-        "device_exists": {
-            "arguments": [_GUID],
-            "returns": ctypes.c_bool
-        },
-        "get_axis": {
-            "arguments": [_GUID, ctwt.DWORD],
-            "returns": ctwt.LONG
-        },
-        "get_button": {
-            "arguments": [_GUID, ctwt.DWORD],
-            "returns": ctypes.c_bool
-        },
-        "get_hat": {
-            "arguments": [_GUID, ctwt.DWORD],
-            "returns": ctwt.LONG
-        }
+        "get_device_count": {"arguments": [], "returns": ctypes.c_uint},
+        "device_exists": {"arguments": [_GUID], "returns": ctypes.c_bool},
+        "get_axis": {"arguments": [_GUID, ctwt.DWORD], "returns": ctwt.LONG},
+        "get_button": {"arguments": [_GUID, ctwt.DWORD], "returns": ctypes.c_bool},
+        "get_hat": {"arguments": [_GUID, ctwt.DWORD], "returns": ctwt.LONG},
     }
 
     @staticmethod
@@ -543,14 +516,10 @@ class DILL:
             callback: function to execute when an event occurs
         """
         DILL.input_event_callback_fn = C_EVENT_CALLBACK(callback)
-        DILL._dll.set_input_event_callback(
-            DILL.input_event_callback_fn
-        )
+        DILL._dll.set_input_event_callback(DILL.input_event_callback_fn)
 
     @staticmethod
-    def set_device_change_callback(
-            callback: Callable[[DeviceSummary], None]
-    ) -> None:
+    def set_device_change_callback(callback: Callable[[DeviceSummary], None]) -> None:
         """Sets the callback function to use for device change events.
 
         The provided function will be executed whenever the status of a
@@ -559,11 +528,8 @@ class DILL:
         Args:
             callback: function to execute when an event occurs
         """
-        DILL.device_change_callback_fn = \
-            C_DEVICE_CHANGE_CALLBACK(callback)
-        DILL._dll.set_device_change_callback(
-            DILL.device_change_callback_fn
-        )
+        DILL.device_change_callback_fn = C_DEVICE_CHANGE_CALLBACK(callback)
+        DILL._dll.set_device_change_callback(DILL.device_change_callback_fn)
 
     @staticmethod
     def get_device_count() -> int:
@@ -584,9 +550,7 @@ class DILL:
         Returns:
             Structure containing detailed information about the desired device
         """
-        return DeviceSummary(
-            DILL._dll.get_device_information_by_index(index)
-        )
+        return DeviceSummary(DILL._dll.get_device_information_by_index(index))
 
     @staticmethod
     def get_device_information_by_guid(guid: GUID) -> DeviceSummary:
@@ -598,9 +562,7 @@ class DILL:
         Returns:
             Structure containing detailed information about the desired device
         """
-        return DeviceSummary(
-            DILL._dll.get_device_information_by_guid(guid.ctypes)
-        )
+        return DeviceSummary(DILL._dll.get_device_information_by_guid(guid.ctypes))
 
     @staticmethod
     def get_axis(guid: GUID, index: int) -> float:
@@ -651,9 +613,7 @@ class DILL:
         Returns:
             Name of the specified device
         """
-        info = DeviceSummary(
-            DILL._dll.get_device_information_by_guid(guid.ctypes)
-        )
+        info = DeviceSummary(DILL._dll.get_device_information_by_guid(guid.ctypes))
         return info.name
 
     @staticmethod
