@@ -2,19 +2,16 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 from typing import (
     Any,
-    Dict,
     Generic,
-    List,
-    TypeVar
+    TypeVar,
 )
 
 from gremlin import error
-from gremlin.keyboard import (
-    key_from_code,
-    Key
-)
+from gremlin.keyboard import key_from_code
 from gremlin.types import (
     AxisNames,
     InputType,
@@ -25,29 +22,28 @@ T = TypeVar("T")
 
 
 class SingletonDecorator(Generic[T]):
-
     """Decorator turning a class into a singleton."""
 
     def __init__(self, klass: type[T]) -> None:
         self.klass = klass
         self.instance: T | None = None
 
-    def __call__(self, *args, **kwargs) -> T:
+    def __call__(self, *args: Any, **kwargs: dict) -> T:  # noqa: ANN401
         if self.instance is None:
             self.instance = self.klass(*args, **kwargs)
         return self.instance
 
 
 class SingletonMetaclass(type):
-
     # https://stackoverflow.com/a/6798042
 
     _instances: dict[type, Any] = {}
 
-    def __call__(cls, *args, **kwargs) -> Any:
+    def __call__(cls, *args: Any, **kwargs: dict) -> Any:  # noqa: ANN401
         if cls not in cls._instances:
-            cls._instances[cls] = \
-                super(SingletonMetaclass, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(SingletonMetaclass, cls).__call__(
+                *args, **kwargs
+            )
         return cls._instances[cls]
 
 
@@ -66,15 +62,12 @@ def input_to_ui_string(input_type: InputType, input_id: int | ScanCode) -> str:
         try:
             return AxisNames.to_string(AxisNames(input_id))
         except error.GremlinError:
-            return "Axis {:d}".format(input_id)
+            return f"Axis {input_id:d}"
     elif input_type == InputType.Keyboard:
         assert isinstance(input_id, tuple) and len(input_id) == 2
         return key_from_code(*input_id).name
     else:
-        return "{} {}".format(
-            InputType.to_string(input_type).capitalize(),
-            input_id
-        )
+        return f"{InputType.to_string(input_type).capitalize()} {input_id}"
 
 
 def parse_ui_string(ui_str: str) -> tuple[InputType, int]:
@@ -93,8 +86,8 @@ def parse_ui_string(ui_str: str) -> tuple[InputType, int]:
         elif parts[0] == "Hat":
             return InputType.JoystickHat, int(parts[1])
         else:
-            raise error.GremlinError("Invalid input string: {}".format(ui_str))
+            raise error.GremlinError(f"Invalid input string: {ui_str}")
     try:
         return InputType.JoystickAxis, AxisNames.to_enum(ui_str).value
     except error.GremlinError:
-        raise error.GremlinError("Invalid input string: {}".format(ui_str))
+        raise error.GremlinError(f"Invalid input string: {ui_str}")

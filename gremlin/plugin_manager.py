@@ -7,15 +7,24 @@ from __future__ import annotations
 import importlib
 import logging
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6 import QtQml
 
-from gremlin import config, error, shared_state, util
+from gremlin import (
+    config,
+    error,
+    shared_state,
+    util,
+)
 from gremlin.common import SingletonMetaclass
-from gremlin.types import ActionProperty, InputType, DataCreationMode
+from gremlin.types import (
+    ActionProperty,
+    DataCreationMode,
+    InputType,
+)
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
@@ -26,16 +35,15 @@ if TYPE_CHECKING:
 
 
 class PluginManager(metaclass=SingletonMetaclass):
-
     """Handles discovery and management of action plugins."""
 
     def __init__(self) -> None:
         """Initializes the action plugin manager."""
-        self._plugins : PluginDict = {}
-        self._type_to_action_map : dict[InputType, PluginList] = {}
-        self._name_to_type_map : PluginDict = {}
-        self._tag_to_type_map : PluginDict = {}
-        self._parameter_requirements : dict[str, PluginList] = {}
+        self._plugins: PluginDict = {}
+        self._type_to_action_map: dict[InputType, PluginList] = {}
+        self._name_to_type_map: PluginDict = {}
+        self._tag_to_type_map: PluginDict = {}
+        self._parameter_requirements: dict[str, PluginList] = {}
 
         self._discover_plugins(Path(util.resource_path("action_plugins")), True)
         user_plugins_path = config.Configuration().value(
@@ -84,15 +92,10 @@ class PluginManager(metaclass=SingletonMetaclass):
             Action class object corresponding to the provided name.
         """
         if name not in self._name_to_type_map:
-            raise error.GremlinError(
-                "No action with name '{}' exists".format(name)
-            )
+            raise error.GremlinError(f"No action with name '{name}' exists")
         return self._name_to_type_map[name]
 
-    def plugins_requiring_parameter(
-        self,
-        param_name: str
-    ) -> PluginList:
+    def plugins_requiring_parameter(self, param_name: str) -> PluginList:
         """Returns the list of plugins requiring a certain parameter.
 
         Args:
@@ -105,9 +108,7 @@ class PluginManager(metaclass=SingletonMetaclass):
         return self._parameter_requirements.get(param_name, [])
 
     def create_instance(
-        self,
-        name: str,
-        input_type: InputType
+        self, name: str, input_type: InputType
     ) -> AbstractActionData | None:
         """Creates an action instance which is stored in the library.
 
@@ -131,11 +132,11 @@ class PluginManager(metaclass=SingletonMetaclass):
 
     def _create_type_action_map(self) -> None:
         """Creates a lookup table from input types to available actions."""
-        self._type_to_action_map : dict[InputType, PluginList] = {
+        self._type_to_action_map: dict[InputType, PluginList] = {
             InputType.JoystickAxis: [],
             InputType.JoystickButton: [],
             InputType.JoystickHat: [],
-            InputType.Keyboard: []
+            InputType.Keyboard: [],
         }
 
         for entry in self._plugins.values():
@@ -184,13 +185,10 @@ class PluginManager(metaclass=SingletonMetaclass):
                     continue
 
                 # Verify requirements for the plugin are satisfied.
-                if "create" in plugin.__dict__ \
-                        and plugin.create.can_create():
+                if "create" in plugin.__dict__ and plugin.create.can_create():
                     # Store plugin class information.
                     self._plugins[plugin.create.tag] = plugin.create
-                    logging.getLogger("system").debug(
-                        f"Loaded: {plugin.create.tag}"
-                    )
+                    logging.getLogger("system").debug(f"Loaded: {plugin.create.tag}")
 
                     # Register QML type.
                     QtQml.qmlRegisterType(
@@ -198,7 +196,7 @@ class PluginManager(metaclass=SingletonMetaclass):
                         "Gremlin.ActionPlugins",
                         1,
                         0,
-                        plugin.create.model.__name__
+                        plugin.create.model.__name__,
                     )
                 else:
                     del plugin
@@ -208,4 +206,4 @@ class PluginManager(metaclass=SingletonMetaclass):
                 logging.getLogger("system").error(
                     f"Loading action_plugins '{fpath.parent}' failed due to: {e}."
                 )
-                raise(e)
+                raise (e)

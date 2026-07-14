@@ -4,66 +4,57 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from abc import (
-    abstractmethod,
-    ABCMeta,
-)
 import codecs
 import dataclasses
 import hashlib
 import logging
 import os
+import uuid
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from collections.abc import Iterable
 from pathlib import Path
 from typing import (
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Self,
-    Set,
     TYPE_CHECKING,
+    Callable,
 )
-import uuid
 from xml.dom import minidom
 from xml.etree import ElementTree
 
 import dill
-
-from gremlin.types import (
-    AxisButtonDirection,
-    InputType,
-    HatDirection,
-    ScanCode,
-)
 from gremlin import (
     device_initialization,
     error,
-    keyboard,
     plugin_manager,
     signal,
 )
 from gremlin.logical_device import LogicalDevice
 from gremlin.tree import TreeNode
+from gremlin.types import (
+    AxisButtonDirection,
+    HatDirection,
+    InputType,
+    ScanCode,
+)
 from gremlin.user_script import Script
 from gremlin.util import (
     clamp,
     create_subelement_node,
     create_subelement_node_custom,
-    safe_read,
-    safe_format,
     read_action_ids,
     read_subelement,
     read_subelement_custom,
+    safe_format,
+    safe_read,
 )
-
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
 
 
 class AbstractVirtualButton(metaclass=ABCMeta):
-
     """Base class of all virtual buttons."""
 
     def __init__(self) -> None:
@@ -90,10 +81,9 @@ class AbstractVirtualButton(metaclass=ABCMeta):
 
 
 class VirtualAxisButton(AbstractVirtualButton):
-
     """Virtual button which turns an axis range into a button."""
 
-    def __init__(self, lower_limit: float=-0.1, upper_limit: float=0.1) -> None:
+    def __init__(self, lower_limit: float = -0.1, upper_limit: float = 0.1) -> None:
         """Creates a new instance.
 
         Args:
@@ -125,17 +115,14 @@ class VirtualAxisButton(AbstractVirtualButton):
         node = ElementTree.Element("virtual-button")
         node.append(create_subelement_node("lower-limit", self.lower_limit))
         node.append(create_subelement_node("upper-limit", self.upper_limit))
-        node.append(
-            create_subelement_node("axis-button-direction", self.direction)
-        )
+        node.append(create_subelement_node("axis-button-direction", self.direction))
         return node
 
 
 class VirtualHatButton(AbstractVirtualButton):
-
     """Virtual button which combines hat directions into a button."""
 
-    def __init__(self, directions: Set=set()) -> None:
+    def __init__(self, directions: set = set()) -> None:
         """Creates a instance.
 
         Args:
@@ -170,7 +157,6 @@ class VirtualHatButton(AbstractVirtualButton):
 
 
 class Settings:
-
     """Stores general profile specific settings."""
 
     def __init__(self, parent: Profile) -> None:
@@ -182,8 +168,8 @@ class Settings:
         self.parent = parent
         self.vjoy_as_input = {}
         self.vjoy_initial_values = {}
-        self.startup_mode : str = "Use Heuristic"
-        self.macro_default_delay : float = 0.05
+        self.startup_mode: str = "Use Heuristic"
+        self.macro_default_delay: float = 0.05
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Populates the data storage with the XML node's contents.
@@ -196,15 +182,11 @@ class Settings:
             raise error.ProfileError("Missing settings node in profile.")
 
         self.startup_mode = read_subelement_custom(
-            settings_node,
-            "startup-mode",
-            lambda x: str(x.text)
+            settings_node, "startup-mode", lambda x: str(x.text)
         )
 
         self.macro_default_delay = read_subelement_custom(
-            settings_node,
-            "macro-default-delay",
-            lambda x: float(x.text)
+            settings_node, "macro-default-delay", lambda x: float(x.text)
         )
 
         # vJoy as input settings
@@ -216,15 +198,9 @@ class Settings:
         # vjoy initialization values
         self.vjoy_initial_values = {}
         for vjoy_node in settings_node.findall("vjoy-initial-value"):
-            vid = read_subelement_custom(
-                vjoy_node, "vjoy-id", lambda x: int(x.text)
-            )
-            aid = read_subelement_custom(
-                vjoy_node, "axis-id", lambda x: int(x.text)
-            )
-            value = read_subelement_custom(
-                vjoy_node, "value", lambda x: float(x.text)
-            )
+            vid = read_subelement_custom(vjoy_node, "vjoy-id", lambda x: int(x.text))
+            aid = read_subelement_custom(vjoy_node, "axis-id", lambda x: int(x.text))
+            value = read_subelement_custom(vjoy_node, "value", lambda x: float(x.text))
 
             if vid not in self.vjoy_initial_values:
                 self.vjoy_initial_values[vid] = {}
@@ -238,19 +214,19 @@ class Settings:
         """
         node = ElementTree.Element("settings")
 
-        node.append(create_subelement_node_custom(
-            "startup-mode", self.startup_mode, str
-        ))
-        node.append(create_subelement_node_custom(
-            "macro-default-delay", self.macro_default_delay, str
-        ))
+        node.append(
+            create_subelement_node_custom("startup-mode", self.startup_mode, str)
+        )
+        node.append(
+            create_subelement_node_custom(
+                "macro-default-delay", self.macro_default_delay, str
+            )
+        )
 
         # Process vJoy as input settings.
         for vid, value in self.vjoy_as_input.items():
             if value is True:
-                node.append(create_subelement_node_custom(
-                    "vjoy-input-id", vid, str
-                ))
+                node.append(create_subelement_node_custom("vjoy-input-id", vid, str))
 
         # Process vJoy axis initial values.
         for vid, data in self.vjoy_initial_values.items():
@@ -279,12 +255,7 @@ class Settings:
                 value = self.vjoy_initial_values[vid][aid]
         return value
 
-    def set_initial_vjoy_axis_value(
-        self,
-        vid: int,
-        aid: int,
-        value: float
-    ) -> None:
+    def set_initial_vjoy_axis_value(self, vid: int, aid: int, value: float) -> None:
         """Sets the default value for a particular vJoy axis.
 
         Args:
@@ -298,7 +269,6 @@ class Settings:
 
 
 class Library:
-
     """Stores actions in order to be reference by input binding instances.
 
     Each item is a self-contained entry with a UUID assigned to it which
@@ -311,7 +281,7 @@ class Library:
         The library contains both the individual action configurations as well
         as the items composed of them.
         """
-        self._actions: Dict[uuid.UUID, AbstractActionData] = {}
+        self._actions: dict[uuid.UUID, AbstractActionData] = {}
 
     def add_action(self, action: AbstractActionData) -> None:
         if action.id in self._actions:
@@ -333,11 +303,7 @@ class Library:
         if key in self._actions:
             del self._actions[key]
 
-    def remove_unused(
-        self,
-        action: AbstractActionData,
-        recursive: bool=True
-    ) -> None:
+    def remove_unused(self, action: AbstractActionData, recursive: bool = True) -> None:
         """Removes the provided action and all its children if unsued.
 
         Args:
@@ -367,9 +333,8 @@ class Library:
         del self._actions[action.id]
 
     def actions_by_type(
-            self,
-            action_type: type[AbstractActionData]
-    ) -> List[AbstractActionData]:
+        self, action_type: type[AbstractActionData]
+    ) -> list[AbstractActionData]:
         """Returns all actions in the library matching the given type.
 
         Args:
@@ -381,9 +346,8 @@ class Library:
         return [a for a in self._actions.values() if isinstance(a, action_type)]
 
     def actions_by_predicate(
-            self,
-            predicate: Callable[[AbstractActionData], bool]
-    ) -> List[AbstractActionData]:
+        self, predicate: Callable[[AbstractActionData], bool]
+    ) -> list[AbstractActionData]:
         """Returns the list of actions fulfilling the given predicate.
 
         Args:
@@ -431,17 +395,15 @@ class Library:
             node: XML node containing the library information
         """
         parse_later = []
-        can_parse = lambda entry: all([
-            aid in self._actions for aid in read_action_ids(entry)
-        ])
+
+        def can_parse(entry: ElementTree.Element) -> bool:
+            return all([aid in self._actions for aid in read_action_ids(entry)])
 
         # Parse all actions
         for entry in node.findall("./library/action"):
             # Ensure all required attributes are present
             if not set(["id", "type"]).issubset(entry.keys()):
-                raise error.ProfileError(
-                    "Incomplete library action specification"
-                )
+                raise error.ProfileError("Incomplete library action specification")
 
             # Ensure the action type is known
             type_key = entry.get("type")
@@ -534,11 +496,10 @@ class Library:
 
 @dataclasses.dataclass
 class DeviceInfo:
-
     """Captures information about a generic device."""
 
     device_uuid: uuid.UUID = dill.UUID_Invalid
-    name: str = ''
+    name: str = ""
 
     def from_xml(self, node: ElementTree.Element) -> None:
         """Sets attributes from an XML node.
@@ -606,7 +567,6 @@ class DeviceDatabase:
 
 
 class Profile:
-
     """Stores the contents and an entire configuration profile."""
 
     current_version = 14
@@ -687,11 +647,11 @@ class Profile:
             out.write(dom_xml.toprettyxml(indent="    "))
 
     def get_input_count(
-            self,
-            device_guid: uuid.UUID,
-            input_type: InputType,
-            input_id: int | ScanCode,
-            mode: str
+        self,
+        device_guid: uuid.UUID,
+        input_type: InputType,
+        input_id: int | ScanCode,
+        mode: str,
     ) -> int:
         """Returns the number of InputItem instances corresponding to the
         provided information.
@@ -709,19 +669,22 @@ class Profile:
             return 0
 
         for item in self.inputs[device_guid]:
-            if item.input_type == input_type and item.input_id == input_id \
-                    and item.mode == mode:
+            if (
+                item.input_type == input_type
+                and item.input_id == input_id
+                and item.mode == mode
+            ):
                 return len(item.action_sequences)
 
         return 0
 
     def get_input_item(
-            self,
-            device_guid: uuid.UUID,
-            input_type: InputType,
-            input_id: int | ScanCode,
-            mode: str,
-            create_if_missing: bool=False
+        self,
+        device_guid: uuid.UUID,
+        input_type: InputType,
+        input_id: int | ScanCode,
+        mode: str,
+        create_if_missing: bool = False,
     ) -> InputItem | None:
         """Returns the InputItem corresponding to the provided information.
 
@@ -738,10 +701,10 @@ class Profile:
         """
         # Verify provided information has correct type information
         if not (
-                isinstance(device_guid, uuid.UUID) and
-                isinstance(input_type, InputType) and
-                type(input_id) in [int, tuple] and
-                isinstance(mode, str)
+            isinstance(device_guid, uuid.UUID)
+            and isinstance(input_type, InputType)
+            and type(input_id) in [int, tuple]
+            and isinstance(mode, str)
         ):
             raise error.ProfileError("Invalid input specification provided.")
 
@@ -752,9 +715,11 @@ class Profile:
                 return None
 
         for item in self.inputs[device_guid]:
-            if item.input_type == input_type and \
-                    item.input_id == input_id and \
-                    item.mode == mode:
+            if (
+                item.input_type == input_type
+                and item.input_id == input_id
+                and item.mode == mode
+            ):
                 return item
 
         if create_if_missing:
@@ -769,9 +734,7 @@ class Profile:
             return None
 
     def remove_action(
-        self,
-        action: AbstractActionData,
-        binding: InputItemBinding
+        self, action: AbstractActionData, binding: InputItemBinding
     ) -> None:
         """Removes an action from the specified InputBinding instance.
 
@@ -785,9 +748,7 @@ class Profile:
         ]
         while len(all_actions) > 0:
             entry = all_actions.pop(0)
-            all_actions.extend([
-                (entry[1], child) for child in entry[1].get_actions()
-            ])
+            all_actions.extend([(entry[1], child) for child in entry[1].get_actions()])
 
             if entry[1] == action:
                 entry[0].remove_action(action)
@@ -836,7 +797,7 @@ class Profile:
             logical.create(
                 read_subelement(node, "input-type"),
                 read_subelement(node, "input-id"),
-                read_subelement(node, "label")
+                read_subelement(node, "label"),
             )
 
     def _logical_devices_to_xml(self) -> ElementTree.Element:
@@ -851,7 +812,6 @@ class Profile:
 
 
 class InputItem:
-
     """Represents the configuration of a single input in a particular mode."""
 
     def __init__(self, library: Library) -> None:
@@ -914,8 +874,9 @@ class InputItem:
         Returns:
             String identifying this input item in a textual manner
         """
-        return f"{self.device_id}: {InputType.to_string(self.input_type)} " \
-               f"{self.input_id}"
+        return (
+            f"{self.device_id}: {InputType.to_string(self.input_type)} {self.input_id}"
+        )
 
     def add_item_binding(self) -> InputItemBinding:
         """Adds a new binding to this input item and returns it."""
@@ -938,7 +899,6 @@ class InputItem:
 
 
 class InputItemBinding:
-
     """Links together a LibraryItem and it's activation behavior."""
 
     def __init__(self, input_item: InputItem) -> None:
@@ -960,9 +920,7 @@ class InputItemBinding:
 
     def to_xml(self) -> ElementTree.Element:
         node = ElementTree.Element("action-configuration")
-        node.append(
-            create_subelement_node("root-action", self.root_action.id)
-        )
+        node.append(create_subelement_node("root-action", self.root_action.id))
         node.append(create_subelement_node("behavior", self.behavior))
         vb_node = self._write_virtual_button()
         if vb_node is not None:
@@ -979,17 +937,18 @@ class InputItemBinding:
         """
         return self.input_item.library
 
-    def _parse_virtual_button(
-        self,
-        node: ElementTree.Element
-    ) -> AbstractVirtualButton:
+    def _parse_virtual_button(self, node: ElementTree.Element) -> AbstractVirtualButton:
         # Ensure the configuration requires a virtual button
         virtual_button = None
-        if self.input_item.input_type == InputType.JoystickAxis and \
-                self.behavior == InputType.JoystickButton:
+        if (
+            self.input_item.input_type == InputType.JoystickAxis
+            and self.behavior == InputType.JoystickButton
+        ):
             virtual_button = VirtualAxisButton()
-        elif self.input_item.input_type == InputType.JoystickHat and \
-                self.behavior == InputType.JoystickButton:
+        elif (
+            self.input_item.input_type == InputType.JoystickHat
+            and self.behavior == InputType.JoystickButton
+        ):
             virtual_button = VirtualHatButton()
 
         # Ensure we have a virtual button entry to parse
@@ -1004,14 +963,18 @@ class InputItemBinding:
 
         return virtual_button
 
-    def _write_virtual_button(self) -> Optional[ElementTree.Element]:
+    def _write_virtual_button(self) -> ElementTree.Element | None:
         # Ascertain whether or not a virtual button node needs to be created
         needs_virtual_button = False
-        if self.input_item.input_type == InputType.JoystickAxis and \
-                self.behavior == InputType.JoystickButton:
+        if (
+            self.input_item.input_type == InputType.JoystickAxis
+            and self.behavior == InputType.JoystickButton
+        ):
             needs_virtual_button = True
-        elif self.input_item.input_type == InputType.JoystickHat and \
-                self.behavior == InputType.JoystickButton:
+        elif (
+            self.input_item.input_type == InputType.JoystickHat
+            and self.behavior == InputType.JoystickButton
+        ):
             needs_virtual_button = True
 
         # Ensure there is no virtual button information present
@@ -1030,10 +993,9 @@ class InputItemBinding:
 
 
 class ModeHierarchy:
-
     """Contains all the modes and their hierarchical information."""
 
-    def __init__(self, parent_profile: Profile):
+    def __init__(self, parent_profile: Profile) -> None:
         """Creates a new mode hierarchy.
 
         Args:
@@ -1052,7 +1014,7 @@ class ModeHierarchy:
         """
         return self._hierarchy.children[0].value
 
-    def mode_names(self) -> List[str]:
+    def mode_names(self) -> list[str]:
         """Returns a list containing the names of all modes.
 
         Returns:
@@ -1060,7 +1022,7 @@ class ModeHierarchy:
         """
         return sorted([node.value for node in self.mode_list()])
 
-    def mode_list(self) -> List[TreeNode]:
+    def mode_list(self) -> list[TreeNode]:
         """Returns a list of all mode nodes.
 
         Returns:
@@ -1070,7 +1032,7 @@ class ModeHierarchy:
         modes.remove(self._hierarchy)
         return modes
 
-    def valid_parents(self, mode_name: str) -> List[str]:
+    def valid_parents(self, mode_name: str) -> list[str]:
         """Returns the list of parents that are valid for the given mode.
 
         Args:
@@ -1097,13 +1059,9 @@ class ModeHierarchy:
         """
         nodes = self._hierarchy.nodes_matching(lambda x: mode_name == x.value)
         if len(nodes) > 1:
-            raise error.GremlinError(
-                f"More than one mode named '{mode_name}' exists"
-            )
+            raise error.GremlinError(f"More than one mode named '{mode_name}' exists")
         elif len(nodes) == 0:
-            raise error.GremlinError(
-                f"No node with the name '{mode_name}' exists"
-            )
+            raise error.GremlinError(f"No node with the name '{mode_name}' exists")
         return nodes[0]
 
     def add_mode(self, mode_name: str) -> None:
@@ -1226,14 +1184,11 @@ class ModeHierarchy:
             n_mode = ElementTree.Element("mode")
             n_mode.text = mode.value
             if mode.parent != self._hierarchy:
-                n_mode.set(
-                    "parent",
-                    safe_format(mode.parent.value, str)
-                )
+                n_mode.set("parent", safe_format(mode.parent.value, str))
             node.append(n_mode)
         return node
 
-    def _actions_with_mode(self, mode: str) -> List[AbstractActionData]:
+    def _actions_with_mode(self, mode: str) -> list[AbstractActionData]:
         """Returns all actions belonging to the given mode.
 
         Args:
@@ -1246,7 +1201,6 @@ class ModeHierarchy:
 
 
 class ScriptManager:
-
     def __init__(self, profile: Profile) -> None:
         """Creates a new instance.
 
@@ -1257,7 +1211,7 @@ class ScriptManager:
             profile: the profile whose scripts to manage
         """
         self._profile = profile
-        self._scripts : list[Script] = []
+        self._scripts: list[Script] = []
 
     @property
     def scripts(self) -> list[Script]:
@@ -1314,9 +1268,7 @@ class ScriptManager:
         """
         instance = self._find_instance(path, name)
         if not instance:
-            raise error.GremlinError(
-                f"Unable to find script {path} with name '{name}'"
-            )
+            raise error.GremlinError(f"Unable to find script {path} with name '{name}'")
         return self._scripts.index(instance)
 
     def _default_name(self, path: Path) -> str:
@@ -1331,12 +1283,10 @@ class ScriptManager:
         """
         names = [s.name for s in self.scripts if s.path == path]
         for i in range(len(names) + 1):
-            candidate = f"Instance {i+1}"
+            candidate = f"Instance {i + 1}"
             if candidate not in names:
                 return candidate
-        raise error.GremlinError(
-            f"Unablle to find a valid default name for {path}"
-        )
+        raise error.GremlinError(f"Unablle to find a valid default name for {path}")
 
     def from_xml(self, root: ElementTree.Element) -> None:
         for node in root.findall("./scripts/script"):
@@ -1345,9 +1295,7 @@ class ScriptManager:
                 script_instance.from_xml(node)
                 self._scripts.append(script_instance)
             except error.GremlinError as e:
-                logging.getLogger("system").error(
-                    f"Failure to load a user script: {e}"
-                )
+                logging.getLogger("system").error(f"Failure to load a user script: {e}")
         self._scripts.sort(key=lambda s: (s.path, s.name))
 
     def to_xml(self) -> ElementTree.Element:
@@ -1358,7 +1306,7 @@ class ScriptManager:
                 script_node.append(node)
         return script_node
 
-    def _find_instance(self, path: Path, name: str) -> Script|None:
+    def _find_instance(self, path: Path, name: str) -> Script | None:
         """Attempts to find the specified script.
 
         Args:

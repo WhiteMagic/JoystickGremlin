@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 
 
 class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
-
     """Checks whether or not joystick inputs are significant."""
 
     def __init__(self) -> None:
@@ -48,9 +47,7 @@ class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
             case InputType.JoystickHat:
                 return self._process_hat(event)
             case _:
-                logging.getLogger("system").warning(
-                    "Event with unknown type received"
-                )
+                logging.getLogger("system").warning("Event with unknown type received")
                 return False
 
     def last_event(self, event: event_handler.Event) -> event_handler.Event:
@@ -123,13 +120,12 @@ class JoystickInputSignificant(metaclass=common.SingletonMetaclass):
 
 
 class AxisChangeSignificanceTracker:
-
     def __init__(
         self,
         initial_value: float,
         minimum_change: float,
         minimum_time_interval: float,
-        record_crossings: bool
+        record_crossings: bool,
     ) -> None:
         self._last_time = time.monotonic_ns()
         self._last_value = initial_value
@@ -143,15 +139,17 @@ class AxisChangeSignificanceTracker:
         time_delta = time_now - self._last_time
         value_delta = abs(new_value - self._last_value)
         zero_crossed = (new_value > 0) != (self._last_value > 0)
-        extrema_reached = (abs(self._last_value) != 1.0 and abs(new_value) == 1.0)
+        extrema_reached = abs(self._last_value) != 1.0 and abs(new_value) == 1.0
 
         if self._record_crossings and (zero_crossed or extrema_reached):
             self._last_time = time_now
             self._last_value = new_value
             return True
 
-        if time_delta >= self._minimum_time_interval and \
-                value_delta >= self._minimum_change:
+        if (
+            time_delta >= self._minimum_time_interval
+            and value_delta >= self._minimum_change
+        ):
             self._last_time = time_now
             self._last_value = new_value
             return True

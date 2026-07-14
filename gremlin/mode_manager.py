@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
-from typing import List
+from __future__ import annotations
 
 from PySide6 import QtCore
 
@@ -14,14 +14,10 @@ from gremlin.types import PropertyType
 
 
 class Mode:
-
     """Simple containiner holding a mode's name and its identifier."""
 
     def __init__(
-            self,
-            name: str,
-            previous: str | None,
-            is_temporary: bool=False
+        self, name: str, previous: str | None, is_temporary: bool = False
     ) -> None:
         """Creates a new Mode instance.
 
@@ -54,15 +50,16 @@ class Mode:
     def is_temporary(self, value: bool) -> None:
         self._is_temporary = value
 
-    def __eq__(self, other) -> bool:
-        return (self.name == other.name and
-                self.previous == other.previous and
-                self.is_temporary == other.is_temporary)
+    def __eq__(self, other: Mode) -> bool:
+        return (
+            self.name == other.name
+            and self.previous == other.previous
+            and self.is_temporary == other.is_temporary
+        )
 
 
 class ModeSequence:
-
-    def __init__(self, modes: List[str]) -> None:
+    def __init__(self, modes: list[str]) -> None:
         """Creates a new ModeSequence instance.
 
         Args:
@@ -84,7 +81,6 @@ class ModeSequence:
 
 @SingletonDecorator
 class ModeManager(QtCore.QObject):
-
     """Manages the mode change history."""
 
     mode_changed = QtCore.Signal(str)
@@ -100,9 +96,7 @@ class ModeManager(QtCore.QObject):
         return self._mode_stack[-1]
 
     def reset(self) -> None:
-        self._mode_stack = [
-            Mode(shared_state.current_profile.modes.first_mode, None)
-        ]
+        self._mode_stack = [Mode(shared_state.current_profile.modes.first_mode, None)]
         self._config.set("global", "internal", "last-mode", self.current.name)
 
     def _exists(self, mode: Mode) -> bool:
@@ -122,8 +116,10 @@ class ModeManager(QtCore.QObject):
             return
 
         # Swap the two top-most elements of the mode stack
-        self._mode_stack[-1], self._mode_stack[-2] = \
-            self._mode_stack[-2], self._mode_stack[-1]
+        self._mode_stack[-1], self._mode_stack[-2] = (
+            self._mode_stack[-2],
+            self._mode_stack[-1],
+        )
         self._update_mode()
 
     def unwind(self) -> None:
@@ -146,7 +142,7 @@ class ModeManager(QtCore.QObject):
                 if resolution_mode == "Oldest":
                     self._mode_stack = self._mode_stack[:idx]
                 elif resolution_mode == "Newest":
-                    self._mode_stack = self._mode_stack[idx+1:]
+                    self._mode_stack = self._mode_stack[idx + 1 :]
             # Special handling if the loop is caused by a temporary mode
             else:
                 if resolution_mode == "Oldest":
@@ -161,9 +157,7 @@ class ModeManager(QtCore.QObject):
                     # 2. Create new stack that no longer contains the old
                     #    temporary mode instance but retains all previous
                     #    modes until the first non-temporary entry
-                    self._mode_stack = [
-                        m for m in self._mode_stack[idx2:] if m != mode
-                    ]
+                    self._mode_stack = [m for m in self._mode_stack[idx2:] if m != mode]
                     # 3. Fix inconsistent stack entry transitions
                     for a, b in zip(self._mode_stack[:-1], self._mode_stack[1:]):
                         if a.name != b.previous:
@@ -189,12 +183,10 @@ Configuration().register(
     "resolution-mode",
     PropertyType.Selection,
     "Oldest",
-    "Defines how a what mode is switched to in the case that a cyclical mode " \
-        "traversal is detected. \"Oldest\" switches to the oldest mode in " \
-        "the cycle while \"newest\" finds the most recent common mode and " \
-        "switches to that one.",
-    {
-        "valid_options": ["Oldest", "Newest"]
-    },
-    True
+    "Defines how a what mode is switched to in the case that a cyclical mode "
+    'traversal is detected. "Oldest" switches to the oldest mode in '
+    'the cycle while "newest" finds the most recent common mode and '
+    "switches to that one.",
+    {"valid_options": ["Oldest", "Newest"]},
+    True,
 )

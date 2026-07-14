@@ -25,7 +25,7 @@ _suspend_input_highlighting = False
 _suspend_timer = None
 
 # Holds the currently active profile
-current_profile : None | profile.Profile = None
+current_profile: None | profile.Profile = None
 
 
 def suspend_input_highlighting() -> bool:
@@ -55,8 +55,5 @@ def set_suspend_input_highlighting_delayed() -> None:
     if _suspend_timer is not None:
         _suspend_timer.cancel()
 
-    _suspend_timer = threading.Timer(
-            2,
-            lambda: set_suspend_input_highlighting(False)
-    )
+    _suspend_timer = threading.Timer(2, lambda: set_suspend_input_highlighting(False))
     _suspend_timer.start()

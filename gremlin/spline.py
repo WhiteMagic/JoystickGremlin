@@ -6,28 +6,20 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import (
-    List,
-    Tuple,
-    Optional,
-)
 
 from gremlin import util
 from gremlin.types import Point2D
 
 # Typing alias
-type CoordinateList = List[Tuple[float, float]]
+type CoordinateList = list[tuple[float, float]]
 
 
 class AbstractCurve(abc.ABC):
-
     """Base class for all curves, providing a common interface."""
 
-    def __init__(self, points: Optional[CoordinateList]=None) -> None:
+    def __init__(self, points: CoordinateList | None = None) -> None:
         self._is_symmetric = False
-        self._process_points(
-            points if points is not None else self._default_points()
-        )
+        self._process_points(points if points is not None else self._default_points())
         self.fit()
 
     @property
@@ -43,7 +35,7 @@ class AbstractCurve(abc.ABC):
             self.fit()
 
     @abc.abstractmethod
-    def control_points(self) -> List[Point2D | CubicBezierSpline.ControlPoint]:
+    def control_points(self) -> list[Point2D | CubicBezierSpline.ControlPoint]:
         """Returns the list of all control points.
 
         Returns:
@@ -108,8 +100,8 @@ class AbstractCurve(abc.ABC):
         if self.is_symmetric:
             len_points = len(points)
             assert len_points % 2, "Symmetric curves must have odd number of points"
-            points[len_points-idx-1].x = -x
-            points[len_points-idx-1].y = -y
+            points[len_points - idx - 1].x = -x
+            points[len_points - idx - 1].y = -y
         self.fit()
 
     @abc.abstractmethod
@@ -157,8 +149,7 @@ class AbstractCurve(abc.ABC):
 
 
 class PiecewiseLinear(AbstractCurve):
-
-    def __init__(self, points: Optional[CoordinateList]=None) -> None:
+    def __init__(self, points: CoordinateList | None = None) -> None:
         """Creates a piece wise linear curve.
 
         Args:
@@ -167,7 +158,7 @@ class PiecewiseLinear(AbstractCurve):
         super().__init__(points)
         self.fit()
 
-    def control_points(self) -> List[Point2D]:
+    def control_points(self) -> list[Point2D]:
         return self.points
 
     def add_control_point(self, x: float, y: float) -> None:
@@ -190,7 +181,7 @@ class PiecewiseLinear(AbstractCurve):
 
         for i in range(int(count / 2.0)):
             p1 = self.points[i]
-            p2 = self.points[-i-1]
+            p2 = self.points[-i - 1]
 
             p2.x = -p1.x
             p2.y = -p1.y
@@ -232,14 +223,13 @@ class PiecewiseLinear(AbstractCurve):
 
 
 class CubicSpline(AbstractCurve):
-
     """Defines a cubic spline for interpolation.
 
     The spline requires a set of control points which are used to
     create a C2 spline which passes through all of them.
     """
 
-    def __init__(self, points: Optional[CoordinateList]=None) -> None:
+    def __init__(self, points: CoordinateList | None = None) -> None:
         """Creates a new CubicSpline object.
 
         Args:
@@ -247,7 +237,7 @@ class CubicSpline(AbstractCurve):
         """
         super().__init__(points)
 
-    def control_points(self) -> List[Point2D]:
+    def control_points(self) -> list[Point2D]:
         return self.points
 
     def add_control_point(self, x: float, y: float) -> None:
@@ -269,7 +259,7 @@ class CubicSpline(AbstractCurve):
         count = len(self.points)
         for i in range(int(count / 2.0)):
             p1 = self.points[i]
-            p2 = self.points[-i-1]
+            p2 = self.points[-i - 1]
 
             p2.x = -p1.x
             p2.y = -p1.y
@@ -296,18 +286,18 @@ class CubicSpline(AbstractCurve):
         v = [0.0] * n
 
         for i in range(n):
-            h[i] = self.points[i+1].x - self.points[i].x
-            b[i] = (self.points[i+1].y - self.points[i].y) / (h[i]+eps)
+            h[i] = self.points[i + 1].x - self.points[i].x
+            b[i] = (self.points[i + 1].y - self.points[i].y) / (h[i] + eps)
 
         u[1] = 2 * (h[0] + h[1])
         v[1] = 6 * (b[1] - b[0])
         for i in range(2, n):
-            u[i] = 2 * (h[i] + h[i-1]) - h[i-1]**2 / (u[i-1] + eps)
-            v[i] = 6 * (b[i] - b[i-1]) - (h[i-1] * v[i-1]) / (u[i-1] + eps)
+            u[i] = 2 * (h[i] + h[i - 1]) - h[i - 1] ** 2 / (u[i - 1] + eps)
+            v[i] = 6 * (b[i] - b[i - 1]) - (h[i - 1] * v[i - 1]) / (u[i - 1] + eps)
 
         self.z[n] = 0.0
-        for i in range(n-1, 0, -1):
-            self.z[i] = (v[i] - h[i] * self.z[i+1]) / (u[i] + eps)
+        for i in range(n - 1, 0, -1):
+            self.z[i] = (v[i] - h[i] * self.z[i + 1]) / (u[i] + eps)
         self.z[0] = 0.0
 
     def _default_points(self) -> CoordinateList:
@@ -334,42 +324,40 @@ class CubicSpline(AbstractCurve):
 
         n = len(self.points)
         i = 0
-        for i in range(n-1):
-            if self.points[i].x <= x <= self.points[i+1].x:
+        for i in range(n - 1):
+            if self.points[i].x <= x <= self.points[i + 1].x:
                 break
 
-        h = self.points[i+1].x - self.points[i].x + 0.00001
-        tmp = (self.z[i] / 2.0) + (x - self.points[i].x) * \
-            (self.z[i+1] - self.z[i]) / (6 * h)
-        tmp = -(h/6.0) * (self.z[i+1] + 2 * self.z[i]) + \
-            (self.points[i+1].y - self.points[i].y) / h + (x - self.points[i].x) * tmp
+        h = self.points[i + 1].x - self.points[i].x + 0.00001
+        tmp = (self.z[i] / 2.0) + (x - self.points[i].x) * (
+            self.z[i + 1] - self.z[i]
+        ) / (6 * h)
+        tmp = (
+            -(h / 6.0) * (self.z[i + 1] + 2 * self.z[i])
+            + (self.points[i + 1].y - self.points[i].y) / h
+            + (x - self.points[i].x) * tmp
+        )
 
         # User generic clamp to avoid function call overhead in this call which
         # is time sensitive.
-        return util.clamp(
-            self.points[i].y + (x - self.points[i].x) * tmp,
-            -1.0,
-            1.0
-        )
+        return util.clamp(self.points[i].y + (x - self.points[i].x) * tmp, -1.0, 1.0)
 
 
 class CubicBezierSpline(AbstractCurve):
-
     """Implementation of a cubic Bezier spline."""
 
     class ControlPoint:
-
         def __init__(
-                self,
-                center: Optional[Point2D]=None,
-                handle_left: Optional[Point2D]=None,
-                handle_right: Optional[Point2D]=None
+            self,
+            center: Point2D | None = None,
+            handle_left: Point2D | None = None,
+            handle_right: Point2D | None = None,
         ) -> None:
             self.center = center
             self.handle_left = handle_left
             self.handle_right = handle_right
 
-    def __init__(self, points: Optional[CoordinateList]=None) -> None:
+    def __init__(self, points: CoordinateList | None = None) -> None:
         """Creates a new CubicBezierSpline object.
 
         Args:
@@ -379,23 +367,23 @@ class CubicBezierSpline(AbstractCurve):
         self._lookup = []
         super().__init__(points)
 
-    def control_points(self) -> List[ControlPoint]:
+    def control_points(self) -> list[ControlPoint]:
         return self._control_points
 
     def add_control_point(self, x: float, y: float) -> None:
         x = util.clamp_analog_axis(x)
         y = util.clamp_analog_axis(y)
-        self._control_points.append(CubicBezierSpline.ControlPoint(
-            Point2D(x, y),
-            Point2D(x-0.05, y),
-            Point2D(x+0.05, y)
-        ))
+        self._control_points.append(
+            CubicBezierSpline.ControlPoint(
+                Point2D(x, y), Point2D(x - 0.05, y), Point2D(x + 0.05, y)
+            )
+        )
         if self._is_symmetric:
-            self._control_points.append(CubicBezierSpline.ControlPoint(
-                Point2D(-x, -y),
-                Point2D(-x-0.05, -y),
-                Point2D(-x+0.05, -y)
-            ))
+            self._control_points.append(
+                CubicBezierSpline.ControlPoint(
+                    Point2D(-x, -y), Point2D(-x - 0.05, -y), Point2D(-x + 0.05, -y)
+                )
+            )
         self.fit()
 
     def invert(self) -> None:
@@ -454,11 +442,13 @@ class CubicBezierSpline(AbstractCurve):
             CubicBezierSpline.ControlPoint(points[0], handle_right=points[1])
         )
         for i in range(3, len(points) - 2, 3):
-            self._control_points.append(CubicBezierSpline.ControlPoint(
-                center=points[i],
-                handle_left=points[i - 1],
-                handle_right=points[i + 1]
-            ))
+            self._control_points.append(
+                CubicBezierSpline.ControlPoint(
+                    center=points[i],
+                    handle_left=points[i - 1],
+                    handle_right=points[i + 1],
+                )
+            )
         self._control_points.append(
             CubicBezierSpline.ControlPoint(points[-1], handle_left=points[-2])
         )
@@ -469,12 +459,7 @@ class CubicBezierSpline(AbstractCurve):
         self._lookup = []
         for cp1, cp2 in zip(self._control_points[:-1], self._control_points[1:]):
             # Grab the knots and their in between control points
-            points = [
-                cp1.center,
-                cp1.handle_right,
-                cp2.handle_left,
-                cp2.center
-            ]
+            points = [cp1.center, cp1.handle_right, cp2.handle_left, cp2.center]
 
             # Compute the t -> coordinate mappings
             step_size = 0.01
@@ -483,7 +468,7 @@ class CubicBezierSpline(AbstractCurve):
                 t = i * step_size
                 self._lookup[-1].append((t, self._value_at_t(points, t)))
 
-    def _value_at_t(self, points: List[Point2D], t: float) -> Point2D:
+    def _value_at_t(self, points: list[Point2D], t: float) -> Point2D:
         """Returns the Point2D for the spline at time t.
 
         Args:
@@ -493,21 +478,21 @@ class CubicBezierSpline(AbstractCurve):
         Returns:
             x and y coordinate corresponding to the given time point as Point2D
         """
-        t2 = t ** 2
-        t3 = t ** 3
+        t2 = t**2
+        t3 = t**3
         mt = 1 - t
-        mt2 = mt ** 2
-        mt3 = mt ** 3
+        mt2 = mt**2
+        mt3 = mt**3
 
         return Point2D(
             points[0].x * mt3
-                + 3 * points[1].x * mt2 * t
-                + 3 * points[2].x * mt * t2
-                + points[3].x * t3,
+            + 3 * points[1].x * mt2 * t
+            + 3 * points[2].x * mt * t2
+            + points[3].x * t3,
             points[0].y * mt3
-                + 3 * points[1].y * mt2 * t
-                + 3 * points[2].y * mt * t2
-                + points[3].y * t3
+            + 3 * points[1].y * mt2 * t
+            + 3 * points[2].y * mt * t2
+            + points[3].y * t3,
         )
 
     def __call__(self, x: float) -> float:
@@ -555,10 +540,7 @@ class CubicBezierSpline(AbstractCurve):
         if interval[0] < 0:
             interval = [0, 1]
         elif interval[1] >= len(self._lookup[index]):
-            interval = [
-                len(self._lookup[index]) - 2,
-                len(self._lookup[index]) - 1
-            ]
+            interval = [len(self._lookup[index]) - 2, len(self._lookup[index]) - 1]
 
         low = self._lookup[index][interval[0]][1]
         high = self._lookup[index][interval[1]][1]
@@ -566,7 +548,5 @@ class CubicBezierSpline(AbstractCurve):
         # Use generic clamp to avoid function call overhead in this call which
         # is time sensitive.
         return util.clamp(
-            low.y + (x - low.x) * ((high.y - low.y) / (high.x - low.x)),
-            -1.0,
-            1.0
+            low.y + (x - low.x) * ((high.y - low.y) / (high.x - low.x)), -1.0, 1.0
         )

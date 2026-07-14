@@ -2,6 +2,8 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import collections
 import logging
 import threading
@@ -11,11 +13,9 @@ import dill
 from gremlin import (
     error,
     shared_state,
-    signal,
 )
-from vjoy.vjoy import VJoyProxy
 from vjoy import vjoy
-
+from vjoy.vjoy import VJoyProxy
 
 _joystick_devices: dict[uuid.UUID, dill.DeviceSummary] = collections.OrderedDict()
 _joystick_init_lock = threading.Lock()
@@ -36,9 +36,7 @@ def joystick_devices_initialization() -> None:
 
     syslog = logging.getLogger("system")
     syslog.info("Initializing joystick devices")
-    syslog.debug(
-        "{:d} joysticks detected".format(dill.DILL.get_device_count())
-    )
+    syslog.debug(f"{dill.DILL.get_device_count():d} joysticks detected")
 
     # Process all connected devices in order to properly initialize the
     # device registry.
@@ -57,17 +55,11 @@ def joystick_devices_initialization() -> None:
     for new_dev in devices:
         if new_dev.device_guid.uuid not in _joystick_devices:
             device_added = True
-            syslog.debug("Added: name={} guid={}".format(
-                new_dev.name,
-                new_dev.device_guid
-            ))
+            syslog.debug(f"Added: name={new_dev.name} guid={new_dev.device_guid}")
     for old_dev in _joystick_devices.values():
         if old_dev not in devices:
             device_removed = True
-            syslog.debug("Removed: name={} guid={}".format(
-                old_dev.name,
-                old_dev.device_guid
-            ))
+            syslog.debug(f"Removed: name={old_dev.name} guid={old_dev.device_guid}")
 
     # Terminate if no change occurred.
     if not device_added and not device_removed:
@@ -83,9 +75,7 @@ def joystick_devices_initialization() -> None:
     vjoy_lookup = {}
     for dev in [dev for dev in devices if dev.is_virtual]:
         hash_value = (dev.axis_count, dev.button_count, dev.hat_count)
-        syslog.debug(
-            "vJoy guid={}: {}".format(dev.device_guid, hash_value)
-        )
+        syslog.debug(f"vJoy guid={dev.device_guid}: {hash_value}")
 
         # Only unique combinations of axes, buttons, and hats are allowed
         # for vJoy devices.
@@ -108,11 +98,7 @@ def joystick_devices_initialization() -> None:
 
         # Compute a hash for the vJoy device and match it against the DILL
         # device hashes.
-        hash_value = (
-            vjoy.axis_count(i),
-            vjoy.button_count(i),
-            vjoy.hat_count(i)
-        )
+        hash_value = (vjoy.axis_count(i), vjoy.button_count(i), vjoy.hat_count(i))
 
         if not vjoy.hat_configuration_valid(i):
             raise error.GremlinError(
@@ -139,13 +125,11 @@ def joystick_devices_initialization() -> None:
     # are made. Order the devices such that vJoy devices are last and the
     # physical devices are ordered by name.
     sorted_devices = sorted(
-        [dev for dev in devices if not dev.is_virtual],
-        key=lambda x: x.name
+        [dev for dev in devices if not dev.is_virtual], key=lambda x: x.name
     )
-    sorted_devices.extend(sorted(
-        [dev for dev in devices if dev.is_virtual],
-        key=lambda x: x.vjoy_id
-    ))
+    sorted_devices.extend(
+        sorted([dev for dev in devices if dev.is_virtual], key=lambda x: x.vjoy_id)
+    )
     # This is an ordered dict, that allows access via device uuid but its
     # values are enumerate in insertion order.
     _joystick_devices.clear()
@@ -193,7 +177,8 @@ def input_devices() -> list[dill.DeviceSummary]:
         vjoy_as_input = shared_state.current_profile.settings.vjoy_as_input
 
     return [
-        dev for dev in _joystick_devices.values()
+        dev
+        for dev in _joystick_devices.values()
         if not dev.is_virtual or vjoy_as_input.get(dev.vjoy_id, False)
     ]
 
@@ -208,10 +193,8 @@ def output_vjoy_devices() -> list[dill.DeviceSummary]:
     if shared_state.current_profile:
         vjoy_as_input = shared_state.current_profile.settings.vjoy_as_input
 
-    return [
-        dev for dev in vjoy_devices()
-        if not vjoy_as_input.get(dev.vjoy_id, False)
-    ]
+    return [dev for dev in vjoy_devices() if not vjoy_as_input.get(dev.vjoy_id, False)]
+
 
 def device_for_uuid(device_uuid: uuid.UUID) -> dill.DeviceSummary:
     return _joystick_devices[device_uuid]

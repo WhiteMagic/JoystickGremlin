@@ -5,21 +5,17 @@
 from __future__ import annotations
 
 import json
-import jsonschema
 import logging
-from typing import (
-    Any,
-    Dict,
-    List,
-    Tuple,
-)
 import uuid
+from typing import Any
+
+import jsonschema
 
 from dill import (
-    DeviceSummary,
     DILL,
     GUID,
-    UUID_LogicalDevice
+    DeviceSummary,
+    UUID_LogicalDevice,
 )
 from gremlin import (
     common,
@@ -31,58 +27,50 @@ from gremlin import (
 )
 from gremlin.config import Configuration
 
-
 _device_database_schema = {
-  "type": "object",
-  "required": ["revision", "devices", "mapping"],
-  "additionalProperties": False,
-  "properties": {
-    "revision": {
-      "type": "integer",
+    "type": "object",
+    "required": ["revision", "devices", "mapping"],
+    "additionalProperties": False,
+    "properties": {
+        "revision": {
+            "type": "integer",
+        },
+        "devices": {"type": "array", "items": {"$ref": "#/$defs/device"}},
+        "mapping": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#/$defs/mappingEntry"},
+        },
     },
-    "devices": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/device" }
+    "$defs": {
+        "device": {
+            "type": "object",
+            "required": ["vendor_id", "product_id", "name", "mapping"],
+            "additionalProperties": False,
+            "properties": {
+                "vendor_id": {"type": "integer"},
+                "product_id": {"type": "integer"},
+                "name": {"type": "string", "minLength": 1},
+                "mapping": {"type": "string", "minLength": 1},
+            },
+        },
+        "mappingEntry": {
+            "type": "object",
+            "additionalProperties": False,
+            "patternProperties": {
+                "^Axis [1-8]$": {"type": "string"},
+                "^Button [1-9]\\d*$": {"type": "string"},
+                "^Hat [1-4]$": {"type": "string"},
+            },
+        },
     },
-    "mapping": {
-      "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/mappingEntry" }
-    }
-  },
-  "$defs": {
-    "device": {
-      "type": "object",
-      "required": ["vendor_id", "product_id", "name", "mapping"],
-      "additionalProperties": False,
-      "properties": {
-        "vendor_id": { "type": "integer" },
-        "product_id": { "type": "integer" },
-        "name": { "type": "string", "minLength": 1 },
-        "mapping": { "type": "string", "minLength": 1 }
-      }
-    },
-    "mappingEntry": {
-      "type": "object",
-      "additionalProperties": False,
-      "patternProperties": {
-        "^Axis [1-8]$": { "type": "string" },
-        "^Button [1-9]\\d*$": { "type": "string" },
-        "^Hat [1-4]$": { "type": "string" }
-      }
-    }
-  }
 }
 
 
 class DeviceMapping:
-
-    def __init__(
-        self,
-        input_map: Dict[Tuple[types.InputType, int], Any]
-    ) -> None:
+    def __init__(self, input_map: dict[tuple[types.InputType, int], Any]) -> None:
         self._input_map = input_map
 
-    def input_name(self, identifier: Tuple[types.InputType, int]) -> str:
+    def input_name(self, identifier: tuple[types.InputType, int]) -> str:
         """Returns the label of an input formatted based on user preferences.
 
         Name formatting is based on the global configuration option and the
@@ -116,7 +104,6 @@ class DeviceMapping:
 
 
 class DeviceDatabase(metaclass=common.SingletonMetaclass):
-
     """Provides device specific names of axis, buttons, and hats if available
     for a given device.
     """
@@ -140,7 +127,7 @@ class DeviceDatabase(metaclass=common.SingletonMetaclass):
                 f"There was an error loading device database {db_file}: {e}"
             )
 
-    def _parse_database(self, json_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _parse_database(self, json_data: dict[str, Any]) -> dict[str, Any]:
         """Processes the raw JSON data for internal usage.
 
         Converts string based input identifiers into tuples of
@@ -155,7 +142,7 @@ class DeviceDatabase(metaclass=common.SingletonMetaclass):
         processed_data = {
             "revision": json_data["revision"],
             "devices": json_data["devices"],
-            "mapping": {}
+            "mapping": {},
         }
 
         # Split string identifier into its constituent parts and build the
@@ -166,24 +153,21 @@ class DeviceDatabase(metaclass=common.SingletonMetaclass):
                 type_string, index_string = key.split(" ")
                 identifier = (
                     types.InputType.to_enum(type_string.lower()),
-                    int(index_string)
+                    int(index_string),
                 )
                 processed_data["mapping"][device_name][identifier] = value
 
         return processed_data
 
     def _device_matches(
-        self,
-        device_data: Dict[str, Any],
-        device: DeviceSummary
+        self, device_data: dict[str, Any], device: DeviceSummary
     ) -> bool:
-        return device_data["product_id"] == device.product_id and \
-            device_data["vendor_id"] == device.vendor_id
+        return (
+            device_data["product_id"] == device.product_id
+            and device_data["vendor_id"] == device.vendor_id
+        )
 
-    def get_mapping_by_uuid(
-        self,
-        device_uuid: uuid.UUID
-    ) -> DeviceMapping | None:
+    def get_mapping_by_uuid(self, device_uuid: uuid.UUID) -> DeviceMapping | None:
         """Returns: DeviceMapping object for the given device GUID.
 
         Args:
@@ -220,11 +204,9 @@ class DeviceDatabase(metaclass=common.SingletonMetaclass):
 
 
 class JoystickWrapper:
-
     """Wraps joysticks and presents an API similar to vjoy."""
 
     class Input:
-
         """Represents a joystick input."""
 
         def __init__(self, joystick_guid: uuid.UUID, index: int) -> None:
@@ -247,7 +229,6 @@ class JoystickWrapper:
             self._value = value
 
     class Axis(Input):
-
         """Represents a single axis of a joystick."""
 
         def __init__(self, joystick_guid: uuid.UUID, index: int) -> None:
@@ -263,7 +244,6 @@ class JoystickWrapper:
             return self._value if self._value else 0.0
 
     class Button(Input):
-
         """Represents a single button of a joystick."""
 
         def __init__(self, joystick_guid: uuid.UUID, index: int) -> None:
@@ -276,7 +256,6 @@ class JoystickWrapper:
             return self._value
 
     class Hat(Input):
-
         """Represents a single hat of a joystick,"""
 
         def __init__(self, joystick_guid: uuid.UUID, index: int) -> None:
@@ -435,7 +414,7 @@ class JoystickWrapper:
         """
         return self._info.hat_count
 
-    def _init_axes(self) -> Dict[int, JoystickWrapper.Axis]:
+    def _init_axes(self) -> dict[int, JoystickWrapper.Axis]:
         """Initializes the axes of the joystick.
 
         Returns:
@@ -448,39 +427,41 @@ class JoystickWrapper:
             axes[aid] = JoystickWrapper.Axis(self._device_guid, aid)
         return axes
 
-    def _init_buttons(self) -> List[JoystickWrapper.Button]:
+    def _init_buttons(self) -> list[JoystickWrapper.Button]:
         """Initializes the buttons of the joystick.
 
         Returns:
             list of JoystickWrapper.Button objects
         """
-        buttons = [None,]
+        buttons = [
+            None,
+        ]
         for i in range(self._info.button_count):
-            buttons.append(JoystickWrapper.Button(self._device_guid, i+1))
+            buttons.append(JoystickWrapper.Button(self._device_guid, i + 1))
         return buttons
 
-    def _init_hats(self) -> List[JoystickWrapper.Hat]:
+    def _init_hats(self) -> list[JoystickWrapper.Hat]:
         """Initializes the hats of the joystick.
 
         Returns:
             list of JoystickWrapper.Hat objects
         """
-        hats = [None,]
+        hats = [
+            None,
+        ]
         for i in range(self._info.hat_count):
-            hats.append(JoystickWrapper.Hat(self._device_guid, i+1))
+            hats.append(JoystickWrapper.Hat(self._device_guid, i + 1))
         return hats
 
 
 class Joystick(metaclass=common.SingletonMetaclass):
-
     """Allows read access to joystick state information."""
 
     # Dictionary of initialized joystick devices
     devices = {}
 
     def __getitem__(
-        self,
-        device_guid: uuid.UUID
+        self, device_guid: uuid.UUID
     ) -> logical_device.LogicalDevice | JoystickWrapper:
         """Returns the requested joystick instance.
 
@@ -511,7 +492,6 @@ class Joystick(metaclass=common.SingletonMetaclass):
 
 
 class Keyboard(metaclass=common.SingletonMetaclass):
-
     """Provides access to the keyboard state."""
 
     def __init__(self) -> None:

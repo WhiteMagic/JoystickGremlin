@@ -4,14 +4,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import time
 import uuid
+from collections.abc import Callable
 
-from gremlin.base_classes import AbstractActionData, UserFeedback
-from gremlin.types import InputType
+from gremlin.base_classes import (
+    AbstractActionData,
+    UserFeedback,
+)
 from gremlin.profile import InputItemBinding
-
+from gremlin.types import InputType
 
 AnalysisFunction = Callable[[InputItemBinding, InputType], list[UserFeedback]]
 
@@ -25,14 +27,14 @@ TAG_VJOY = "map-to-vjoy"
 
 
 _CACHE_TTL = 0.25
-_feedback_cache : dict[uuid.UUID, tuple[float, list[UserFeedback]]] = {}
+_feedback_cache: dict[uuid.UUID, tuple[float, list[UserFeedback]]] = {}
 
 
 def action_sequence_feedback(binding: InputItemBinding) -> list[UserFeedback]:
     analysis_functions = [
         _dual_axis_response_curve_analysis,
         _map_to_mouse_analysis,
-        _vjoy_analysis
+        _vjoy_analysis,
     ]
 
     cache_key = binding.root_action.id if binding.root_action else uuid.UUID(int=0)
@@ -51,10 +53,8 @@ def action_sequence_feedback(binding: InputItemBinding) -> list[UserFeedback]:
     return feedback
 
 
-
 def _map_to_mouse_analysis(
-    paths: list[list[AbstractActionData]],
-    behavior: InputType
+    paths: list[list[AbstractActionData]], behavior: InputType
 ) -> list[UserFeedback]:
     """Verifies the following aspects relating to the Map to Mouse action:
 
@@ -74,19 +74,21 @@ def _map_to_mouse_analysis(
             dadz_after = TAG_DUAL_AXIS_DEADZONE in path_tags[mm_index:]
 
             if rc_after or dadz_after:
-                feedback.append(UserFeedback(
-                    UserFeedback.FeedbackType.Warning,
-                    "Actions are executed sequentially, the Map to Mouse action "
-                    "will not be affected by actions after it."
-                ))
+                feedback.append(
+                    UserFeedback(
+                        UserFeedback.FeedbackType.Warning,
+                        "Actions are executed sequentially, the Map to Mouse action "
+                        "will not be affected by actions after it.",
+                    )
+                )
         except ValueError:
             continue
 
     return feedback
 
+
 def _vjoy_analysis(
-    paths: list[list[AbstractActionData]],
-    behavior: InputType
+    paths: list[list[AbstractActionData]], behavior: InputType
 ) -> list[UserFeedback]:
     """Verifies the following aspects relating to the Map to vJoy action:
 
@@ -107,11 +109,13 @@ def _vjoy_analysis(
             dadz_after = TAG_DUAL_AXIS_DEADZONE in path_tags[vjoy_index:]
 
             if rc_after or dadz_after:
-                feedback.append(UserFeedback(
-                    UserFeedback.FeedbackType.Warning,
-                    "Actions are executed sequentially, the Map to vJoy action "
-                    "will not be affected by actions after it."
-                ))
+                feedback.append(
+                    UserFeedback(
+                        UserFeedback.FeedbackType.Warning,
+                        "Actions are executed sequentially, the Map to vJoy action "
+                        "will not be affected by actions after it.",
+                    )
+                )
         except ValueError:
             continue
 
@@ -119,8 +123,7 @@ def _vjoy_analysis(
 
 
 def _dual_axis_response_curve_analysis(
-    paths: list[list[AbstractActionData]],
-    behavior: InputType
+    paths: list[list[AbstractActionData]], behavior: InputType
 ) -> list[UserFeedback]:
     """Verifies the following aspects relating to the Dual Axis Deadzone action:
 
@@ -135,11 +138,13 @@ def _dual_axis_response_curve_analysis(
         path_tags = _path_as_tags(path)
 
         if TAG_RESPONSE_CURVE in path_tags and TAG_DUAL_AXIS_DEADZONE in path_tags:
-            feedback.append(UserFeedback(
-                UserFeedback.FeedbackType.Info,
-                "Applying deadzones both in \"Response Curve\" and "
-                "\"Dual Axis Deadzone\" actions may lead to unexpected results."
-            ))
+            feedback.append(
+                UserFeedback(
+                    UserFeedback.FeedbackType.Info,
+                    'Applying deadzones both in "Response Curve" and '
+                    '"Dual Axis Deadzone" actions may lead to unexpected results.',
+                )
+            )
 
     return feedback
 
@@ -148,9 +153,7 @@ def _path_as_tags(path: list[AbstractActionData]) -> list[str]:
     return [action.tag for action in path]
 
 
-def _extract_sequences(
-    root: AbstractActionData
-) -> list[list[AbstractActionData]]:
+def _extract_sequences(root: AbstractActionData) -> list[list[AbstractActionData]]:
     complete_paths = []
 
     # Each entry in the stack has the following information:
@@ -173,12 +176,8 @@ def _extract_sequences(
                     if not siblings:
                         complete_paths.append(branch_path)
                     else:
-                        stack.append(
-                            (siblings[0], branch_path, siblings[1:])
-                        )
+                        stack.append((siblings[0], branch_path, siblings[1:]))
                 else:
-                    stack.append(
-                        (container[0], branch_path, container[1:] + siblings)
-                    )
+                    stack.append((container[0], branch_path, container[1:] + siblings))
 
     return complete_paths

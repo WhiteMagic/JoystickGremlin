@@ -6,19 +6,18 @@
 Auto-mapping from physical DirectInput to vJoy devices.
 """
 
-from collections.abc import Iterable
+from __future__ import annotations
+
 import dataclasses
 import itertools
-from typing import (
-    List,
-    Self,
-)
+from collections.abc import Iterable
+from typing import Self
 
+import dill
 from action_plugins import (
     map_to_vjoy,
     root,
 )
-import dill
 from gremlin import (
     device_initialization,
     plugin_manager,
@@ -30,7 +29,6 @@ from gremlin import (
 
 @dataclasses.dataclass
 class AutoMapperOptions:
-
     """Options for the auto-mapper."""
 
     mode: str = "Default"
@@ -39,7 +37,6 @@ class AutoMapperOptions:
 
 
 class AutoMapper:
-
     """Generates "Map to vJoy" actions for physical input devices.
 
     The primary purpose is to help users with new profiles get started with
@@ -78,8 +75,8 @@ class AutoMapper:
 
     def generate_mappings(
         self,
-        input_devices_guids: List[dill.GUID],
-        output_vjoy_ids: List[int],
+        input_devices_guids: list[dill.GUID],
+        output_vjoy_ids: list[int],
         options: AutoMapperOptions,
     ) -> str:
         """Generates mappings for the profile.
@@ -129,9 +126,7 @@ class AutoMapper:
         return self._create_mappings_report()
 
     def _prepare_profile(
-        self,
-        input_devices: list[dill.DeviceSummary],
-        options: AutoMapperOptions
+        self, input_devices: list[dill.DeviceSummary], options: AutoMapperOptions
     ) -> None:
         """Prepares the profile for an auto-map run."""
         if options.overwrite_used_inputs:
@@ -207,8 +202,7 @@ class AutoMapper:
         prepared profile."""
         used_vjoy_inputs = []
         connected_device_uuids = [
-            dev.device_guid.uuid for dev
-            in device_initialization.physical_devices()
+            dev.device_guid.uuid for dev in device_initialization.physical_devices()
         ]
         for device_uuid, input_items in self._profile.inputs.items():
             if device_uuid not in connected_device_uuids:
@@ -276,9 +270,7 @@ class AutoMapper:
                     yield vjoy_hat
 
     def _create_new_mapping(
-        self,
-        physical_input: profile.InputItem,
-        vjoy_input: types.VjoyInput
+        self, physical_input: profile.InputItem, vjoy_input: types.VjoyInput
     ) -> None:
         """Creates a new mapping from physical_input to vjoy_input."""
         vjoy_action = plugin_manager.PluginManager().create_instance(

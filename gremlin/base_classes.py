@@ -4,30 +4,48 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod, ABC
 import copy
-from enum import Enum
 import logging
 import time
-from typing import Any, Generic, List, Self, Tuple, Type, TypeVar, TYPE_CHECKING, Optional
 import uuid
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from enum import Enum
+from typing import (
+    TYPE_CHECKING,
+    Generic,
+    Self,
+    TypeVar,
+)
 from xml.etree import ElementTree
 
-from gremlin import util, event_handler
-from gremlin.error import GremlinError, MissingImplementationError
+from gremlin import (
+    event_handler,
+    util,
+)
+from gremlin.error import (
+    GremlinError,
+    MissingImplementationError,
+)
 from gremlin.profile import Library
-from gremlin.types import ActionActivationMode, ActionProperty, InputType, \
-    PropertyType, DataInsertionMode, DataCreationMode
+from gremlin.types import (
+    ActionActivationMode,
+    ActionProperty,
+    DataCreationMode,
+    DataInsertionMode,
+    HatDirection,
+    InputType,
+    PropertyType,
+)
 
 if TYPE_CHECKING:
     from gremlin.event_handler import Event
-    from gremlin.ui.action_model import ActionModel
 
 
 class UserFeedback:
-
     class FeedbackType(Enum):
-
         Info = 1
         Warning = 2
         Error = 3
@@ -46,10 +64,9 @@ class UserFeedback:
 
 
 class Value:
-
     """Represents an input value, keeping track of raw and "seen" value."""
 
-    def __init__(self, raw: Any) -> None:
+    def __init__(self, raw: bool | float | HatDirection) -> None:
         """Creates a new value and initializes it.
 
         Args:
@@ -59,7 +76,7 @@ class Value:
         self._current = raw
 
     @property
-    def raw(self) -> Any:
+    def raw(self) -> bool | float | HatDirection:
         """Returns the raw unmodified value.
 
         Returns:
@@ -68,7 +85,7 @@ class Value:
         return self._raw
 
     @property
-    def current(self) -> Any:
+    def current(self) -> bool | float | HatDirection:
         """Returns the current, potentially, modified value.
 
         Returns:
@@ -77,7 +94,7 @@ class Value:
         return self._current
 
     @current.setter
-    def current(self, current: Any) -> None:
+    def current(self, current: bool | float | HatDirection) -> None:
         """Sets the current value which may differ from the raw one.
 
         Args:
@@ -87,22 +104,21 @@ class Value:
 
 
 class AbstractActionData(ABC):
-
     """Base class holding the data of all action related data classes."""
 
     # Fields expected to be present in every action plugin. These define
     # information required by the plugin manager as well as UI and behavior
     # logic.
-    version : int
-    name : str
-    tag : str
-    icon : str
-    functor: Type[AbstractFunctor]
+    version: int
+    name: str
+    tag: str
+    icon: str
+    functor: type[AbstractFunctor]
     model = None
-    properties: Tuple[ActionProperty, ...] = ()
-    input_types: Tuple[InputType, ...] = ()
+    properties: tuple[ActionProperty, ...] = ()
+    input_types: tuple[InputType, ...] = ()
 
-    def __init__(self, behavior_type: InputType=InputType.JoystickButton) -> None:
+    def __init__(self, behavior_type: InputType = InputType.JoystickButton) -> None:
         """Creates a new action data instance.
 
         Args:
@@ -126,9 +142,7 @@ class AbstractActionData(ABC):
 
     @classmethod
     def create(
-            cls,
-            mode: DataCreationMode,
-            behavior_type: InputType=InputType.JoystickButton
+        cls, mode: DataCreationMode, behavior_type: InputType = InputType.JoystickButton
     ) -> AbstractActionData:
         """Creates a new instance with the given creation mode.
 
@@ -144,10 +158,10 @@ class AbstractActionData(ABC):
             obj.action_label = cls.name
             return obj
         else:
-            obj =  cls._do_create(mode, behavior_type)
+            obj = cls._do_create(mode, behavior_type)
             obj.action_label = cls.name
             if obj is None:
-                raise GremlinError(f"Unable to create an object")
+                raise GremlinError("Unable to create an object")
             return obj
 
     @classmethod
@@ -204,11 +218,7 @@ class AbstractActionData(ABC):
     def activation_mode(self, value: ActionActivationMode) -> None:
         self._activation_mode = value
 
-    def from_xml(
-            self,
-            node: ElementTree.Element,
-            library: Library
-    ) -> None:
+    def from_xml(self, node: ElementTree.Element, library: Library) -> None:
         """Populates the instance's values with the content of the XML node.
 
         Calls the implementation specific serialization routine.
@@ -225,7 +235,7 @@ class AbstractActionData(ABC):
         )
         self._from_xml(node, library)
 
-    def to_xml(self) -> Optional[ElementTree.Element]:
+    def to_xml(self) -> ElementTree.Element | None:
         """Returns an XML node representing the instance's contents.
 
         Calls the implementation specific serialization routine.
@@ -241,14 +251,18 @@ class AbstractActionData(ABC):
 
         node = self._to_xml()
         if node is not None:
-            node.append(util.create_property_node(
-                "action-label", self.action_label, PropertyType.String
-            ))
-            node.append(util.create_property_node(
-                "activation-mode",
-                self.activation_mode,
-                PropertyType.ActionActivationMode
-            ))
+            node.append(
+                util.create_property_node(
+                    "action-label", self.action_label, PropertyType.String
+                )
+            )
+            node.append(
+                util.create_property_node(
+                    "activation-mode",
+                    self.activation_mode,
+                    PropertyType.ActionActivationMode,
+                )
+            )
         else:
             print(f"Received invalid node in {self.id}")
         return node
@@ -259,21 +273,18 @@ class AbstractActionData(ABC):
         Returns:
             True if the instance is in a valid state, False otherwise
         """
-        return not any([
-            uf.feedback_type == UserFeedback.FeedbackType.Error for
-            uf in self.user_feedback()
-        ])
-
+        return not any(
+            [
+                uf.feedback_type == UserFeedback.FeedbackType.Error
+                for uf in self.user_feedback()
+            ]
+        )
 
     # Interface that all actions have to support, even if only an empty noop
     # implementation is provided.
 
     @abstractmethod
-    def _from_xml(
-            self,
-            node: ElementTree.Element,
-            library: Library
-    ) -> None:
+    def _from_xml(self, node: ElementTree.Element, library: Library) -> None:
         """Populates the instance's values with the content of the XML node.
 
         Args:
@@ -304,9 +315,8 @@ class AbstractActionData(ABC):
         pass
 
     def get_actions(
-            self,
-            selector: Optional[str]=None
-    )  -> Tuple[List[AbstractActionData], List[str]]:
+        self, selector: str | None = None
+    ) -> tuple[list[AbstractActionData], list[str]]:
         """Returns all actions matching the given selector.
 
         The selector indicates the container from which to return actions. If
@@ -329,15 +339,15 @@ class AbstractActionData(ABC):
                 selectors.extend([entry] * len(new_actions))
         else:
             actions = self._get_container(selector)
-            selectors = [selector]  * len(actions)
+            selectors = [selector] * len(actions)
         return (actions, selectors)
 
     def insert_action(
-            self,
-            action: AbstractActionData,
-            selector: str,
-            mode: DataInsertionMode = DataInsertionMode.Append,
-            anchor: Optional[int]=None
+        self,
+        action: AbstractActionData,
+        selector: str,
+        mode: DataInsertionMode = DataInsertionMode.Append,
+        anchor: int | None = None,
     ) -> None:
         """Inserts an action as a child of the current object.
 
@@ -362,8 +372,8 @@ class AbstractActionData(ABC):
         else:
             if not (0 <= anchor <= len(container)):
                 raise GremlinError(
-                    f"{self.name}: specified anchor index '{anchor}' is " +
-                    f"not present in container '{selector}'"
+                    f"{self.name}: specified anchor index '{anchor}' is "
+                    + f"not present in container '{selector}'"
                 )
             if mode == DataInsertionMode.Append:
                 anchor += 1
@@ -384,8 +394,8 @@ class AbstractActionData(ABC):
             del container[index]
         else:
             raise GremlinError(
-                f"{self.name}: attempting to remove action with invalid " +
-                f"index ({index}) from container '{selector}'"
+                f"{self.name}: attempting to remove action with invalid "
+                + f"index ({index}) from container '{selector}'"
             )
 
     def clone(self) -> AbstractActionData:
@@ -415,11 +425,7 @@ class AbstractActionData(ABC):
         return False
 
     @classmethod
-    def _do_create(
-            cls,
-            mode: DataCreationMode,
-            behavior_type: InputType
-    ) -> Self:
+    def _do_create(cls, mode: DataCreationMode, behavior_type: InputType) -> Self:
         """Allows customization of instance creation in derived classes.
 
         Args:
@@ -430,10 +436,11 @@ class AbstractActionData(ABC):
             Newly created instance
         """
         raise MissingImplementationError(
-            f"{cls._do_create.__name__} not implemented by derived class {cls.__name__}")
+            f"{cls._do_create.__name__} not implemented by derived class {cls.__name__}"
+        )
 
     @abstractmethod
-    def _valid_selectors(self) -> List[str]:
+    def _valid_selectors(self) -> list[str]:
         """Returns the list of valid selectors.
 
         Returns:
@@ -442,7 +449,7 @@ class AbstractActionData(ABC):
         pass
 
     @abstractmethod
-    def _get_container(self, selector: str) -> List[AbstractActionData]:
+    def _get_container(self, selector: str) -> list[AbstractActionData]:
         """Returns the list corresponding to the selector.
 
         Args:
@@ -455,9 +462,7 @@ class AbstractActionData(ABC):
 
     @abstractmethod
     def _handle_behavior_change(
-        self,
-        old_behavior: InputType,
-        new_behavior: InputType
+        self, old_behavior: InputType, new_behavior: InputType
     ) -> None:
         """Handles changing of the behavior type of the action.
 
@@ -472,9 +477,7 @@ class AbstractActionData(ABC):
     # General utility functions, supporting the implementation of actions.
 
     def _validate_selector(
-            self,
-            selector: Optional[str],
-            none_is_valid: bool=True
+        self, selector: str | None, none_is_valid: bool = True
     ) -> None:
         """Verifies that a provided selector is valid.
 
@@ -493,41 +496,11 @@ class AbstractActionData(ABC):
                 f"{self.name}: provided selector '{selector}' is invalid"
             )
 
-    def _remove_entry_from_list(self, storage: List[Any], value: Any) -> None:
-        """Removes the provided value from the given container.
-
-        Args:
-            storage: list object from which to remove the value
-            value: the value to remove
-        """
-        if value in storage:
-            storage.remove(value)
-
-    def _insert_entry_into_list(
-        self,
-        storage: List[Any],
-        anchor: Any,
-        value: Any,
-        append: bool=True
-    ) -> None:
-        """Inserts the provided value into the given storage.
-
-        Args:
-            storage: list container into which to insert the value
-            anchor: value around which to insert the new value
-            value: new value to insert into the list
-            append: append if True, prepend if False
-        """
-        if anchor in storage:
-            index = storage.index(anchor)
-            index = index + 1 if append else index
-            storage.insert(index, value)
-
 
 T = TypeVar("T", bound="AbstractActionData")
 
-class AbstractFunctor(Generic[T], ABC):
 
+class AbstractFunctor(Generic[T], ABC):
     """Abstract base class defining the interface for functor like classes."""
 
     def __init__(self, instance: T) -> None:
@@ -548,10 +521,7 @@ class AbstractFunctor(Generic[T], ABC):
 
     @abstractmethod
     def __call__(
-            self,
-            event: Event,
-            value: Value,
-            properties: list[ActionProperty]=[]
+        self, event: Event, value: Value, properties: list[ActionProperty] = []
     ) -> None:
         """Processes the functor using the provided event and value data.
 
@@ -565,10 +535,10 @@ class AbstractFunctor(Generic[T], ABC):
 
     def _process_event(
         self,
-        functors: List[AbstractFunctor],
+        functors: list[AbstractFunctor],
         event: event_handler.Event,
         value: Value,
-        properties: list[ActionProperty]=[]
+        properties: list[ActionProperty] = [],
     ) -> None:
         """Processes the provided event data with every provided functor.
 
@@ -583,11 +553,11 @@ class AbstractFunctor(Generic[T], ABC):
             functor(event, value, properties)
 
     def _pulse_event(
-            self,
-            functors: List[AbstractFunctor],
-            event_press: event_handler.Event,
-            value_press: Value,
-            properties: List[ActionProperty] = []
+        self,
+        functors: list[AbstractFunctor],
+        event_press: event_handler.Event,
+        value_press: Value,
+        properties: list[ActionProperty] = [],
     ) -> None:
         """Processes the provided event as a pulse with every provided functor.
 
@@ -631,6 +601,6 @@ class AbstractFunctor(Generic[T], ABC):
                 return not value.current
             case _:
                 raise GremlinError(
-                    f"Invalid activation mode encountered when executing " +
-                    f"action '{self.data.id}'"
+                    "Invalid activation mode encountered when executing "
+                    + f"action '{self.data.id}'"
                 )

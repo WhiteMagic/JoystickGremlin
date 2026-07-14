@@ -6,13 +6,15 @@
 This module provides text-to-speech support via the Qt WinRT TTS backend.
 """
 
+from __future__ import annotations
+
 import dataclasses
 import enum
 from collections import deque
 
 from PySide6.QtTextToSpeech import (
     QTextToSpeech,
-    QVoice
+    QVoice,
 )
 
 from gremlin.common import SingletonMetaclass
@@ -21,17 +23,17 @@ from gremlin.types import PropertyType
 
 
 class TTSQueueMode(enum.StrEnum):
-    QueueBack  = "queue-back"
+    QueueBack = "queue-back"
     QueueFront = "queue-front"
-    Interrupt  = "interrupt"
+    Interrupt = "interrupt"
 
 
 @dataclasses.dataclass
 class TTSRequest:
-    text:   str
-    rate:   float
+    text: str
+    rate: float
     volume: float
-    pitch:  float
+    pitch: float
 
 
 class TTSManager(metaclass=SingletonMetaclass):
@@ -47,9 +49,7 @@ class TTSManager(metaclass=SingletonMetaclass):
         if self._engine is not None:
             return
         self._engine = QTextToSpeech("winrt")
-        voice_name = Configuration().value(
-            "action", "text-to-speech", "voice"
-        )
+        voice_name = Configuration().value("action", "text-to-speech", "voice")
         if voice_name:
             for voice in self._engine.availableVoices():
                 if voice.name() == voice_name:
@@ -108,6 +108,7 @@ class TTSManager(metaclass=SingletonMetaclass):
         self._engine.setVolume(self._current_request.volume)
         self._engine.setPitch(self._current_request.pitch)
         self._engine.say(self._current_request.text)
+
 
 Configuration().register(
     "action",

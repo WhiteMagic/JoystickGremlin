@@ -2,6 +2,8 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 from PySide6 import QtCore
 
 from gremlin import common
@@ -18,7 +20,6 @@ def display_error(message: str, details: str = "") -> None:
 
 @common.SingletonDecorator
 class Signal(QtCore.QObject):
-
     reloadUi = QtCore.Signal()
 
     reloadCurrentInputItem = QtCore.Signal()

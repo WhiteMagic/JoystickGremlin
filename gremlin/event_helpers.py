@@ -4,12 +4,12 @@
 
 from __future__ import annotations
 
+import logging
+import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-import logging
-from typing import Tuple, TYPE_CHECKING
-import uuid
+from typing import TYPE_CHECKING
 
 from PySide6 import QtCore
 
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 
 
 class ModeMatch(Enum):
-
     """Defines how mode matching is performed for button release actions."""
 
     IgnoreMode = 1
@@ -35,7 +34,6 @@ class ModeMatch(Enum):
 
 
 class ReleaseMode(Enum):
-
     """Defines how button release actions are triggered."""
 
     OnPress = 1
@@ -44,19 +42,17 @@ class ReleaseMode(Enum):
 
 @dataclass
 class ButtonReleaseEntry:
-
-    callback : Callable[[event_handler.Event], None]
-    registration_mode : str
-    mode_match : ModeMatch
-    release_mode : ReleaseMode
+    callback: Callable[[event_handler.Event], None]
+    registration_mode: str
+    mode_match: ModeMatch
+    release_mode: ReleaseMode
 
 
 @dataclass
 class RegistryKey:
-
-    device_uuid : uuid.UUID
+    device_uuid: uuid.UUID
     input_type: InputType
-    input_id : int
+    input_id: int
 
     @classmethod
     def from_event(cls, event: event_handler.Event) -> RegistryKey:
@@ -68,11 +64,7 @@ class RegistryKey:
         Returns:
             The corresponding RegistryKey instance
         """
-        return cls(
-            event.device_guid,
-            event.event_type,
-            event.identifier
-        )
+        return cls(event.device_guid, event.event_type, event.identifier)
 
     def __hash__(self) -> int:
         return hash((self.device_uuid, self.input_type, self.input_id))
@@ -80,7 +72,6 @@ class RegistryKey:
 
 @common.SingletonDecorator
 class ButtonReleaseActions(QtCore.QObject):
-
     """Ensures a desired action is run when a button is released.
 
     Registered actions are executed by the EventHandler class after at the end
@@ -102,7 +93,7 @@ class ButtonReleaseActions(QtCore.QObject):
         self,
         callback: Callable[[event_handler.Event], None],
         physical_event: event_handler.Event,
-        mode_match: ModeMatch=ModeMatch.IgnoreMode
+        mode_match: ModeMatch = ModeMatch.IgnoreMode,
     ) -> None:
         """Registers a callback with the system.
 
@@ -118,18 +109,15 @@ class ButtonReleaseActions(QtCore.QObject):
         # mode_match argument.
         self._registry[key].append(
             ButtonReleaseEntry(
-                callback,
-                physical_event.mode,
-                mode_match,
-                ReleaseMode.OnRelease
+                callback, physical_event.mode, mode_match, ReleaseMode.OnRelease
             )
         )
 
     def register_vjoy_button_release(
         self,
-        vjoy_input: Tuple[int, int],
+        vjoy_input: tuple[int, int],
         physical_event: event_handler.Event,
-        activate_on_press: bool
+        activate_on_press: bool,
     ) -> None:
         """Registers a physical and vjoy button pair for tracking.
 
@@ -157,7 +145,7 @@ class ButtonReleaseActions(QtCore.QObject):
                 lambda _event: self._release_vjoy_callback_prototype(vjoy_input),
                 physical_event.mode,
                 ModeMatch.DifferentMode,
-                ReleaseMode.OnPress if activate_on_press else ReleaseMode.OnRelease
+                ReleaseMode.OnPress if activate_on_press else ReleaseMode.OnRelease,
             )
         )
 
@@ -165,7 +153,7 @@ class ButtonReleaseActions(QtCore.QObject):
         self,
         logical_button_id: int,
         physical_event: event_handler.Event,
-        activate_on_press: bool
+        activate_on_press: bool,
     ) -> None:
         key = RegistryKey.from_event(physical_event)
         if key not in self._registry:
@@ -180,7 +168,7 @@ class ButtonReleaseActions(QtCore.QObject):
                 ),
                 physical_event.mode,
                 ModeMatch.DifferentMode,
-                ReleaseMode.OnPress if activate_on_press else ReleaseMode.OnRelease
+                ReleaseMode.OnPress if activate_on_press else ReleaseMode.OnRelease,
             )
         )
 
@@ -209,14 +197,15 @@ class ButtonReleaseActions(QtCore.QObject):
                 case ModeMatch.MatchMode:
                     run_callback = self._current_mode == entry.registration_mode
 
-            if run_callback and \
-                    event.is_pressed == (entry.release_mode == ReleaseMode.OnPress):
+            if run_callback and event.is_pressed == (
+                entry.release_mode == ReleaseMode.OnPress
+            ):
                 entry.callback(event)
             else:
                 new_list.append(entry)
         self._registry[key] = new_list
 
-    def _release_vjoy_callback_prototype(self, vjoy_input: Tuple[int, int]) -> None:
+    def _release_vjoy_callback_prototype(self, vjoy_input: tuple[int, int]) -> None:
         """Prototype of a button release callback, used with lambdas.
 
         Args:
@@ -224,13 +213,14 @@ class ButtonReleaseActions(QtCore.QObject):
         """
         vjoy = VJoyProxy()
         # Check if the button is valid otherwise we cause Gremlin to crash
-        if vjoy_input[0] in vjoy.vjoy_devices \
-                and vjoy[vjoy_input[0]].is_button_valid(vjoy_input[1]):
+        if vjoy_input[0] in vjoy.vjoy_devices and vjoy[vjoy_input[0]].is_button_valid(
+            vjoy_input[1]
+        ):
             vjoy[vjoy_input[0]].button(vjoy_input[1]).is_pressed = False
         else:
             logging.getLogger("system").warning(
-                f"Attempted to use non existent button: " +
-                f"vJoy {vjoy_input[0]:d} button {vjoy_input[1]:d}"
+                "Attempted to use non existent button: "
+                + f"vJoy {vjoy_input[0]:d} button {vjoy_input[1]:d}"
             )
 
     def _release_logical_device_callback_prototype(self, input_id: int) -> None:
@@ -245,8 +235,8 @@ class ButtonReleaseActions(QtCore.QObject):
             ld[identifier].update(False)
         else:
             logging.getLogger("system").warning(
-                f"Attempted to use non existent button: " +
-                f"Logical Device button {input_id}."
+                "Attempted to use non existent button: "
+                + f"Logical Device button {input_id}."
             )
 
     def _mode_changed_cb(self, mode: str) -> None:

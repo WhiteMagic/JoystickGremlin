@@ -51,8 +51,7 @@ INPUT_KEYBOARD = 1
 
 
 class Vector2:
-
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float, y: float) -> None:
         self.x = x
         self.y = y
 
@@ -75,7 +74,7 @@ class Vector2:
         Returns:
             Unit length vector with the same direction
         """
-        magnitude = math.sqrt(self.x ** 2 + self.y ** 2)
+        magnitude = math.sqrt(self.x**2 + self.y**2)
         if magnitude < 0.00001:
             return Vector2(0, 0)
         return Vector2(self.x / magnitude, self.y / magnitude)
@@ -91,21 +90,19 @@ class Vector2:
 
 
 class MotionType(enum.Enum):
-
     """Mouse motion types available."""
 
-    Fixed = 1,
+    Fixed = 1
     Accelerated = 2
 
 
 class MouseMotion:
-
     """Base class of all mouse motion behaviors."""
 
     # Time step between calls
     delta_t = 0.01
 
-    def __init__(self, dx: float=0, dy: float=0):
+    def __init__(self, dx: float = 0, dy: float = 0) -> None:
         """Creates a new instance.
 
         Args:
@@ -165,10 +162,9 @@ class MouseMotion:
 
 
 class FixedMouseMotion(MouseMotion):
-
     """Motion generation with fixed speed."""
 
-    def __init__(self, dx: float, dy: float):
+    def __init__(self, dx: float, dy: float) -> None:
         """Creates a new instance.
 
         Args:
@@ -197,16 +193,15 @@ class FixedMouseMotion(MouseMotion):
 
 
 class AcceleratedMouseMotion(MouseMotion):
-
     """Motion generation with acceleration over time."""
 
     def __init__(
-            self,
-            direction: Vector2,
-            min_speed: float,
-            max_speed: float,
-            time_to_max_speed: float
-    ):
+        self,
+        direction: Vector2,
+        min_speed: float,
+        max_speed: float,
+        time_to_max_speed: float,
+    ) -> None:
         """Creates a new instance.
 
         Args:
@@ -239,12 +234,11 @@ class AcceleratedMouseMotion(MouseMotion):
         Args:
             direction: new direction of travel
         """
-        self.direction = direction# - 90
+        self.direction = direction
         self.dx = self.direction.x * self.current_velocity
         self.dy = self.direction.y * self.current_velocity
         self._tick_dx_value, self._tick_dx_time = self._compute_values(self.dx)
         self._tick_dy_value, self._tick_dy_time = self._compute_values(self.dy)
-
 
     def __call__(self) -> tuple[float, float]:
         """Returns the change in x and y for this point in time.
@@ -258,7 +252,7 @@ class AcceleratedMouseMotion(MouseMotion):
         # Apply acceleration to obtain next integration step values
         self.current_velocity = min(
             self.max_velocity,
-            self.current_velocity + self.acceleration * MouseMotion.delta_t
+            self.current_velocity + self.acceleration * MouseMotion.delta_t,
         )
         self.dx = self.direction.x * self.current_velocity
         self.dy = self.direction.y * self.current_velocity
@@ -271,10 +265,9 @@ class AcceleratedMouseMotion(MouseMotion):
 
 @SingletonDecorator
 class MouseController:
-
     """Centralizes sending mouse events in an organized manner."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Creates a new instance."""
         self._motion_type = MotionType.Fixed
         self._delta_generator = FixedMouseMotion(0, 0)
@@ -283,11 +276,7 @@ class MouseController:
         self._is_running = False
         self._thread = threading.Thread(target=self._control_loop)
 
-    def set_absolute_motion(
-            self,
-            dx: int|None=None,
-            dy: int|None=None
-    ) -> None:
+    def set_absolute_motion(self, dx: int | None = None, dy: int | None = None) -> None:
         """Configures a motion using absolute velocities.
 
         If dx / dy are set to None their values will not be updated.
@@ -304,17 +293,16 @@ class MouseController:
         else:
             self._motion_type = MotionType.Fixed
             self._delta_generator = FixedMouseMotion(
-                dx if dx is not None else 0,
-                dy if dy is not None else 0
+                dx if dx is not None else 0, dy if dy is not None else 0
             )
 
     def add_accelerated_motion(
-            self,
-            direction: int,
-            min_speed: int,
-            max_speed: int,
-            time_to_max_speed: float,
-            event: Event
+        self,
+        direction: int,
+        min_speed: int,
+        max_speed: int,
+        time_to_max_speed: float,
+        event: Event,
     ) -> None:
         """Configures a motion using acceleration.
 
@@ -332,14 +320,9 @@ class MouseController:
             self._delta_generator.set_direction(self._compute_direction())
         else:
             self._motion_type = MotionType.Accelerated
-            self._motion_commands = {
-                event: Vector2.from_angle(direction)
-            }
+            self._motion_commands = {event: Vector2.from_angle(direction)}
             self._delta_generator = AcceleratedMouseMotion(
-                self._compute_direction(),
-                min_speed,
-                max_speed,
-                time_to_max_speed
+                self._compute_direction(), min_speed, max_speed, time_to_max_speed
             )
 
     def remove_accelerated_motion(self, event: Event) -> None:
@@ -390,7 +373,6 @@ class MouseController:
 
 
 class _MOUSEINPUT(ctypes.Structure):
-
     """Defines the MOUSEINPUT structure.
 
     https://msdn.microsoft.com/en-us/library/ms646273(v=VS.85).aspx
@@ -407,7 +389,6 @@ class _MOUSEINPUT(ctypes.Structure):
 
 
 class _KEYBDINPUT(ctypes.Structure):
-
     """Defines the KEYBDINPUT structure.
 
     https://msdn.microsoft.com/en-us/library/ms646271(v=vs.85).aspx
@@ -418,43 +399,33 @@ class _KEYBDINPUT(ctypes.Structure):
         ("wScan", ctypes.wintypes.WORD),
         ("dwFlags", ctypes.wintypes.DWORD),
         ("time", ctypes.wintypes.DWORD),
-        ("wExtraInfo", ctypes.POINTER(ctypes.wintypes.ULONG))
+        ("wExtraInfo", ctypes.POINTER(ctypes.wintypes.ULONG)),
     )
 
 
 class _INPUTunion(ctypes.Union):
-
     """Defines the INPUT union type.
 
     https://msdn.microsoft.com/en-us/library/ms646270(v=vs.85).aspx
     """
 
-    _fields_ = (
-        ("mi", _MOUSEINPUT),
-        ("ki", _KEYBDINPUT)
-    )
+    _fields_ = (("mi", _MOUSEINPUT), ("ki", _KEYBDINPUT))
 
 
 class _INPUT(ctypes.Structure):
-
     """Defines the INPUT structure.
 
     https://msdn.microsoft.com/en-us/library/ms646270(v=vs.85).aspx
     """
 
-    _fields_ = (
-        ("type", ctypes.wintypes.DWORD),
-        ("union", _INPUTunion)
-    )
+    _fields_ = (("type", ctypes.wintypes.DWORD), ("union", _INPUTunion))
 
 
-def mouse_relative_motion(dx: int, dy: int):
-    _send_input(
-        _mouse_input(MOUSEEVENTF_MOVE, dx, dy)
-    )
+def mouse_relative_motion(dx: int, dy: int) -> None:
+    _send_input(_mouse_input(MOUSEEVENTF_MOVE, dx, dy))
 
 
-def mouse_press(button: MouseButton):
+def mouse_press(button: MouseButton) -> None:
     if button == MouseButton.Left:
         _send_input(_mouse_input(MOUSEEVENTF_LEFTDOWN))
     elif button == MouseButton.Right:
@@ -467,7 +438,7 @@ def mouse_press(button: MouseButton):
         _send_input(_mouse_input(MOUSEEVENTF_XDOWN, data=XBUTTON2))
 
 
-def mouse_release(button: MouseButton):
+def mouse_release(button: MouseButton) -> None:
     if button == MouseButton.Left:
         _send_input(_mouse_input(MOUSEEVENTF_LEFTUP))
     elif button == MouseButton.Right:
@@ -480,18 +451,17 @@ def mouse_release(button: MouseButton):
         _send_input(_mouse_input(MOUSEEVENTF_XUP, data=XBUTTON2))
 
 
-def mouse_wheel(motion: int):
-    _send_input(_mouse_input(MOUSEEVENTF_WHEEL, data=-motion*WHEEL_DELTA))
+def mouse_wheel(motion: int) -> None:
+    _send_input(_mouse_input(MOUSEEVENTF_WHEEL, data=-motion * WHEEL_DELTA))
 
 
-def _mouse_input(flags, dx: int=0, dy: int=0, data: int=0):
+def _mouse_input(flags: int, dx: int = 0, dy: int = 0, data: int = 0) -> _INPUT:
     return _INPUT(
-        INPUT_MOUSE,
-        _INPUTunion(mi=_MOUSEINPUT(dx, dy, data, flags, 0, None))
+        INPUT_MOUSE, _INPUTunion(mi=_MOUSEINPUT(dx, dy, data, flags, 0, None))
     )
 
 
-def _send_input(*inputs):
+def _send_input(*inputs: _INPUT) -> int:
     nInputs = len(inputs)
     LPINPUT = _INPUT * nInputs
     pInputs = LPINPUT(*inputs)

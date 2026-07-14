@@ -2,15 +2,13 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import array
 import logging
 import threading
 import time
-from typing import (
-    Generator,
-    Optional,
-    Union,
-)
+from collections.abc import Generator
 
 import miniaudio
 
@@ -21,7 +19,6 @@ from gremlin.util import clamp
 
 
 class AudioSample:
-
     """Represents a single audiot sample to be played.
 
     Generates the audio samples from the given audio file while also exposing
@@ -31,7 +28,7 @@ class AudioSample:
         fine for the play audio action, but may be limiting for other uses.
     """
 
-    Generator_T = Generator[Union[bytes, array.array[int]], int, None]
+    Generator_T = Generator[bytes | array.array[int], int, None]
 
     def __init__(self, sound_file: str, play_volume: int) -> None:
         """Creates an AudioSample instance.
@@ -44,22 +41,19 @@ class AudioSample:
         decoded = miniaudio.decode_file(sound_file)
         volume_factor = clamp(play_volume / 100.0, 0.0, 1.0)
         samples = array.array(
-            "h",
-            [int(sample * volume_factor) for sample in decoded.samples]
+            "h", [int(sample * volume_factor) for sample in decoded.samples]
         )
 
         self.stream = miniaudio.stream_raw_pcm_memory(
-            samples,
-            decoded.nchannels,
-            decoded.sample_width
+            samples, decoded.nchannels, decoded.sample_width
         )
         self.device = miniaudio.PlaybackDevice(
             sample_rate=decoded.sample_rate,
             nchannels=decoded.nchannels,
-            output_format=decoded.sample_format
+            output_format=decoded.sample_format,
         )
         self._playback_done_event = threading.Event()
-        self._generator: Optional[AudioSample.Generator_T] = None
+        self._generator: AudioSample.Generator_T | None = None
 
     def block(self) -> None:
         """Blocks the calling thread until playback is complete."""
@@ -82,6 +76,7 @@ class AudioSample:
         playback.
         """
         self._playback_done_event.clear()
+
         def sample_generator() -> AudioSample.Generator_T:
             try:
                 yield from self.stream
@@ -96,7 +91,6 @@ class AudioSample:
 
 
 class AudioPlayer(metaclass=SingletonMetaclass):
-
     """Manages the playing of audio files."""
 
     def __init__(self) -> None:
@@ -177,5 +171,5 @@ Configuration().register(
     "(Sequential) or interrupt current playback (Interrupt), or play sounds "
     "in parallel (Overlap).",
     {"valid_options": ["Sequential", "Interrupt", "Overlap"]},
-    True
+    True,
 )

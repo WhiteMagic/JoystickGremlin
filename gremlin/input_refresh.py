@@ -13,7 +13,6 @@ from gremlin.types import InputType
 
 
 class RefreshPhysicalInputs:
-
     """Emits input events using cached device information to trigger Gremlin
     action execution."""
 
@@ -28,10 +27,12 @@ class RefreshPhysicalInputs:
             for index in range(joy.axis_count):
                 axis_id = dev.axis_map[index].axis_index
                 action = macro.Macro()
-                action.add_action(macro.JoystickAction(
-                    dev.device_guid.uuid,
-                    InputType.JoystickAxis,
-                    axis_id,
-                    joy.axis(axis_id).value
-                ))
+                action.add_action(
+                    macro.JoystickAction(
+                        dev.device_guid.uuid,
+                        InputType.JoystickAxis,
+                        axis_id,
+                        joy.axis(axis_id).value,
+                    )
+                )
                 macro_manager.queue_macro(action)

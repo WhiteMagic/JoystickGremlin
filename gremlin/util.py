@@ -2,43 +2,40 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
-from collections.abc import Callable
 import ctypes
 import importlib
 import json
 import logging
 import math
 import os
-from pathlib import Path
 import re
 import sys
 import threading
 import time
-from typing import (
-    Any,
-    TypeVar
-)
+import types
 import urllib.request
 import uuid
+from collections.abc import Callable
+from pathlib import Path
+from typing import (
+    Any,
+    TypeVar,
+)
 from xml.etree import ElementTree
 
 from PySide6 import QtCore
 
-from dill import (
-    DeviceSummary,
-    GUID
-)
-
+from dill import DeviceSummary
 from gremlin import error
 from gremlin.types import (
+    ActionActivationMode,
     AxisButtonDirection,
     AxisMode,
     HatDirection,
     InputType,
     Point2D,
     PropertyType,
-    ActionActivationMode,
-    ScriptVariableType
+    ScriptVariableType,
 )
 
 # Table storing which modules have been imported already
@@ -46,13 +43,14 @@ g_loaded_modules = {}
 
 
 class FileWatcher(QtCore.QObject):
-
     """Watches files in the filesystem for changes."""
 
     # Signal emitted when the watched file is modified
     file_changed = QtCore.Signal(str)
 
-    def __init__(self, file_names, parent=None):
+    def __init__(
+        self, file_names: list[str], parent: QtCore.QObject | None = None
+    ) -> None:
         """Creates a new instance.
 
         :param file_names list of files to watch
@@ -68,13 +66,13 @@ class FileWatcher(QtCore.QObject):
         self._watch_thread = threading.Thread(target=self._monitor)
         self._watch_thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         """Terminates the thread monitoring files."""
         self._is_running = False
         if self._watch_thread.is_alive():
             self._watch_thread.join()
 
-    def _monitor(self):
+    def _monitor(self) -> None:
         """Continuously monitors files for change."""
         while self._is_running:
             for fname in self._file_names:
@@ -125,7 +123,6 @@ def parse_id_or_uuid(value: str) -> int | uuid.UUID:
             raise error.ProfileError(f"Invalid type for value '{value}'")
 
 
-
 def parse_bool(value: str, default_value: bool = False) -> bool:
     """Returns the boolean representation of the provided value.
 
@@ -153,17 +150,15 @@ def parse_bool(value: str, default_value: bool = False) -> bool:
     elif value.lower() in ["true", "false"]:
         return True if value.lower() == "true" else False
     else:
-        raise error.ProfileError(
-            f"Invalid bool type/value used: {type(value)}/{value}"
-        )
+        raise error.ProfileError(f"Invalid bool type/value used: {type(value)}/{value}")
 
 
 def safe_read(
-        node: ElementTree.Element,
-        key: str,
-        type_cast: Callable[[str], Any] | None = None,
-        default_value: Any | None = None
-) -> Any:
+    node: ElementTree.Element,
+    key: str,
+    type_cast: Callable[[str], Any] | None = None,
+    default_value: Any | None = None,  # noqa: ANN401
+) -> Any:  # noqa: ANN401
     """Safely reads an attribute from an XML node.
 
     If the attempt at reading the attribute fails, due to the attribute not
@@ -200,9 +195,9 @@ def safe_read(
 
 
 def safe_format(
-        value: Any,
-        data_type: Any,
-        formatter: Callable[[Any], str] = str
+    value: Any,  # noqa: ANN401
+    data_type: Any,  # noqa: ANN401
+    formatter: Callable[[Any], str] = str,  # noqa: ANN401
 ) -> str:
     """Returns a formatted value ensuring type correctness.
 
@@ -222,8 +217,7 @@ def safe_format(
         return formatter(value)
     else:
         raise error.ProfileError(
-            f"Value '{value}' has type {type(value)} "
-            f"when {data_type} is expected"
+            f"Value '{value}' has type {type(value)} when {data_type} is expected"
         )
 
 
@@ -244,7 +238,8 @@ _property_from_string = {
     PropertyType.Path: Path,
 }
 
-def property_from_string(data_type: PropertyType, value: str) -> Any:
+
+def property_from_string(data_type: PropertyType, value: str) -> Any:  # noqa: ANN401
     """Converts the provided string to the indicated type.
 
     Args:
@@ -276,7 +271,8 @@ _property_to_string = {
     PropertyType.Path: str,
 }
 
-def property_to_string(data_type: PropertyType, value: Any) -> str:
+
+def property_to_string(data_type: PropertyType, value: Any) -> str:  # noqa: ANN401
     """Converts a value of a given data type into a string representation.
 
     Args:
@@ -368,10 +364,8 @@ _element_to_string = {
     "plugin-variable-type": lambda x: ScriptVariableType.to_string(x),
 }
 
-def create_subelement_node(
-        name: str,
-        value: Any
-) -> ElementTree.Element:
+
+def create_subelement_node(name: str, value: Any) -> ElementTree.Element:  # noqa: ANN401
     """Creates an <input> subelement.
 
     Args:
@@ -379,9 +373,7 @@ def create_subelement_node(
         value: content of the element being created
     """
     if name not in _element_types:
-        raise error.ProfileError(
-            f"No input subelement with name '{name} exists"
-        )
+        raise error.ProfileError(f"No input subelement with name '{name} exists")
     if type(value) not in _element_types[name]:
         raise error.ProfileError(
             f"Incorrect value type for subelement with name '{name}"
@@ -394,8 +386,8 @@ def create_subelement_node(
 
 def create_subelement_node_custom(
     name: str,
-    value: Any,
-    to_string: Callable[[Any], str]
+    value: Any,  # noqa: ANN401
+    to_string: Callable[[Any], str],  # noqa: ANN401
 ) -> ElementTree.Element:
     node = ElementTree.Element(name)
     node.text = to_string(value)
@@ -403,8 +395,7 @@ def create_subelement_node_custom(
 
 
 def create_node_from_data(
-        node_name: str,
-        properties: list[tuple[str, Any, PropertyType]]
+    node_name: str, properties: list[tuple[str, Any, PropertyType]]
 ) -> ElementTree.Element:
     """Returns an XML node with the given name and property elements.
 
@@ -422,9 +413,9 @@ def create_node_from_data(
 
 
 def create_property_node(
-        name: str,
-        value: Any,
-        property_type: PropertyType | list[PropertyType]
+    name: str,
+    value: Any,  # noqa: ANN401
+    property_type: PropertyType | list[PropertyType],  # noqa: ANN401
 ) -> ElementTree.Element:
     """Creates a <property> profile element.
 
@@ -455,8 +446,8 @@ def create_property_node(
 
 
 def append_property_nodes(
-        root_node: ElementTree.Element,
-        properties: list[TypeVar("PropertyData", str, Any, PropertyType)]
+    root_node: ElementTree.Element,
+    properties: list[TypeVar("PropertyData", str, Any, PropertyType)],  # noqa: ANN401
 ) -> None:
     """Creates and adds property nodes to the given root node.
 
@@ -467,10 +458,8 @@ def append_property_nodes(
     for entry in properties:
         root_node.append(create_property_node(entry[0], entry[1], entry[2]))
 
-def create_action_node(
-        action_type: str,
-        action_id: uuid.UUID
-) -> ElementTree.Element:
+
+def create_action_node(action_type: str, action_id: uuid.UUID) -> ElementTree.Element:
     """Returns an action element populated with the provided data.
 
     Args:
@@ -502,16 +491,12 @@ def read_action_id(node: ElementTree.Element) -> uuid.UUID:
 
     id_value = node.get("id")
     if id_value is None:
-        raise error.ProfileError(
-            f"Reading id entry failed due to it not being present."
-        )
+        raise error.ProfileError("Reading id entry failed due to it not being present.")
 
     try:
         return uuid.UUID(id_value)
     except Exception:
-        raise error.ProfileError(
-            f"Failed parsing id from value: '{id_value}'."
-        )
+        raise error.ProfileError(f"Failed parsing id from value: '{id_value}'.")
 
 
 def read_uuid(node: ElementTree.Element, tag: str, key: str) -> uuid.UUID:
@@ -532,19 +517,15 @@ def read_uuid(node: ElementTree.Element, tag: str, key: str) -> uuid.UUID:
 
     id_value = node.get(key)
     if id_value is None:
-        raise error.ProfileError(
-            f"Reading id entry failed due to it not being present."
-        )
+        raise error.ProfileError("Reading id entry failed due to it not being present.")
 
     try:
         return uuid.UUID(id_value)
     except Exception:
-        raise error.ProfileError(
-            f"Failed parsing id from value: '{id_value}'."
-        )
+        raise error.ProfileError(f"Failed parsing id from value: '{id_value}'.")
 
 
-def read_subelement(node: ElementTree.Element, name: str) -> Any:
+def read_subelement(node: ElementTree.Element, name: str) -> Any:  # noqa: ANN401
     """Returns the value of a subelement of the given element node.
 
     This function knows how to parse the values of a variety of standardized
@@ -562,9 +543,7 @@ def read_subelement(node: ElementTree.Element, name: str) -> Any:
     """
     # Ensure there is a parser for the provided subelement
     if name not in _element_parsers:
-        raise error.ProfileError(
-            f"No parser available for subelement with name {name}"
-        )
+        raise error.ProfileError(f"No parser available for subelement with name {name}")
 
     # Ensure the subelement exists in the provided node
     element = node.find(name)
@@ -580,8 +559,8 @@ def read_subelement(node: ElementTree.Element, name: str) -> Any:
 def read_subelement_custom(
     node: ElementTree.Element,
     name: str,
-    validate_and_parse: Callable[[ElementTree.Element], Any]
-) -> Any:
+    validate_and_parse: Callable[[ElementTree.Element], Any],
+) -> Any:  # noqa: ANN401
     element = node.find(name)
     if element is None:
         raise error.ProfileError(
@@ -591,12 +570,11 @@ def read_subelement_custom(
     return validate_and_parse(element)
 
 
-
 def read_property(
-        action_node: ElementTree.Element,
-        name: str,
-        property_type: PropertyType | list[PropertyType]
-) -> Any:
+    action_node: ElementTree.Element,
+    name: str,
+    property_type: PropertyType | list[PropertyType],
+) -> Any:  # noqa: ANN401
     """Returns the value of the property with the given name.
 
     Args:
@@ -611,16 +589,14 @@ def read_property(
     if isinstance(property_type, PropertyType):
         property_type = [property_type]
     return _process_property(
-        action_node.find(f"./property/name[.='{name}']/.."),
-        name,
-        property_type
+        action_node.find(f"./property/name[.='{name}']/.."), name, property_type
     )
 
 
 def read_properties(
-        action_node: ElementTree.Element,
-        name: str,
-        property_type: PropertyType | list[PropertyType]
+    action_node: ElementTree.Element,
+    name: str,
+    property_type: PropertyType | list[PropertyType],
 ) -> list[Any]:
     """Returns the values of all properties with the given name.
 
@@ -640,10 +616,8 @@ def read_properties(
 
 
 def _process_property(
-        property_node: ElementTree.Element,
-        name: str,
-        property_types: list[PropertyType]
-) -> Any:
+    property_node: ElementTree.Element, name: str, property_types: list[PropertyType]
+) -> Any:  # noqa: ANN401
     """Processes a single XML node corresponding to a specific property.
 
     Args:
@@ -657,21 +631,17 @@ def _process_property(
     if property_node is None:
         raise error.ProfileError(f"A property named '{name}' is missing.")
 
-    v_node = property_node.find(f"./value")
+    v_node = property_node.find("./value")
     if v_node is None:
-        raise error.ProfileError(
-            f"Value element of property '{name}' is missing"
-        )
+        raise error.ProfileError(f"Value element of property '{name}' is missing")
     if "type" not in property_node.keys():
-        raise error.ProfileError(
-            f"Property element is missing the 'type' attribute."
-        )
+        raise error.ProfileError("Property element is missing the 'type' attribute.")
 
     p_type = PropertyType.to_enum(property_node.get("type"))
     if p_type not in property_types:
         raise error.ProfileError(
-            f"Property type mismatch, got '{p_type}' expected one of: " +
-            f"[{', '.join([str(v) for v in property_types])}]"
+            f"Property type mismatch, got '{p_type}' expected one of: "
+            + f"[{', '.join([str(v) for v in property_types])}]"
         )
     try:
         return _property_from_string[p_type](v_node.text)
@@ -707,16 +677,16 @@ def create_action_ids(name: str, action_ids: list[uuid.UUID]) -> ElementTree.Ele
         XML node containing the action ids grouped under a single node
     """
     node = ElementTree.Element(name)
-    for uuid in action_ids:
+    for uuid_val in action_ids:
         entry = ElementTree.Element("action-id")
-        entry.text = str(uuid)
+        entry.text = str(uuid_val)
         node.append(entry)
     return node
 
 
 def determine_value_type(
-        value: Any,
-        property_type: PropertyType | list[PropertyType]
+    value: Any,  # noqa: ANN401
+    property_type: PropertyType | list[PropertyType],  # noqa: ANN401
 ) -> tuple[PropertyType, bool]:
     """Returns whether a value is of the correct type and the type..
 
@@ -760,7 +730,7 @@ def all_properties_present(keys: list[str], properties: dict[str, Any]) -> bool:
     return True
 
 
-def is_user_admin():
+def is_user_admin() -> bool:
     """Returns if the user has admin privileges.
 
     Returns:
@@ -770,11 +740,7 @@ def is_user_admin():
 
 
 def with_center_calibration(
-        value: int,
-        low: int,
-        centerLow: int,
-        centerHigh: int,
-        high:int
+    value: int, low: int, centerLow: int, centerHigh: int, high: int
 ) -> float:
     """Returns the calibrated value for a normal style axis.
 
@@ -818,9 +784,7 @@ def no_center_calibration(value: int, minimum: int, maximum: int) -> float:
 
 
 def linear_axis_value_interpolation(
-    value: float,
-    min_value: float,
-    max_value: float
+    value: float, min_value: float, max_value: float
 ) -> float:
     """Returns the linearly interpolated value between min and max.
 
@@ -839,11 +803,7 @@ def linear_axis_value_interpolation(
 
 
 def create_calibration_function(
-        low: int,
-        centerLow: int,
-        centerHigh: int,
-        high:int,
-        has_center: bool
+    low: int, centerLow: int, centerHigh: int, high: int, has_center: bool
 ) -> Callable[[int], float]:
     """Returns a calibration function appropriate for the provided data.
 
@@ -891,7 +851,7 @@ def userprofile_path() -> str:
 
 
 def resource_path(relative_path: str) -> str:
-    """ Get absolute path to resource, handling development and pyinstaller
+    """Get absolute path to resource, handling development and pyinstaller
     based usage.
 
     Args:
@@ -926,8 +886,9 @@ def format_name(name: str) -> str:
     Returns:
         name formatted to be suitable as a python variable name
     """
-    return re.sub("[^A-Za-z]", "", name.lower()[0]) + \
-        re.sub("[^A-Za-z0-9]", "", name.lower()[1:])
+    return re.sub("[^A-Za-z]", "", name.lower()[0]) + re.sub(
+        "[^A-Za-z0-9]", "", name.lower()[1:]
+    )
 
 
 def valid_python_identifier(name: str) -> bool:
@@ -991,8 +952,9 @@ _dill_hat_lookup = {
     18000: HatDirection.South,
     22500: HatDirection.SouthWest,
     27000: HatDirection.West,
-    31500: HatDirection.NorthWest
+    31500: HatDirection.NorthWest,
 }
+
 
 def dill_hat_lookup(value: int) -> HatDirection:
     """Returns the HatDirection corresponding to the raw value if exact, else "Center".
@@ -1006,7 +968,7 @@ def dill_hat_lookup(value: int) -> HatDirection:
     return _dill_hat_lookup.get(value, HatDirection.Center)
 
 
-def load_module(name):
+def load_module(name: str) -> types.ModuleType:
     """Imports  the given module.
 
     :param name the name of the module
@@ -1048,11 +1010,12 @@ def file_exists_and_is_accessible(filename: str) -> bool:
     """Returns true when a provided filename exists and can be read."""
 
     return (
-        isinstance(filename, str) and
-        len(filename) > 0 and
-        os.path.isfile(filename) and
-        os.access(filename, os.R_OK)
-        )
+        isinstance(filename, str)
+        and len(filename) > 0
+        and os.path.isfile(filename)
+        and os.access(filename, os.R_OK)
+    )
+
 
 def latest_gremlin_version() -> str | None:
     """Returns the latest Gremlin version available online.
@@ -1064,7 +1027,7 @@ def latest_gremlin_version() -> str | None:
         with urllib.request.urlopen(
             "https://raw.githubusercontent.com/WhiteMagic/JoystickGremlin/"
             "refs/heads/develop/version.json",
-            timeout=5
+            timeout=5,
         ) as response:
             data = response.read()
             json_data = json.loads(data)
@@ -1103,8 +1066,7 @@ def get_code_release() -> str:
 
 
 def first_available_input(
-    devices: list[DeviceSummary],
-    input_types: list[InputType]
+    devices: list[DeviceSummary], input_types: list[InputType]
 ) -> tuple[DeviceSummary, InputType, int] | None:
     """Returns the first available input of the given type.
 

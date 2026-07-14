@@ -18,10 +18,7 @@ from threading import (
     Lock,
     Thread,
 )
-from typing import (
-    Tuple,
-    override,
-)
+from typing import override
 from xml.etree import ElementTree
 
 import dill
@@ -50,15 +47,11 @@ from gremlin.types import (
 )
 from vjoy.vjoy import VJoyProxy
 
-MacroEntry = collections.namedtuple(
-    "MacroEntry",
-    ["macro", "state"]
-)
+MacroEntry = collections.namedtuple("MacroEntry", ["macro", "state"])
 
 
 @SingletonDecorator
 class MacroManager:
-
     """Manages the proper dispatching and scheduling of macros."""
 
     def __init__(self) -> None:
@@ -72,9 +65,7 @@ class MacroManager:
         # Default delay between subsequent message dispatch. This is to get
         # around some games not picking up messages if they are sent in too
         # quick a succession.
-        self.default_delay = Configuration().value(
-           "action", "macro", "default-delay"
-        )
+        self.default_delay = Configuration().value("action", "macro", "default-delay")
 
         self._is_executing_exclusive = False
         self._is_running = False
@@ -95,9 +86,10 @@ class MacroManager:
     def stop(self) -> None:
         """Stops the scheduler."""
         self._is_running = False
-        if self._run_scheduler_thread is not None and \
-                self._run_scheduler_thread.is_alive():
-
+        if (
+            self._run_scheduler_thread is not None
+            and self._run_scheduler_thread.is_alive()
+        ):
             # Terminate the scheduler
             self._schedule_event.set()
             self._run_scheduler_thread.join()
@@ -147,8 +139,10 @@ class MacroManager:
                 for entry in self._queue:
                     # Terminate macro if needed
                     if entry.state is False:
-                        if entry.macro.id in self._flags \
-                                and self._flags[entry.macro.id]:
+                        if (
+                            entry.macro.id in self._flags
+                            and self._flags[entry.macro.id]
+                        ):
                             # Terminate currently running macro
                             with self._flags_lock:
                                 self._flags[entry.macro.id] = False
@@ -262,7 +256,6 @@ class MacroManager:
 
 
 class Macro:
-
     """Represents a macro which can be executed."""
 
     # Unique identifier for each macro
@@ -354,7 +347,6 @@ class Macro:
 
 
 class AbstractAction(ABC):
-
     """Base class for all macro action."""
 
     @abstractmethod
@@ -398,18 +390,17 @@ class AbstractAction(ABC):
 
 
 class JoystickAction(AbstractAction):
-
     """Joystick input action for a macro."""
 
     tag = "joystick"
 
     def __init__(
-            self,
-            device_guid: uuid.UUID,
-            input_type: InputType,
-            input_id: int | uuid.UUID,
-            value: bool | float | Tuple[int, int],
-            axis_mode: AxisMode=AxisMode.Absolute
+        self,
+        device_guid: uuid.UUID,
+        input_type: InputType,
+        input_id: int | uuid.UUID,
+        value: bool | float | tuple[int, int],
+        axis_mode: AxisMode = AxisMode.Absolute,
     ) -> None:
         """Creates a new JoystickAction instance for use in a macro.
 
@@ -428,12 +419,7 @@ class JoystickAction(AbstractAction):
 
     @classmethod
     def create(cls) -> JoystickAction:
-        return JoystickAction(
-            dill.UUID_Invalid,
-            InputType.JoystickButton,
-            0,
-            False
-        )
+        return JoystickAction(dill.UUID_Invalid, InputType.JoystickButton, 0, False)
 
     def __call__(self) -> None:
         """Emits an Event instance through the EventListener system."""
@@ -444,7 +430,7 @@ class JoystickAction(AbstractAction):
                 device_guid=self.device_guid,
                 identifier=self.input_id,
                 mode=mode_manager.ModeManager().current.name,
-                value=self.value
+                value=self.value,
             )
         elif self.input_type == InputType.JoystickButton:
             event = event_handler.Event(
@@ -452,7 +438,7 @@ class JoystickAction(AbstractAction):
                 device_guid=self.device_guid,
                 identifier=self.input_id,
                 mode=mode_manager.ModeManager().current.name,
-                is_pressed=self.value
+                is_pressed=self.value,
             )
         elif self.input_type == InputType.JoystickHat:
             event = event_handler.Event(
@@ -460,7 +446,7 @@ class JoystickAction(AbstractAction):
                 device_guid=self.device_guid,
                 identifier=self.input_id,
                 mode=mode_manager.ModeManager().current.name,
-                value=self.value
+                value=self.value,
             )
 
         el.joystick_event.emit(event)
@@ -473,33 +459,31 @@ class JoystickAction(AbstractAction):
                 ["device-guid", self.device_guid, PropertyType.UUID],
                 ["input-type", self.input_type, PropertyType.InputType],
                 ["input-id", self.input_id, PropertyType.Int],
-            ]
+            ],
         )
         if self.input_type == InputType.JoystickAxis:
             util.append_property_nodes(
                 node,
                 [
                     ["value", self.value, PropertyType.Float],
-                    ["axis-mode", self.axis_mode, PropertyType.AxisMode]
-                ]
+                    ["axis-mode", self.axis_mode, PropertyType.AxisMode],
+                ],
             )
         elif self.input_type == InputType.JoystickButton:
-            node.append(util.create_property_node(
-                "value", self.value, PropertyType.Bool
-            ))
+            node.append(
+                util.create_property_node("value", self.value, PropertyType.Bool)
+            )
         elif self.input_type == InputType.JoystickHat:
-            node.append(util.create_property_node(
-                "value", self.value, PropertyType.HatDirection
-            ))
+            node.append(
+                util.create_property_node(
+                    "value", self.value, PropertyType.HatDirection
+                )
+            )
         return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        self.device_guid = util.read_property(
-            node, "device-guid", PropertyType.UUID
-        )
-        self.input_type = util.read_property(
-            node, "input-type", PropertyType.InputType
-        )
+        self.device_guid = util.read_property(node, "device-guid", PropertyType.UUID)
+        self.input_type = util.read_property(node, "input-type", PropertyType.InputType)
         self.input_id = util.read_property(node, "input-id", PropertyType.Int)
         if self.input_type == InputType.JoystickAxis:
             self.value = util.read_property(node, "value", PropertyType.Float)
@@ -509,9 +493,7 @@ class JoystickAction(AbstractAction):
         elif self.input_type == InputType.JoystickButton:
             self.value = util.read_property(node, "value", PropertyType.Bool)
         elif self.input_type == InputType.JoystickHat:
-            self.value = util.read_property(
-                node, "value", PropertyType.HatDirection
-            )
+            self.value = util.read_property(node, "value", PropertyType.HatDirection)
 
     def is_valid(self) -> bool:
         return self.device_guid != dill.UUID_Invalid
@@ -525,7 +507,6 @@ class JoystickAction(AbstractAction):
 
 
 class KeyAction(AbstractAction):
-
     """Key to press or release by a macro."""
 
     tag = "key"
@@ -564,25 +545,22 @@ class KeyAction(AbstractAction):
                 ["scan-code", self.key.scan_code, PropertyType.Int],
                 ["is-extended", self.key.is_extended, PropertyType.Bool],
                 ["is-pressed", self.is_pressed, PropertyType.Bool],
-            ]
+            ],
         )
         return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.key = key_from_code(
             util.read_property(node, "scan-code", PropertyType.Int),
-            util.read_property(node, "is-extended", PropertyType.Bool)
+            util.read_property(node, "is-extended", PropertyType.Bool),
         )
-        self.is_pressed = util.read_property(
-            node, "is-pressed", PropertyType.Bool
-        )
+        self.is_pressed = util.read_property(node, "is-pressed", PropertyType.Bool)
 
     def is_valid(self) -> bool:
         return self.key is not None
 
 
 class LogicalDeviceAction(AbstractAction):
-
     """Logical device input action."""
 
     tag = "logical-device"
@@ -591,8 +569,8 @@ class LogicalDeviceAction(AbstractAction):
         self,
         input_type: InputType,
         input_id: int,
-        value: bool | float | Tuple[int, int],
-        axis_mode: AxisMode=AxisMode.Absolute
+        value: bool | float | tuple[int, int],
+        axis_mode: AxisMode = AxisMode.Absolute,
     ) -> None:
         """Creates a new LogicalDeviceAction instance for use in a macro.
 
@@ -614,11 +592,7 @@ class LogicalDeviceAction(AbstractAction):
         if len(LogicalDevice().inputs_of_type()) == 0:
             LogicalDevice().create(InputType.JoystickButton)
         first_input = LogicalDevice().inputs_of_type()[0]
-        return LogicalDeviceAction(
-            first_input.type,
-            first_input.id,
-            first_input._value
-        )
+        return LogicalDeviceAction(first_input.type, first_input.id, first_input._value)
 
     def __call__(self) -> None:
         ld = LogicalDevice()[
@@ -644,8 +618,8 @@ class LogicalDeviceAction(AbstractAction):
                 device_guid=LogicalDevice.device_guid,
                 mode=self._mode_manager.current.name,
                 value=self.value,
-                is_pressed=self.value == True,
-                raw_value=self.value
+                is_pressed=self.value is True,
+                raw_value=self.value,
             )
         )
 
@@ -656,29 +630,30 @@ class LogicalDeviceAction(AbstractAction):
             [
                 ["input-type", self.input_type, PropertyType.InputType],
                 ["input-id", self.input_id, PropertyType.Int],
-            ]
+            ],
         )
         if self.input_type == InputType.JoystickAxis:
             util.append_property_nodes(
                 node,
                 [
                     ["value", self.value, PropertyType.Float],
-                    ["axis-mode", self.axis_mode, PropertyType.AxisMode]
-                ])
+                    ["axis-mode", self.axis_mode, PropertyType.AxisMode],
+                ],
+            )
         elif self.input_type == InputType.JoystickButton:
-            node.append(util.create_property_node(
-                "value", self.value, PropertyType.Bool
-            ))
+            node.append(
+                util.create_property_node("value", self.value, PropertyType.Bool)
+            )
         elif self.input_type == InputType.JoystickHat:
-            node.append(util.create_property_node(
-                "value", self.value, PropertyType.HatDirection
-            ))
+            node.append(
+                util.create_property_node(
+                    "value", self.value, PropertyType.HatDirection
+                )
+            )
         return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        self.input_type = util.read_property(
-            node, "input-type", PropertyType.InputType
-        )
+        self.input_type = util.read_property(node, "input-type", PropertyType.InputType)
         self.input_id = util.read_property(node, "input-id", PropertyType.Int)
         if self.input_type == InputType.JoystickAxis:
             self.value = util.read_property(node, "value", PropertyType.Float)
@@ -688,16 +663,13 @@ class LogicalDeviceAction(AbstractAction):
         elif self.input_type == InputType.JoystickButton:
             self.value = util.read_property(node, "value", PropertyType.Bool)
         elif self.input_type == InputType.JoystickHat:
-            self.value = util.read_property(
-                node, "value", PropertyType.HatDirection
-            )
+            self.value = util.read_property(node, "value", PropertyType.HatDirection)
 
     def is_valid(self) -> bool:
         return True
 
 
 class MouseButtonAction(AbstractAction):
-
     """Mouse button action."""
 
     tag = "mouse-button"
@@ -737,29 +709,26 @@ class MouseButtonAction(AbstractAction):
             [
                 ["button", MouseButton.to_string(self.button), PropertyType.String],
                 ["is-pressed", self.is_pressed, PropertyType.Bool],
-            ]
+            ],
         )
         return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        self.button = MouseButton.to_enum(util.read_property(
-            node, "button", PropertyType.String
-        ))
-        self.is_pressed = util.read_property(
-            node, "is-pressed", PropertyType.Bool
+        self.button = MouseButton.to_enum(
+            util.read_property(node, "button", PropertyType.String)
         )
+        self.is_pressed = util.read_property(node, "is-pressed", PropertyType.Bool)
 
     def is_valid(self) -> bool:
         return self.button is not None
 
 
 class MouseMotionAction(AbstractAction):
-
     """Mouse motion action."""
 
     tag = "mouse-motion"
 
-    def __init__(self, dx: float|int, dy: float|int):
+    def __init__(self, dx: float | int, dy: float | int) -> None:
         """Creates a new MouseMotionAction object for use in a macro.
 
         Args:
@@ -783,7 +752,7 @@ class MouseMotionAction(AbstractAction):
             [
                 ["dx", self.dx, PropertyType.Int],
                 ["dy", self.dy, PropertyType.Int],
-            ]
+            ],
         )
         return node
 
@@ -796,12 +765,11 @@ class MouseMotionAction(AbstractAction):
 
 
 class PauseAction(AbstractAction):
-
     """Represents the pause in a macro between pressed."""
 
     tag = "pause"
 
-    def __init__(self, duration: float):
+    def __init__(self, duration: float) -> None:
         """Creates a new Pause object for use in a macro.
 
         Args:
@@ -818,33 +786,30 @@ class PauseAction(AbstractAction):
 
     def to_xml(self) -> ElementTree.Element:
         node = self._create_node(self.tag)
-        node.append(util.create_property_node(
-            "duration", self.duration, PropertyType.Float
-        ))
+        node.append(
+            util.create_property_node("duration", self.duration, PropertyType.Float)
+        )
         return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
-        self.duration = util.read_property(
-            node, "duration", PropertyType.Float
-        )
+        self.duration = util.read_property(node, "duration", PropertyType.Float)
 
     def is_valid(self) -> bool:
         return True
 
 
 class VJoyAction(AbstractAction):
-
     """VJoy input action for a macro."""
 
     tag = "vjoy"
 
     def __init__(
-            self,
-            vjoy_id: int,
-            input_type: InputType,
-            input_id: int,
-            value: bool | float | Tuple[int, int],
-            axis_mode: AxisMode=AxisMode.Absolute
+        self,
+        vjoy_id: int,
+        input_type: InputType,
+        input_id: int,
+        value: bool | float | tuple[int, int],
+        axis_mode: AxisMode = AxisMode.Absolute,
     ) -> None:
         """Creates a new VJoyAction instance for use in a macro.
 
@@ -874,8 +839,7 @@ class VJoyAction(AbstractAction):
                     vjoy.axis(self.input_id).value = self.value
                 elif self.axis_mode == AxisMode.Relative:
                     vjoy.axis(self.input_id).value = max(
-                        -1.0,
-                        min(1.0, vjoy.axis(self.input_id).value + self.value)
+                        -1.0, min(1.0, vjoy.axis(self.input_id).value + self.value)
                     )
             elif self.input_type == InputType.JoystickButton:
                 vjoy.button(self.input_id).is_pressed = self.value
@@ -894,30 +858,31 @@ class VJoyAction(AbstractAction):
                 ["vjoy-id", self.vjoy_id, PropertyType.Int],
                 ["input-type", self.input_type, PropertyType.InputType],
                 ["input-id", self.input_id, PropertyType.Int],
-            ]
+            ],
         )
         if self.input_type == InputType.JoystickAxis:
             util.append_property_nodes(
                 node,
                 [
                     ["value", self.value, PropertyType.Float],
-                    ["axis-mode", self.axis_mode, PropertyType.AxisMode]
-                ])
+                    ["axis-mode", self.axis_mode, PropertyType.AxisMode],
+                ],
+            )
         elif self.input_type == InputType.JoystickButton:
-            node.append(util.create_property_node(
-                "value", self.value, PropertyType.Bool
-            ))
+            node.append(
+                util.create_property_node("value", self.value, PropertyType.Bool)
+            )
         elif self.input_type == InputType.JoystickHat:
-            node.append(util.create_property_node(
-                "value", self.value, PropertyType.HatDirection
-            ))
+            node.append(
+                util.create_property_node(
+                    "value", self.value, PropertyType.HatDirection
+                )
+            )
         return node
 
     def from_xml(self, node: ElementTree.Element) -> None:
         self.vjoy_id = util.read_property(node, "vjoy-id", PropertyType.Int)
-        self.input_type = util.read_property(
-            node, "input-type", PropertyType.InputType
-        )
+        self.input_type = util.read_property(node, "input-type", PropertyType.InputType)
         self.input_id = util.read_property(node, "input-id", PropertyType.Int)
         if self.input_type == InputType.JoystickAxis:
             self.value = util.read_property(node, "value", PropertyType.Float)
@@ -927,16 +892,13 @@ class VJoyAction(AbstractAction):
         elif self.input_type == InputType.JoystickButton:
             self.value = util.read_property(node, "value", PropertyType.Bool)
         elif self.input_type == InputType.JoystickHat:
-            self.value = util.read_property(
-                node, "value", PropertyType.HatDirection
-            )
+            self.value = util.read_property(node, "value", PropertyType.HatDirection)
 
     def is_valid(self) -> bool:
         return True
 
 
 class AbstractRepeat(ABC):
-
     """Base class for all macro repeat modes."""
 
     def __init__(self, delay: float) -> None:
@@ -954,9 +916,7 @@ class AbstractRepeat(ABC):
             XML node containing the instance's information
         """
         node = ElementTree.Element("repeat")
-        node.append(util.create_property_node(
-            "delay", self.delay, PropertyType.Float)
-        )
+        node.append(util.create_property_node("delay", self.delay, PropertyType.Float))
         self._to_xml_additional(node)
         return node
 
@@ -979,10 +939,9 @@ class AbstractRepeat(ABC):
 
 
 class CountRepeat(AbstractRepeat):
-
     """Repeat mode which repeats the macro a fixed number of times."""
 
-    def __init__(self, count: int=1, delay: float=0.1) -> None:
+    def __init__(self, count: int = 1, delay: float = 0.1) -> None:
         """Creates a new instance.
 
         Args:
@@ -999,9 +958,7 @@ class CountRepeat(AbstractRepeat):
             node: XML node containing the instance's information
         """
         node.set("type", "count")
-        node.append(util.create_property_node(
-            "count", self.count, PropertyType.Int
-        ))
+        node.append(util.create_property_node("count", self.count, PropertyType.Int))
 
     def _from_xml_additional(self, node: ElementTree.Element) -> None:
         """Populates the instance's data from the provided XML node.
@@ -1013,11 +970,10 @@ class CountRepeat(AbstractRepeat):
 
 
 class ToggleRepeat(AbstractRepeat):
-
     """Repeat mode which repeats the macro as long as it hasn't been toggled
     off again after being toggled on."""
 
-    def __init__(self, delay: float=0.1) -> None:
+    def __init__(self, delay: float = 0.1) -> None:
         """Creates a new instance.
 
         Args:
@@ -1043,11 +999,10 @@ class ToggleRepeat(AbstractRepeat):
 
 
 class HoldRepeat(AbstractRepeat):
-
     """Repeat mode which repeats the macro as long as the activation condition
     is being fulfilled or held down."""
 
-    def __init__(self, delay: float=0.1) -> None:
+    def __init__(self, delay: float = 0.1) -> None:
         """Creates a new instance.
 
         Args:
@@ -1078,11 +1033,8 @@ Configuration().register(
     "default-delay",
     PropertyType.Float,
     0.05,
-    "The default time (in seconds) the macro system waits between emitting " +
-    "subsequent actions when no pauses are present.",
-    {
-        "min": 0.0,
-        "max": 10.0
-    },
-    True
+    "The default time (in seconds) the macro system waits between emitting "
+    + "subsequent actions when no pauses are present.",
+    {"min": 0.0, "max": 10.0},
+    True,
 )

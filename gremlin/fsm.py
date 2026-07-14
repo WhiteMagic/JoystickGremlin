@@ -4,21 +4,18 @@
 
 """Implementation of a very simple finite state machine."""
 
-from collections.abc import Callable
+from __future__ import annotations
+
 import logging
 import threading
-from typing import Any, Dict, List, Tuple
+from collections.abc import Callable
+from typing import Any
 
 
 class Transition:
-
     """Represents a single transition in the finite state machine."""
 
-    def __init__(
-            self,
-            callbacks: List[Callable[..., Any]],
-            new_state: str
-    ) -> None:
+    def __init__(self, callbacks: list[Callable[..., Any]], new_state: str) -> None:
         """Creates a new Transition object.
 
         Args:
@@ -31,17 +28,16 @@ class Transition:
 
 
 class FiniteStateMachine:
-
     """Simple finite state machine."""
 
     def __init__(
-            self,
-            start_state: str,
-            states: List[str],
-            actions: List[str],
-            transitions: Dict[Tuple[str, str], Transition],
-            debug: bool=False,
-            identifier: str="FSM"
+        self,
+        start_state: str,
+        states: list[str],
+        actions: list[str],
+        transitions: dict[tuple[str, str], Transition],
+        debug: bool = False,
+        identifier: str = "FSM",
     ) -> None:
         """Creates a new finite state machine object.
 
@@ -53,7 +49,7 @@ class FiniteStateMachine:
             debug: logs debug messages if True
             identifier: name used to identify the FSM instance
         """
-        assert(start_state in states)
+        assert start_state in states
 
         self.start_state = start_state
         self.states = states
@@ -79,7 +75,7 @@ class FiniteStateMachine:
             if state in self.states:
                 self.current_state = state
 
-    def try_perform(self, action: str, *args: Any) -> list[Any] | None:
+    def try_perform(self, action: str, *args: Any) -> list[Any] | None:  # noqa: ANN401
         """Attempts a state transition, returning None if invalid instead
         of raising.
 
@@ -90,23 +86,23 @@ class FiniteStateMachine:
             Result of executing the state transition callback(s), or None
             if no transition exists for the current state and action.
         """
-        assert(action in self.actions)
+        assert action in self.actions
         with self._lock:
             key = (self.current_state, action)
             if key not in self.transitions:
                 return None
-            assert(self.transitions[key].new_state in self.states)
+            assert self.transitions[key].new_state in self.states
 
             values = [cb(*args) for cb in self.transitions[key].callbacks]
             if self.debug:
                 logging.getLogger("system").debug(
-                    f"FSM ({self.identifier}): {self.current_state} -> " +
-                    f"{self.transitions[key].new_state} ({action})"
+                    f"FSM ({self.identifier}): {self.current_state} -> "
+                    + f"{self.transitions[key].new_state} ({action})"
                 )
             self.current_state = self.transitions[key].new_state
             return values
 
-    def perform(self, action: str, *args: Any) -> list[Any]:
+    def perform(self, action: str, *args: Any) -> list[Any] | None:  # noqa: ANN401
         """Performs a state transition on the FSM.
 
         Args:
@@ -121,5 +117,5 @@ class FiniteStateMachine:
             logging.getLogger("system").exception(
                 f"Missing transition: {key}: {self.transitions.keys()}"
             )
-            assert(key in self.transitions)
+            assert key in self.transitions
         return result

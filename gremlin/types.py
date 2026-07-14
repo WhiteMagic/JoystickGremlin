@@ -9,20 +9,16 @@ import logging
 from typing import (
     Generic,
     NamedTuple,
-    Tuple,
     TypeVar,
-    Union,
 )
 
 import gremlin.error
-
 
 # Type alias for a keyboard scan code.
 type ScanCode = tuple[int, bool]
 
 
 class ActivationRule(enum.Enum):
-
     """Activation rules for collections of conditions.
 
     All requires all the conditions in a collection to evaluate to True while
@@ -34,7 +30,6 @@ class ActivationRule(enum.Enum):
 
 
 class InputType(enum.Enum):
-
     """Enumeration of possible input types."""
 
     Keyboard = 1
@@ -83,6 +78,7 @@ _InputType_to_enum_lookup = {
 
 class VjoyInput(NamedTuple):
     """Uniquely identifies a vJoy input on this system."""
+
     vjoy_id: int
     input_type: InputType
     # Be consistent for axes: preferable use "linear_index".
@@ -90,7 +86,6 @@ class VjoyInput(NamedTuple):
 
 
 class AxisNames(enum.Enum):
-
     """Names associated with axis indices."""
 
     X = 1
@@ -107,18 +102,14 @@ class AxisNames(enum.Enum):
         try:
             return _AxisNames_to_string_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid AxisName lookup, {}".format(value)
-            )
+            raise gremlin.error.GremlinError(f"Invalid AxisName lookup, {value}")
 
     @staticmethod
     def to_enum(value: str) -> AxisNames:
         try:
             return _AxisNames_to_enum_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid AxisName lookup, {}".format(value)
-            )
+            raise gremlin.error.GremlinError(f"Invalid AxisName lookup, {value}")
 
 
 _AxisNames_to_string_lookup = {
@@ -129,7 +120,7 @@ _AxisNames_to_string_lookup = {
     AxisNames.RY: "Y Rotation",
     AxisNames.RZ: "Z Rotation",
     AxisNames.SLIDER: "Slider",
-    AxisNames.DIAL: "Dial"
+    AxisNames.DIAL: "Dial",
 }
 _AxisNames_to_enum_lookup = {
     "X Axis": AxisNames.X,
@@ -139,12 +130,11 @@ _AxisNames_to_enum_lookup = {
     "Y Rotation": AxisNames.RY,
     "Z Rotation": AxisNames.RZ,
     "Slider": AxisNames.SLIDER,
-    "Dial": AxisNames.DIAL
+    "Dial": AxisNames.DIAL,
 }
 
 
 class AxisButtonDirection(enum.Enum):
-
     """Possible activation directions for axis button instances."""
 
     Anywhere = 1
@@ -157,7 +147,7 @@ class AxisButtonDirection(enum.Enum):
             return _AxisButtonDirection_to_string_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError(
-                "Invalid AxisButtonDirection lookup, {}".format(value)
+                f"Invalid AxisButtonDirection lookup, {value}"
             )
 
     @staticmethod
@@ -166,24 +156,23 @@ class AxisButtonDirection(enum.Enum):
             return _AxisButtonDirection_to_enum_lookup[value]
         except KeyError:
             raise gremlin.error.GremlinError(
-                "Invalid AxisButtonDirection lookup, {}".format(value)
+                f"Invalid AxisButtonDirection lookup, {value}"
             )
 
 
 _AxisButtonDirection_to_string_lookup = {
     AxisButtonDirection.Anywhere: "anywhere",
     AxisButtonDirection.Above: "above",
-    AxisButtonDirection.Below: "below"
+    AxisButtonDirection.Below: "below",
 }
 _AxisButtonDirection_to_enum_lookup = {
     "anywhere": AxisButtonDirection.Anywhere,
     "above": AxisButtonDirection.Above,
-    "below": AxisButtonDirection.Below
+    "below": AxisButtonDirection.Below,
 }
 
 
 class MouseButton(enum.Enum):
-
     """Enumeration of all possible mouse buttons."""
 
     Left = 1
@@ -230,7 +219,6 @@ _MouseButton_to_enum_lookup = {
 
 
 class DeviceType(enum.Enum):
-
     """Enumeration of the different possible input types."""
 
     Keyboard = 1
@@ -255,17 +243,16 @@ class DeviceType(enum.Enum):
 _DeviceType_to_string_lookup = {
     DeviceType.Keyboard: "keyboard",
     DeviceType.Joystick: "joystick",
-    DeviceType.VJoy: "vjoy"
+    DeviceType.VJoy: "vjoy",
 }
 _DeviceType_to_enum_lookup = {
     "keyboard": DeviceType.Keyboard,
     "joystick": DeviceType.Joystick,
-    "vjoy": DeviceType.VJoy
+    "vjoy": DeviceType.VJoy,
 }
 
 
 class ScriptVariableType(enum.Enum):
-
     """Enumeration of all supported variable types."""
 
     Int = 1
@@ -282,18 +269,14 @@ class ScriptVariableType(enum.Enum):
         try:
             return _ScriptVariableType_to_string_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid ScriptVariableType in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid ScriptVariableType in lookup")
 
     @staticmethod
     def to_enum(value: str) -> ScriptVariableType:
         try:
             return _ScriptVariableType_to_enum_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid ScriptVariableType in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid ScriptVariableType in lookup")
 
 
 _ScriptVariableType_to_string_lookup = {
@@ -304,7 +287,7 @@ _ScriptVariableType_to_string_lookup = {
     ScriptVariableType.PhysicalInput: "PhysicalInput",
     ScriptVariableType.VirtualInput: "VirtualInput",
     ScriptVariableType.Mode: "Mode",
-    ScriptVariableType.Selection: "Selection"
+    ScriptVariableType.Selection: "Selection",
 }
 _ScriptVariableType_to_enum_lookup = {
     "Int": ScriptVariableType.Int,
@@ -314,12 +297,11 @@ _ScriptVariableType_to_enum_lookup = {
     "PhysicalInput": ScriptVariableType.PhysicalInput,
     "VirtualInput": ScriptVariableType.VirtualInput,
     "Mode": ScriptVariableType.Mode,
-    "Selection": ScriptVariableType.Selection
+    "Selection": ScriptVariableType.Selection,
 }
 
 
 class PropertyType(enum.Enum):
-
     """Enumeration of all known property types."""
 
     String = 1
@@ -338,10 +320,10 @@ class PropertyType(enum.Enum):
     HatDirection = 14
     List = 15
     Selection = 16
-    ActionActivationMode = 17,
-    Point2D = 18,
-    ScriptVariableType = 19,
-    Path = 20,
+    ActionActivationMode = 17
+    Point2D = 18
+    ScriptVariableType = 19
+    Path = 20
 
     @staticmethod
     def to_string(value: PropertyType) -> str:
@@ -356,6 +338,7 @@ class PropertyType(enum.Enum):
             return _PropertyType_to_enum_lookup[value.lower()]
         except KeyError:
             raise gremlin.error.GremlinError("Invalid PropertyType in lookup")
+
 
 _PropertyType_to_string_lookup = {
     PropertyType.String: "string",
@@ -404,7 +387,6 @@ _PropertyType_to_enum_lookup = {
 
 
 class AxisMode(enum.Enum):
-
     Absolute = 1
     Relative = 2
 
@@ -413,31 +395,27 @@ class AxisMode(enum.Enum):
         try:
             return _AxisMode_to_string_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid AxisMode in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid AxisMode in lookup")
 
     @staticmethod
     def to_enum(value: str) -> AxisMode:
         try:
             return _AxisMode_to_enum_lookup[value.lower()]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid AxisMode in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid AxisMode in lookup")
+
 
 _AxisMode_to_string_lookup = {
     AxisMode.Absolute: "absolute",
-    AxisMode.Relative: "relative"
+    AxisMode.Relative: "relative",
 }
 _AxisMode_to_enum_lookup = {
     "absolute": AxisMode.Absolute,
-    "relative": AxisMode.Relative
+    "relative": AxisMode.Relative,
 }
 
 
 class HatDirection(enum.Enum):
-
     """Represents the possible directions a hat can take on."""
 
     Center = (0, 0)
@@ -455,21 +433,18 @@ class HatDirection(enum.Enum):
         try:
             return _HatDirection_to_string_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid HatDirection in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid HatDirection in lookup")
 
     @staticmethod
-    def to_enum(value: Union[str, Tuple[int, int]]) -> HatDirection:
+    def to_enum(value: str | tuple[int, int]) -> HatDirection:
         try:
             if isinstance(value, str):
                 return _HatDirection_to_enum_lookup[value.lower()]
             else:
                 return _HatDirection_to_enum_lookup[value]
         except KeyError:
-            raise gremlin.error.GremlinError(
-                "Invalid HatDirection in lookup"
-            )
+            raise gremlin.error.GremlinError("Invalid HatDirection in lookup")
+
 
 _HatDirection_to_string_lookup = {
     HatDirection.Center: "center",
@@ -508,7 +483,6 @@ _HatDirection_to_enum_lookup = {
 
 
 class LogicalOperator(enum.Enum):
-
     """Enumeration of possible condition combinations."""
 
     Any = 1
@@ -516,10 +490,7 @@ class LogicalOperator(enum.Enum):
 
     @staticmethod
     def to_display(instance: LogicalOperator) -> str:
-        lookup = {
-            LogicalOperator.Any: "Any",
-            LogicalOperator.All: "All"
-        }
+        lookup = {LogicalOperator.Any: "Any", LogicalOperator.All: "All"}
         value = lookup.get(instance, None)
         if value is None:
             raise gremlin.error.GremlinError(
@@ -529,10 +500,7 @@ class LogicalOperator(enum.Enum):
 
     @staticmethod
     def to_string(instance: LogicalOperator) -> str:
-        lookup = {
-            LogicalOperator.Any: "any",
-            LogicalOperator.All: "all"
-        }
+        lookup = {LogicalOperator.Any: "any", LogicalOperator.All: "all"}
         value = lookup.get(instance, None)
         if value is None:
             raise gremlin.error.GremlinError(
@@ -542,10 +510,7 @@ class LogicalOperator(enum.Enum):
 
     @staticmethod
     def to_enum(string: str) -> LogicalOperator:
-        lookup = {
-            "any": LogicalOperator.Any,
-            "all": LogicalOperator.All
-        }
+        lookup = {"any": LogicalOperator.Any, "all": LogicalOperator.All}
         value = lookup.get(string, None)
         if value is None:
             raise gremlin.error.GremlinError(
@@ -555,7 +520,6 @@ class LogicalOperator(enum.Enum):
 
 
 class ConditionType(enum.Enum):
-
     """Enumeration of possible condition types."""
 
     Joystick = 1
@@ -571,7 +535,7 @@ class ConditionType(enum.Enum):
             ConditionType.Keyboard: "Keyboard",
             ConditionType.CurrentInput: "Current Input",
             ConditionType.VJoy: "vJoy",
-            ConditionType.LogicalDevice: "Logical Device"
+            ConditionType.LogicalDevice: "Logical Device",
         }
         value = lookup.get(instance, None)
         if value is None:
@@ -587,7 +551,7 @@ class ConditionType(enum.Enum):
             ConditionType.Keyboard: "keyboard",
             ConditionType.CurrentInput: "current_input",
             ConditionType.VJoy: "vjoy",
-            ConditionType.LogicalDevice: "logical_device"
+            ConditionType.LogicalDevice: "logical_device",
         }
         value = lookup.get(instance, None)
         if value is None:
@@ -603,7 +567,7 @@ class ConditionType(enum.Enum):
             "keyboard": ConditionType.Keyboard,
             "current_input": ConditionType.CurrentInput,
             "vjoy": ConditionType.VJoy,
-            "logical_device": ConditionType.LogicalDevice
+            "logical_device": ConditionType.LogicalDevice,
         }
         value = lookup.get(string, None)
         if value is None:
@@ -614,7 +578,6 @@ class ConditionType(enum.Enum):
 
 
 class ActionProperty(enum.Enum):
-
     """Enumeration of the properties actions can be tagged with."""
 
     # Will reuse an existing action instead of creating a new one by default
@@ -631,7 +594,6 @@ class ActionProperty(enum.Enum):
 
 
 class ActionActivationMode(enum.Enum):
-
     """Possible activation modes of button-like inputs."""
 
     Deactivated = 1
@@ -641,7 +603,7 @@ class ActionActivationMode(enum.Enum):
     Disallowed = 5
 
     @staticmethod
-    def to_string(instance: ActionActivationMode ) -> str:
+    def to_string(instance: ActionActivationMode) -> str:
         lookup = {
             ActionActivationMode.Deactivated: "deactivated",
             ActionActivationMode.Press: "press",
@@ -663,7 +625,7 @@ class ActionActivationMode(enum.Enum):
             "press": ActionActivationMode.Press,
             "release": ActionActivationMode.Release,
             "both": ActionActivationMode.Both,
-            "disallowed": ActionActivationMode.Disallowed
+            "disallowed": ActionActivationMode.Disallowed,
         }
         value = lookup.get(string, None)
         if value is None:
@@ -674,7 +636,6 @@ class ActionActivationMode(enum.Enum):
 
 
 class DataInsertionMode(enum.Enum):
-
     """Specifies to insertion type to be performed."""
 
     Append = 0
@@ -682,7 +643,6 @@ class DataInsertionMode(enum.Enum):
 
 
 class DataCreationMode(enum.Enum):
-
     """Specifies how a new AbstractActionData instance is created."""
 
     Create = 0
@@ -690,7 +650,6 @@ class DataCreationMode(enum.Enum):
 
 
 class Point2D:
-
     """Represents a simple 2D point."""
 
     def __init__(self, x: float, y: float) -> None:
@@ -724,7 +683,7 @@ class Point2D:
         """
         return f"{self.x},{self.y}"
 
-    def __add__(self, other: float) -> Point2D:
+    def __add__(self, other: Point2D) -> Point2D:
         """Adds another point to this one, returning the resulting sum.
 
         Args:
@@ -735,7 +694,7 @@ class Point2D:
         """
         return Point2D(self.x + other.x, self.y + other.y)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Point2D) -> Point2D:
         """Subtracts another point from this one, returning the result.
 
         Args:
@@ -749,8 +708,8 @@ class Point2D:
 
 NumericType = TypeVar("NumericType", int, float)
 
-class ValueRange(Generic[NumericType]):
 
+class ValueRange(Generic[NumericType]):
     """Represents a value range for a numerical type."""
 
     _low: NumericType

@@ -4,23 +4,25 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, List, Optional
+from typing import (
+    Any,
+    Callable,
+)
 
 from gremlin import error
 
 
 class TreeNode:
-
     """Represents a single node in a tree.
 
     Supports basic functionaolity for tree construction and modification.
     """
 
     def __init__(
-            self,
-            value: Optional[Any] = None,
-            parent: Optional[TreeNode] = None
-    ):
+        self,
+        value: Any | None = None,  # noqa: ANN401
+        parent: TreeNode | None = None,
+    ) -> None:
         """Creates a new tree instance.
 
         Args:
@@ -59,9 +61,7 @@ class TreeNode:
             other: the node to add as sibling
         """
         if self.parent is None:
-            raise error.GremlinError(
-                "Cannot add sibling node to root node."
-            )
+            raise error.GremlinError("Cannot add sibling node to root node.")
 
         other.parent = self.parent
         self.parent.children.append(other)
@@ -73,13 +73,11 @@ class TreeNode:
             other: the node to add as sibling
         """
         if self.parent is None:
-            raise error.GremlinError(
-                "Cannot add sibling node to root node."
-            )
+            raise error.GremlinError("Cannot add sibling node to root node.")
 
         other.parent = self.parent
         index = self.parent.children.index(self)
-        self.parent.children.insert(index+1, other)
+        self.parent.children.insert(index + 1, other)
 
     def insert_sibling_before(self, other: TreeNode) -> None:
         """Inserts a new sibling before this node.
@@ -88,9 +86,7 @@ class TreeNode:
             other: the node to add as sibling
         """
         if self.parent is None:
-            raise error.GremlinError(
-                "Cannot add sibling node to root node."
-            )
+            raise error.GremlinError("Cannot add sibling node to root node.")
 
         other.parent = self.parent
         index = self.parent.children.index(self)
@@ -105,9 +101,7 @@ class TreeNode:
         # Check for direct cycles. If any are present resolve them and log
         # a warning message as this could be a sign of unintended behavior
         if other.is_descendant(self) or self.is_descendant(other):
-            raise error.GremlinError(
-                "Setting parent would cause a cycle, aborting"
-            )
+            raise error.GremlinError("Setting parent would cause a cycle, aborting")
 
         if self.parent is not None:
             self.parent.remove_child(self)
@@ -198,7 +192,7 @@ class TreeNode:
 
         raise error.GremlinError(f"No node with index {index} exists.")
 
-    def nodes_matching(self, predicate: Callable[[TreeNode], bool]) -> List[TreeNode]:
+    def nodes_matching(self, predicate: Callable[[TreeNode], bool]) -> list[TreeNode]:
         """Returns the list of nodes for which the predicate is true.
 
         Args:

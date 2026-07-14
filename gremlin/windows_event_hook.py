@@ -2,10 +2,12 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import ctypes
+import threading
 from ctypes import wintypes
 from dataclasses import dataclass
-import threading
 from typing import Callable
 
 from gremlin.common import SingletonMetaclass
@@ -33,12 +35,10 @@ g_mouse_callbacks = []
 
 # Signature of a hook callback function which can be used as a decorator
 HOOKPROC = ctypes.WINFUNCTYPE(
-    wintypes.LPARAM,
-    ctypes.c_int,
-    wintypes.WPARAM,
-    wintypes.LPARAM
+    wintypes.LPARAM, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
 )
 
+# fmt: off
 # Function to hook into an event stream
 user32.SetWindowsHookExW.restype = wintypes.HHOOK
 user32.SetWindowsHookExW.argtypes = (
@@ -64,6 +64,7 @@ user32.GetMessageW.argtypes = (
     wintypes.UINT,          # _In_     wMsgFilterMin
     wintypes.UINT           # _In_     wMsgFilterMax
 )
+# fmt: on
 
 # Convert message content
 user32.TranslateMessage.argtypes = (wintypes.LPMSG,)
@@ -71,6 +72,7 @@ user32.TranslateMessage.argtypes = (wintypes.LPMSG,)
 # Dispatch message to hooked processes
 user32.DispatchMessageW.argtypes = (wintypes.LPMSG,)
 
+# fmt: off
 # Action definitions
 HC_ACTION       = 0
 WH_KEYBOARD_LL  = 13
@@ -88,38 +90,41 @@ WM_MOUSEWHEEL   = 0x020A
 WM_XBUTTONDOWN  = 0x020B
 WM_XBUTTONUP    = 0x020C
 WM_MOUSEHWHEEL  = 0x020E
+# fmt: on
 
 
 class KBDLLHOOKSTRUCT(ctypes.Structure):
-
     """Data structure used with keuboard callbacks."""
 
     _fields_ = (
-        ("vkCode",      wintypes.DWORD),
-        ("scanCode",    wintypes.DWORD),
-        ("flags",       wintypes.DWORD),
-        ("time",        wintypes.DWORD),
-        ("dwExtraInfo", wintypes.WPARAM)
+        ("vkCode", wintypes.DWORD),
+        ("scanCode", wintypes.DWORD),
+        ("flags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", wintypes.WPARAM),
     )
+
+
 LPKBDLLHOOKSTRUCT = ctypes.POINTER(KBDLLHOOKSTRUCT)
 
 
 class MSLLHOOKSTRUCT(ctypes.Structure):
-
     """Data structure used with mouse callbacks."""
 
     _fields_ = (
-        ("pt",          wintypes.POINT),
-        ("mouseData",   wintypes.DWORD),
-        ("flags",       wintypes.DWORD),
-        ("time",        wintypes.DWORD),
-        ("dwExtraInfo", wintypes.WPARAM)
+        ("pt", wintypes.POINT),
+        ("mouseData", wintypes.DWORD),
+        ("flags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", wintypes.WPARAM),
     )
+
+
 LPMSLLHOOKSTRUCT = ctypes.POINTER(MSLLHOOKSTRUCT)
 
 
 @HOOKPROC
-def process_keyboard_event(n_code, w_param, l_param):
+def process_keyboard_event(n_code: int, w_param: int, l_param: int) -> int:
     """Process a single keyboard event.
 
     :param n_code code detailing how to process the event
@@ -156,7 +161,7 @@ def process_keyboard_event(n_code, w_param, l_param):
 
 
 @HOOKPROC
-def process_mouse_event(n_code, w_param, l_param):
+def process_mouse_event(n_code: int, w_param: int, l_param: int) -> int:
     """Process a single mouse event.
 
     :param n_code code detailing how to process the event
@@ -202,7 +207,6 @@ def process_mouse_event(n_code, w_param, l_param):
 
 @dataclass
 class KeyEvent:
-
     """Structure containing details about a key event.
 
     - scan_code is the hardware scan code of this event
@@ -211,10 +215,10 @@ class KeyEvent:
     - is_injected indicates if the event has been injected
     """
 
-    scan_code : int
-    is_extended : bool
-    is_pressed : bool
-    is_injected : bool
+    scan_code: int
+    is_extended: bool
+    is_pressed: bool
+    is_injected: bool
 
     def __str__(self) -> str:
         """Returns a string representation of the event.
@@ -223,22 +227,21 @@ class KeyEvent:
         """
         up_or_down = "down" if self.is_pressed else "up"
         injected_str = "injected" if self.is_injected else ""
-        return f"({hex(self.scan_code)} {self.is_extended}) " \
-               f"{up_or_down}, {injected_str}"
+        return (
+            f"({hex(self.scan_code)} {self.is_extended}) {up_or_down}, {injected_str}"
+        )
 
 
 @dataclass
 class MouseEvent:
-
     """Structure containing information about a mouse event."""
 
-    button_id : MouseButton
-    is_pressed : bool
-    is_injected : bool
+    button_id: MouseButton
+    is_pressed: bool
+    is_injected: bool
 
 
 class KeyboardHook(metaclass=SingletonMetaclass):
-
     """Hooks into the event stream and grabs keyboard related events
     and passes them on to registered callback functions.
     """
@@ -276,10 +279,7 @@ class KeyboardHook(metaclass=SingletonMetaclass):
     def _listen(self) -> None:
         """Configures the hook and starts listening."""
         hook_id = user32.SetWindowsHookExW(
-            WH_KEYBOARD_LL,
-            process_keyboard_event,
-            None,
-            0
+            WH_KEYBOARD_LL, process_keyboard_event, None, 0
         )
 
         msg = wintypes.MSG()
@@ -288,18 +288,17 @@ class KeyboardHook(metaclass=SingletonMetaclass):
             if not result:
                 break
             if result == -1:
-                raise ctypes.WinError(get_last_error())
+                raise ctypes.WinError(ctypes.get_last_error())
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
 
         try:
             user32.UnhookWindowsHookEx(hook_id)
-        except Exception as e:
+        except Exception:
             pass
 
 
 class MouseHook(metaclass=SingletonMetaclass):
-
     """Hooks into the event stream and grabs mouse related events and passes
     them on to registered callback functions.
     """
@@ -334,12 +333,7 @@ class MouseHook(metaclass=SingletonMetaclass):
 
     def _listen(self) -> None:
         """Configures the hook and starts listening."""
-        hook_id = user32.SetWindowsHookExW(
-            WH_MOUSE_LL,
-            process_mouse_event,
-            None,
-            0
-        )
+        hook_id = user32.SetWindowsHookExW(WH_MOUSE_LL, process_mouse_event, None, 0)
 
         msg = wintypes.MSG()
         while self._running:
@@ -347,7 +341,7 @@ class MouseHook(metaclass=SingletonMetaclass):
             if not result:
                 break
             if result == -1:
-                raise ctypes.WinError(get_last_error())
+                raise ctypes.WinError(ctypes.get_last_error())
             user32.TranslateMessage(ctypes.byref(msg))
             user32.DispatchMessageW(ctypes.byref(msg))
 

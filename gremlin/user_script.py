@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import copy
 import functools
 import heapq
@@ -13,40 +12,42 @@ import importlib.util
 import inspect
 import logging
 import numbers
-from pathlib import Path
 import random
 import string
 import threading
 import time
+import uuid
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from pathlib import Path
 from typing import (
-    override,
     Any,
     Callable,
-    List,
+    override,
 )
-import uuid
 from xml.etree import ElementTree
 
 import dill
-from vjoy.vjoy import VJoyProxy
-
-from gremlin.input_cache import (
-    Joystick,
-    Keyboard,
-)
 import gremlin.keyboard
-from gremlin.logical_device import LogicalDevice
-from gremlin.types import (
-    HatDirection,
-    InputType,
-    PropertyType,
-)
 from gremlin import (
     error,
     event_handler,
     shared_state,
     util,
 )
+from gremlin.input_cache import (
+    Joystick,
+    Keyboard,
+)
+from gremlin.logical_device import LogicalDevice
+from gremlin.types import (
+    HatDirection,
+    InputType,
+    PropertyType,
+)
+from vjoy.vjoy import VJoyProxy
 
 
 def _resolve_path(script_path: Path) -> Path:
@@ -58,7 +59,6 @@ def _resolve_path(script_path: Path) -> Path:
 
 
 class CallbackRegistry:
-
     """Registry of all callbacks known to the system."""
 
     def __init__(self) -> None:
@@ -66,12 +66,7 @@ class CallbackRegistry:
         self._registry = {}
         self._current_id = 0
 
-    def add(
-            self,
-            callback: Callable,
-            event: event_handler.Event,
-            mode: str
-    ) -> None:
+    def add(self, callback: Callable, event: event_handler.Event, mode: str) -> None:
         """Adds a new callback to the registry.
 
         Args:
@@ -80,7 +75,7 @@ class CallbackRegistry:
             mode: the mode in which to trigger the callback
         """
         self._current_id += 1
-        function_name = "{}_{:d}".format(callback.__name__, self._current_id)
+        function_name = f"{callback.__name__}_{self._current_id:d}"
 
         if event.device_guid not in self._registry:
             self._registry[event.device_guid] = {}
@@ -106,7 +101,6 @@ class CallbackRegistry:
 
 
 class PeriodicRegistry:
-
     """Registry for periodically executed functions."""
 
     def __init__(self) -> None:
@@ -170,11 +164,7 @@ class PeriodicRegistry:
     def _thread_loop(self) -> None:
         """Main execution loop run in a separate thread."""
         # Setup plugins to use
-        self._plugins = [
-            JoystickPlugin(),
-            VJoyPlugin(),
-            KeyboardPlugin()
-        ]
+        self._plugins = [JoystickPlugin(), VJoyPlugin(), KeyboardPlugin()]
         callback_map = {}
 
         # Populate the queue
@@ -183,8 +173,7 @@ class PeriodicRegistry:
             plugin_cb = self._install_plugins(item[1])
             callback_map[plugin_cb] = item[0]
             heapq.heappush(
-                self._queue,
-                (time.time() + callback_map[plugin_cb], plugin_cb)
+                self._queue, (time.time() + callback_map[plugin_cb], plugin_cb)
             )
 
         # Main thread loop
@@ -195,8 +184,7 @@ class PeriodicRegistry:
                 item[1]()
 
                 heapq.heappush(
-                    self._queue,
-                    (time.time() + callback_map[item[1]], item[1])
+                    self._queue, (time.time() + callback_map[item[1]], item[1])
                 )
 
             # Sleep until either the next function needs to be run or
@@ -209,7 +197,6 @@ periodic_registry = PeriodicRegistry()
 
 
 class JoystickDecorator:
-
     """Creates customized decorators for physical joystick devices."""
 
     def __init__(self, name: str, device_guid: str, mode: str) -> None:
@@ -237,24 +224,23 @@ class JoystickDecorator:
             _input_callback,
             device_guid=self.device_guid,
             input_type=InputType.JoystickAxis,
-            mode=self.mode
+            mode=self.mode,
         )
         self.button = functools.partial(
             _input_callback,
             device_guid=self.device_guid,
             input_type=InputType.JoystickButton,
-            mode=self.mode
+            mode=self.mode,
         )
         self.hat = functools.partial(
             _input_callback,
             device_guid=self.device_guid,
             input_type=InputType.JoystickHat,
-            mode=self.mode
+            mode=self.mode,
         )
 
 
 class VJoyPlugin:
-
     """Plugin providing automatic access to the VJoyProxy object.
 
     For a function to use this plugin it requires one of its parameters
@@ -284,7 +270,6 @@ class VJoyPlugin:
 
 
 class JoystickPlugin:
-
     """Plugin providing automatic access to the Joystick object.
 
     For a function to use this plugin it requires one of its parameters
@@ -314,7 +299,6 @@ class JoystickPlugin:
 
 
 class KeyboardPlugin:
-
     """Plugin providing automatic access to the Keyboard object.
 
     For a function to use this plugin it requires one of its parameters
@@ -341,7 +325,6 @@ class KeyboardPlugin:
 
 
 class ScriptVariableRegistry:
-
     def __init__(self) -> None:
         self._registry = {}
 
@@ -381,7 +364,7 @@ class ScriptVariableRegistry:
             self._registry[script_id] = {}
         self._registry[script_id][variable.name] = variable
 
-    def get(self, script_id: uuid.UUID, name: str) -> AbstractVariable|None:
+    def get(self, script_id: uuid.UUID, name: str) -> AbstractVariable | None:
         """Returns a variable from the registry.
 
         Args:
@@ -397,12 +380,11 @@ class ScriptVariableRegistry:
 
 
 class Script:
-
     """Represents the prototype of a script."""
 
     variable_registry = ScriptVariableRegistry()
 
-    def __init__(self, path: Path=Path(), name: str="") -> None:
+    def __init__(self, path: Path = Path(), name: str = "") -> None:
         """Creates a new Script."""
         self._id = uuid.uuid4()
         self.path = _resolve_path(path)
@@ -429,9 +411,9 @@ class Script:
         Returns:
             True if the instance is fully configured, False otherwise
         """
-        return all([
-            var.is_valid() for var in self.variables.values() if not var.is_optional
-        ])
+        return all(
+            [var.is_valid() for var in self.variables.values() if not var.is_optional]
+        )
 
     def has_variable(self, name: str) -> bool:
         """Returns if this instance has a particular variable.
@@ -493,9 +475,7 @@ class Script:
         }
 
         self._id = util.read_uuid(node, "script", "id")
-        self.path = _resolve_path(
-            util.read_property(node, "path", PropertyType.Path)
-        )
+        self.path = _resolve_path(util.read_property(node, "path", PropertyType.Path))
         self.name = util.read_property(node, "name", PropertyType.String)
 
         # Retrieve variable information from the script and instantiate them
@@ -514,8 +494,8 @@ class Script:
             type_name = entry.get("type")
             if not isinstance(self.variables[name], lookup[type_name]):
                 raise error.GremlinError(
-                    f"Script: Type mismatch, profile contains '{type_name}' " + \
-                    f"while script expects '{self.variables[name]}'"
+                    f"Script: Type mismatch, profile contains '{type_name}' "
+                    + f"while script expects '{self.variables[name]}'"
                 )
             self.variables[name].from_xml(entry)
 
@@ -533,7 +513,7 @@ class Script:
             [
                 ("path", self.path, PropertyType.Path),
                 ("name", str(self.name), PropertyType.String),
-            ]
+            ],
         )
         node.set("id", util.safe_format(self._id, uuid.UUID))
         for entry in self.variables.values():
@@ -567,8 +547,7 @@ class Script:
             raise error.GremlinError(f"Invalid script file '{self.path}'")
 
         self.spec = importlib.util.spec_from_file_location(
-            "".join(random.choices(string.ascii_lowercase, k=16)),
-            str(self.path)
+            "".join(random.choices(string.ascii_lowercase, k=16)), str(self.path)
         )
         self.module = importlib.util.module_from_spec(self.spec)
         self.module._script_id = self.id
@@ -578,7 +557,7 @@ class Script:
             if isinstance(value, AbstractVariable):
                 if value.name in self.variables:
                     logging.getLogger("system").error(
-                        f"Script: Duplicate label {value.label} present in {path}"
+                        f"Script: Duplicate label {value.label} present in {self.path}"
                     )
                 self.variables[value.name] = copy.deepcopy(value)
 
@@ -592,14 +571,10 @@ class Script:
 
 
 class AbstractVariable(ABC):
-
     xml_tag = "abstract"
 
     def __init__(
-            self,
-            name: str | None = None,
-            description: str = "",
-            is_optional: bool = True
+        self, name: str | None = None, description: str = "", is_optional: bool = True
     ) -> None:
         self.name = name
         self.description = description
@@ -608,12 +583,12 @@ class AbstractVariable(ABC):
 
     @property
     @abstractmethod
-    def value(self) -> Any:
+    def value(self) -> Any:  # noqa: ANN401
         pass
 
     @value.setter
     @abstractmethod
-    def value(self, value: Any) -> None:
+    def value(self, value: Any) -> None:  # noqa: ANN401
         pass
 
     def from_xml(self, node: ElementTree.Element) -> None:
@@ -625,12 +600,7 @@ class AbstractVariable(ABC):
             return None
         node = ElementTree.Element("variable")
         node.set("type", self.xml_tag)
-        util.append_property_nodes(
-            node,
-            [
-                ["name", self.name, PropertyType.String]
-            ]
-        )
+        util.append_property_nodes(node, [["name", self.name, PropertyType.String]])
         self._to_xml(node)
         return node
 
@@ -650,12 +620,9 @@ class AbstractVariable(ABC):
     def _assign_value_from(self, other: AbstractVariable) -> None:
         pass
 
-    def _get_script_id(self) -> uuid.UUID|None:
+    def _get_script_id(self) -> uuid.UUID | None:
         for frame in inspect.stack():
-            identifier = frame.frame.f_locals.get(
-                "_script_id",
-                None
-            )
+            identifier = frame.frame.f_locals.get("_script_id", None)
             if isinstance(identifier, uuid.UUID):
                 return identifier
         return None
@@ -672,15 +639,10 @@ class AbstractVariable(ABC):
 
 
 class BoolVariable(AbstractVariable):
-
     xml_tag = "bool"
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            initial_value: bool
+        self, name: str, description: str, is_optional: bool, initial_value: bool
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -702,26 +664,23 @@ class BoolVariable(AbstractVariable):
         self._value = util.read_property(node, "value", PropertyType.Bool)
 
     def _to_xml(self, node: ElementTree.Element) -> None:
-        node.append(util.create_property_node(
-            "value", self.value, PropertyType.Bool
-        ))
+        node.append(util.create_property_node("value", self.value, PropertyType.Bool))
 
     def _assign_value_from(self, other: BoolVariable) -> None:
         self._value = other.value
 
 
 class FloatVariable(AbstractVariable):
-
     xml_tag = "float"
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            initial_value: float,
-            min_value: float,
-            max_value: float,
+        self,
+        name: str,
+        description: str,
+        is_optional: bool,
+        initial_value: float,
+        min_value: float,
+        max_value: float,
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -766,17 +725,16 @@ class FloatVariable(AbstractVariable):
 
 
 class IntegerVariable(AbstractVariable):
-
     xml_tag = "int"
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            initial_value: int,
-            min_value: int,
-            max_value: int,
+        self,
+        name: str,
+        description: str,
+        is_optional: bool,
+        initial_value: int,
+        min_value: int,
+        max_value: int,
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -808,27 +766,19 @@ class IntegerVariable(AbstractVariable):
         self._value = util.read_property(node, "value", PropertyType.Int)
 
     def _to_xml(self, node: ElementTree.Element) -> None:
-        node.append(util.create_property_node(
-            "value", self._value, PropertyType.Int
-        ))
+        node.append(util.create_property_node("value", self._value, PropertyType.Int))
 
     def _assign_value_from(self, other: IntegerVariable) -> None:
         self._value = other.value
 
 
 class KeyboardVariable(AbstractVariable):
-
     xml_tag = "keyboard"
 
-    def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool
-    ) -> None:
+    def __init__(self, name: str, description: str, is_optional: bool) -> None:
         super().__init__(name, description, is_optional)
 
-        self._value : None | gremlin.keyboard.Key = None
+        self._value: None | gremlin.keyboard.Key = None
         self._initialize_from_registry()
 
     @property
@@ -841,10 +791,11 @@ class KeyboardVariable(AbstractVariable):
 
     def is_valid(self) -> bool:
         return isinstance(self._value, gremlin.keyboard.Key)
+
     def _from_xml(self, node: ElementTree.Element) -> None:
         self._value = gremlin.keyboard.key_from_code(
             util.read_property(node, "scan-code", PropertyType.Int),
-            util.read_property(node, "is-extended", PropertyType.Bool)
+            util.read_property(node, "is-extended", PropertyType.Bool),
         )
 
     def _to_xml(self, node: ElementTree.Element) -> None:
@@ -854,7 +805,7 @@ class KeyboardVariable(AbstractVariable):
             [
                 ["scan-code", self._value.scan_code, PropertyType.Int],
                 ["is-extended", self._value.is_extended, PropertyType.Bool],
-            ]
+            ],
         )
 
     def _assign_value_from(self, other: KeyboardVariable) -> None:
@@ -870,15 +821,14 @@ class KeyboardVariable(AbstractVariable):
 
 
 class LogicalDeviceVariable(AbstractVariable):
-
     xml_tag = "logical-device"
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            valid_types: List[InputType],
+        self,
+        name: str,
+        description: str,
+        is_optional: bool,
+        valid_types: list[InputType],
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -907,14 +857,10 @@ class LogicalDeviceVariable(AbstractVariable):
 
     def create_decorator(self, mode: str) -> JoystickDecorator:
         if not self.is_valid():
-            return JoystickDecorator(
-                "", str(dill.GUID_Invalid), ""
-            )
+            return JoystickDecorator("", str(dill.GUID_Invalid), "")
         else:
             return JoystickDecorator(
-                "Logical Device",
-                str(LogicalDevice.device_guid),
-                mode
+                "Logical Device", str(LogicalDevice.device_guid), mode
             )
 
     @property
@@ -933,9 +879,7 @@ class LogicalDeviceVariable(AbstractVariable):
         return self._ld.exists(self._identifier)
 
     def _from_xml(self, node: ElementTree.Element) -> None:
-        input_type = util.read_property(
-            node, "input-type", PropertyType.InputType
-        )
+        input_type = util.read_property(node, "input-type", PropertyType.InputType)
         input_id = util.read_property(node, "input-id", PropertyType.Int)
         self._identifier = LogicalDevice.Input.Identifier(input_type, input_id)
 
@@ -945,7 +889,7 @@ class LogicalDeviceVariable(AbstractVariable):
             [
                 ["input-type", self._identifier.type, PropertyType.InputType],
                 ["input-id", self._identifier.id, PropertyType.Int],
-            ]
+            ],
         )
 
     def _assign_value_from(self, other: LogicalDeviceVariable) -> None:
@@ -953,15 +897,9 @@ class LogicalDeviceVariable(AbstractVariable):
 
 
 class ModeVariable(AbstractVariable):
-
     xml_tag = "mode"
 
-    def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool
-    ) -> None:
+    def __init__(self, name: str, description: str, is_optional: bool) -> None:
         super().__init__(name, description, is_optional)
 
         self._mode = shared_state.current_profile.modes.first_mode
@@ -982,25 +920,22 @@ class ModeVariable(AbstractVariable):
         self._mode = util.read_property(node, "value", PropertyType.String)
 
     def _to_xml(self, node: ElementTree.Element) -> None:
-        node.append(util.create_property_node(
-            "value", self._mode, PropertyType.String
-        ))
+        node.append(util.create_property_node("value", self._mode, PropertyType.String))
 
     def _assign_value_from(self, other: ModeVariable) -> None:
         self._mode = other.value
 
 
 class SelectionVariable(AbstractVariable):
-
     xml_tag = "selection"
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            option_list: list[str],
-            default_index: int=0
+        self,
+        name: str,
+        description: str,
+        is_optional: bool,
+        option_list: list[str],
+        default_index: int = 0,
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -1012,7 +947,7 @@ class SelectionVariable(AbstractVariable):
         self._option_list = option_list
         self._set_current_index(default_index)
         self._initialize_from_registry()
-    
+
     def _set_current_index(self, index: int) -> None:
         if 0 <= index < len(self._option_list):
             self._current_index = index
@@ -1037,29 +972,22 @@ class SelectionVariable(AbstractVariable):
         return True
 
     def _from_xml(self, node: ElementTree.Element) -> None:
-        self._set_current_index(util.read_property(
-            node, "index", PropertyType.Int
-        ))
+        self._set_current_index(util.read_property(node, "index", PropertyType.Int))
 
     def _to_xml(self, node: ElementTree.Element) -> None:
-        node.append(util.create_property_node(
-            "index", self._current_index, PropertyType.Int
-        ))
+        node.append(
+            util.create_property_node("index", self._current_index, PropertyType.Int)
+        )
 
     def _assign_value_from(self, other: SelectionVariable) -> None:
         self._set_current_index(other._current_index)
 
 
 class StringVariable(AbstractVariable):
-
     xml_tag = "string"
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            initial_value: str
+        self, name: str, description: str, is_optional: bool, initial_value: str
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -1081,26 +1009,25 @@ class StringVariable(AbstractVariable):
         self._value = util.read_property(node, "value", PropertyType.String)
 
     def _to_xml(self, node: ElementTree.Element) -> None:
-        node.append(util.create_property_node(
-            "value", self._value, PropertyType.String
-        ))
+        node.append(
+            util.create_property_node("value", self._value, PropertyType.String)
+        )
 
     def _assign_value_from(self, other: StringVariable) -> None:
         self._value = other.value
 
 
 class PhysicalInputVariable(AbstractVariable):
-
     xml_tag = "physical-input"
 
     type Identifier = tuple[uuid.UUID, InputType, int]
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            valid_types: list[InputType],
+        self,
+        name: str,
+        description: str,
+        is_optional: bool,
+        valid_types: list[InputType],
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -1152,15 +1079,9 @@ class PhysicalInputVariable(AbstractVariable):
 
     def create_decorator(self, mode: str) -> JoystickDecorator:
         if not self.is_valid():
-            return JoystickDecorator(
-                "", str(dill.GUID_Invalid), ""
-            )
+            return JoystickDecorator("", str(dill.GUID_Invalid), "")
         else:
-            return JoystickDecorator(
-                "device name",
-                str(self._device_guid),
-                mode
-            )
+            return JoystickDecorator("device name", str(self._device_guid), mode)
 
     def is_valid(self) -> bool:
         return (
@@ -1170,9 +1091,7 @@ class PhysicalInputVariable(AbstractVariable):
         )
 
     def _from_xml(self, node: ElementTree.Element) -> None:
-        self._device_guid = util.read_property(
-            node, "device-guid", PropertyType.UUID
-        )
+        self._device_guid = util.read_property(node, "device-guid", PropertyType.UUID)
         self._input_type = util.read_property(
             node, "input-type", PropertyType.InputType
         )
@@ -1185,7 +1104,7 @@ class PhysicalInputVariable(AbstractVariable):
                 ["device-guid", self._device_guid, PropertyType.UUID],
                 ["input-type", self._input_type, PropertyType.InputType],
                 ["input-id", self._input_id, PropertyType.Int],
-            ]
+            ],
         )
 
     def _assign_value_from(self, other: PhysicalInputVariable) -> None:
@@ -1203,15 +1122,14 @@ class PhysicalInputVariable(AbstractVariable):
 
 
 class VirtualInputVariable(AbstractVariable):
-
     xml_tag = "vjoy"
 
     def __init__(
-            self,
-            name: str,
-            description: str,
-            is_optional: bool,
-            valid_types: List[InputType],
+        self,
+        name: str,
+        description: str,
+        is_optional: bool,
+        valid_types: list[InputType],
     ) -> None:
         super().__init__(name, description, is_optional)
 
@@ -1245,7 +1163,7 @@ class VirtualInputVariable(AbstractVariable):
     def valid_types(self) -> list[InputType]:
         return self._valid_types
 
-    def remap(self, value: float|bool|HatDirection) -> None:
+    def remap(self, value: float | bool | HatDirection) -> None:
         device = VJoyProxy()[self._vjoy_id]
         match self._input_type:
             case InputType.JoystickButton:
@@ -1280,7 +1198,7 @@ class VirtualInputVariable(AbstractVariable):
                 ["vjoy-id", self._vjoy_id, PropertyType.Int],
                 ["input-type", self._input_type, PropertyType.InputType],
                 ["input-id", self._input_id, PropertyType.Int],
-            ]
+            ],
         )
 
     def _assign_value_from(self, other: VirtualInputVariable) -> None:
@@ -1317,7 +1235,7 @@ def keyboard(key_name: str, mode: str) -> Callable:
     def wrap(callback: Callable) -> Callable:
 
         @functools.wraps(callback)
-        def wrapper_fn(*args, **kwargs):
+        def wrapper_fn(*args: Any, **kwargs: dict) -> None:  # noqa: ANN401
             callback(*args, **kwargs)
 
         key = gremlin.keyboard.key_from_name(key_name)
@@ -1339,7 +1257,7 @@ def periodic(interval: float) -> Callable:
     def wrap(callback: Callable) -> Callable:
 
         @functools.wraps(callback)
-        def wrapper_fn(*args, **kwargs):
+        def wrapper_fn(*args: Any, **kwargs: dict) -> None:  # noqa: ANN401
             callback(*args, **kwargs)
 
         periodic_registry.add(wrapper_fn, interval)
@@ -1350,10 +1268,7 @@ def periodic(interval: float) -> Callable:
 
 
 def _input_callback(
-        input_id: int,
-        device_guid: uuid.UUID,
-        input_type: InputType,
-        mode: str
+    input_id: int, device_guid: uuid.UUID, input_type: InputType, mode: str
 ) -> Callable:
     """Decorator for a specific input on a physical device.
 
@@ -1370,14 +1285,14 @@ def _input_callback(
     def wrap(callback: Callable) -> Callable:
 
         @functools.wraps(callback)
-        def wrapper_fn(*args, **kwargs):
+        def wrapper_fn(*args: Any, **kwargs: dict) -> None:  # noqa: ANN401
             callback(*args, **kwargs)
 
         event = event_handler.Event(
             event_type=input_type,
             identifier=input_id,
             device_guid=device_guid,
-            mode=mode
+            mode=mode,
         )
         callback_registry.add(wrapper_fn, event, mode)
 

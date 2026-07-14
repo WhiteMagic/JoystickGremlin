@@ -2,19 +2,20 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import ctypes
 import ctypes.wintypes
 import os
-import time
 import threading
+import time
 
-from PySide6 import QtCore
 import win32gui
 import win32process
+from PySide6 import QtCore
 
 
 class ProcessMonitor(QtCore.QObject):
-
     """Monitors the currently active window process.
 
     This class continuously monitors the active window and whenever
@@ -45,9 +46,7 @@ class ProcessMonitor(QtCore.QObject):
         """Starts monitoring the current process."""
         if not self.running:
             self.running = True
-            self._update_thread = threading.Thread(
-                target=self._update
-            )
+            self._update_thread = threading.Thread(target=self._update)
             self._update_thread.start()
 
     def stop(self) -> None:
@@ -66,17 +65,12 @@ class ProcessMonitor(QtCore.QObject):
             if pid != self._current_pid:
                 self._current_pid = pid
                 handle = ProcessMonitor.kernel32.OpenProcess(
-                    ProcessMonitor.PROCESS_QUERY_LIMITED_INFORMATION,
-                    False,
-                    pid
+                    ProcessMonitor.PROCESS_QUERY_LIMITED_INFORMATION, False, pid
                 )
 
                 self._buffer_size = ctypes.wintypes.DWORD(1024)
                 ProcessMonitor.kernel32.QueryFullProcessImageNameA(
-                    handle,
-                    0,
-                    self._buffer,
-                    ctypes.byref(self._buffer_size)
+                    handle, 0, self._buffer, ctypes.byref(self._buffer_size)
                 )
                 ProcessMonitor.kernel32.CloseHandle(handle)
 
@@ -104,7 +98,8 @@ def list_current_processes() -> list[str]:
        The list of active process executable paths
     """
     from win32com.client import GetObject
-    wmi = GetObject('winmgmts:')
+
+    wmi = GetObject("winmgmts:")
     processes = wmi.InstancesOf("Win32_Process")
     process_list = []
     for entry in processes:

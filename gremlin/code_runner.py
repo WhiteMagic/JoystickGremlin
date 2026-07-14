@@ -4,27 +4,24 @@
 
 from __future__ import annotations
 
-from abc import (
-    ABCMeta,
-    abstractmethod,
-)
 import logging
 import os
 import sys
 import time
-from typing import List
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 
 import dill
-from vjoy.vjoy import VJoyProxy
-
 from gremlin import (
     audio_player,
     device_initialization,
     error,
     event_handler,
     event_helpers,
-    input_cache,
     fsm,
+    input_cache,
     macro,
     mode_manager,
     profile,
@@ -42,10 +39,10 @@ from gremlin.types import (
     HatDirection,
     InputType,
 )
+from vjoy.vjoy import VJoyProxy
 
 
 class VirtualButton(metaclass=ABCMeta):
-
     """Implements a button like interface."""
 
     def __init__(self) -> None:
@@ -56,14 +53,21 @@ class VirtualButton(metaclass=ABCMeta):
         """Initializes the state of the button FSM."""
         states = ["up", "down"]
         actions = ["press", "release"]
-        noop = lambda: False
-        press = lambda: True
-        release = lambda: True
+
+        def noop() -> bool:
+            return False
+
+        def press() -> bool:
+            return True
+
+        def release() -> bool:
+            return True
+
         transitions = {
             ("up", "press"): fsm.Transition([press], "down"),
             ("up", "release"): fsm.Transition([noop], "up"),
             ("down", "release"): fsm.Transition([release], "up"),
-            ("down", "press"): fsm.Transition([noop], "down")
+            ("down", "press"): fsm.Transition([noop], "down"),
         }
         return fsm.FiniteStateMachine("up", states, actions, transitions)
 
@@ -81,12 +85,8 @@ class VirtualButton(metaclass=ABCMeta):
 
 
 class VirtualAxisButton(VirtualButton):
-
     def __init__(
-            self,
-            lower_limit: float,
-            upper_limit: float,
-            direction: AxisButtonDirection
+        self, lower_limit: float, upper_limit: float, direction: AxisButtonDirection
     ) -> None:
         super().__init__()
         self._lower_limit = lower_limit
@@ -127,8 +127,10 @@ class VirtualAxisButton(VirtualButton):
             self._fsm.perform("release")
             states = [True, False]
         inside_range = self._lower_limit <= value <= self._upper_limit
-        valid_direction = direction == self._direction or \
-            self._direction == AxisButtonDirection.Anywhere
+        valid_direction = (
+            direction == self._direction
+            or self._direction == AxisButtonDirection.Anywhere
+        )
         if inside_range and valid_direction:
             if newly_initialized:
                 self._fsm.set_state("down")
@@ -141,10 +143,9 @@ class VirtualAxisButton(VirtualButton):
 
 
 class VirtualHatButton(VirtualButton):
-
     """Treats directional hat events as a button."""
 
-    def __init__(self, directions: List[HatDirection]) -> None:
+    def __init__(self, directions: list[HatDirection]) -> None:
         super().__init__()
         self._directions = directions
 
@@ -156,11 +157,8 @@ class VirtualHatButton(VirtualButton):
 
 
 class VirtualButtonFunctor:
-
     def __init__(
-        self,
-        virtual_button: VirtualButton,
-        event_template: event_handler.Event
+        self, virtual_button: VirtualButton, event_template: event_handler.Event
     ) -> None:
         self._virtual_button = virtual_button
         self._event_template = event_template
@@ -176,7 +174,6 @@ class VirtualButtonFunctor:
 
 
 class CallbackObject:
-
     """Represents the callback executed in reaction to an input."""
 
     c_next_virtual_identifier = 1
@@ -209,9 +206,7 @@ class CallbackObject:
             True if the callback is to be always executed
         """
         actions = self._binding.root_action.get_actions()[0]
-        values = [
-            ActionProperty.AlwaysExecute in a.properties for a in actions
-        ]
+        values = [ActionProperty.AlwaysExecute in a.properties for a in actions]
         return any(values)
 
     def __call__(self, event: event_handler.Event) -> None:
@@ -220,14 +215,12 @@ class CallbackObject:
             self._functor(event, value)
 
             # Pause between the execution of subsequent bindings
-            if i < len(values)-1:
+            if i < len(values) - 1:
                 time.sleep(0.01)
 
     def _physical_event_setup(self) -> None:
         """Configures the callback object for traditional physical events."""
-        self._functor = self._binding.root_action.functor(
-            self._binding.root_action
-        )
+        self._functor = self._binding.root_action.functor(self._binding.root_action)
 
     def _virtual_event_setup(self) -> None:
         """Configures the callback object for virtual button handling.
@@ -249,7 +242,7 @@ class CallbackObject:
             device_guid=dill.UUID_Virtual,
             mode=self._binding.input_item.mode,
             is_pressed=False,
-            raw_value=False
+            raw_value=False,
         )
 
         # Create virtual button instance and virtual event generator
@@ -259,19 +252,18 @@ class CallbackObject:
                 VirtualAxisButton(
                     vb_instance.lower_limit,
                     vb_instance.upper_limit,
-                    vb_instance.direction
+                    vb_instance.direction,
                 ),
-                virtual_event
+                virtual_event,
             )
         elif isinstance(vb_instance, profile.VirtualHatButton):
             self._functor = VirtualButtonFunctor(
-                VirtualHatButton(vb_instance.directions),
-                virtual_event
+                VirtualHatButton(vb_instance.directions), virtual_event
             )
         else:
             raise error.GremlinError(
-                "Attempting to create virtual event setup when no virtual " +
-                "button is configured."
+                "Attempting to create virtual event setup when no virtual "
+                + "button is configured."
             )
 
         # Create new callback entries for the virtual button event to execute
@@ -300,16 +292,16 @@ class CallbackObject:
             dill.UUID_Virtual,
             self._binding.input_item.mode,
             virtual_event,
-            CallbackObject(virt_binding)
+            CallbackObject(virt_binding),
         )
 
-    def _generate_values(self, event: event_handler.Event) -> List[Value]:
+    def _generate_values(self, event: event_handler.Event) -> list[Value]:
         if event.event_type in [InputType.JoystickAxis, InputType.JoystickHat]:
             value = Value(event.value)
         elif event.event_type in [
             InputType.JoystickButton,
             InputType.Keyboard,
-            InputType.VirtualButton
+            InputType.VirtualButton,
         ]:
             value = Value(event.is_pressed)
         else:
@@ -319,7 +311,6 @@ class CallbackObject:
 
 
 class CodeRunner:
-
     """Runs the actual profile code."""
 
     def __init__(self) -> None:
@@ -367,12 +358,7 @@ class CodeRunner:
             # Add a fake keyboard action which does nothing to the callbacks
             # in every mode in order to have empty modes be "present".
             for mode_name in self._profile.modes.mode_names():
-                self.event_handler.add_callback(
-                    0,
-                    mode_name,
-                    None,
-                    lambda x: x
-                )
+                self.event_handler.add_callback(0, mode_name, None, lambda x: x)
 
             # Create callbacks fom the user scripts and other code.
             callback_count = 0
@@ -381,10 +367,7 @@ class CodeRunner:
                     for event, callback_list in events.items():
                         for callback in callback_list.values():
                             self.event_handler.add_callback(
-                                dev_id,
-                                mode,
-                                event,
-                                callback
+                                dev_id, mode, event, callback
                             )
                             callback_count += 1
 
@@ -397,15 +380,9 @@ class CodeRunner:
 
             # Connect signals.
             evt_listener = event_handler.EventListener()
-            evt_listener.keyboard_event.connect(
-                self.event_handler.process_event
-            )
-            evt_listener.joystick_event.connect(
-                self.event_handler.process_event
-            )
-            evt_listener.virtual_event.connect(
-                self.event_handler.process_event
-            )
+            evt_listener.keyboard_event.connect(self.event_handler.process_event)
+            evt_listener.joystick_event.connect(self.event_handler.process_event)
+            evt_listener.virtual_event.connect(self.event_handler.process_event)
             evt_listener.gremlin_active = True
 
             # Start various manager-style classes.
@@ -424,8 +401,7 @@ class CodeRunner:
             self._refresh_axes()
         except ImportError as e:
             signal.display_error(
-                "Unable to launch due to a missing user plugin.",
-                str(e)
+                "Unable to launch due to a missing user plugin.", str(e)
             )
 
     def stop(self) -> None:
@@ -473,13 +449,12 @@ class CodeRunner:
                 # The axis_map may have empty entries, which need to be ignored.
                 if entry.axis_index == 0:
                     continue
-                vjoy_state[vjoy_dev.vjoy_id][entry.axis_index] = \
-                    cache_dev.axis(entry.axis_index).value
+                vjoy_state[vjoy_dev.vjoy_id][entry.axis_index] = cache_dev.axis(
+                    entry.axis_index
+                ).value
 
         # Refresh physical input states.
-        if Configuration().value(
-            "global", "general", "refresh-axis-on-activation"
-        ):
+        if Configuration().value("global", "general", "refresh-axis-on-activation"):
             RefreshPhysicalInputs.refresh_axes()
 
         # Set vJoy axis default values unless the axis changed its value due
@@ -526,13 +501,10 @@ class CodeRunner:
                 event_type=action.input_item.input_type,
                 device_guid=action.input_item.device_id,
                 identifier=action.input_item.input_id,
-                mode=action.input_item.mode
+                mode=action.input_item.mode,
             )
 
             # Generate executable unit for the linked library item.
             self.event_handler.add_callback(
-                event.device_guid,
-                action.input_item.mode,
-                event,
-                CallbackObject(action)
+                event.device_guid, action.input_item.mode, event, CallbackObject(action)
             )

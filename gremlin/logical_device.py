@@ -6,17 +6,21 @@ from __future__ import annotations
 
 import collections
 import time
-from typing import cast, List, Optional
+from typing import cast
 
 import dill
-
-from gremlin.error import GremlinError, MissingImplementationError
 from gremlin.common import SingletonMetaclass
-from gremlin.types import InputType, HatDirection
+from gremlin.error import (
+    GremlinError,
+    MissingImplementationError,
+)
+from gremlin.types import (
+    HatDirection,
+    InputType,
+)
 
 
 class LogicalDevice(metaclass=SingletonMetaclass):
-
     """Implements a device like system for arbitrary amonuts of logical device
     inputs that can be used to combine and further modify inputs before
     ultimately feeding them to a vJoy device."""
@@ -24,7 +28,6 @@ class LogicalDevice(metaclass=SingletonMetaclass):
     device_guid = dill.UUID_LogicalDevice
 
     class Input:
-
         """General input class, base class for all other inputs."""
 
         Identifier = collections.namedtuple("Identifier", ["type", "id"])
@@ -63,7 +66,6 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             raise MissingImplementationError("Input._input_type not implemented")
 
     class Axis(Input):
-
         def __init__(self, label: str, id: int) -> None:
             super().__init__(label, id)
             self._value = 0.0
@@ -76,7 +78,6 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             return self._value
 
     class Button(Input):
-
         def __init__(self, label: str, id: int) -> None:
             super().__init__(label, id)
             self._value = False
@@ -89,7 +90,6 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             return self._value
 
     class Hat(Input):
-
         def __init__(self, label: str, id: int) -> None:
             super().__init__(label, id)
             self._value = HatDirection.Center
@@ -100,7 +100,6 @@ class LogicalDevice(metaclass=SingletonMetaclass):
         @property
         def direction(self) -> HatDirection:
             return self._value
-
 
     def __init__(self) -> None:
         self._inputs = {}
@@ -127,10 +126,10 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             return False
 
     def create(
-            self,
-            type: InputType,
-            input_id: Optional[int]=None,
-            label: Optional[str]=None
+        self,
+        type: InputType,
+        input_id: int | None = None,
+        label: str | None = None,
     ) -> Input:
         """Creates a new input instance of the given type.
 
@@ -145,7 +144,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
         do_create = {
             InputType.JoystickAxis: self.Axis,
             InputType.JoystickButton: self.Button,
-            InputType.JoystickHat: self.Hat
+            InputType.JoystickHat: self.Hat,
         }
 
         # Use provided input id or generate a new onw if the provided one is
@@ -202,7 +201,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
         del self._label_lookup[input.label]
         del input
 
-    def labels_of_type(self, type_list: List[InputType]=[]) -> List[str]:
+    def labels_of_type(self, type_list: list[InputType] = []) -> list[str]:
         """Returns all labels for inputs of the matching types.
 
         Args:
@@ -215,7 +214,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
         x = [e.label for e in self.inputs_of_type(type_list)]
         return x
 
-    def inputs_of_type(self, type_list: List[InputType]=[]) -> list[Input]:
+    def inputs_of_type(self, type_list: list[InputType] = []) -> list[Input]:
         """Returns input corresponding to the specified types.
 
         Args:
@@ -229,11 +228,11 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             type_list = [
                 InputType.JoystickAxis,
                 InputType.JoystickButton,
-                InputType.JoystickHat
+                InputType.JoystickHat,
             ]
         return [
-            e for e in
-            sorted(self._inputs.values(), key=lambda x: (x.type.name, x.label))
+            e
+            for e in sorted(self._inputs.values(), key=lambda x: (x.type.name, x.label))
             if e.type in type_list
         ]
 
@@ -253,8 +252,8 @@ class LogicalDevice(metaclass=SingletonMetaclass):
         inputs = self.inputs_of_type([type])
         if len(inputs) <= offset:
             raise GremlinError(
-                "Attempting to access an input item of type " +
-                f"{InputType.to_string(type)} with invalid offset {offset}"
+                "Attempting to access an input item of type "
+                + f"{InputType.to_string(type)} with invalid offset {offset}"
             )
         return inputs[offset]
 
@@ -275,7 +274,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             raise GremlinError(f"No logical axis with id {index} exists.")
         return cast(
             LogicalDevice.Axis,
-            self[LogicalDevice.Input.Identifier(InputType.JoystickAxis, index)]
+            self[LogicalDevice.Input.Identifier(InputType.JoystickAxis, index)],
         )
 
     def button(self, index: int) -> Button:
@@ -283,7 +282,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             raise GremlinError(f"No logical button with id {index} exists.")
         return cast(
             LogicalDevice.Button,
-            self[LogicalDevice.Input.Identifier(InputType.JoystickButton, index)]
+            self[LogicalDevice.Input.Identifier(InputType.JoystickButton, index)],
         )
 
     def hat(self, index: int) -> Hat:
@@ -291,7 +290,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             raise GremlinError(f"No logical hat with id {index} exists.")
         return cast(
             LogicalDevice.Hat,
-            self[LogicalDevice.Input.Identifier(InputType.JoystickHat, index)]
+            self[LogicalDevice.Input.Identifier(InputType.JoystickHat, index)],
         )
 
     def _lowest_available_id(self, type: InputType) -> int:
@@ -318,8 +317,7 @@ class LogicalDevice(metaclass=SingletonMetaclass):
         return id in [e.id for e in self.inputs_of_type([type])]
 
     def _resolve_to_identifier(
-        self,
-        identifier_or_label: Input.Identifier | str
+        self, identifier_or_label: Input.Identifier | str
     ) -> Input.Identifier:
         """Returns the identifier associated with the given lookup.
 
@@ -338,8 +336,6 @@ class LogicalDevice(metaclass=SingletonMetaclass):
             else:
                 raise GremlinError(
                     f"Provided lookup '{identifier_or_label}' is invalid."
-            )
+                )
         except KeyError:
-            raise GremlinError(
-                f"No input exists for '{identifier_or_label}'."
-            )
+            raise GremlinError(f"No input exists for '{identifier_or_label}'.")

@@ -6,14 +6,17 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 import os
 import re
+import time
 import uuid
+from typing import Any
 
-from typing import Any, Tuple
-
-from gremlin import common, error, util
+from gremlin import (
+    common,
+    error,
+    util,
+)
 from gremlin.types import PropertyType
 
 _config_file_path = os.path.join(util.userprofile_path(), "configuration.json")
@@ -32,7 +35,6 @@ _required_properties = {
 
 
 class Configuration(metaclass=common.SingletonMetaclass):
-
     """Responsible for loading and saving configuration data."""
 
     def __init__(self) -> None:
@@ -54,8 +56,9 @@ class Configuration(metaclass=common.SingletonMetaclass):
         if self._should_skip_reload():
             return
 
-        logging.getLogger("system") \
-            .info(f"Loading configuration from {_config_file_path}.")
+        logging.getLogger("system").info(
+            f"Loading configuration from {_config_file_path}."
+        )
 
         # Attempt to load the configuration file if this fails set
         # default empty values.
@@ -82,13 +85,13 @@ class Configuration(metaclass=common.SingletonMetaclass):
 
                     # Only parse types for which there is a conversion
                     if data_type in util._property_to_string:
-                        value =  util.property_from_string(data_type, value)
+                        value = util.property_from_string(data_type, value)
 
                     self._data[(section, group, name)] = {
                         "value": value,
                         "data_type": data_type,
                         "properties": entry["properties"],
-                        "expose": entry["expose"]
+                        "expose": entry["expose"],
                     }
 
         # Save all data
@@ -119,15 +122,12 @@ class Configuration(metaclass=common.SingletonMetaclass):
                 "value": value,
                 "data_type": PropertyType.to_string(entry["data_type"]),
                 "properties": entry["properties"],
-                "expose": entry["expose"]
+                "expose": entry["expose"],
             }
 
         # Write data to file
         with open(_config_file_path, "w") as hdl:
-            encoder = json.JSONEncoder(
-                sort_keys=True,
-                indent=4
-            )
+            encoder = json.JSONEncoder(sort_keys=True, indent=4)
             hdl.write(encoder.encode(json_data))
 
     def register(
@@ -136,10 +136,10 @@ class Configuration(metaclass=common.SingletonMetaclass):
         group: str,
         name: str,
         data_type: PropertyType,
-        initial_value: Any,
+        initial_value: Any,  # noqa: ANN401
         description: str,
         properties: dict[str, Any],
-        expose: bool=False
+        expose: bool = False,
     ) -> None:
         """Registers a new configuration parameter.
 
@@ -159,8 +159,8 @@ class Configuration(metaclass=common.SingletonMetaclass):
         # Check the data type is a known one
         if data_type not in _required_properties:
             raise error.GremlinError(
-                "Attempting to register an entry with unsupported data type: " +
-                f"{str(data_type)} in {key}"
+                "Attempting to register an entry with unsupported data type: "
+                + f"{str(data_type)} in {key}"
             )
 
         # Ensure all required properties are present
@@ -173,9 +173,9 @@ class Configuration(metaclass=common.SingletonMetaclass):
                     )
                 elif not isinstance(properties[req_prop], req_type):
                     raise error.GremlinError(
-                        f"Incorrect type for property '{req_prop}', expected " +
-                        f"'{req_type}' but got '{type(properties[req_prop])}' " +
-                        f"in entry {key}"
+                        f"Incorrect type for property '{req_prop}', expected "
+                        + f"'{req_type}' but got '{type(properties[req_prop])}' "
+                        + f"in entry {key}"
                     )
 
         # Handle pre-existing entries
@@ -188,8 +188,9 @@ class Configuration(metaclass=common.SingletonMetaclass):
 
             if data_type != self._data[key]["data_type"]:
                 logging.getLogger("system").warning(
-                    f"Data type for parameter '{key}' changed, updating from " +
-                    f"'{self._data[key]["data_type"]}' to '{data_type}'")
+                    f"Data type for parameter '{key}' changed, updating from "
+                    + f"'{self._data[key]['data_type']}' to '{data_type}'"
+                )
                 self._data[key]["data_type"] = data_type
 
             self._data[key]["description"] = description
@@ -201,12 +202,12 @@ class Configuration(metaclass=common.SingletonMetaclass):
                 "data_type": data_type,
                 "description": description,
                 "properties": properties,
-                "expose": expose
+                "expose": expose,
             }
 
         try:
             self.save()
-        except TypeError as e:
+        except TypeError:
             logging.getLogger("system").error(
                 f"Failed to save configuration after registering parameter {key}."
             )
@@ -228,7 +229,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
                 del self._data[key]
         self.save()
 
-    def get(self, section: str, group: str, name: str, entry: str) -> Any:
+    def get(self, section: str, group: str, name: str, entry: str) -> Any:  # noqa: ANN401
         """Gets the value of a specific parameter entry.
 
         Args:
@@ -242,7 +243,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         return self._retrieve_value(section, group, name, entry)
 
-    def set(self, section: str, group: str, name: str, value: Any) -> None:
+    def set(self, section: str, group: str, name: str, value: Any) -> None:  # noqa: ANN401
         """Sets the value of a specific parameter.
 
         Args:
@@ -255,18 +256,15 @@ class Configuration(metaclass=common.SingletonMetaclass):
         if key not in self._data:
             raise error.GremlinError(f"No parameter with key '{key}' exists.")
 
-        _, is_valid = util.determine_value_type(
-            value,
-            self._data[key]["data_type"]
-        )
+        _, is_valid = util.determine_value_type(value, self._data[key]["data_type"])
         if is_valid:
             self._data[key]["value"] = value
             self.save()
         else:
             data_type = self._data[key]["data_type"]
             raise error.GremlinError(
-                "Value has wrong data type, expted: " +
-                f"'{data_type}' got '{type(value)}'"
+                "Value has wrong data type, expted: "
+                + f"'{data_type}' got '{type(value)}'"
             )
 
     def exists(self, section: str, group: str, name: str) -> bool:
@@ -282,7 +280,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         return (section, group, name) in self._data
 
-    def sections(self, only_exposed: bool=True) -> list[str]:
+    def sections(self, only_exposed: bool = True) -> list[str]:
         """Returns the list of all sections.
 
         Args:
@@ -298,7 +296,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
                 section_names.append(key[0])
         return sorted(set(section_names))
 
-    def groups(self, section: str, only_exposed: bool=True) -> list[str]:
+    def groups(self, section: str, only_exposed: bool = True) -> list[str]:
         """Returns the list of groups used within a section.
 
         Args:
@@ -311,17 +309,14 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         group_names = []
         for key in self._data.keys():
-            if key[0] == section and \
-                    len(self.entries(key[0], key[1], only_exposed)) > 0:
+            if (
+                key[0] == section
+                and len(self.entries(key[0], key[1], only_exposed)) > 0
+            ):
                 group_names.append(key[1])
         return sorted(set(group_names))
 
-    def entries(
-            self,
-            section: str,
-            group: str,
-            only_exposed: bool=True
-    ) -> list[str]:
+    def entries(self, section: str, group: str, only_exposed: bool = True) -> list[str]:
         """Returns the list of entry names for a group within a section.
 
         Args:
@@ -334,18 +329,33 @@ class Configuration(metaclass=common.SingletonMetaclass):
             The list of groups occurring within the given section.
         """
         if only_exposed:
-            return sorted(list(set(
-                [key[2] for key in self._data.keys() if
-                 key[0] == section and key[1] == group and
-                 self.expose(section, group, key[2])]
-            )))
+            return sorted(
+                list(
+                    set(
+                        [
+                            key[2]
+                            for key in self._data.keys()
+                            if key[0] == section
+                            and key[1] == group
+                            and self.expose(section, group, key[2])
+                        ]
+                    )
+                )
+            )
         else:
-            return sorted(list(set(
-                [key[2] for key in self._data.keys() if
-                    key[0] == section and key[1] == group]
-            )))
+            return sorted(
+                list(
+                    set(
+                        [
+                            key[2]
+                            for key in self._data.keys()
+                            if key[0] == section and key[1] == group
+                        ]
+                    )
+                )
+            )
 
-    def value(self, section: str, group: str, name: str) -> Any:
+    def value(self, section: str, group: str, name: str) -> Any:  # noqa: ANN401
         """Returns the value associated with the given parameter.
 
         Args:
@@ -358,7 +368,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         """
         return self._retrieve_value(section, group, name, "value")
 
-    def data_type(self, section: str, group: str, name: str) -> Any:
+    def data_type(self, section: str, group: str, name: str) -> PropertyType:
         """Returns the data type of the specified entry.
 
         Args:
@@ -367,7 +377,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
             name: name by which the new parameter will be accessed
 
         Returns:
-            Value associated with the given parameter
+            Data type associated with the given parameter
         """
         return self._retrieve_value(section, group, name, "data_type")
 
@@ -420,18 +430,18 @@ class Configuration(metaclass=common.SingletonMetaclass):
         uuid_str = str(uuid).upper()
         if not self.exists("calibration", uuid_str, str(axis_id)):
             self.register(
-                "calibration", uuid_str, str(axis_id),
+                "calibration",
+                uuid_str,
+                str(axis_id),
                 PropertyType.List,
                 [-32768, 0, 0, 32767, True],
                 "",
                 {},
-                False
+                False,
             )
 
     def get_calibration(
-            self,
-            uuid: uuid.UUID,
-            axis_id: int
+        self, uuid: uuid.UUID, axis_id: int
     ) -> tuple[int, int, int, int, bool]:
         """Returns the calibration data of a given axis.
 
@@ -448,20 +458,11 @@ class Configuration(metaclass=common.SingletonMetaclass):
             return (-32768, 0, 0, 32767, True)
 
     def set_calibration(
-            self,
-            uuid: uuid.UUID,
-            axis_id: int,
-            data: Tuple[int, int, int, int, bool]
+        self, uuid: uuid.UUID, axis_id: int, data: tuple[int, int, int, int, bool]
     ) -> None:
         self.set("calibration", str(uuid).upper(), str(axis_id), list(data))
 
-    def _retrieve_value(
-        self,
-        section: str,
-        group: str,
-        name: str,
-        entry: str
-    ) -> Any:
+    def _retrieve_value(self, section: str, group: str, name: str, entry: str) -> Any:  # noqa: ANN401
         """Returns an entry from the storage.
 
         Args:
@@ -508,318 +509,7 @@ class Configuration(metaclass=common.SingletonMetaclass):
         Returns:
             True if reloading of the configuration should be skipped.
         """
-        return self._last_reload is not None and \
-            time.time() - self._last_reload < 1.0
-
-
-    # def set_last_mode(self, profile_path, mode_name):
-    #     """Stores the last active mode of the given profile.
-
-    #     :param profile_path profile path for which to store the mode
-    #     :param mode_name name of the active mode
-    #     """
-    #     if profile_path is None or mode_name is None:
-    #         return
-    #     self._data["last_mode"][profile_path] = mode_name
-    #     self.save()
-
-    # def get_last_mode(self, profile_path):
-    #     """Returns the last active mode of the given profile.
-
-    #     :param profile_path profile path for which to return the mode
-    #     :return name of the mode if present, None otherwise
-    #     """
-    #     return self._data["last_mode"].get(profile_path, None)
-
-    # def _has_profile(self, exec_path):
-    #     """Returns whether or not a profile exists for a given executable.
-
-    #     :param exec_path the path to the executable
-    #     :return True if a profile exists, False otherwise
-    #     """
-    #     return exec_path in self._data["profiles"]
-
-    # @property
-    # def last_profile(self):
-    #     """Returns the last used profile.
-
-    #     :return path to the most recently used profile
-    #     """
-    #     return self._data.get("last_profile", None)
-
-    # @last_profile.setter
-    # def last_profile(self, value):
-    #     """Sets the last used profile.
-
-    #     :param value path to the most recently used profile
-    #     """
-    #     self._data["last_profile"] = value
-
-    #     # Update recent profiles
-    #     if value is not None:
-    #         current = self.recent_profiles
-    #         if value in current:
-    #             del current[current.index(value)]
-    #         current.insert(0, value)
-    #         current = current[0:5]
-    #         self._data["recent_profiles"] = current
-    #     self.save()
-
-    # @property
-    # def recent_profiles(self):
-    #     """Returns a list of recently used profiles.
-
-    #     :return list of recently used profiles
-    #     """
-    #     return self._data.get("recent_profiles", [])
-
-    # @property
-    # def keep_last_autoload(self):
-    #     """Returns whether or not to keep last autoloaded profile active when it would otherwise
-    #     be automatically disabled.
-
-    #     This setting prevents unloading an autoloaded profile when not changing to another one.
-
-    #     :return True if last profile keeping is active, False otherwise
-    #     """
-    #     return self._data.get("keep_last_autoload", False)
-
-    # @keep_last_autoload.setter
-    # def keep_last_autoload(self, value):
-    #     """Sets whether or not to keep last autoloaded profile active when it would otherwise
-    #     be automatically disabled.
-
-    #     This setting prevents unloading an autoloaded profile when not changing to another one.
-
-    #     :param value Flag indicating whether or not to enable / disable the
-    #         feature
-    #     """
-    #     if type(value) == bool:
-    #         self._data["keep_last_autoload"] = value
-    #         self.save()
-
-    # @property
-    # def highlight_input(self):
-    #     """Returns whether or not to highlight inputs.
-
-    #     This enables / disables the feature where using a physical input
-    #     automatically selects it in the UI.
-
-    #     :return True if the feature is enabled, False otherwise
-    #     """
-    #     return self._data.get("highlight_input", True)
-
-    # @highlight_input.setter
-    # def highlight_input(self, value):
-    #     """Sets whether or not to highlight inputs.
-
-    #     This enables / disables the feature where using a physical input
-    #     automatically selects it in the UI.
-
-    #     :param value Flag indicating whether or not to enable / disable the
-    #         feature
-    #     """
-    #     if type(value) == bool:
-    #         self._data["highlight_input"] = value
-    #         self.save()
-
-    # @property
-    # def highlight_device(self):
-    #     """Returns whether or not highlighting swaps device tabs.
-
-    #     This enables / disables the feature where using a physical input
-    #     automatically swaps to the correct device tab.
-
-    #     :return True if the feature is enabled, False otherwise
-    #     """
-    #     return self._data.get("highlight_device", False)
-
-    # @highlight_device.setter
-    # def highlight_device(self, value):
-    #     """Sets whether or not to swap device tabs to highlight inputs.
-
-    #     This enables / disables the feature where using a physical input
-    #     automatically swaps to the correct device tab.
-
-    #     :param value Flag indicating whether or not to enable / disable the
-    #         feature
-    #     """
-    #     if type(value) == bool:
-    #         self._data["highlight_device"] = value
-    #         self.save()
-
-    # @property
-    # def mode_change_message(self):
-    #     """Returns whether or not to show a windows notification on mode change.
-
-    #     :return True if the feature is enabled, False otherwise
-    #     """
-    #     return self._data.get("mode_change_message", False)
-
-    # @mode_change_message.setter
-    # def mode_change_message(self, value):
-    #     """Sets whether or not to show a windows notification on mode change.
-
-    #     :param value True to enable the feature, False to disable
-    #     """
-    #     self._data["mode_change_message"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def activate_on_launch(self):
-    #     """Returns whether or not to activate the profile on launch.
-
-    #     :return True if the profile is to be activate on launch, False otherwise
-    #     """
-    #     return self._data.get("activate_on_launch", False)
-
-    # @activate_on_launch.setter
-    # def activate_on_launch(self, value):
-    #     """Sets whether or not to activate the profile on launch.
-
-    #     :param value aactivate profile on launch if True, or not if False
-    #     """
-    #     self._data["activate_on_launch"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def close_to_tray(self):
-    #     """Returns whether or not to minimze the application when closing it.
-
-    #     :return True if closing minimizes to tray, False otherwise
-    #     """
-    #     return self._data.get("close_to_tray", False)
-
-    # @close_to_tray.setter
-    # def close_to_tray(self, value):
-    #     """Sets whether or not to minimize to tray instead of closing.
-
-    #     :param value minimize to tray if True, close if False
-    #     """
-    #     self._data["close_to_tray"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def start_minimized(self):
-    #     """Returns whether or not to start Gremlin minimized.
-
-    #     :return True if starting minimized, False otherwise
-    #     """
-    #     return self._data.get("start_minimized", False)
-
-    # @start_minimized.setter
-    # def start_minimized(self, value):
-    #     """Sets whether or not to start Gremlin minimized.
-
-    #     :param value start minimized if True and normal if False
-    #     """
-    #     self._data["start_minimized"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def macro_axis_polling_rate(self):
-    #     """Returns the polling rate to use when recording axis macro actions.
-
-    #     :return polling rate to use when recording a macro with axis inputs
-    #     """
-    #     return self._data.get("macro_axis_polling_rate", 0.1)
-
-    # @macro_axis_polling_rate.setter
-    # def macro_axis_polling_rate(self, value):
-    #     self._data["macro_axis_polling_rate"] = value
-    #     self.save()
-
-    # @property
-    # def macro_axis_minimum_change_rate(self):
-    #     """Returns the minimum change in value required to record an axis event.
-
-    #     :return minimum axis change required
-    #     """
-    #     return self._data.get("macro_axis_minimum_change_rate", 0.005)
-
-    # @macro_axis_minimum_change_rate.setter
-    # def macro_axis_minimum_change_rate(self, value):
-    #     self._data["macro_axis_minimum_change_rate"] = value
-    #     self.save()
-
-    # @property
-    # def macro_record_axis(self):
-    #     return self._data.get("macro_record_axis", False)
-
-    # @macro_record_axis.setter
-    # def macro_record_axis(self, value):
-    #     self._data["macro_record_axis"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def macro_record_button(self):
-    #     return self._data.get("macro_record_button", True)
-
-    # @macro_record_button.setter
-    # def macro_record_button(self, value):
-    #     self._data["macro_record_button"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def macro_record_hat(self):
-    #     return self._data.get("macro_record_hat", True)
-
-    # @macro_record_hat.setter
-    # def macro_record_hat(self, value):
-    #     self._data["macro_record_hat"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def macro_record_keyboard(self):
-    #     return self._data.get("macro_record_keyboard", True)
-
-    # @macro_record_keyboard.setter
-    # def macro_record_keyboard(self, value):
-    #     self._data["macro_record_keyboard"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def macro_record_mouse(self):
-    #     return self._data.get("macro_record_mouse", False)
-
-    # @macro_record_mouse.setter
-    # def macro_record_mouse(self, value):
-    #     self._data["macro_record_mouse"] = bool(value)
-    #     self.save()
-
-    # @property
-    # def window_size(self):
-    #     """Returns the size of the main Gremlin window.
-
-    #     :return size of the main Gremlin window
-    #     """
-    #     return self._data.get("window_size", None)
-
-    # @window_size.setter
-    # def window_size(self, value):
-    #     """Sets the size of the main Gremlin window.
-
-    #     :param value the size of the main Gremlin window
-    #     """
-    #     self._data["window_size"] = value
-    #     self.save()
-
-    # @property
-    # def window_location(self):
-    #     """Returns the position of the main Gremlin window.
-
-    #     :return position of the main Gremlin window
-    #     """
-    #     return self._data.get("window_location", None)
-
-    # @window_location.setter
-    # def window_location(self, value):
-    #     """Sets the position of the main Gremlin window.
-
-    #     :param value the position of the main Gremlin window
-    #     """
-    #     self._data["window_location"] = value
-    #     self.save()
+        return self._last_reload is not None and time.time() - self._last_reload < 1.0
 
 
 def get_profile(exec_path: str) -> str | None:
@@ -831,9 +521,7 @@ def get_profile(exec_path: str) -> str | None:
     Returns:
         Path to the profile if one exists, None otherwise.
     """
-    for entry in Configuration().value(
-        "profile", "automation", "entries-auto-loading"
-    ):
+    for entry in Configuration().value("profile", "automation", "entries-auto-loading"):
         if entry[1] == exec_path and entry[2]:
             return entry[0]
     return None
@@ -864,7 +552,7 @@ def get_profile_with_regex(exec_path: str) -> str | None:
     # expression to match against the given exec_path.
     for entry in sorted(
         Configuration().value("profile", "automation", "entries-auto-loading"),
-        key=lambda x: x[1].lower()
+        key=lambda x: x[1].lower(),
     ):
         profile_path = entry[0]
         entry_path = entry[1]

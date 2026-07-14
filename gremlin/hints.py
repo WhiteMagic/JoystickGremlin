@@ -4,6 +4,8 @@
 
 """Reads hints from a CSV file and makes them available to Gremlin for use."""
 
+from __future__ import annotations
+
 import csv
 
 from gremlin.util import resource_path
@@ -14,7 +16,7 @@ hint = {}
 
 try:
     with open(resource_path("doc/hints.csv")) as csv_stream:
-        reader = csv.reader(csv_stream, delimiter=",", quotechar="\"")
+        reader = csv.reader(csv_stream, delimiter=",", quotechar='"')
         for row in reader:
             hint[row[0]] = row[1]
 except FileNotFoundError:
