@@ -260,10 +260,10 @@ class EventListener(QtCore.QObject):
             self._stop_event.clear()
             threading.Thread(target=self._run).start()
 
-    def reload_calibration(self, uuid: uuid.UUID, axis_index: int) -> None:
+    def reload_calibration(self, device_guid: dill.GUID, axis_index: int) -> None:
         """Reloads the calibration data of the specified axis."""
         cfg = config.Configuration()
-        key = (uuid, axis_index)
+        key = (device_guid, axis_index)
         self._calibrations[key] = util.create_calibration_function(
             *cfg.get_calibration(*key)
         )
@@ -447,7 +447,7 @@ class EventListener(QtCore.QObject):
         """
         for dev_info in device_initialization.joystick_devices():
             for entry in dev_info.axis_map:
-                self.reload_calibration(dev_info.device_uuid, entry.axis_index)
+                self.reload_calibration(dev_info.device_guid, entry.axis_index)
 
 
 @common.SingletonDecorator

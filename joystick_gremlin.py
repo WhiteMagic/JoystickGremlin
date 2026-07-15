@@ -14,12 +14,19 @@ import time
 import traceback
 import types
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 # Import QtMultimedia so pyinstaller doesn't miss it.
-from PySide6 import QtCore, QtGui, QtQml, QtQuick, QtWidgets
+from PySide6 import (
+    QtCore,
+    QtGui,
+    QtQml,
+    QtQuick,
+    QtWidgets,
+)
 
 import dill
+import resources  # noqa: F401 - registers Qt resources (fonts, icons) as a side effect
 import vjoy.vjoy
 from gremlin.config import Configuration
 from gremlin.types import PropertyType
@@ -341,7 +348,7 @@ def update_action_priorities() -> None:
 
 
 class JoystickGremlinApp(QtWidgets.QApplication):
-    def __init__(self, argv: List[str]) -> None:
+    def __init__(self, argv: list[str]) -> None:
         # Parse command line arguments.
         parser = argparse.ArgumentParser()
         parser.add_argument(
@@ -374,7 +381,6 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         sys.excepthook = exception_hook
 
         # Initialize joystick device handling.
-        self.syslog.info("Initializing joystick devices")
         dill.DILL.init()
         device_initialization_error = None
         try:
