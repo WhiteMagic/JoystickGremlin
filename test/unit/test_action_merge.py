@@ -2,13 +2,14 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
-import pytest
 import uuid
-from xml.etree import ElementTree
 
 # Test UUIDs
 _ACTION_ID = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
@@ -16,14 +17,11 @@ _DESCRIPTION_ID = uuid.UUID("fbe6be7b-07c9-4400-94f2-caa245ebcc7e")
 _DEVICE_GUID_1 = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540001")
 _DEVICE_GUID_2 = uuid.UUID("4DCB3090-97EC-11EB-8003-444553540002")
 
-from gremlin.types import DataInsertionMode
-from gremlin.error import GremlinError
-from gremlin.profile import Library, Profile
-import gremlin.types as types
-from gremlin.ui.device import InputIdentifier
-
 import action_plugins.merge_axis as merge_axis
+import gremlin.types as types
 from action_plugins.description import DescriptionData
+from gremlin.profile import Profile
+from gremlin.ui.device import InputIdentifier
 
 
 def test_ctor():
@@ -50,7 +48,7 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert a.axis_in1.input_id == 1
     assert a.axis_in2.device_guid == _DEVICE_GUID_2
     assert a.axis_in2.input_type == types.InputType.JoystickAxis
-    assert a.axis_in2.input_id ==  2
+    assert a.axis_in2.input_id == 2
 
 
 def test_to_xml():
@@ -67,18 +65,12 @@ def test_to_xml():
     a.axis_in2.device_guid = _DEVICE_GUID_2
     a.axis_in1.input_id = 1
     a.axis_in2.input_type = types.InputType.JoystickAxis
-    a.axis_in2.input_id =  2
+    a.axis_in2.input_id = 2
 
     node = a._to_xml()
-    assert node.find(
-            "./property/name[.='label']/../value"
-        ).text == "This is a test"
-    assert node.find(
-            "./property/name[.='operation']/../value"
-        ).text == "maximum"
-    assert node.find(
-            "./property/name[.='axis1-axis']/../value"
-        ).text == "1"
+    assert node.find("./property/name[.='label']/../value").text == "This is a test"
+    assert node.find("./property/name[.='operation']/../value").text == "maximum"
+    assert node.find("./property/name[.='axis1-axis']/../value").text == "1"
     assert (
         node.find("./property/name[.='axis1-guid']/../value").text.upper()
         == str(_DEVICE_GUID_1).upper()

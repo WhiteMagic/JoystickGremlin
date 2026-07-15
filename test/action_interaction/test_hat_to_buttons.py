@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import pytest
 
 from gremlin.types import HatDirection
@@ -45,10 +46,7 @@ def test_transition(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     assert jgbot.button(OUT_BUTTON_2) == False
 
 
-def test_transition_multiple(
-    jgbot: JoystickGremlinBot,
-    profile_dir: Path
-) -> None:
+def test_transition_multiple(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "hat_to_buttons.xml")
 
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.North)

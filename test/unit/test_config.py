@@ -2,18 +2,21 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
-from collections.abc import Iterator
 import tempfile
-import pytest
+from collections.abc import Iterator
 from unittest import mock
+
+import pytest
 
 import gremlin.config
 import gremlin.error
 import gremlin.types
-
 from gremlin.common import SingletonMetaclass
 from gremlin.types import PropertyType
 
@@ -27,17 +30,13 @@ def cfg() -> Iterator[gremlin.config.Configuration]:
     # restored when the fixutre is torn down.
     original_path = gremlin.config._config_file_path
     SingletonMetaclass._instances.pop(gremlin.config.Configuration, None)
-    with mock.patch.object(
-        gremlin.config, "_config_file_path", tempfile.mkstemp()[1]
-    ):
+    with mock.patch.object(gremlin.config, "_config_file_path", tempfile.mkstemp()[1]):
         try:
             yield gremlin.config.Configuration()
         finally:
             # Restore original config file path and delete singleton instance.
             gremlin.config._config_file_path = original_path
-            SingletonMetaclass._instances.pop(
-                gremlin.config.Configuration, None
-            )
+            SingletonMetaclass._instances.pop(gremlin.config.Configuration, None)
 
 
 def test_simple(cfg: gremlin.config.Configuration) -> None:
@@ -96,9 +95,7 @@ def test_load_save(cfg: gremlin.config.Configuration) -> None:
     assert cfg.expose("test", "case", "4") == False
 
     cfg.save()
-    with mock.patch.object(
-        cfg, cfg._should_skip_reload.__name__, return_value=False
-    ):
+    with mock.patch.object(cfg, cfg._should_skip_reload.__name__, return_value=False):
         cfg.load()
 
     assert cfg.value("test", "case", "1") == 42
@@ -115,9 +112,7 @@ def test_load_save(cfg: gremlin.config.Configuration) -> None:
 
 
 def test_exceptions(cfg: gremlin.config.Configuration) -> None:
-    cfg.register(
-        "test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20}
-    )
+    cfg.register("test", "case", "1", PropertyType.Int, 42, "", {"min": 1, "max": 20})
     with pytest.raises(gremlin.error.GremlinError):
         cfg.set("test", "case", "1", 3.14)
 

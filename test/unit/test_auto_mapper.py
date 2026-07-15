@@ -2,12 +2,20 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import pathlib
 
 import pytest
 
 import dill
-from gremlin import auto_mapper, device_initialization, profile, shared_state, types
+from gremlin import (
+    auto_mapper,
+    device_initialization,
+    profile,
+    shared_state,
+    types,
+)
 
 _PROFILE_DEVICE_AXIS_COUNT = 4
 _PROFILE_DEVICE_BUTTON_COUNT = 6
@@ -359,21 +367,29 @@ def test_iter_physical_inputs_for_empty_mode(
             assert hat.input_id == hat_i + 1
 
 
-def test_auto_map(subtests, xml_dir: pathlib.Path, register_profile_device: dill.DeviceSummary):
+def test_auto_map(
+    subtests, xml_dir: pathlib.Path, register_profile_device: dill.DeviceSummary
+):
     p = profile.Profile()
     p.from_xml(str(xml_dir / "profile_auto_mapper.xml"))
     shared_state.current_profile = p
 
     mapper = auto_mapper.AutoMapper(p)
     with subtests.test("default profile"):
-        assert mapper.generate_mappings(
+        assert (
+            mapper.generate_mappings(
                 [register_profile_device.device_guid],
                 [1],
                 auto_mapper.AutoMapperOptions(),
-        ) == "Created 2 mappings, retained 9 previous bindings."
+            )
+            == "Created 2 mappings, retained 9 previous bindings."
+        )
     with subtests.test("EmptyMode"):
-        assert mapper.generate_mappings(
+        assert (
+            mapper.generate_mappings(
                 [register_profile_device.device_guid],
                 [1],
                 auto_mapper.AutoMapperOptions(mode="EmptyMode"),
-        ) == "Created 13 mappings, retained 0 previous bindings."
+            )
+            == "Created 13 mappings, retained 0 previous bindings."
+        )

@@ -4,19 +4,18 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import uuid
+from pathlib import Path
 
-from action_plugins import merge_axis
 import gremlin.profile
+from action_plugins import merge_axis
 
 from .conftest import JoystickGremlinBot
 from .input_definitions import *
 
 
 def set_merge_mode(
-    profile: gremlin.profile.Profile,
-    mode: merge_axis.MergeOperation
+    profile: gremlin.profile.Profile, mode: merge_axis.MergeOperation
 ) -> None:
     k_merge_action_id = uuid.UUID("3c3ab772-a723-4ccb-a4ca-cf09061aa4d1")
     action = profile.library.get_action(k_merge_action_id)

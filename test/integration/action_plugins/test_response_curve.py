@@ -5,11 +5,25 @@
 """
 Integration test for response curve action using logical output devices.
 """
+
+from __future__ import annotations
+
 import pytest
 
-from action_plugins import response_curve, root, map_to_logical_device
 import dill
-from gremlin import logical_device, plugin_manager, profile, spline, types, mode_manager
+from action_plugins import (
+    map_to_logical_device,
+    response_curve,
+    root,
+)
+from gremlin import (
+    logical_device,
+    mode_manager,
+    plugin_manager,
+    profile,
+    spline,
+    types,
+)
 from test.integration import app_tester
 from test.integration.action_plugins.conftest import LogicalActionCallableT
 
@@ -29,8 +43,7 @@ def response_curve_action() -> response_curve.ResponseCurveData:
     """
     p_manager = plugin_manager.PluginManager()
     return p_manager.create_instance(
-        response_curve.ResponseCurveData.name,
-        types.InputType.JoystickAxis
+        response_curve.ResponseCurveData.name, types.InputType.JoystickAxis
     )
 
 

@@ -2,10 +2,13 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import pathlib
 import uuid
-from gremlin.profile import Profile
+
 from action_plugins import macro
+from gremlin.profile import Profile
 
 _PROFILE = "action_macro.xml"
 _ACTION_UUID = uuid.UUID("8759f48d-8879-488a-9895-07503bf0dc0c")

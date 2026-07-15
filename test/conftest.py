@@ -2,17 +2,22 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import pathlib
-import pytest
+import tempfile
 
 # Mock before any imports happen
 from unittest.mock import Mock
-import tempfile
+
+import pytest
+
 import gremlin.util
+
 gremlin.util.userprofile_path = Mock(return_value=tempfile.mkdtemp())
 
-import joystick_gremlin
 import gremlin.ui.backend
+import joystick_gremlin
 
 
 @pytest.fixture(scope="session")

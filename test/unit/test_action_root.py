@@ -2,20 +2,25 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
-import pytest
 import uuid
-from xml.etree import ElementTree
 
-from gremlin.error import GremlinError
-from gremlin.profile import Library, Profile
-from gremlin.types import InputType, DataInsertionMode
+import pytest
 
 from action_plugins.description import DescriptionData
-from action_plugins.root import RootData, RootModel
+from action_plugins.root import RootData
+from gremlin.error import GremlinError
+from gremlin.profile import Profile
+from gremlin.types import (
+    DataInsertionMode,
+    InputType,
+)
 
 _PROFILE_HIERARCHY = "profile_hierarchy.xml"
 

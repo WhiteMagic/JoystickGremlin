@@ -2,7 +2,10 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
@@ -12,7 +15,10 @@ from xml.etree import ElementTree
 
 from PySide6 import QtCore
 
-from action_plugins.run_command import RunCommandData, RunCommandFunctor
+from action_plugins.run_command import (
+    RunCommandData,
+    RunCommandFunctor,
+)
 from gremlin.base_classes import Value
 from gremlin.profile import Library
 from gremlin.types import InputType
@@ -32,9 +38,7 @@ def test_from_xml(xml_dir: pathlib.Path) -> None:
     library = Library()
     action = RunCommandData(InputType.JoystickButton)
     action.from_xml(
-        ElementTree.fromstring(
-            (xml_dir / _ACTION_RUN_COMMAND_SIMPLE).read_text()
-        ),
+        ElementTree.fromstring((xml_dir / _ACTION_RUN_COMMAND_SIMPLE).read_text()),
         library,
     )
 
@@ -67,9 +71,7 @@ def test_roundtrip(xml_dir: pathlib.Path) -> None:
     library = Library()
     source = RunCommandData(InputType.JoystickButton)
     source.from_xml(
-        ElementTree.fromstring(
-            (xml_dir / _ACTION_RUN_COMMAND_SIMPLE).read_text()
-        ),
+        ElementTree.fromstring((xml_dir / _ACTION_RUN_COMMAND_SIMPLE).read_text()),
         library,
     )
     node = source.to_xml()

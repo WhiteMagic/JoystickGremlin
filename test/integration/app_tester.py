@@ -2,21 +2,29 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import time
-from typing import Any, Callable, TypeVar
 import uuid
+from typing import (
+    Any,
+    Callable,
+    TypeVar,
+)
 
 import pytest
 from PySide6 import QtWidgets
 
 import dill
-from action_plugins import map_to_logical_device
-from gremlin import base_classes
-from gremlin import event_handler
-from gremlin import logical_device
-from gremlin import mode_manager
 import gremlin.input_cache
 import gremlin.types
+from action_plugins import map_to_logical_device
+from gremlin import (
+    base_classes,
+    event_handler,
+    logical_device,
+    mode_manager,
+)
 
 _InputTypeT = TypeVar("_InputTypeT")
 
@@ -192,12 +200,13 @@ class GremlinAppTester:
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
     ):
         self._assert_input_eventually_equals(
-            lambda: gremlin.input_cache.Joystick()
-                [dill.GUID_LogicalDevice.uuid]
-                [logical_device.LogicalDevice.Input.Identifier(
-                    gremlin.types.InputType.JoystickAxis,
-                    axis_id
-                )].value,
+            lambda: (
+                gremlin.input_cache.Joystick()[dill.GUID_LogicalDevice.uuid][
+                    logical_device.LogicalDevice.Input.Identifier(
+                        gremlin.types.InputType.JoystickAxis, axis_id
+                    )
+                ].value
+            ),
             pytest.approx(expected, abs=_FLOAT_AXIS_MAX_DELTA),
             min_delay,
             max_delay,

@@ -2,13 +2,15 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import pathlib
 import uuid
 
 import gremlin.profile
 from gremlin import swap_devices
 
-_PROFILE_DEVICE_UUID = uuid.UUID('97b77b40-07d8-11f0-8028-444553540000')
+_PROFILE_DEVICE_UUID = uuid.UUID("97b77b40-07d8-11f0-8028-444553540000")
 
 
 def test_swap_devices_from_data_xml(xml_dir: pathlib.Path):

@@ -6,10 +6,16 @@
 Integration tests for user scripts - device I/O only.
 """
 
+from __future__ import annotations
+
 import pytest
 
 import dill
-from gremlin import profile, types, util
+from gremlin import (
+    profile,
+    types,
+    util,
+)
 from test.integration import app_tester
 from vjoy import vjoy
 
@@ -87,7 +93,9 @@ class TestUserScript:
             )
         with subtests.test("output axis cache"):
             tester.assert_cached_axis_eventually_equals(
-                vjoy_di_device.device_guid.uuid, output_axis_id, util.with_default_center_calibration(vjoy_output)
+                vjoy_di_device.device_guid.uuid,
+                output_axis_id,
+                util.with_default_center_calibration(vjoy_output),
             )
         tester.assert_axis_eventually_equals(
             vjoy_di_device.device_guid, output_axis_id, vjoy_output

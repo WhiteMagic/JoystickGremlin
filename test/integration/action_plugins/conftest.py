@@ -2,14 +2,26 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
-from collections.abc import Callable, Iterator
+from __future__ import annotations
+
+from collections.abc import (
+    Callable,
+    Iterator,
+)
 
 import pytest
 
-from action_plugins import map_to_logical_device
 import dill
-from gremlin import logical_device, plugin_manager, profile, shared_state
-from gremlin.ui import backend, device
+from action_plugins import map_to_logical_device
+from gremlin import (
+    logical_device,
+    plugin_manager,
+    profile,
+)
+from gremlin.ui import (
+    backend,
+    device,
+)
 
 LogicalActionCallableT = Callable[
     [logical_device.LogicalDevice.Input.Identifier | str],

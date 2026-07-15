@@ -6,24 +6,29 @@
 Integration tests with a profile that does simple input forwarding.
 """
 
-from collections.abc import Iterator
-import contextlib
+from __future__ import annotations
+
 import itertools
 import sys
 import threading
+from collections.abc import Iterator
 from unittest import mock
 
 sys.path.append(".")
 
 import pytest
 
-from action_plugins import map_to_vjoy
 import dill
-from gremlin import types
-from gremlin import util
+from action_plugins import map_to_vjoy
+from gremlin import (
+    types,
+    util,
+)
 from test.integration import app_tester
-from vjoy import vjoy
-from vjoy import vjoy_interface
+from vjoy import (
+    vjoy,
+    vjoy_interface,
+)
 
 
 @pytest.fixture
@@ -174,7 +179,9 @@ class TestSimpleProfile:
             (-tester.AXIS_MAX_INT, [21, 11, 1, -9, -19, -29]),
         ]:
             calibrated_value = util.with_default_center_calibration(di_input)
-            vjoy_control_device.axis(linear_index=input_axis_id).value = calibrated_value
+            vjoy_control_device.axis(
+                linear_index=input_axis_id
+            ).value = calibrated_value
             with subtests.test("input readback"):
                 tester.assert_axis_eventually_equals(
                     vjoy_di_device.device_guid, input_axis_id, di_input

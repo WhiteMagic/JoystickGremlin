@@ -2,27 +2,29 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
 
 import action_plugins.condition.condition
-from gremlin import event_handler
+
 sys.path.append(".")
 
 import pathlib
-import pytest
 import uuid
-from xml.etree import ElementTree
 
-from gremlin.error import GremlinError
-from gremlin.event_handler import Event
-from gremlin.types import HatDirection, InputType, DataInsertionMode
+import pytest
 
-from gremlin.profile import Library, InputItem, InputItemBinding, Profile
-from action_plugins.condition import ConditionData, ConditionModel
-
-from action_plugins.root import RootData
-from action_plugins.description import DescriptionData
 import action_plugins.condition as condition
+from action_plugins.condition import ConditionData
+from action_plugins.description import DescriptionData
+from gremlin.error import GremlinError
+from gremlin.profile import Profile
+from gremlin.types import (
+    DataInsertionMode,
+    HatDirection,
+    InputType,
+)
 
 _PROFILE_SIMPLE = "action_condition_simple.xml"
 _PROFILE_COMPLEX = "action_condition_complex.xml"
@@ -117,28 +119,25 @@ def test_to_xml() -> None:
 
     JoyCond = action_plugins.condition.condition.JoystickCondition
     cond = JoyCond()
-    state = JoyCond.State(
-        _INPUT_1_DEVICE_UUID,
-        InputType.JoystickButton,
-        37
-    )
+    state = JoyCond.State(_INPUT_1_DEVICE_UUID, InputType.JoystickButton, 37)
     cond._states = [state]
     cond._comparator = condition.comparator.PressedComparator(True)
     a.conditions.append(cond)
 
     node = a.to_xml()
-    assert node.find(
-            "./property/name[.='logical-operator']/../value"
-        ).text == "all"
-    assert node.find(
-            "./condition/property/name[.='condition-type']/../value"
-        ).text == "joystick"
-    assert node.find(
-            "./condition/input/property/name[.='input-type']/../value"
-        ).text == "button"
-    assert node.find(
-            "./condition/comparator/property/name[.='is-pressed']/../value"
-        ).text == "True"
+    assert node.find("./property/name[.='logical-operator']/../value").text == "all"
+    assert (
+        node.find("./condition/property/name[.='condition-type']/../value").text
+        == "joystick"
+    )
+    assert (
+        node.find("./condition/input/property/name[.='input-type']/../value").text
+        == "button"
+    )
+    assert (
+        node.find("./condition/comparator/property/name[.='is-pressed']/../value").text
+        == "True"
+    )
 
 
 def test_action_methods(xml_dir: pathlib.Path) -> None:

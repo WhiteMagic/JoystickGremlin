@@ -2,21 +2,23 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
-import pytest
 import uuid
 from xml.etree import ElementTree
 
-import dill
-from gremlin.error import GremlinError
-import gremlin.types as types
-from gremlin.profile import Library
+import pytest
 
+import gremlin.types as types
 from action_plugins.description import DescriptionData
 from action_plugins.map_to_vjoy import MapToVjoyData
+from gremlin.error import GremlinError
+from gremlin.profile import Library
 
 _ACTION_MAP_BUTTON = "action_map_to_vjoy_button.xml"
 _ACTION_MAP_AXIS = "action_map_to_vjoy_axis.xml"
@@ -62,9 +64,7 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert r.axis_scaling == 1.0
 
     r = MapToVjoyData(types.InputType.JoystickButton)
-    r.from_xml(
-        ElementTree.fromstring((xml_dir / _ACTION_MAP_AXIS).read_text()), l
-    )
+    r.from_xml(ElementTree.fromstring((xml_dir / _ACTION_MAP_AXIS).read_text()), l)
     assert r.vjoy_device_id == 2
     assert r.vjoy_input_id == 6
     assert r.vjoy_input_type == types.InputType.JoystickAxis
@@ -81,15 +81,9 @@ def test_to_xml():
     r.vjoy_input_type = types.InputType.JoystickButton
 
     node = r._to_xml()
-    assert node.find(
-            "./property/name[.='vjoy-device-id']/../value"
-        ).text == "2"
-    assert node.find(
-            "./property/name[.='vjoy-input-id']/../value"
-        ).text == "14"
-    assert node.find(
-            "./property/name[.='vjoy-input-type']/../value"
-        ).text == "button"
+    assert node.find("./property/name[.='vjoy-device-id']/../value").text == "2"
+    assert node.find("./property/name[.='vjoy-input-id']/../value").text == "14"
+    assert node.find("./property/name[.='vjoy-input-type']/../value").text == "button"
     assert node.find("./property/name[.='axis-mode']") == None
     assert node.find("./property/name[.='axis-scaling']") == None
 
@@ -98,18 +92,8 @@ def test_to_xml():
     r.axis_scaling = 0.75
 
     node = r._to_xml()
-    assert node.find(
-        "./property/name[.='vjoy-device-id']/../value"
-    ).text == "2"
-    assert node.find(
-        "./property/name[.='vjoy-input-id']/../value"
-    ).text == "14"
-    assert node.find(
-        "./property/name[.='vjoy-input-type']/../value"
-    ).text == "axis"
-    assert node.find(
-        "./property/name[.='axis-mode']/../value"
-    ).text == "absolute"
-    assert node.find(
-        "./property/name[.='axis-scaling']/../value"
-    ).text == "0.75"
+    assert node.find("./property/name[.='vjoy-device-id']/../value").text == "2"
+    assert node.find("./property/name[.='vjoy-input-id']/../value").text == "14"
+    assert node.find("./property/name[.='vjoy-input-type']/../value").text == "axis"
+    assert node.find("./property/name[.='axis-mode']/../value").text == "absolute"
+    assert node.find("./property/name[.='axis-scaling']/../value").text == "0.75"

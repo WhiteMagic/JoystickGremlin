@@ -2,13 +2,17 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
-import pytest
 import uuid
 from xml.etree import ElementTree
+
+import pytest
 
 from action_plugins.text_to_speech import TextToSpeechData
 from gremlin.profile import Library

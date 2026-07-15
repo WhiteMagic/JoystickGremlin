@@ -2,10 +2,16 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import pathlib
 import uuid
+
+from action_plugins import (
+    dual_axis_deadzone,
+    map_to_vjoy,
+)
 from gremlin.profile import Profile
-from action_plugins import dual_axis_deadzone, map_to_vjoy
 
 _PROFILE = "action_dual_axis_deadzone.xml"
 _ACTION_UUID = uuid.UUID("20465c1e-afb3-49f9-9e43-1d7087f0e8ce")

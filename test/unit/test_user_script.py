@@ -2,11 +2,20 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import pathlib
-import pytest
 import uuid
 
-from gremlin import error, profile, shared_state, types, user_script
+import pytest
+
+from gremlin import (
+    error,
+    profile,
+    shared_state,
+    types,
+    user_script,
+)
 from test.unit.conftest import get_fake_device_guid
 
 
@@ -24,7 +33,6 @@ def script_for_test(script_path: pathlib.Path) -> user_script.Script:
 
 
 class TestScript:
-
     def test_script_loaded_and_configured(
         self, script_for_test: user_script.Script, script_path: pathlib.Path
     ):
@@ -59,11 +67,13 @@ class TestScript:
             assert var.value is False
 
     @pytest.mark.parametrize("value", [True, False])
-    def test_bool_variable_xml_transforms(self, script_for_test: user_script.Script, value):
+    def test_bool_variable_xml_transforms(
+        self, script_for_test: user_script.Script, value
+    ):
         var = script_for_test.get_variable("A bool variable")
         var.value = value
         xml = var.to_xml()
-        var_from_xml = user_script.BoolVariable('', '', False, False)
+        var_from_xml = user_script.BoolVariable("", "", False, False)
         var_from_xml.from_xml(xml)
         assert var_from_xml.value is value
 
@@ -92,11 +102,13 @@ class TestScript:
             assert var.is_valid()
 
     @pytest.mark.parametrize("value", [1.1, 2.2, 10.0, -4.0, 1])
-    def test_float_variable_xml_transforms(self, script_for_test: user_script.Script, value):
+    def test_float_variable_xml_transforms(
+        self, script_for_test: user_script.Script, value
+    ):
         var = script_for_test.get_variable("A float variable")
         var.value = value
         xml = var.to_xml()
-        var_from_xml = user_script.FloatVariable('', '', 0.0, 0.0, 0.0, False)
+        var_from_xml = user_script.FloatVariable("", "", 0.0, 0.0, 0.0, False)
         var_from_xml.from_xml(xml)
         assert var_from_xml.value == value
 

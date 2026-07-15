@@ -4,20 +4,23 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import sys
 import threading
+from pathlib import Path
 from typing import (
-    cast,
     Any,
     Generator,
+    cast,
 )
 
-from PySide6 import QtCore
 import pytest
 import pytestqt.qtbot
+from PySide6 import QtCore
 
 import dill
+import gremlin.profile
+import gremlin.ui.backend
+import joystick_gremlin
 from gremlin import (
     code_runner,
     config,
@@ -25,21 +28,16 @@ from gremlin import (
     mode_manager,
 )
 from gremlin.logical_device import LogicalDevice
-import gremlin.profile
 from gremlin.types import (
-    InputType,
     HatDirection,
+    InputType,
 )
 from gremlin.util import clamp
-import gremlin.ui.backend
-import joystick_gremlin
-
 
 LDIdentifier = LogicalDevice.Input.Identifier
 
 
 class EventSpec:
-
     """Encapsulates information about an expected event and supports
     comparison with an actual Event instance."""
 
@@ -47,7 +45,7 @@ class EventSpec:
         self,
         event_type: InputType,
         input_id: int,
-        expected_value: float | bool | HatDirection
+        expected_value: float | bool | HatDirection,
     ) -> None:
         """Creates a new EventSpec instance.
 
@@ -66,8 +64,7 @@ class EventSpec:
         Returns:
             A string representation of the EventSpec instance.
         """
-        return f"EventSpec({self.event_type}, {self.input_id}, " \
-            f"{self.expected_value})"
+        return f"EventSpec({self.event_type}, {self.input_id}, {self.expected_value})"
 
     def _repr_compare(self, other: Any) -> list[str]:
         """Returns information used when the comparison fails.
@@ -108,7 +105,6 @@ class EventSpec:
 
 
 class EventLogger(QtCore.QObject):
-
     """Helper class which logs all events received from Gremlin."""
 
     receivedValidSignal = QtCore.Signal()
@@ -124,9 +120,7 @@ class EventLogger(QtCore.QObject):
         self.logged_events: list[event_handler.Event] = []
         self.emitted_events: list[event_handler.Event] = []
 
-        event_handler.EventListener().joystick_event.connect(
-            self._process_event
-        )
+        event_handler.EventListener().joystick_event.connect(self._process_event)
 
     def clear(self) -> None:
         """Clears all logged events."""
@@ -146,9 +140,7 @@ class EventLogger(QtCore.QObject):
         # delayed) is received.
         while len(self.logged_events) == 0:
             self._qtbot.waitSignal(
-                self.receivedValidSignal,
-                timeout=500,
-                raising=True
+                self.receivedValidSignal, timeout=500, raising=True
             ).wait()
         return self.logged_events.pop(0)
 
@@ -176,7 +168,6 @@ class EventLogger(QtCore.QObject):
 
 
 class JoystickGremlinBot:
-
     """Helper class which allows interfacing with Gremlin for input simulation
     and output verification."""
 
@@ -274,7 +265,7 @@ class JoystickGremlinBot:
         """
         input = cast(
             LogicalDevice.Axis,
-            self._logical_device[LDIdentifier(InputType.JoystickAxis, input_id)]
+            self._logical_device[LDIdentifier(InputType.JoystickAxis, input_id)],
         )
         return input.value
 
@@ -289,7 +280,7 @@ class JoystickGremlinBot:
         """
         input = cast(
             LogicalDevice.Button,
-            self._logical_device[LDIdentifier(InputType.JoystickButton, input_id)]
+            self._logical_device[LDIdentifier(InputType.JoystickButton, input_id)],
         )
         return input.is_pressed
 
@@ -304,7 +295,7 @@ class JoystickGremlinBot:
         """
         input = cast(
             LogicalDevice.Hat,
-            self._logical_device[LDIdentifier(InputType.JoystickHat, input_id)]
+            self._logical_device[LDIdentifier(InputType.JoystickHat, input_id)],
         )
         return input.direction
 
@@ -345,8 +336,7 @@ class JoystickGremlinBot:
             duration: The duration in seconds to hold the button pressed.
         """
         self.press_button(button_id)
-        threading.Timer(
-            duration, lambda: self.release_button(button_id)).start()
+        threading.Timer(duration, lambda: self.release_button(button_id)).start()
 
     def tap_button(self, button_id: int) -> None:
         """Taps a button (press and release) quickly.
@@ -382,7 +372,7 @@ class JoystickGremlinBot:
         """
         input = cast(
             LogicalDevice.Axis,
-            self._logical_device[LDIdentifier(InputType.JoystickAxis, axis_id)]
+            self._logical_device[LDIdentifier(InputType.JoystickAxis, axis_id)],
         )
         new_value = clamp(input.value + delta, -1.0, 1.0)
         self._emit_event(InputType.JoystickAxis, axis_id, new_value)
@@ -411,10 +401,7 @@ class JoystickGremlinBot:
         self.set_hat_direction(hat_id, HatDirection.Center)
 
     def _emit_event(
-        self,
-        input_type: InputType,
-        input_id: int,
-        value: float | int | HatDirection
+        self, input_type: InputType, input_id: int, value: float | int | HatDirection
     ) -> None:
         """Creates an Event instance based on the given information and then
         emits it.
@@ -446,7 +433,7 @@ class JoystickGremlinBot:
             self._mode_manager.current.name,
             value=evt_value,
             is_pressed=is_pressed,
-            raw_value=value
+            raw_value=value,
         )
 
         # Inform the event logger about the event we're about to emit, then

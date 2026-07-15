@@ -6,6 +6,8 @@
 Integration tests with a profile with macros that have vJoy outputs.
 """
 
+from __future__ import annotations
+
 import sys
 
 sys.path.append(".")

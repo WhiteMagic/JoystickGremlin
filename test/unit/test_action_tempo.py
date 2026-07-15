@@ -2,22 +2,24 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
-import pytest
 import uuid
-from xml.etree import ElementTree
 
-from gremlin.types import DataInsertionMode
-from gremlin.config import Configuration
-from gremlin.error import GremlinError
-import gremlin.types as types
-from gremlin.profile import Library, Profile
+import pytest
 
 import action_plugins.tempo as tempo
+import gremlin.types as types
 from action_plugins.description import DescriptionData
+from gremlin.config import Configuration
+from gremlin.error import GremlinError
+from gremlin.profile import Profile
+from gremlin.types import DataInsertionMode
 
 _ACTION_TEMPO_SIMPLE = "action_tempo_simple.xml"
 
@@ -46,15 +48,12 @@ def test_to_xml():
     a.threshold = 0.42
 
     node = a._to_xml()
-    assert node.find(
-            "./property/name[.='activate-on']/../value"
-        ).text == "release"
-    assert node.find(
-            "./property/name[.='threshold']/../value"
-    ).text == "0.42"
-    assert node.find(
-            "./short-actions/action-id"
-    ).text == "fbe6be7b-07c9-4400-94f2-caa245ebcc7e"
+    assert node.find("./property/name[.='activate-on']/../value").text == "release"
+    assert node.find("./property/name[.='threshold']/../value").text == "0.42"
+    assert (
+        node.find("./short-actions/action-id").text
+        == "fbe6be7b-07c9-4400-94f2-caa245ebcc7e"
+    )
 
 
 def test_action_methods(xml_dir: pathlib.Path):

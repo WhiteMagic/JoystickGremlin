@@ -2,15 +2,17 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
 
-from gremlin.profile import Profile
-from gremlin.action_analysis import _extract_sequences
 from gremlin import shared_state
-
+from gremlin.action_analysis import _extract_sequences
+from gremlin.profile import Profile
 
 _PROFILE_FOR_ANALYSIS = "profile_for_analysis.xml"
 
@@ -34,7 +36,10 @@ def test_extract_sequences(xml_dir: pathlib.Path) -> None:
     axis_sequences = _extract_sequences(axis_root)
     assert len(axis_sequences) == 1
     assert get_sequence_types(axis_sequences[0]) == [
-        "root", "map-to-vjoy", "map-to-mouse", "response-curve"
+        "root",
+        "map-to-vjoy",
+        "map-to-mouse",
+        "response-curve",
     ]
 
     button_input = input_items[1]
@@ -43,8 +48,17 @@ def test_extract_sequences(xml_dir: pathlib.Path) -> None:
     button_sequences = _extract_sequences(button_root)
     assert len(button_sequences) == 2
     assert get_sequence_types(button_sequences[0]) == [
-        "root", "macro", "condition", "map-to-logical-device", "description", "change-mode"
+        "root",
+        "macro",
+        "condition",
+        "map-to-logical-device",
+        "description",
+        "change-mode",
     ]
     assert get_sequence_types(button_sequences[1]) == [
-        "root", "macro", "condition", "map-to-vjoy", "change-mode"
+        "root",
+        "macro",
+        "condition",
+        "map-to-vjoy",
+        "change-mode",
     ]

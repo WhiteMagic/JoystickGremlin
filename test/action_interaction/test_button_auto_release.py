@@ -6,8 +6,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gremlin.types import HatDirection
-
 from .conftest import JoystickGremlinBot
 from .input_definitions import *
 

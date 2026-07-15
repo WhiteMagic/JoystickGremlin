@@ -2,20 +2,24 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
+
 sys.path.append(".")
 
 import pathlib
 from unittest import mock
 
-import dill
 import pytest
-from vjoy import vjoy
+
+import dill
+import gremlin.device_initialization
+import gremlin.event_handler
 
 # Import creates required user profile directory.
 import joystick_gremlin
-import gremlin.device_initialization
-import gremlin.event_handler
+from vjoy import vjoy
 
 
 def get_fake_device_raw_guid(is_virtual: bool) -> dill._GUID:
@@ -36,14 +40,12 @@ def get_fake_device_guid(is_virtual: bool) -> dill.GUID:
 def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
     """Creates a repeatable, faked DeviceSummary."""
     # Data below was generated from a vJoy device.
-    guid =  get_fake_device_raw_guid(is_virtual)
+    guid = get_fake_device_raw_guid(is_virtual)
     axis_map_array = (dill._AxisMap * 8)()
     for i, (linear_i, axis_i) in enumerate(
         [(1, 1), (2, 2), (3, 3), (4, 6), (5, 7), (6, 8), (7, 0), (8, 0)]
     ):
-        axis_map_array[i] = dill._AxisMap(
-            linear_index=linear_i, axis_index=axis_i
-        )
+        axis_map_array[i] = dill._AxisMap(linear_index=linear_i, axis_index=axis_i)
     return dill.DeviceSummary(
         dill._DeviceSummary(
             device_guid=guid,
@@ -120,9 +122,7 @@ def joystick_init():
 
 @pytest.fixture(scope="package", autouse=True)
 def terminate_event_listener(request):
-    request.addfinalizer(
-        lambda: gremlin.event_handler.EventListener().terminate()
-    )
+    request.addfinalizer(lambda: gremlin.event_handler.EventListener().terminate())
 
 
 @pytest.fixture(scope="package")

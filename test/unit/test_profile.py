@@ -2,27 +2,34 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
 
 from gremlin import profile
+
 sys.path.append(".")
 
 import pathlib
-import pytest
 import tempfile
 import uuid
 from xml.etree import ElementTree
 
-import gremlin.plugin_manager
-from gremlin.config import Configuration
-from gremlin.types import AxisMode, InputType
-from gremlin import device_initialization, shared_state
-
-from gremlin.profile import Profile
-from test.unit.conftest import get_fake_device_guid
+import pytest
 
 # Ensure config entries are generated
-import action_plugins.tempo
+import gremlin.plugin_manager
+from gremlin import (
+    device_initialization,
+    shared_state,
+)
+from gremlin.config import Configuration
+from gremlin.profile import Profile
+from gremlin.types import (
+    AxisMode,
+    InputType,
+)
+from test.unit.conftest import get_fake_device_guid
 
 
 def test_constructor_invalid(xml_dir: pathlib.Path):
@@ -92,7 +99,14 @@ def test_mode_hierarchy(xml_dir: pathlib.Path):
     p = Profile()
     p.from_xml(str(xml_dir / "profile_mode_hierarchy.xml"))
 
-    assert p.modes.mode_names() == ["Child", "Deep", "Default", "Levels", "Separate", "Three"]
+    assert p.modes.mode_names() == [
+        "Child",
+        "Deep",
+        "Default",
+        "Levels",
+        "Separate",
+        "Three",
+    ]
     assert p.modes.first_mode == "Default"
 
     assert p.modes.find_mode("Levels").value == "Levels"
@@ -139,7 +153,9 @@ def test_library_preserves_action_order(xml_dir: pathlib.Path) -> None:
 def test_device_database(xml_dir: pathlib.Path, subtests):
     database = profile.DeviceDatabase()
     with subtests.test("create database"):
-        uuids = [dev.device_guid.uuid for dev in device_initialization.physical_devices()]
+        uuids = [
+            dev.device_guid.uuid for dev in device_initialization.physical_devices()
+        ]
         database.update_for_uuids(uuids)
         assert len(database.devices) == len(uuids)
 

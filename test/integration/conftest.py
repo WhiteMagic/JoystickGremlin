@@ -2,17 +2,18 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
 
 sys.path.append(".")
 
-from collections.abc import Iterator
 import logging
 import pathlib
 import tempfile
+from collections.abc import Iterator
 from typing import Generator
 
-from PySide6 import QtWidgets
 import pytest
 
 import dill
@@ -24,12 +25,11 @@ import gremlin.logical_device
 import gremlin.profile
 import gremlin.ui.backend
 import joystick_gremlin
-from vjoy import vjoy
 from action_plugins import map_to_vjoy
+from vjoy import vjoy
 
 pytest.register_assert_rewrite("test.integration.app_tester")
 from test.integration import app_tester
-
 
 # +-------------------------------------------------------------------------
 # | Common fixtures, override in modules as needed.
@@ -188,7 +188,9 @@ def tear_down() -> Iterator[None]:
 
 
 @pytest.fixture
-def tester(qapp: joystick_gremlin.JoystickGremlinApp) -> Generator[app_tester.GremlinAppTester]:
+def tester(
+    qapp: joystick_gremlin.JoystickGremlinApp,
+) -> Generator[app_tester.GremlinAppTester]:
     gremlin_app = app_tester.GremlinAppTester(qapp)
     cfg = gremlin.config.Configuration()
     cfg.set("global", "general", "refresh-axis-on-mode-change", False)

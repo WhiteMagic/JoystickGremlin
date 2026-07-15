@@ -5,18 +5,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-import statistics
-import time
 
-from gremlin import (
-    event_handler,
-    keyboard,
-    macro,
-)
 from gremlin.input_cache import Keyboard
+
 from .conftest import JoystickGremlinBot
 from .input_definitions import *
-
 
 # def test_bm_key_press_rountrip(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
 #     jgbot.load_profile(profile_dir / "map_to_keyboard.xml")

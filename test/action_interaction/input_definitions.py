@@ -2,6 +2,8 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 IN_AXIS_1 = 1
 IN_AXIS_2 = 2
 IN_AXIS_3 = 3

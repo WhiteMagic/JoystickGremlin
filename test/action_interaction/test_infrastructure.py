@@ -11,6 +11,7 @@ from gremlin.types import HatDirection
 from .conftest import JoystickGremlinBot
 from .input_definitions import *
 
+
 def test_button_basic(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")
 
@@ -40,6 +41,7 @@ def test_button_hold(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.wait(0.2)
     assert jgbot.button(IN_BUTTON_1) == False
     assert jgbot.button(IN_BUTTON_2) == False
+
 
 def test_button_tap(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "template.xml")

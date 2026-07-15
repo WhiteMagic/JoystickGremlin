@@ -5,17 +5,18 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import pytest
 
+from gremlin.macro import MacroManager
 from gremlin.types import (
     HatDirection,
     InputType,
 )
-from gremlin.macro import MacroManager
 
 from .conftest import (
+    EventSpec,
     JoystickGremlinBot,
-    EventSpec
 )
 from .input_definitions import *
 
@@ -40,10 +41,9 @@ def test_simple(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     for entry in expected_event_sequence:
         assert entry == jgbot.next_event()
 
+
 def test_repeat(
-    jgbot: JoystickGremlinBot,
-    profile_dir: Path,
-    subtests: pytest.Subtests
+    jgbot: JoystickGremlinBot, profile_dir: Path, subtests: pytest.Subtests
 ) -> None:
     jgbot.load_profile(profile_dir / "macro.xml")
     MacroManager().default_delay = 0.05
@@ -63,10 +63,7 @@ def test_repeat(
                 assert entry == jgbot.next_event()
 
 
-def test_trigger_on_release(
-    jgbot: JoystickGremlinBot,
-    profile_dir: Path
-) -> None:
+def test_trigger_on_release(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "macro.xml")
     MacroManager().default_delay = 0.0
 
@@ -78,10 +75,10 @@ def test_trigger_on_release(
     # Ensure macro is executed upon button release.
     jgbot.release_button(IN_BUTTON_3)
     jgbot.wait(0.05)
-    assert EventSpec(
-        InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
-    assert EventSpec(
-        InputType.JoystickButton, OUT_BUTTON_1, False) == jgbot.next_event()
+    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
+    assert (
+        EventSpec(InputType.JoystickButton, OUT_BUTTON_1, False) == jgbot.next_event()
+    )
 
     with pytest.raises(jgbot.qtbot.TimeoutError):
         jgbot.next_event()
@@ -94,8 +91,7 @@ def test_hat_single(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.set_axis_absolute(OUT_AXIS_1, 0.12)
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.North)
     jgbot.wait(0.05)
-    assert EventSpec(
-        InputType.JoystickAxis, OUT_AXIS_1, 0.05) == jgbot.next_event()
+    assert EventSpec(InputType.JoystickAxis, OUT_AXIS_1, 0.05) == jgbot.next_event()
     assert jgbot.axis(OUT_AXIS_1) == pytest.approx(0.17, abs=0.01)
 
 
@@ -107,11 +103,9 @@ def test_hat_count(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.wait(0.05)
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.East)
 
-    assert EventSpec(
-        InputType.JoystickAxis, OUT_AXIS_1, 0.10) == jgbot.next_event()
+    assert EventSpec(InputType.JoystickAxis, OUT_AXIS_1, 0.10) == jgbot.next_event()
     assert jgbot.axis(OUT_AXIS_1) == pytest.approx(-0.05, abs=0.01)
-    assert EventSpec(
-        InputType.JoystickAxis, OUT_AXIS_1, 0.10) == jgbot.next_event()
+    assert EventSpec(InputType.JoystickAxis, OUT_AXIS_1, 0.10) == jgbot.next_event()
     assert jgbot.axis(OUT_AXIS_1) == pytest.approx(0.05, abs=0.01)
 
 
@@ -128,8 +122,7 @@ def test_hat_toggle(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     expected_value = -0.15
     for _ in range(4):
         expected_value += 0.1
-        assert EventSpec(
-            InputType.JoystickAxis, OUT_AXIS_1, 0.1) == jgbot.next_event()
+        assert EventSpec(InputType.JoystickAxis, OUT_AXIS_1, 0.1) == jgbot.next_event()
 
     assert jgbot.axis(OUT_AXIS_1) == pytest.approx(expected_value, abs=0.01)
     assert jgbot.event_count() == 0
@@ -151,12 +144,10 @@ def test_hat_hold(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     expected_value = -0.15
     for _ in range(4):
         expected_value += 0.1
-        assert EventSpec(
-            InputType.JoystickAxis, OUT_AXIS_1, 0.1) == jgbot.next_event()
+        assert EventSpec(InputType.JoystickAxis, OUT_AXIS_1, 0.1) == jgbot.next_event()
         assert jgbot.axis(OUT_AXIS_1) == pytest.approx(expected_value, abs=0.01)
 
     assert jgbot.event_count() == 0
     jgbot.set_hat_direction(IN_HAT_1, HatDirection.Center)
     with pytest.raises(jgbot.qtbot.TimeoutError):
         jgbot.next_event()
-

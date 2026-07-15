@@ -5,13 +5,29 @@
 """
 Integration test for response curve action using logical output devices.
 """
+
+from __future__ import annotations
+
 import pytest
 
-from action_plugins import merge_axis, root, map_to_logical_device
 import dill
-from gremlin import logical_device, mode_manager, plugin_manager, profile, types
+from action_plugins import (
+    map_to_logical_device,
+    merge_axis,
+    root,
+)
+from gremlin import (
+    logical_device,
+    mode_manager,
+    plugin_manager,
+    profile,
+    types,
+)
 from test.integration import app_tester
-from test.integration.action_plugins.conftest import LogicalActionCallableT, LogicalIdentifierCallableT
+from test.integration.action_plugins.conftest import (
+    LogicalActionCallableT,
+    LogicalIdentifierCallableT,
+)
 
 _LOGICAL_INPUT_AXIS1_LABEL = "InputAxis1"
 _LOGICAL_INPUT_AXIS2_LABEL = "InputAxis2"
@@ -30,27 +46,31 @@ def merge_axis_action() -> merge_axis.MergeAxisData:
     """
     p_manager = plugin_manager.PluginManager()
     return p_manager.create_instance(
-        merge_axis.MergeAxisData.name,
-        types.InputType.JoystickAxis
+        merge_axis.MergeAxisData.name, types.InputType.JoystickAxis
     )
 
 
 @pytest.fixture(scope="module")
-def profile_setup(profile_for_test: profile.Profile,
-                  merge_axis_action: merge_axis.MergeAxisData,
-                  logical_device_for_test: logical_device.LogicalDevice,
-                  get_logical_input_identifier: LogicalIdentifierCallableT,
-                  ):
+def profile_setup(
+    profile_for_test: profile.Profile,
+    merge_axis_action: merge_axis.MergeAxisData,
+    logical_device_for_test: logical_device.LogicalDevice,
+    get_logical_input_identifier: LogicalIdentifierCallableT,
+):
     """Sets up the profile for testing merge axis action via intermediate outputs."""
     # Configure the merge axis action.
     logical_input_axis_1 = logical_device_for_test.create(
-                types.InputType.JoystickAxis, label=_LOGICAL_INPUT_AXIS1_LABEL
-            )
-    merge_axis_action.axis_in1 = get_logical_input_identifier(_LOGICAL_INPUT_AXIS1_LABEL)
+        types.InputType.JoystickAxis, label=_LOGICAL_INPUT_AXIS1_LABEL
+    )
+    merge_axis_action.axis_in1 = get_logical_input_identifier(
+        _LOGICAL_INPUT_AXIS1_LABEL
+    )
     logical_input_axis_2 = logical_device_for_test.create(
-                types.InputType.JoystickAxis, label=_LOGICAL_INPUT_AXIS2_LABEL
-            )
-    merge_axis_action.axis_in2 = get_logical_input_identifier(_LOGICAL_INPUT_AXIS2_LABEL)
+        types.InputType.JoystickAxis, label=_LOGICAL_INPUT_AXIS2_LABEL
+    )
+    merge_axis_action.axis_in2 = get_logical_input_identifier(
+        _LOGICAL_INPUT_AXIS2_LABEL
+    )
 
     # Create logical device action to map merged axes to an output logical axis.
     p_manager = plugin_manager.PluginManager()
@@ -61,8 +81,8 @@ def profile_setup(profile_for_test: profile.Profile,
         )
     )
     logical_output_axis = logical_device_for_test.create(
-                types.InputType.JoystickAxis, label=_LOGICAL_OUTPUT_AXIS_LABEL
-            )
+        types.InputType.JoystickAxis, label=_LOGICAL_OUTPUT_AXIS_LABEL
+    )
     map_to_logical_action.logical_input_id = logical_output_axis.id
 
     # Add actions to profile.
@@ -84,7 +104,9 @@ def profile_setup(profile_for_test: profile.Profile,
         input_item_binding.root_action = root_action
         input_item_binding.behavior = types.InputType.JoystickAxis
         input_item.action_sequences.append(input_item_binding)
-        profile_for_test.inputs.setdefault(dill.UUID_LogicalDevice, []).append(input_item)
+        profile_for_test.inputs.setdefault(dill.UUID_LogicalDevice, []).append(
+            input_item
+        )
 
 
 class TestMergeAxis:
@@ -116,15 +138,23 @@ class TestMergeAxis:
         expected_output: int,
     ):
         with subtests.test("first_input_before_second"):
-            tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1)
-            tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2)
+            tester.inject_logical_input(
+                get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
+            )
+            tester.inject_logical_input(
+                get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2
+            )
             tester.assert_logical_axis_eventually_equals(
                 logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
                 expected_output,
             )
         with subtests.test("second_input_before_first"):
-            tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2)
-            tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1)
+            tester.inject_logical_input(
+                get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2
+            )
+            tester.inject_logical_input(
+                get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
+            )
             tester.assert_logical_axis_eventually_equals(
                 logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
                 expected_output,
@@ -158,8 +188,12 @@ class TestMergeAxis:
         expected_output: int,
     ):
         merge_axis_action.operation = merge_axis.MergeOperation.Minimum
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1)
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
+        )
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2
+        )
         tester.assert_logical_axis_eventually_equals(
             logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
@@ -193,13 +227,16 @@ class TestMergeAxis:
         expected_output: int,
     ):
         merge_axis_action.operation = merge_axis.MergeOperation.Maximum
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1)
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
+        )
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2
+        )
         tester.assert_logical_axis_eventually_equals(
             logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
-
 
     @pytest.mark.parametrize(
         "value_input1,value_input2,expected_output",
@@ -226,13 +263,16 @@ class TestMergeAxis:
         expected_output: int,
     ):
         merge_axis_action.operation = merge_axis.MergeOperation.Sum
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1)
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
+        )
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2
+        )
         tester.assert_logical_axis_eventually_equals(
             logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
         )
-
 
     @pytest.mark.parametrize(
         "value_input1,value_input2,expected_output",
@@ -259,8 +299,12 @@ class TestMergeAxis:
         expected_output: int,
     ):
         merge_axis_action.operation = merge_axis.MergeOperation.Bidirectional
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1)
-        tester.inject_logical_input(get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2)
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
+        )
+        tester.inject_logical_input(
+            get_logical_input_action(_LOGICAL_INPUT_AXIS2_LABEL), value_input2
+        )
         tester.assert_logical_axis_eventually_equals(
             logical_device_for_test[_LOGICAL_OUTPUT_AXIS_LABEL].id,
             expected_output,
