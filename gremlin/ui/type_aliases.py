@@ -2,11 +2,12 @@
 
 # SPDX-License-Identifier: GPL-3.0-only
 
+from __future__ import annotations
+
 import sys
 from typing import (
-    cast,
-    Optional,
     TypeVar,
+    cast,
 )
 
 from PySide6 import (
@@ -14,8 +15,8 @@ from PySide6 import (
     QtQml,
 )
 
-
 T = TypeVar("T")
+
 
 def QmlElement(cls: type[T]) -> type[T]:
     """Type-preserving QML element registration decorator.
@@ -33,5 +34,5 @@ def QmlElement(cls: type[T]) -> type[T]:
 
 MI = QtCore.QModelIndex
 PMI = QtCore.QPersistentModelIndex
-OQO = Optional[QtCore.QObject]
+OQO = QtCore.QObject | None
 ModelIndex = MI | PMI

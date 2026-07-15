@@ -5,15 +5,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import (
-    Any,
-    List,
-    TYPE_CHECKING,
-)
+from typing import cast
 
-from PySide6 import QtCore, QtQml
-from PySide6.QtCore import Property, Signal, Slot
+from PySide6 import QtCore
 
+import gremlin.ui.type_aliases as ta
 from gremlin import (
     event_handler,
     keyboard,
@@ -26,47 +22,40 @@ from gremlin.types import InputType
 from gremlin.ui.device import InputIdentifier
 from gremlin.ui.util import to_local_path
 
-if TYPE_CHECKING:
-    import gremlin.ui.type_aliases as ta
-
-
 QML_IMPORT_NAME = "Gremlin.Script"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class AbstractVariableModel(QtCore.QObject):
-
     """Exposes a single variable to the QML UI."""
 
-    validityChanged = Signal()
+    validityChanged = QtCore.Signal()
 
     def __init__(
-        self,
-        variable: user_script.AbstractVariable,
-        parent: ta.OQO = None
+        self, variable: user_script.AbstractVariable, parent: ta.OQO = None
     ) -> None:
         super().__init__(parent)
 
         self._variable = variable
 
-    @Property(str, constant=True)
+    @QtCore.Property(str, constant=True)
     def description(self) -> str:
         return self._variable.description
 
-    @Property(str, constant=True)
+    @QtCore.Property(str, constant=True)
     def name(self) -> str:
         return self._variable.name
 
-    @Property(str, constant=True)
+    @QtCore.Property(str, constant=True)
     def type(self) -> str:
         return self._variable.xml_tag
 
-    @Property(bool, constant=True)
+    @QtCore.Property(bool, constant=True)
     def isOptional(self) -> bool:
         return self._variable.is_optional
 
-    @Property(bool, notify=validityChanged)
+    @QtCore.Property(bool, notify=validityChanged)
     def isValid(self) -> bool:
         return self._variable.is_valid()
 
@@ -74,12 +63,13 @@ class AbstractVariableModel(QtCore.QObject):
         self.validityChanged.emit()
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class BoolVariableModel(AbstractVariableModel):
+    changed = QtCore.Signal()
 
-    changed = Signal()
-
-    def __init__(self, variable: user_script.BoolVariable, parent=None):
+    def __init__(
+        self, variable: user_script.BoolVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
     def _get_value(self) -> bool:
@@ -91,20 +81,16 @@ class BoolVariableModel(AbstractVariableModel):
             self.changed.emit()
             self.evaluate_validity()
 
-    value = Property(
-        bool,
-        fget=_get_value,
-        fset=_set_value,
-        notify=changed
-    )
+    value = QtCore.Property(bool, fget=_get_value, fset=_set_value, notify=changed)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class FloatVariableModel(AbstractVariableModel):
+    changed = QtCore.Signal()
 
-    changed = Signal()
-
-    def __init__(self, variable: user_script.FloatVariable, parent=None):
+    def __init__(
+        self, variable: user_script.FloatVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
     def _get_value(self) -> float:
@@ -116,28 +102,24 @@ class FloatVariableModel(AbstractVariableModel):
             self.changed.emit()
             self.evaluate_validity()
 
-    @Property(float, constant=True)
+    @QtCore.Property(float, constant=True)
     def maxValue(self) -> float:
         return self._variable.max_value
 
-    @Property(float, constant=True)
+    @QtCore.Property(float, constant=True)
     def minValue(self) -> float:
         return self._variable.min_value
 
-    value = Property(
-        float,
-        fget=_get_value,
-        fset=_set_value,
-        notify=changed
-    )
+    value = QtCore.Property(float, fget=_get_value, fset=_set_value, notify=changed)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class IntegerVariableModel(AbstractVariableModel):
+    changed = QtCore.Signal()
 
-    changed = Signal()
-
-    def __init__(self, variable: user_script.IntegerVariable, parent=None):
+    def __init__(
+        self, variable: user_script.IntegerVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
     def _get_value(self) -> int:
@@ -149,40 +131,32 @@ class IntegerVariableModel(AbstractVariableModel):
             self.changed.emit()
             self.evaluate_validity()
 
-    @Property(float, constant=True)
+    @QtCore.Property(float, constant=True)
     def maxValue(self) -> float:
         return self._variable.max_value
 
-    @Property(float, constant=True)
+    @QtCore.Property(float, constant=True)
     def minValue(self) -> float:
         return self._variable.min_value
 
-    value = Property(
-        int,
-        fget=_get_value,
-        fset=_set_value,
-        notify=changed
-    )
+    value = QtCore.Property(int, fget=_get_value, fset=_set_value, notify=changed)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class KeyboardVariableModel(AbstractVariableModel):
-
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
-            self,
-            variable: user_script.KeyboardVariable,
-            parent: ta.OQO = None
+        self, variable: user_script.KeyboardVariable, parent: ta.OQO = None
     ) -> None:
         super().__init__(variable, parent)
 
-    @Property(str, notify=changed)
+    @QtCore.Property(str, notify=changed)
     def label(self) -> str:
         return "Record" if self._variable.value is None else self._variable.value.name
 
-    @Slot(list)
-    def updateKeyboard(self, data: List[event_handler.Event]) -> None:
+    @QtCore.Slot(list)
+    def updateKeyboard(self, data: list[event_handler.Event]) -> None:
         """Receives the events corresponding to joystick events.
 
         We only expect to receive a single input item, thus only store
@@ -196,23 +170,20 @@ class KeyboardVariableModel(AbstractVariableModel):
         self.evaluate_validity()
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class LogicalDeviceModel(AbstractVariableModel):
-
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
-            self,
-            variable: user_script.LogicalDeviceVariable,
-            parent=None
-    ):
+        self, variable: user_script.LogicalDeviceVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
-    @Property(str, notify=changed)
+    @QtCore.Property(str, notify=changed)
     def label(self) -> str:
         return self._variable.value.label
 
-    @Property(list, constant=True)
+    @QtCore.Property(list, constant=True)
     def validTypes(self) -> list[str]:
         return [InputType.to_string(v) for v in self._variable.valid_types]
 
@@ -221,7 +192,7 @@ class LogicalDeviceModel(AbstractVariableModel):
             LogicalDevice.device_guid,
             self._variable.value.type,
             self._variable.value.id,
-            parent=self
+            parent=self,
         )
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
@@ -229,24 +200,25 @@ class LogicalDeviceModel(AbstractVariableModel):
             return
 
         self._variable.value = LogicalDevice.Input.Identifier(
-            identifier.input_type,
-            identifier.input_id
+            identifier.input_type, identifier.input_id
         )
         self.changed.emit()
 
-    logicalInputIdentifier = Property(
-        InputIdentifier,
+    logicalInputIdentifier = QtCore.Property(
+        type=InputIdentifier,
         fget=_get_logical_input_identifier,
         fset=_set_logical_input_identifier,
-        notify=changed
+        notify=changed,
     )
 
-@QtQml.QmlElement
+
+@ta.QmlElement
 class ModeVariableModel(AbstractVariableModel):
+    changed = QtCore.Signal()
 
-    changed = Signal()
-
-    def __init__(self, variable: user_script.ModeVariable, parent=None):
+    def __init__(
+        self, variable: user_script.ModeVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
     def _get_value(self) -> str:
@@ -258,20 +230,16 @@ class ModeVariableModel(AbstractVariableModel):
             self.changed.emit()
             self.evaluate_validity()
 
-    value = Property(
-        str,
-        fget=_get_value,
-        fset=_set_value,
-        notify=changed
-    )
+    value = QtCore.Property(str, fget=_get_value, fset=_set_value, notify=changed)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class SelectionVariableModel(AbstractVariableModel):
+    changed = QtCore.Signal()
 
-    changed = Signal()
-
-    def __init__(self, variable: user_script.SelectionVariable, parent=None):
+    def __init__(
+        self, variable: user_script.SelectionVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
     def _get_value(self) -> str:
@@ -283,24 +251,20 @@ class SelectionVariableModel(AbstractVariableModel):
             self.changed.emit()
             self.evaluate_validity()
 
-    @Property(list, constant=True)
+    @QtCore.Property(list, constant=True)
     def options(self) -> list:
         return self._variable.options
 
-    value = Property(
-        str,
-        fget=_get_value,
-        fset=_set_value,
-        notify=changed
-    )
+    value = QtCore.Property(str, fget=_get_value, fset=_set_value, notify=changed)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class StringVariableModel(AbstractVariableModel):
+    changed = QtCore.Signal()
 
-    changed = Signal()
-
-    def __init__(self, variable: user_script.StringVariable, parent=None):
+    def __init__(
+        self, variable: user_script.StringVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
     def _get_value(self) -> str:
@@ -312,36 +276,28 @@ class StringVariableModel(AbstractVariableModel):
             self.changed.emit()
             self.evaluate_validity()
 
-    value = Property(
-        str,
-        fget=_get_value,
-        fset=_set_value,
-        notify=changed
-    )
+    value = QtCore.Property(str, fget=_get_value, fset=_set_value, notify=changed)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class PhysicalInputVariableModel(AbstractVariableModel):
-
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
-            self,
-            variable: user_script.PhysicalInputVariable,
-            parent=None
-    ):
+        self, variable: user_script.PhysicalInputVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
-    @Property(str, notify=changed)
+    @QtCore.Property(str, notify=changed)
     def label(self) -> str:
         return InputIdentifier(*self._variable.value).label
 
-    @Property(list, constant=True)
+    @QtCore.Property(list, constant=True)
     def validTypes(self) -> list[str]:
         return [InputType.to_string(v) for v in self._variable.valid_types]
 
-    @Slot(list)
-    def updateJoystick(self, data: List[event_handler.Event]) -> None:
+    @QtCore.Slot(list)
+    def updateJoystick(self, data: list[event_handler.Event]) -> None:
         """Receives the events corresponding to joystick events.
 
         We only expect to receive a single input item, thus only store
@@ -353,29 +309,26 @@ class PhysicalInputVariableModel(AbstractVariableModel):
         self._variable.value = (
             data[0].device_guid,
             data[0].event_type,
-            data[0].identifier
+            data[0].identifier,
         )
         self.changed.emit()
         self.evaluate_validity()
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class VirtualInputVariableModel(AbstractVariableModel):
-
-    changed = Signal()
+    changed = QtCore.Signal()
 
     def __init__(
-            self,
-            variable: user_script.PhysicalInputVariable,
-            parent=None
-    ):
+        self, variable: user_script.PhysicalInputVariable, parent: ta.OQO = None
+    ) -> None:
         super().__init__(variable, parent)
 
-    @Property(str, notify=changed)
+    @QtCore.Property(str, notify=changed)
     def label(self) -> str:
         return "Bla 123"
 
-    @Property(list, constant=True)
+    @QtCore.Property(list, constant=True)
     def validTypes(self) -> list[str]:
         return [InputType.to_string(v) for v in self._variable.valid_types]
 
@@ -407,34 +360,22 @@ class VirtualInputVariableModel(AbstractVariableModel):
             self.changed.emit()
             self.evaluate_validity()
 
-    inputType = Property(
-        str,
-        fget=_get_input_type,
-        fset=_set_input_type,
-        notify=changed
+    inputType = QtCore.Property(
+        str, fget=_get_input_type, fset=_set_input_type, notify=changed
     )
 
-    inputId = Property(
-        int,
-        fget=_get_input_id,
-        fset=_set_input_id,
-        notify=changed
+    inputId = QtCore.Property(
+        int, fget=_get_input_id, fset=_set_input_id, notify=changed
     )
 
-    vjoyId = Property(
-        int,
-        fget=_get_vjoy_id,
-        fset=_set_vjoy_id,
-        notify=changed
-    )
+    vjoyId = QtCore.Property(int, fget=_get_vjoy_id, fset=_set_vjoy_id, notify=changed)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class ScriptListModel(QtCore.QAbstractListModel):
-
     """List of all loaded scripts."""
 
-    instancesChanged = Signal()
+    instancesChanged = QtCore.Signal()
 
     roles = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("path".encode()),
@@ -455,54 +396,49 @@ class ScriptListModel(QtCore.QAbstractListModel):
         user_script.VirtualInputVariable: VirtualInputVariableModel,
     }
 
-    def __init__(self, script_manager: ScriptManager, parent=None):
+    def __init__(self, script_manager: ScriptManager, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._script_manager = script_manager
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def addScript(self, qml_url: str) -> None:
         self.layoutAboutToBeChanged.emit()
         self._script_manager.add_script(to_local_path(qml_url))
         self.layoutChanged.emit()
 
-    @Slot(str, str)
+    @QtCore.Slot(str, str)
     def removeScript(self, path: str, name: str) -> None:
         index = self._script_manager.index_of(Path(path), name)
         self.beginRemoveRows(QtCore.QModelIndex(), index, index)
         self._script_manager.remove_script(Path(path), name)
         self.endRemoveRows()
 
-    @Slot(str, str, str)
-    def renameScript(
-            self,
-            path: str,
-            old_name: str,
-            new_name: str
-    ) -> None:
+    @QtCore.Slot(str, str, str)
+    def renameScript(self, path: str, old_name: str, new_name: str) -> None:
         self._script_manager.rename_script(Path(path), old_name, new_name)
         self.dataChanged.emit(
-            self.createIndex(0, 0),
-            self.createIndex(self.rowCount(), 0)
+            self.createIndex(0, 0), self.createIndex(self.rowCount(), 0)
         )
 
-    def rowCount(self, parent=QtCore.QModelIndex) -> int:
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._script_manager.scripts)
 
-    def data(self, index: QtCore.QModelIndex, role: int=...) -> Any:
-        if role not in self.roleNames():
+    def data(
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> str | list[AbstractVariableModel] | None:
+        if role not in self.roles:
             raise GremlinError(f"Invalid role {role} in ScriptListModel")
 
-        role_name = ScriptListModel.roles[role].data().decode()
         script = self._script_manager.scripts[index.row()]
-        match role_name:
+        match cast(str, self.roles[role]):
             case "path":
                 return str(script.path)
             case "name":
                 return script.name
             case "variables":
-                return  [
-                    ScriptListModel.data_class_lookup[type(var)](var, self) \
+                return [
+                    ScriptListModel.data_class_lookup[type(var)](var, self)
                     for var in script.variables.values()
                 ]
             case _:

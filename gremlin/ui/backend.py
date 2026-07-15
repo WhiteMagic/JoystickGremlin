@@ -7,25 +7,16 @@ from __future__ import annotations
 import logging
 import os
 import sys
-from typing import (
-    List,
-    TYPE_CHECKING,
-)
 import uuid
 
 from PySide6 import (
     QtCore,
-    QtQml,
     QtGui,
-)
-from PySide6.QtCore import (
-    Property,
-    Signal,
-    Slot,
+    QtQml,
 )
 
 import dill
-
+import gremlin.ui.type_aliases as ta
 from gremlin import (
     audio_player,
     code_runner,
@@ -51,32 +42,26 @@ from gremlin.ui.profile import InputItemModel
 from gremlin.ui.script import ScriptListModel
 from gremlin.ui.util import to_local_path
 
-
-if TYPE_CHECKING:
-    import gremlin.ui.type_aliases as ta
-
-
 QML_IMPORT_NAME = "Gremlin.UI"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class UIState(QtCore.QObject):
-
     """Holds the state of the UI to simplify complex interactions.
 
     The various UI elements retrieve the state they should be in from this
     instance while being able to set state only via method calls.
     """
 
-    deviceChanged = Signal()
-    inputChanged = Signal()
-    modeChanged = Signal()
-    tabChanged = Signal()
-    themeRevisionChanged = Signal()
-    selectIndex = Signal(int)
+    deviceChanged = QtCore.Signal()
+    inputChanged = QtCore.Signal()
+    modeChanged = QtCore.Signal()
+    tabChanged = QtCore.Signal()
+    themeRevisionChanged = QtCore.Signal()
+    selectIndex = QtCore.Signal(int)
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._current_device = dill.UUID_Invalid
@@ -85,9 +70,7 @@ class UIState(QtCore.QObject):
         self._current_tab = "physical"
         self._theme_revision = 0
 
-        event_handler.EventListener().device_change_event.connect(
-            self._device_change
-        )
+        event_handler.EventListener().device_change_event.connect(self._device_change)
         signal.profileChanged.connect(self._device_change)
 
     def _device_change(self) -> None:
@@ -109,7 +92,7 @@ class UIState(QtCore.QObject):
                 self.setCurrentDevice(str(dill.UUID_Invalid))
                 self.setCurrentTab("logical")
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def setCurrentDevice(self, device_name: str) -> None:
         device_uuid = uuid.UUID(device_name)
         if device_uuid != self._current_device:
@@ -117,58 +100,52 @@ class UIState(QtCore.QObject):
             self.deviceChanged.emit()
             self.inputChanged.emit()
 
-    @Slot(InputIdentifier, int)
+    @QtCore.Slot(InputIdentifier, int)
     def setCurrentInput(self, input: InputIdentifier, index: int) -> None:
         value = (input, index)
         if value != self._current_input.get(input.device_guid, None):
             self._current_input[input.device_guid] = value
             self.inputChanged.emit()
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def setCurrentMode(self, mode_name: str) -> None:
         if mode_name != self._current_mode:
             self._current_mode = mode_name
             self.modeChanged.emit()
             self.inputChanged.emit()
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def setCurrentTab(self, tab: str) -> None:
         if tab != self._current_tab:
             self._current_tab = tab
             self.tabChanged.emit()
 
-    @Slot()
+    @QtCore.Slot()
     def bumpThemeRevision(self) -> None:
         self._theme_revision += 1
         self.themeRevisionChanged.emit()
 
-    @Property(str, notify=deviceChanged)
+    @QtCore.Property(str, notify=deviceChanged)
     def currentDevice(self) -> str:
         return str(self._current_device).upper()
 
-    @Property(InputIdentifier, notify=inputChanged)
+    @QtCore.Property(InputIdentifier, notify=inputChanged)
     def currentInput(self) -> InputIdentifier:
-        return self._current_input.get(
-            self._current_device,
-            (InputIdentifier(), 0)
-        )[0]
+        return self._current_input.get(self._current_device, (InputIdentifier(), 0))[0]
 
-    @Property(int, notify=inputChanged)
+    @QtCore.Property(int, notify=inputChanged)
     def currentInputIndex(self) -> int:
-        return self._current_input.get(
-            self._current_device,
-            (InputIdentifier(), 0)
-        )[1]
+        return self._current_input.get(self._current_device, (InputIdentifier(), 0))[1]
 
-    @Property(str, notify=modeChanged)
+    @QtCore.Property(str, notify=modeChanged)
     def currentMode(self) -> str:
         return self._current_mode
 
-    @Property(str, notify=tabChanged)
+    @QtCore.Property(str, notify=tabChanged)
     def currentTab(self) -> str:
         return self._current_tab
 
-    @Property(int, notify=themeRevisionChanged)
+    @QtCore.Property(int, notify=themeRevisionChanged)
     def themeRevision(self) -> int:
         """Counter bumped whenever the theme colours change.
 
@@ -179,30 +156,28 @@ class UIState(QtCore.QObject):
 
     def __str__(self) -> str:
         cur_input = self._current_input.get(
-            self._current_device,
-            (InputIdentifier(), 0)
+            self._current_device, (InputIdentifier(), 0)
         )
-        return f"{self._current_device} {cur_input[0].input_id} " + \
-            f"{cur_input[1]}  {self._current_tab}"
+        return (
+            f"{self._current_device} {cur_input[0].input_id} "
+            + f"{cur_input[1]}  {self._current_tab}"
+        )
 
 
 @common.SingletonDecorator
 class Backend(QtCore.QObject):
-
     """Allows interfacing between the QML frontend and the Python backend."""
 
-    windowTitleChanged = Signal()
-    profileChanged = Signal()
-    recentProfilesChanged = Signal()
-    inputConfigurationChanged = Signal()
-    activityChanged = Signal()
-    propertyChanged = Signal()
-    uiChanged = Signal()
+    windowTitleChanged = QtCore.Signal()
+    profileChanged = QtCore.Signal()
+    recentProfilesChanged = QtCore.Signal()
+    inputConfigurationChanged = QtCore.Signal()
+    activityChanged = QtCore.Signal()
+    propertyChanged = QtCore.Signal()
+    uiChanged = QtCore.Signal()
 
     def __init__(
-        self,
-        engine: QtQml.QQmlApplicationEngine,
-        parent: ta.OQO=None
+        self, engine: QtQml.QQmlApplicationEngine, parent: ta.OQO = None
     ) -> None:
         super().__init__(parent)
 
@@ -227,35 +202,31 @@ class Backend(QtCore.QObject):
             lambda: self.ui_state.setCurrentMode(mm.current.name)
         )
         self.profileChanged.connect(self._profile_change_handler)
-        self.process_monitor.process_changed.connect(
-            self._active_process_changed_cb
-        )
+        self.process_monitor.process_changed.connect(self._active_process_changed_cb)
 
         event_handler.EventHandler().is_active.connect(
             lambda: self.activityChanged.emit()
         )
-        event_handler.EventListener().device_change_event.connect(
-            self._device_change
-        )
-        event_handler.EventListener().joystick_event.connect(
-            self._highlight_input
-        )
+        event_handler.EventListener().device_change_event.connect(self._device_change)
+        event_handler.EventListener().joystick_event.connect(self._highlight_input)
 
         self.profileChanged.emit()
 
     def _highlight_input(self, event: event_handler.Event) -> None:
-        if not self.config.value("global", "general", "input-highlighting") \
-                or shared_state.suspend_input_highlighting():
+        if (
+            not self.config.value("global", "general", "input-highlighting")
+            or shared_state.suspend_input_highlighting()
+        ):
             return
 
         current_input = self.ui_state.currentInput
-        if self.ui_state.currentTab == "physical" \
-                and current_input.device_guid == event.device_guid \
-                and self.joystick_change_monitor.should_process(event):
+        if (
+            self.ui_state.currentTab == "physical"
+            and current_input.device_guid == event.device_guid
+            and self.joystick_change_monitor.should_process(event)
+        ):
             new_input = InputIdentifier(
-                event.device_guid,
-                event.event_type,
-                event.identifier
+                event.device_guid, event.event_type, event.identifier
             )
             if current_input.linear_index != new_input.linear_index:
                 signal.setInputIndex.emit(new_input.linear_index)
@@ -270,9 +241,7 @@ class Backend(QtCore.QObject):
         signal.profileChanged.emit()
 
     def _device_change(self) -> None:
-        behavior = self.config.value(
-            "global", "general", "device-change-behavior"
-        )
+        behavior = self.config.value("global", "general", "device-change-behavior")
         match behavior:
             case "Disable":
                 self.activate_gremlin(False)
@@ -287,13 +256,15 @@ class Backend(QtCore.QObject):
         """Emits the signal required for property changes to propagate."""
         self.propertyChanged.emit()
 
-    @Slot()
+    @QtCore.Slot()
     def emitConfigChanged(self) -> None:
         signal.configChanged.emit()
         audio_player.AudioPlayer().refresh()
 
     def check_for_updates(self) -> None:
-        parse_version = lambda v: [int(x) for x in v.split(".")]
+        def parse_version(value: str) -> list[int]:
+            return [int(x) for x in value.split(".")]
+
         if self.config.value("global", "general", "check-for-updates"):
             # Attempt to retrieve the latest version information, if this fails
             # silently abort.
@@ -313,7 +284,7 @@ class Backend(QtCore.QObject):
                 signal.showNotification.emit(
                     "New version available",
                     f"A newer version of Joystick Gremlin, {version_string} "
-                    f"is available."
+                    f"is available.",
                 )
                 self.config.set(
                     "global", "internal", "last-known-version", version_string
@@ -326,7 +297,7 @@ class Backend(QtCore.QObject):
         Otherwise the profile associated with the newly active process is
         loaded and then activated. Should
         """
-        if not self.config.value( "profile", "automation", "enable-auto-loading"):
+        if not self.config.value("profile", "automation", "enable-auto-loading"):
             return
 
         profile_path = config.get_profile_with_regex(path)
@@ -344,7 +315,7 @@ class Backend(QtCore.QObject):
             ):
                 self.activate_gremlin(False)
 
-    @Property(str, notify=propertyChanged)
+    @QtCore.Property(str, notify=propertyChanged)
     def gremlinVersion(self) -> str:
         """Returns the current version of Gremlin.
 
@@ -353,11 +324,11 @@ class Backend(QtCore.QObject):
         """
         return util.get_code_release()
 
-    @Property(UIState, notify=uiChanged)
+    @QtCore.Property(UIState, notify=uiChanged)
     def uiState(self) -> UIState:
         return self.ui_state
 
-    @Property(bool, notify=activityChanged)
+    @QtCore.Property(bool, notify=activityChanged)
     def gremlinPaused(self) -> bool:
         """Returns True if Gremlin is paused, False otherwise.
 
@@ -366,7 +337,7 @@ class Backend(QtCore.QObject):
         """
         return not event_handler.EventHandler().process_callbacks
 
-    @Property(bool, notify=activityChanged)
+    @QtCore.Property(bool, notify=activityChanged)
     def gremlinActive(self) -> bool:
         """Returns whether or not a Gremlin profile is active.
 
@@ -375,7 +346,7 @@ class Backend(QtCore.QObject):
         """
         return self.runner.is_running()
 
-    @Slot()
+    @QtCore.Slot()
     def toggleActiveState(self) -> None:
         """Toggles Gremlin between active and inactive."""
         self.activate_gremlin(not self.runner.is_running())
@@ -391,11 +362,8 @@ class Backend(QtCore.QObject):
             # Generate the code for the profile and run it
             # self._profile_auto_activated = False
             shared_state.set_suspend_input_highlighting(True)
-            self.runner.start(
-                self.profile,
-                self.profile.modes.first_mode
-            )
-            #self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon_active.ico"))
+            self.runner.start(self.profile, self.profile.modes.first_mode)
+            # self.ui.tray_icon.setIcon(QtGui.QIcon("gfx/icon_active.ico"))
         else:
             # Stop running the code
             self.runner.stop()
@@ -417,7 +385,7 @@ class Backend(QtCore.QObject):
         root_window = self.engine.rootObjects()[0]
         root_window.setVisibility(QtGui.QWindow.Visibility.Minimized)
 
-    @Slot(InputIdentifier, result=int)
+    @QtCore.Slot(InputIdentifier, result=int)
     def getActionCount(self, identifier: InputIdentifier) -> int:
         """Returns the number of actions associated with an input.
 
@@ -437,17 +405,15 @@ class Backend(QtCore.QObject):
                 identifier.input_type,
                 identifier.input_id,
                 self.ui_state.currentMode,
-                False
+                False,
             )
             return len(item.action_sequences)
-        except error.ProfileError as e:
+        except error.ProfileError:
             return 0
 
-    @Slot(InputIdentifier, int, result=InputItemModel)
+    @QtCore.Slot(InputIdentifier, int, result=InputItemModel)
     def getInputItem(
-        self,
-        identifier: InputIdentifier,
-        enumeration_index: int
+        self, identifier: InputIdentifier, enumeration_index: int
     ) -> InputItemModel | None:
         """Returns a model for a specified InputItem.
 
@@ -466,10 +432,10 @@ class Backend(QtCore.QObject):
                 identifier.input_type,
                 identifier.input_id,
                 self.ui_state.currentMode,
-                True
+                True,
             )
             return InputItemModel(item, enumeration_index, self)
-        except error.ProfileError as e:
+        except error.ProfileError:
             pass
 
     @QtCore.Slot()
@@ -480,7 +446,7 @@ class Backend(QtCore.QObject):
     def resumeInputHighlighting(self) -> None:
         shared_state.set_suspend_input_highlighting(False)
 
-    @Slot(str, int, result=bool)
+    @QtCore.Slot(str, int, result=bool)
     def isActionExpanded(self, uuid_str: str, index: int) -> bool:
         """Returns whether or not a specific action is expanded in the UI.
 
@@ -493,13 +459,8 @@ class Backend(QtCore.QObject):
         """
         return self._action_state.get((uuid.UUID(uuid_str), index), True)
 
-    @Slot(str, int, bool)
-    def setIsActionExpanded(
-        self,
-        uuid_str: str,
-        index: int,
-        is_expanded: bool
-    ) -> None:
+    @QtCore.Slot(str, int, bool)
+    def setIsActionExpanded(self, uuid_str: str, index: int, is_expanded: bool) -> None:
         """Sets a specific action's expanded state.
 
         Args:
@@ -509,7 +470,7 @@ class Backend(QtCore.QObject):
         """
         self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
 
-    @Property(bool, notify=propertyChanged)
+    @QtCore.Property(bool, notify=propertyChanged)
     def useDarkMode(self) -> bool:
         """Returns whether or not dark mode is enabled.
 
@@ -518,8 +479,8 @@ class Backend(QtCore.QObject):
         """
         return self.config.value("global", "general", "dark-mode")
 
-    @Property(type=list, notify=recentProfilesChanged)
-    def recentProfiles(self) -> List[str]:
+    @QtCore.Property(type=list, notify=recentProfilesChanged)
+    def recentProfiles(self) -> list[str]:
         """Returns a list of recently used profiles.
 
         Returns:
@@ -527,7 +488,7 @@ class Backend(QtCore.QObject):
         """
         return self.config.value("global", "internal", "recent-profiles")
 
-    @Slot()
+    @QtCore.Slot()
     def newProfile(self) -> None:
         """Creates a new profile."""
         self.activate_gremlin(False)
@@ -536,7 +497,7 @@ class Backend(QtCore.QObject):
         signal.reloadCurrentInputItem.emit()
         signal.reloadUi.emit()
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def saveProfile(self, qml_url: str) -> None:
         """Saves the current profile in the given path.
 
@@ -549,7 +510,7 @@ class Backend(QtCore.QObject):
         self.config.set("global", "internal", "last-profile", str(path))
         self.windowTitleChanged.emit()
 
-    @Slot(result=str)
+    @QtCore.Slot(result=str)
     def profilePath(self) -> str:
         """Returns the current profile's path.
 
@@ -559,7 +520,7 @@ class Backend(QtCore.QObject):
         path = self.profile.fpath
         return "" if path is None else str(path)
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def loadProfile(self, fpath: str) -> None:
         """Loads a profile from the specified path.
 
@@ -572,7 +533,7 @@ class Backend(QtCore.QObject):
         self.profileChanged.emit()
         signal.reloadCurrentInputItem.emit()
 
-    @Property(bool, notify=propertyChanged)
+    @QtCore.Property(bool, notify=propertyChanged)
     def profileContainsUnsavedChanges(self) -> bool:
         """Returns whether or not the current profile contains unsaved changes.
 
@@ -582,15 +543,15 @@ class Backend(QtCore.QObject):
         """
         return self.profile.has_unsaved_changes()
 
-    @Property(type=ScriptListModel, notify=profileChanged)
+    @QtCore.Property(type=ScriptListModel, notify=profileChanged)
     def scriptListModel(self) -> ScriptListModel:
         return ScriptListModel(self.profile.scripts, self)
 
-    @Property(type=str, notify=propertyChanged)
+    @QtCore.Property(type=str, notify=propertyChanged)
     def currentMode(self) -> str:
         return mode_manager.ModeManager().current.name
 
-    @Property(type=str, notify=windowTitleChanged)
+    @QtCore.Property(type=str, notify=windowTitleChanged)
     def windowTitle(self) -> str:
         """Returns the current window title.
 
@@ -638,9 +599,7 @@ class Backend(QtCore.QObject):
         except (KeyError, TypeError) as e:
             # An error occurred while parsing an existing profile, creating
             # an empty profile instead.
-            logging.getLogger("system").exception(
-                "Invalid profile content:\n{}".format(e)
-            )
+            logging.getLogger("system").exception(f"Invalid profile content:\n{e}")
             self.newProfile()
         except error.ProfileError as e:
             # Parsing the profile went wrong, stop loading and start with an

@@ -5,19 +5,12 @@
 from __future__ import annotations
 
 import logging
-from typing import (
-    Dict,
-    TYPE_CHECKING,
-)
 import uuid
 
-from PySide6 import (
-    QtCore,
-    QtQml,
-)
+from PySide6 import QtCore
 
 import dill
-
+import gremlin.ui.type_aliases as ta
 from gremlin import (
     auto_mapper,
     shared_state,
@@ -25,16 +18,12 @@ from gremlin import (
     swap_devices,
 )
 
-if TYPE_CHECKING:
-    import gremlin.ui.type_aliases as ta
-
 QML_IMPORT_NAME = "Gremlin.Tools"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class Tools(QtCore.QObject):
-
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
@@ -42,10 +31,10 @@ class Tools(QtCore.QObject):
     def createMappings(
         self,
         mode: str,
-        physical_devices: Dict[str, bool],
-        vjoy_devices: Dict[int, bool],
+        physical_devices: dict[str, bool],
+        vjoy_devices: dict[int, bool],
         overwrite: bool,
-        repeat: bool
+        repeat: bool,
     ) -> str:
         """
         Create mappings between physical and vJoy devices.
@@ -63,12 +52,10 @@ class Tools(QtCore.QObject):
         feedback_string = mapper.generate_mappings(
             [
                 dill.GUID.from_str(guid)
-                for (guid, chosen) in physical_devices.items() if chosen
+                for (guid, chosen) in physical_devices.items()
+                if chosen
             ],
-            [
-                int(vjoy_id)
-                for (vjoy_id, chosen) in vjoy_devices.items() if chosen
-            ],
+            [int(vjoy_id) for (vjoy_id, chosen) in vjoy_devices.items() if chosen],
             auto_mapper.AutoMapperOptions(mode, repeat, overwrite),
         )
         signal.signal.profileChanged.emit()
@@ -91,14 +78,12 @@ class Tools(QtCore.QObject):
             source_uuid = uuid.UUID(source_uuid_str)
             target_uuid = uuid.UUID(target_uuid_str)
             result = swap_devices.swap_devices(
-                shared_state.current_profile,
-                source_uuid,
-                target_uuid
+                shared_state.current_profile, source_uuid, target_uuid
             )
             signal.signal.profileChanged.emit()
             signal.signal.reloadCurrentInputItem.emit()
             return result.as_string()
-        except ValueError as e:
+        except ValueError:
             logging.getLogger("system").error(
                 f"Invalid UUID provided for swapping devices: "
                 f"{source_uuid_str}, {target_uuid_str}"

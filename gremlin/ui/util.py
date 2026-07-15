@@ -9,18 +9,13 @@ import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    List,
-)
 
 from PySide6 import (
     QtCore,
     QtGui,
-    QtQml,
 )
 
+import gremlin.ui.type_aliases as ta
 from gremlin import (
     device_helpers,
     event_handler,
@@ -45,17 +40,12 @@ from gremlin.types import (
     MouseButton,
 )
 
-if TYPE_CHECKING:
-    import gremlin.ui.type_aliases as ta
-
-
 QML_IMPORT_NAME = "Gremlin.Util"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class InputListenerModel(QtCore.QObject):
-
     """Allows recording user inputs with an on-screen prompt."""
 
     # Signal emitted when the listening for inputs is done to let the UI
@@ -68,17 +58,17 @@ class InputListenerModel(QtCore.QObject):
     # Signal emitted when the setting to accept multiple inputs changes.
     multipleInputsChanged = QtCore.Signal(bool)
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         # List of InputTypes that will be listened to.
-        self._event_types : list[InputType] = []
+        self._event_types: list[InputType] = []
         # If True more than the first input will be returned.
         self._multiple_inputs = False
         # Timer terminating the listening process in various scenarios.
         self._abort_timer = threading.Timer(1.0, self._abort_listening)
         # Received inputs while listening.
-        self._inputs : list[event_handler.Event] = []
+        self._inputs: list[event_handler.Event] = []
         # Flag indicating whether the listener is active or not.
         self._is_enabled = False
 
@@ -88,9 +78,11 @@ class InputListenerModel(QtCore.QObject):
         # Keyboard events are always listened to in order to catch the ESC
         # key to abort input listening.
         event_listener.keyboard_event.connect(self._kb_event_cb)
-        if InputType.JoystickAxis in self._event_types or \
-                InputType.JoystickButton in self._event_types or \
-                InputType.JoystickHat in self._event_types:
+        if (
+            InputType.JoystickAxis in self._event_types
+            or InputType.JoystickButton in self._event_types
+            or InputType.JoystickHat in self._event_types
+        ):
             event_listener.joystick_event.connect(self._joy_event_cb)
         if InputType.Mouse in self._event_types:
             windows_event_hook.MouseHook().start()
@@ -99,9 +91,11 @@ class InputListenerModel(QtCore.QObject):
     def _disconnect_listeners(self) -> None:
         event_listener = event_handler.EventListener()
         event_listener.keyboard_event.disconnect(self._kb_event_cb)
-        if InputType.JoystickAxis in self._event_types or \
-                InputType.JoystickButton in self._event_types or \
-                InputType.JoystickHat in self._event_types:
+        if (
+            InputType.JoystickAxis in self._event_types
+            or InputType.JoystickButton in self._event_types
+            or InputType.JoystickHat in self._event_types
+        ):
             try:
                 event_listener.joystick_event.disconnect(self._joy_event_cb)
             except RuntimeError:
@@ -177,8 +171,7 @@ class InputListenerModel(QtCore.QObject):
             case InputType.JoystickButton:
                 self._process_button(event)
             case InputType.JoystickAxis:
-                if device_helpers.JoystickInputSignificant() \
-                        .should_process(event):
+                if device_helpers.JoystickInputSignificant().should_process(event):
                     self._process_single_input_only(event)
             case InputType.JoystickHat:
                 if event.value != HatDirection.Center:
@@ -191,12 +184,12 @@ class InputListenerModel(QtCore.QObject):
             event: the key event to be processed
         """
         # Special handling for the ESC key, to abort listening if it is held.
-        is_esc = keyboard.key_from_code(*event.identifier) == \
-            keyboard.key_from_name("esc")
+        is_esc = keyboard.key_from_code(*event.identifier) == keyboard.key_from_name(
+            "esc"
+        )
         if is_esc:
             if event.is_pressed and not self._abort_timer.is_alive():
-                self._abort_timer = \
-                    threading.Timer(1.0, self._abort_listening)
+                self._abort_timer = threading.Timer(1.0, self._abort_listening)
                 self._abort_timer.start()
 
             # Avoid processing the ESC key as a regular input if keyboard
@@ -235,10 +228,10 @@ class InputListenerModel(QtCore.QObject):
     def _get_event_types(self) -> list[str]:
         return [InputType.to_string(v) for v in self._event_types]
 
-    def _set_event_types(self, event_types: List[str]) -> None:
+    def _set_event_types(self, event_types: list[str]) -> None:
         types = sorted(
             [InputType.to_enum(v) for v in event_types],
-            key=lambda v: InputType.to_string(v)
+            key=lambda v: InputType.to_string(v),
         )
         if types != self._event_types:
             self._event_types = types
@@ -270,30 +263,22 @@ class InputListenerModel(QtCore.QObject):
             self.multipleInputsChanged.emit(self._multiple_inputs)
 
     currentInput = QtCore.Property(
-        list,
-        fget=_get_current_inputs,
-        notify=listeningTerminated
+        list, fget=_get_current_inputs, notify=listeningTerminated
     )
 
     enabled = QtCore.Property(
-        bool,
-        fget=_get_is_enabled,
-        fset=_set_is_enabled,
-        notify=enabledChanged
+        bool, fget=_get_is_enabled, fset=_set_is_enabled, notify=enabledChanged
     )
 
     multipleInputs = QtCore.Property(
         bool,
         fget=_get_multiple_inputs,
         fset=_set_multiple_inputs,
-        notify=multipleInputsChanged
+        notify=multipleInputsChanged,
     )
 
     eventTypes = QtCore.Property(
-        list,
-        fget=_get_event_types,
-        fset=_set_event_types,
-        notify=eventTypesChanged
+        list, fget=_get_event_types, fset=_set_event_types, notify=eventTypesChanged
     )
 
 
@@ -314,7 +299,9 @@ class MacroRecorder:
         self._record_timings: bool = False
         self._last_event_time: int = 0
         self._last_recordings: dict[event_handler.Event, int] = {}
-        self._axis_recordings: dict[event_handler.Event, device_helpers.AxisChangeSignificanceTracker] = {}
+        self._axis_recordings: dict[
+            event_handler.Event, device_helpers.AxisChangeSignificanceTracker
+        ] = {}
         self._is_recording: bool = False
         self._config = Configuration()
 
@@ -346,9 +333,14 @@ class MacroRecorder:
         if InputType.Mouse in self._valid_event_types:
             windows_event_hook.MouseHook().start()
             el.mouse_event.connect(self._queue_event_recording)
-        if any(input_type in self._valid_event_types for input_type in (
-            InputType.JoystickButton, InputType.JoystickAxis, InputType.JoystickHat
-        )):
+        if any(
+            input_type in self._valid_event_types
+            for input_type in (
+                InputType.JoystickButton,
+                InputType.JoystickAxis,
+                InputType.JoystickHat,
+            )
+        ):
             el.joystick_event.connect(self._queue_event_recording)
 
     def stop(self) -> None:
@@ -384,11 +376,17 @@ class MacroRecorder:
                 if not self._axis_recordings[event].is_significant_change(event.value):
                     return
             else:
-                self._axis_recordings[event] = device_helpers.AxisChangeSignificanceTracker(
-                    event.value,
-                    self._config.value("action", "macro", "axis-minimum-change-amount"),
-                    self._config.value("action", "macro", "axis-minimum-time-interval"),
-                    True
+                self._axis_recordings[event] = (
+                    device_helpers.AxisChangeSignificanceTracker(
+                        event.value,
+                        self._config.value(
+                            "action", "macro", "axis-minimum-change-amount"
+                        ),
+                        self._config.value(
+                            "action", "macro", "axis-minimum-time-interval"
+                        ),
+                        True,
+                    )
                 )
 
         match event.event_type:
@@ -422,12 +420,11 @@ class MacroRecorder:
         self._append_action_callback(action)
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class ProcessListModel(QtCore.QAbstractListModel):
-
     """Provides a list model of all currently running processes."""
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._processes = sorted(process_monitor.list_current_processes())
@@ -439,14 +436,12 @@ class ProcessListModel(QtCore.QAbstractListModel):
         self._processes = sorted(process_monitor.list_current_processes())
         self.endResetModel()
 
-    def rowCount(self, parent: QtCore.QModelIndex=QtCore.QModelIndex()) -> int:
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._processes)
 
     def data(
-        self,
-        index: QtCore.QModelIndex,
-        role: int=QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> Any:
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> str:
         if not index.isValid():
             return ""
 
@@ -456,7 +451,6 @@ class ProcessListModel(QtCore.QAbstractListModel):
 
 
 class ColorInformation(metaclass=SingletonMetaclass):
-
     """Contains the information about the primary colors of the UI theme.
 
     Information is provided via a QML object (ColorInformation.qml) that holds the

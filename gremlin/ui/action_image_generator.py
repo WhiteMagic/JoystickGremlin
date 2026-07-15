@@ -18,7 +18,6 @@ from gremlin.ui.util import ColorInformation
 
 
 class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
-
     """Generates action sequence visualizations.
 
     This provider renders visual summary images for input action sequences
@@ -57,10 +56,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         self._vjoy_metrics = QtGui.QFontMetrics(self._vjoy_font)
 
     def requestImage(
-        self,
-        image_id: str,
-        size: QtCore.QSize,
-        requested_size: QtCore.QSize
+        self, image_id: str, size: QtCore.QSize, requested_size: QtCore.QSize
     ) -> QtGui.QImage:
         """Returns the image for the given id, generating it if needed.
 
@@ -115,34 +111,24 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
                     glyph_width = self._segoe_metrics.horizontalAdvance(token)
 
                     painter.drawText(
-                        QtCore.QRect(
-                            x_offset,
-                            -3,
-                            glyph_width,
-                            self._glyph_height
-                        ),
+                        QtCore.QRect(x_offset, -3, glyph_width, self._glyph_height),
                         QtCore.Qt.AlignmentFlag.AlignCenter,
-                        token
+                        token,
                     )
                     x_offset += glyph_width + self._spacing
-                elif token.startswith("\uF448"):
-                    glyph_width = \
-                        self._render_vjoy_glyph(token.split(","), painter, x_offset)
+                elif token.startswith("\uf448"):
+                    glyph_width = self._render_vjoy_glyph(
+                        token.split(","), painter, x_offset
+                    )
                     x_offset += glyph_width + self._spacing
                 elif len(token) == 1:
                     painter.setFont(self._bootstrap_font)
-                    glyph_width = \
-                        self._bootstrap_metrics.horizontalAdvance(token)
+                    glyph_width = self._bootstrap_metrics.horizontalAdvance(token)
 
                     painter.drawText(
-                        QtCore.QRect(
-                            x_offset,
-                            1,
-                            glyph_width,
-                            self._glyph_height
-                        ),
+                        QtCore.QRect(x_offset, 1, glyph_width, self._glyph_height),
                         QtCore.Qt.AlignmentFlag.AlignCenter,
-                        token
+                        token,
                     )
                     x_offset += glyph_width + self._spacing
                 else:
@@ -156,7 +142,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         image = QtGui.QImage(
             max(20, x_offset - self._spacing if x_offset > 0 else 0),
             self._glyph_height,
-            QtGui.QImage.Format.Format_ARGB32_Premultiplied
+            QtGui.QImage.Format.Format_ARGB32_Premultiplied,
         )
         image.fill(QtCore.Qt.GlobalColor.transparent)
 
@@ -169,15 +155,12 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         return image
 
     def _render_vjoy_glyph(
-        self,
-        token: list[str],
-        painter: QtGui.QPainter,
-        x_offset: int
+        self, token: list[str], painter: QtGui.QPainter, x_offset: int
     ) -> int:
         """Renders a vJoy token.
 
         Token format: <vjoy_icon>,<device_id>,<type_letter>,<input_number>
-        - vjoy_icon: Bootstrap icon character (\uF448)
+        - vjoy_icon: Bootstrap icon character (\uf448)
         - device_id: vJoy device number
         - type_letter: A = Axis, B = Button, H = Hat
         - input_number: Input number (1-128)
@@ -190,11 +173,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         Returns:
             Width of the rendered glyph in pixels
         """
-        lookup = {
-            "A": "AX",
-            "B": "BTN",
-            "H": "HAT"
-        }
+        lookup = {"A": "AX", "B": "BTN", "H": "HAT"}
         if token[2] not in lookup:
             return 0
 
@@ -208,7 +187,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         device_width = self._segoe_metrics.horizontalAdvance(str(vjoy_id))
         label_block_width = max(
             self._vjoy_metrics.horizontalAdvance(str(input_id)),
-            self._vjoy_metrics.horizontalAdvance(input_type)
+            self._vjoy_metrics.horizontalAdvance(input_type),
         )
 
         current_x = x_offset
@@ -218,7 +197,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         painter.drawText(
             QtCore.QRect(current_x, 1, icon_width, self._glyph_height),
             QtCore.Qt.AlignmentFlag.AlignCenter,
-            vjoy_icon
+            vjoy_icon,
         )
         current_x += icon_width + self._spacing
 
@@ -227,7 +206,7 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         painter.drawText(
             QtCore.QRect(current_x, -2, device_width, self._glyph_height),
             QtCore.Qt.AlignmentFlag.AlignVCenter,
-            str(vjoy_id)
+            str(vjoy_id),
         )
         current_x += device_width + self._spacing
 
@@ -236,14 +215,14 @@ class ActionSummaryImageProvider(QtQuick.QQuickImageProvider):
         painter.drawText(
             QtCore.QRect(current_x, -1, label_block_width, 13),
             QtCore.Qt.AlignmentFlag.AlignCenter,
-            str(input_id)
+            str(input_id),
         )
 
         # Draw type label (bottom)
         painter.drawText(
             QtCore.QRect(current_x, 8, label_block_width, 13),
             QtCore.Qt.AlignmentFlag.AlignCenter,
-            input_type
+            input_type,
         )
 
         return icon_width + device_width + label_block_width + 2 * self._spacing

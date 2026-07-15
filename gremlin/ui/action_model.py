@@ -5,17 +5,26 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 from PySide6 import QtCore
 
 import gremlin.ui.type_aliases as ta
 from gremlin.config import Configuration
-from gremlin.error import GremlinError, MissingImplementationError
+from gremlin.error import (
+    GremlinError,
+    MissingImplementationError,
+)
 from gremlin.plugin_manager import PluginManager
 from gremlin.profile import Library
 from gremlin.signal import signal
-from gremlin.types import ActionActivationMode, InputType
+from gremlin.types import (
+    ActionActivationMode,
+    InputType,
+)
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
@@ -27,12 +36,11 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 
 class SequenceIndex:
-
     def __init__(
-            self,
-            parent_index: int | None,
-            container_name: str | None,
-            index: int,
+        self,
+        parent_index: int | None,
+        container_name: str | None,
+        index: int,
     ) -> None:
         """Creates a new action index instance.
         This models the QModelIndex class.
@@ -63,19 +71,18 @@ class SequenceIndex:
 
 @ta.QmlElement
 class ActionModel(QtCore.QObject):
-
     """QML model representing a single action instance."""
 
     actionChanged = QtCore.Signal()
     actionLabelChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            data: AbstractActionData,
-            binding_model: InputItemBindingModel,
-            action_index: SequenceIndex,
-            parent_index: SequenceIndex,
-            parent: QtCore.QObject
+        self,
+        data: AbstractActionData,
+        binding_model: InputItemBindingModel,
+        action_index: SequenceIndex,
+        parent_index: SequenceIndex,
+        parent: QtCore.QObject,
     ) -> None:
         super().__init__(parent)
 
@@ -84,9 +91,7 @@ class ActionModel(QtCore.QObject):
         self._sequence_index = action_index
         self._parent_sequence_index = parent_index
 
-        self._binding_model.behaviorChanged.connect(
-            lambda: self.actionChanged.emit()
-        )
+        self._binding_model.behaviorChanged.connect(lambda: self.actionChanged.emit())
 
     def _qml_path_impl(self) -> str:
         raise MissingImplementationError(
@@ -123,10 +128,10 @@ class ActionModel(QtCore.QObject):
 
     @QtCore.Property(type=list, notify=actionChanged)
     def userFeedback(self) -> list[dict]:
-        return [{
-            "type": entry.feedback_type.value,
-            "message": entry.message
-        } for entry in self._data.user_feedback()]
+        return [
+            {"type": entry.feedback_type.value, "message": entry.message}
+            for entry in self._data.user_feedback()
+        ]
 
     @QtCore.Property(type=bool, notify=actionChanged)
     def isValid(self) -> bool:
@@ -146,9 +151,7 @@ class ActionModel(QtCore.QObject):
 
     @QtCore.Property(type=bool, notify=actionChanged)
     def lastInContainer(self) -> bool:
-        return self._binding_model.is_last_action_in_container(
-            self._sequence_index
-        )
+        return self._binding_model.is_last_action_in_container(self._sequence_index)
 
     @QtCore.Property(type=bool, constant=True)
     def canChangeActivation(self) -> bool:
@@ -159,11 +162,11 @@ class ActionModel(QtCore.QObject):
         return self._action_behavior()
 
     @QtCore.Property(type=list, notify=actionChanged)
-    def compatibleActions(self) -> List[str]:
+    def compatibleActions(self) -> list[str]:
         return self._compatible_actions()
 
     @QtCore.Slot(str, result=list)
-    def getActions(self, selector: str) -> List[ActionModel]:
+    def getActions(self, selector: str) -> list[ActionModel]:
         """Returns the collection of actions corresponding to the selector.
 
         Args:
@@ -172,10 +175,7 @@ class ActionModel(QtCore.QObject):
         Returns:
             List of actions corresponding to the given container
         """
-        return self._binding_model.get_child_actions(
-            self._sequence_index,
-            selector
-        )
+        return self._binding_model.get_child_actions(self._sequence_index, selector)
 
     @QtCore.Slot(str, str)
     def appendAction(self, action_name: str, selector: str) -> None:
@@ -186,20 +186,16 @@ class ActionModel(QtCore.QObject):
             selector: name of the container into which to add the action
         """
         action = PluginManager().create_instance(
-            action_name,
-            self._binding_model.behavior_type
+            action_name, self._binding_model.behavior_type
         )
         if action:
             self._data.insert_action(action, selector)
             self._binding_model.sync_data()
-            signal.inputItemChanged.emit(
-                self._binding_model.parent().enumeration_index
-            )
+            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
         else:
             logging.getLogger("system").error(
                 f"Failed to create action of type {action_name}"
             )
-
 
     @QtCore.Slot(int, int, str)
     def dropAction(self, source: int, target: int, method: str) -> None:
@@ -224,9 +220,7 @@ class ActionModel(QtCore.QObject):
         if target == 0:
             signal.reloadCurrentInputItem.emit()
 
-        signal.inputItemChanged.emit(
-            self._binding_model.parent().enumeration_index
-        )
+        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
     @QtCore.Slot(int)
     def removeAction(self, index: int) -> None:
@@ -236,9 +230,7 @@ class ActionModel(QtCore.QObject):
             index: sequence index corresponding to the action to remove
         """
         self._binding_model.remove_action(index)
-        signal.inputItemChanged.emit(
-            self._binding_model.parent().enumeration_index
-        )
+        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
     @property
     def action_data(self) -> AbstractActionData:
@@ -287,19 +279,23 @@ class ActionModel(QtCore.QObject):
         if state[1] != value:
             self._tuple_to_activation((state[0], value))
 
-    def _activation_to_tuple(self) -> Tuple[bool, bool]:
+    def _activation_to_tuple(self) -> tuple[bool, bool]:
         """Returns a tuple representing the activation behavior state.
 
         Returns:
             Tuple indicating which activation behaviors are enabled
         """
-        on_press = self._data.activation_mode in \
-                   [ActionActivationMode.Both, ActionActivationMode.Press]
-        on_release = self._data.activation_mode in \
-            [ActionActivationMode.Both, ActionActivationMode.Release]
+        on_press = self._data.activation_mode in [
+            ActionActivationMode.Both,
+            ActionActivationMode.Press,
+        ]
+        on_release = self._data.activation_mode in [
+            ActionActivationMode.Both,
+            ActionActivationMode.Release,
+        ]
         return (on_press, on_release)
 
-    def _tuple_to_activation(self, state: Tuple[bool, bool]) -> None:
+    def _tuple_to_activation(self, state: tuple[bool, bool]) -> None:
         """Sets the activation state based on the state tuple.
 
         Args:
@@ -316,11 +312,8 @@ class ActionModel(QtCore.QObject):
                 self._data.activation_mode = ActionActivationMode.Both
 
     def _append_drop_action(
-            self,
-            source_sidx: int,
-            target_sidx: int,
-            container: Optional[str]=None
-        ) -> None:
+        self, source_sidx: int, target_sidx: int, container: str | None = None
+    ) -> None:
         """Positions the source node after the target node.
 
         Args:
@@ -336,7 +329,7 @@ class ActionModel(QtCore.QObject):
         except GremlinError:
             signal.reloadUi.emit()
 
-    def _compatible_actions(self) -> List[str]:
+    def _compatible_actions(self) -> list[str]:
         """Returns the names of actions that are compatible within the current
         context.
 
@@ -349,9 +342,7 @@ class ActionModel(QtCore.QObject):
         key = ["action", "general", "action-priorities"]
         priority_list = Configuration().value(*key)
 
-        action_list = PluginManager().type_action_map[
-            self._binding_model.behavior_type
-        ]
+        action_list = PluginManager().type_action_map[self._binding_model.behavior_type]
         all_valid_action_names = [
             entry.name for entry in action_list if entry.tag != "root"
         ]
@@ -367,59 +358,55 @@ class ActionModel(QtCore.QObject):
         return sorted(filtered_names, key=lambda x: sort_names.index(x))
 
     actionLabel = QtCore.Property(
-        str,
-        fget=_get_action_label,
-        fset=_set_action_label,
-        notify=actionChanged
+        str, fget=_get_action_label, fset=_set_action_label, notify=actionChanged
     )
 
     activateOnPress = QtCore.Property(
         bool,
         fget=_get_activate_on_press,
         fset=_set_activate_on_press,
-        notify=actionChanged
+        notify=actionChanged,
     )
 
     activateOnRelease = QtCore.Property(
         bool,
         fget=_get_activate_on_release,
         fset=_set_activate_on_release,
-        notify=actionChanged
+        notify=actionChanged,
     )
 
 
 class ActionPriorityListModel(QtCore.QAbstractListModel):
-
     # TODO: Needs to be treated as a normal action property type and then
     #       rendered in the UI
 
     roles = {
-        QtCore.Qt.UserRole + 1: QtCore.QByteArray("name".encode()),
-        QtCore.Qt.UserRole + 2: QtCore.QByteArray("visible".encode()),
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"visible"),
     }
 
-    def __init__(self, parent: QtCore.QObject=...) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
         self._config = Configuration()
         self._cfg_key = ["action", "general", "action-priorities"]
 
-    def rowCount(self, parent:QtCore.QModelIndex=...) -> int:
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._config.value(*self._cfg_key))
 
-    def data(self, index: QtCore.QModelIndex, role: int=...) -> int:
-        if role in ActionPriorityListModel.roles:
-            role_name = ActionPriorityListModel.roles[role].data().decode()
-            data = self._config.value(*self._cfg_key)[index.row()]
-            match role_name:
-                case "name":
-                    return data[0]
-                case "visible":
-                    return data[1]
-                case _:
-                    raise GremlinError(f"Unknown role name {role_name}")
-
-        else:
+    def data(
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> int:
+        if role not in self.roles:
             raise GremlinError("Invalid role encountered")
 
-    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+        data = self._config.value(*self._cfg_key)[index.row()]
+        match cast(str, self.roles.get(role, "")):
+            case "name":
+                return data[0]
+            case "visible":
+                return data[1]
+            case _:
+                raise GremlinError(f"Unknown role name {role}")
+
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return ActionPriorityListModel.roles

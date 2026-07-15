@@ -5,33 +5,20 @@
 from __future__ import annotations
 
 import logging
-import uuid
-
 import time
+import uuid
 from typing import (
+    TYPE_CHECKING,
+    Any,
     cast,
     override,
-    Any,
-    Dict,
-    List,
-    Optional,
-    TYPE_CHECKING,
 )
 
-from PySide6 import (
-    QtCore,
-    QtQml,
-)
-from PySide6.QtCore import (
-    Property,
-    Signal,
-    Slot,
-)
+from PySide6 import QtCore
 
 import dill
-from gremlin.base_classes import UserFeedback
-from gremlin.error import GremlinError
 import gremlin.profile
+import gremlin.ui.type_aliases as ta
 from gremlin import (
     action_analysis,
     common,
@@ -41,44 +28,42 @@ from gremlin import (
     swap_devices,
     tree,
 )
+from gremlin.error import GremlinError
 from gremlin.signal import signal
 from gremlin.types import (
     AxisButtonDirection,
+    DataInsertionMode,
     HatDirection,
     InputType,
-    DataInsertionMode,
 )
-from gremlin.util import clamp
-
 from gremlin.ui.action_model import (
     ActionModel,
     SequenceIndex,
 )
+from gremlin.util import clamp
 
 if TYPE_CHECKING:
     from action_plugins.root import RootModel
     from gremlin.base_classes import AbstractActionData
-    import gremlin.ui.type_aliases as ta
 
 
 QML_IMPORT_NAME = "Gremlin.Profile"
 QML_IMPORT_MAJOR_VERSION = 1
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class VirtualButtonModel(QtCore.QObject):
-
     """Represents both axis and hat virtual buttons."""
 
-    lowerLimitChanged = Signal()
-    upperLimitChanged = Signal()
-    directionChanged = Signal()
-    hatDirectionChanged = Signal()
+    lowerLimitChanged = QtCore.Signal()
+    upperLimitChanged = QtCore.Signal()
+    directionChanged = QtCore.Signal()
+    hatDirectionChanged = QtCore.Signal()
 
     def __init__(
         self,
         virtual_button: gremlin.profile.AbstractVirtualButton,
-        parent: ta.OQO=None
+        parent: ta.OQO = None,
     ) -> None:
         """Creates a new instance.
 
@@ -115,10 +100,10 @@ class VirtualButtonModel(QtCore.QObject):
             self.virtual_button.direction = direction
             self.directionChanged.emit()
 
-    def _get_hat_state(self, hat_direction):
+    def _get_hat_state(self, hat_direction: HatDirection) -> bool:
         return hat_direction in self.virtual_button.directions
 
-    def _set_hat_state(self, hat_direction, is_active):
+    def _set_hat_state(self, hat_direction: HatDirection, is_active: bool) -> None:
         if is_active:
             if hat_direction not in self.virtual_button.directions:
                 self.virtual_button.directions.append(hat_direction)
@@ -129,87 +114,89 @@ class VirtualButtonModel(QtCore.QObject):
                 del self.virtual_button.directions[index]
                 self.hatDirectionChanged.emit()
 
-    lowerLimit = Property(
-        float,
-        fget=_get_lower_limit,
-        fset=_set_lower_limit,
-        notify=lowerLimitChanged
+    lowerLimit = QtCore.Property(
+        float, fget=_get_lower_limit, fset=_set_lower_limit, notify=lowerLimitChanged
     )
-    upperLimit = Property(
-        float,
-        fget=_get_upper_limit,
-        fset=_set_upper_limit,
-        notify=upperLimitChanged
+    upperLimit = QtCore.Property(
+        float, fget=_get_upper_limit, fset=_set_upper_limit, notify=upperLimitChanged
     )
-    direction = Property(
-        str,
-        fget=_get_direction,
-        fset=_set_direction,
-        notify=directionChanged
+    direction = QtCore.Property(
+        str, fget=_get_direction, fset=_set_direction, notify=directionChanged
     )
 
-    hatNorth = Property(
+    hatNorth = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.North),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.North, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.North, x
+        ),
+        notify=hatDirectionChanged,
     )
-    hatNorthEast = Property(
+    hatNorthEast = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.NorthEast),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.NorthEast, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.NorthEast, x
+        ),
+        notify=hatDirectionChanged,
     )
-    hatEast = Property(
+    hatEast = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.East),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.East, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.East, x
+        ),
+        notify=hatDirectionChanged,
     )
-    hatSouthEast = Property(
+    hatSouthEast = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.SouthEast),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.SouthEast, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.SouthEast, x
+        ),
+        notify=hatDirectionChanged,
     )
-    hatSouth = Property(
+    hatSouth = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.South),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.South, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.South, x
+        ),
+        notify=hatDirectionChanged,
     )
-    hatSouthWest = Property(
+    hatSouthWest = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.SouthWest),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.SouthWest, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.SouthWest, x
+        ),
+        notify=hatDirectionChanged,
     )
-    hatWest = Property(
+    hatWest = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.West),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.West, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.West, x
+        ),
+        notify=hatDirectionChanged,
     )
-    hatNorthWest = Property(
+    hatNorthWest = QtCore.Property(
         bool,
         fget=lambda cls: VirtualButtonModel._get_hat_state(cls, HatDirection.NorthWest),
-        fset=lambda cls, x: VirtualButtonModel._set_hat_state(cls, HatDirection.NorthWest, x),
-        notify=hatDirectionChanged
+        fset=lambda cls, x: VirtualButtonModel._set_hat_state(
+            cls, HatDirection.NorthWest, x
+        ),
+        notify=hatDirectionChanged,
     )
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class HatDirectionModel(QtCore.QObject):
-
     """QML model representing the directions of a hat."""
 
-    directionsChanged = Signal()
+    directionsChanged = QtCore.Signal()
 
-    def __init__(
-        self,
-        directions: List[HatDirection],
-        parent: Optional[QtCore.QObject]=None
-    ):
+    def __init__(self, directions: list[HatDirection], parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self.directions = directions
@@ -228,59 +215,70 @@ class HatDirectionModel(QtCore.QObject):
                 del self.directions[index]
                 self.directionsChanged.emit()
 
-    hatNorth = Property(
+    hatNorth = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.North),
-        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.North, x),
-        notify=directionsChanged
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(
+            cls, HatDirection.North, x
+        ),
+        notify=directionsChanged,
     )
-    hatNorthEast = Property(
+    hatNorthEast = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.NorthEast),
-        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.NorthEast, x),
-        notify=directionsChanged
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(
+            cls, HatDirection.NorthEast, x
+        ),
+        notify=directionsChanged,
     )
-    hatEast = Property(
+    hatEast = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.East),
         fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.East, x),
-        notify=directionsChanged
+        notify=directionsChanged,
     )
-    hatSouthEast = Property(
+    hatSouthEast = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.SouthEast),
-        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.SouthEast, x),
-        notify=directionsChanged
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(
+            cls, HatDirection.SouthEast, x
+        ),
+        notify=directionsChanged,
     )
-    hatSouth = Property(
+    hatSouth = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.South),
-        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.South, x),
-        notify=directionsChanged
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(
+            cls, HatDirection.South, x
+        ),
+        notify=directionsChanged,
     )
-    hatSouthWest = Property(
+    hatSouthWest = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.SouthWest),
-        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.SouthWest, x),
-        notify=directionsChanged
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(
+            cls, HatDirection.SouthWest, x
+        ),
+        notify=directionsChanged,
     )
-    hatWest = Property(
+    hatWest = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.West),
         fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.West, x),
-        notify=directionsChanged
+        notify=directionsChanged,
     )
-    hatNorthWest = Property(
+    hatNorthWest = QtCore.Property(
         bool,
         fget=lambda cls: HatDirectionModel._get_hat_state(cls, HatDirection.NorthWest),
-        fset=lambda cls, x: HatDirectionModel._set_hat_state(cls, HatDirection.NorthWest, x),
-        notify=directionsChanged
+        fset=lambda cls, x: HatDirectionModel._set_hat_state(
+            cls, HatDirection.NorthWest, x
+        ),
+        notify=directionsChanged,
     )
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class InputItemBindingModel(QtCore.QObject):
-
     """Model representing an ActionTree instance."""
 
     behaviorChanged = QtCore.Signal()
@@ -290,9 +288,9 @@ class InputItemBindingModel(QtCore.QObject):
     userFeedbackChanged = QtCore.Signal()
 
     def __init__(
-            self,
-            input_item_binding: gremlin.profile.InputItemBinding,
-            parent: ta.OQO = None
+        self,
+        input_item_binding: gremlin.profile.InputItemBinding,
+        parent: ta.OQO = None,
     ) -> None:
         super().__init__(parent)
 
@@ -318,9 +316,15 @@ class InputItemBindingModel(QtCore.QObject):
         self._container_index_lookup = {}
 
         # Initialize action queue
-        actions = [(self.root_action, None), ]
-        parent_indices = [SequenceIndex(None, None, None),]
-        container_indices = [0, ]
+        actions = [
+            (self.root_action, None),
+        ]
+        parent_indices = [
+            SequenceIndex(None, None, None),
+        ]
+        container_indices = [
+            0,
+        ]
         count = 0
 
         while len(actions) > 0:
@@ -347,7 +351,7 @@ class InputItemBindingModel(QtCore.QObject):
                 actions.append((c_actions[i], c_containers[i]))
                 parent_indices.append(index)
                 if i > 0:
-                    if c_containers[i] != c_containers[i-1]:
+                    if c_containers[i] != c_containers[i - 1]:
                         c_index = 0
                 container_indices.append(c_index)
                 c_index += 1
@@ -355,9 +359,7 @@ class InputItemBindingModel(QtCore.QObject):
             count += 1
 
     def get_child_actions(
-            self,
-            index: SequenceIndex | int,
-            container: str
+        self, index: SequenceIndex | int, container: str
     ) -> list[ActionModel]:
         if isinstance(index, int):
             index = self._index_lookup[index]
@@ -397,10 +399,7 @@ class InputItemBindingModel(QtCore.QObject):
         return self._action_models[self._index_lookup[index]]._data
 
     def move_action(
-            self,
-            source_idx: int,
-            target_idx: int,
-            container: Optional[str]=None
+        self, source_idx: int, target_idx: int, container: str | None = None
     ) -> None:
         """Moves the source action to the spot after the target action.
 
@@ -418,20 +417,16 @@ class InputItemBindingModel(QtCore.QObject):
 
         s_parent_identifier = (
             s_model.sequence_index.parent_index,
-            s_model.sequence_index.container_name
+            s_model.sequence_index.container_name,
         )
         t_parent_identifier = (
             t_model.sequence_index.parent_index,
-            t_model.sequence_index.container_name
+            t_model.sequence_index.container_name,
         )
 
         if container is not None:
             self.remove_action(s_model.sequence_index, False)
-            self.append_action(
-                s_model.action_data,
-                t_model.sequence_index,
-                container
-            )
+            self.append_action(s_model.action_data, t_model.sequence_index, container)
         else:
             # If source and target are in the same container special care has to
             # be taken to ensure removal and insertion happen in a valid order
@@ -445,10 +440,7 @@ class InputItemBindingModel(QtCore.QObject):
                 # of the container
                 if s_lid < t_lid:
                     move_performed = True
-                    self.append_action(
-                        s_model.action_data,
-                        t_model.sequence_index
-                    )
+                    self.append_action(s_model.action_data, t_model.sequence_index)
                     self.remove_action(s_model.sequence_index, False)
 
             # This is the default case if the source and target actions are part
@@ -463,9 +455,7 @@ class InputItemBindingModel(QtCore.QObject):
         self.rootActionChanged.emit()
 
     def remove_action(
-            self,
-            action_index: int | SequenceIndex,
-            perform_sync: bool=True
+        self, action_index: int | SequenceIndex, perform_sync: bool = True
     ) -> None:
         """Removes the specified action from its parent.
 
@@ -480,11 +470,11 @@ class InputItemBindingModel(QtCore.QObject):
         if isinstance(action_index, int):
             action_index = self._index_lookup[action_index]
 
-        parent_data = \
-            self.get_action_model_by_sidx(action_index.parent_index).action_data
+        parent_data = self.get_action_model_by_sidx(
+            action_index.parent_index
+        ).action_data
         parent_data.remove_action(
-            self.get_action_container_index(action_index),
-            action_index.container_name
+            self.get_action_container_index(action_index), action_index.container_name
         )
 
         if perform_sync:
@@ -492,10 +482,10 @@ class InputItemBindingModel(QtCore.QObject):
             self.rootActionChanged.emit()
 
     def append_action(
-            self,
-            action_data: AbstractActionData,
-            target_index: SequenceIndex,
-            container: Optional[str]=None
+        self,
+        action_data: AbstractActionData,
+        target_index: SequenceIndex,
+        container: str | None = None,
     ) -> None:
         """Appends the provided action data after the specified action.
 
@@ -508,12 +498,7 @@ class InputItemBindingModel(QtCore.QObject):
         # RootAction and thus should be used to insert into directly.
         if target_index.parent_index is None:
             data = self.get_action_model_by_sidx(target_index.index).action_data
-            data.insert_action(
-                action_data,
-                "children",
-                DataInsertionMode.Prepend,
-                0
-            )
+            data.insert_action(action_data, "children", DataInsertionMode.Prepend, 0)
         elif container is None:
             parent_data = self.get_action_model_by_sidx(
                 target_index.parent_index
@@ -522,17 +507,12 @@ class InputItemBindingModel(QtCore.QObject):
                 action_data,
                 target_index.container_name,
                 DataInsertionMode.Append,
-                self.get_action_container_index(target_index)
+                self.get_action_container_index(target_index),
             )
         else:
-            target_data = self.get_action_model_by_sidx(
-                target_index.index
-            ).action_data
+            target_data = self.get_action_model_by_sidx(target_index.index).action_data
             target_data.insert_action(
-                action_data,
-                container,
-                DataInsertionMode.Prepend,
-                0
+                action_data, container, DataInsertionMode.Prepend, 0
             )
 
     def is_last_action_in_container(self, index: SequenceIndex) -> bool:
@@ -545,21 +525,19 @@ class InputItemBindingModel(QtCore.QObject):
             True if the specified action is the last one in its container, False
             otherwise.
         """
-        indices = sorted([
-            self._container_index_lookup[m.sequence_index]
-            for m in self.get_child_actions(
-                index.parent_index,
-                index.container_name
-            )
-        ])
+        indices = sorted(
+            [
+                self._container_index_lookup[m.sequence_index]
+                for m in self.get_child_actions(
+                    index.parent_index, index.container_name
+                )
+            ]
+        )
         return self._container_index_lookup[index] >= indices[-1]
-
 
     @QtCore.Property(type=str, notify=inputTypeChanged)
     def inputType(self) -> str:
-        return InputType.to_string(
-            self._input_item_binding.input_item.input_type
-        )
+        return InputType.to_string(self._input_item_binding.input_item.input_type)
 
     @QtCore.Property(type=VirtualButtonModel, notify=virtualButtonChanged)
     def virtualButton(self) -> VirtualButtonModel:
@@ -572,10 +550,10 @@ class InputItemBindingModel(QtCore.QObject):
     @QtCore.Property(type=list, notify=userFeedbackChanged)
     def userFeedback(self) -> list[dict]:
         data = action_analysis.action_sequence_feedback(self._input_item_binding)
-        return [{
-            "type": entry.feedback_type.value,
-            "message": entry.message
-        } for entry in data]
+        return [
+            {"type": entry.feedback_type.value, "message": entry.message}
+            for entry in data
+        ]
 
     def _check_user_feedback(self, index: int) -> None:
         # Only perform updates for matchin items.
@@ -609,25 +587,31 @@ class InputItemBindingModel(QtCore.QObject):
             # Ensure a virtual button instance exists of the correct type
             # if one is needed
             input_type = self._input_item_binding.input_item.input_type
-            if input_type == InputType.JoystickAxis and \
-                    behavior == InputType.JoystickButton:
+            if (
+                input_type == InputType.JoystickAxis
+                and behavior == InputType.JoystickButton
+            ):
                 if not isinstance(
-                        self._input_item_binding.virtual_button,
-                        gremlin.profile.VirtualAxisButton
+                    self._input_item_binding.virtual_button,
+                    gremlin.profile.VirtualAxisButton,
                 ):
-                    self._input_item_binding.virtual_button = \
+                    self._input_item_binding.virtual_button = (
                         gremlin.profile.VirtualAxisButton()
+                    )
                     self._virtual_button_model = VirtualButtonModel(
                         self._input_item_binding.virtual_button
                     )
-            elif input_type == InputType.JoystickHat and \
-                    behavior == InputType.JoystickButton:
+            elif (
+                input_type == InputType.JoystickHat
+                and behavior == InputType.JoystickButton
+            ):
                 if not isinstance(
-                        self._input_item_binding.virtual_button,
-                        gremlin.profile.VirtualHatButton
+                    self._input_item_binding.virtual_button,
+                    gremlin.profile.VirtualHatButton,
                 ):
-                    self._input_item_binding.virtual_button = \
+                    self._input_item_binding.virtual_button = (
                         gremlin.profile.VirtualHatButton()
+                    )
                     self._virtual_button_model = VirtualButtonModel(
                         self._input_item_binding.virtual_button
                     )
@@ -646,17 +630,13 @@ class InputItemBindingModel(QtCore.QObject):
     def behavior_type(self) -> None:
         return self._input_item_binding.behavior
 
-    behavior = Property(
-        str,
-        fget=_get_behavior,
-        fset=_set_behavior,
-        notify=behaviorChanged
+    behavior = QtCore.Property(
+        str, fget=_get_behavior, fset=_set_behavior, notify=behaviorChanged
     )
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class InputItemModel(QtCore.QAbstractListModel):
-
     """QML model class representing an InputItem instance and acting as a
     model to display the individual InputItemBindingModel instances.
     """
@@ -664,16 +644,16 @@ class InputItemModel(QtCore.QAbstractListModel):
     # This fake single role and the roleName function are needed to have the
     # modelData property available in the QML delegate
     roles = {
-        QtCore.Qt.UserRole + 1: QtCore.QByteArray("fake".encode()),
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"fake"),
     }
 
-    bindingsChanged = Signal()
+    bindingsChanged = QtCore.Signal()
 
     def __init__(
         self,
         input_item: gremlin.profile.InputItem,
         enumeration_index: int,
-        parent: ta.OQO = None
+        parent: ta.OQO = None,
     ) -> None:
         """Exposes the list of all action sequences to the UI.
 
@@ -692,23 +672,17 @@ class InputItemModel(QtCore.QAbstractListModel):
     def enumeration_index(self) -> int:
         return self._enumeration_index
 
-    @Slot()
+    @QtCore.Slot()
     def newActionSequence(self) -> None:
-        self.beginInsertRows(
-            QtCore.QModelIndex(),
-            self.rowCount(),
-            self.rowCount()
-        )
+        self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
         self._input_item.add_item_binding()
         self.endInsertRows()
         signal.inputItemChanged.emit(self._enumeration_index)
 
-    @Slot(InputItemBindingModel)
+    @QtCore.Slot(InputItemBindingModel)
     def deleteActionSequnce(self, binding: InputItemBindingModel) -> None:
         try:
-            index = self._input_item.action_sequences.index(
-                binding.input_item_binding
-            )
+            index = self._input_item.action_sequences.index(binding.input_item_binding)
             self.beginRemoveRows(QtCore.QModelIndex(), index, index)
             self._input_item.remove_item_binding(binding.input_item_binding)
             self.endRemoveRows()
@@ -716,7 +690,7 @@ class InputItemModel(QtCore.QAbstractListModel):
         except ValueError:
             pass
 
-    @Slot(str, str, str)
+    @QtCore.Slot(str, str, str)
     def dropAction(self, source: str, target: str, method: str) -> None:
         """Handles dropping an action tree element
 
@@ -740,26 +714,26 @@ class InputItemModel(QtCore.QAbstractListModel):
         if source_entry is not None:
             for idx, entry in enumerate(self._input_item.action_sequences):
                 if entry.root_action.id == target_id:
-                    self._input_item.action_sequences.insert(idx+1, source_entry)
+                    self._input_item.action_sequences.insert(idx + 1, source_entry)
 
         self.bindingsChanged.emit()
 
-    def rowCount(self, parent: QtCore.QModelIndex=...) -> int:
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._input_item.action_sequences)
 
-    def data(self, index: QtCore.QModelIndex, role: int=...) -> Any:
+    def data(
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> InputItemBindingModel:
         return InputItemBindingModel(
-            self._input_item.action_sequences[index.row()],
-            parent=self
+            self._input_item.action_sequences[index.row()], parent=self
         )
 
-    def roleNames(self) -> Dict:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return InputItemModel.roles
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class ModeListModel(QtCore.QAbstractListModel):
-
     """List containing model instances for each mode."""
 
     roles = {
@@ -771,8 +745,8 @@ class ModeListModel(QtCore.QAbstractListModel):
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
-        self._lookup: Dict[str, tree.TreeNode] = {}
-        self._names: List[str] = []
+        self._lookup: dict[str, tree.TreeNode] = {}
+        self._names: list[str] = []
         self._reset()
 
         signal.profileChanged.connect(self._reset)
@@ -792,34 +766,31 @@ class ModeListModel(QtCore.QAbstractListModel):
         return len(self._lookup)
 
     def data(
-        self,
-        index: ta.ModelIndex,
-        role: int=QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> Any:
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> str | int | None:
         if role not in self.roleNames():
             raise GremlinError(f"Invalid role {role} in ModeListModel")
 
         node = self._lookup[self._names[index.row()]]
-        if role == QtCore.Qt.ItemDataRole.UserRole + 1:
-            return node.value
-        elif role == QtCore.Qt.ItemDataRole.UserRole + 2:
-            if node.parent is None:
-                return ""
-            else:
-                return node.parent.value
-        elif role == QtCore.Qt.ItemDataRole.UserRole + 3:
-            return node.depth
+        match cast(str, self.roles.get(role, "")):
+            case "name":
+                return node.value
+            case "parentName":
+                return "" if node.parent is None else node.parent.value
+            case "depth":
+                return node.depth
+            case _:
+                return None
 
-    def roleNames(self) -> Dict:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class ModeHierarchyModel(QtCore.QObject):
-
     """Model exposing the mode hierarchy and allows managing it."""
 
-    modesChanged = Signal()
+    modesChanged = QtCore.Signal()
 
     def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
@@ -831,27 +802,27 @@ class ModeHierarchyModel(QtCore.QObject):
         self._modes = shared_state.current_profile.modes
         self.modesChanged.emit()
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def newMode(self, name: str) -> None:
         if not self._modes.mode_exists(name):
             self._modes.add_mode(name)
             self.modesChanged.emit()
             signal.modesChanged.emit()
 
-    @Slot(str, str)
+    @QtCore.Slot(str, str)
     def renameMode(self, old_name: str, new_name: str) -> None:
-        if old_name != new_name and not new_name in self.modeStringList():
+        if old_name != new_name and new_name not in self.modeStringList():
             self._modes.rename_mode(old_name, new_name)
             self.modesChanged.emit()
             signal.modesChanged.emit()
 
-    @Slot(str)
+    @QtCore.Slot(str)
     def deleteMode(self, name: str) -> None:
         self._modes.delete_mode(name)
         self.modesChanged.emit()
         signal.modesChanged.emit()
 
-    @Slot(str, str)
+    @QtCore.Slot(str, str)
     def setParent(self, mode_name: str, parent_name: str) -> None:
         node = self._modes.find_mode(mode_name)
         if parent_name != node.parent.value:
@@ -859,39 +830,38 @@ class ModeHierarchyModel(QtCore.QObject):
             self.modesChanged.emit()
             signal.modesChanged.emit()
 
-    @Slot(str, result=list)
+    @QtCore.Slot(str, result=list)
     def validParents(self, name: str) -> list[dict[str, str]]:
         options = [{"value": ""}]
         for entry in self._modes.valid_parents(name):
             options.append({"value": entry})
         return options
 
-    @Slot(result=list)
+    @QtCore.Slot(result=list)
     def modeStringList(self) -> list[str]:
         return self._modes.mode_names()
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class LabelValueSelectionModel(QtCore.QAbstractListModel):
-
     """Generic class presenting an interface for use with Comboboxes."""
 
-    selectionChanged = Signal()
+    selectionChanged = QtCore.Signal()
 
     roles = {
-        QtCore.Qt.UserRole + 1: QtCore.QByteArray("label".encode()),
-        QtCore.Qt.UserRole + 2: QtCore.QByteArray("value".encode()),
-        QtCore.Qt.UserRole + 3: QtCore.QByteArray("bootstrap".encode()),
-        QtCore.Qt.UserRole + 4: QtCore.QByteArray("imageIcon".encode())
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"label"),
+        QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"value"),
+        QtCore.Qt.ItemDataRole.UserRole + 3: QtCore.QByteArray(b"bootstrap"),
+        QtCore.Qt.ItemDataRole.UserRole + 4: QtCore.QByteArray(b"imageIcon"),
     }
 
     def __init__(
-            self,
-            labels: List[Any],
-            values: List[str],
-            bootstrap: List[str]=[],
-            icons: List[str]=[],
-            parent: ta.OQO = None
+        self,
+        labels: list[Any],
+        values: list[str],
+        bootstrap: list[str] = [],
+        icons: list[str] = [],
+        parent: ta.OQO = None,
     ) -> None:
         super().__init__(parent)
 
@@ -903,24 +873,29 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
         self._icons = icons
         self._current_index = 0
 
-    def rowCount(self, parent: QtCore.QModelIndex) -> int:
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._labels)
 
-    def data(self, index: QtCore.QModelIndex, role: int) -> Any:
+    def data(
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> str:
         if role not in self.roleNames():
             raise GremlinError(f"Invalid role {role} in LabelValueSelectionModel")
 
-        index = index.row()
-        if role == QtCore.Qt.UserRole + 1:
-            return self._labels[index]
-        elif role == QtCore.Qt.UserRole + 2:
-            return str(self._values[index])
-        elif role == QtCore.Qt.UserRole + 3:
-            return "" if index >= len(self._bootstrap) else self._bootstrap[index]
-        elif role == QtCore.Qt.UserRole + 4:
-            return "" if index >= len(self._icons) else self._icons[index]
+        row = index.row()
+        match cast(str, self.roles.get(role, "")):
+            case "label":
+                return self._labels[row]
+            case "value":
+                return str(self._values[row])
+            case "bootstrap":
+                return "" if row >= len(self._bootstrap) else self._bootstrap[row]
+            case "imageIcon":
+                return "" if row >= len(self._icons) else self._icons[row]
+            case _:
+                return ""
 
-    def roleNames(self) -> Dict:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return LabelValueSelectionModel.roles
 
     def _get_current_value(self) -> str:
@@ -933,55 +908,52 @@ class LabelValueSelectionModel(QtCore.QAbstractListModel):
             if index != self._current_index:
                 self._current_index = index
                 self.selectionChanged.emit()
-        except ValueError as e:
+        except ValueError:
             logging.error(
-                f"LabelValueSelectionModel: Attempting to set invalid "
-                f"value {value_str}"
+                f"LabelValueSelectionModel: Attempting to set invalid value {value_str}"
             )
 
     def _get_current_selection_index(self) -> int:
         return self._current_index
 
-    currentValue = Property(
-        str,
-        fget=_get_current_value,
-        fset=_set_current_value,
-        notify=selectionChanged
+    currentValue = QtCore.Property(
+        str, fget=_get_current_value, fset=_set_current_value, notify=selectionChanged
     )
 
-    currentSelectionIndex = Property(
-        int,
-        fget=_get_current_selection_index,
-        notify=selectionChanged
+    currentSelectionIndex = QtCore.Property(
+        int, fget=_get_current_selection_index, notify=selectionChanged
     )
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class StartupModeModel(QtCore.QAbstractListModel):
-
     """Model representing the startup mode setting of the current profile."""
 
-    selectionChanged = Signal()
+    selectionChanged = QtCore.Signal()
 
     roles = {
         QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray("label".encode()),
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("value".encode()),
     }
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._profile = cast(gremlin.profile.Profile, shared_state.current_profile)
-        self._valid_names = ["Use Heuristic", "Last Active"] + \
-            self._profile.modes.mode_names()
+        self._valid_names = [
+            "Use Heuristic",
+            "Last Active",
+        ] + self._profile.modes.mode_names()
         signal.profileChanged.connect(self._reset)
         signal.modesChanged.connect(self._reset)
 
     def _reset(self) -> None:
         self.beginResetModel()
         self._profile = cast(gremlin.profile.Profile, shared_state.current_profile)
-        self._valid_names = ["Use Heuristic", "Last Active"] + \
-            self._profile.modes.mode_names()
+        self._valid_names = [
+            "Use Heuristic",
+            "Last Active",
+        ] + self._profile.modes.mode_names()
         self.endResetModel()
         self.selectionChanged.emit()
 
@@ -991,44 +963,39 @@ class StartupModeModel(QtCore.QAbstractListModel):
 
     @override
     def data(
-            self,
-            index: ta.ModelIndex,
-            role: int = QtCore.Qt.ItemDataRole.DisplayRole
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
     ) -> Any:
         if not index.isValid() or index.row() >= len(self._valid_names):
             return None
 
-        match self.roles[role]:
+        match cast(str, self.roles[role]):
             case "label":
                 return self._valid_names[index.row()]
             case "value":
                 return index.row()
 
     @override
-    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
     def _get_current_selection_index(self) -> int:
-        return self._valid_names.index(
-            self._profile.settings.startup_mode
-        )
+        return self._valid_names.index(self._profile.settings.startup_mode)
 
     def _set_current_selection_index(self, index: int) -> None:
         if index != self._get_current_selection_index():
             self._profile.settings.startup_mode = self._valid_names[index]
             self.selectionChanged.emit()
 
-    currentSelectionIndex = Property(
+    currentSelectionIndex = QtCore.Property(
         int,
         fget=_get_current_selection_index,
         fset=_set_current_selection_index,
-        notify=selectionChanged
+        notify=selectionChanged,
     )
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
-
     """Model representign if a vJoy device is treated as input or output
     device."""
 
@@ -1037,7 +1004,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"isInput"),
     }
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._profile = shared_state.current_profile
@@ -1056,9 +1023,7 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
 
     @override
     def data(
-            self,
-            index: ta.ModelIndex,
-            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
     ) -> Any:
         if not index.isValid() or index.row() >= len(self._vjoy_devices):
             return None
@@ -1074,10 +1039,10 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
 
     @override
     def setData(
-            self,
-            index: ta.ModelIndex,
-            value: Any,
-            role: int=QtCore.Qt.ItemDataRole.EditRole
+        self,
+        index: ta.ModelIndex,
+        value: Any,
+        role: int = QtCore.Qt.ItemDataRole.EditRole,
     ) -> bool:
         match cast(str, self.roles[role]):
             case "isInput":
@@ -1090,13 +1055,12 @@ class VJoyInputOrOutputModel(QtCore.QAbstractListModel):
                 return False
 
     @override
-    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class OutputVJoyListModel(QtCore.QAbstractListModel):
-
     """Model representing the initial vJoy values of the current profile."""
 
     roles = {
@@ -1104,7 +1068,7 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray(b"initialValuesModel"),
     }
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._profile = shared_state.current_profile
@@ -1123,9 +1087,7 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
 
     @override
     def data(
-            self,
-            index: ta.ModelIndex,
-            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
     ) -> Any:
         if not index.isValid() or index.row() >= len(self._vjoy_devices):
             return None
@@ -1139,18 +1101,19 @@ class OutputVJoyListModel(QtCore.QAbstractListModel):
                 )
 
     @override
-    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    def _output_devices(self) -> List[dill.DeviceSummary]:
+    def _output_devices(self) -> list[dill.DeviceSummary]:
         return [
-            d for d in device_initialization.vjoy_devices() if
-            self._profile.settings.vjoy_as_input.get(d.vjoy_id, False) is False
+            d
+            for d in device_initialization.vjoy_devices()
+            if self._profile.settings.vjoy_as_input.get(d.vjoy_id, False) is False
         ]
 
-@QtQml.QmlElement
-class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
 
+@ta.QmlElement
+class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
     """Model representing the initial vJoy values for a specific vJoy device."""
 
     roles = {
@@ -1158,11 +1121,7 @@ class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
         QtCore.Qt.ItemDataRole.UserRole + 2: QtCore.QByteArray("value".encode()),
     }
 
-    def __init__(
-        self,
-        device: dill.DeviceSummary,
-        parent: ta.OQO = None
-    ) -> None:
+    def __init__(self, device: dill.DeviceSummary, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._device = device
@@ -1180,9 +1139,7 @@ class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
 
     @override
     def data(
-            self,
-            index: ta.ModelIndex,
-            role: int=QtCore.Qt.ItemDataRole.DisplayRole
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
     ) -> Any:
         if not index.isValid() or index.row() >= self._device.axis_count:
             return None
@@ -1191,20 +1148,19 @@ class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
             case "label":
                 return common.input_to_ui_string(
                     InputType.JoystickAxis,
-                    self._device.axis_map[index.row()].axis_index
+                    self._device.axis_map[index.row()].axis_index,
                 )
             case "value":
                 return self._profile.settings.get_initial_vjoy_axis_value(
-                    self._device.vjoy_id,
-                    self._device.axis_map[index.row()].axis_index
+                    self._device.vjoy_id, self._device.axis_map[index.row()].axis_index
                 )
 
     @override
     def setData(
-            self,
-            index: ta.ModelIndex,
-            value: Any,
-            role: int=QtCore.Qt.ItemDataRole.EditRole
+        self,
+        index: ta.ModelIndex,
+        value: Any,
+        role: int = QtCore.Qt.ItemDataRole.EditRole,
     ) -> bool:
         if not index.isValid() or index.row() >= self._device.axis_count:
             return False
@@ -1214,25 +1170,24 @@ class OutputVJoyInitialValuesModel(QtCore.QAbstractListModel):
                 self._profile.settings.set_initial_vjoy_axis_value(
                     self._device.vjoy_id,
                     self._device.axis_map[index.row()].axis_index,
-                    value
+                    value,
                 )
                 return True
             case _:
                 return False
 
     @override
-    def roleNames(self) -> Dict[int, QtCore.QByteArray]:
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class ProfileSettingsModel(QtCore.QObject):
-
     """QML model exposing profile settings to the UI."""
 
-    settingsChanged = Signal()
+    settingsChanged = QtCore.Signal()
 
-    def __init__(self, parent: ta.OQO=None) -> None:
+    def __init__(self, parent: ta.OQO = None) -> None:
         super().__init__(parent)
 
         self._profile = shared_state.current_profile
@@ -1247,17 +1202,16 @@ class ProfileSettingsModel(QtCore.QObject):
             self._profile.settings.macro_default_delay = delay
             self.settingsChanged.emit()
 
-    macroDefaultDelay = Property(
+    macroDefaultDelay = QtCore.Property(
         float,
         fget=lambda self: self._profile.settings.macro_default_delay,
         fset=_set_macro_default_delay,
-        notify=settingsChanged
+        notify=settingsChanged,
     )
 
 
-@QtQml.QmlElement
+@ta.QmlElement
 class ProfileDeviceListModel(QtCore.QAbstractListModel):
-
     """Model listing devices with bindings in the profile."""
 
     selectedIndexChanged = QtCore.Signal()
@@ -1278,8 +1232,7 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
     def update_model(self) -> None:
         """Updates the model if the connected devices change."""
         self.beginResetModel()
-        self._devices = \
-            swap_devices.get_profile_devices(shared_state.current_profile)
+        self._devices = swap_devices.get_profile_devices(shared_state.current_profile)
         self.endResetModel()
 
     def rowCount(self, parent: ta.MI = QtCore.QModelIndex()) -> int:
@@ -1287,12 +1240,12 @@ class ProfileDeviceListModel(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.MI, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> Any:
+    ) -> str | None:
         if not index.isValid() or not (0 <= index.row() < len(self._devices)):
             return None
 
         device = self._devices[index.row()]
-        match self.roles[role]:
+        match cast(str, self.roles[role]):
             case "name":
                 return device.name
             case "nameAndActions":
