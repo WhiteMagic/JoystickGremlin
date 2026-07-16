@@ -57,8 +57,8 @@ class TestModeHierarchy:
         with pytest.raises(GremlinError):
             mh.find_mode("not there")
 
-        assert mh.mode_exists("Second") == True
-        assert mh.mode_exists("Other") == False
+        assert mh.mode_exists("Second")
+        assert not mh.mode_exists("Other")
 
     def test_delete(self) -> None:
         p = Profile()

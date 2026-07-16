@@ -10,6 +10,7 @@ sys.path.append(".")
 
 import pathlib
 import uuid
+from typing import Any
 from xml.etree import ElementTree
 
 import pytest
@@ -53,7 +54,7 @@ xml_bad = """
 """
 
 
-def test_read_action_id():
+def test_read_action_id() -> None:
     doc = ElementTree.fromstring(xml_doc)
     assert gremlin.util.read_action_id(doc) == uuid.UUID(
         "ac905a47-9ad3-4b65-b702-fbae1d133609"
@@ -76,7 +77,7 @@ def test_read_action_id():
         gremlin.util.read_action_id(doc)
 
 
-def test_read_property():
+def test_read_property() -> None:
     doc = ElementTree.fromstring(xml_doc)
 
     assert (
@@ -94,9 +95,7 @@ def test_read_property():
     assert (
         gremlin.util.read_property(doc, "pi", gremlin.types.PropertyType.Float) == 3.14
     )
-    assert (
-        gremlin.util.read_property(doc, "lies", gremlin.types.PropertyType.Bool) == True
-    )
+    assert gremlin.util.read_property(doc, "lies", gremlin.types.PropertyType.Bool)
     assert gremlin.util.read_property(
         doc, "path", gremlin.types.PropertyType.Path
     ) == pathlib.Path("./test")
@@ -162,7 +161,7 @@ def test_read_property():
         pytest.param(-32766, -32768, 32767, -32766, id="negative_range_below"),
     ],
 )
-def test_clamp(value, min_val, max_val, expected):
+def test_clamp(value: float, min_val: float, max_val: float, expected: float) -> None:
     """Test that values are properly clamped to the specified range."""
     assert gremlin.util.clamp(value, min_val, max_val) == expected
 
@@ -182,10 +181,13 @@ def test_clamp(value, min_val, max_val, expected):
         pytest.param(pathlib.Path("./test"), gremlin.types.PropertyType.Path),
     ],
 )
-def test_determine_value_type_valid_values(value, property_type):
+def test_determine_value_type_valid_values(
+    value: Any,  # noqa: ANN401
+    property_type: gremlin.types.PropertyType | list[gremlin.types.PropertyType],
+) -> None:
     property_type, is_valid = gremlin.util.determine_value_type(value, property_type)
     assert property_type == property_type
-    assert is_valid == True
+    assert is_valid
 
 
 @pytest.mark.parametrize(
@@ -202,10 +204,13 @@ def test_determine_value_type_valid_values(value, property_type):
         pytest.param(pathlib.Path("./test"), gremlin.types.PropertyType.String),
     ],
 )
-def test_determine_value_type_invalid_values(value, property_type):
+def test_determine_value_type_invalid_values(
+    value: Any,  # noqa: ANN401
+    property_type: gremlin.types.PropertyType | list[gremlin.types.PropertyType],
+) -> None:
     property_type, is_valid = gremlin.util.determine_value_type(value, property_type)
-    assert property_type == None
-    assert is_valid == False
+    assert property_type is None
+    assert not is_valid
 
 
 @pytest.mark.parametrize(
@@ -220,5 +225,9 @@ def test_determine_value_type_invalid_values(value, property_type):
         pytest.param(gremlin.types.PropertyType.Path, pathlib.Path("/test"), "\\test"),
     ],
 )
-def test_property_to_string(property, property_value, property_string):
+def test_property_to_string(
+    property: gremlin.types.PropertyType,
+    property_value: Any,  # noqa: ANN401
+    property_string: str,
+) -> None:
     assert gremlin.util.property_to_string(property, property_value) == property_string

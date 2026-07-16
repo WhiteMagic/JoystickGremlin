@@ -10,7 +10,7 @@ from dill import (
 )
 
 
-def test_DeviceSummary_initialisation():
+def test_DeviceSummary_initialisation() -> None:
     c_device_summary = _DeviceSummary()
     c_device_summary.name = b"MOZA R12 Base\x90"
     device_summary = DeviceSummary(data=c_device_summary)

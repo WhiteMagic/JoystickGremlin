@@ -7,6 +7,8 @@ from __future__ import annotations
 import pathlib
 import uuid
 
+import pytest
+
 from action_plugins import macro
 from gremlin.profile import Profile
 
@@ -16,7 +18,7 @@ _INPUT_1_DEVICE_UUID = uuid.UUID("97b77b40-07d8-11f0-8028-444553540000")
 _INPUT_2_DEVICE_UUID = uuid.UUID("97b77b40-07d8-11f0-8028-444553540001")
 
 
-def test_from_xml(subtests, xml_dir: pathlib.Path):
+def test_from_xml(subtests: pytest.Subtests, xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE))
 
@@ -24,7 +26,7 @@ def test_from_xml(subtests, xml_dir: pathlib.Path):
 
     assert isinstance(a, macro.MacroData)
     with subtests.test("macro high level data"):
-        assert a.is_exclusive == False
+        assert not a.is_exclusive
         assert a.repeat_mode == macro.MacroRepeatModes.Single
         assert a.repeat_data.count == 1
         assert a.repeat_data.delay == 0.1
@@ -32,7 +34,7 @@ def test_from_xml(subtests, xml_dir: pathlib.Path):
         assert len(a.actions) == 10
 
 
-def test_swap_uuid(xml_dir: pathlib.Path):
+def test_swap_uuid(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE))
 

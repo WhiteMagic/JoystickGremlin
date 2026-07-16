@@ -13,10 +13,15 @@ import pytest
 from gremlin import fsm
 
 
-def test_simple():
-    f1 = lambda: 1
-    f2 = lambda: 2
-    f3 = lambda: 3
+def test_simple() -> None:
+    def f1() -> int:
+        return 1
+
+    def f2() -> int:
+        return 2
+
+    def f3() -> int:
+        return 3
 
     states = ["1", "2", "3"]
     actions = ["switch"]
@@ -37,14 +42,19 @@ def test_simple():
     assert sm.current_state == "1"
 
 
-def test_multi():
+def test_multi() -> None:
     # 1 - 2 - 4
     #   \   /
     #     3
 
-    add = lambda a, b: a + b
-    sub = lambda a, b: a - b
-    mul = lambda a, b: a * b
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    def sub(a: int, b: int) -> int:
+        return a - b
+
+    def mul(a: int, b: int) -> int:
+        return a * b
 
     states = ["1", "2", "3", "4"]
     actions = ["add", "mul", "sub"]

@@ -49,7 +49,7 @@ def test_from_xml(xml_dir: pathlib.Path) -> None:
     assert isinstance(cond, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(cond._comparator, condition.comparator.PressedComparator)
     assert cond._states[0].input_type == InputType.JoystickButton
-    assert cond._comparator.is_pressed == False
+    assert not cond._comparator.is_pressed
     assert cond.is_valid()
 
 
@@ -88,7 +88,7 @@ def test_from_xml_complex(xml_dir: pathlib.Path) -> None:
     assert isinstance(c1, action_plugins.condition.condition.JoystickCondition)
     assert isinstance(c1._comparator, condition.comparator.PressedComparator)
     assert c1._states[0].input_type == InputType.JoystickButton
-    assert c1._comparator.is_pressed == False
+    assert not c1._comparator.is_pressed
     assert c1.is_valid()
 
     c2 = a.conditions[1]
@@ -111,7 +111,7 @@ def test_from_xml_complex(xml_dir: pathlib.Path) -> None:
     c4 = a.conditions[3]
     assert isinstance(c4, action_plugins.condition.condition.KeyboardCondition)
     assert isinstance(c4._comparator, condition.comparator.PressedComparator)
-    assert c4._comparator.is_pressed == False
+    assert not c4._comparator.is_pressed
 
 
 def test_to_xml() -> None:
@@ -170,10 +170,10 @@ def test_ctor() -> None:
 
     assert len(a.conditions) == 0
     assert a.logical_operator == condition.LogicalOperator.All
-    assert a.is_valid() == True
+    assert a.is_valid()
 
 
-def test_swap_uuid(xml_dir: pathlib.Path):
+def test_swap_uuid(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_COMPLEX))
 

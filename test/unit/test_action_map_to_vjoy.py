@@ -34,12 +34,12 @@ def test_ctor(joystick_init: None) -> None:
     assert r.axis_scaling == 1.0
 
 
-def test_actions(xml_dir: pathlib.Path):
-    l = Library()
+def test_actions(xml_dir: pathlib.Path) -> None:
+    library = Library()
     a = MapToVjoyData(types.InputType.JoystickButton)
     a.from_xml(
         ElementTree.fromstring((xml_dir / _ACTION_MAP_BUTTON).read_text()),
-        l,
+        library,
     )
 
     assert len(a.get_actions()[0]) == 0
@@ -50,12 +50,12 @@ def test_actions(xml_dir: pathlib.Path):
         a.remove_action(0, "something")
 
 
-def test_from_xml(xml_dir: pathlib.Path):
-    l = Library()
+def test_from_xml(xml_dir: pathlib.Path) -> None:
+    library = Library()
     r = MapToVjoyData(types.InputType.JoystickButton)
     r.from_xml(
         ElementTree.fromstring((xml_dir / _ACTION_MAP_BUTTON).read_text()),
-        l,
+        library,
     )
     assert r.vjoy_device_id == 1
     assert r.vjoy_input_id == 12
@@ -64,7 +64,9 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert r.axis_scaling == 1.0
 
     r = MapToVjoyData(types.InputType.JoystickButton)
-    r.from_xml(ElementTree.fromstring((xml_dir / _ACTION_MAP_AXIS).read_text()), l)
+    r.from_xml(
+        ElementTree.fromstring((xml_dir / _ACTION_MAP_AXIS).read_text()), library
+    )
     assert r.vjoy_device_id == 2
     assert r.vjoy_input_id == 6
     assert r.vjoy_input_type == types.InputType.JoystickAxis
@@ -72,7 +74,7 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert r.axis_scaling == 1.5
 
 
-def test_to_xml():
+def test_to_xml() -> None:
     r = MapToVjoyData(types.InputType.JoystickButton)
 
     r._id = uuid.UUID("ac905a47-9ad3-4b65-b702-fbae1d133609")
@@ -84,8 +86,8 @@ def test_to_xml():
     assert node.find("./property/name[.='vjoy-device-id']/../value").text == "2"
     assert node.find("./property/name[.='vjoy-input-id']/../value").text == "14"
     assert node.find("./property/name[.='vjoy-input-type']/../value").text == "button"
-    assert node.find("./property/name[.='axis-mode']") == None
-    assert node.find("./property/name[.='axis-scaling']") == None
+    assert node.find("./property/name[.='axis-mode']") is None
+    assert node.find("./property/name[.='axis-scaling']") is None
 
     r.vjoy_input_type = types.InputType.JoystickAxis
     r.axis_mode = types.AxisMode.Absolute

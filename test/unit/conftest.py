@@ -62,12 +62,12 @@ def _make_fake_device(is_virtual: bool) -> dill.DeviceSummary:
 
 
 @pytest.fixture(scope="package", autouse=True)
-def register_config_options():
+def register_config_options() -> None:
     joystick_gremlin.register_config_options()
 
 
 @pytest.fixture(scope="package", autouse=True)
-def joystick_init():
+def joystick_init() -> None:
     dill.DILL.init()
     di_stub_devices = {
         0: _make_fake_device(is_virtual=False),
@@ -121,7 +121,7 @@ def joystick_init():
 
 
 @pytest.fixture(scope="package", autouse=True)
-def terminate_event_listener(request):
+def terminate_event_listener(request: pytest.FixtureRequest) -> None:
     request.addfinalizer(lambda: gremlin.event_handler.EventListener().terminate())
 
 

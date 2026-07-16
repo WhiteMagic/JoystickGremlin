@@ -63,7 +63,9 @@ def test_empty_entries(option: MetaConfigOption) -> None:
     assert option.entries("some", "no such") == []
 
 
-def test_register_duplicate_logs_warning(option: MetaConfigOption, caplog) -> None:
+def test_register_duplicate_logs_warning(
+    option: MetaConfigOption, caplog: pytest.LogCaptureFixture
+) -> None:
     option.register("dup", "grp", "name", "desc", DummyWidget)
     option.register("dup", "grp", "name", "desc", DummyWidget)
 

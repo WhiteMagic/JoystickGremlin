@@ -25,14 +25,14 @@ from gremlin.types import (
 _PROFILE_HIERARCHY = "profile_hierarchy.xml"
 
 
-def test_ctor():
+def test_ctor() -> None:
     a = RootData(InputType.JoystickButton)
 
     assert len(a.children) == 0
-    assert a.is_valid() == True
+    assert a.is_valid()
 
 
-def test_from_xml(xml_dir: pathlib.Path):
+def test_from_xml(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_HIERARCHY))
 
@@ -44,7 +44,7 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert a.children[2].id == uuid.UUID("0c905a47-9ad3-4b65-b702-fbae1d133603")
 
 
-def test_action_methods(xml_dir: pathlib.Path):
+def test_action_methods(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _PROFILE_HIERARCHY))
 

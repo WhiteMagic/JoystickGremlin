@@ -24,7 +24,7 @@ from gremlin.types import DataInsertionMode
 _ACTION_TEMPO_SIMPLE = "action_tempo_simple.xml"
 
 
-def test_from_xml(xml_dir: pathlib.Path):
+def test_from_xml(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _ACTION_TEMPO_SIMPLE))
 
@@ -39,7 +39,7 @@ def test_from_xml(xml_dir: pathlib.Path):
     assert a.long_actions[0].id == uuid.UUID("2bf10c03-a9d3-4410-a56a-70643e2c05b8")
 
 
-def test_to_xml():
+def test_to_xml() -> None:
     d = DescriptionData()
     d._id = uuid.UUID("fbe6be7b-07c9-4400-94f2-caa245ebcc7e")
 
@@ -56,7 +56,7 @@ def test_to_xml():
     )
 
 
-def test_action_methods(xml_dir: pathlib.Path):
+def test_action_methods(xml_dir: pathlib.Path) -> None:
     p = Profile()
     p.from_xml(str(xml_dir / _ACTION_TEMPO_SIMPLE))
 
@@ -78,7 +78,7 @@ def test_action_methods(xml_dir: pathlib.Path):
     assert a.get_actions("long")[0][0].id == a1.id
 
 
-def test_ctor():
+def test_ctor() -> None:
     a = tempo.TempoData(types.InputType.JoystickButton)
     c = Configuration()
 
@@ -86,4 +86,4 @@ def test_ctor():
     assert len(a.long_actions) == 0
     assert a.threshold == c.value("action", "tempo", "duration")
     assert a.activate_on == "release"
-    assert a.is_valid() == True
+    assert a.is_valid()

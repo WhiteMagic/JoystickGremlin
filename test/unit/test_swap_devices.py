@@ -13,7 +13,7 @@ from gremlin import swap_devices
 _PROFILE_DEVICE_UUID = uuid.UUID("97b77b40-07d8-11f0-8028-444553540000")
 
 
-def test_swap_devices_from_data_xml(xml_dir: pathlib.Path):
+def test_swap_devices_from_data_xml(xml_dir: pathlib.Path) -> None:
     profile = gremlin.profile.Profile()
     existing_uuid = _PROFILE_DEVICE_UUID
     new_uuid = uuid.uuid4()

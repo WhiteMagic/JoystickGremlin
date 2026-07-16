@@ -35,12 +35,14 @@ def script_for_test(script_path: pathlib.Path) -> user_script.Script:
 class TestScript:
     def test_script_loaded_and_configured(
         self, script_for_test: user_script.Script, script_path: pathlib.Path
-    ):
+    ) -> None:
         assert script_for_test.path.match(script_path)
         assert script_for_test.name == "Instance 1"
         assert script_for_test.is_configured
 
-    def test_script_has_expected_variables(self, script_for_test: user_script.Script):
+    def test_script_has_expected_variables(
+        self, script_for_test: user_script.Script
+    ) -> None:
         assert script_for_test.has_variable("A bool variable")
         assert script_for_test.has_variable("A float variable")
         assert script_for_test.has_variable("An integer variable")
@@ -54,7 +56,9 @@ class TestScript:
         assert script_for_test.has_variable("A physical button input variable")
         assert script_for_test.has_variable("A physical hat input variable")
 
-    def test_bool_variable(self, script_for_test: user_script.Script, subtests):
+    def test_bool_variable(
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test boolean variable properties."""
         var = script_for_test.get_variable("A bool variable")
         assert isinstance(var, user_script.BoolVariable)
@@ -68,8 +72,8 @@ class TestScript:
 
     @pytest.mark.parametrize("value", [True, False])
     def test_bool_variable_xml_transforms(
-        self, script_for_test: user_script.Script, value
-    ):
+        self, script_for_test: user_script.Script, value: bool
+    ) -> None:
         var = script_for_test.get_variable("A bool variable")
         var.value = value
         xml = var.to_xml()
@@ -77,7 +81,9 @@ class TestScript:
         var_from_xml.from_xml(xml)
         assert var_from_xml.value is value
 
-    def test_float_variable(self, script_for_test: user_script.Script, subtests):
+    def test_float_variable(
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test float variable properties."""
         var = script_for_test.get_variable("A float variable")
         assert isinstance(var, user_script.FloatVariable)
@@ -103,8 +109,8 @@ class TestScript:
 
     @pytest.mark.parametrize("value", [1.1, 2.2, 10.0, -4.0, 1])
     def test_float_variable_xml_transforms(
-        self, script_for_test: user_script.Script, value
-    ):
+        self, script_for_test: user_script.Script, value: float
+    ) -> None:
         var = script_for_test.get_variable("A float variable")
         var.value = value
         xml = var.to_xml()
@@ -112,7 +118,9 @@ class TestScript:
         var_from_xml.from_xml(xml)
         assert var_from_xml.value == value
 
-    def test_integer_variable(self, script_for_test: user_script.Script, subtests):
+    def test_integer_variable(
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test integer variable properties."""
         var = script_for_test.get_variable("An integer variable")
         assert isinstance(var, user_script.IntegerVariable)
@@ -138,8 +146,8 @@ class TestScript:
 
     @pytest.mark.parametrize("value", [-11, 0, 2, 3, 10])
     def test_integer_variable_xml_transforms(
-        self, script_for_test: user_script.Script, value
-    ):
+        self, script_for_test: user_script.Script, value: int
+    ) -> None:
         var = script_for_test.get_variable("An integer variable")
         var.value = value
         xml = var.to_xml()
@@ -147,7 +155,9 @@ class TestScript:
         var_from_xml.from_xml(xml)
         assert var_from_xml.value == value
 
-    def test_mode_variable(self, script_for_test: user_script.Script, subtests):
+    def test_mode_variable(
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test mode variable properties."""
         var = script_for_test.get_variable("A mode variable")
         assert isinstance(var, user_script.ModeVariable)
@@ -165,7 +175,9 @@ class TestScript:
             assert var.value == initial_mode
             assert var.is_valid()
 
-    def test_mode_variable_xml_transforms(self, script_for_test: user_script.Script):
+    def test_mode_variable_xml_transforms(
+        self, script_for_test: user_script.Script
+    ) -> None:
         var = script_for_test.get_variable("A mode variable")
         var.value = "Default"
         xml = var.to_xml()
@@ -173,7 +185,9 @@ class TestScript:
         var_from_xml.from_xml(xml)
         assert var_from_xml.value == "Default"
 
-    def test_string_variable(self, script_for_test: user_script.Script, subtests):
+    def test_string_variable(
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test string variable properties."""
         var = script_for_test.get_variable("A string variable")
         assert isinstance(var, user_script.StringVariable)
@@ -201,8 +215,8 @@ class TestScript:
         ],
     )
     def test_string_variable_xml_transforms(
-        self, script_for_test: user_script.Script, value
-    ):
+        self, script_for_test: user_script.Script, value: str
+    ) -> None:
         var = script_for_test.get_variable("A string variable")
         var.value = value
         xml = var.to_xml()
@@ -210,7 +224,9 @@ class TestScript:
         var_from_xml.from_xml(xml)
         assert var_from_xml.value == value
 
-    def test_selection_variable_with_invalid_default_raises(self, subtests):
+    def test_selection_variable_with_invalid_default_raises(
+        self, subtests: pytest.Subtests
+    ) -> None:
         with subtests.test("default too large"):
             with pytest.raises(error.PluginError):
                 user_script.SelectionVariable(
@@ -230,7 +246,9 @@ class TestScript:
                     default_index=-1,
                 )
 
-    def test_selection_variable(self, script_for_test: user_script.Script, subtests):
+    def test_selection_variable(
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test selection variable properties."""
         var = script_for_test.get_variable("A selection variable")
         assert isinstance(var, user_script.SelectionVariable)
@@ -263,8 +281,8 @@ class TestScript:
 
     @pytest.mark.parametrize("value", ["selection1", "selection2", "selection3"])
     def test_selection_variable_xml_transforms(
-        self, script_for_test: user_script.Script, value
-    ):
+        self, script_for_test: user_script.Script, value: str
+    ) -> None:
         var = script_for_test.get_variable("A selection variable")
         var.value = value
         xml = var.to_xml()
@@ -275,8 +293,8 @@ class TestScript:
         assert var_from_xml.value == value
 
     def test_virtual_input_variable(
-        self, script_for_test: user_script.Script, subtests
-    ):
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test virtual input variable properties."""
         with subtests.test("axis"):
             var = script_for_test.get_variable("A virtual axis input variable")
@@ -318,8 +336,8 @@ class TestScript:
             var_from_xml.from_xml(var.to_xml())
 
     def test_physical_input_variable(
-        self, script_for_test: user_script.Script, subtests
-    ):
+        self, script_for_test: user_script.Script, subtests: pytest.Subtests
+    ) -> None:
         """Test physical input variable properties."""
         with subtests.test("axis"):
             var = script_for_test.get_variable("A physical axis input variable")
@@ -393,7 +411,7 @@ class TestScript:
             assert var_from_xml.is_valid()
             assert var_from_xml.value == var.value
 
-    def test_swap_uuid(self, script_for_test: user_script.Script):
+    def test_swap_uuid(self, script_for_test: user_script.Script) -> None:
         var = script_for_test.get_variable("A physical axis input variable")
         existing_device_uuid = get_fake_device_guid(is_virtual=False).uuid
         var.value = (

@@ -33,11 +33,11 @@ def test_ctor() -> None:
 
 
 def test_from_xml(xml_dir: pathlib.Path) -> None:
-    l = Library()
+    library = Library()
     a = TextToSpeechData(InputType.JoystickButton)
     a.from_xml(
         ElementTree.fromstring((xml_dir / _ACTION_TTS_SIMPLE).read_text()),
-        l,
+        library,
     )
 
     assert a._id == _TTS_UUID
@@ -69,17 +69,17 @@ def test_to_xml() -> None:
 
 
 def test_roundtrip(xml_dir: pathlib.Path) -> None:
-    l = Library()
+    library = Library()
     a = TextToSpeechData(InputType.JoystickButton)
     a.from_xml(
         ElementTree.fromstring((xml_dir / _ACTION_TTS_SIMPLE).read_text()),
-        l,
+        library,
     )
     node = a.to_xml()
     assert node is not None
 
     b = TextToSpeechData(InputType.JoystickButton)
-    b.from_xml(node, l)
+    b.from_xml(node, library)
 
     assert b.text == a.text
     assert b.queue_mode == a.queue_mode
@@ -90,13 +90,13 @@ def test_roundtrip(xml_dir: pathlib.Path) -> None:
 
 def test_whitespace_preserved() -> None:
     a = TextToSpeechData(InputType.JoystickButton)
-    l = Library()
+    library = Library()
     a.text = "  hello\n  world  "
 
     node = a.to_xml()
     assert node is not None
     b = TextToSpeechData(InputType.JoystickButton)
-    b.from_xml(node, l)
+    b.from_xml(node, library)
 
     assert b.text == "  hello\n  world  "
 
