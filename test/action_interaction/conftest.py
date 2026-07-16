@@ -8,7 +8,6 @@ import sys
 import threading
 from pathlib import Path
 from typing import (
-    Any,
     Generator,
     cast,
 )
@@ -66,7 +65,7 @@ class EventSpec:
         """
         return f"EventSpec({self.event_type}, {self.input_id}, {self.expected_value})"
 
-    def _repr_compare(self, other: Any) -> list[str]:
+    def _repr_compare(self, other: event_handler.Event) -> list[str]:
         """Returns information used when the comparison fails.
 
         Returns:
@@ -78,7 +77,7 @@ class EventSpec:
             f"Expected: {self}",
         ]
 
-    def __eq__(self, event: Any) -> bool:
+    def __eq__(self, event: event_handler.Event) -> bool:
         """Compares the EventSpec instance with an Event instance.
 
         Args:
@@ -100,7 +99,7 @@ class EventSpec:
                 return self.expected_value == event.raw_value
         return False
 
-    def __ne__(self, event: Any) -> bool:
+    def __ne__(self, event: event_handler.Event) -> bool:
         return not (event == self)
 
 

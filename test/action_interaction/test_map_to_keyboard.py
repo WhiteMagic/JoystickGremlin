@@ -8,8 +8,8 @@ from pathlib import Path
 
 from gremlin.input_cache import Keyboard
 
+from . import input_definitions as inout
 from .conftest import JoystickGremlinBot
-from .input_definitions import *
 
 # def test_bm_key_press_rountrip(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
 #     jgbot.load_profile(profile_dir / "map_to_keyboard.xml")
@@ -36,47 +36,47 @@ def test_single_key(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "map_to_keyboard.xml")
     Keyboard()._keyboard_state = {}
 
-    assert Keyboard().is_pressed("k") == False
-    jgbot.press_button(IN_BUTTON_1)
+    assert not Keyboard().is_pressed("k")
+    jgbot.press_button(inout.IN_BUTTON_1)
     jgbot.wait(0.01)
-    assert Keyboard().is_pressed("k") == True
-    jgbot.release_button(IN_BUTTON_1)
+    assert Keyboard().is_pressed("k")
+    jgbot.release_button(inout.IN_BUTTON_1)
     jgbot.wait(0.01)
-    assert Keyboard().is_pressed("k") == False
+    assert not Keyboard().is_pressed("k")
 
 
 def test_key_combination(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "map_to_keyboard.xml")
 
-    assert Keyboard().is_pressed("right shift2") == False
-    assert Keyboard().is_pressed("m") == False
+    assert not Keyboard().is_pressed("right shift2")
+    assert not Keyboard().is_pressed("m")
 
-    jgbot.press_button(IN_BUTTON_2)
+    jgbot.press_button(inout.IN_BUTTON_2)
     jgbot.wait(0.01)
-    assert Keyboard().is_pressed("right shift2") == True
-    assert Keyboard().is_pressed("m") == True
+    assert Keyboard().is_pressed("right shift2")
+    assert Keyboard().is_pressed("m")
 
-    jgbot.release_button(IN_BUTTON_2)
+    jgbot.release_button(inout.IN_BUTTON_2)
     jgbot.wait(0.01)
-    assert Keyboard().is_pressed("right shift2") == False
-    assert Keyboard().is_pressed("m") == False
+    assert not Keyboard().is_pressed("right shift2")
+    assert not Keyboard().is_pressed("m")
 
 
 def test_sequential(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "map_to_keyboard.xml")
     Keyboard()._keyboard_state = {}
 
-    assert Keyboard().is_pressed("o") == False
-    jgbot.tap_button(IN_BUTTON_3)
+    assert not Keyboard().is_pressed("o")
+    jgbot.tap_button(inout.IN_BUTTON_3)
     jgbot.wait(0.01)
     print(Keyboard()._keyboard_state)
-    assert Keyboard().is_pressed("o") == True
-    jgbot.tap_button(IN_BUTTON_3)
+    assert Keyboard().is_pressed("o")
+    jgbot.tap_button(inout.IN_BUTTON_3)
     jgbot.wait(0.01)
-    assert Keyboard().is_pressed("o") == False
-    jgbot.tap_button(IN_BUTTON_3)
+    assert not Keyboard().is_pressed("o")
+    jgbot.tap_button(inout.IN_BUTTON_3)
     jgbot.wait(0.01)
-    assert Keyboard().is_pressed("o") == True
-    jgbot.tap_button(IN_BUTTON_3)
+    assert Keyboard().is_pressed("o")
+    jgbot.tap_button(inout.IN_BUTTON_3)
     jgbot.wait(0.01)
-    assert Keyboard().is_pressed("o") == False
+    assert not Keyboard().is_pressed("o")

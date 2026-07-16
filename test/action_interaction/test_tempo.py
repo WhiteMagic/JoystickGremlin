@@ -10,25 +10,29 @@ import pytest
 
 from gremlin.types import InputType
 
+from . import input_definitions as inout
 from .conftest import (
     EventSpec,
     JoystickGremlinBot,
 )
-from .input_definitions import *
 
 
 def test_on_press_short(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "tempo.xml")
 
-    jgbot.press_button(IN_BUTTON_2)
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
-    assert jgbot.button(OUT_BUTTON_1) == True
-    jgbot.wait(0.1)
-    jgbot.release_button(IN_BUTTON_2)
+    jgbot.press_button(inout.IN_BUTTON_2)
     assert (
-        EventSpec(InputType.JoystickButton, OUT_BUTTON_1, False) == jgbot.next_event()
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, True)
+        == jgbot.next_event()
     )
-    assert jgbot.button(OUT_BUTTON_1) == False
+    assert jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.wait(0.1)
+    jgbot.release_button(inout.IN_BUTTON_2)
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, False)
+        == jgbot.next_event()
+    )
+    assert not jgbot.button(inout.OUT_BUTTON_1)
 
     # Ensure no additional events are generated.
     with pytest.raises(jgbot.qtbot.TimeoutError):
@@ -38,19 +42,27 @@ def test_on_press_short(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
 def test_on_press_long(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "tempo.xml")
 
-    jgbot.press_button(IN_BUTTON_2)
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
-    jgbot.wait(0.15)
-    assert jgbot.button(OUT_BUTTON_1) == True
-    assert jgbot.button(OUT_BUTTON_2) == False
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_2, True) == jgbot.next_event()
-
-    jgbot.release_button(IN_BUTTON_2)
+    jgbot.press_button(inout.IN_BUTTON_2)
     assert (
-        EventSpec(InputType.JoystickButton, OUT_BUTTON_2, False) == jgbot.next_event()
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, True)
+        == jgbot.next_event()
+    )
+    jgbot.wait(0.15)
+    assert jgbot.button(inout.OUT_BUTTON_1)
+    assert not jgbot.button(inout.OUT_BUTTON_2)
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_2, True)
+        == jgbot.next_event()
+    )
+
+    jgbot.release_button(inout.IN_BUTTON_2)
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_2, False)
+        == jgbot.next_event()
     )
     assert (
-        EventSpec(InputType.JoystickButton, OUT_BUTTON_1, False) == jgbot.next_event()
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, False)
+        == jgbot.next_event()
     )
 
     # Ensure no additional events are generated.
@@ -61,14 +73,18 @@ def test_on_press_long(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
 def test_on_release_short_tap(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "tempo.xml")
 
-    assert jgbot.button(OUT_BUTTON_1) == False
-    jgbot.tap_button(IN_BUTTON_1)
+    assert not jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.tap_button(inout.IN_BUTTON_1)
 
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
     assert (
-        EventSpec(InputType.JoystickButton, OUT_BUTTON_1, False) == jgbot.next_event()
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, True)
+        == jgbot.next_event()
     )
-    assert jgbot.button(OUT_BUTTON_1) == False
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, False)
+        == jgbot.next_event()
+    )
+    assert not jgbot.button(inout.OUT_BUTTON_1)
 
     # Ensure no additional events are generated.
     with pytest.raises(jgbot.qtbot.TimeoutError):
@@ -78,14 +94,18 @@ def test_on_release_short_tap(jgbot: JoystickGremlinBot, profile_dir: Path) -> N
 def test_on_release_short_hold(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "tempo.xml")
 
-    assert jgbot.button(OUT_BUTTON_1) == False
-    jgbot.press_button(IN_BUTTON_1)
+    assert not jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.press_button(inout.IN_BUTTON_1)
     jgbot.wait(0.15)
-    jgbot.release_button(IN_BUTTON_1)
+    jgbot.release_button(inout.IN_BUTTON_1)
 
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
     assert (
-        EventSpec(InputType.JoystickButton, OUT_BUTTON_1, False) == jgbot.next_event()
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, True)
+        == jgbot.next_event()
+    )
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, False)
+        == jgbot.next_event()
     )
 
     # Ensure no additional events are generated.
@@ -96,28 +116,32 @@ def test_on_release_short_hold(jgbot: JoystickGremlinBot, profile_dir: Path) -> 
 def test_on_release_long(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "tempo.xml")
 
-    jgbot.press_button(IN_BUTTON_1)
+    jgbot.press_button(inout.IN_BUTTON_1)
     jgbot.wait(0.22)
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_2, True) == jgbot.next_event()
-    assert jgbot.button(OUT_BUTTON_2) == True
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_2, True)
+        == jgbot.next_event()
+    )
+    assert jgbot.button(inout.OUT_BUTTON_2)
 
     jgbot.wait(0.05)
-    jgbot.release_button(IN_BUTTON_1)
+    jgbot.release_button(inout.IN_BUTTON_1)
     assert (
-        EventSpec(InputType.JoystickButton, OUT_BUTTON_2, False) == jgbot.next_event()
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_2, False)
+        == jgbot.next_event()
     )
-    assert jgbot.button(OUT_BUTTON_2) == False
+    assert not jgbot.button(inout.OUT_BUTTON_2)
 
 
 def test_release_out_of_rder(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "tempo.xml")
 
     assert jgbot.current_mode() == "Default"
-    jgbot.press_button(IN_BUTTON_3)
+    jgbot.press_button(inout.IN_BUTTON_3)
     jgbot.wait(0.25)
-    jgbot.release_button(IN_BUTTON_3)
+    jgbot.release_button(inout.IN_BUTTON_3)
     assert jgbot.current_mode() == "Second"
-    jgbot.press_button(IN_BUTTON_3)
+    jgbot.press_button(inout.IN_BUTTON_3)
     jgbot.wait(0.25)
-    jgbot.release_button(IN_BUTTON_3)
+    jgbot.release_button(inout.IN_BUTTON_3)
     assert jgbot.current_mode() == "Default"

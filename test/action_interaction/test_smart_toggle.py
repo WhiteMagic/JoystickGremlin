@@ -10,31 +10,34 @@ import pytest
 
 from gremlin.types import InputType
 
+from . import input_definitions as inout
 from .conftest import (
     EventSpec,
     JoystickGremlinBot,
 )
-from .input_definitions import *
 
 
 def test_short_press(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
     jgbot.load_profile(profile_dir / "smart_toggle.xml")
 
     # Check that tapping the button toggles the output on and off.
-    assert jgbot.button(OUT_BUTTON_1) == False
-    jgbot.press_button(IN_BUTTON_1)
-    assert jgbot.button(OUT_BUTTON_1) == True
-    jgbot.release_button(IN_BUTTON_1)
-    assert jgbot.button(OUT_BUTTON_1) == True
-    jgbot.press_button(IN_BUTTON_1)
-    assert jgbot.button(OUT_BUTTON_1) == True
-    jgbot.release_button(IN_BUTTON_1)
-    assert jgbot.button(OUT_BUTTON_1) == False
+    assert not jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.press_button(inout.IN_BUTTON_1)
+    assert jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.release_button(inout.IN_BUTTON_1)
+    assert jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.press_button(inout.IN_BUTTON_1)
+    assert jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.release_button(inout.IN_BUTTON_1)
+    assert not jgbot.button(inout.OUT_BUTTON_1)
 
     # Ensure a short hold doesn't trigger the held behavior.
     jgbot.clear_events()
-    jgbot.hold_button(IN_BUTTON_1, 0.1)
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
+    jgbot.hold_button(inout.IN_BUTTON_1, 0.1)
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, True)
+        == jgbot.next_event()
+    )
 
     # Ensure no additional events are generated.
     with pytest.raises(jgbot.qtbot.TimeoutError):
@@ -46,11 +49,15 @@ def test_long_press(jgbot: JoystickGremlinBot, profile_dir: Path) -> None:
 
     # Ensure holding and releasing the button after the threshold time
     # results in hold instead of toggle behavior.
-    assert jgbot.button(OUT_BUTTON_1) == False
-    jgbot.hold_button(IN_BUTTON_1, 0.25)
-    assert EventSpec(InputType.JoystickButton, OUT_BUTTON_1, True) == jgbot.next_event()
+    assert not jgbot.button(inout.OUT_BUTTON_1)
+    jgbot.hold_button(inout.IN_BUTTON_1, 0.25)
     assert (
-        EventSpec(InputType.JoystickButton, OUT_BUTTON_1, False) == jgbot.next_event()
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, True)
+        == jgbot.next_event()
+    )
+    assert (
+        EventSpec(InputType.JoystickButton, inout.OUT_BUTTON_1, False)
+        == jgbot.next_event()
     )
 
     # Ensure no additional events are generated.
