@@ -34,6 +34,7 @@ build-backend = "poetry.core.masonry.api"
 line-length = 88
 indent-width = 4
 target-version = "py313"
+extend-exclude = ["gremlin/user_scripts/", "generate_wix.py", "resources.py", "dist", "doc"]
 
 [tool.ruff.format]
 quote-style = "double"
