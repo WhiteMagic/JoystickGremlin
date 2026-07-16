@@ -52,8 +52,8 @@ def profile_setup(
     profile_for_test: profile.Profile,
     response_curve_action: response_curve.ResponseCurveData,
     logical_device_for_test: logical_device.LogicalDevice,
-):
-    """Sets up the profile for testing response curve action via intermediate outputs."""
+) -> None:
+    """Sets up the profile for testing response curve action via intermediate output."""
     # Create logical device action to map response curve to an output logical axis.
     p_manager = plugin_manager.PluginManager()
     map_to_logical_action: map_to_logical_device.MapToLogicalDeviceData = (
@@ -111,7 +111,7 @@ class TestResponseCurve:
         logical_device_for_test: logical_device.LogicalDevice,
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
-    ):
+    ) -> None:
         tester.inject_logical_input(
             get_logical_input_action(_LOGICAL_INPUT_AXIS_LABEL), axis_input
         )
@@ -142,7 +142,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
@@ -177,7 +177,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = False
         curve.add_control_point(-0.5, -0.1)
@@ -222,10 +222,10 @@ class TestResponseCurve:
         response_curve_action: response_curve.ResponseCurveData,
         logical_device_for_test: logical_device.LogicalDevice,
         get_logical_input_action: LogicalActionCallableT,
-        monkeypatch,
+        monkeypatch: pytest.MonkeyPatch,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
@@ -263,7 +263,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.CubicSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.1)
@@ -298,7 +298,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.CubicSpline()
         curve.is_symmetric = False
         curve.add_control_point(-0.5, -0.1)
@@ -335,7 +335,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.CubicBezierSpline()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.2)
@@ -370,7 +370,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.CubicBezierSpline()
         curve.is_symmetric = False
         curve.add_control_point(-0.5, -0.2)
@@ -407,7 +407,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = True
         curve.add_control_point(-0.5, -0.2)
@@ -444,7 +444,7 @@ class TestResponseCurve:
         get_logical_input_action: LogicalActionCallableT,
         axis_input: int,
         expected_output: int,
-    ):
+    ) -> None:
         response_curve_action.curve = curve = spline.PiecewiseLinear()
         curve.is_symmetric = False
         curve.add_control_point(-0.5, -0.2)

@@ -56,7 +56,7 @@ def profile_setup(
     merge_axis_action: merge_axis.MergeAxisData,
     logical_device_for_test: logical_device.LogicalDevice,
     get_logical_input_identifier: LogicalIdentifierCallableT,
-):
+) -> None:
     """Sets up the profile for testing merge axis action via intermediate outputs."""
     # Configure the merge axis action.
     logical_input_axis_1 = logical_device_for_test.create(
@@ -132,11 +132,11 @@ class TestMergeAxis:
         tester: app_tester.GremlinAppTester,
         logical_device_for_test: logical_device.LogicalDevice,
         get_logical_input_action: LogicalActionCallableT,
-        subtests,
+        subtests: pytest.Subtests,
         value_input1: int,
         value_input2: int,
         expected_output: int,
-    ):
+    ) -> None:
         with subtests.test("first_input_before_second"):
             tester.inject_logical_input(
                 get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
@@ -186,7 +186,7 @@ class TestMergeAxis:
         value_input1: int,
         value_input2: int,
         expected_output: int,
-    ):
+    ) -> None:
         merge_axis_action.operation = merge_axis.MergeOperation.Minimum
         tester.inject_logical_input(
             get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
@@ -225,7 +225,7 @@ class TestMergeAxis:
         value_input1: int,
         value_input2: int,
         expected_output: int,
-    ):
+    ) -> None:
         merge_axis_action.operation = merge_axis.MergeOperation.Maximum
         tester.inject_logical_input(
             get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
@@ -261,7 +261,7 @@ class TestMergeAxis:
         value_input1: int,
         value_input2: int,
         expected_output: int,
-    ):
+    ) -> None:
         merge_axis_action.operation = merge_axis.MergeOperation.Sum
         tester.inject_logical_input(
             get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1
@@ -297,7 +297,7 @@ class TestMergeAxis:
         value_input1: int,
         value_input2: int,
         expected_output: int,
-    ):
+    ) -> None:
         merge_axis_action.operation = merge_axis.MergeOperation.Bidirectional
         tester.inject_logical_input(
             get_logical_input_action(_LOGICAL_INPUT_AXIS1_LABEL), value_input1

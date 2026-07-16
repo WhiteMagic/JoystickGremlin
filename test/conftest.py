@@ -16,8 +16,8 @@ import gremlin.util
 
 gremlin.util.userprofile_path = Mock(return_value=tempfile.mkdtemp())
 
-import gremlin.ui.backend
-import joystick_gremlin
+import gremlin.ui.backend  # noqa: E402
+import joystick_gremlin  # noqa: E402
 
 
 @pytest.fixture(scope="session")

@@ -29,7 +29,7 @@ from action_plugins import map_to_vjoy
 from vjoy import vjoy
 
 pytest.register_assert_rewrite("test.integration.app_tester")
-from test.integration import app_tester
+from test.integration import app_tester  # noqa: E402
 
 # +-------------------------------------------------------------------------
 # | Common fixtures, override in modules as needed.
@@ -90,7 +90,7 @@ def edited_profile(
 
 @pytest.fixture(scope="module")
 def profile_path(profile_name: str) -> pathlib.Path:
-    """Returns profile path. Requires test modules to define the profile_name fixture."""
+    """Returns profile path. Requires test modules to define profile_name fixture."""
     return pathlib.Path(__file__).parent / "xml" / profile_name
 
 
@@ -132,7 +132,7 @@ def vjoy_control_device(vjoy_control_device_id: int) -> Iterator[vjoy.VJoy]:
 
 @pytest.fixture(scope="package")
 def vjoy_di_devices_or_skip() -> list[dill.DeviceSummary]:
-    """Returns list of DirectInput vJoy devices summaries if any, else skips dependent tests."""
+    """Returns list of DirectInput vJoy device summaries, else skips dependent tests."""
     vjoy_devices = gremlin.device_initialization.vjoy_devices()
     if len(vjoy_devices) == 0:
         pytest.skip("No vJoy input devices found")

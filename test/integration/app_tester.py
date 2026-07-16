@@ -7,7 +7,6 @@ from __future__ import annotations
 import time
 import uuid
 from typing import (
-    Any,
     Callable,
     TypeVar,
 )
@@ -46,12 +45,14 @@ class GremlinAppTester:
 
     AXIS_MAX_INT = 32767
 
-    def __init__(self, app: QtWidgets.QApplication):
+    def __init__(self, app: QtWidgets.QApplication) -> None:
         self.app = app
 
     def inject_logical_input(
-        self, logical_action: map_to_logical_device.MapToLogicalDeviceData, value: Any
-    ):
+        self,
+        logical_action: map_to_logical_device.MapToLogicalDeviceData,
+        value: float | bool | gremlin.types.HatDirection,
+    ) -> None:
         functor = map_to_logical_device.MapToLogicalDeviceFunctor(logical_action)
         # Not used today, but let's create a valid one anyway.
         event = event_handler.Event(
@@ -69,7 +70,7 @@ class GremlinAppTester:
         expected: _InputTypeT,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         start_t = time.monotonic()
         last_exception = None
         while time.monotonic() - start_t < max_delay:
@@ -95,7 +96,7 @@ class GremlinAppTester:
         expected: float,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         try:
             joystick_cache = gremlin.input_cache.Joystick()[device_uuid]
         except gremlin.error.GremlinError as e:
@@ -114,7 +115,7 @@ class GremlinAppTester:
         expected: bool,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         try:
             joystick_cache = gremlin.input_cache.Joystick()[device_uuid]
         except gremlin.error.GremlinError as e:
@@ -133,7 +134,7 @@ class GremlinAppTester:
         expected: gremlin.types.HatDirection,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         try:
             joystick_cache = gremlin.input_cache.Joystick()[device_uuid]
         except gremlin.error.GremlinError as e:
@@ -154,7 +155,7 @@ class GremlinAppTester:
         expected: int,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         self._assert_input_eventually_equals(
             lambda: dill.DILL.get_axis(di_device_guid, axis_id),
             pytest.approx(expected, abs=_INTEGER_AXIS_MAX_DELTA),
@@ -169,7 +170,7 @@ class GremlinAppTester:
         expected: bool,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         self._assert_input_eventually_equals(
             lambda: dill.DILL.get_button(di_device_guid, button_id),
             expected,
@@ -184,7 +185,7 @@ class GremlinAppTester:
         expected: int,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         self._assert_input_eventually_equals(
             lambda: dill.DILL.get_hat(di_device_guid, hat_id),
             expected,
@@ -198,7 +199,7 @@ class GremlinAppTester:
         expected: int,
         min_delay: float = 0,
         max_delay: float = _ASSERT_EVENTUALLY_MAX_DELAY,
-    ):
+    ) -> None:
         self._assert_input_eventually_equals(
             lambda: (
                 gremlin.input_cache.Joystick()[dill.GUID_LogicalDevice.uuid][

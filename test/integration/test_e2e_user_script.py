@@ -72,13 +72,13 @@ class TestUserScript:
     )
     def test_axis_sequential(
         self,
-        subtests,
+        subtests: pytest.Subtests,
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
         di_input: int,
         vjoy_output: int,
-    ):
+    ) -> None:
         input_axis_id = 1
         output_axis_id = 2
         calibrated_value = util.with_default_center_calibration(di_input)
@@ -113,7 +113,7 @@ class TestUserScript:
     )
     def test_button(
         self,
-        subtests,
+        subtests: pytest.Subtests,
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
@@ -121,7 +121,7 @@ class TestUserScript:
         cached_input: bool,
         cached_output: bool,
         vjoy_output: int,
-    ):
+    ) -> None:
         input_button_id = 1
         output_button_id = 2
         vjoy_control_device.button(index=input_button_id).is_pressed = di_input
@@ -158,14 +158,14 @@ class TestUserScript:
     )
     def test_hat(
         self,
-        subtests,
+        subtests: pytest.Subtests,
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
         di_input: types.HatDirection,
         vjoy_output: int,
         cached_value: types.HatDirection | None,
-    ):
+    ) -> None:
         input_hat_id = 1
         output_hat_id = 2
         vjoy_control_device.hat(index=input_hat_id).direction = di_input

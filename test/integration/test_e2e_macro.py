@@ -34,11 +34,11 @@ class TestMacro:
 
     def test_macro_sequence(
         self,
-        subtests,
+        subtests: pytest.Subtests,
         tester: app_tester.GremlinAppTester,
         vjoy_control_device: vjoy.VJoy,
         vjoy_di_device: dill.DeviceSummary,
-    ):
+    ) -> None:
         """Verifies multiple macro executions triggered by a single button press."""
         input_button_id = 1
         vjoy_output = 1
@@ -51,7 +51,7 @@ class TestMacro:
             vjoy_di_device.device_guid.uuid, input_button_id, cached_value
         )
 
-        def assert_fixed_outputs(step: int):
+        def assert_fixed_outputs(step: int) -> None:
             with subtests.test("hat northeast", step=step):
                 tester.assert_hat_eventually_equals(vjoy_di_device.device_guid, 1, 4500)
             with subtests.test("hat west", step=step):
