@@ -31,7 +31,6 @@ from gremlin.base_classes import (
 )
 from gremlin.code_runner import CallbackObject
 from gremlin.error import GremlinError
-from gremlin.plugin_manager import PluginManager
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
@@ -202,11 +201,6 @@ class HatButtonsModel(ActionModel):
         if self._data.button_count != count:
             self._data.set_button_count(count)
             self.changed.emit()
-
-    def _compatible_actions(self) -> List[str]:
-        action_list = PluginManager().type_action_map[InputType.JoystickButton]
-        action_list = [entry for entry in action_list if entry.tag != "root"]
-        return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
     buttonCount = QtCore.Property(
         type=int, fget=_get_button_count, fset=_set_button_count, notify=changed

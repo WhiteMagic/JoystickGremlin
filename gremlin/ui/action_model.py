@@ -163,7 +163,32 @@ class ActionModel(QtCore.QObject):
 
     @QtCore.Property(type=list, notify=actionChanged)
     def compatibleActions(self) -> list[str]:
-        return self._compatible_actions()
+        """Returns the names of actions that are compatible within the current context.
+
+        The list of action names are filtered and sorted based on user preferences.
+
+        Returns:
+            List of currently valid actions.
+        """
+        key = ["action", "general", "action-priorities"]
+        priority_list = Configuration().value(*key)
+
+        action_list = PluginManager().type_action_map[
+            InputType.to_enum(self._action_behavior())
+        ]
+        all_valid_action_names = [
+            entry.name for entry in action_list if entry.tag != "root"
+        ]
+
+        # Sort actions according to the priority list but hide those we don't
+        # intend to show.
+        sort_names = [name for name, vis in priority_list if vis]
+        remove_names = [name for name, vis in priority_list if not vis]
+
+        filtered_names = [
+            name for name in all_valid_action_names if name not in remove_names
+        ]
+        return sorted(filtered_names, key=lambda x: sort_names.index(x))
 
     @QtCore.Slot(str, result=list)
     def getActions(self, selector: str) -> list[ActionModel]:
@@ -186,7 +211,7 @@ class ActionModel(QtCore.QObject):
             selector: name of the container into which to add the action
         """
         action = PluginManager().create_instance(
-            action_name, self._binding_model.behavior_type
+            action_name, InputType.to_enum(self._action_behavior())
         )
         if action:
             self._data.insert_action(action, selector)
@@ -328,34 +353,6 @@ class ActionModel(QtCore.QObject):
                 self._binding_model.move_action(source_sidx, target_sidx, container)
         except GremlinError:
             signal.reloadUi.emit()
-
-    def _compatible_actions(self) -> list[str]:
-        """Returns the names of actions that are compatible within the current
-        context.
-
-        The list of action names are filtered and sorted based on user
-        preferences.
-
-        Returns:
-            List of currently valid actions.
-        """
-        key = ["action", "general", "action-priorities"]
-        priority_list = Configuration().value(*key)
-
-        action_list = PluginManager().type_action_map[self._binding_model.behavior_type]
-        all_valid_action_names = [
-            entry.name for entry in action_list if entry.tag != "root"
-        ]
-
-        # Sort actions according to the priority list but hide those we don't
-        # intend to show.
-        sort_names = [name for name, vis in priority_list if vis]
-        remove_names = [name for name, vis in priority_list if not vis]
-
-        filtered_names = [
-            name for name in all_valid_action_names if name not in remove_names
-        ]
-        return sorted(filtered_names, key=lambda x: sort_names.index(x))
 
     actionLabel = QtCore.Property(
         str, fget=_get_action_label, fset=_set_action_label, notify=actionChanged

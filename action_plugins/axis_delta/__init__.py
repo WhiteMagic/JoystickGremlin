@@ -25,7 +25,6 @@ from gremlin.base_classes import (
 )
 from gremlin.config import Configuration
 from gremlin.error import GremlinError
-from gremlin.plugin_manager import PluginManager
 from gremlin.profile import Library
 from gremlin.types import (
     ActionProperty,
@@ -101,11 +100,6 @@ class AxisDeltaModel(ActionModel):
 
     def _action_behavior(self) -> str:
         return "button"
-
-    def _compatible_actions(self) -> List[str]:
-        action_list = PluginManager().type_action_map[InputType.JoystickButton]
-        action_list = [e for e in action_list if e.tag != "root"]
-        return [a.name for a in sorted(action_list, key=lambda x: x.name)]
 
     def _get_change_threshold(self) -> float:
         return self._data.change_threshold
