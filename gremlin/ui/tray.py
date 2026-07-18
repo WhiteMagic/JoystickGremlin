@@ -17,6 +17,17 @@ from gremlin.ui.backend import Backend
 # our helper window.
 _WM_TRAY = win32con.WM_USER + 20
 
+# Shell_NotifyIcon values that pywin32 does not expose as constants.
+# Opting into version 4 unlocks the modern notification protocol (cursor
+# position packed into wparam, keyboard selection events, better multi-monitor
+# menu placement); NIF_SHOWTIP opts into the standard tooltip even when the
+# user has balloon tips suppressed by policy.
+_NOTIFYICON_VERSION_4 = 4
+_NIF_SHOWTIP = 0x00000080
+# Keyboard-driven notifications delivered under version 4 (low word of lparam).
+_NIN_SELECT = win32con.WM_USER + 0
+_NIN_KEYSELECT = win32con.WM_USER + 1
+
 # Tray menu command identifiers.
 _ID_SHOW = 1023
 _ID_TOGGLE = 1024
@@ -68,7 +79,11 @@ class SystemTrayIcon:
             self._taskbar_created: self._on_taskbar_created,
         }
         self._class_atom = win32gui.RegisterClass(wc)
-        self._hwnd = win32gui.CreateWindow(
+        # WS_EX_TOOLWINDOW keeps the helper window out of the taskbar and
+        # Alt+Tab; WS_EX_NOACTIVATE stops it stealing focus. Together they
+        # ensure the zero-size helper can never flicker into view.
+        self._hwnd = win32gui.CreateWindowEx(
+            win32con.WS_EX_TOOLWINDOW | win32con.WS_EX_NOACTIVATE,
             self._class_atom, "Joystick Gremlin", win32con.WS_OVERLAPPED,
             0, 0, 0, 0, 0, 0, wc.hInstance, None
         )
@@ -78,8 +93,12 @@ class SystemTrayIcon:
         self._backend.activityChanged.connect(self._refresh_icon)
 
     def remove(self) -> None:
-        """Removes the tray icon and helper window (call on shutdown)."""
-        win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, (self._hwnd, 0))
+        """Removes the tray icon and helper window (call on shutdown).
+
+        DestroyWindow dispatches WM_DESTROY synchronously, and its handler is
+        the sole owner of the icon removal, so tearing down the window here is
+        enough -- deleting the icon as well would double-delete it.
+        """
         win32gui.DestroyWindow(self._hwnd)
 
     def restore(self) -> None:
@@ -103,8 +122,14 @@ class SystemTrayIcon:
     def _add_icon(self) -> None:
         win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, (
             self._hwnd, 0,
-            win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP,
+            win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP
+            | _NIF_SHOWTIP,
             _WM_TRAY, self._current_icon(), "Joystick Gremlin"
+        ))
+        # Select the modern notification behaviour. Must follow NIM_ADD; the
+        # version is carried in the timeout/version field of the data tuple.
+        win32gui.Shell_NotifyIcon(win32gui.NIM_SETVERSION, (
+            self._hwnd, 0, 0, 0, 0, "", "", _NOTIFYICON_VERSION_4
         ))
 
     def _refresh_icon(self) -> None:
@@ -125,11 +150,19 @@ class SystemTrayIcon:
     def _on_tray_event(
         self, hwnd: int, msg: int, wparam: int, lparam: int
     ) -> int:
-        """Restores on a left click / double click of the icon, and shows the
-        context menu on a right click."""
-        if lparam in (win32con.WM_LBUTTONUP, win32con.WM_LBUTTONDBLCLK):
+        """Restores on a left click / double click / keyboard selection of the
+        icon, and shows the context menu on a right click / menu key."""
+        # Under NOTIFYICON_VERSION_4 the notification event is the low word of
+        # lparam; the high word holds the icon id.
+        event = lparam & 0xFFFF
+        if event in (
+            win32con.WM_LBUTTONUP,
+            win32con.WM_LBUTTONDBLCLK,
+            _NIN_SELECT,
+            _NIN_KEYSELECT,
+        ):
             self.restore()
-        elif lparam == win32con.WM_RBUTTONUP:
+        elif event in (win32con.WM_RBUTTONUP, win32con.WM_CONTEXTMENU):
             self._show_menu()
         return 0
 
