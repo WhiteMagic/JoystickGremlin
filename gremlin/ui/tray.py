@@ -172,12 +172,20 @@ class SystemTrayIcon:
         """Dispatches a tray menu selection."""
         command = wparam & 0xFFFF
         if command == _ID_SHOW:
-            self.restore()
+            self._toggle_visibility()
         elif command == _ID_TOGGLE:
             self._backend.toggleActiveState()
         elif command == _ID_QUIT:
             self._quit()
         return 0
+
+    def _toggle_visibility(self) -> None:
+        """Hides the window into the tray when it is visible, and restores it
+        when it is hidden."""
+        if self._window.isVisible():
+            self._window.hide()
+        else:
+            self.restore()
 
     def _on_taskbar_created(
         self, hwnd: int, msg: int, wparam: int, lparam: int
@@ -195,9 +203,12 @@ class SystemTrayIcon:
     def _show_menu(self) -> None:
         """Builds and shows the tray context menu at the cursor."""
         menu = win32gui.CreatePopupMenu()
-        win32gui.AppendMenu(
-            menu, win32con.MF_STRING, _ID_SHOW, "Show Joystick Gremlin"
+        show_hide = (
+            "Hide Joystick Gremlin"
+            if self._window.isVisible()
+            else "Show Joystick Gremlin"
         )
+        win32gui.AppendMenu(menu, win32con.MF_STRING, _ID_SHOW, show_hide)
         win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
         label = "Deactivate" if self._backend.gremlinActive else "Activate"
         win32gui.AppendMenu(menu, win32con.MF_STRING, _ID_TOGGLE, label)
