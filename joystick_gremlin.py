@@ -24,6 +24,7 @@ from PySide6 import (
     QtQuick,
     QtWidgets,
 )
+from PySide6.QtQuickControls2 import QQuickStyle
 
 import dill
 import resources  # noqa: F401 - registers Qt resources (fonts, icons) as a side effect
@@ -37,7 +38,6 @@ install_path = os.path.normcase(os.path.dirname(os.path.abspath(sys.argv[0])))
 os.chdir(install_path)
 
 # Setting some global QT configurations.
-os.environ["QT_QUICK_CONTROLS_STYLE"] = "Universal"
 # os.environ["QML_IMPORT_TRACE"] = "1"
 # os.environ["QSG_RHI"] = "1"
 
@@ -516,15 +516,15 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         self.setOrganizationDomain("https://whitemagic.github.io/JoystickGremlin/")
         self.setApplicationName("Joystick Gremlin")
 
-        # Change application wide font.
-        self.setFont(QtGui.QFont("Segoe UI", 11))
-
         # Load font used for icons.
         if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:
             self.syslog.error("Failed to load BootstrapIcons")
 
-        # Load fonts used by the Kobold style.
+        # Load fonts used by the style, set default application font and set style.
         gremlin.ui.theme_manager.load_fonts()
+        self.setFont(QtGui.QFont("IBM Plex Sans"))
+        QQuickStyle.setStyle("Kobold")
+        QQuickStyle.setFallbackStyle("Basic")
 
         # Create application and UI engine.
         self.engine = QtQml.QQmlApplicationEngine(parent=self)
