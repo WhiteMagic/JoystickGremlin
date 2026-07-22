@@ -61,7 +61,9 @@ import gremlin.tts
 import gremlin.types
 import gremlin.ui.action_image_generator
 import gremlin.ui.backend
+import gremlin.ui.icon_provider
 import gremlin.ui.option
+import gremlin.ui.theme_manager
 import gremlin.ui.tools
 import gremlin.ui.util
 
@@ -217,6 +219,26 @@ def register_config_options() -> None:
         False,
         "Use the dark mode UI.",
         {},
+        True,
+    )
+    cfg.register(
+        "global",
+        "general",
+        "theme",
+        PropertyType.String,
+        "light",
+        "Currently used color theme for the UI.",
+        {},
+        True,
+    )
+    cfg.register(
+        "global",
+        "general",
+        "ui-scale",
+        PropertyType.Selection,
+        "100",
+        "UI scaling percentage.",
+        {"valid_options": ["100", "150", "200"]},
         True,
     )
     cfg.register(
@@ -501,9 +523,13 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         if QtGui.QFontDatabase.addApplicationFont(":/BootstrapIcons") < 0:
             self.syslog.error("Failed to load BootstrapIcons")
 
+        # Load fonts used by the Kobold style.
+        gremlin.ui.theme_manager.load_fonts()
+
         # Create application and UI engine.
         self.engine = QtQml.QQmlApplicationEngine(parent=self)
         self.engine.addImportPath(gremlin.util.resource_path("theme"))
+        self.engine.addImportPath(gremlin.util.resource_path("style/qml"))
 
         QtQml.qmlRegisterSingletonType(
             QtCore.QUrl.fromLocalFile(gremlin.util.resource_path("qml/Style.qml")),
@@ -528,19 +554,22 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         if user_plugins_path.is_dir():
             QtCore.QDir.addSearchPath("user_plugins", str(user_plugins_path))
 
-        # Create and register backend and signal objects
+        # Register image providers.
+        self.engine.addImageProvider(
+            "action_summary",
+            gremlin.ui.action_image_generator.ActionSummaryImageProvider(),
+        )
+        self.engine.addImageProvider("icon", gremlin.ui.icon_provider.IconProvider())
+
+        # Create and register singleton instances.
         self.backend = gremlin.ui.backend.Backend(self.engine)
         self.backend.newProfile()
-
-        # Register image provider for action summaries
-        action_image_provider = (
-            gremlin.ui.action_image_generator.ActionSummaryImageProvider()
-        )
-        self.engine.addImageProvider("action_summary", action_image_provider)
+        self.theme_manager = gremlin.ui.theme_manager.ThemeManager()
 
         self.engine.rootContext().setContextProperty("backend", self.backend)
         self.engine.rootContext().setContextProperty("uiState", self.backend.ui_state)
         self.engine.rootContext().setContextProperty("signal", gremlin.signal.signal)
+        self.engine.rootContext().setContextProperty("themeManager", self.theme_manager)
 
 
 def main() -> int:
