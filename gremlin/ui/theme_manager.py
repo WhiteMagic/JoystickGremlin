@@ -210,6 +210,19 @@ class ThemeManager(QtCore.QObject):
         Configuration().set("global", "general", "theme", theme_name)
         signal.configChanged.emit()
 
+    @QtCore.Slot(str)
+    def set_ui_scale(self, scale: str) -> None:
+        """Sets the given UI scale, persisting it and updating the UI.
+
+        Args:
+            scale: UI scale percentage as a string.
+        """
+        if scale not in _VALID_UI_SCALES:
+            logging.getLogger("system").warning(f"Unknown UI scale '{scale}'")
+            return
+        Configuration().set("global", "general", "ui-scale", scale)
+        signal.configChanged.emit()
+
     @QtCore.Property(list, constant=True)
     def themeNames(self) -> list[str]:
         return sorted(self._themes.keys())
