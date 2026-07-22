@@ -15,12 +15,31 @@ T.ToolButton {
     font.family: FontType.sans
     font.pixelSize: Metrics.textBody
 
-    contentItem: Text {
-        text: control.text
-        color: control.enabled ? Theme.fg : Theme.fgDisabled
-        font: control.font
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    contentItem: Item {
+        // Metrics.icon, not _icon.implicitWidth -- Image.implicitWidth follows
+        // the loaded source's natural size (0 if it failed to load), not the
+        // deliberate fixed size AppIcon renders at.
+        implicitWidth: _icon.visible ? Metrics.icon : _label.implicitWidth
+        implicitHeight: Metrics.ctrlH
+
+        AppIcon {
+            id: _icon
+            anchors.centerIn: parent
+            visible: control.icon.name !== ""
+            name: control.icon.name
+            role: control.enabled ? "fg" : "fgDisabled"
+        }
+
+        Text {
+            id: _label
+            anchors.centerIn: parent
+            visible: !_icon.visible
+            text: control.text
+            color: control.enabled ? Theme.fg : Theme.fgDisabled
+            font: control.font
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     // Flat: no border at rest -- only the fill responds, per its toolbar-affordance role.

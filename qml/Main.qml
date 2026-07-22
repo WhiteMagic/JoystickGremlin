@@ -14,6 +14,7 @@ import Gremlin.Device
 import Gremlin.Profile
 import Gremlin.Style
 import Gremlin.UI
+import Kobold.Internal
 
 import "helpers.js" as Helpers
 

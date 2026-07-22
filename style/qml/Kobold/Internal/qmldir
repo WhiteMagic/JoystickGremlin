@@ -1,0 +1,7 @@
+module Kobold.Internal
+Chip              Chip.qml
+InputButton       InputButton.qml
+InputListView     InputListView.qml
+DeviceInputList   DeviceInputList.qml
+LogicalDevice     LogicalDevice.qml
+KeyboardInputList KeyboardInputList.qml
