@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Joystick Gremlin R14 — interactive prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+.theme-light { --bg:#ffffff; --bgAlt:#f2f2f4; --bgHover:#e8e8ec; --bgSelected:#dcdce2;
+  --line:#c4c4cc; --fg:#17171a; --fgMuted:#6a6a74; --fgDisabled:#a6a6b0;
+  --accent:#1060c0; --error:#c0281c; --warning:#9a5c00; }
+.theme-dark { --bg:#242429; --bgAlt:#1b1b1e; --bgHover:#2e2e34; --bgSelected:#3a3a42;
+  --line:#4a4a54; --fg:#e6e6ea; --fgMuted:#94949e; --fgDisabled:#5c5c66;
+  --accent:#58a6ff; --error:#ff7b6b; --warning:#e0a63c; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bgAlt); color:var(--fg); font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:14px; padding:16px; display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
+.mono { font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; }
+
+.meta { display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--fgMuted);
+  border:1px solid var(--line); background:var(--bg); padding:8px 12px; width:1400px; }
+.meta strong { color:var(--fg); } .meta .sep { width:1px; height:16px; background:var(--line); }
+.meta button { font:inherit; height:24px; padding:0 8px; background:var(--bgAlt); color:var(--fg);
+  border:1px solid var(--line); border-radius:2px; cursor:pointer; }
+.meta button[aria-pressed="true"] { border-color:var(--accent); border-width:2px; }
+
+.app { width:1400px; height:860px; background:var(--bg); border:1px solid var(--line);
+  display:flex; flex-direction:column; overflow:hidden; }
+.menubar { height:26px; flex:none; display:flex; align-items:center; border-bottom:1px solid var(--line); padding:0 4px; }
+.menubar span { padding:0 8px; line-height:24px; }
+.menubar span:hover { background:var(--bgHover); }
+.toolbar { height:34px; flex:none; display:flex; align-items:center; gap:4px; border-bottom:1px solid var(--line); padding:0 8px; }
+.tbtn { width:24px; height:24px; display:grid; place-items:center; border:1px solid transparent;
+  border-radius:2px; background:none; color:var(--fg); cursor:pointer; }
+.tbtn:hover { background:var(--bgHover); border-color:var(--line); }
+.tbtn[aria-pressed="true"] { color:var(--accent); border-color:var(--line); background:var(--bgSelected); }
+.tbtn svg { fill:currentColor; }
+.toolbar .spacer { flex:1; }
+.toolbar label { font-size:14px; color:var(--fgMuted); margin-right:4px; }
+.combowrap { position:relative; display:inline-flex; flex:none; }
+.combo { height:24px; font-size:14px; border:1px solid var(--line); border-radius:2px; background:var(--bgAlt);
+  color:var(--fg); padding:0 24px 0 6px; appearance:none; cursor:pointer; }
+.combowrap::after { content:""; position:absolute; right:6px; top:10px; width:0; height:0; pointer-events:none;
+  border-left:4px solid transparent; border-right:4px solid transparent; border-top:4px solid var(--fgMuted); }
+
+.tabs { height:36px; flex:none; display:flex; align-items:stretch; border-bottom:1px solid var(--line); padding:0 8px; }
+.tab { padding:0 12px; display:flex; align-items:center; font-size:14px; color:var(--fgMuted); cursor:pointer;
+  border:0; border-bottom:2px solid transparent; background:none; font-family:inherit; }
+.tab:hover { background:var(--bgHover); color:var(--fg); }
+.tab[aria-selected="true"] { color:var(--fg); font-weight:600; border-bottom-color:var(--accent); background:var(--bgSelected); }
+.tabs .vrule { width:1px; background:var(--line); margin:4px 8px; }
+.tabs .grow { flex:1; }
+
+.main { flex:1; display:flex; min-height:0; }
+.left { width:400px; flex:none; overflow-y:auto; background:var(--bgAlt); padding:4px 0; }
+.vsplit { width:1px; flex:none; background:var(--line); }
+.right { flex:1; overflow-y:auto; min-width:900px; }
+
+.irow { position:relative; height:48px; padding:4px 8px; margin:0 8px 4px 8px; background:var(--bg);
+  border:1px solid var(--line); border-radius:2px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; gap:2px; }
+.irow:hover { background:var(--bgHover); }
+.irow[aria-selected="true"] { background:var(--bgSelected); }
+.irow[aria-selected="true"]::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--accent); }
+.iline { display:flex; align-items:baseline; gap:8px; height:18px; overflow:hidden; }
+.ident { font-size:14px; line-height:18px; white-space:nowrap; flex:none; }
+.idesc { font-size:12px; line-height:18px; color:var(--fgMuted); text-align:right; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
+.chips { display:flex; gap:4px; height:18px; overflow:hidden; }
+.chip { font-size:12px; line-height:16px; height:18px; padding:0 6px; border:1px solid var(--line);
+  border-radius:2px; color:var(--fgMuted); white-space:nowrap; flex:none; }
+.chip.more { color:var(--fgDisabled); }
+
+.seq { padding:8px; }
+.seq + .seq { margin-top:8px; }
+.seqhdr { display:flex; align-items:center; gap:8px; height:24px; margin-bottom:4px; }
+.grip { width:16px; height:16px; color:var(--fgMuted); cursor:grab; flex:none; fill:currentColor; }
+.field { height:24px; font-family:inherit; font-size:14px; border:1px solid var(--line); border-radius:2px;
+  background:var(--bgAlt); color:var(--fg); padding:0 6px; }
+.btn { height:24px; font-family:inherit; font-size:14px; border:1px solid var(--line); border-radius:2px;
+  background:var(--bgAlt); color:var(--fg); padding:0 8px; cursor:pointer; }
+.btn:hover { background:var(--bgHover); }
+.field:focus, .btn:focus-visible, .combo:focus, .tab:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.menubtn { padding:0 6px 0 8px; display:inline-flex; align-items:center; gap:8px; }
+.menubtn::after { content:""; width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; border-top:4px solid var(--fgMuted); }
+
+.radgroup { display:inline-flex; align-items:center; gap:12px; flex:none; }
+.radgroup > span { font-size:14px; color:var(--fgMuted); }
+.rad { display:inline-flex; align-items:center; gap:4px; height:24px; font-size:14px; cursor:pointer; flex:none; }
+.rad i { width:12px; height:12px; border:1px solid var(--line); border-radius:12px; flex:none; background:var(--bgAlt); display:grid; place-items:center; }
+.rad[aria-checked="true"] i { border-color:var(--accent); }
+.rad[aria-checked="true"] i::after { content:""; width:6px; height:6px; border-radius:6px; background:var(--accent); }
+.chk { display:inline-flex; align-items:center; gap:4px; height:24px; font-size:12px; cursor:pointer; flex:none; }
+.chk i { width:12px; height:12px; border:1px solid var(--line); border-radius:2px; flex:none; background:var(--bgAlt); display:grid; place-items:center; }
+.chk[aria-checked="true"] i { border-color:var(--accent); }
+.chk[aria-checked="true"] i::after { content:""; width:8px; height:4px; margin-top:-2px;
+  border-left:2px solid var(--accent); border-bottom:2px solid var(--accent); transform:rotate(-45deg); }
+
+.arow { display:flex; align-items:center; gap:4px; height:28px; }
+.fold { width:16px; height:16px; flex:none; color:var(--fgMuted); background:none; border:0; cursor:pointer; display:grid; place-items:center; }
+.fold svg { fill:currentColor; }
+.aicon { width:16px; height:16px; flex:none; color:var(--fg); cursor:grab; fill:currentColor; }
+.aname { height:24px; flex:1; min-width:0; font-family:inherit; font-size:14px; padding:0 6px;
+  border:1px solid transparent; border-radius:2px; background:none; color:var(--fg); cursor:text; }
+.aname:hover { border-color:var(--line); background:var(--bgAlt); }
+.aname:focus { outline:2px solid var(--accent); outline-offset:-2px; }
+.iconbtn { width:24px; height:24px; flex:none; display:grid; place-items:center; background:none;
+  border:1px solid transparent; border-radius:2px; color:var(--fgMuted); cursor:pointer; }
+.iconbtn:hover { background:var(--bgHover); border-color:var(--line); color:var(--fg); }
+.iconbtn svg { fill:currentColor; }
+.badge { width:24px; height:24px; display:grid; place-items:center; flex:none; }
+.badge svg { fill:currentColor; }
+.badge.warn { color:var(--warning); }
+
+.abody { margin-left:8px; padding-left:8px; border-left:1px solid var(--line); }
+.abody.leaf { border-left-color:transparent; }
+.cfg { display:flex; align-items:center; gap:8px; min-height:24px; padding:2px 0; font-size:14px; }
+.cfg .lbl { font-size:14px; }
+.val { font-size:14px; }
+.rec { height:24px; display:inline-flex; align-items:center; gap:4px; padding:0 8px; border:1px solid var(--line);
+  border-radius:2px; background:var(--bgAlt); font-size:12px; color:var(--fg); cursor:pointer; flex:none; }
+.rec:hover { background:var(--bgHover); }
+.rec svg { fill:currentColor; }
+
+.slot { display:flex; align-items:center; gap:8px; height:24px; }
+.slot .sl { font-size:12px; color:var(--fgMuted); flex:none; }
+.slot .rule { flex:1; height:1px; background:var(--line); }
+.addslot { font-size:12px; color:var(--fgMuted); flex:none; padding:0 6px; height:24px; display:inline-flex;
+  align-items:center; gap:8px; border:1px solid transparent; border-radius:2px; cursor:pointer; background:none; }
+.addslot::after { content:""; width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; border-top:4px solid currentColor; }
+.addslot:hover { border-color:var(--line); color:var(--fg); }
+.empty-slot { font-size:12px; color:var(--fgMuted); padding:4px 0 4px 24px; }
+.newseq { padding:8px; display:flex; }
+
+.footer { height:24px; flex:none; display:flex; align-items:center; gap:24px; border-top:1px solid var(--line);
+  padding:0 8px; font-size:12px; color:var(--fgMuted); }
+.footer b { font-weight:600; color:var(--fg); }
+
+.menu { position:fixed; z-index:50; background:var(--bg); border:1px solid var(--line); border-radius:2px;
+  min-width:200px; padding:4px 0; display:none; }
+.menu.open { display:block; }
+.menu button { display:flex; align-items:center; gap:8px; width:100%; height:28px; padding:0 12px; background:none;
+  border:0; font-family:inherit; font-size:14px; color:var(--fg); cursor:pointer; text-align:left; }
+.menu button:hover { background:var(--bgHover); }
+.menu button svg { fill:currentColor; width:16px; height:16px; flex:none; color:var(--fg); }
+.menu .mlabel { font-size:12px; color:var(--fgMuted); padding:4px 12px 2px; }
+
+
+.overview { width:1400px; border:1px solid var(--line); background:var(--bg); padding:24px 32px;
+  color:var(--fg); line-height:20px; }
+.overview h1 { font-size:14px; font-weight:600; margin:0 0 8px; }
+.overview h2 { font-size:14px; font-weight:600; margin:20px 0 8px; padding-bottom:4px; border-bottom:1px solid var(--line); }
+.overview h2:first-of-type { margin-top:12px; }
+.overview p { font-size:14px; color:var(--fgMuted); margin:0 0 8px; }
+.overview ul { list-style:none; margin:0; padding:0; }
+.overview li { font-size:14px; position:relative; padding:2px 0 2px 16px; }
+.overview li::before { content:""; position:absolute; left:2px; top:10px; width:4px; height:4px;
+  border-radius:4px; background:var(--fgMuted); }
+.overview li b { font-weight:600; }
+.overview li, .overview p { color:var(--fg); }
+.overview .lead { color:var(--fgMuted); }
+.overview em { font-style:italic; color:var(--fg); }
+</style></head>
+<body class="theme-light">
+<svg style="display:none" aria-hidden="true">
+<g id="i-caret-down" fill="currentColor"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></g>
+<g id="i-caret-right" fill="currentColor"><path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/></g>
+<g id="i-x" fill="currentColor"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></g>
+<g id="i-warn" fill="currentColor"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/> <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/></g>
+<g id="i-rec" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/> <path d="M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/></g>
+<g id="i-condition" fill="currentColor"><path d="M7 7V1.414a1 1 0 0 1 2 0V2h5a1 1 0 0 1 .8.4l.975 1.3a.5.5 0 0 1 0 .6L14.8 5.6a1 1 0 0 1-.8.4H9v10H7v-5H2a1 1 0 0 1-.8-.4L.225 9.3a.5.5 0 0 1 0-.6L1.2 7.4A1 1 0 0 1 2 7zm1 3V8H2l-.75 1L2 10zm0-5h6l.75-1L14 3H8z"/></g>
+<g id="i-vjoy" fill="currentColor"><path d="M10 2a2 2 0 0 1-1.5 1.937v5.087c.863.083 1.5.377 1.5.726 0 .414-.895.75-2 .75s-2-.336-2-.75c0-.35.637-.643 1.5-.726V3.937A2 2 0 1 1 10 2"/> <path d="M0 9.665v1.717a1 1 0 0 0 .553.894l6.553 3.277a2 2 0 0 0 1.788 0l6.553-3.277a1 1 0 0 0 .553-.894V9.665c0-.1-.06-.19-.152-.23L9.5 6.715v.993l5.227 2.178a.125.125 0 0 1 .001.23l-5.94 2.546a2 2 0 0 1-1.576 0l-5.94-2.546a.125.125 0 0 1 .001-.23L6.5 7.708l-.013-.988L.152 9.435a.25.25 0 0 0-.152.23"/></g>
+<g id="i-hat" fill="currentColor"><path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"/></g>
+<g id="i-keyboard" fill="currentColor"><path d="M14 5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM2 4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/> <path d="M13 10.25a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm0-2a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-5 0A.25.25 0 0 1 8.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 8 8.75zm2 0a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25zm1 2a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-5-2A.25.25 0 0 1 6.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 6 8.75zm-2 0A.25.25 0 0 1 4.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 4 8.75zm-2 0A.25.25 0 0 1 2.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 2 8.75zm11-2a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-2 0a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-2 0A.25.25 0 0 1 9.25 6h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 9 6.75zm-2 0A.25.25 0 0 1 7.25 6h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 7 6.75zm-2 0A.25.25 0 0 1 5.25 6h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 5 6.75zm-3 0A.25.25 0 0 1 2.25 6h1.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-1.5A.25.25 0 0 1 2 6.75zm0 4a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm2 0a.25.25 0 0 1 .25-.25h5.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-5.5a.25.25 0 0 1-.25-.25z"/></g>
+<g id="i-grip" fill="currentColor"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0M7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0M7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/></g>
+<g id="i-new" fill="currentColor"><path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5"/> <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5z"/></g>
+<g id="i-save" fill="currentColor"><path d="M11 2H9v3h2z"/> <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/></g>
+<g id="i-open" fill="currentColor"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v.64c.57.265.94.876.856 1.546l-.64 5.124A2.5 2.5 0 0 1 12.733 15H3.266a2.5 2.5 0 0 1-2.481-2.19l-.64-5.124A1.5 1.5 0 0 1 1 6.14zM2 6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3H2.5a.5.5 0 0 0-.5.5zm-.367 1a.5.5 0 0 0-.496.562l.64 5.124A1.5 1.5 0 0 0 3.266 14h9.468a1.5 1.5 0 0 0 1.489-1.314l.64-5.124A.5.5 0 0 0 14.367 7z"/></g>
+<g id="i-chart" fill="currentColor"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/></g>
+<g id="i-gear" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/> <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></g>
+<g id="i-tempo" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4M3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707M2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10m9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5m.754-4.246a.39.39 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.39.39 0 0 0-.029-.518z"/> <path fill-rule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A8 8 0 0 1 0 10m8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3"/></g>
+<g id="i-macro" fill="currentColor"><path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/></g>
+<g id="i-curve" fill="currentColor"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/></g>
+<g id="i-mouse" fill="currentColor"><path d="M8 3a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 3m4 8a4 4 0 0 1-8 0V5a4 4 0 1 1 8 0zM8 0a5 5 0 0 0-5 5v6a5 5 0 0 0 10 0V5a5 5 0 0 0-5-5"/></g>
+<g id="i-chain" fill="currentColor"><path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9q-.13 0-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z"/> <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4 4 0 0 1-.82 1H12a3 3 0 1 0 0-6z"/></g>
+<g id="i-double" fill="currentColor"><path d="M6.75 1a.75.75 0 0 1 .75.75V8a.5.5 0 0 0 1 0V5.467l.086-.004c.317-.012.637-.008.816.027.134.027.294.096.448.182.077.042.15.147.15.314V8a.5.5 0 1 0 1 0V6.435l.106-.01c.316-.024.584-.01.708.04.118.046.3.207.486.43.081.096.15.19.2.259V8.5a.5.5 0 0 0 1 0v-1h.342a1 1 0 0 1 .995 1.1l-.271 2.715a2.5 2.5 0 0 1-.317.991l-1.395 2.442a.5.5 0 0 1-.434.252H6.035a.5.5 0 0 1-.416-.223l-1.433-2.15a1.5 1.5 0 0 1-.243-.666l-.345-3.105a.5.5 0 0 1 .399-.546L5 8.11V9a.5.5 0 0 0 1 0V1.75A.75.75 0 0 1 6.75 1M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/></g>
+<g id="i-merge" fill="currentColor"><path d="M7.25 6v1q-.211.451-.588.95c-.537.716-1.259 1.44-2.016 2.196l.708.708.015-.016c.652-.652 1.33-1.33 1.881-2.015V12h1.5V6h1.216a.25.25 0 0 0 .192-.41L8.192 3.23a.25.25 0 0 0-.384 0L5.842 5.59a.25.25 0 0 0 .192.41z"/> <path d="M9.05.435c-.58-.58-1.52-.58-2.1 0L.436 6.95c-.58.58-.58 1.519 0 2.098l6.516 6.516c.58.58 1.519.58 2.098 0l6.516-6.516c.58-.58.58-1.519 0-2.098zm-1.4.7a.495.495 0 0 1 .7 0l6.516 6.515a.495.495 0 0 1 0 .7L8.35 14.866a.495.495 0 0 1-.7 0L1.134 8.35a.495.495 0 0 1 0-.7L7.65 1.134Z"/></g>
+<g id="i-plus" fill="currentColor"><path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/></g>
+<g id="i-tts" fill="currentColor"><path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/> <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/> <path d="M10.025 8a4.5 4.5 0 0 1-1.318 3.182L8 10.475A3.5 3.5 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.5 4.5 0 0 1 10.025 8M7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11"/></g>
+<g id="i-delta" fill="currentColor"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/></g>
+<g id="i-mode" fill="currentColor"><path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5m14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5"/></g>
+</svg>
+
+<div class="meta"><span>Theme</span>
+<button id="tl" aria-pressed="true">Light</button><button id="td" aria-pressed="false">Dark</button></div>
+
+<div class="app">
+  <div class="menubar"><span>File</span><span>Tools</span><span>Help</span></div>
+  <div class="toolbar">
+    <button class="tbtn" title="New"><svg width="16" height="16"><use href="#i-new"/></svg></button>
+    <button class="tbtn" title="Save"><svg width="16" height="16"><use href="#i-save"/></svg></button>
+    <button class="tbtn" title="Load"><svg width="16" height="16"><use href="#i-open"/></svg></button>
+    <button class="tbtn" title="Active" aria-pressed="true"><svg width="16" height="16"><use href="#i-vjoy"/></svg></button>
+    <button class="tbtn" title="Input viewer"><svg width="16" height="16"><use href="#i-chart"/></svg></button>
+    <button class="tbtn" title="Options"><svg width="16" height="16"><use href="#i-gear"/></svg></button>
+    <span class="spacer"></span>
+    <label>Configuring mode</label>
+    <span class="combowrap"><select class="combo"><option>Default</option><option>Combat</option></select></span>
+  </div>
+  <div class="tabs">
+    <button class="tab" data-dev="warthog" aria-selected="false">Joystick - HOTAS Warthog</button>
+    <button class="tab" data-dev="t16" aria-selected="true">T.16000M</button>
+    <button class="tab" aria-selected="false">vJoy Device 1</button>
+    <button class="tab" aria-selected="false">Keyboard</button>
+    <button class="tab" aria-selected="false">Logical Device</button>
+    <span class="grow"></span><span class="vrule"></span>
+    <button class="tab" aria-selected="false">Scripts</button>
+    <button class="tab" aria-selected="false">Settings</button>
+  </div>
+  <div class="main">
+    <div class="left" id="left"></div>
+    <div class="vsplit"></div>
+    <div class="right" id="right"></div>
+  </div>
+  <div class="footer"><span>State: <b>Running</b></span><span>Editing: <b>Default</b></span><span>Running: <b>Combat</b></span></div>
+</div>
+
+<div class="menu" id="menu"></div>
+
+<div class="overview">
+  <h1>Gremlin UI Redesign Overview</h1>
+
+  <h2>Design background</h2>
+  <p class="lead">Everything follows from a handful of rules. If something in the prototype seems to break one, that's worth flagging.</p>
+  <ul>
+    <li><b>Everything visible at once.</b> No progressive disclosure — no accordions, drawers, "advanced" sections, or anything that hides state behind a click. Hover may <em>add</em> a tooltip, but never changes the layout.</li>
+    <li><b>Colour carries state, never decoration.</b> The accent (blue here) means only: selected, focused, active. It's never a filled button or a coloured header. It's also user-changeable, so it deliberately does no heavy lifting.</li>
+    <li><b>Structure comes from lines and indentation, not boxes.</b> Nested actions are shown with a thin guide line and a 16px indent — no tinted bands, no cards inside cards.</li>
+    <li><b>Desktop application.</b> Gremlin is used on desktops, so no mobile-inspired behaviour, touch-supporting interfaces, or sizing.</li>
+    <li><b>Colour theme support.</b> The theme will support defining colour themes through a text/QML file to modify the colours used, based on fixed colour tokens.</li>
+    <li><b>Scale support.</b> The UI will support rendering at 100%, 150%, and 200% zoom levels.</li>
+  </ul>
+
+  <h2>Intent behind choices</h2>
+  <ul>
+    <li><b>The left list is deliberately not denser than before.</b> The old app's space problem was never the input list — it was the right pane.</li>
+    <li><b>Action names are borderless text.</b> This reduces visual clutter while still permitting modifying the text.</li>
+    <li><b>Guide lines only appear where actions branch.</b> A leaf action indents but draws no line, so the lines in the pane are a map of exactly where nesting happens.</li>
+    <li><b>"Add action" is a quiet menu button</b>, not a bright button, because it repeats many times down the tree and a row of bright buttons would be noise.</li>
+    <li><b>The left-pane "chips" summarise an input's actions</b> as plain text with a "+n" overflow. They're derived live from the actual tree.</li>
+  </ul>
+
+  <h2>Interactive elements</h2>
+  <ul>
+    <li>Adding actions via drop down.</li>
+    <li>Updating of action chips.</li>
+    <li>Updating of action descriptions.</li>
+    <li>Switching between physical devices.</li>
+    <li>Folding of actions.</li>
+  </ul>
+  <p>Other bits may appear interactive but don't mock functionality. Also, action logic isn't correct and is just hallucinated behaviour.</p>
+
+  <h2>Feedback</h2>
+  <ul>
+    <li>Does the nesting read clearly — can you tell config apart from nested actions, and see which slot an action sits in?</li>
+    <li>Is the interface readable enough, i.e. the balance between compactness and space?</li>
+    <li>General feedback on the UI — what works, what doesn't?</li>
+  </ul>
+</div>
+
+
+
+<script>
+// ---------- action-type catalogue -------------------------------------
+const TYPES = {
+  "map-to-vjoy":     {label:"Map to vJoy",     icon:"vjoy",     slots:[]},
+  "map-to-keyboard": {label:"Map to Keyboard", icon:"keyboard", slots:[]},
+  "map-to-mouse":    {label:"Map to Mouse",    icon:"mouse",    slots:[]},
+  "condition":       {label:"Condition",       icon:"condition",slots:["True","False"]},
+  "tempo":           {label:"Tempo",           icon:"tempo",    slots:["Short press","Long press"]},
+  "chain":           {label:"Chain",           icon:"chain",    slots:["Sequence"]},
+  "macro":           {label:"Macro",           icon:"macro",    slots:[]},
+  "response-curve":  {label:"Response Curve",  icon:"curve",    slots:[]},
+};
+const MENU_ORDER = ["map-to-vjoy","map-to-keyboard","map-to-mouse","condition","tempo","chain","macro","response-curve"];
+let UID = 1000;
+const uid = () => "n" + (++UID);
+
+// ---------- a node factory --------------------------------------------
+function makeNode(type, name) {
+  const t = TYPES[type];
+  return { id: uid(), type, name: name ?? t.label,
+           slots: t.slots.map(s => ({ name: s, children: [] })) };
+}
+
+// ---------- two device datasets ---------------------------------------
+// T.16000M -- the deep Condition tree (real sc_r14.xml structure).
+function t16Tree() {
+  const cond = makeNode("condition");
+  cond.slots[0].children = [ makeNode("map-to-vjoy","Landing / Lights") ];
+  const hat = makeNode("chain","Power management");   // stand-in container w/ children
+  hat.slots[0].children = [
+    makeNode("map-to-keyboard","Map to Keyboard"),
+    makeNode("map-to-keyboard","Map to Keyboard"),
+  ];
+  cond.slots[1].children = [ hat ];
+  return [cond];
+}
+// Warthog -- Button 8 already carries a Tempo with mapped children.
+function warthogTree() {
+  const tempo = makeNode("tempo");
+  tempo.slots[0].children = [ makeNode("map-to-vjoy","Map to vJoy") ];   // short press
+  tempo.slots[1].children = [ makeNode("map-to-vjoy","Map to vJoy") ];   // long press
+  return [tempo];
+}
+// A single mapped action -- the common case for most buttons.
+const oneVjoy = () => [[ makeNode("map-to-vjoy","Map to vJoy") ]];
+const oneCurve = () => [[ makeNode("response-curve","Response Curve"), makeNode("map-to-vjoy","Map to vJoy") ]];
+
+const DEVICES = {
+  "t16": { tab:"T.16000M", inputs: [
+    {id:"X Axis - X Axis", desc:"Lateral strafe", seqs:oneCurve()},
+    {id:"Button 5", desc:""},
+    {id:"Button 6", desc:""},
+    {id:"Button 7", desc:""},
+    {id:"Hat 1 - POV Hat", desc:"Power management & Landing / Lights", seqs:[t16Tree()], sel:true},
+  ]},
+  "warthog": { tab:"Joystick - HOTAS Warthog", inputs: [
+    {id:"Button 6", desc:"Weapon group 2", seqs:oneVjoy()},
+    {id:"Button 7", desc:"Target: attacker next", seqs:oneVjoy()},
+    {id:"Button 8", desc:"Target: hostile next / all next", seqs:[warthogTree()], sel:true},
+    {id:"Button 9", desc:"Target: in view / under reticle", seqs:oneVjoy()},
+    {id:"Button 11", desc:"Toggle GSafe", seqs:oneVjoy()},
+  ]},
+};
+let CURRENT = "t16";
+
+// Every input owns exactly one action sequence (an array of root actions).
+// Inputs authored without one get a real, empty, mutable sequence here -- so
+// nothing downstream has to guard for a missing seqs.
+for (const dev of Object.values(DEVICES))
+  for (const inp of dev.inputs) {
+    if (!inp.seqs) inp.seqs = [[]];
+    deriveChips(inp);                 // chips are ALWAYS derived, never authored by hand
+  }
+
+// ---------- rendering the left pane -----------------------------------
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function renderLeft() {
+  const dev = DEVICES[CURRENT];
+  left.innerHTML = dev.inputs.map((r,i) => `
+    <div class="irow ${r.chips.length?"":"empty"}" data-i="${i}" ${r.sel?'aria-selected="true"':''} tabindex="0">
+      <div class="iline"><span class="ident">${esc(r.id)}</span><span class="idesc" data-descfor="${i}">${esc(r.desc||"")}</span></div>
+      <div class="chips" data-i="${i}"></div>
+    </div>`).join("");
+  left.querySelectorAll(".irow").forEach(el => el.onclick = () => selectInput(+el.dataset.i));
+  layoutChips();
+}
+function layoutChips() {
+  const dev = DEVICES[CURRENT];
+  left.querySelectorAll(".chips").forEach(box => {
+    const all = dev.inputs[+box.dataset.i].chips;
+    if (!all.length) { box.innerHTML=""; return; }
+    const chip = c => `<span class="chip">${esc(c)}</span>`, more = n => `<span class="chip more">+${n}</span>`;
+    box.innerHTML = all.map(chip).join("");
+    if (box.scrollWidth <= box.clientWidth) return;
+    for (let n = all.length-1; n>=0; n--) {
+      box.innerHTML = all.slice(0,n).map(chip).join("") + more(all.length-n);
+      if (box.scrollWidth <= box.clientWidth) return;
+    }
+  });
+}
+function selectInput(i) {
+  const dev = DEVICES[CURRENT];
+  dev.inputs.forEach((r,j)=> r.sel = (j===i));
+  left.querySelectorAll(".irow").forEach((el,j)=> el.toggleAttribute("aria-selected", j===i));
+  renderRight();
+}
+function currentInput() { return DEVICES[CURRENT].inputs.find(r => r.sel); }
+
+// ---------- rendering the right pane (recursive) ----------------------
+const svg = n => `<svg width="16" height="16"><use href="#i-${n}"/></svg>`;
+function renderNode(node) {
+  const t = TYPES[node.type];
+  const hasChildren = node.slots.some(s => s.children.length);
+  const bodyClass = hasChildren ? "abody" : "abody leaf";
+  const slotsHtml = node.slots.map(slot => `
+    <div class="slot" data-node="${node.id}" data-slot="${esc(slot.name)}">
+      <span class="sl">${esc(slot.name)}</span><span class="rule"></span>
+      <button class="addslot" data-node="${node.id}" data-slot="${esc(slot.name)}">Add action</button>
+    </div>
+    ${slot.children.length ? slot.children.map(renderNode).join("")
+       : `<div class="empty-slot">No actions yet.</div>`}
+  `).join("");
+  // leaf config stub so leaves are not empty
+  const cfg = t.slots.length ? "" : `<div class="cfg">${leafConfig(node)}</div>`;
+  return `
+    <div class="act" data-id="${node.id}">
+      <div class="arow">
+        <button class="fold">${svg("caret-down")}</button>
+        <svg class="aicon"><use href="#i-${t.icon}"/></svg>
+        <input class="aname" value="${esc(node.name)}">
+        <button class="iconbtn rmnode" data-id="${node.id}" title="Remove">${svg("x")}</button>
+      </div>
+      <div class="${node.slots.length?bodyClass:'abody leaf'}">
+        ${cfg}${slotsHtml}
+      </div>
+    </div>`;
+}
+function leafConfig(node) {
+  if (node.type==="map-to-vjoy")
+    return `<span class="combowrap"><select class="combo"><option>vJoy Device 1</option><option>vJoy Device 2</option></select></span>
+            <span class="combowrap"><select class="combo"><option>Button 12</option><option>Button 8</option><option>Hat 3</option></select></span>`;
+  if (node.type==="map-to-keyboard")
+    return `<span class="lbl">Key combination</span><button class="rec">${svg("rec")}Record</button><span class="val mono">F8</span>`;
+  if (node.type==="map-to-mouse")
+    return `<span class="lbl">Button</span><span class="combowrap"><select class="combo"><option>Left</option><option>Right</option><option>Middle</option></select></span>`;
+  if (node.type==="macro")
+    return `<span class="lbl">1 step</span><button class="btn">Edit macro…</button>`;
+  if (node.type==="response-curve")
+    return `<span class="combowrap"><select class="combo"><option>Cubic Spline</option><option>Piecewise Linear</option></select></span>`;
+  return `<span class="lbl" style="color:var(--fgMuted)">No configuration</span>`;
+}
+function renderRight() {
+  const inp = currentInput();
+  const treatHat = /Hat/.test(inp.id), treatBtn = !treatHat;
+  const seqs = inp.seqs;
+  right.innerHTML = seqs.map((tree, si) => `
+    <div class="seq" data-seq="${si}">
+      <div class="seqhdr">
+        <svg class="grip"><use href="#i-grip"/></svg>
+        <input class="seqdesc field" style="flex:1" value="${esc(inp.desc||"")}" placeholder="Describe this action sequence">
+        <span class="radgroup"><span>Treat as</span>
+          <span class="rad" aria-checked="${treatBtn}"><i></i>Button</span>
+          <span class="rad" aria-checked="${treatHat}"><i></i>${treatHat?"Hat":"Axis"}</span></span>
+        <button class="btn menubtn seqadd" data-seq="${si}">Add action</button>
+        <button class="iconbtn" title="Remove">${svg("x")}</button>
+      </div>
+      ${tree.length ? tree.map(renderNode).join("")
+        : `<div class="empty-slot" style="padding-left:8px">No actions yet. Use “Add action” to start.</div>`}
+    </div>`).join("") + `<div class="newseq"><button class="btn">New action sequence</button></div>`;
+  wireRight();
+}
+
+// ---------- mutation ---------------------------------------------------
+function* iterate(node) {          // walks ONE node and its descendants
+  yield node;
+  for (const s of node.slots) for (const c of s.children) yield* iterate(c);
+}
+function* iterateForest(trees) {   // walks an array of trees (each an array of roots)
+  for (const tree of trees) for (const root of tree) yield* iterate(root);
+}
+function findSlot(nodeId, slotName, trees) {
+  for (const n of iterateForest(trees)) {
+    if (n.id === nodeId) return n.slots.find(s => s.name === slotName);
+  }
+  return null;
+}
+function removeNode(nodeId, trees) {
+  // nested: find the node whose slot holds nodeId
+  for (const n of iterateForest(trees)) {
+    for (const s of n.slots) {
+      const idx = s.children.findIndex(c => c.id === nodeId);
+      if (idx >= 0) { s.children.splice(idx, 1); return true; }
+    }
+  }
+  // top-level: a root of one of the sequences
+  for (const tree of trees) {
+    const idx = tree.findIndex(c => c.id === nodeId);
+    if (idx >= 0) { tree.splice(idx, 1); return true; }
+  }
+  return false;
+}
+
+// ---------- the action-type menu --------------------------------------
+const menu = document.getElementById("menu");
+let menuTarget = null;   // {kind:"slot"|"seq", ...}
+function openMenu(x, y, target) {
+  menuTarget = target;
+  menu.innerHTML = `<div class="mlabel">Add action</div>` + MENU_ORDER.map(k =>
+    `<button data-type="${k}"><svg><use href="#i-${TYPES[k].icon}"/></svg>${TYPES[k].label}</button>`).join("");
+  menu.querySelectorAll("button").forEach(b => b.onclick = () => { chooseType(b.dataset.type); });
+  menu.style.left = Math.min(x, innerWidth-220) + "px";
+  menu.style.top  = Math.min(y, innerHeight-260) + "px";
+  menu.classList.add("open");
+}
+function closeMenu() { menu.classList.remove("open"); menuTarget = null; }
+document.addEventListener("click", e => {
+  if (!menu.contains(e.target) && !e.target.closest(".addslot,.seqadd")) closeMenu();
+});
+function chooseType(type) {
+  const inp = currentInput();
+  const trees = inp.seqs;
+  const node = makeNode(type);
+  if (menuTarget.kind === "slot") {
+    const slot = findSlot(menuTarget.node, menuTarget.slot, trees);
+    slot.children.push(node);
+  } else {
+    trees[menuTarget.seq].push(node);
+  }
+  closeMenu();
+  refreshChipsFor(inp);
+  renderRight();
+ 
+}
+function deriveChips(inp) {          // pure: chips = flattened action labels of the tree
+  const flat = [];
+  inp.seqs.forEach(tree => tree.forEach(function walk(n){
+    flat.push(TYPES[n.type].label);
+    n.slots.forEach(s => s.children.forEach(walk));
+  }));
+  inp.chips = flat;
+}
+function refreshChipsFor(inp) { deriveChips(inp); layoutChips(); }
+
+// ---------- wiring the right pane -------------------------------------
+function wireRight() {
+  right.querySelectorAll(".seqdesc").forEach(f => f.oninput = () => {
+    const inp = currentInput();
+    inp.desc = f.value;
+    const i = DEVICES[CURRENT].inputs.indexOf(inp);
+    const span = left.querySelector(`.idesc[data-descfor="${i}"]`);
+    if (span) span.textContent = inp.desc;
+  });
+  right.querySelectorAll(".addslot").forEach(b => b.onclick = e => {
+    const r = b.getBoundingClientRect();
+    openMenu(r.left, r.bottom+2, {kind:"slot", node:b.dataset.node, slot:b.dataset.slot});
+  });
+  right.querySelectorAll(".seqadd").forEach(b => b.onclick = () => {
+    const r = b.getBoundingClientRect();
+    openMenu(r.left, r.bottom+2, {kind:"seq", seq:+b.dataset.seq});
+  });
+  right.querySelectorAll(".rmnode").forEach(b => b.onclick = () => {
+    removeNode(b.dataset.id, currentInput().seqs);
+    refreshChipsFor(currentInput()); renderRight();
+  });
+  right.querySelectorAll(".fold").forEach(b => b.onclick = () => {
+    const body = b.closest(".act").querySelector(".abody");
+    const open = body.style.display !== "none";
+    body.style.display = open ? "none" : "";
+    b.firstElementChild.firstElementChild.setAttribute("href", open ? "#i-caret-right" : "#i-caret-down");
+  });
+  right.querySelectorAll('.rad').forEach(el => el.onclick = () => {
+    el.parentElement.querySelectorAll('.rad').forEach(o=>o.setAttribute("aria-checked","false"));
+    el.setAttribute("aria-checked","true");
+  });
+  right.querySelectorAll('.rec').forEach(el => el.onclick = () => el.classList.toggle("armed"));
+}
+
+
+// ---------- tabs -------------------------------------------------------
+document.querySelectorAll(".tab[data-dev]").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(o=>o.setAttribute("aria-selected","false"));
+  t.setAttribute("aria-selected","true");
+  CURRENT = t.dataset.dev;
+  renderLeft(); renderRight();
+});
+document.querySelectorAll(".tab:not([data-dev])").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(o=>o.setAttribute("aria-selected","false"));
+  t.setAttribute("aria-selected","true");
+});
+
+// ---------- meta -------------------------------------------------------
+const b = document.body;
+function pair(a,c,fn){ a.onclick=()=>{a.setAttribute("aria-pressed","true");c.setAttribute("aria-pressed","false");fn(true);};
+  c.onclick=()=>{c.setAttribute("aria-pressed","true");a.setAttribute("aria-pressed","false");fn(false);}; }
+pair(document.getElementById("tl"),document.getElementById("td"),
+  v=>{b.classList.toggle("theme-light",v);b.classList.toggle("theme-dark",!v);});
+
+// ---------- boot -------------------------------------------------------
+renderLeft(); renderRight();
+</script>
+</body></html>
