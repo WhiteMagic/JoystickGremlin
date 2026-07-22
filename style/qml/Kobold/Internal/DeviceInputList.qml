@@ -9,11 +9,14 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Gremlin.Style
+import Kobold.Foundation
 
 // Visualizes the inputs and information about their associated actions
 // contained in a Device instance.
-Item {
+Rectangle {
     id: _root
+
+    color: Theme.bgAlt
 
     property Device device
 
@@ -38,28 +41,29 @@ Item {
     }
 
     // List of all the inputs available on the device
-    JGListView {
+    InputListView {
         id: _inputList
 
         anchors.fill: parent
-        anchors.leftMargin: 10
+        anchors.leftMargin: Metrics.gapM
 
         scrollbarAlwaysVisible: true
-        spacing: 5
+        spacing: Metrics.gapS
+        reuseItems: true
 
         model: device
 
         delegate: InputButton {
-            width: _inputList.width - 20
-            height: 50
+            width: _inputList.width - Metrics.gapM * 2
+            height: Metrics.rowInput
 
-            selected: model.index === _inputList.currentIndex
-            onClicked: () => { _inputList.currentIndex = model.index }
+            selected: index === _inputList.currentIndex
+            onClicked: () => { _inputList.currentIndex = index }
         }
 
         footer: Item {
             width: ListView.view.width
-            height: 10
+            height: Metrics.gapM
         }
 
         Component.onCompleted: () => {

@@ -28,6 +28,7 @@ from PySide6 import (
 )
 from PySide6.QtQuickControls2 import QQuickStyle
 
+import gremlin.signal
 import gremlin.ui.icon_provider
 import gremlin.ui.theme_manager
 import gremlin.util
@@ -49,6 +50,7 @@ def main() -> int:
 
     manager = gremlin.ui.theme_manager.ThemeManager()
     engine.rootContext().setContextProperty("themeManager", manager)
+    engine.rootContext().setContextProperty("signal", gremlin.signal.signal)
 
     engine.load(
         QtCore.QUrl.fromLocalFile(
