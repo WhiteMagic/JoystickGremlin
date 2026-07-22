@@ -19,5 +19,7 @@
     <qresource prefix="style-icons">
         <file alias="check.svg">style/assets/icons/check.svg</file>
         <file alias="chevron-down.svg">style/assets/icons/chevron-down.svg</file>
+        <file alias="edit.svg">style/assets/icons/edit.svg</file>
+        <file alias="delete.svg">style/assets/icons/delete.svg</file>
     </qresource>
 </RCC>

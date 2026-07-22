@@ -9,11 +9,19 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Gremlin.Style
+import Kobold.Foundation
+
+// TextInputDialog is a plain reusable dialog kept in qml/ (not
+// Kobold-specific); reach it via a relative directory import since it's
+// outside this module's own folder.
+import "../../../../qml"
 
 // Visualizes the inputs and information about their associated actions
 // contained in the LogicalDevice system.
-Item {
+Rectangle {
     id: _root
+
+    color: Theme.bgAlt
 
     property int inputIndex
     property InputIdentifier inputIdentifier
@@ -24,7 +32,7 @@ Item {
         id: _textInput
 
         visible: false
-        width: 300
+        width: Metrics.dp(300)
 
         property var callback: null
 
@@ -40,31 +48,40 @@ Item {
 
         anchors.fill: parent
 
-        JGListView {
+        InputListView {
             id: _inputList
 
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Layout.leftMargin: 10
+            Layout.leftMargin: Metrics.gapM
 
             scrollbarAlwaysVisible: true
-            spacing: 5
+            spacing: Metrics.gapS
+            reuseItems: true
 
             model: LogicalDeviceManagementModel {}
 
             delegate: InputButton {
-                width: _inputList.width - 20
-                height: 50
+                id: _row
 
-                selected: model.index === _inputList.currentIndex
-                onClicked: () => { _inputList.currentIndex = model.index }
+                width: _inputList.width - Metrics.gapM * 2
+                height: Metrics.rowInput
 
-                editButton: IconButton {
-                    text: bsi.icons.edit
-                    font.pixelSize: 12
-                    width: 15
+                selected: index === _inputList.currentIndex
+                onClicked: () => { _inputList.currentIndex = index }
 
+                editButton: ToolButton {
+                    icon.name: "edit"
+                    padding: Metrics.gapS
+
+                    // Lazily-instantiated (Loader-created) Components don't
+                    // see the delegate's own required properties by bare
+                    // name -- go through the id instead. "label" is the
+                    // model's raw rename/delete key, distinct from the
+                    // display-only "name" InputButton already carries, so it
+                    // isn't part of InputButton's own data contract.
                     onClicked: () => {
+                        const label = _inputList.model.labelAt(_row.index)
                         _textInput.text = label
                         _textInput.callback = (value) => {
                             _inputList.model.changeName(label, value)
@@ -73,18 +90,19 @@ Item {
                     }
                 }
 
-                deleteButton: IconButton {
-                    text: bsi.icons.remove
-                    font.pixelSize: 12
-                    width: 15
+                deleteButton: ToolButton {
+                    icon.name: "delete"
+                    padding: Metrics.gapS
 
-                    onClicked: () => { _inputList.model.deleteInput(label) }
+                    onClicked: () => {
+                        _inputList.model.deleteInput(_inputList.model.labelAt(_row.index))
+                    }
                 }
             }
 
             footer: Item {
                 width: ListView.view.width
-                height: 10
+                height: Metrics.gapM
             }
 
             onCurrentIndexChanged: () => {

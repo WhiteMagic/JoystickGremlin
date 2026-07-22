@@ -9,47 +9,60 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Gremlin.Style
+import Kobold.Foundation
+
+// InputListener is a plain reusable component kept in qml/ (not
+// Kobold-specific); reach it via a relative directory import since it's
+// outside this module's own folder.
+import "../../../../qml"
 
 // Visualizes the inputs and information about their associated actions
 // contained in a Device instance.
-Item {
+Rectangle {
+    color: Theme.bgAlt
+
     // List of all existing inputs.
     ColumnLayout {
         id: _content
 
         anchors.fill: parent
 
-        JGListView {
+        InputListView {
             id: _inputList
 
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Layout.leftMargin: 10
+            Layout.leftMargin: Metrics.gapM
 
             scrollbarAlwaysVisible: true
-            spacing: 5
+            spacing: Metrics.gapS
+            reuseItems: true
 
             model: KeyboardManagerModel {}
 
             delegate: InputButton {
-                width: _inputList.width - 20
-                height: 50
+                id: _row
 
-                selected: model.index === _inputList.currentIndex
-                onClicked: () => { _inputList.currentIndex = model.index }
+                width: _inputList.width - Metrics.gapM * 2
+                height: Metrics.rowInput
 
-                deleteButton: IconButton {
-                    text: bsi.icons.remove
-                    font.pixelSize: 12
-                    width: 15
+                selected: index === _inputList.currentIndex
+                onClicked: () => { _inputList.currentIndex = index }
 
-                    onClicked: () => { _inputList.model.deleteInput(model.index) }
+                deleteButton: ToolButton {
+                    icon.name: "delete"
+                    padding: Metrics.gapS
+
+                    // Lazily-instantiated (Loader-created) Components don't
+                    // see the delegate's own required properties by bare
+                    // name -- go through the id instead.
+                    onClicked: () => { _inputList.model.deleteInput(_row.index) }
                 }
             }
 
             footer: Item {
                 width: ListView.view.width
-                height: 10
+                height: Metrics.gapM
             }
 
             onCurrentIndexChanged: () => {
@@ -61,7 +74,7 @@ Item {
          }
 
         InputListener {
-            Layout.margins: 10
+            Layout.margins: Metrics.gapL
             Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
 
             text: "Add Key"

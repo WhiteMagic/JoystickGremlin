@@ -90,6 +90,22 @@ def _description_from_item(item: InputItem) -> str:
         return ""
 
 
+def _action_labels_from_item(item: InputItem) -> list[str]:
+    """Returns the labels of every bound action across all of the item's sequences.
+
+    A sequence's root is an invisible container (action_label always "Root") whose
+    children are the actually bound actions; an empty/unbound sequence has no
+    children and contributes nothing.
+    """
+    if not item:
+        return []
+    labels = []
+    for seq in item.action_sequences:
+        assert seq.root_action is not None
+        labels.extend(child.action_label for child in seq.root_action.get_actions()[0])
+    return labels
+
+
 @ta.QmlElement
 class InputIdentifier(QtCore.QObject):
     """Stores the identifier of a single input item."""
@@ -309,6 +325,7 @@ class Device(QtCore.QAbstractListModel):
             b"actionSequenceDisplayMode"
         ),
         QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"actionLabels"),
     }
 
     deviceChanged = QtCore.Signal()
@@ -372,7 +389,7 @@ class Device(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> str | int:
+    ) -> str | int | list[str]:
         if role not in self.roles:
             return "Unknown"
 
@@ -397,6 +414,9 @@ class Device(QtCore.QAbstractListModel):
             case "description":
                 input_item = self._get_input_item(input_info)
                 return _description_from_item(input_item) if input_item else ""
+            case "actionLabels":
+                input_item = self._get_input_item(input_info)
+                return _action_labels_from_item(input_item) if input_item else []
             case _:
                 return ""
 
@@ -465,6 +485,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
             b"actionSequenceDisplayMode"
         ),
         QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 7: QtCore.QByteArray(b"actionLabels"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -542,7 +563,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> str | int:
+    ) -> str | int | list[str]:
         if role not in self.roles:
             return "Unknown"
 
@@ -572,6 +593,8 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
                 )
             case "description":
                 return _description_from_item(input_item) if input_item else ""
+            case "actionLabels":
+                return _action_labels_from_item(input_item) if input_item else []
             case _:
                 return ""
 
@@ -605,6 +628,11 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
         identifier.input_id = input.id
 
         return identifier
+
+    @QtCore.Slot(int, result=str)
+    def labelAt(self, index: int) -> str:
+        """Returns the label of the input at the given row index."""
+        return self._index_to_input(index).label
 
     def _name(self, identifier: tuple[InputType, int]) -> str:
         return f"{InputType.to_string(identifier[0]).capitalize()} {identifier[1]:d}"
@@ -751,6 +779,7 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
             b"actionSequenceDisplayMode"
         ),
         QtCore.Qt.ItemDataRole.UserRole + 5: QtCore.QByteArray(b"description"),
+        QtCore.Qt.ItemDataRole.UserRole + 6: QtCore.QByteArray(b"actionLabels"),
     }
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -819,7 +848,7 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
 
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
-    ) -> str | int:
+    ) -> str | int | list[str]:
         if role not in self.roles:
             return "Unknown"
 
@@ -841,6 +870,8 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
                 )
             case "description":
                 return _description_from_item(input_item) if input_item else ""
+            case "actionLabels":
+                return _action_labels_from_item(input_item) if input_item else []
             case _:
                 return ""
 
@@ -1663,8 +1694,8 @@ Configuration().register(
     "general",
     "action-sequence-information",
     PropertyType.Selection,
-    "Full",
+    "Chips",
     "Defines how action sequences associated with inputs are displayed.",
-    {"valid_options": ["Full", "Count"]},
+    {"valid_options": ["Chips", "Count"]},
     True,
 )
