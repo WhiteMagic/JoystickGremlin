@@ -20,6 +20,7 @@ QtObject {
     readonly property int ctrlH:         dp(24)
     readonly property int indent:        dp(16)
     readonly property int icon:          dp(16)
+    readonly property int markSize:      dp(16) // CheckBox box / RadioButton ring diameter
     readonly property int gapS:          dp(4)
     readonly property int gapM:          dp(8)
     readonly property int gapL:          dp(12)
@@ -32,6 +33,7 @@ QtObject {
     // Hand-controlled exceptions -- kept off the even/dp policy, per SPEC §4.
     readonly property real hairline:      pick({100: 1, 150: 1, 200: 2})
     readonly property real insertionLine: pick({100: 2, 150: 2, 200: 4})
+    readonly property real accentMark:    pick({100: 2, 150: 2, 200: 4}) // tab underline, selected-row bar
     readonly property int  indentGuide:   pick({100: 1, 150: 2, 200: 2})
 
     // Shell heights, pane minimums (SPEC §10 / guide §3.2).

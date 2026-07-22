@@ -5,4 +5,19 @@
     <qresource prefix="/">
         <file alias="BootstrapIcons">gfx/bootstrap-icons.otf</file>
     </qresource>
+    <qresource prefix="themes">
+        <file alias="light.json">style/themes/light.json</file>
+        <file alias="dark.json">style/themes/dark.json</file>
+        <file alias="scheme.schema.json">style/themes/scheme.schema.json</file>
+    </qresource>
+    <qresource prefix="fonts">
+        <file alias="IBMPlexSans-Regular.otf">style/assets/fonts/IBMPlexSans-Regular.otf</file>
+        <file alias="IBMPlexSans-SemiBold.otf">style/assets/fonts/IBMPlexSans-SemiBold.otf</file>
+        <file alias="IBMPlexMono-Regular.otf">style/assets/fonts/IBMPlexMono-Regular.otf</file>
+        <file alias="IBMPlexMono-SemiBold.otf">style/assets/fonts/IBMPlexMono-SemiBold.otf</file>
+    </qresource>
+    <qresource prefix="style-icons">
+        <file alias="check.svg">style/assets/icons/check.svg</file>
+        <file alias="chevron-down.svg">style/assets/icons/chevron-down.svg</file>
+    </qresource>
 </RCC>

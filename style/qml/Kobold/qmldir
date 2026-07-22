@@ -1,0 +1,15 @@
+module Kobold
+Button      Button.qml
+ToolButton  ToolButton.qml
+CheckBox    CheckBox.qml
+RadioButton RadioButton.qml
+TextField   TextField.qml
+SpinBox     SpinBox.qml
+ComboBox    ComboBox.qml
+Menu        Menu.qml
+MenuItem    MenuItem.qml
+ScrollBar   ScrollBar.qml
+ToolTip     ToolTip.qml
+TabBar      TabBar.qml
+TabButton   TabButton.qml
+Label       Label.qml
