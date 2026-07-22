@@ -1,0 +1,5 @@
+module Kobold.Foundation
+singleton Theme     Theme.qml
+singleton Metrics   Metrics.qml
+singleton FontType  FontType.qml
+AppIcon             AppIcon.qml

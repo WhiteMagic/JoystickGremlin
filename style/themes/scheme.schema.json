@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kobold colour scheme",
+  "type": "object",
+  "required": ["meta", "colors"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appearance"],
+      "properties": {
+        "name": { "type": "string" },
+        "appearance": { "type": "string", "enum": ["light", "dark"] }
+      }
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bg", "bgAlt", "bgHover", "bgSelected", "line",
+        "fg", "fgMuted", "fgDisabled", "accent", "error", "warning"
+      ],
+      "properties": {
+        "bg": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "bgAlt": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "bgHover": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "bgSelected": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "line": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "fg": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "fgMuted": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "fgDisabled": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "error": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "warning": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+      }
+    }
+  }
+}

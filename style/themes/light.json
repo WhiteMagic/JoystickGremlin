@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "name": "Light",
+    "appearance": "light"
+  },
+  "colors": {
+    "bg": "#ffffff",
+    "bgAlt": "#f2f2f4",
+    "bgHover": "#e8e8ec",
+    "bgSelected": "#dcdce2",
+    "line": "#c4c4cc",
+    "fg": "#17171a",
+    "fgMuted": "#6a6a74",
+    "fgDisabled": "#a6a6b0",
+    "accent": "#1060c0",
+    "error": "#c0281c",
+    "warning": "#9a5c00"
+  }
+}
