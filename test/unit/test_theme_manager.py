@@ -8,6 +8,7 @@ import json
 import pathlib
 
 import jsonschema
+import pytest
 from PySide6 import (
     QtCore,
     QtGui,
@@ -81,6 +82,27 @@ def test_scheme_schema_validates() -> None:
     for name in ("light.json", "dark.json"):
         data = json.loads((_THEMES_DIR / name).read_text())
         jsonschema.validate(instance=data, schema=schema)
+
+
+def test_scheme_schema_rejects_planted_bad_schemes() -> None:
+    schema = json.loads((_THEMES_DIR / "scheme.schema.json").read_text())
+    valid = {"meta": {"appearance": "light"}, "colors": _LIGHT_COLORS}
+
+    missing_key = {"meta": valid["meta"], "colors": dict(_LIGHT_COLORS)}
+    del missing_key["colors"]["accent"]
+
+    extra_key = {"meta": valid["meta"], "colors": dict(_LIGHT_COLORS, extra="#000000")}
+
+    alpha_color = {
+        "meta": valid["meta"],
+        "colors": dict(_LIGHT_COLORS, accent="#1060c0ff"),
+    }
+
+    bad_appearance = {"meta": {"appearance": "solarized"}, "colors": _LIGHT_COLORS}
+
+    for bad_scheme in (missing_key, extra_key, alpha_color, bad_appearance):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate(instance=bad_scheme, schema=schema)
 
 
 def test_theme_qml_facade_live_update() -> None:
