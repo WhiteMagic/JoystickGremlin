@@ -21,5 +21,11 @@
         <file alias="chevron-down.svg">style/assets/icons/chevron-down.svg</file>
         <file alias="edit.svg">style/assets/icons/edit.svg</file>
         <file alias="delete.svg">style/assets/icons/delete.svg</file>
+        <file alias="new_profile.svg">style/assets/icons/new_profile.svg</file>
+        <file alias="save_profile.svg">style/assets/icons/save_profile.svg</file>
+        <file alias="load_profile.svg">style/assets/icons/load_profile.svg</file>
+        <file alias="activate.svg">style/assets/icons/activate.svg</file>
+        <file alias="options.svg">style/assets/icons/options.svg</file>
+        <file alias="input_viewer.svg">style/assets/icons/input_viewer.svg</file>
     </qresource>
 </RCC>

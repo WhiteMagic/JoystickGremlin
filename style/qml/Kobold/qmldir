@@ -8,8 +8,11 @@ SpinBox     SpinBox.qml
 ComboBox    ComboBox.qml
 Menu        Menu.qml
 MenuItem    MenuItem.qml
+MenuBar     MenuBar.qml
+MenuBarItem MenuBarItem.qml
 ScrollBar   ScrollBar.qml
 ToolTip     ToolTip.qml
 TabBar      TabBar.qml
 TabButton   TabButton.qml
 Label       Label.qml
+SplitView   SplitView.qml
