@@ -5,7 +5,9 @@ CheckBox    CheckBox.qml
 RadioButton RadioButton.qml
 TextField   TextField.qml
 SpinBox     SpinBox.qml
+DoubleSpinBox DoubleSpinBox.qml
 ComboBox    ComboBox.qml
+RangeSlider RangeSlider.qml
 Menu        Menu.qml
 MenuItem    MenuItem.qml
 MenuBar     MenuBar.qml

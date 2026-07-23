@@ -9,7 +9,11 @@ T.ToolButton {
     id: control
 
     implicitHeight: Metrics.ctrlH
-    implicitWidth: Math.max(Metrics.ctrlH, contentItem.implicitWidth + Metrics.gapM * 2)
+    // Icon-only buttons are a square, one control height on a side -- not padded out to
+    // whatever the text formula below would give them (icon 16 + gapM*2 = 32, wider than
+    // the 24px height). Text buttons keep the padded, content-driven width.
+    implicitWidth: control.icon.name !== "" ? Metrics.ctrlH
+        : Math.max(Metrics.ctrlH, contentItem.implicitWidth + Metrics.gapM * 2)
     padding: Metrics.gapM
 
     font.family: FontType.sans

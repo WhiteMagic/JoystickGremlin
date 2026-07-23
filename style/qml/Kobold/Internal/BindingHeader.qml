@@ -1,0 +1,111 @@
+// -*- coding: utf-8; -*-
+// SPDX-License-Identifier: GPL-3.0-only
+
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import Kobold.Foundation
+
+import Gremlin.Profile
+
+// InputBehavior is a plain reusable widget kept in qml/ (not Kobold-specific yet); reach it
+// via a relative directory import since it's outside this module's own folder -- same
+// convention as LogicalDevice.qml's TextInputDialog import.
+import "../../../../qml"
+
+// SPEC §8 binding header: [grip][description][Treat as][Add action, bordered][!][x]. Live
+// replacement for the general header row of the legacy
+// qml/InputItemBindingConfigurationHeader.qml. The axis/hat virtual-button UI is not part of
+// this row's grammar (SPEC §8 doesn't mention it) -- it stays a sibling Loader in
+// qml/InputItemBinding.qml, unchanged.
+Item {
+    id: root
+
+    property InputItemBindingModel inputBinding
+    property InputItemModel inputItemModel
+
+    implicitHeight: Metrics.rowAction
+
+    function _maxSeverity(hints) {
+        let highest = 0
+        for (let i = 0; i < hints.length; i++) {
+            if (hints[i]["type"] > highest) {
+                highest = hints[i]["type"]
+            }
+        }
+        return highest
+    }
+
+    RowLayout {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: Metrics.gapM
+
+        AppIcon {
+            id: _grip
+
+            name: "grip"
+            role: "fgMuted"
+
+            MouseArea {
+                id: _dragArea
+
+                anchors.fill: parent
+                cursorShape: Qt.OpenHandCursor
+            }
+        }
+
+        TextField {
+            id: _description
+
+            Layout.fillWidth: true
+            placeholderText: "Description"
+            text: root.inputBinding && root.inputBinding.rootAction ?
+                root.inputBinding.rootAction.actionLabel : ""
+
+            onEditingFinished: {
+                root.inputBinding.rootAction.actionLabel = text
+            }
+        }
+
+        InputBehavior {
+            inputBinding: root.inputBinding
+        }
+
+        AddActionMenuButton {
+            variant: "bordered"
+            model: root.inputBinding && root.inputBinding.rootAction ?
+                root.inputBinding.rootAction.compatibleActions : []
+
+            onActionRequested: (name) => {
+                root.inputBinding.rootAction.appendAction(name, "children")
+            }
+        }
+
+        AppIcon {
+            id: _feedbackIcon
+
+            visible: root.inputBinding && root.inputBinding.userFeedback.length > 0
+            name: "warning"
+            role: root.inputBinding && root._maxSeverity(root.inputBinding.userFeedback) >= 3 ?
+                "error" : "warning"
+
+            HoverHandler {
+                id: _feedbackHover
+            }
+
+            ToolTip.visible: _feedbackHover.hovered
+            ToolTip.text: root.inputBinding ?
+                root.inputBinding.userFeedback.map((h) => h.message).join("\n") : ""
+        }
+
+        ToolButton {
+            icon.name: "delete"
+
+            onClicked: {
+                root.inputItemModel.deleteActionSequnce(root.inputBinding)
+            }
+        }
+    }
+}
