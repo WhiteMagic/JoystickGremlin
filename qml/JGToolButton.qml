@@ -4,21 +4,10 @@
 import QtQuick
 import QtQuick.Controls
 
+// Thin tooltip-forwarding wrapper; icon/background/hover come from the
+// active style's ToolButton (Kobold.ToolButton), not overridden here.
 ToolButton {
-    property alias color: _icon.color
     property alias tooltip: _tooltip.text
-
-    contentItem: Label {
-        id: _icon
-
-        text: parent.text
-
-        font.family: "bootstrap-icons"
-        font.pixelSize: 24
-
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
 
     ToolTip {
         id: _tooltip

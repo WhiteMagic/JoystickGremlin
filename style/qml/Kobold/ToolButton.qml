@@ -15,6 +15,10 @@ T.ToolButton {
     font.family: FontType.sans
     font.pixelSize: Metrics.textBody
 
+    // Override for the engaged-toggle icon shade (SPEC/architecture §2.5) -- the only
+    // sanctioned non-selection/focus use of accent on an icon.
+    property string iconRole: control.enabled ? "fg" : "fgDisabled"
+
     contentItem: Item {
         // Metrics.icon, not _icon.implicitWidth -- Image.implicitWidth follows
         // the loaded source's natural size (0 if it failed to load), not the
@@ -27,7 +31,7 @@ T.ToolButton {
             anchors.centerIn: parent
             visible: control.icon.name !== ""
             name: control.icon.name
-            role: control.enabled ? "fg" : "fgDisabled"
+            role: control.iconRole
         }
 
         Text {

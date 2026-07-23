@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Templates as T
-import QtQuick.Controls.Universal
+import Kobold.Foundation
 
 T.TabBar {
     id: control
@@ -32,8 +33,8 @@ T.TabBar {
 
         highlightMoveDuration: 100
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: 48
-        preferredHighlightEnd: width - 48
+        preferredHighlightBegin: Metrics.tabStrip
+        preferredHighlightEnd: width - Metrics.tabStrip
 
 
         MouseArea {
@@ -67,8 +68,8 @@ T.TabBar {
     }
 
     background: Rectangle {
-        implicitWidth: 200
-        implicitHeight: 48
-        color: control.Universal.background
+        implicitWidth: Metrics.ctrlH * 8
+        implicitHeight: Metrics.tabStrip
+        color: Theme.bg
     }
 }
