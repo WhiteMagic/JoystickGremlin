@@ -25,6 +25,7 @@ QtObject {
     readonly property int gapM:          dp(8)
     readonly property int gapL:          dp(12)
     readonly property int radius:        dp(2)
+    readonly property int sliderTrack:   dp(4) // RangeSlider/Slider groove thickness
 
     // Font pixel sizes (family/weight live in FontType).
     readonly property int textBody:      dp(14)

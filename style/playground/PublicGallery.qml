@@ -8,6 +8,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Kobold.Foundation
+import Kobold.Controls
 
 ScrollView {
     id: root
@@ -248,6 +249,58 @@ ScrollView {
             }
         }
 
+        // -- DoubleSpinBox -------------------------------------------------
+        Section {
+            title: "DoubleSpinBox"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+                DoubleSpinBox { from: 0; to: 100; stepSize: 0.1; decimals: 2; value: 42.5 }
+                Caption { text: "rest" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                DoubleSpinBox {
+                    from: 0; to: 100; stepSize: 0.1; decimals: 2; value: 42.5
+                    enabled: false
+                }
+                Caption { text: "disabled" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                DoubleSpinBox { from: -1.0; to: 1.0; stepSize: 0.1; decimals: 3; value: 0.5 }
+                Caption { text: "live -- click +/-, type a value, hover, tab" }
+            }
+        }
+
+        // -- RangeSlider -------------------------------------------------
+        Section {
+            title: "RangeSlider"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+                RangeSlider {
+                    from: 0; to: 100
+                    first.value: 25; second.value: 75
+                }
+                Caption { text: "rest -- accent-filled span between handles" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                RangeSlider {
+                    from: 0; to: 100
+                    first.value: 25; second.value: 75
+                    enabled: false
+                }
+                Caption { text: "disabled" }
+            }
+            ColumnLayout {
+                spacing: Metrics.gapS
+                RangeSlider { from: 0; to: 100; first.value: 10; second.value: 90 }
+                Caption { text: "live -- drag either handle" }
+            }
+        }
+
         // -- ComboBox ---------------------------------------------------
         Section {
             title: "ComboBox"
@@ -364,6 +417,54 @@ ScrollView {
                 spacing: Metrics.gapS
                 Label { text: "Disabled label"; enabled: false }
                 Caption { text: "disabled" }
+            }
+        }
+
+        // -- NumericRangeSlider (Kobold.Controls) ------------------------
+        Section {
+            title: "NumericRangeSlider (Kobold.Controls)"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                NumericRangeSlider {
+                    id: _rangeDemo
+                    from: -1.0
+                    to: 1.0
+                    stepSize: 0.1
+                    decimals: 3
+                    firstValue: -0.5
+                    secondValue: 0.5
+
+                    onFirstValueEdited: (value) => { firstValue = value }
+                    onSecondValueEdited: (value) => { secondValue = value }
+                }
+                Caption { text: "live -- drag the slider or edit either mono value field" }
+            }
+        }
+
+        // -- HatDirectionToggle (Kobold.Controls) ------------------------
+        Section {
+            title: "HatDirectionToggle (Kobold.Controls)"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                HatDirectionToggle {
+                    id: _hatDemo
+                    north: true
+                    east: true
+
+                    onNorthEdited: (value) => { north = value }
+                    onNorthEastEdited: (value) => { northEast = value }
+                    onEastEdited: (value) => { east = value }
+                    onSouthEastEdited: (value) => { southEast = value }
+                    onSouthEdited: (value) => { south = value }
+                    onSouthWestEdited: (value) => { southWest = value }
+                    onWestEdited: (value) => { west = value }
+                    onNorthWestEdited: (value) => { northWest = value }
+                }
+                Caption { text: "live -- toggle any direction; accent-shaded when selected" }
             }
         }
 

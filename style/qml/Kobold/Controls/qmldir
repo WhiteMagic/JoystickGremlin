@@ -1,0 +1,4 @@
+module Kobold.Controls
+NumericRangeSlider NumericRangeSlider.qml
+HatDirectionToggle HatDirectionToggle.qml
+VJoySelector       VJoySelector.qml

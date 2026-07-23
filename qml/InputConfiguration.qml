@@ -8,7 +8,8 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Gremlin.Profile
-import Gremlin.Style
+
+import Kobold.Foundation
 
 Item {
     id: _root
@@ -44,13 +45,16 @@ Item {
 
         anchors.fill: parent
 
-        // Show all actions associated with this input
+        // Show all actions associated with this input. SPEC §8: sequences are independent
+        // trees, separated by 8px of space -- never a rule between them (each sequence
+        // provides its own 8px padding, see qml/InputItemBinding.qml).
         JGListView {
             id: _listView
 
             Layout.fillHeight: true
             Layout.fillWidth: true
             scrollbarAlwaysVisible: true
+            spacing: Metrics.gapM
 
             // Content to visualize
             model: _root.inputItemModel
@@ -86,24 +90,16 @@ Item {
             }
         }
 
-        // Button to add a new action configuration to the currently
-        // active input
-        Rectangle {
-            id: _newActionButton
+        // Button to add a new action configuration to the currently active input. SPEC §8:
+        // "New action sequence" is an ordinary push button -- not filled.
+        Button {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Metrics.gapM
 
-            Layout.fillWidth: true
-            Layout.preferredHeight: 40
+            text: "New Action Sequence"
 
-            color: Style.background
-
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                text: "New Action Sequence"
-
-                onClicked: {
-                    _root.inputItemModel.newActionSequence()
-                }
+            onClicked: {
+                _root.inputItemModel.newActionSequence()
             }
         }
     }
