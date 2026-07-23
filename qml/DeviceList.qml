@@ -6,8 +6,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 
-import QtQuick.Controls.Universal
-
 import Gremlin.Device
 import Gremlin.Profile
 
@@ -36,7 +34,7 @@ Item {
             id: _physicalInputs
             model: deviceListModel
 
-            JGTabButton {
+            TabButton {
                 id: _button
 
                 text: name
@@ -59,7 +57,7 @@ Item {
         }
 
         // Keyboard and logical device buttons.
-        JGTabButton {
+        TabButton {
             id: _keyboardButton
 
             text: "Keyboard"
@@ -79,7 +77,7 @@ Item {
             }
         }
 
-        JGTabButton {
+        TabButton {
             id: _logicalButton
 
             text: "Logical Device"

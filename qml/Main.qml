@@ -3,7 +3,13 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
+// Qualified import: an unqualified "QtQuick.Controls.Universal" would
+// redeclare MenuBar/TabButton/ComboBox/etc. as its own concrete types,
+// silently shadowing the Kobold-styled versions of every bare control
+// declared in this file (QML's "last import wins" rule for same-named
+// types). Only the Universal.theme sync below is actually needed, for
+// the still-Universal-styled legacy right pane.
+import QtQuick.Controls.Universal as UniversalStyle
 import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQuick.Window
@@ -14,6 +20,7 @@ import Gremlin.Device
 import Gremlin.Profile
 import Gremlin.Style
 import Gremlin.UI
+import Kobold.Foundation
 import Kobold.Internal
 
 import "helpers.js" as Helpers
@@ -260,13 +267,13 @@ ApplicationWindow {
             anchors.fill: parent
 
             JGToolButton {
-                text: "\uF392"
+                icon.name: "new_profile"
                 tooltip: qsTr("Create new profile")
 
                 onClicked: () => { backend.newProfile() }
             }
             JGToolButton {
-                text: "\uF356"
+                icon.name: "save_profile"
                 tooltip: qsTr("Save current profile")
 
                 onClicked: () => {
@@ -279,21 +286,21 @@ ApplicationWindow {
                 }
             }
             JGToolButton {
-                text: "\uF358"
+                icon.name: "load_profile"
                 tooltip: qsTr("Load profile")
 
                 onClicked: () => { _loadProfileFileDialog.open() }
             }
             JGToolButton {
-                text: "\uF448"
-                color: backend.gremlinActive ? Style.accent : Style.foreground
+                icon.name: "activate"
+                iconRole: backend.gremlinActive ? "accent" : "fg"
                 tooltip: qsTr("Toggle Gremlin")
 
                 onClicked: () => { backend.toggleActiveState() }
             }
 
             JGToolButton {
-                text: "\uF3F2"
+                icon.name: "input_viewer"
                 tooltip: qsTr("Open input viewer")
 
                 onClicked: () => {
@@ -302,7 +309,7 @@ ApplicationWindow {
             }
 
             JGToolButton {
-                text: "\uF3E5"
+                icon.name: "options"
                 tooltip: qsTr("Open options")
 
                 onClicked: () => {
@@ -318,7 +325,7 @@ ApplicationWindow {
                 text: "Configuring mode"
             }
 
-            TooltipComboBox {
+            ComboBox {
                 id: _modeSelector
 
                 Layout.preferredWidth: 200
@@ -332,12 +339,6 @@ ApplicationWindow {
 
                 Component.onCompleted: () => {
                     currentIndex = find(uiState.currentMode)
-                }
-
-                ToolTip {
-                    visible: parent.hovered
-                    text: qsTr("Select mode to edit")
-                    delay: 500
                 }
 
                 // TODO: Complete this to have modes show hierarchy information
@@ -361,33 +362,86 @@ ApplicationWindow {
         }
     }
 
+    // Plain adjacency readout (SPEC §10): three facts side by side, no
+    // divergence warning/icon/tone -- Editing != Executing mode is routine.
     footer: Rectangle {
         id: _footer
 
-        height: 30
-        color: Universal.chromeMediumColor
+        implicitHeight: Metrics.footer
+        color: Theme.bg
+
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: Metrics.hairline
+            color: Theme.line
+        }
 
         RowLayout {
             anchors.fill: parent
+            anchors.leftMargin: Metrics.gapM
+            anchors.rightMargin: Metrics.gapM
+            spacing: Metrics.gapL
 
-            Label {
-                Layout.preferredWidth: 200
-                padding: 5
+            Row {
+                spacing: Metrics.gapS
 
-                text: "<B>Status: </B>" +
-                    Helpers.selectText(
-                        backend.gremlinActive, "Active", "Not Running"
-                    ) +
-                    Helpers.selectText(
-                        backend.gremlinActive & backend.gremlinPaused, " (Paused)", ""
-                    )
+                Text {
+                    text: qsTr("Status:")
+                    color: Theme.fgMuted
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                }
+                Text {
+                    text: Helpers.selectText(
+                            backend.gremlinActive, qsTr("Active"), qsTr("Not Running")
+                        ) +
+                        Helpers.selectText(
+                            backend.gremlinActive & backend.gremlinPaused, qsTr(" (Paused)"), ""
+                        )
+                    color: Theme.fg
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                    font.weight: FontType.semiBold
+                }
             }
 
-            Label {
-                Layout.fillWidth: true
-                padding: 5
+            Row {
+                spacing: Metrics.gapS
 
-                text: "<B>Executing mode: </B>" + backend.currentMode
+                Text {
+                    text: qsTr("Editing:")
+                    color: Theme.fgMuted
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                }
+                Text {
+                    text: uiState.currentMode
+                    color: Theme.fg
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                    font.weight: FontType.semiBold
+                }
+            }
+
+            Row {
+                spacing: Metrics.gapS
+                Layout.fillWidth: true
+
+                Text {
+                    text: qsTr("Executing mode:")
+                    color: Theme.fgMuted
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                }
+                Text {
+                    text: backend.currentMode
+                    color: Theme.fg
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                    font.weight: FontType.semiBold
+                }
             }
         }
     }
@@ -473,6 +527,10 @@ ApplicationWindow {
 
         RowLayout {
             Layout.fillWidth: true
+            // Nested Layouts default fillHeight to true, which would let
+            // this row compete with the SplitView below for vertical
+            // space and get vertically centered in the leftover gap.
+            Layout.fillHeight: false
 
             // Horizontal list of "tabs" listing all detected devices.
             DeviceList {
@@ -500,12 +558,25 @@ ApplicationWindow {
                 }
             }
 
+            // Groups the device tabs from Scripts/Settings (SPEC \u00A710); grouping
+            // alone carries the meaning -- no greying, no icons on either side.
+            Rectangle {
+                Layout.preferredWidth: Metrics.hairline
+                Layout.fillHeight: true
+                Layout.topMargin: Metrics.gapS
+                Layout.bottomMargin: Metrics.gapS
+                Layout.leftMargin: Metrics.gapM
+                Layout.rightMargin: Metrics.gapM
+
+                color: Theme.line
+            }
+
             DeviceTabBar {
                 scrollbarAlwaysVisible: false
 
                 Component.onCompleted: () => { _scriptButton.checked = false }
 
-                JGTabButton {
+                TabButton {
                     id: _scriptButton
 
                     text: "Scripts"
@@ -522,7 +593,7 @@ ApplicationWindow {
                     }
                 }
 
-                JGTabButton {
+                TabButton {
                     id: _profileSettingsButton
 
                     text: "Settings"
@@ -558,7 +629,7 @@ ApplicationWindow {
                 id: _deviceInputList
 
                 visible: uiState.currentTab === "physical"
-                SplitView.minimumWidth: 400
+                SplitView.minimumWidth: Metrics.leftPaneMin
 
                 device: _deviceModel
             }
@@ -568,7 +639,7 @@ ApplicationWindow {
                 id: _logicalDeviceList
 
                 visible: uiState.currentTab === "logical"
-                SplitView.minimumWidth: 400
+                SplitView.minimumWidth: Metrics.leftPaneMin
 
                 // Trigger a model update on the InputConfiguration.
                 onInputIdentifierChanged: () => {
@@ -580,7 +651,7 @@ ApplicationWindow {
                 id: _keyboardInputList
 
                 visible: uiState.currentTab === "keyboard"
-                SplitView.minimumWidth: 400
+                SplitView.minimumWidth: Metrics.leftPaneMin
             }
 
             // List of the actions associated with the currently selected input.
@@ -598,7 +669,7 @@ ApplicationWindow {
 
                 SplitView.fillWidth: true
                 SplitView.fillHeight: true
-                SplitView.minimumWidth: 900
+                SplitView.minimumWidth: Metrics.rightPaneMin
             }
         }
 
