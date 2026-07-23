@@ -141,8 +141,9 @@ No `font.pixelSize`, no font fallback, no glyph metrics.
 - **Chips carry no icons** — 12px is too small to read a glyph.
 - **Accent-shading an icon is a *state* channel only** (canonical case: Active toggle).
 - Plugin authors ship SVG to the same convention: 16×16 viewBox, filled, single colour.
-- The ~39 glyphs must be **curated deliberately** for a shared grammar. R14's were picked
-  one at a time (speedometer / joystick / plus-square) and read as noise.
+- The ~50 glyphs must be **curated deliberately** for a shared grammar (final list pending —
+  guide `CONFIRM-4`). R14's were picked one at a time (speedometer / joystick / plus-square) and
+  read as noise.
 
 ---
 
@@ -267,7 +268,7 @@ from its header, sharing one 1px guide.
 - **Description = accumulated action names the user MODIFIED** (defaults are not
   accumulated). So description = intent; chips = structure. **They never duplicate.**
   No actions → no description, and a 48px empty row is *complete*, not truncated.
-- **Chips: flat, full names, no icons, `+n` overflow.**
+- **Chips: flat (`bgAlt` fill, 1px `line`), full names, no icons, `+n` overflow.**
   **`+n` appears only on genuine overflow** — render all, measure, drop only if they do not
   fit. `X Axis` (4 actions) shows all four at 400px; `Hat 1` (8) overflows.
   **No abbreviations.** The nested formula notation and `image://action_summary` both die.

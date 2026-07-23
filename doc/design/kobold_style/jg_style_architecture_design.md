@@ -154,7 +154,7 @@ VID/PID). Row titles and key combos stay Sans.
 
 ```jsonc
 {
-  "meta": { "name": "Instrument Dark", "appearance": "dark" },   // appearance ∈ {light,dark}, optional
+  "meta": { "name": "Kobold Dark", "appearance": "dark" },   // appearance ∈ {light,dark}, optional
   "colors": {
     "bg": "#242429", "bgAlt": "#1b1b1e", "bgHover": "#2e2e34", "bgSelected": "#3a3a42",
     "line": "#4a4a54", "fg": "#e6e6ea", "fgMuted": "#94949e", "fgDisabled": "#5c5c66",
@@ -175,14 +175,20 @@ partial scheme).
 
 ### 4.1 Colour theming
 
-- **`ThemeManager` (Python, `QObject`, `@QmlSingleton`)** — single source of truth. Owns scheme
+- **`ThemeManager` (Python, `QObject`)** — single source of truth. Owns scheme
   discovery, load, validation, and the *active* scheme. Exposes **11 named `Property(QColor, …,
-  notify=changed)`** + one `changed` signal. Reads/writes the selected scheme id **through the
-  existing configuration-management class**, not by touching JSON directly.
-- **`Theme` (QML, `pragma Singleton`, in the style/foundation module `qmldir`)** — thin facade:
-  `readonly property color bg: ThemeManager.bg` ×11. **Every consumer and every plugin reads
-  `Theme` only.** This keeps thousands of consumer reads QML-side; only 11 facade bindings cross
-  into Python, and only on `changed`.
+  notify=changed)`** + one `changed` signal, plus a `uiScale` property (100 | 150 | 200) that
+  `Metrics` reads. Reads/writes the selected scheme id **through the existing
+  configuration-management class**, not by touching JSON directly.
+- **Exposed to QML as a context property**, not a QML singleton: the Python entry point calls
+  `engine.rootContext().setContextProperty("themeManager", theme_manager)`. It is **not** an
+  `@QmlElement`/`@QmlSingleton` type. This is the one sanctioned context property in the style;
+  every colour consumer reaches it only through the `Theme` facade below.
+- **`Theme` (QML, `pragma Singleton`, in the Foundation module `qmldir`)** — thin facade:
+  `readonly property color bg: themeManager.bg` ×11. **Every consumer and every plugin reads
+  `Theme` only.** This keeps thousands of consumer reads QML-side; only 11 facade bindings read the
+  context property, and only on `changed`. (`Metrics` is the lone exception that reads
+  `themeManager.uiScale` directly — a dimension driver, not a colour.)
 - **Live switch** = `ThemeManager` swaps the active scheme dict → `emit changed()` → all facade
   bindings recompute → all consumer bindings recompute. No per-property signals; one `changed`.
 - **Appearance: manual only.** A single scheme id, persisted via the config class. On startup,
@@ -194,15 +200,10 @@ partial scheme).
 Sketch:
 
 ```python
-# theme_manager.py
-QML_IMPORT_NAME = "Kobold.Foundation"
-QML_IMPORT_MAJOR_VERSION = 1
-
+# theme_manager.py  (plain QObject; exposed via setContextProperty, not @QmlSingleton)
 _TOKENS = ("bg","bgAlt","bgHover","bgSelected","line",
            "fg","fgMuted","fgDisabled","accent","error","warning")
 
-@QmlElement
-@QmlSingleton
 class ThemeManager(QObject):
     changed = Signal()
     def __init__(self, parent=None):
@@ -214,33 +215,34 @@ class ThemeManager(QObject):
     bg     = Property(QColor, lambda s: s._c["bg"],     notify=changed)
     accent = Property(QColor, lambda s: s._c["accent"], notify=changed)
     # ... etc for the remaining 9 ...
+    uiScale = Property(int, lambda s: s._ui_scale, notify=changed)  # 100 | 150 | 200
 ```
 
 ```qml
-// Theme.qml   (pragma Singleton; registered in qmldir: `singleton Theme 1.0 Theme.qml`)
+// Theme.qml   (pragma Singleton; registered in qmldir: `singleton Theme Theme.qml`)
+// Reads the `themeManager` context property directly — no import needed for it.
 pragma Singleton
 import QtQuick
-import Kobold.Foundation
 QtObject {
-    readonly property color bg:         ThemeManager.bg
-    readonly property color accent:     ThemeManager.accent
+    readonly property color bg:         themeManager.bg
+    readonly property color accent:     themeManager.accent
     // ... 9 more ...
 }
 ```
 
 ### 4.2 Dimensions & scaling — `Metrics` (QML singleton)
 
-QML-owned (no file logic). `scale ∈ {100%, 15%, 200%}` bound to a config-owned value.
+QML-owned (no file logic). `scale ∈ {100%, 150%, 200%}` driven by `themeManager.uiScale`.
 **Policy functions + per-token override tables.** Consumers read **named tokens**, never call the
-policy functions. Values are integer [100, 150, 200] to ensure good map lookup without floating point issues.
+policy functions. `scalePercentage` is integer (100 | 150 | 200) so the `pick()` override tables key
+by integer — no floating-point map lookups.
 
 ```qml
-// Metrics.qml  (pragma Singleton)
+// Metrics.qml  (pragma Singleton) — reads the `themeManager` context property directly
 pragma Singleton
 import QtQuick
-import Kobold.Foundation                 // for Config.uiScale (see CONFIRM-1)
 QtObject {
-    readonly property int scalePercentage: Config.uiScale // 100 | 150 | 200
+    readonly property int scalePercentage: themeManager.uiScale // 100 | 150 | 200
     readonly property real scale: scalePercentage / 100.0
 
     // policies — pick one per token
@@ -258,13 +260,15 @@ QtObject {
     readonly property int  gapM:          dp(8)
     readonly property int  gapL:          dp(12)
     readonly property int  radius:        dp(2)
+    readonly property int  markSize:      dp(16)  // checkbox box / radio ring diameter
     // font pixel sizes (family/weight live in FontType)
     readonly property int  textBody:      dp(14)
     readonly property int  textDetail:    dp(12)
-    // hand-controlled exceptions
-    readonly property real hairline:      pick({ "1": 1, "1.5": 1, "2": 2 })
-    readonly property real insertionLine: pick({ "1": 2, "1.5": 2, "2": 4 })
-    readonly property int  indentGuide:   pick({ "1": 1, "1.5": 2, "2": 2 })
+    // hand-controlled exceptions (integer-keyed pick tables)
+    readonly property real hairline:      pick({ 100: 1, 150: 1, 200: 2 })
+    readonly property real insertionLine: pick({ 100: 2, 150: 2, 200: 4 })
+    readonly property real accentMark:    pick({ 100: 2, 150: 2, 200: 4 })  // tab underline, selected-row bar
+    readonly property int  indentGuide:   pick({ 100: 1, 150: 2, 200: 2 })
     // shell heights, pane minimums, etc. — add per SPEC §4/§10
 }
 ```
@@ -331,16 +335,25 @@ Bootstrap Icons 1.13.1 (MIT), 16×16 viewBox, filled, single colour. **~50 curat
   dir on import path vs. QML module) against *Qt Quick Controls → Creating a Custom Style* before
   finalising. Can use the `self.engine.addImportPath(...)` directive to make the style discoverable.
 - Controls to implement (initial set): `Button`, `ToolButton`, `CheckBox`, `RadioButton`,
-  `Menu` + `MenuItem`, `ComboBox` (the real value-selector `▾`), `TextField`, `SpinBox`, `DoubleSpinBox`,  `ScrollBar`, `TabBar`, `TabButton`,`Slider`, `ToolTip`, `Label`/Text conventions. (The action-selector menu-button and toggle buttons per SPEC §7 may be app components, not restyled primitives — decide during Phase 2.)
+  `Menu` + `MenuItem`, `MenuBar` + `MenuBarItem`, `ComboBox` (the real value-selector `▾`),
+  `TextField`, `SpinBox`, `DoubleSpinBox`, `ScrollBar`, `TabBar`, `TabButton`, `Slider`, `SplitView`,
+  `ToolTip`, `Label`/Text conventions. (The action-selector menu-button and toggle buttons per
+  SPEC §7 may be app components, not restyled primitives — decide during Phase 2.)
+- **Placement rule:** generic, QQC2-adjacent controls (including `MenuBar`, `SplitView`, `ToolButton`)
+  live here as style templates in `style/qml/Kobold/`; custom single-purpose components (`InputButton`,
+  `Chip`, …) live in `Kobold.Internal` (§4.6).
 
 ### 4.6 Modules & boundary
 
-- **`Kobold.Foundation`** — `ThemeManager`, `Theme`, `Metrics`, `FontType`, `AppIcon`, `Config`
-  surface. Shared by everything.
+- **`Kobold.Foundation`** — the QML singletons `Theme`, `Metrics`, `FontType`, `AppIcon`. Shared by
+  everything. (`ThemeManager` is the Python source of truth behind `Theme`, exposed as the
+  `themeManager` context property — see §4.1; `uiScale` lives on it, not on a separate `Config`.)
 - **The Kobold style** — control templates (consumed implicitly via `import QtQuick.Controls`).
-- **`Kobold.Internal.*`** — internal app components (`ActionRow`, `SlotHeader`, `InputRow`, `Chip`,
-  `BindingHeader`, `SchemePicker`, shell, multi-input source row). Churn freely. **Plugins never
-  import these.**
+  Generic, QQC2-adjacent controls that are not stock QQC2 types (`MenuBar`, `SplitView`, `ToolButton`)
+  also live here.
+- **`Kobold.Internal.*`** — custom single-purpose app components (`ActionRow`, `SlotHeader`,
+  `InputButton`, `Chip`, `BindingHeader`, `SchemePicker`, multi-input source row). Churn freely.
+  **Plugins never import these.**
 - **`Kobold.Controls`** — the *public plugin surface*: re-exports Foundation singletons + `AppIcon`
   + A curated set of within-action config building blocks (labelled row, inline-sentence helper,
   field wrappers). Encapsulation/allow list, not versioning. Type names must not collide with
@@ -348,58 +361,62 @@ Bootstrap Icons 1.13.1 (MIT), 16×16 viewBox, filled, single colour. **~50 curat
 
 ### 4.7 Suggested repo layout (`CONFIRM-3` — adjust to real paths)
 
+One `Kobold/` directory holds both the style and the submodules: the control templates sit in it
+directly, the submodules are subdirectories beneath it (exactly as `QtQuick` / `QtQuick.Controls`).
+
 ```
 gremlin/ui/
-├── theme_manager.py     (@QmlElement/@QmlSingleton, QML_IMPORT_NAME="Gremlin.Foundation")
+├── theme_manager.py     (plain QObject; exposed via setContextProperty("themeManager", …))
 ├── icon_provider.py     (QQuickImageProvider; registered on the engine at startup)
 
 style/
 ├── qml/                            ← QML import ROOT (engine.addImportPath points here)
-│   ├── Kobold/
-│   │   ├── Foundation/             ← import Kobold.Foundation
-│   │   │   ├── qmldir
-│   │   │   ├── Theme.qml           (pragma Singleton facade)
-│   │   │   ├── Metrics.qml         (pragma Singleton)
-│   │   │   ├── FontType.qml        (pragma Singleton)
-│   │   │   └── AppIcon.qml
-│   │   ├── Controls/               ← import Kobold.Controls  (PUBLIC plugin kit)
-│   │   │   ├── qmldir
-│   │   │   ├── LabeledRow.qml
-│   │   │   ├── InlineRow.qml
-│   │   │   └── …field wrappers…    (re-exports Foundation singletons + AppIcon)
-│   │   └── Internal/               ← import Kobold.Internal  (app-only; plugins MUST NOT import)
-│   │       ├── qmldir
-│   │       ├── ActionRow.qml
-│   │       ├── SlotHeader.qml
-│   │       ├── InputRow.qml
-│   │       ├── Chip.qml
-│   │       ├── BindingHeader.qml
-│   │       └── shell/…             (menu, toolbar, tabs, footer, split layout)
-│   └── Kobold/                     ← the STYLE (NOT imported; selected via QQuickStyle.setStyle)
-│       ├── qmldir                  (optional; Basic is the fallback for anything absent)
-│       ├── Button.qml
-│       ├── CheckBox.qml
-│       ├── RadioButton.qml
-│       └── …ComboBox, Menu, TextField, SpinBox, ScrollBar, ToolTip, ToolButton…
+│   └── Kobold/                     ← THE STYLE: control templates sit here directly …
+│       ├── qmldir                  (style manifest; Basic is the fallback for anything absent)
+│       ├── Button.qml  CheckBox.qml  RadioButton.qml  ComboBox.qml  Menu.qml  MenuItem.qml
+│       ├── MenuBar.qml  MenuBarItem.qml  TextField.qml  SpinBox.qml  ScrollBar.qml
+│       ├── TabBar.qml  TabButton.qml  ToolTip.qml  ToolButton.qml  SplitView.qml  Label.qml
+│       │                             (selected via QQuickStyle.setStyle, not imported)
+│       ├── Foundation/             ← import Kobold.Foundation
+│       │   ├── qmldir
+│       │   ├── Theme.qml           (pragma Singleton facade over `themeManager`)
+│       │   ├── Metrics.qml         (pragma Singleton)
+│       │   ├── FontType.qml        (pragma Singleton)
+│       │   └── AppIcon.qml
+│       ├── Controls/               ← import Kobold.Controls  (PUBLIC plugin kit)
+│       │   ├── qmldir
+│       │   ├── LabeledRow.qml
+│       │   ├── InlineRow.qml
+│       │   └── …field wrappers…    (re-exports Foundation singletons + AppIcon)
+│       └── Internal/               ← import Kobold.Internal  (app-only; plugins MUST NOT import)
+│           ├── qmldir
+│           ├── ActionRow.qml
+│           ├── SlotHeader.qml
+│           ├── InputButton.qml
+│           ├── Chip.qml
+│           ├── DeviceInputList.qml
+│           └── BindingHeader.qml
 ├── playground/                     ← gallery app (Phase 3); its own main.qml
 ├── assets/
 │   ├── icons/*.svg                 ← Bootstrap glyphs (bundled in qrc)
 │   └── fonts/*.otf                 ← IBM Plex 400/600 (bundled in qrc)
 ├── themes/                         ← light.json, dark.json, scheme.schema.json (shipped → qrc)
 
-test/lint/                          ← §7 lint scripts + Metrics/scheme tests
+qml/                                ← legacy app-composition (Main.qml, DeviceTabBar.qml,
+                                       DeviceList.qml, …); migrating into the Kobold tiers above
+test/unit/                          ← test_style_lint.py, test_metrics.py, test_theme_manager.py
 ```
 
 **Module → import → contents (the map at a glance):**
 
 | Import name                | Disk (under import root) | Holds                                   | Consumed by                                              |
 | -------------------------- | ------------------------ | --------------------------------------- | -------------------------------------------------------- |
-| `Kobold.Foundation`        | `Kobold/Foundation/`     | tokens, provider, singletons, `AppIcon` | everything                                               |
+| `Kobold.Foundation`        | `Kobold/Foundation/`     | `Theme`/`Metrics`/`FontType`/`AppIcon`  | everything                                               |
 | `Kobold.Controls`          | `Kobold/Controls/`       | public kit helpers + re-exports         | **plugins**                                              |
-| `Kobold.Internal`          | `Kobold/Internal/`       | app components + shell                  | app only (never plugins)                                 |
-| *(the style)* `Instrument` | `Instrument/`            | QQC2 control templates                  | implicit via `QtQuick.Controls` + `QQuickStyle.setStyle` |
+| `Kobold.Internal`          | `Kobold/Internal/`       | custom single-purpose app components    | app only (never plugins)                                 |
+| *(the style)* `Kobold`     | `Kobold/` (files direct) | QQC2 control templates + generic controls | implicit via `QtQuick.Controls` + `QQuickStyle.setStyle` |
 
-**Example `qmldir`** (`Gremlin/Foundation/qmldir`) — QML singletons need explicit entries; the Python `@QmlElement` types register themselves when their module is imported:
+**Example `qmldir`** (`Kobold/Foundation/qmldir`) — the QML singletons need explicit entries. `ThemeManager` is *not* here: it is a Python `QObject` reached through the `themeManager` context property (§4.1), and `Theme.qml` is the QML-side facade over it:
 
 ```
 module Kobold.Foundation
@@ -425,11 +442,11 @@ load_fonts()                                  # QFontDatabase.addApplicationFont
 engine = QQmlApplicationEngine()
 engine.addImageProvider("icon", IconProvider())
 
-# 3) make the import root discoverable, and import Python-side modules so their
-#    @QmlElement types register into Gremlin.Foundation / etc.
+# 3) make the import root discoverable, and expose the Python source-of-truth as a
+#    context property so Theme.qml / Metrics.qml can bind to it.
 engine.addImportPath("qrc:/style/qml")              # or the on-disk import root
-import gremlin.style.qml.Kobold.Foundation.ThemeManager   # noqa: triggers registration
-# … import any other @QmlElement-bearing modules …
+theme_manager = ThemeManager()
+engine.rootContext().setContextProperty("themeManager", theme_manager)
 
 engine.load("qrc:/qml/main.qml")
 ```
@@ -471,7 +488,7 @@ engine.load("qrc:/qml/main.qml")
 
   - **Goal:** tokens + assets available to QML.
   - **Depends on:** nothing.
-  - **Deliverables:** `ThemeManager.py` (11 tokens + `changed`, scheme discovery/load/validate over a `QFile`/`QDir` roots list = `[":/themes"]`), `Theme.qml` facade, `Metrics.qml`, `FontType.qml`, font loading in the Python entry point, `IconProvider` + `AppIcon.qml`, `themes/light.json`, `themes/dark.json`, `scheme.schema.json`, `Gremlin.Foundation` `qmldir`.
+  - **Deliverables:** `ThemeManager.py` (11 tokens + `changed`, scheme discovery/load/validate over a `QFile`/`QDir` roots list = `[":/themes"]`), `Theme.qml` facade, `Metrics.qml`, `FontType.qml`, font loading in the Python entry point, `IconProvider` + `AppIcon.qml`, `themes/light.json`, `themes/dark.json`, `scheme.schema.json`, `Kobold.Foundation` `qmldir`.
   - **Exposes:** `Theme`, `Metrics`, `FontType`, `AppIcon`.
   - **DoD:** a throwaway QML page shows a rectangle in each of the 11 tokens, text in Sans+Mono at 12/14 in 400/600, and one `AppIcon` that recolours when the active scheme is swapped from Python. Load-time validator rejects a deliberately malformed scheme with a clear error. All scheme IO via `QFile`.
   - **Spec refs:** §3, §4, §5, §6.
@@ -483,7 +500,7 @@ engine.load("qrc:/qml/main.qml")
 
   - **Goal:** every basic control renders in the new look app-wide.
   - **Depends on:** Phase 1.
-  - **Deliverables:** the Instrument style dir (control templates in §4.5), `QQuickStyle.setStyle` wired **before** engine load, `setFallbackStyle("Basic")`, qrc/import-path registration.
+  - **Deliverables:** the Kobold style dir (control templates in §4.5), `QQuickStyle.setStyle` wired **before** engine load, `setFallbackStyle("Basic")`, qrc/import-path registration.
   - **Consumes:** Foundation. **Exposes:** the active style (implicit).
   - **DoD:** each implemented control renders from tokens across both themes and all three zooms, with correct states (rest/hover/pressed/checked/focused/disabled/error). Checkboxes/radios show **accent mark, never a filled box** (R4). No shadows/gradients (R2/§2.3). Focus outline is `2px, offset -2px` accent.
   - **Spec refs:** §7, §2 (R1/R2/R4).
@@ -506,7 +523,7 @@ engine.load("qrc:/qml/main.qml")
 
   - **Goal:** SPEC §9 left pane.
   - **Depends on:** Phases 1–3.
-  - **Deliverables:** `InputRow` (48px, identifier always-in-full + right-aligned 12px `fgMuted` description, chips row with render-all-then-`+n`-on-true-overflow), `bgAlt` recessed well, rows = `bg` + 1px `line` + 2px radius + 8px side margin + 4px gap, selection = `bgSelected` + 2px accent left bar.
+  - **Deliverables:** `InputButton` (48px, identifier always-in-full + right-aligned 12px `fgMuted` description, chips row with render-all-then-`+n`-on-true-overflow), `bgAlt` recessed well, rows = `bg` + 1px `line` + 2px radius + 8px side margin + 4px gap, selection = `bgSelected` + 2px accent left bar.
   - **DoD:** an unbound row is a complete 48px row (not truncated); chips never abbreviate; `+n` only on measured overflow; description = accumulated *modified* action names only.
   - **Spec refs:** §9.
   - **Watch-outs:** description and chips never duplicate; hover popup is future work — reserve, don't build.
@@ -537,8 +554,8 @@ engine.load("qrc:/qml/main.qml")
   > **Detailed doc:** `phases/phase_7_plugins.md`
 
   - **Goal:** migrate the plugin config bodies.
-  - **Depends on:** Phases 1–6, and `Gremlin.Controls` finalised.
-  - **Deliverables:** `Gremlin.Controls` public kit (within-action helpers); migrate each plugin's QML config view to consume it; the multi-input source-row pattern (SPEC §11: labelled group + N source rows; unassigned source row is a first-class state carrying its instruction; one assign widget; `activation-mode: disallowed` → no TriggerMode, reserve no space).
+  - **Depends on:** Phases 1–6, and `Kobold.Controls` finalised.
+  - **Deliverables:** `Kobold.Controls` public kit (within-action helpers); migrate each plugin's QML config view to consume it; the multi-input source-row pattern (SPEC §11: labelled group + N source rows; unassigned source row is a first-class state carrying its instruction; one assign widget; `activation-mode: disallowed` → no TriggerMode, reserve no space).
   - **DoD:** plugins reskin automatically from the style; residual work is **layout reflow** from the new 24px height / 2px grid, not reconstruction. Kit type names don't collide with QtQuick.Controls.
   - **Spec refs:** §7, §8 (config), §11.
   - **Watch-outs:** align within an action only; inline-sentence configs stay sentences; **flag** the §11 two-names issue (`OPEN-1`), don't fix it.
@@ -549,19 +566,25 @@ engine.load("qrc:/qml/main.qml")
 
 **Gating in CI (now):**
 
-- **Static grep/regex over QML** (fail on any hit):
+- **`scripts/lint_style.py` — static grep/regex over QML** (fail on any hit):
   - hex colour literals outside `themes/*.json` → must be `Theme.*`
   - raw px in styling positions (width/height/spacing/margins/radius/border/font size) → must be
-    `Metrics.*`
+    `Metrics.*` (bare `0`, `2`, `-2` are the sanctioned literals — zero, and the fixed focus-ring
+    stroke/outset)
   - `box-shadow`, `gradient`, `Qt.rgba(`, `color-mix`, `layer.effect` used for shadow, `opacity`
     used as tint
   - `pointSize` / `pt` font sizes → must be `pixelSize` from `Metrics`
   - `font.pixelSize` literals not sourced from `Metrics` → must be `{12,14}` only, via `Metrics`
-- **Metrics-resolution unit test:** resolve every `Metrics` token at scale ∈ {1.0, 1.5, 2.0}; assert
-  each is an integer **or** a declared exception (`hairline`, `insertionLine`, `indentGuide`, 1px
-  border). Catches grid violations invisible to the eye.
-- **Scheme-schema test:** every shipped scheme validates against `scheme.schema.json`; exactly 11
-  colour keys; no alpha.
+  - **Scope:** the gate scans `style/qml/`. `action_plugins/*/*.qml` are in scope and come under the
+    gate as Phase 7 migrates them (expect a wall of violations before then — treat it as the
+    migration to-do list, not an instant hard gate). Legacy top-level `qml/` is **excluded** until
+    its files migrate into the Kobold tiers.
+- **Metrics-resolution unit test** (`test/unit/test_metrics.py`, separate from the lint script):
+  resolve every `Metrics` token at scale ∈ {1.0, 1.5, 2.0}; assert each is an integer **or** a
+  declared exception (`hairline`, `insertionLine`, `accentMark`, `indentGuide`, 1px border). Catches
+  grid violations invisible to the eye.
+- **Scheme-schema test** (`test/unit/test_theme_manager.py`): every shipped scheme validates against
+  `scheme.schema.json`; exactly 11 colour keys; no alpha.
 
 **Human (now):** visual inspection of the playground across both themes × three zooms × states.
 Manual spec checks worth running periodically: cover-the-labels (§12.4), count accent marks ~2–4
@@ -575,8 +598,10 @@ Manual spec checks worth running periodically: cover-the-labels (§12.4), count 
 
 - **`OPEN-1` (from SPEC §11):** `merge-axis` has two editable names — `label` (shared instance, in
   the combo) and `action-label` (this node, in the header). Nothing says which is which. **Ignore the user will fix at some point**
-- **`CONFIRM-1`:** the existing **configuration-management class** API — how `ThemeManager` reads the
-  selected scheme id and how `Metrics`/`Config.uiScale` is surfaced to QML. *(Human to provide.)* Read `gremlin/config.py` to understand the class.
+- **`CONFIRM-1` (resolved):** `ThemeManager` reads the selected scheme id from the existing config
+  class, and **`uiScale` lives on `ThemeManager`** (100 | 150 | 200), reached from QML through the
+  `themeManager` context property — there is no separate `Config` singleton. `Metrics` binds
+  `scalePercentage: themeManager.uiScale`. See `gremlin/config.py` and `gremlin/ui/theme_manager.py`.
 - **`CONFIRM-2`:** exact 6.11 packaging/registration for the custom style from qrc — verify against
   *Creating a Custom Style* before finalising Phase 2.
 - **`CONFIRM-3`:** real repo directory paths and module import names.
@@ -594,7 +619,7 @@ Manual spec checks worth running periodically: cover-the-labels (§12.4), count 
 - **Scheme** — a colour theme: one JSON file, 11 tokens + meta. Bundled (qrc) or user (`%USERPROFILE%`).
 - **Token** — a named colour (`Theme.*`) or dimension (`Metrics.*`). The only legal source of a
   colour or a dimension.
-- **Foundation / Instrument style / Internal / Controls** — the four module tiers (§4.6).
+- **Foundation / the Kobold style / Internal / Controls** — the four module tiers (§4.6).
 - **Action / slot / RootAction / library / sequence** — domain model (§5).
 - **Config body** — the plugin-supplied UI under an action header; the plugin's only responsibility.
 - **Tree scaffolding** — the core-drawn chevron/icon/header/slot-headers/guides/indent.

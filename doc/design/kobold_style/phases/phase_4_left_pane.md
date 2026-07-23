@@ -30,6 +30,8 @@ shadow** (R2).
   abbreviations, with a `+n` overflow marker. So chips communicate **structure**.
 - **Intent (description) and structure (chips) never say the same thing.**
 
+See the actual implementation of this in `InputButton.qml` for details.
+
 **`+n` overflow — measure, don't guess.** Render *all* chips, measure, and drop only the ones that
 genuinely don't fit, replacing them with `+n`. Example: an axis with 4 actions shows all four at
 400px; a hat with 8 overflows and shows `+n`. Do not pre-truncate by count.
@@ -41,7 +43,7 @@ row's left edge. Both, together.
 
 ## What you're building
 
-### `InputRow.qml` (internal component)
+### `InputButton.qml` (internal component)
 
 - Fixed height **48px** (× scale), **4px** gap between rows (52px pitch). Unbound rows are the same
   48px height — an empty row is complete.
@@ -54,7 +56,7 @@ row's left edge. Both, together.
 
 ### Chips
 
-- Flat labels: `bgAlt` (or `bg`) fill, 1px `line`, `fg` text, **full action names**, **no icons**
+- Flat labels: `bgAlt` fill, 1px `line`, `fg` text, **full action names**, **no icons**
   (12px is too small to read a glyph), **no abbreviations**.
 - **Overflow:** lay them out, measure available width, and show `+n` only for chips that don't fit
   (`fgMuted`). `+n` appears **only** on real overflow.
@@ -63,8 +65,9 @@ row's left edge. Both, together.
 
 ### The list
 
-- `ListView` over the selected device's inputs, `reuseItems: true`, delegate = `InputRow`.
+- `ListView` over the selected device's inputs, `reuseItems: true`, delegate = `InputButton`.
 - Pane background `bgAlt`.
+- See `DeviceInputList.qml` for the current implementation.
 
 ---
 

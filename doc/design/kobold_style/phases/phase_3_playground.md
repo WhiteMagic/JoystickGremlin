@@ -47,7 +47,7 @@ the resolution/schema tests. See guide §7 for the trigger to add screenshots la
   side by side. Label each state.
 - Include the tokens themselves: a swatch strip of all 11 colours, and text specimens (Sans/Mono ×
   400/600 × 12/14) so type and colour regressions show up immediately.
-- As later phases add components (InputRow, ActionRow, chips, shell bits), add a gallery section for
+- As later phases add components (InputButton, ActionRow, chips, shell bits), add a gallery section for
   each. The gallery grows with the system.
 
 ### 2. Lint scripts (`scripts/`)
