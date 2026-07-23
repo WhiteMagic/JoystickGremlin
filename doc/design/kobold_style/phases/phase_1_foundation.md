@@ -11,26 +11,29 @@ model). **Depends on:** nothing. **Enables:** every other phase.
 ## Concepts for this phase (read before coding)
 
 **QML singleton.** A single shared object instance that any QML file can reach by name without
-creating it. You declare one either in QML (`pragma Singleton` + a `qmldir` entry) or in Python
-(`@QmlElement @QmlSingleton`). Consumers just write `Theme.bg`, `Metrics.rowInput`, etc. — no
-instance to pass around. We use singletons because colours/metrics/fonts are global and read from
-thousands of places.
+creating it. `Theme`, `Metrics` and `FontType` are QML singletons (`pragma Singleton` + a `qmldir`
+entry). Consumers just write `Theme.bg`, `Metrics.rowInput`, etc. — no instance to pass around. We
+use singletons because colours/metrics/fonts are global and read from thousands of places.
 
 **Source of truth vs. facade.** We split the theme into two objects on purpose:
 
 - **`ThemeManager` (Python)** is the *source of truth*. It does the real work: find scheme files,
   parse and validate them, hold the currently-active colours, and emit a signal when they change.
-  It exposes 11 colour properties (`bg`, `accent`, …) and one `changed` signal.
+  It exposes 11 colour properties (`bg`, `accent`, …), a `uiScale` property (100 | 150 | 200, read
+  by `Metrics`), and one `changed` signal. **It is exposed to QML as a *context property* named
+  `themeManager`** (`engine.rootContext().setContextProperty("themeManager", …)`) — a plain
+  `QObject`, **not** a `@QmlSingleton`.
 - **`Theme.qml` (QML) is a *facade*.** "Facade" = a thin, simple front object that stands in for a
   more complex one behind it. `Theme.qml` does no work; each of its 11 properties is just
-  `readonly property color bg: ThemeManager.bg`. Consumers only ever touch `Theme`, never
-  `ThemeManager`.
+  `readonly property color bg: themeManager.bg`. Consumers only ever touch `Theme`, never
+  `themeManager` (the one exception is `Metrics`, which reads `themeManager.uiScale` — a dimension,
+  not a colour).
 
-  **Why bother with the facade instead of using `ThemeManager` directly?** Two reasons:
-  1. *Encapsulation* — consumers depend on a stable QML name (`Theme`), not on the Python class.
+  **Why bother with the facade instead of reading `themeManager` directly?** Two reasons:
+  1. *Encapsulation* — consumers depend on a stable QML name (`Theme`), not on the Python object.
   2. *Performance* — when a QML binding like `color: Theme.bg` is evaluated (including every time a
      list delegate is recycled during scrolling), reading a QML property is cheap and stays inside
-     QML. If consumers read `ThemeManager.bg` directly, every read crosses the Python↔QML boundary.
+     QML. If consumers read `themeManager.bg` directly, every read crosses the Python↔QML boundary.
      With the facade, only the **11 facade bindings** cross the boundary, and only when the theme
      actually changes. Thousands of consumer reads stay QML-side. For a UI with 100–200 rows, that
      matters.
@@ -54,12 +57,14 @@ for schemes.**
 
 ## What you're building
 
-### 1. `ThemeManager` (Python singleton — the source of truth)
+### 1. `ThemeManager` (Python — the source of truth)
 
-- A `QObject` decorated `@QmlElement @QmlSingleton`, with `QML_IMPORT_NAME = "Kobold.Foundation"`.
+- A plain `QObject` (no `@QmlElement`/`@QmlSingleton`). The entry point creates one instance and
+  exposes it as the context property `themeManager`
+  (`engine.rootContext().setContextProperty("themeManager", theme_manager)`).
 - Holds a dict `token → QColor` for the active scheme.
 - Exposes **11 `Property(QColor, …, notify=changed)`** named exactly per the token table (guide §3.1),
-  all backed by one `changed = Signal()`.
+  all backed by one `changed = Signal()`; plus a `uiScale` `Property(int)` (100 | 150 | 200).
 - **Scheme discovery/loading** over a roots list using `QFile`/`QDir`:
   - `QDir(root).entryList(["*.json"])` per root; read each file's bytes with `QFile`; `json.loads`.
   - Build a registry: `id (filename stem) → {name, appearance, colors}`. Bundled vs user tracked.
@@ -75,11 +80,7 @@ for schemes.**
   (best-effort on Windows; leaves content untouched).
 
 ```python
-QML_IMPORT_NAME = "Kobold.Foundation"
-QML_IMPORT_MAJOR_VERSION = 1
-
-@QmlElement
-@QmlSingleton
+# Plain QObject — registered via setContextProperty("themeManager", …), not @QmlSingleton.
 class ThemeManager(QObject):
     changed = Signal()
     def __init__(self, parent=None):
@@ -92,36 +93,37 @@ class ThemeManager(QObject):
     # 11 properties, all notify=changed, e.g.:
     accent = Property(QColor, lambda s: s._active["accent"], notify=changed)
     # bg, bgAlt, bgHover, bgSelected, line, fg, fgMuted, fgDisabled, error, warning …
+    uiScale = Property(int, lambda s: s._ui_scale, notify=changed)  # 100 | 150 | 200
 ```
 
 ### 2. `Theme.qml` (QML singleton — the facade)
 
 ```qml
+// Reads the `themeManager` context property directly — no import needed for it.
 pragma Singleton
 import QtQuick
-import Kobold.Foundation
 QtObject {
-    readonly property color bg:         ThemeManager.bg
-    readonly property color bgAlt:      ThemeManager.bgAlt
-    readonly property color bgHover:    ThemeManager.bgHover
-    readonly property color bgSelected: ThemeManager.bgSelected
-    readonly property color line:       ThemeManager.line
-    readonly property color fg:         ThemeManager.fg
-    readonly property color fgMuted:    ThemeManager.fgMuted
-    readonly property color fgDisabled: ThemeManager.fgDisabled
-    readonly property color accent:     ThemeManager.accent
-    readonly property color error:      ThemeManager.error
-    readonly property color warning:    ThemeManager.warning
+    readonly property color bg:         themeManager.bg
+    readonly property color bgAlt:      themeManager.bgAlt
+    readonly property color bgHover:    themeManager.bgHover
+    readonly property color bgSelected: themeManager.bgSelected
+    readonly property color line:       themeManager.line
+    readonly property color fg:         themeManager.fg
+    readonly property color fgMuted:    themeManager.fgMuted
+    readonly property color fgDisabled: themeManager.fgDisabled
+    readonly property color accent:     themeManager.accent
+    readonly property color error:      themeManager.error
+    readonly property color warning:    themeManager.warning
 }
 ```
 Declare it in `qmldir`: `singleton Theme Theme.qml`.
 
 ### 3. `Metrics.qml` (QML singleton — dimensions + scaling)
 
-Implement exactly as guide §4.2: `scale` bound to a config value; policy functions `dp`/`even`/`pick`;
-named dimension tokens; hand-controlled exceptions (`hairline`, `insertionLine`, `indentGuide`).
-Consumers read named tokens, never call the policy functions. Add the shell heights and pane minimums
-from guide §3.2/SPEC §10.
+Implement exactly as guide §4.2: `scalePercentage: themeManager.uiScale`; policy functions
+`dp`/`even`/`pick` (with integer-keyed `pick` tables); named dimension tokens; hand-controlled
+exceptions (`hairline`, `insertionLine`, `accentMark`, `indentGuide`). Consumers read named tokens,
+never call the policy functions. Add the shell heights and pane minimums from guide §3.2/SPEC §10.
 
 ### 4. `FontType.qml` (QML singleton) + Python font loading
 
@@ -156,8 +158,8 @@ singleton Metrics   Metrics.qml
 singleton FontType  FontType.qml
 AppIcon             AppIcon.qml
 ```
-(The `@QmlElement` Python types register themselves when their module is imported at startup — see
-guide §4.7 wiring.)
+(`ThemeManager` is **not** listed here — it is a plain `QObject` reached through the `themeManager`
+context property set at startup; see guide §4.7 wiring.)
 
 ---
 

@@ -36,7 +36,13 @@ no colour/tone shift. Just the three readouts.
 
 ---
 
-## What you're building (all internal components)
+## What you're building
+
+Placement follows the §4.6 split: generic, QQC2-adjacent controls (`MenuBar`, `SplitView`,
+`ToolButton`) are **style templates** in `style/qml/Kobold/`; the app-composition pieces (device tab
+strip, split container wiring, footer) are custom components destined for `Kobold.Internal` — though
+some currently live in legacy top-level `qml/` (`Main.qml`, `DeviceTabBar.qml`, `DeviceList.qml`)
+pending migration.
 
 ### Root window
 
@@ -78,9 +84,13 @@ no colour/tone shift. Just the three readouts.
       a 1px vertical rule separates the two groups.
 - [ ] Active tab shows underline + SemiBold + `bgSelected`; inactive tabs are **not greyed**, have no
       icons, and are never accent-filled.
+- [ ] The whole shell renders in the Kobold style. The right pane (action tree) is **not yet
+      styled** at this point — that arrives in Phases 6–7; it is a phase boundary, not a permanent
+      carve-out.
 - [ ] `Configuring mode` keeps its label and toolbar position.
 - [ ] Footer shows the three readouts as plain adjacency, with **no** divergence warning/icon/tone,
       even when Editing and Running differ.
+- [ ] Linter script passes without failures.
 
 ## Watch-outs
 
