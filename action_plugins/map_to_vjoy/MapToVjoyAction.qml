@@ -1,110 +1,93 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property MapToVjoyModel action
+    required property MapToVjoyModel action
 
-    implicitHeight: _content.height
-
-
+    // One row: the vJoy device/input picker plus whichever behavior-specific controls
+    // apply, side by side -- vertical space is precious, and none of this is wide
+    // enough to need its own line.
     RowLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
+        spacing: Metrics.gapM
 
         VJoySelector {
-            validTypes: [_root.action.actionBehavior]
+            validTypes: [root.action.actionBehavior]
 
-            // Propagate internal changes to the external interface.
             onSelectionChanged: (vjoyId, inputType, inputId) => {
-                _root.action.vjoyDeviceId = vjoyId
-                _root.action.vjoyInputType = inputType
-                _root.action.vjoyInputId = inputId
-
+                root.action.vjoyDeviceId = vjoyId
+                root.action.vjoyInputType = inputType
+                root.action.vjoyInputId = inputId
             }
 
             Component.onCompleted: {
                 initialize(
-                    _root.action.vjoyDeviceId,
-                    _root.action.actionBehavior,
-                    _root.action.vjoyInputId
+                    root.action.vjoyDeviceId,
+                    root.action.actionBehavior,
+                    root.action.vjoyInputId
                 )
             }
         }
 
-        // UI for a physical axis behaving as an axis
-        Loader {
-            active: _root.action.vjoyInputType == "axis"
-            Layout.fillWidth: true
+        // UI for a physical axis behaving as an axis.
+        RowLayout {
+            visible: root.action.vjoyInputType === "axis"
+            spacing: Metrics.gapM
 
-            sourceComponent: Row {
-                RadioButton {
-                    text: "Absolute"
-                    checked: _root.action.axisMode == "absolute"
+            RadioButton {
+                text: "Absolute"
+                checked: root.action.axisMode === "absolute"
 
-                    onCheckedChanged: {
-                        _root.action.axisMode = "absolute"
-                    }
-                }
-                RadioButton {
-                    id: _relativeMode
-                    text: "Relative"
-                    checked: _root.action.axisMode == "relative"
+                onToggled: { root.action.axisMode = "absolute" }
+            }
+            RadioButton {
+                id: _relativeMode
 
-                    onCheckedChanged: {
-                        _root.action.axisMode = "relative"
-                    }
-                }
+                text: "Relative"
+                checked: root.action.axisMode === "relative"
 
-                Label {
-                    text: "Scaling"
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: _relativeMode.checked
-                }
+                onToggled: { root.action.axisMode = "relative" }
+            }
 
-                FloatSpinBox {
-                    visible: _relativeMode.checked
-                    minValue: 0
-                    maxValue: 100
-                    stepSize: 0.1
-                    value: _root.action.axisScaling
+            Text {
+                text: "Scaling"
+                visible: _relativeMode.checked
+                color: Theme.fg
+                font.family: FontType.sans
+                font.pixelSize: Metrics.textBody
+            }
 
-                    onValueModified: (newValue) => {
-                        _root.action.axisScaling = newValue
-                    }
-                }
+            DoubleSpinBox {
+                visible: _relativeMode.checked
+                from: 0
+                to: 100
+                stepSize: 0.1
+                decimals: 2
+                value: root.action.axisScaling
+
+                onValueModified: (value) => { root.action.axisScaling = value }
             }
         }
-        // UI for a button input
-        Loader {
-            active: _root.action.vjoyInputType == "button"
-            Layout.fillWidth: true
 
-            sourceComponent: Row {
-                Switch {
-                    text: "Invert activation"
-                    checked: _root.action.buttonInverted
+        // UI for a button input.
+        CheckBox {
+            visible: root.action.vjoyInputType === "button"
+            text: "Invert activation"
+            checked: root.action.buttonInverted
 
-                    onToggled: function()
-                    {
-                        _root.action.buttonInverted = checked
-                    }
-                }
-            }
+            onToggled: { root.action.buttonInverted = checked }
         }
     }
 }
