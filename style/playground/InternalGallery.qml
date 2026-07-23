@@ -110,6 +110,172 @@ ScrollView {
             }
         }
 
+        // -- Action tree: recursive grammar (ActionRow / SlotHeader / TreeIndent) --------
+        Section {
+            title: "Action tree -- recursive grammar (SPEC §8 worked example)"
+
+            ColumnLayout {
+                Layout.preferredWidth: 460
+                spacing: 0
+
+                ActionRow {
+                    Layout.fillWidth: true
+                    iconName: "check"
+                    name: "Condition"
+                }
+                TreeIndent {
+                    Layout.fillWidth: true
+                    hasChildren: true
+
+                    SlotHeader {
+                        Layout.fillWidth: true
+                        label: "True"
+                        actionNames: ["Chain", "Macro", "Response Curve"]
+                    }
+                    ActionRow {
+                        Layout.fillWidth: true
+                        iconName: "check"
+                        name: "Landing / Lights"
+                    }
+                    TreeIndent {
+                        // Leaf: config only, no children -- no guide, width still reserved.
+                        Layout.fillWidth: true
+                        hasChildren: false
+
+                        Text {
+                            text: "[vJoy Device 1 ▾] [Hat 3 ▾]"
+                            color: Theme.fgMuted
+                            font.family: FontType.sans
+                            font.pixelSize: Metrics.textDetail
+                        }
+                    }
+                    SlotHeader {
+                        Layout.fillWidth: true
+                        label: "False"
+                        actionNames: ["Chain", "Macro", "Response Curve"]
+                    }
+                    ActionRow {
+                        Layout.fillWidth: true
+                        iconName: "check"
+                        name: "Power management"
+                    }
+                    TreeIndent {
+                        Layout.fillWidth: true
+                        hasChildren: true
+
+                        SlotHeader {
+                            Layout.fillWidth: true
+                            label: "North"
+                            actionNames: ["Map to Keyboard"]
+                        }
+                        ActionRow {
+                            Layout.fillWidth: true
+                            iconName: "check"
+                            name: "Map to Keyboard"
+                            showTriggerMode: true
+                            activateOnPress: true
+                            activateOnRelease: true
+                        }
+                    }
+                }
+                Caption {
+                    text: "cover the labels: the guides alone still mark True/Landing, "
+                        + "False/Power → North/Map"
+                }
+            }
+
+            ColumnLayout {
+                Layout.preferredWidth: 300
+                spacing: Metrics.gapS
+
+                ActionRow {
+                    Layout.fillWidth: true
+                    iconName: "check"
+                    name: "Invalid action"
+                    hasError: true
+                    errorHint: "vJoy device 1 is not connected."
+                }
+                Caption { text: "error state -- hover the icon for the hint tooltip" }
+
+                ActionRow {
+                    Layout.fillWidth: true
+                    iconName: "check"
+                    name: "hover me"
+                }
+                Caption {
+                    text: "at rest the name field's border is transparent (reserved, "
+                        + "invisible) -- hover it to see line+bgAlt appear; the row itself "
+                        + "has no hover fill of its own"
+                }
+            }
+        }
+
+        // -- AddActionMenuButton: ghost (slot header) vs bordered (binding header) -------
+        Section {
+            title: "AddActionMenuButton -- ghost / bordered chrome"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                RowLayout {
+                    spacing: Metrics.gapL
+
+                    AddActionMenuButton {
+                        variant: "ghost"
+                        model: ["Condition", "Chain", "Macro", "Tempo"]
+                    }
+                    AddActionMenuButton {
+                        variant: "bordered"
+                        model: ["Condition", "Chain", "Macro", "Tempo"]
+                    }
+                }
+                Caption {
+                    text: "ghost: no chrome at rest, edge-only on hover, never filled / "
+                        + "bordered: an ordinary button, always"
+                }
+            }
+        }
+
+        // -- Drag & drop insertion-line convention ---------------------------------------
+        Section {
+            title: "Drag & drop -- row-edge band insertion line"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                Rectangle {
+                    Layout.preferredWidth: 300
+                    Layout.preferredHeight: Metrics.insertionLine
+                    color: Theme.line
+                }
+                Caption {
+                    text: "2px insertion line in Theme.line (never accent), shown at the "
+                        + "row-edge band the pointer is over while dragging -- RowDropBand"
+                }
+            }
+        }
+
+        // -- ActionStepTable: macro steps render as a table, not nested actions ---------
+        Section {
+            title: "ActionStepTable -- macro steps render as a table"
+
+            ColumnLayout {
+                Layout.preferredWidth: 420
+                spacing: Metrics.gapS
+
+                ActionStepTable {
+                    Layout.fillWidth: true
+                    columns: ["Type", "Input", "Duration"]
+                    rows: [
+                        ["Key press", "F8", "—"],
+                        ["Pause", "—", "250 ms"],
+                        ["Key release", "F8", "—"]
+                    ]
+                }
+                Caption { text: "flat rows, 1px line separators -- never indented ActionRows" }
+            }
+        }
+
         Item { Layout.preferredHeight: Metrics.gapL }
     }
 }
