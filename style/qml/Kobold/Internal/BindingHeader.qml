@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Kobold.Foundation
+import Kobold.Controls
 
 import Gremlin.Profile
 

@@ -574,6 +574,9 @@ class JoystickGremlinApp(QtWidgets.QApplication):
             gremlin.ui.action_image_generator.ActionSummaryImageProvider(),
         )
         self.engine.addImageProvider("icon", gremlin.ui.icon_provider.IconProvider())
+        self.engine.addImageProvider(
+            "action-icon", gremlin.ui.icon_provider.ActionIconProvider()
+        )
 
         # Create and register singleton instances.
         self.backend = gremlin.ui.backend.Backend(self.engine)

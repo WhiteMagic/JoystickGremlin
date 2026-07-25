@@ -369,6 +369,21 @@ class InputItemBindingModel(QtCore.QObject):
             index = self._index_lookup[index]
         return self._child_lookup.get((index.index, container), [])
 
+    def has_child_actions(self, index: SequenceIndex | int) -> bool:
+        """Returns whether the given action has children in any of its containers.
+
+        Generic across container-naming schemes ("children", "true"/"false", ...) since
+        it inspects `_child_lookup` directly rather than needing to know a specific
+        plugin's container names.
+        """
+        if isinstance(index, int):
+            index = self._index_lookup[index]
+        return any(
+            actions
+            for (parent_index, _container), actions in self._child_lookup.items()
+            if parent_index == index.index
+        )
+
     def get_action_model_by_sidx(self, sidx: int) -> ActionModel:
         if sidx not in self._index_lookup:
             raise GremlinError(f"No action with sequence index {sidx} exists")

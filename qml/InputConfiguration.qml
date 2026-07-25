@@ -55,6 +55,9 @@ Item {
             Layout.fillWidth: true
             scrollbarAlwaysVisible: true
             spacing: Metrics.gapM
+            // Delegates here are whole action-sequence trees, not short uniform rows --
+            // step-scroll can't reach content past the first index (see JGListView.qml).
+            stepScroll: false
 
             // Content to visualize
             model: _root.inputItemModel

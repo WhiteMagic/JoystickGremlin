@@ -15,12 +15,11 @@ from PySide6 import (
 )
 
 
-class IconProvider(QtQuick.QQuickImageProvider):
-    """Rasterizes and recolors the bundled Kobold style icon glyphs on demand.
+class _BaseIconProvider(QtQuick.QQuickImageProvider):
+    """Shared `image://<provider>/<id>?c=<hex>&px=<size>` pipeline.
 
-    Handles `image://icon/<name>?c=<hex>&px=<size>` requests: loads
-    `:/style-icons/<name>.svg`, substitutes the literal string `currentColor`
-    for `#<hex>` and rasterizes to a QImage of the requested `px` size.
+    Handles caching, id parsing, `currentColor` substitution and rasterization.
+    Subclasses only decide how `<id>` (the part before `?`) maps to a QFile.
     """
 
     def __init__(self, max_cache_size: int = 200) -> None:
@@ -44,7 +43,7 @@ class IconProvider(QtQuick.QQuickImageProvider):
 
         Args:
             image_id: The "<name>?c=<hex>&px=<size>" part of the image URI
-                image://icon/<image id>
+                image://<provider>/<image id>
             size: Output parameter for the actual image size (not used)
             requested_size: The size requested by QML (not used)
 
@@ -86,19 +85,31 @@ class IconProvider(QtQuick.QQuickImageProvider):
         px = int(params.get("px", "16"))
         return name, color, px
 
-    def _render(self, name: str, color: str, px: int) -> QtGui.QImage:
-        """Loads, recolors, and rasterizes the named icon SVG.
+    def _open(self, name: str) -> QtCore.QFile:
+        """Maps an icon id to the QFile it should be read from.
 
         Args:
-            name: The icon name, resolved to the resource :/style-icons/<name>.svg
+            name: The id portion (before "?") of the request.
+
+        Returns:
+            A QFile ready to be opened for the icon's SVG source.
+        """
+        raise NotImplementedError
+
+    def _render(self, name: str, color: str, px: int) -> QtGui.QImage:
+        """Loads, recolors, and rasterizes the icon SVG resolved from `name`.
+
+        Args:
+            name: The id portion (before "?") of the request, resolved to a
+                QFile via `_open`.
             color: Hex color (without "#") to substitute for `currentColor`
             px: Width and height, in pixels, to rasterize at
 
         Returns:
-            A QImage of the recolored icon, or a null QImage if the SVG resource for
-            `name` could not be opened.
+            A QImage of the recolored icon, or a null QImage if the SVG source
+            for `name` could not be opened.
         """
-        handle = QtCore.QFile(f":/style-icons/{name}.svg")
+        handle = self._open(name)
         if not handle.open(
             QtCore.QIODevice.OpenModeFlag.ReadOnly | QtCore.QIODevice.OpenModeFlag.Text
         ):
@@ -122,3 +133,26 @@ class IconProvider(QtQuick.QQuickImageProvider):
             painter.end()
 
         return image
+
+
+class IconProvider(_BaseIconProvider):
+    """Rasterizes and recolors the bundled Kobold style icon glyphs on demand.
+
+    Handles `image://icon/<name>?c=<hex>&px=<size>` requests by loading
+    `:/style-icons/<name>.svg`.
+    """
+
+    def _open(self, name: str) -> QtCore.QFile:
+        return QtCore.QFile(f":/style-icons/{name}.svg")
+
+
+class ActionIconProvider(_BaseIconProvider):
+    """Rasterizes and recolors plugin-authored action type icons on demand.
+
+    Handles `image://action-icon/<uri>?c=<hex>&px=<size>` requests, where
+    `<uri>` is a `file:///...` URI pointing directly at an `icon.svg` on disk —
+    core or user-authored alike, since neither is embedded in the qrc.
+    """
+
+    def _open(self, name: str) -> QtCore.QFile:
+        return QtCore.QFile(QtCore.QUrl(name).toLocalFile())

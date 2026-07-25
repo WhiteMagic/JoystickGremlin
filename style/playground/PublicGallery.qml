@@ -468,6 +468,32 @@ ScrollView {
             }
         }
 
+        // -- AddActionMenuButton (Kobold.Controls) ------------------------
+        Section {
+            title: "AddActionMenuButton -- ghost / bordered chrome"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                RowLayout {
+                    spacing: Metrics.gapL
+
+                    AddActionMenuButton {
+                        variant: "ghost"
+                        model: ["Condition", "Chain", "Macro", "Tempo"]
+                    }
+                    AddActionMenuButton {
+                        variant: "bordered"
+                        model: ["Condition", "Chain", "Macro", "Tempo"]
+                    }
+                }
+                Caption {
+                    text: "ghost: no chrome at rest, edge-only on hover, never filled / "
+                        + "bordered: an ordinary button, always"
+                }
+            }
+        }
+
         Item { Layout.preferredHeight: Metrics.gapL }
     }
 }
