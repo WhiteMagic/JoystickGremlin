@@ -7,8 +7,6 @@ LogicalDevice       LogicalDevice.qml
 KeyboardInputList   KeyboardInputList.qml
 ActionRow           ActionRow.qml
 ActivationToggle    ActivationToggle.qml
-SlotHeader          SlotHeader.qml
-AddActionMenuButton AddActionMenuButton.qml
 TreeIndent          TreeIndent.qml
 BindingHeader       BindingHeader.qml
 RowDropBand         RowDropBand.qml

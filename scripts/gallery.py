@@ -47,6 +47,12 @@ def main() -> int:
     engine = QtQml.QQmlApplicationEngine()
     engine.addImportPath(gremlin.util.resource_path("style/qml"))
     engine.addImageProvider("icon", gremlin.ui.icon_provider.IconProvider())
+    engine.addImageProvider(
+        "action-icon", gremlin.ui.icon_provider.ActionIconProvider()
+    )
+    QtCore.QDir.addSearchPath(
+        "core_plugins", gremlin.util.resource_path("action_plugins/")
+    )
 
     manager = gremlin.ui.theme_manager.ThemeManager()
     engine.rootContext().setContextProperty("themeManager", manager)

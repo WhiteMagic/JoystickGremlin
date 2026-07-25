@@ -4,7 +4,9 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     cast,
@@ -25,6 +27,7 @@ from gremlin.types import (
     ActionActivationMode,
     InputType,
 )
+from gremlin.util import resource_path
 
 if TYPE_CHECKING:
     from gremlin.base_classes import AbstractActionData
@@ -106,6 +109,24 @@ class ActionModel(QtCore.QObject):
             "ActionModel._qml_path_impl not implemented in subclass"
         )
 
+    def _icon_path_impl(self) -> str:
+        """Resolves the plugin-authored type icon for this action, tinted to `fg`.
+
+        Unlike `_qml_path_impl`, this has a concrete default and is not overridden
+        per plugin: resolved relative to the data class's own module file, so it
+        works identically for core and user-authored plugins alike, without
+        assuming any tag/directory naming convention. Falls back to a shared
+        placeholder if the plugin has not shipped its own `icon.svg`. The returned
+        `file:///...` URI is consumed by `image://action-icon/<uri>?c=<hex>&px=<n>`
+        (`gremlin/ui/icon_provider.py`), which substitutes `currentColor` for the
+        requested colour and rasterizes it.
+        """
+        print(self._data.tag)
+        own_icon = Path(inspect.getfile(type(self._data))).parent / "icon.svg"
+        if own_icon.exists():
+            return own_icon.as_uri()
+        return Path(resource_path("action_plugins/action-placeholder.svg")).as_uri()
+
     @property
     def input_type(self) -> InputType:
         return self._binding_model.behavior_type
@@ -129,6 +150,14 @@ class ActionModel(QtCore.QObject):
     @QtCore.Property(type=str, notify=actionChanged)
     def qmlPath(self) -> str:
         return self._qml_path_impl()
+
+    @QtCore.Property(type=str, notify=actionChanged)
+    def iconPath(self) -> str:
+        return self._icon_path_impl()
+
+    @QtCore.Property(type=bool, notify=actionChanged)
+    def hasChildren(self) -> bool:
+        return self._binding_model.has_child_actions(self._sequence_index)
 
     @QtCore.Property(type=str, constant=True)
     def icon(self) -> str:
