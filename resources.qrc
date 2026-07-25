@@ -27,5 +27,18 @@
         <file alias="activate.svg">style/assets/icons/activate.svg</file>
         <file alias="options.svg">style/assets/icons/options.svg</file>
         <file alias="input_viewer.svg">style/assets/icons/input_viewer.svg</file>
+        <file alias="grip.svg">style/assets/icons/grip.svg</file>
+        <file alias="warning.svg">style/assets/icons/warning.svg</file>
+        <file alias="error.svg">style/assets/icons/error.svg</file>
+        <file alias="arrow-n.svg">style/assets/icons/arrow-n.svg</file>
+        <file alias="arrow-ne.svg">style/assets/icons/arrow-ne.svg</file>
+        <file alias="arrow-e.svg">style/assets/icons/arrow-e.svg</file>
+        <file alias="arrow-se.svg">style/assets/icons/arrow-se.svg</file>
+        <file alias="arrow-s.svg">style/assets/icons/arrow-s.svg</file>
+        <file alias="arrow-sw.svg">style/assets/icons/arrow-sw.svg</file>
+        <file alias="arrow-w.svg">style/assets/icons/arrow-w.svg</file>
+        <file alias="arrow-nw.svg">style/assets/icons/arrow-nw.svg</file>
+        <file alias="arrow-c.svg">style/assets/icons/arrow-c.svg</file>
+        <file alias="assign.svg">style/assets/icons/assign.svg</file>
     </qresource>
 </RCC>

@@ -9,6 +9,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Kobold.Foundation
+import Kobold.Controls
 import Kobold.Internal
 
 ScrollView {
@@ -120,7 +121,7 @@ ScrollView {
 
                 ActionRow {
                     Layout.fillWidth: true
-                    iconName: "check"
+                    iconPath: Qt.resolvedUrl("../../action_plugins/action-placeholder.svg")
                     name: "Condition"
                 }
                 TreeIndent {
@@ -134,7 +135,7 @@ ScrollView {
                     }
                     ActionRow {
                         Layout.fillWidth: true
-                        iconName: "check"
+                        iconPath: Qt.resolvedUrl("../../action_plugins/action-placeholder.svg")
                         name: "Landing / Lights"
                     }
                     TreeIndent {
@@ -156,7 +157,7 @@ ScrollView {
                     }
                     ActionRow {
                         Layout.fillWidth: true
-                        iconName: "check"
+                        iconPath: Qt.resolvedUrl("../../action_plugins/action-placeholder.svg")
                         name: "Power management"
                     }
                     TreeIndent {
@@ -170,7 +171,7 @@ ScrollView {
                         }
                         ActionRow {
                             Layout.fillWidth: true
-                            iconName: "check"
+                            iconPath: Qt.resolvedUrl("../../action_plugins/action-placeholder.svg")
                             name: "Map to Keyboard"
                             showTriggerMode: true
                             activateOnPress: true
@@ -190,7 +191,7 @@ ScrollView {
 
                 ActionRow {
                     Layout.fillWidth: true
-                    iconName: "check"
+                    iconPath: Qt.resolvedUrl("../../action_plugins/action-placeholder.svg")
                     name: "Invalid action"
                     hasError: true
                     errorHint: "vJoy device 1 is not connected."
@@ -199,7 +200,7 @@ ScrollView {
 
                 ActionRow {
                     Layout.fillWidth: true
-                    iconName: "check"
+                    iconPath: Qt.resolvedUrl("../../action_plugins/action-placeholder.svg")
                     name: "hover me"
                 }
                 Caption {
@@ -207,31 +208,11 @@ ScrollView {
                         + "invisible) -- hover it to see line+bgAlt appear; the row itself "
                         + "has no hover fill of its own"
                 }
-            }
-        }
-
-        // -- AddActionMenuButton: ghost (slot header) vs bordered (binding header) -------
-        Section {
-            title: "AddActionMenuButton -- ghost / bordered chrome"
-
-            ColumnLayout {
-                spacing: Metrics.gapS
-
-                RowLayout {
-                    spacing: Metrics.gapL
-
-                    AddActionMenuButton {
-                        variant: "ghost"
-                        model: ["Condition", "Chain", "Macro", "Tempo"]
-                    }
-                    AddActionMenuButton {
-                        variant: "bordered"
-                        model: ["Condition", "Chain", "Macro", "Tempo"]
-                    }
-                }
                 Caption {
-                    text: "ghost: no chrome at rest, edge-only on hover, never filled / "
-                        + "bordered: an ordinary button, always"
+                    text: "Kobold.Controls.ActionNode (the live wiring of this row onto a "
+                        + "real ActionModel) is not demoed here -- it needs a real action "
+                        + "tree and the app's `backend`/`signal` context objects, so it's "
+                        + "verified in the live app instead."
                 }
             }
         }
@@ -273,6 +254,77 @@ ScrollView {
                     ]
                 }
                 Caption { text: "flat rows, 1px line separators -- never indented ActionRows" }
+            }
+        }
+
+        // -- Plugin type icons: every shipped action_plugins/*/icon.svg -----------------
+        Section {
+            title: "Plugin type icons -- all shipped action_plugins/*/icon.svg"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Metrics.gapM
+
+                    Repeater {
+                        model: [
+                            { dir: "axis_delta", name: "Axis Delta" },
+                            { dir: "chain", name: "Chain" },
+                            { dir: "change_mode", name: "Change Mode" },
+                            { dir: "condition", name: "Condition" },
+                            { dir: "description", name: "Description" },
+                            { dir: "double_tap", name: "Double Tap" },
+                            { dir: "dual_axis_deadzone", name: "Dual Axis Deadzone" },
+                            { dir: "hat_buttons", name: "Hat as Buttons" },
+                            { dir: "load_profile", name: "Load Profile" },
+                            { dir: "macro", name: "Macro" },
+                            { dir: "map_to_keyboard", name: "Map to Keyboard" },
+                            { dir: "map_to_logical_device", name: "Map to Logical Device" },
+                            { dir: "map_to_mouse", name: "Map to Mouse" },
+                            { dir: "map_to_vjoy", name: "Map to vJoy" },
+                            { dir: "merge_axis", name: "Merge Axis" },
+                            { dir: "pause_resume", name: "Pause and Resume" },
+                            { dir: "play_sound", name: "Play Sound" },
+                            { dir: "reference", name: "Reference" },
+                            { dir: "response_curve", name: "Response Curve" },
+                            { dir: "run_command", name: "Run Command" },
+                            { dir: "smart_toggle", name: "Smart Toggle" },
+                            { dir: "split_axis", name: "Split Axis" },
+                            { dir: "tempo", name: "Tempo" },
+                            { dir: "text_to_speech", name: "Text to Speech" }
+                        ]
+
+                        delegate: RowLayout {
+                            required property var modelData
+
+                            spacing: Metrics.gapS
+
+                            Image {
+                                source: "image://action-icon/"
+                                    + Qt.resolvedUrl("../../action_plugins/" + modelData.dir + "/icon.svg")
+                                    + "?c=" + Theme.fg.toString().slice(-6) + "&px=" + Metrics.icon
+                                sourceSize.width: Metrics.icon
+                                sourceSize.height: Metrics.icon
+                                width: Metrics.icon
+                                height: Metrics.icon
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                            }
+                            Text {
+                                text: modelData.name
+                                color: Theme.fg
+                                font.family: FontType.sans
+                                font.pixelSize: Metrics.textDetail
+                            }
+                        }
+                    }
+                }
+                Caption {
+                    text: "every plugin-authored type icon, tinted to fg via the shared "
+                        + "IconProvider pipeline (image://action-icon/...) -- check both themes"
+                }
             }
         }
 

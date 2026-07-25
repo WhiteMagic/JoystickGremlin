@@ -64,3 +64,13 @@ def test_behavior_switch_noop_keeps_children() -> None:
 
     assert [child.id for child in binding.root_action.get_actions()[0]] == child_ids
     assert all(binding.library.has_action(cid) for cid in child_ids)
+
+
+def test_has_child_actions() -> None:
+    iibm = _make_binding_model(InputType.JoystickButton)
+    root_model = iibm.get_action_model_by_sidx(0)
+
+    assert root_model.hasChildren is True
+
+    for child in root_model.getActions("children"):
+        assert child.hasChildren is False

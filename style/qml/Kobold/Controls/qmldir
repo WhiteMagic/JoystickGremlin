@@ -1,4 +1,8 @@
 module Kobold.Controls
-NumericRangeSlider NumericRangeSlider.qml
-HatDirectionToggle HatDirectionToggle.qml
-VJoySelector       VJoySelector.qml
+NumericRangeSlider  NumericRangeSlider.qml
+HatDirectionToggle  HatDirectionToggle.qml
+VJoySelector        VJoySelector.qml
+ActionNode          ActionNode.qml
+SlotHeader          SlotHeader.qml
+AddActionMenuButton AddActionMenuButton.qml
+InputAssignButton  InputAssignButton.qml

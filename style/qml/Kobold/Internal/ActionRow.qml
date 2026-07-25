@@ -18,7 +18,7 @@ Item {
     id: root
 
     property bool expanded: true
-    property string iconName: ""
+    property string iconPath: ""
     property string name: ""
     property bool showTriggerMode: false
     property bool activateOnPress: false
@@ -26,6 +26,12 @@ Item {
     property bool hasError: false
     property string errorHint: ""
     property int depth: 0
+    // The Item that should actually move during a drag -- set by the caller (the row
+    // itself has no opinion on what "the row" means to its parent's layout).
+    property Item dragTarget: null
+    // Exposed so the caller can drive `dragTarget.Drag.active` -- declaring
+    // `drag.target` alone does not do that automatically.
+    readonly property alias dragActive: _dragArea.drag.active
 
     signal toggleExpandedRequested()
     signal nameEdited(string text)
@@ -45,28 +51,44 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Metrics.gapS
 
+        // Stateless trigger, not checkable -- `expanded` is the caller's own property
+        // (round-tripped explicitly through toggleExpandedRequested), not something a
+        // checkable button's internal toggle state should own or fight over.
         ToolButton {
             id: _chevron
 
-            checkable: true
-            checked: root.expanded
             icon.name: "chevron-down"
-            rotation: checked ? 0 : -90
+            rotation: root.expanded ? 0 : -90
 
             onClicked: root.toggleExpandedRequested()
         }
 
-        AppIcon {
+        // Plugin-authored icon, tinted to `fg` only (never a switchable role, unlike
+        // AppIcon) via the dedicated `action-icon` image provider -- a separate
+        // provider from AppIcon's `icon` one, since `root.iconPath` is a `file:///...`
+        // URI onto an arbitrary plugin's icon.svg (core or user-authored), not a name
+        // in the bundled :/style-icons/ set.
+        Image {
             id: _typeIcon
 
-            name: root.iconName
-            role: "fg"
+            source: root.iconPath
+                ? "image://action-icon/" + root.iconPath + "?c="
+                    + Theme.fg.toString().slice(-6) + "&px=" + Metrics.icon
+                : ""
+            sourceSize.width: Metrics.icon
+            sourceSize.height: Metrics.icon
+            width: Metrics.icon
+            height: Metrics.icon
+            fillMode: Image.PreserveAspectFit
+            smooth: true
 
             MouseArea {
                 id: _dragArea
 
                 anchors.fill: parent
                 cursorShape: Qt.OpenHandCursor
+                drag.target: root.dragTarget
+                drag.axis: Drag.YAxis
                 onPressed: root.dragRequested()
             }
         }

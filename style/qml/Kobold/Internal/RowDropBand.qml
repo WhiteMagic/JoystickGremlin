@@ -21,7 +21,11 @@ DropArea {
 
     readonly property real bandHeight: Metrics.gapL
     readonly property bool inTopBand: containsDrag && drag.y < bandHeight
-    readonly property bool valid: validationCallback === null || validationCallback(this)
+    // Mime data is only reachable from the DragEvent handed to onEntered/onDropped, not
+    // from any DropArea property -- so validity has to be tracked as mutable state
+    // updated from those handlers, not computed inline (a bare `validationCallback(this)`
+    // would pass this DropArea, not the drag, to the callback).
+    property bool valid: false
 
     // Overlays `target` exactly (same parent's coordinate space) rather than
     // participating in a layout's own flow -- callers place this as a floating
@@ -32,6 +36,12 @@ DropArea {
     width: target ? target.width : 0
     height: target ? target.height : 0
 
+    onEntered: (drag) => {
+        root.valid = root.validationCallback === null || root.validationCallback(drag)
+    }
+    onExited: () => {
+        root.valid = false
+    }
     onDropped: (drop) => {
         if (root.valid && root.dropCallback !== null) {
             root.dropCallback(drop)
