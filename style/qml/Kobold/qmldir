@@ -1,5 +1,6 @@
 module Kobold
 Button      Button.qml
+ToolBar     ToolBar.qml
 ToolButton  ToolButton.qml
 CheckBox    CheckBox.qml
 RadioButton RadioButton.qml

@@ -44,6 +44,7 @@ Item {
         id: _content
 
         anchors.fill: parent
+        anchors.topMargin: Metrics.gapM
 
         // Show all actions associated with this input. SPEC §8: sequences are independent
         // trees, separated by space -- never a rule between them (InputItemBinding.qml

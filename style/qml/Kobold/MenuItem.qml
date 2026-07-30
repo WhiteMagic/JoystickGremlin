@@ -10,6 +10,10 @@ T.MenuItem {
 
     implicitHeight: Metrics.ctrlH
     implicitWidth: leftPadding + contentItem.implicitWidth + rightPadding
+    // Menu's contentItem is a ListView -- it never stretches its delegates on its own, so
+    // without this every item falls back to its own label width and the hover/selection
+    // fill stops short of the popup's edge.
+    width: ListView.view ? ListView.view.width : implicitWidth
     spacing: Metrics.gapM
 
     font.family: FontType.sans

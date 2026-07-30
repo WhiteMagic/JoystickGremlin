@@ -15,7 +15,7 @@ T.TabButton {
 
     font.family: FontType.sans
     font.pixelSize: Metrics.textBody
-    font.weight: control.checked ? FontType.semiBold : FontType.regular
+    font.weight: FontType.regular
 
     contentItem: Text {
         text: control.text
@@ -25,9 +25,9 @@ T.TabButton {
         verticalAlignment: Text.AlignVCenter
     }
 
-    // Active = 2px accent underline + SemiBold + bgSelected (SPEC §10). Never accent-filled.
+    // Active = 2px accent underline + bgSelected (SPEC §10). Never accent-filled.
     background: Rectangle {
-        color: control.checked ? Theme.bgSelected : control.hovered ? Theme.bgHover : "transparent"
+        color: control.checked ? Theme.bgSelected : control.hovered ? Theme.bgHover : Theme.bgAlt
 
         Rectangle {
             visible: control.checked
