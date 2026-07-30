@@ -1,36 +1,26 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 
-import QtQuick.Controls.Universal
-
-import Gremlin.Profile
 import Gremlin.ActionPlugins
-import Gremlin.Base
-import "../../qml"
+import Gremlin.Profile
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property ChangeModeModel action
+    required property ChangeModeModel action
 
-    ModeHierarchyModel {
-        id: _modeHierarchyModel
-    }
-
-    implicitHeight: _content.height
+    spacing: Metrics.gapM
 
     RowLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
-
+        spacing: Metrics.gapM
 
         ComboBox {
             id: _changeType
@@ -39,25 +29,27 @@ Item {
 
             model: ["Switch", "Previous", "Unwind", "Cycle", "Temporary"]
 
-            Component.onCompleted: function() {
-                currentIndex = find(_root.action.changeType)
+            Component.onCompleted: {
+                currentIndex = find(root.action.changeType)
             }
 
-            onActivated: function() {
-                _root.action.changeType = currentValue
-            }
+            onActivated: { root.action.changeType = currentValue }
         }
 
-        // Mode switch selection UI
+        // Switch to a specific mode.
         RowLayout {
             visible: _changeType.currentValue === "Switch"
+            spacing: Metrics.gapM
 
-            Label {
+            Text {
                 text: "Switch to mode"
+                color: Theme.fg
+                font.family: FontType.sans
+                font.pixelSize: Metrics.textBody
             }
 
-            TooltipComboBox {
-                id: _switch_combo
+            ComboBox {
+                id: _switchCombo
 
                 Layout.preferredWidth: 200
 
@@ -65,21 +57,20 @@ Item {
                 textRole: "name"
                 valueRole: "name"
 
-                Component.onCompleted: function() {
-                    currentIndex = find(_root.action.targetModes[0])
+                Component.onCompleted: {
+                    currentIndex = find(root.action.targetModes[0])
                 }
 
-                onActivated: function() {
-                    _root.action.setTargetMode(currentValue, 0)
+                onActivated: {
+                    root.action.setTargetMode(currentValue, 0)
                 }
 
                 Connections {
                     target: _changeType
                     function onActivated() {
-                        if(visible)
-                        {
-                            _switch_combo.currentIndex = _switch_combo.find(
-                                _root.action.targetModes[0]
+                        if (_switchCombo.visible) {
+                            _switchCombo.currentIndex = _switchCombo.find(
+                                root.action.targetModes[0]
                             )
                         }
                     }
@@ -87,65 +78,77 @@ Item {
             }
         }
 
-        // Switch to previous mode UI
+        // Return to the previously active mode.
         RowLayout {
             visible: _changeType.currentValue === "Previous"
 
-            Label {
+            Text {
                 text: "Change to the previously active mode"
+                color: Theme.fg
+                font.family: FontType.sans
+                font.pixelSize: Metrics.textBody
             }
         }
 
-        // Unwind one mode from the stack UI
+        // Unwind one mode from the stack.
         RowLayout {
             visible: _changeType.currentValue === "Unwind"
 
-            Label {
+            Text {
                 text: "Unwind one mode in the stack"
+                color: Theme.fg
+                font.family: FontType.sans
+                font.pixelSize: Metrics.textBody
             }
         }
 
-        // Mode cycle setup UI
+        // Cycle through a set of modes.
         RowLayout {
             visible: _changeType.currentValue === "Cycle"
+            spacing: Metrics.gapM
 
-            Label {
+            Text {
                 Layout.alignment: Qt.AlignTop
 
                 text: "Cycle through these modes"
+                color: Theme.fg
+                font.family: FontType.sans
+                font.pixelSize: Metrics.textBody
             }
 
             ColumnLayout {
-                Layout.fillWidth: true
+                spacing: Metrics.gapS
 
                 Repeater {
-                    model: _root.action.targetModes
+                    model: root.action.targetModes
 
-                    RowLayout {
+                    delegate: RowLayout {
+                        id: _cycleRow
+
                         required property int index
 
-                        TooltipComboBox {
+                        spacing: Metrics.gapM
+
+                        ComboBox {
                             Layout.preferredWidth: 200
 
                             model: ModeListModel {}
                             textRole: "name"
                             valueRole: "name"
 
-                            Component.onCompleted: function() {
-                                currentIndex = find(_root.action.targetModes[index])
+                            Component.onCompleted: {
+                                currentIndex = find(root.action.targetModes[_cycleRow.index])
                             }
 
-                            onActivated: function() {
-                                _root.action.setTargetMode(currentValue, index)
+                            onActivated: {
+                                root.action.setTargetMode(currentValue, _cycleRow.index)
                             }
                         }
 
-                        IconButton {
-                            text: bsi.icons.remove
+                        ToolButton {
+                            icon.name: "delete"
 
-                            onClicked: {
-                                _root.action.deleteTargetMode(index)
-                            }
+                            onClicked: { root.action.deleteTargetMode(_cycleRow.index) }
                         }
                     }
                 }
@@ -153,24 +156,25 @@ Item {
                 Button {
                     text: "Add mode"
 
-                    onClicked: function() {
-                        _root.action.addTargetMode()
-                    }
+                    onClicked: { root.action.addTargetMode() }
                 }
-
             }
         }
 
-        // Temporary mode switch UI
+        // Temporarily switch to a mode while the input is held.
         RowLayout {
             visible: _changeType.currentValue === "Temporary"
+            spacing: Metrics.gapM
 
-            Label {
+            Text {
                 text: "Temporarily switch to mode"
+                color: Theme.fg
+                font.family: FontType.sans
+                font.pixelSize: Metrics.textBody
             }
 
-            TooltipComboBox {
-                id: temporary_combo
+            ComboBox {
+                id: _temporaryCombo
 
                 Layout.preferredWidth: 200
 
@@ -178,28 +182,25 @@ Item {
                 textRole: "name"
                 valueRole: "name"
 
-                Component.onCompleted: function() {
-                    currentIndex = find(_root.action.targetModes[0])
+                Component.onCompleted: {
+                    currentIndex = find(root.action.targetModes[0])
                 }
 
-                onActivated: function() {
-                    _root.action.setTargetMode(currentValue, 0)
+                onActivated: {
+                    root.action.setTargetMode(currentValue, 0)
                 }
 
                 Connections {
                     target: _changeType
                     function onActivated() {
-                        if(visible)
-                        {
-                            temporary_combo.currentIndex = temporary_combo.find(
-                                _root.action.targetModes[0]
+                        if (_temporaryCombo.visible) {
+                            _temporaryCombo.currentIndex = _temporaryCombo.find(
+                                root.action.targetModes[0]
                             )
                         }
                     }
                 }
             }
         }
-
-        LayoutHorizontalSpacer {}
     }
 }

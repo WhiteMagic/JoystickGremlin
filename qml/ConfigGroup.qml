@@ -7,8 +7,8 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
-import Gremlin.Base
 import Gremlin.Config
+import Kobold.Controls
 import "helpers.js" as Helpers
 
 ColumnLayout {
@@ -38,7 +38,7 @@ ColumnLayout {
         delegate: _entryDelegateChooser
     }
 
-    LayoutVerticalSpacer {
+    Spacer {
         Layout.preferredHeight: 5
     }
 
@@ -78,12 +78,12 @@ ColumnLayout {
                 title: name
                 explanation: description
 
-                FloatSpinBox {
+                DoubleSpinBox {
                     Layout.alignment: Qt.AlignRight
 
                     value: model.value
-                    minValue: properties.min
-                    maxValue: properties.max
+                    from: properties.min
+                    to: properties.max
 
                     onValueModified: (newValue) => { model.value = newValue }
                 }

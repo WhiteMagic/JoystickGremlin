@@ -3,6 +3,15 @@ NumericRangeSlider  NumericRangeSlider.qml
 HatDirectionToggle  HatDirectionToggle.qml
 VJoySelector        VJoySelector.qml
 ActionNode          ActionNode.qml
+ActionDragDropArea  ActionDragDropArea.qml
 SlotHeader          SlotHeader.qml
 AddActionMenuButton AddActionMenuButton.qml
 InputAssignButton  InputAssignButton.qml
+Spacer              Spacer.qml
+Divider             Divider.qml
+ButtonStateSelector ButtonStateSelector.qml
+InputListView       InputListView.qml
+InputCaptureButton  InputCaptureButton.qml
+LogicalDeviceSelector LogicalDeviceSelector.qml
+ActionStepTable     ActionStepTable.qml
+RowDropBand         RowDropBand.qml

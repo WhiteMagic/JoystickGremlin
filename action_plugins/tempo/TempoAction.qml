@@ -1,162 +1,112 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
-Item {
-    id: _root
 
-    property TempoModel action
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    implicitHeight: _content.height
+    required property TempoModel action
 
-    ColumnLayout {
-        id: _content
+    spacing: Metrics.gapM
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    RowLayout {
+        spacing: Metrics.gapM
 
-        // +-------------------------------------------------------------------
-        // | Behavior configuration
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                id: _label
-
-                text: "Long-press threshold (sec)"
-            }
-            FloatSpinBox {
-                minValue: 0
-                maxValue: 100
-                value: _root.action.threshold
-                stepSize: 0.05
-
-                onValueModified: (newValue) => {
-                    _root.action.threshold = newValue
-                }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Label {
-                text: "Activate on"
-            }
-            RadioButton {
-                text: "press"
-                checked: _root.action.activateOn == "press"
-
-                onClicked: {
-                    _root.action.activateOn = "press"
-                }
-            }
-            RadioButton {
-                text: "release"
-                checked: _root.action.activateOn == "release"
-
-                onClicked: {
-                    _root.action.activateOn = "release"
-                }
-            }
+        Text {
+            text: "Long-press threshold (sec)"
+            color: Theme.fg
+            font.family: FontType.sans
+            font.pixelSize: Metrics.textBody
         }
 
-        // +-------------------------------------------------------------------
-        // | Short press actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Short press"
-            }
+        DoubleSpinBox {
+            from: 0
+            to: 100
+            stepSize: 0.05
+            decimals: 2
+            value: root.action.threshold
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "short"); }
-            }
+            onValueModified: { root.action.threshold = value }
         }
 
-        Rectangle {
-            id: _shortDivider
-            Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
+        Item { Layout.fillWidth: true }
+
+        Text {
+            text: "Activate on"
+            color: Theme.fg
+            font.family: FontType.sans
+            font.pixelSize: Metrics.textBody
         }
 
-        Repeater {
-            model: _root.action.getActions("short")
+        RadioButton {
+            text: "Press"
+            checked: root.action.activateOn === "press"
 
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "short"
-
-                Layout.fillWidth: true
-            }
+            onToggled: { root.action.activateOn = "press" }
         }
+        RadioButton {
+            text: "Release"
+            checked: root.action.activateOn === "release"
 
-        // +-------------------------------------------------------------------
-        // | Long press actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Long press"
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "long"); }
-            }
-        }
-
-        Rectangle {
-            id: _longDivider
-            Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
-        }
-
-        Repeater {
-            model: _root.action.getActions("long")
-
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "long"
-
-                Layout.fillWidth: true
-            }
+            onToggled: { root.action.activateOn = "release" }
         }
     }
 
-    // Drop action for insertion into empty/first slot of the short actions
-    ActionDragDropArea {
-        target: _shortDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "short");
+    // Short-press sequence.
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Short press"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "short") }
+    }
+
+    Repeater {
+        model: root.action.getActions("short")
+
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
+
+            Layout.fillWidth: true
+
+            action: modelData
+            previousSibling: index > 0 ? root.action.getActions("short")[index - 1] : null
         }
     }
 
-    // Drop action for insertion into empty/first slot of the long actions
-    ActionDragDropArea {
-        target: _longDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "long");
+    // Long-press sequence.
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Long press"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "long") }
+    }
+
+    Repeater {
+        model: root.action.getActions("long")
+
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
+
+            Layout.fillWidth: true
+
+            action: modelData
+            previousSibling: index > 0 ? root.action.getActions("long")[index - 1] : null
         }
     }
 }

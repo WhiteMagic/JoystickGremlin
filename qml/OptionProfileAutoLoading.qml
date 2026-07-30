@@ -9,6 +9,7 @@ import QtQuick.Layouts
 import Gremlin.Config
 import Gremlin.Util
 import Gremlin.Style
+import Kobold.Controls
 
 Item {
     ProfileAutoLoadingModel {
@@ -172,7 +173,7 @@ Item {
                     }
                 }
 
-                LayoutHorizontalSpacer {}
+                Spacer {}
 
                 Switch {
                     id: _isEnabled
@@ -182,8 +183,8 @@ Item {
                     onToggled: () => { model.isEnabled = checked }
                 }
 
-                IconButton {
-                    text: bsi.icons.remove
+                ToolButton {
+                    icon.name: "delete"
 
                     onClicked: () => { _model.removeEntry(index) }
                 }
@@ -220,7 +221,7 @@ Item {
                 }
             }
 
-            LayoutVerticalSpacer {
+            Spacer {
                 Layout.preferredHeight: 10
             }
         }

@@ -55,6 +55,13 @@ RowLayout {
             const value = root._valueFromText(text)
             root.firstValueEdited(Math.min(value, root.secondValue))
         }
+
+        background: Rectangle {
+            radius: Metrics.radius
+            color: Theme.bg
+            border.width: Metrics.hairline
+            border.color: _firstInput.activeFocus ? Theme.accent : Theme.line
+        }
     }
 
     RangeSlider {
@@ -71,6 +78,25 @@ RowLayout {
 
         first.onMoved: root.firstValueEdited(first.value)
         second.onMoved: root.secondValueEdited(second.value)
+
+        background: Rectangle {
+            x: _slider.leftPadding
+            y: _slider.topPadding + (_slider.availableHeight - height) / 2
+            width: _slider.availableWidth
+            height: Metrics.sliderTrack
+            radius: height / 2
+            color: Theme.bg
+            border.width: Metrics.hairline
+            border.color: Theme.line
+
+            Rectangle {
+                x: _slider.first.visualPosition * parent.width
+                width: (_slider.second.visualPosition - _slider.first.visualPosition) * parent.width
+                height: parent.height
+                radius: height / 2
+                color: Theme.accent
+            }
+        }
     }
 
     TextField {
@@ -89,6 +115,13 @@ RowLayout {
         onEditingFinished: {
             const value = root._valueFromText(text)
             root.secondValueEdited(Math.max(value, root.firstValue))
+        }
+
+        background: Rectangle {
+            radius: Metrics.radius
+            color: Theme.bg
+            border.width: Metrics.hairline
+            border.color: _secondInput.activeFocus ? Theme.accent : Theme.line
         }
     }
 }

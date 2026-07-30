@@ -1,148 +1,94 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
-Item {
-    id: _root
 
-    property SplitAxisModel action
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    implicitHeight: _content.height
+    required property SplitAxisModel action
 
-    ColumnLayout {
-        id: _content
+    property var _lowerActions: root.action.getActions("lower")
+    property var _upperActions: root.action.getActions("upper")
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    spacing: Metrics.gapM
 
-        RowLayout {
-            Label {
-                text: "Split axis at"
-            }
+    RowLayout {
+        spacing: Metrics.gapM
 
-            FloatSpinBox {
-                minValue: -1.0
-                maxValue: 1.0
-                stepSize: 0.05
-                decimals: Style.decimalsPrecise
-                value: _root.action.splitValue
-
-                onValueModified: (newValue) => {
-                    _root.action.splitValue = newValue
-                }
-            }
+        Label {
+            text: "Split axis at"
         }
 
-        // +-------------------------------------------------------------------
-        // | Lower split actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            id: _lowerHeader
+        DoubleSpinBox {
+            from: -1.0
+            to: 1.0
+            stepSize: 0.05
+            decimals: 4
+            value: root.action.splitValue
 
-            Label {
-                text: "Actions for the <b>lower / left</b> part of the split."
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: (x) => { _root.action.appendAction(x, "lower"); }
-            }
+            onValueModified: { root.action.splitValue = value }
         }
+    }
 
-        HorizontalDivider {
-            id: _lowerDivider
+    // +-------------------------------------------------------------------
+    // | Lower split actions
+    // +-------------------------------------------------------------------
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Lower / left"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "lower") }
+    }
+
+    Repeater {
+        model: root._lowerActions
+
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
 
             Layout.fillWidth: true
 
-            dividerColor: Style.lowColor
-            lineWidth: 2
-            spacing: 2
+            action: modelData
+            previousSibling: index > 0 ? root._lowerActions[index - 1] : null
         }
+    }
 
-        Repeater {
-            model: _root.action.getActions("lower")
+    // +-------------------------------------------------------------------
+    // | Upper split actions
+    // +-------------------------------------------------------------------
+    SlotHeader {
+        Layout.fillWidth: true
 
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "lower"
+        label: "Upper / right"
+        actionNames: root.action.compatibleActions
 
-                Layout.fillWidth: true
-            }
-        }
+        onActionRequested: (name) => { root.action.appendAction(name, "upper") }
+    }
 
-        // +-------------------------------------------------------------------
-        // | Upper split actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            id: _upperHeader
+    Repeater {
+        model: root._upperActions
 
-            Label {
-                text: "Actions for the <b>upper / right</b> part of the split."
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: (x) => { _root.action.appendAction(x, "upper"); }
-            }
-        }
-
-        HorizontalDivider {
-            id: _upperDivider
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
 
             Layout.fillWidth: true
 
-            dividerColor: Style.lowColor
-            lineWidth: 2
-            spacing: 2
-        }
-
-        Repeater {
-            model: _root.action.getActions("upper")
-
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "upper"
-
-                Layout.fillWidth: true
-            }
+            action: modelData
+            previousSibling: index > 0 ? root._upperActions[index - 1] : null
         }
     }
-
-    // Drop action for insertion into empty/first slot of the upper actions
-    ActionDragDropArea {
-        target: _upperDivider
-        dropCallback: (drop) => {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "upper");
-        }
-    }
-
-    // Drop action for insertion into empty/first slot of the lower actions
-    ActionDragDropArea {
-        target: _lowerDivider
-        dropCallback: (drop) => {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "lower");
-        }
-    }
-
 }

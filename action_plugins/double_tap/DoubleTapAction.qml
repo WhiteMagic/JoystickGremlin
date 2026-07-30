@@ -1,163 +1,112 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property DoubleTapModel action
+    required property DoubleTapModel action
 
-    implicitHeight: _content.height
+    spacing: Metrics.gapM
 
-    ColumnLayout {
-        id: _content
+    RowLayout {
+        spacing: Metrics.gapM
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        // +-------------------------------------------------------------------
-        // | Behavior configuration
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                id: _label
-
-                text: "Double-tap threshold (sec)"
-            }
-            FloatSpinBox {
-                minValue: 0
-                maxValue: 100
-                value: _root.action.threshold
-                stepSize: 0.05
-
-                onValueModified: (newValue) => {
-                    _root.action.threshold = newValue
-                }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Label {
-                text: "Single/Double tap:"
-            }
-            RadioButton {
-                text: "exclusive"
-                checked: _root.action.activateOn == "exclusive"
-
-                onClicked: {
-                    _root.action.activateOn = "exclusive"
-                }
-            }
-            RadioButton {
-                text: "combined"
-                checked: _root.action.activateOn == "combined"
-
-                onClicked: {
-                    _root.action.activateOn = "combined"
-                }
-            }
+        Text {
+            text: "Double-tap threshold (sec)"
+            color: Theme.fg
+            font.family: FontType.sans
+            font.pixelSize: Metrics.textBody
         }
 
-        // +-------------------------------------------------------------------
-        // | Short press actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Single Tap"
-            }
+        DoubleSpinBox {
+            from: 0
+            to: 100
+            stepSize: 0.05
+            decimals: 2
+            value: root.action.threshold
 
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "single"); }
-            }
+            onValueModified: { root.action.threshold = value }
         }
 
-        Rectangle {
-            id: _singleDivider
-            Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
+        Item { Layout.fillWidth: true }
+
+        Text {
+            text: "Activate on"
+            color: Theme.fg
+            font.family: FontType.sans
+            font.pixelSize: Metrics.textBody
         }
 
-        Repeater {
-            model: _root.action.getActions("single")
+        RadioButton {
+            text: "Exclusive"
+            checked: root.action.activateOn === "exclusive"
 
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "single"
-
-                Layout.fillWidth: true
-            }
+            onToggled: { root.action.activateOn = "exclusive" }
         }
+        RadioButton {
+            text: "Combined"
+            checked: root.action.activateOn === "combined"
 
-        // +-------------------------------------------------------------------
-        // | Long press actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Double Tap"
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "double"); }
-            }
-        }
-
-        Rectangle {
-            id: _doubleDivider
-            Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
-        }
-
-        Repeater {
-            model: _root.action.getActions("double")
-
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "double"
-
-                Layout.fillWidth: true
-            }
+            onToggled: { root.action.activateOn = "combined" }
         }
     }
 
-    // Drop action for insertion into empty/first slot of the short actions
-    ActionDragDropArea {
-        target: _singleDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "single");
+    // Single-tap sequence.
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Single tap"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "single") }
+    }
+
+    Repeater {
+        model: root.action.getActions("single")
+
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
+
+            Layout.fillWidth: true
+
+            action: modelData
+            previousSibling: index > 0 ? root.action.getActions("single")[index - 1] : null
         }
     }
 
-    // Drop action for insertion into empty/first slot of the long actions
-    ActionDragDropArea {
-        target: _doubleDivider
-        dropCallback: function(drop) {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "double");
+    // Double-tap sequence.
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Double tap"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "double") }
+    }
+
+    Repeater {
+        model: root.action.getActions("double")
+
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
+
+            Layout.fillWidth: true
+
+            action: modelData
+            previousSibling: index > 0 ? root.action.getActions("double")[index - 1] : null
         }
     }
 }

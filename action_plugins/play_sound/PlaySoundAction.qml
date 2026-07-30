@@ -3,74 +3,65 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
-Item {
-    property PlaySoundModel action
 
-    implicitHeight: _content.height
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
+
+    required property PlaySoundModel action
 
     RowLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
+        spacing: Metrics.gapM
 
         Label {
-            Layout.preferredWidth: 110
-
             text: "Audio filename"
         }
 
-        JGTextField {
+        TextField {
             id: _soundFilename
 
             Layout.fillWidth: true
 
-            text: action.soundFilename
-            placeholderText: null !== action ? null : "Input the name of the audio file to play."
-
+            text: root.action.soundFilename
+            placeholderText: "Input the name of the audio file to play"
             selectByMouse: true
 
-            onTextChanged: () => { action.soundFilename = text }
+            onTextChanged: { root.action.soundFilename = text }
         }
 
         Button {
-            text: "Select File"
+            text: "Select file"
 
-            onClicked: () => { _fileDialog.open() }
+            onClicked: { _fileDialog.open() }
         }
 
         Label {
-            Layout.preferredWidth: 50
-
             text: "Volume"
         }
 
-        JGSpinBox {
-            Layout.preferredWidth: 100
-
-            value: action.soundVolume
+        SpinBox {
+            value: root.action.soundVolume
             from: 0
             to: 100
 
-            onValueModified: () => { action.soundVolume = value }
+            onValueModified: { root.action.soundVolume = value }
         }
-   }
+    }
 
-   FileDialog {
+    FileDialog {
         id: _fileDialog
 
         nameFilters: ["Audio files (*.wav *.mp3 *.ogg)"]
-        title: "Select a File"
+        title: "Select a file"
 
-        onAccepted: () => {
+        onAccepted: {
             _soundFilename.text = selectedFile.toString().substring("file:///".length)
         }
     }

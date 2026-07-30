@@ -10,11 +10,7 @@ import QtQuick.Window
 import Gremlin.Device
 import Gremlin.Style
 import Kobold.Foundation
-
-// InputListener is a plain reusable component kept in qml/ (not
-// Kobold-specific); reach it via a relative directory import since it's
-// outside this module's own folder.
-import "../../../../qml"
+import Kobold.Controls
 
 // Visualizes the inputs and information about their associated actions
 // contained in a Device instance.
@@ -73,7 +69,7 @@ Rectangle {
             }
          }
 
-        InputListener {
+        InputCaptureButton {
             Layout.margins: Metrics.gapL
             Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
 

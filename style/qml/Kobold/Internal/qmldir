@@ -1,7 +1,6 @@
 module Kobold.Internal
 Chip                Chip.qml
 InputButton         InputButton.qml
-InputListView       InputListView.qml
 DeviceInputList     DeviceInputList.qml
 LogicalDevice       LogicalDevice.qml
 KeyboardInputList   KeyboardInputList.qml
@@ -9,6 +8,4 @@ ActionRow           ActionRow.qml
 ActivationToggle    ActivationToggle.qml
 TreeIndent          TreeIndent.qml
 BindingHeader       BindingHeader.qml
-RowDropBand         RowDropBand.qml
-ActionStepTable     ActionStepTable.qml
 ActivationBehavior  ActivationBehavior.qml

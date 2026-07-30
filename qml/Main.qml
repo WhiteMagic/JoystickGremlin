@@ -14,12 +14,12 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQuick.Window
 
-import Gremlin.Base
 import Gremlin.Config
 import Gremlin.Device
 import Gremlin.Profile
 import Gremlin.Style
 import Gremlin.UI
+import Kobold.Controls
 import Kobold.Foundation
 import Kobold.Internal
 
@@ -85,7 +85,6 @@ ApplicationWindow {
                 case MessageDialog.Save:
                     var fpath = backend.profilePath()
                     if(fpath === "") {
-                        console.log("Saving to " + fpath)
                         _saveProfileFileDialog.quitAfterSave = true
                         _saveProfileFileDialog.open()
                     } else {
@@ -266,15 +265,19 @@ ApplicationWindow {
         RowLayout {
             anchors.fill: parent
 
-            JGToolButton {
+            ToolButton {
                 icon.name: "new_profile"
-                tooltip: qsTr("Create new profile")
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: qsTr("Create new profile")
 
                 onClicked: () => { backend.newProfile() }
             }
-            JGToolButton {
+            ToolButton {
                 icon.name: "save_profile"
-                tooltip: qsTr("Save current profile")
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: qsTr("Save current profile")
 
                 onClicked: () => {
                     var fpath = backend.profilePath()
@@ -285,39 +288,47 @@ ApplicationWindow {
                     }
                 }
             }
-            JGToolButton {
+            ToolButton {
                 icon.name: "load_profile"
-                tooltip: qsTr("Load profile")
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: qsTr("Load profile")
 
                 onClicked: () => { _loadProfileFileDialog.open() }
             }
-            JGToolButton {
+            ToolButton {
                 icon.name: "activate"
                 iconRole: backend.gremlinActive ? "accent" : "fg"
-                tooltip: qsTr("Toggle Gremlin")
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: qsTr("Toggle Gremlin")
 
                 onClicked: () => { backend.toggleActiveState() }
             }
 
-            JGToolButton {
+            ToolButton {
                 icon.name: "input_viewer"
-                tooltip: qsTr("Open input viewer")
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: qsTr("Open input viewer")
 
                 onClicked: () => {
                     Helpers.createComponent("DialogInputViewer.qml")
                 }
             }
 
-            JGToolButton {
+            ToolButton {
                 icon.name: "options"
-                tooltip: qsTr("Open options")
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: qsTr("Open options")
 
                 onClicked: () => {
                     Helpers.createComponent("DialogOptions.qml")
                 }
             }
 
-            LayoutHorizontalSpacer {}
+            Spacer {}
 
             Label {
                 Layout.rightMargin: 10
@@ -544,15 +555,13 @@ ApplicationWindow {
             }
 
             ColumnLayout {
-                IconButton {
-                    text: "\uF285"
-                    font.pixelSize: 14
+                ToolButton {
+                    icon.name: "arrow-e"
 
                     onClicked: () => { _deviceList.nextTab() }
                 }
-                IconButton {
-                    text: "\uF284"
-                    font.pixelSize: 14
+                ToolButton {
+                    icon.name: "arrow-w"
 
                     onClicked: () => { _deviceList.previousTab() }
                 }

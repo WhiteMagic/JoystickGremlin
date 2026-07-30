@@ -1,51 +1,37 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 
-import QtQuick.Controls.Universal
-
-import Gremlin.Profile
 import Gremlin.ActionPlugins
-import "../../qml"
-import "../../qml/helpers.js" as Helpers
+import Gremlin.Profile
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property MapToKeyboardModel action
+    required property MapToKeyboardModel action
 
-    implicitHeight: _content.height
+    RowLayout {
+        spacing: Metrics.gapM
 
-    ColumnLayout {
-        id: _content
+        Label {
+            text: "Key combination"
+        }
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+        InputCaptureButton {
+            Layout.fillWidth: true
 
-        RowLayout {
-            Label {
-                Layout.preferredWidth: 150
+            eventTypes: ["key"]
+            multipleInputs: true
+            text: root.action.keyCombination.length > 0 ? root.action.keyCombination : "Record keys"
 
-                text: "<B>Key Combination</B>"
-            }
-
-            InputListener {
-                Layout.fillWidth: true
-
-                callback: (inputs) => { _root.action.updateInputs(inputs) }
-                multipleInputs: true
-                eventTypes: ["key"]
-
-                text: Helpers.safeText(
-                    _root.action.keyCombination,
-                    "Record Keys"
-                )
-            }
+            callback: (inputs) => { root.action.updateInputs(inputs) }
         }
     }
 }

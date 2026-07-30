@@ -16,10 +16,10 @@ import Kobold.Foundation
 import Kobold.Internal
 
 
-// SPEC §8: sequences are independent trees, separated by space + each sequence's own
-// padding -- never a rule between them (that's the ListView's job in
-// qml/InputConfiguration.qml). This item's own 8px padding is that "each sequence's 8px
-// padding".
+// SPEC §8: sequences are independent trees, separated by space -- never a rule between them
+// (that's the ListView's job in qml/InputConfiguration.qml). Vertical separation from
+// neighboring trees is entirely the ghost "New Action Sequence" row's gapS margin now
+// (InputConfiguration.qml) -- this item reserves none of its own, or the two would stack.
 Item {
     id: _root
 
@@ -27,7 +27,7 @@ Item {
     property InputItemModel inputItemModel
     property BindingHeader headerWidget: _header
 
-    implicitHeight: _content.height + Metrics.gapM * 2
+    implicitHeight: _content.height
 
     Connections {
         target: signal
@@ -46,13 +46,15 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: Metrics.gapM
-        // Extra right-hand room on top of the uniform margin above, so content clears the
-        // ListView's overlay scrollbar (SPEC ScrollBar.qml, Metrics.gapM wide) instead of
-        // sitting flush under it -- the gap the left pane's input list gets for free by
-        // narrowing its own delegate width (DeviceInputList.qml). Content padding only; the
-        // delegate's own width (qml/InputConfiguration.qml) stays untouched.
+        anchors.leftMargin: Metrics.gapM
+        // Extra right-hand room, so content clears the ListView's overlay scrollbar (SPEC
+        // ScrollBar.qml, Metrics.gapM wide) instead of sitting flush under it -- the gap the
+        // left pane's input list gets for free by narrowing its own delegate width
+        // (DeviceInputList.qml). Content padding only; the delegate's own width
+        // (qml/InputConfiguration.qml) stays untouched.
         anchors.rightMargin: Metrics.gapM * 2
+        // No top margin -- vertical separation from the previous tree is the ghost row's
+        // gapS margin above (InputConfiguration.qml), not this item's own padding.
         spacing: Metrics.gapS
 
         // +--------------------------------------------------------------------
@@ -83,6 +85,11 @@ Item {
             id: _actionTree
 
             Layout.fillWidth: true
+            // An empty sequence loads a real (0-height) RootAction, but ColumnLayout still
+            // costs a spacing gap around a merely-0-height row -- hasChildren collapses the
+            // row itself, same as ActivationBehavior does for its own inapplicable case.
+            visible: _root.inputBinding && _root.inputBinding.rootAction &&
+                _root.inputBinding.rootAction.hasChildren
 
             // setSource()'s initial-properties argument, not source: + onLoaded --
             // RootAction.qml's root declares `required property RootModel action`,

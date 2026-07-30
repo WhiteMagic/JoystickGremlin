@@ -77,7 +77,7 @@ ColumnLayout {
                 decimals: 2
                 value: root.action.axisScaling
 
-                onValueModified: (value) => { root.action.axisScaling = value }
+                onValueModified: { root.action.axisScaling = value }
             }
         }
 

@@ -123,12 +123,13 @@ Window {
 
             // Device header.
             RowLayout {
-                IconButton {
+                ToolButton {
                     id: _foldButton
 
                     checkable: true
                     checked: false
-                    text: checked ? bsi.icons.folded : bsi.icons.unfolded
+                    icon.name: "chevron-down"
+                    rotation: checked ? 0 : -90
                 }
 
                 JGText {

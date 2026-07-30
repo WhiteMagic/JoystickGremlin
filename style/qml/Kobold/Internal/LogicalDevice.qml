@@ -10,6 +10,7 @@ import QtQuick.Window
 import Gremlin.Device
 import Gremlin.Style
 import Kobold.Foundation
+import Kobold.Controls
 
 // TextInputDialog is a plain reusable dialog kept in qml/ (not
 // Kobold-specific); reach it via a relative directory import since it's

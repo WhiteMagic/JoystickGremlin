@@ -121,7 +121,6 @@ class ActionModel(QtCore.QObject):
         (`gremlin/ui/icon_provider.py`), which substitutes `currentColor` for the
         requested colour and rasterizes it.
         """
-        print(self._data.tag)
         own_icon = Path(inspect.getfile(type(self._data))).parent / "icon.svg"
         if own_icon.exists():
             return own_icon.as_uri()
@@ -253,6 +252,7 @@ class ActionModel(QtCore.QObject):
         if action:
             self._data.insert_action(action, selector)
             self._binding_model.sync_data()
+            signal.reloadCurrentInputItem.emit()
             signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
         else:
             logging.getLogger("system").error(
@@ -279,9 +279,7 @@ class ActionModel(QtCore.QObject):
         else:
             self._append_drop_action(source, target, method)
 
-        if target == 0:
-            signal.reloadCurrentInputItem.emit()
-
+        signal.reloadCurrentInputItem.emit()
         signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
     @QtCore.Slot(int)
@@ -292,6 +290,7 @@ class ActionModel(QtCore.QObject):
             index: sequence index corresponding to the action to remove
         """
         self._binding_model.remove_action(index)
+        signal.reloadCurrentInputItem.emit()
         signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
     @property

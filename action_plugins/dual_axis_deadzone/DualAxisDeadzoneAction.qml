@@ -1,283 +1,181 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import Gremlin.UI
-import "../../qml"
+import Kobold.Foundation
+import Kobold.Controls
 
 Item {
     id: _root
 
-    property DualAxisDeadzoneModel action
-    property LabelValueSelectionModel deadzoneListModel: action.deadzoneActionList
+    required property DualAxisDeadzoneModel action
+
+    property LabelValueSelectionModel deadzoneModel: action.deadzoneActionList
+    property var _firstActions: action.getActions("first")
+    property var _secondActions: action.getActions("second")
 
     implicitHeight: _content.height
 
     Connections {
-        target: action
-
+        target: _root.action
         function onModelChanged() {
-            deadzoneListModel.currentValue = _root.action.deadzone
+            _root.deadzoneModel.currentValue = _root.action.deadzone
+            _root._firstActions = _root.action.getActions("first")
+            _root._secondActions = _root.action.getActions("second")
         }
     }
 
-
-    // Dialog to change the label of the current action
     Dialog {
         id: _dialog
-
         anchors.centerIn: Overlay.overlay
-
         standardButtons: Dialog.Ok | Dialog.Cancel
         modal: true
         focus: true
-
         title: "Rename action"
 
-        Row {
-            anchors.fill: parent
-
-            JGTextField {
-                id: _actionLabel
-
-                width: 400
-                focus: true
-
-                text: action.label
-                placeholderText: "Action label"
-
-                onAccepted: () => { _dialog.accept() }
-            }
+        TextField {
+            id: _actionLabel
+            focus: true
+            text: _root.action.label
+            placeholderText: "Action label"
+            onAccepted: () => { _dialog.accept() }
         }
 
-        onAccepted: () => { action.label = _actionLabel.text }
+        onAccepted: () => { _root.action.label = _actionLabel.text }
     }
 
     ColumnLayout {
         id: _content
-
         anchors.left: parent.left
         anchors.right: parent.right
 
-        // +-------------------------------------------------------------------
-        // | Deadzone instance selection and management
-        // +-------------------------------------------------------------------
         RowLayout {
-            Label {
-                Layout.preferredWidth: 150
+            Label { text: "Deadzone instance" }
 
-                text: "Deadzone instance"
-            }
-
-            LabelValueComboBox {
-                model: _root.deadzoneListModel
+            ComboBox {
+                id: _deadzoneSelection
+                Layout.fillWidth: true
+                model: _root.deadzoneModel
+                textRole: "label"
+                valueRole: "value"
 
                 Component.onCompleted: () => {
-                    _root.deadzoneListModel.currentValue = _root.action.deadzone
+                    currentIndex = _root.deadzoneModel.currentSelectionIndex
                 }
-
-                onSelectionChanged: () => {
-                    _root.action.deadzone = _root.deadzoneListModel.currentValue
+                Connections {
+                    target: _root.deadzoneModel
+                    function onSelectionChanged() {
+                        _deadzoneSelection.currentIndex = _root.deadzoneModel.currentSelectionIndex
+                    }
+                }
+                onActivated: () => {
+                    _root.deadzoneModel.currentValue = currentValue
+                    _root.action.deadzone = currentValue
                 }
             }
 
-            IconButton {
-                text: bsi.icons.add_new
-                font.pixelSize: 24
-
+            Button {
+                text: "New instance"
                 onClicked: () => { _root.action.newDeadzone() }
             }
-
-            IconButton {
-                text: bsi.icons.rename
-                font.pixelSize: 24
-
+            ToolButton {
+                icon.name: "edit"
                 onClicked: () => { _dialog.open() }
             }
         }
 
-        // Deadzone configuration
         RowLayout {
-            Label {
-                Layout.preferredWidth: 150
+            spacing: Metrics.gapL
 
-                text: "Deadzone limits"
-            }
+            Label { text: "Inner deadzone" }
 
-            Label {
-                text: "Inner"
-            }
-
-            FloatSpinBox {
-                id: _innerValue
-
-                minValue: 0.0
-                maxValue: 1.0
-                decimals: Style.decimalsPrecise
+            DoubleSpinBox {
+                from: 0.0
+                to: 1.0
+                stepSize: 0.05
+                decimals: 4
                 value: _root.action.innerDeadzone
 
-                onValueModified: (newValue) => {
-                    _root.action.innerDeadzone = newValue
-                }
+                onValueModified: { _root.action.innerDeadzone = value }
             }
 
-            Label {
-                Layout.leftMargin: 20
+            Label { text: "Outer deadzone" }
 
-                text: "Outer"
-            }
-
-            FloatSpinBox {
-                id: _outerValue
-
-                minValue: 0.0
-                maxValue: 1.0
-                decimals: Style.decimalsPrecise
+            DoubleSpinBox {
+                from: 0.0
+                to: 1.0
+                stepSize: 0.05
+                decimals: 4
                 value: _root.action.outerDeadzone
 
-                onValueModified: (newValue) => {
-                    _root.action.outerDeadzone = newValue
-
-                }
+                onValueModified: { _root.action.outerDeadzone = value }
             }
         }
 
-        // +-------------------------------------------------------------------
-        // | Axis assignments
-        // +-------------------------------------------------------------------
         RowLayout {
-            // First axis selection
-            Label {
-                text: "First axis: "
-                font.family: "Segoe UI"
-                font.weight: 600
-            }
-            Label {
-                text: _root.action.axis1.label
-            }
-            IconButton {
-                text: bsi.icons.replace
+            spacing: Metrics.gapL
 
+            Label { text: "First axis" }
+            InputAssignButton {
+                valueLabel: _root.action.axis1.label
+                isAssigned: _root.action.axis1.isValid
                 onClicked: () => { _root.action.axis1 = uiState.currentInput }
             }
 
-            LayoutHorizontalSpacer {
-                Layout.fillWidth: false
-                Layout.preferredWidth: 50
-            }
-
-            // Second axis selection
-            Label {
-                text: "Second axis: "
-                font.family: "Segoe UI"
-                font.weight: 600
-            }
-            Label {
-                text: _root.action.axis2.label
-            }
-            IconButton {
-                text: bsi.icons.replace
-
+            Label { text: "Second axis" }
+            InputAssignButton {
+                valueLabel: _root.action.axis2.label
+                isAssigned: _root.action.axis2.isValid
                 onClicked: () => { _root.action.axis2 = uiState.currentInput }
             }
         }
 
-        // +-------------------------------------------------------------------
-        // | First axis actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "First axis"
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: (x) => { _root.action.appendAction(x, "first") }
-            }
-        }
-
-        Rectangle {
-            id: _firstDivider
+        SlotHeader {
             Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
+            label: "First axis actions"
+            actionNames: _root.action.compatibleActions
+            onActionRequested: (name) => { _root.action.appendAction(name, "first") }
         }
 
         Repeater {
-            model: _root.action.getActions("first")
+            model: _root._firstActions
 
             delegate: ActionNode {
+                required property var modelData
+                required property int index
+
+                Layout.fillWidth: true
                 action: modelData
-                parentAction: _root.action
-                containerName: "first"
-
-                Layout.fillWidth: true
+                previousSibling: index > 0 ? _root._firstActions[index - 1] : null
             }
         }
 
-        // +-------------------------------------------------------------------
-        // | Second axis actions
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Second axis"
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: (x) => { _root.action.appendAction(x, "second") }
-            }
-        }
-
-        Rectangle {
-            id: _secondDivider
+        SlotHeader {
             Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
+            label: "Second axis actions"
+            actionNames: _root.action.compatibleActions
+            onActionRequested: (name) => { _root.action.appendAction(name, "second") }
         }
 
         Repeater {
-            model: _root.action.getActions("second")
+            model: _root._secondActions
 
             delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "second"
+                required property var modelData
+                required property int index
 
                 Layout.fillWidth: true
+                action: modelData
+                previousSibling: index > 0 ? _root._secondActions[index - 1] : null
             }
-        }
-    }
-
-    // Drop action for insertion into empty/first slot of the short actions
-    ActionDragDropArea {
-        target: _firstDivider
-        dropCallback: (drop) => {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "first");
-        }
-    }
-
-    // Drop action for insertion into empty/first slot of the long actions
-    ActionDragDropArea {
-        target: _secondDivider
-        dropCallback: (drop) => {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "second");
         }
     }
 }

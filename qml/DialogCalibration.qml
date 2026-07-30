@@ -9,6 +9,7 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Gremlin.Style
+import Kobold.Controls
 
 Window {
     id: _calibrationDialog
@@ -187,7 +188,7 @@ Window {
 
                         onValueModified: model.low = Qt.binding(() => value)
                     }
-                    LayoutHorizontalSpacer {
+                    Spacer {
                     }
                     CalibrationSpinBox {
                         id: _sbCLow
@@ -209,7 +210,7 @@ Window {
 
                         onValueModified: model.centerHigh = Qt.binding(() => value)
                     }
-                    LayoutHorizontalSpacer {
+                    Spacer {
                     }
                     CalibrationSpinBox {
                         id: _sbHigh
@@ -269,7 +270,7 @@ Window {
                         _btnExtremaCalibration.checked = false
                     }
                 }
-                LayoutVerticalSpacer {
+                Spacer {
                     visible: !model.withCenter
                 }
                 Button {

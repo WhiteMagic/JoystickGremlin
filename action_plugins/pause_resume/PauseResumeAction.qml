@@ -1,54 +1,42 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 
-import QtQuick.Controls.Universal
-
-import Gremlin.Profile
 import Gremlin.ActionPlugins
-import "../../qml"
+import Gremlin.Profile
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property PauseResumeModel action
-
-    implicitHeight: _content.height
+    required property PauseResumeModel action
 
     RowLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
+        spacing: Metrics.gapM
 
         RadioButton {
             text: "Pause"
+            checked: root.action.operation === "Pause"
 
-            checked: _root.action.operation === "Pause"
-            onClicked: function() {
-                _root.action.operation = "Pause"
-            }
+            onToggled: { root.action.operation = "Pause" }
         }
         RadioButton {
             text: "Resume"
+            checked: root.action.operation === "Resume"
 
-            checked: _root.action.operation === "Resume"
-            onClicked: function() {
-                _root.action.operation = "Resume"
-            }
+            onToggled: { root.action.operation = "Resume" }
         }
         RadioButton {
             text: "Toggle"
+            checked: root.action.operation === "Toggle"
 
-            checked: _root.action.operation === "Toggle"
-            onClicked: function() {
-                _root.action.operation = "Toggle"
-            }
+            onToggled: { root.action.operation = "Toggle" }
         }
     }
 }

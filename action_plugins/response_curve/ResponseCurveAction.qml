@@ -4,19 +4,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
-
-import QtQuick.Controls.Universal
 import QtQuick.Shapes
-import Qt.labs.qmlmodels
-
-import QtCharts
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
 import Gremlin.Style
-import "../../qml"
+import Kobold.Foundation
+import Kobold.Controls
 
 import "render_helpers.js" as RH
 
@@ -119,9 +113,14 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        spacing: Metrics.gapM
+
         // Various controls to configure curve editing
         RowLayout {
             Layout.fillWidth: true
+            spacing: Metrics.gapM
+
+            Label { text: "Curve type" }
 
             ComboBox {
                 Layout.preferredWidth: 200
@@ -152,6 +151,7 @@ Item {
         // Response curve widget
         RowLayout {
             Layout.preferredWidth: 475
+            spacing: Metrics.gapL
 
             Item {
                 id: _vis
@@ -241,6 +241,8 @@ Item {
 
             GridLayout {
                 columns: 2
+                columnSpacing: Metrics.gapM
+                rowSpacing: Metrics.gapS
 
                 Label {
                     Layout.preferredWidth: 30
@@ -248,13 +250,13 @@ Item {
                     text: "X"
                 }
 
-                FloatSpinBox {
+                DoubleSpinBox {
                     id: _coordX
 
-                    minValue: -1.0
-                    maxValue: 1.0
+                    from: -1.0
+                    to: 1.0
                     stepSize: 0.05
-                    decimals: Style.decimalsPrecise
+                    decimals: 4
                     value: _root.action.selectedPointCoord.x
 
                     onValueModified: (newValue) => {
@@ -266,13 +268,13 @@ Item {
                     text: "Y"
                 }
 
-                FloatSpinBox {
+                DoubleSpinBox {
                     id: _coordY
 
-                    minValue: -1.0
-                    maxValue: 1.0
+                    from: -1.0
+                    to: 1.0
                     stepSize: 0.05
-                    decimals: Style.decimalsPrecise
+                    decimals: 4
                     value: _root.action.selectedPointCoord.y
 
                     onValueModified: (newValue) => {
@@ -296,8 +298,10 @@ Item {
         }
 
         RowLayout {
+            spacing: Metrics.gapL
+
             // Lower half axis.
-            NumericalRangeSlider {
+            NumericRangeSlider {
                 id: _lowerDeadzone
 
                 from: -1.0
@@ -307,12 +311,12 @@ Item {
                 stepSize: 0.05
                 decimals: 3
 
-                onFirstValueChanged: () => { deadzone.low = firstValue }
-                onSecondValueChanged: () => { deadzone.centerLow = secondValue }
+                onFirstValueEdited: (value) => { deadzone.low = value }
+                onSecondValueEdited: (value) => { deadzone.centerLow = value }
             }
 
             // Upper half axis.
-            NumericalRangeSlider {
+            NumericRangeSlider {
                 id: _upperDeadzone
 
                 from: 0.0
@@ -322,8 +326,8 @@ Item {
                 stepSize: 0.05
                 decimals: 3
 
-                onFirstValueChanged: () => { deadzone.centerHigh = firstValue }
-                onSecondValueChanged: () => { deadzone.high = secondValue }
+                onFirstValueEdited: (value) => { deadzone.centerHigh = value }
+                onSecondValueEdited: (value) => { deadzone.high = value }
             }
         }
     }
