@@ -494,6 +494,70 @@ ScrollView {
             }
         }
 
+        // -- Divider (Kobold.Controls) ------------------------------------
+        Section {
+            title: "Divider (Kobold.Controls)"
+
+            ColumnLayout {
+                spacing: Metrics.gapM
+                Layout.preferredWidth: Metrics.ctrlH * 8
+
+                Label { text: "Row above" }
+                Divider { Layout.fillWidth: true }
+                Label { text: "Row below" }
+                Caption { text: "fixed Theme.line hairline -- no color property, R4-safe by construction" }
+            }
+        }
+
+        // -- ButtonStateSelector (Kobold.Controls) -------------------------
+        Section {
+            title: "ButtonStateSelector (Kobold.Controls)"
+
+            ColumnLayout {
+                spacing: Metrics.gapS
+
+                ButtonStateSelector {
+                    id: _buttonStateDemo
+                    isPressed: true
+                    onStateModified: (value) => { isPressed = value }
+                }
+                Caption { text: "live -- Press / Release" }
+            }
+        }
+
+        // -- InputListView (Kobold.Controls) -------------------------------
+        Section {
+            title: "InputListView (Kobold.Controls)"
+
+            InputListView {
+                id: _inputListDemo
+                Layout.preferredWidth: Metrics.ctrlH * 8
+                Layout.preferredHeight: Metrics.ctrlH * 5
+                scrollbarAlwaysVisible: true
+                model: 30
+                delegate: Text {
+                    text: "Row " + index
+                    color: Theme.fg
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textBody
+                    height: Metrics.ctrlH
+                }
+            }
+            Caption { text: "step-scroll wheel handling -- shared by the left pane and plugin bodies (e.g. macro)" }
+        }
+
+        // -- InputCaptureButton / LogicalDeviceSelector (Kobold.Controls) --
+        Section {
+            title: "InputCaptureButton / LogicalDeviceSelector (Kobold.Controls)"
+
+            Caption {
+                text: "Not demoed here -- both wrap Python models that need a running "
+                    + "EventListener / LogicalDevice profile context (InputListenerModel, "
+                    + "LogicalDeviceSelectorModel), same reasoning as ActionNode above. "
+                    + "Verified in the live app instead."
+            }
+        }
+
         Item { Layout.preferredHeight: Metrics.gapL }
     }
 }

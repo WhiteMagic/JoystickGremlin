@@ -7,6 +7,7 @@ import QtQuick.Controls.Universal
 import QtQuick.Layouts
 
 import Gremlin.Profile
+import Kobold.Controls
 import "helpers.js" as Helpers
 
 Item {
@@ -30,12 +31,10 @@ Item {
 
             Layout.fillWidth: true
 
-            IconButton {
+            ToolButton {
                 id: _handle
 
-                font.pixelSize: 24
-                horizontalPadding: -5
-                text: bsi.icons.verticalDrag
+                icon.name: "grip"
 
                 // Drag handle mouse interaction area.
                 MouseArea {
@@ -68,11 +67,16 @@ Item {
                 inputBinding: _root.inputBinding
             }
 
-            ActionSelector {
+            AddActionMenuButton {
                 Layout.alignment: Qt.AlignRight
 
-                actionNode: _root.inputBinding.rootAction
-                callback: (x) => { actionNode.appendAction(x, "children") }
+                variant: "bordered"
+                model: _root.inputBinding.rootAction ?
+                    _root.inputBinding.rootAction.compatibleActions : []
+
+                onActionRequested: (name) => {
+                    _root.inputBinding.rootAction.appendAction(name, "children")
+                }
             }
 
             Label {
@@ -95,9 +99,8 @@ Item {
                 }
             }
 
-            IconButton {
-                text: bsi.icons.remove
-                font.pixelSize: 24
+            ToolButton {
+                icon.name: "delete"
 
                 onClicked: () => {
                     _root.inputItemModel.deleteActionSequnce(_root.inputBinding)

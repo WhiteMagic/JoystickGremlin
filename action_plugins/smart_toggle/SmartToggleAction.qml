@@ -1,66 +1,65 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
-
-import QtQuick.Controls.Universal
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property SmartToggleModel action
+    required property SmartToggleModel action
 
-    implicitHeight: _content.height
+    spacing: Metrics.gapM
 
-    // Show all child nodes
-    ColumnLayout {
-        id: _content
+    RowLayout {
+        spacing: Metrics.gapM
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        RowLayout {
-            Label {
-                text: "Toggle delay"
-            }
-            FloatSpinBox {
-                minValue: 0
-                maxValue: 100
-                value: _root.action.delay
-                stepSize: 0.05
-
-                onValueModified: (newValue) => {
-                    _root.action.delay = newValue
-                }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) { _root.action.appendAction(x, "children"); }
-            }
+        Text {
+            text: "Toggle delay (sec)"
+            color: Theme.fg
+            font.family: FontType.sans
+            font.pixelSize: Metrics.textBody
         }
 
-        Repeater {
-            model: _root.action.getActions("children")
+        DoubleSpinBox {
+            from: 0
+            to: 100
+            stepSize: 0.05
+            decimals: 2
+            value: root.action.delay
 
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "children"
+            onValueModified: { root.action.delay = value }
+        }
+    }
 
-                Layout.fillWidth: true
-            }
+    SlotHeader {
+        Layout.fillWidth: true
+
+        label: "Actions"
+        actionNames: root.action.compatibleActions
+
+        onActionRequested: (name) => { root.action.appendAction(name, "children") }
+    }
+
+    Repeater {
+        model: root.action.getActions("children")
+
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
+
+            Layout.fillWidth: true
+
+            action: modelData
+            previousSibling: index > 0 ? root.action.getActions("children")[index - 1] : null
         }
     }
 }

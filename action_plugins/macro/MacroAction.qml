@@ -1,556 +1,441 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 import Qt.labs.qmlmodels
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
-import Gremlin.Compact as Compact
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
-import "../../qml/helpers.js" as Helpers
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+//
+// The step list is explicitly NOT an action container (SPEC §8: "Macro steps are NOT
+// child actions -- render them as a table, or the UI is lying."). Kobold.Controls'
+// ActionStepTable is the purpose-built table shell for this, but its `rows` contract is
+// `list<list<string>>` -- plain display strings only. Macro steps need live, per-step
+// interactive controls (InputCaptureButton, ButtonStateSelector, spin boxes, selectors),
+// which cannot be expressed as strings, so ActionStepTable could not be used as-is here.
+// See the accompanying report for the flagged mismatch. What follows instead is a
+// hand-built row (`MacroStepRow`) that reuses ActionStepTable's own structure verbatim --
+// header row + hairline rule, flat 0-spacing rows, row-edge-band drop targets via the
+// public `ActionDragDropArea` -- with real widgets standing in for its `Text` cells.
+ColumnLayout {
+    id: root
 
-    property MacroModel action
+    required property MacroModel action
 
-    implicitHeight: _content.height
+    readonly property int stepTypeColumnWidth: Metrics.ctrlH * 5
+    // Reserves the scrollbar's own width plus a visible gap so step rows stop
+    // short of it instead of butting up against the track.
+    readonly property int stepListScrollGutter: Metrics.gapM * 2
 
-    ColumnLayout {
-        id: _content
+    readonly property var stepTypes: [
+        {value: "joystick", text: "Joystick"},
+        {value: "key", text: "Keyboard"},
+        {value: "logical-device", text: "Logical device"},
+        {value: "mouse-button", text: "Mouse button"},
+        {value: "mouse-motion", text: "Mouse motion"},
+        {value: "pause", text: "Pause"},
+        {value: "vjoy", text: "vJoy"}
+    ]
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    spacing: Metrics.gapM
 
-        // Macro repeat configuration settings.
-        RowLayout {
-            Layout.fillWidth: true
+    // +-------------------------------------------------------------------
+    // | Repeat configuration
+    // +-------------------------------------------------------------------
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Metrics.gapM
 
-            Label {
-                Layout.preferredWidth: 125
+        Label { text: "Repeat mode" }
 
-                text: "<b>Repeat Mode</b>"
+        ComboBox {
+            id: _repeatMode
+
+            textRole: "text"
+            valueRole: "value"
+
+            model: [
+                {value: "single", text: "Single"},
+                {value: "count", text: "Count"},
+                {value: "toggle", text: "Toggle"},
+                {value: "hold", text: "Hold"}
+            ]
+
+            Component.onCompleted: {
+                currentIndex = indexOfValue(root.action.repeatMode)
             }
 
-            ComboBox {
-                id: _repeatMode
-
-                textRole: "text"
-                valueRole: "value"
-
-                Component.onCompleted: () => {
-                    currentIndex = indexOfValue(_root.action.repeatMode)
-                }
-
-                onActivated: () => { _root.action.repeatMode = currentValue }
-
-                model: [
-                    {value: "single", text: "Single"},
-                    {value: "count", text: "Count"},
-                    {value: "toggle", text: "Toggle"},
-                    {value: "hold", text: "Hold"},
-                ]
-            }
-
-            FloatSpinBox {
-                visible: ["count", "toggle", "hold"].includes(_repeatMode.currentValue)
-
-                value: _root.action.repeatDelay
-                minValue: 0.0
-                maxValue: 3600.0
-
-                onValueModified: (newValue) => {
-                    _root.action.repeatDelay = newValue
-                }
-            }
-
-            JGSpinBox {
-                visible: _repeatMode.currentValue === "count"
-
-                value: _root.action.repeatCount
-                from: 1
-                to: 100
-
-                onValueModified: () => { _root.action.repeatCount = value }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Switch {
-                text: "Exclusive"
-
-                checked: _root.action.isExclusive
-                onClicked: () => { _root.action.isExclusive = checked }
-            }
-
-            Switch {
-                text: "Pre-Emptive"
-
-                visible: _root.action.isExclusive
-                checked: _root.action.isPreemptive
-                onClicked: () => { _root.action.isPreemptive = checked }
-            }
-
+            onActivated: { root.action.repeatMode = currentValue }
         }
 
-        // Action recording configuration settings.
-        RowLayout {
-            Layout.fillWidth: true
+        DoubleSpinBox {
+            visible: ["count", "toggle", "hold"].includes(_repeatMode.currentValue)
 
-            Label {
-                Layout.preferredWidth: 125
+            from: 0
+            to: 3600
+            stepSize: 0.1
+            decimals: 2
+            value: root.action.repeatDelay
 
-                text: "<b>Record Inputs</b>"
-            }
-
-            CheckBox {
-                text: "Keyboard"
-                checked: _root.action.recordKeyboard
-                onToggled: () => { _root.action.recordKeyboard = checked }
-                enabled: !_root.action.isRecording
-            }
-            CheckBox {
-                text: "Mouse"
-                checked: _root.action.recordMouse
-                onToggled: () => { _root.action.recordMouse = checked }
-                enabled: !_root.action.isRecording
-            }
-            CheckBox {
-                text: "Axis"
-                checked: _root.action.recordJoystickAxis
-                onToggled: () => { _root.action.recordJoystickAxis = checked }
-                enabled: !_root.action.isRecording
-            }
-            CheckBox {
-                text: "Button"
-                checked: _root.action.recordJoystickButton
-                onToggled: () => { _root.action.recordJoystickButton = checked }
-                enabled: !_root.action.isRecording
-            }
-            CheckBox {
-                text: "Hat"
-                checked: _root.action.recordJoystickHat
-                onToggled: () => { _root.action.recordJoystickHat = checked }
-                enabled: !_root.action.isRecording
-            }
-            CheckBox {
-                text: "Timings"
-                checked: _root.action.recordTimings
-                onToggled: () => { _root.action.recordTimings = checked }
-                enabled: !_root.action.isRecording
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Compact.RecordButton {
-                visible: !_root.action.isRecording
-                description: "Start Recording"
-                onClicked: () => { _root.action.startRecording() }
-            }
-            Compact.RecordButton {
-                visible: _root.action.isRecording
-                highlighted: true
-                description: "Stop Recording"
-                onPressed: () => { _root.action.stopRecording() }
-            }
+            onValueModified: { root.action.repeatDelay = value }
         }
 
+        SpinBox {
+            visible: _repeatMode.currentValue === "count"
 
-        ActionDrop {
-            targetIndex: 0
-            insertionMode: "prepend"
+            editable: true
+            from: 1
+            to: 100
+            value: root.action.repeatCount
 
-            Layout.bottomMargin: -10
+            onValueModified: { root.action.repeatCount = value }
         }
 
-        ScrollView {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(_actionList.contentHeight, 400)
-            clip: true
+        Spacer {}
 
-            JGListView {
-                id: _actionList
+        CheckBox {
+            text: "Exclusive"
+            checked: root.action.isExclusive
 
-                width: parent.width
-                spacing: 2
-                scrollbarAlwaysVisible: true
-
-                model: _root.action.actions
-                delegate: _delegateChooser
-
-                Connections {
-                    target: _actionList.model
-
-                    function onActionAdded() {
-                        // Reposition the view at the bottom of the list when
-                        // an action is added but not when deleted.
-                        Qt.callLater(_actionList.positionViewAtEnd)
-                    }
-                }
-            }
+            onToggled: { root.action.isExclusive = checked }
         }
+        CheckBox {
+            visible: root.action.isExclusive
+            text: "Pre-emptive"
+            checked: root.action.isPreemptive
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.topMargin: 10
-
-            ComboBox {
-                id: _macroAction
-
-                Layout.preferredWidth: 150
-
-                textRole: "text"
-                valueRole: "value"
-
-                model: [
-                    {value: "joystick", text: "Joystick"},
-                    {value: "key", text: "Keyboard"},
-                    {value: "logical-device", text: "Logical Device"},
-                    {value: "mouse-button", text: "Mouse Button"},
-                    {value: "mouse-motion", text: "Mouse Motion"},
-                    {value: "pause", text: "Pause"},
-                    {value: "vjoy", text: "vJoy"}
-                ]
-            }
-
-            Button {
-                text: "Add Action"
-
-                onClicked: () => {
-                    _root.action.addAction(_macroAction.currentValue)
-                }
-            }
-
-            LayoutHorizontalSpacer {}
+            onToggled: { root.action.isPreemptive = checked }
         }
     }
 
-    // Renders the correct delegate based on the action type
+    // +-------------------------------------------------------------------
+    // | Action step record and add controls.
+    // +-------------------------------------------------------------------
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Metrics.gapM
+
+        Label { text: "Record inputs" }
+
+        CheckBox {
+            text: "Keyboard"
+            checked: root.action.recordKeyboard
+            enabled: !root.action.isRecording
+
+            onToggled: { root.action.recordKeyboard = checked }
+        }
+        CheckBox {
+            text: "Mouse"
+            checked: root.action.recordMouse
+            enabled: !root.action.isRecording
+
+            onToggled: { root.action.recordMouse = checked }
+        }
+        CheckBox {
+            text: "Axis"
+            checked: root.action.recordJoystickAxis
+            enabled: !root.action.isRecording
+
+            onToggled: { root.action.recordJoystickAxis = checked }
+        }
+        CheckBox {
+            text: "Button"
+            checked: root.action.recordJoystickButton
+            enabled: !root.action.isRecording
+
+            onToggled: { root.action.recordJoystickButton = checked }
+        }
+        CheckBox {
+            text: "Hat"
+            checked: root.action.recordJoystickHat
+            enabled: !root.action.isRecording
+
+            onToggled: { root.action.recordJoystickHat = checked }
+        }
+        CheckBox {
+            text: "Timings"
+            checked: root.action.recordTimings
+            enabled: !root.action.isRecording
+
+            onToggled: { root.action.recordTimings = checked }
+        }
+
+        Button {
+            visible: !root.action.isRecording
+            text: "Start recording"
+
+            onClicked: { root.action.startRecording() }
+        }
+        Button {
+            visible: root.action.isRecording
+            text: "Stop recording"
+
+            onClicked: { root.action.stopRecording() }
+        }
+
+        Spacer {}
+
+        AddActionMenuButton {
+            variant: "bordered"
+            text: "Add step"
+            model: root.stepTypes.map((entry) => entry.text)
+
+            onActionRequested: (name) => {
+                root.action.addAction(root.stepTypes.find((entry) => entry.text === name).value)
+            }
+        }
+    }
+
+    // Recessed well: bgAlt behind, individual step rows keep the standard
+    // bg fill so they read as cards sitting inside the list.
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: Math.min(_stepList.contentHeight, 400) + 2 * Metrics.gapS
+
+        color: Theme.bgAlt
+        radius: Metrics.radius * 2
+
+        InputListView {
+            id: _stepList
+
+            anchors.fill: parent
+            anchors.margins: Metrics.gapS
+
+            spacing: Metrics.gapS
+            scrollbarAlwaysVisible: true
+            reuseItems: true
+
+            model: root.action.actions
+            delegate: _delegateChooser
+
+            Connections {
+                target: _stepList.model
+
+                function onActionAdded() {
+                    // Reposition the view at the bottom of the list when a step is
+                    // added but not when one is removed.
+                    Qt.callLater(_stepList.positionViewAtEnd)
+                }
+            }
+        }
+    }
+
+    // Renders the correct row content based on the step type.
     DelegateChooser {
         id: _delegateChooser
 
         role: "actionType"
 
-        // Joystick action.
         DelegateChoice {
             roleValue: "joystick"
 
-            DraggableAction {
-                icon_qrc: "qrc:/icons/physical_joystick"
-                label: "Joystick"
+            MacroStepRow {
+                stepLabel: "Joystick"
 
-                actionItem: RowLayout {
-                    InputListener {
+                detailItem: RowLayout {
+                    spacing: Metrics.gapM
+
+                    InputCaptureButton {
                         Layout.fillWidth: true
 
-                        text: Helpers.safeText(
-                            modelData.label, "Record Input"
-                        )
-                        callback: (inputs) => {
-                            modelData.updateJoystick(inputs)
-                        }
-                        multipleInputs: false
                         eventTypes: ["axis", "button", "hat"]
+                        multipleInputs: false
+                        text: modelData.label ? modelData.label : "Record input"
+
+                        callback: (inputs) => { modelData.updateJoystick(inputs) }
                     }
 
-                    // Show different components based on input
-                    Compact.ButtonStateSelector {
+                    ButtonStateSelector {
                         visible: modelData.inputType === "button"
 
                         isPressed: modelData.isPressed
-                        onStateModified: (isPressed) => {
-                            modelData.isPressed = isPressed
-                        }
+                        onStateModified: (isPressed) => { modelData.isPressed = isPressed }
                     }
-                    Compact.FloatSpinBox {
+                    AxisValueSpin {
                         visible: modelData.inputType === "axis"
-
-                        minValue: -1.0
-                        maxValue: 1.0
-                        decimals: Style.decimalsPrecise
-                        value: modelData.axisValue
-
-                        onValueModified: (newValue) => {
-                            modelData.axisValue = newValue
-                        }
                     }
-                    Compact.ComboBox {
+                    HatDirectionCombo {
                         visible: modelData.inputType === "hat"
-
-                        textRole: "text"
-                        valueRole: "value"
-
-                        model: [
-                            {value: "center", text: "Center"},
-                            {value: "north", text: "North"},
-                            {value: "north-east", text: "North East"},
-                            {value: "east", text: "East"},
-                            {value: "south-east", text: "South East"},
-                            {value: "south", text: "South"},
-                            {value: "south-west", text: "South West"},
-                            {value: "west", text: "West"},
-                            {value: "north-west", text: "North West"}
-                        ]
-
-                        Component.onCompleted: () => {
-                            currentIndex = Qt.binding(
-                                () => indexOfValue(modelData.hatDirection)
-                            )
-                        }
-
-                        onActivated: function () {
-                            modelData.hatDirection = currentValue
-                        }
                     }
                 }
             }
         }
 
-        // Key action.
         DelegateChoice {
             roleValue: "key"
 
-            DraggableAction {
-                icon: bsi.icons.icon_keyboard
-                label: "Keyboard"
+            MacroStepRow {
+                stepLabel: "Keyboard"
 
-                actionItem: RowLayout {
-                    InputListener {
+                detailItem: RowLayout {
+                    spacing: Metrics.gapM
+
+                    InputCaptureButton {
                         Layout.fillWidth: true
 
-                        text: Helpers.safeText(
-                            modelData.key, "Record Input"
-                        )
-                        callback: (inputs) => { modelData.updateKey(inputs) }
-                        multipleInputs: false
                         eventTypes: ["key"]
+                        multipleInputs: false
+                        text: modelData.key ? modelData.key : "Record input"
+
+                        callback: (inputs) => { modelData.updateKey(inputs) }
                     }
 
-                    Compact.ButtonStateSelector {
+                    ButtonStateSelector {
                         isPressed: modelData.isPressed
-                        onStateModified: (isPressed) => {
-                            modelData.isPressed = isPressed
-                        }
+                        onStateModified: (isPressed) => { modelData.isPressed = isPressed }
                     }
                 }
             }
         }
 
-        // Logical device action.
         DelegateChoice {
             roleValue: "logical-device"
 
-            DraggableAction {
-                icon: bsi.icons.icon_logical_device
-                label: "Logical device"
+            MacroStepRow {
+                stepLabel: "Logical device"
 
-                actionItem: RowLayout {
+                detailItem: RowLayout {
+                    spacing: Metrics.gapM
+
                     LogicalDeviceSelector {
                         // The ordering is important, swapping it will result in the
                         // wrong item being displayed.
                         validTypes: ["axis", "button", "hat"]
                         logicalInputIdentifier: modelData.logicalInputIdentifier
-                        useCompact: true
 
-                        onLogicalInputIdentifierChanged: () => {
+                        onLogicalInputIdentifierChanged: {
                             modelData.logicalInputIdentifier = logicalInputIdentifier
                         }
                     }
 
-                    LayoutHorizontalSpacer {}
+                    Spacer {}
 
-                    // Show different components based on input
-                    Compact.ButtonStateSelector {
+                    ButtonStateSelector {
                         visible: modelData.inputType === "button"
 
                         isPressed: modelData.isPressed
-                        onStateModified: (isPressed) => {
-                            modelData.isPressed = isPressed
-                        }
+                        onStateModified: (isPressed) => { modelData.isPressed = isPressed }
                     }
                     RowLayout {
                         visible: modelData.inputType === "axis"
+                        spacing: Metrics.gapM
 
-                        Compact.FloatSpinBox {
-                            minValue: -1.0
-                            maxValue: 1.0
-                            decimals: Style.decimalsPrecise
-                            value: modelData.axisValue
-
-                            onValueModified: (newValue) => {
-                                modelData.axisValue = newValue
-                            }
-                        }
-
-                        Compact.ComboBox {
-                            model: ["Absolute", "Relative"]
-
-                            Component.onCompleted: () => {
-                                currentIndex = find(
-                                    Helpers.capitalize(modelData.axisMode)
-                                )
-                            }
-
-                            onActivated: () => {
-                                modelData.axisMode = currentValue
-                            }
-                        }
+                        AxisValueSpin {}
+                        AxisModeRadios {}
                     }
-                    Compact.ComboBox {
+                    HatDirectionCombo {
                         visible: modelData.inputType === "hat"
-
-                        textRole: "text"
-                        valueRole: "value"
-
-                        model: [
-                            {value: "center", text: "Center"},
-                            {value: "north", text: "North"},
-                            {value: "north-east", text: "North East"},
-                            {value: "east", text: "East"},
-                            {value: "south-east", text: "South East"},
-                            {value: "south", text: "South"},
-                            {value: "south-west", text: "South West"},
-                            {value: "west", text: "West"},
-                            {value: "north-west", text: "North West"}
-                        ]
-
-                        currentIndex: indexOfValue(modelData.hatDirection)
-                        Component.onCompleted: () => {
-                            currentIndex = Qt.binding(
-                                () => {return indexOfValue(modelData.hatDirection)}
-                            )
-                        }
-
-                        onActivated: () => {
-                            modelData.hatDirection = currentValue
-                        }
                     }
                 }
             }
         }
 
-        // Mouse button.
         DelegateChoice {
             roleValue: "mouse-button"
 
-            DraggableAction {
-                icon: bsi.icons.icon_mouse
-                label: "Mouse Button"
+            MacroStepRow {
+                stepLabel: "Mouse button"
 
-                actionItem: RowLayout {
-                    InputListener {
+                detailItem: RowLayout {
+                    spacing: Metrics.gapM
+
+                    InputCaptureButton {
                         Layout.fillWidth: true
 
-                        text: Helpers.safeText(
-                            modelData.button, "Record Input"
-                        )
-                        callback: (inputs) => { modelData.updateButton(inputs) }
-                        multipleInputs: false
                         eventTypes: ["mouse"]
+                        multipleInputs: false
+                        text: modelData.button ? modelData.button : "Record input"
+
+                        callback: (inputs) => { modelData.updateButton(inputs) }
                     }
 
-                    LayoutHorizontalSpacer {}
-
-                    Compact.ButtonStateSelector {
+                    ButtonStateSelector {
                         isPressed: modelData.isPressed
-                        onStateModified: (isPressed) => {
-                            modelData.isPressed = isPressed
-                        }
+                        onStateModified: (isPressed) => { modelData.isPressed = isPressed }
                     }
                 }
             }
         }
 
-        // Mouse motion.
         DelegateChoice {
             roleValue: "mouse-motion"
 
-            DraggableAction {
-                icon: bsi.icons.icon_mouse
-                label: "Mouse Motion"
+            MacroStepRow {
+                stepLabel: "Mouse motion"
 
-                actionItem: RowLayout {
-                    Label {
-                        Layout.leftMargin: 5
+                detailItem: RowLayout {
+                    spacing: Metrics.gapM
 
-                        text: "X-Axis"
-                    }
-                    Compact.SpinBox {
+                    Spacer {}
+
+                    Label { text: "X axis" }
+                    SpinBox {
+                        editable: true
                         from: -10000
                         to: 10000
                         stepSize: 5
                         value: modelData.dx
 
-                        onValueModified: () => { modelData.dx = value }
+                        onValueModified: { modelData.dx = value }
                     }
 
-                    Label {
-                        text: "Y-Axis"
-
-                        leftPadding: 25
-                    }
-                    Compact.SpinBox {
+                    Label { text: "Y axis" }
+                    SpinBox {
+                        editable: true
                         from: -10000
                         to: 10000
                         stepSize: 5
                         value: modelData.dy
 
-                        onValueModified: () => { modelData.dy = value }
+                        onValueModified: { modelData.dy = value }
                     }
-
-                    LayoutHorizontalSpacer {}
                 }
             }
         }
 
-        // Pause action.
         DelegateChoice {
             roleValue: "pause"
 
-            DraggableAction {
-                icon: bsi.icons.icon_pause
-                label: "Pause"
+            MacroStepRow {
+                stepLabel: "Pause"
 
-                actionItem: RowLayout {
-                    Compact.FloatSpinBox {
-                        minValue: 0.0
-                        maxValue: 10.0
+                detailItem: RowLayout {
+                    spacing: Metrics.gapM
+
+                    Spacer {}
+
+                    DoubleSpinBox {
+                        from: 0
+                        to: 10
+                        stepSize: 0.1
+                        decimals: 2
                         value: modelData.duration
 
-                        onValueModified: (newValue) => {
-                            modelData.duration = newValue
-                        }
+                        onValueModified: { modelData.duration = value }
                     }
-                    Label {
-                        text: "seconds"
-                    }
-                    LayoutHorizontalSpacer {}
+                    Label { text: "seconds" }
                 }
             }
         }
 
-        // vJoy action.
         DelegateChoice {
             roleValue: "vjoy"
 
-            DraggableAction {
-                icon: bsi.icons.icon_joystick
-                label: "vJoy"
+            MacroStepRow {
+                stepLabel: "vJoy"
 
-                actionItem: RowLayout {
+                detailItem: RowLayout {
+                    spacing: Metrics.gapM
+
                     VJoySelector {
-                        Layout.alignment: Qt.AlignTop
-
                         validTypes: ["axis", "button", "hat"]
-                        useCompact: true
 
                         onSelectionChanged: (vjoyId, inputType, inputId) => {
                             modelData.vjoyId = vjoyId
@@ -558,7 +443,7 @@ Item {
                             modelData.inputId = inputId
                         }
 
-                        Component.onCompleted: () => {
+                        Component.onCompleted: {
                             initialize(
                                 modelData.vjoyId,
                                 modelData.inputType,
@@ -567,252 +452,202 @@ Item {
                         }
                     }
 
-                    LayoutHorizontalSpacer {}
+                    Spacer {}
 
-                    // Show different components based on input.
-                    Compact.ButtonStateSelector {
+                    ButtonStateSelector {
                         visible: modelData.inputType === "button"
 
                         isPressed: modelData.isPressed
-                        onStateModified: (isPressed) => {
-                            modelData.isPressed = isPressed
-                        }
+                        onStateModified: (isPressed) => { modelData.isPressed = isPressed }
                     }
-                    ColumnLayout {
+                    RowLayout {
                         visible: modelData.inputType === "axis"
+                        spacing: Metrics.gapM
 
-                        Compact.FloatSpinBox {
-                            minValue: -1.0
-                            maxValue: 1.0
-                            decimals: Style.decimalsPrecise
-                            value: modelData.axisValue
-
-                            onValueModified: (newValue) => {
-                                modelData.axisValue = newValue
-                            }
-                        }
-
-                        Compact.ComboBox {
-                            model: ["Absolute", "Relative"]
-
-                            Component.onCompleted: () => {
-                                currentIndex = find(
-                                    Helpers.capitalize(modelData.axisMode)
-                                )
-                            }
-
-                            onActivated: () => {
-                                modelData.axisMode = currentValue
-                            }
-                        }
+                        AxisValueSpin {}
+                        AxisModeRadios {}
                     }
-                    Compact.ComboBox {
+                    HatDirectionCombo {
                         visible: modelData.inputType === "hat"
-
-                        textRole: "text"
-                        valueRole: "value"
-
-                        model: [
-                            {value: "center", text: "Center"},
-                            {value: "north", text: "North"},
-                            {value: "north-east", text: "North East"},
-                            {value: "east", text: "East"},
-                            {value: "south-east", text: "South East"},
-                            {value: "south", text: "South"},
-                            {value: "south-west", text: "South West"},
-                            {value: "west", text: "West"},
-                            {value: "north-west", text: "North West"}
-                        ]
-
-                        currentIndex: indexOfValue(modelData.hatDirection)
-                        Component.onCompleted: () => {
-                            currentIndex = Qt.binding(
-                                () => {return indexOfValue(modelData.hatDirection)}
-                            )
-                        }
-
-                        onActivated: () => {
-                            modelData.hatDirection = currentValue
-                        }
                     }
                 }
             }
         }
     }
 
-    // Predefined button that removes a given action.
-    component DeleteButton : IconButton {
-        text: bsi.icons.remove
-        font.pixelSize: 16
+    // Local helpers -- factored out because the same `modelData.<field>` pattern
+    // recurs across several step types (joystick/logical-device/vjoy all carry
+    // axisValue and hatDirection; logical-device/vjoy both carry axisMode). Each
+    // relies on the ambient `modelData` context property supplied by the
+    // enclosing DelegateChoice, exactly as `MacroStepRow` below relies on the
+    // ambient `index`/`modelData` supplied by the list view delegate.
+    component AxisValueSpin: DoubleSpinBox {
+        from: -1.0
+        to: 1.0
+        stepSize: 0.05
+        decimals: 4
+        value: modelData.axisValue
 
-        onClicked: () => { _root.action.removeAction(index) }
+        onValueModified: { modelData.axisValue = value }
     }
 
-    // Displays an icon and also acts as the drag handle for the drag&drop
-    // implementation.
-    component Icon : Item {
-        property string iconName: ""
-        property string iconSource: ""
-        property string label: ""
-        property var target
+    component AxisModeRadios: RowLayout {
+        spacing: Metrics.gapM
 
-        property alias dragActive: _dragArea.drag.active
+        RadioButton {
+            text: "Absolute"
+            checked: modelData.axisMode === "absolute"
 
-        implicitWidth: _iconRow.implicitWidth
-        implicitHeight: _iconRow.implicitHeight
-
-        Row {
-            id: _iconRow
-
-            Label {
-                text: bsi.icons.drag_handle
-                font.family: "bootstrap-icons"
-                font.pixelSize: 16
-            }
-            Label {
-                visible: iconName !== ""
-                text: iconName
-                font.family: "bootstrap-icons"
-                font.pixelSize: 16
-            }
-            Image {
-                visible: iconSource !== ""
-                source: iconSource
-                width: 16
-                height: 16
-                fillMode: Image.PreserveAspectFit
-            }
+            onToggled: { modelData.axisMode = "absolute" }
         }
+        RadioButton {
+            text: "Relative"
+            checked: modelData.axisMode === "relative"
 
-        MouseArea {
-            id: _dragArea
-
-            anchors.fill: parent
-
-            drag.target: target
-            drag.axis: Drag.YAxis
-
-            // Create a visualization of the dragged item.
-            onPressed: () => {
-                parent.parent.grabToImage(function(result) {
-                    target.Drag.imageSource = result.url
-                })
-            }
-        }
-
-        HoverHandler {
-            id: _iconHover
-        }
-
-        ToolTip {
-            visible: _iconHover.hovered && label !== ""
-            text: label
-            delay: 500
+            onToggled: { modelData.axisMode = "relative" }
         }
     }
 
-    component ActionDrop : DropArea {
-        property int targetIndex
-        property string insertionMode: "append"
+    component HatDirectionCombo: ComboBox {
+        textRole: "text"
+        valueRole: "value"
 
-        height: 8
+        model: [
+            {value: "center", text: "Center"},
+            {value: "north", text: "North"},
+            {value: "north-east", text: "North East"},
+            {value: "east", text: "East"},
+            {value: "south-east", text: "South East"},
+            {value: "south", text: "South"},
+            {value: "south-west", text: "South West"},
+            {value: "west", text: "West"},
+            {value: "north-west", text: "North West"}
+        ]
 
-        Layout.fillWidth: true
-
-        onDropped: (drop) => {
-            drop.accept()
-            _marker.opacity = 0.0
-            _root.action.dropCallback(targetIndex, drop.text, insertionMode)
+        Component.onCompleted: {
+            currentIndex = Qt.binding(() => indexOfValue(modelData.hatDirection))
         }
 
-        onEntered: () => { _marker.opacity = 1.0 }
-        onExited: () => { _marker.opacity = 0.0 }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-
-            Rectangle {
-                id: _marker
-
-                y: parent.y+5
-                height: 10
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                opacity: 0.0
-                color: Style.accent
-            }
-        }
+        onActivated: { modelData.hatDirection = currentValue }
     }
 
-    component DraggableAction : ColumnLayout {
-        id: _draggableAction
+    // A single flat step row: drag handle, step-type label, step-specific detail
+    // content, delete button -- the same four-slot shell as ActionStepTable's own
+    // row, minus the string-only cell restriction (see the note atop this file).
+    // Deliberately an Item, not a layout, so `ActionDragDropArea` below can overlay
+    // it exactly as it overlays ActionStepTable's and ActionNode's own rows --
+    // both use plain-Item roots for the same reason.
+    component MacroStepRow: Item {
+        id: _stepRow
 
-        // Widget properties.
-        property string icon: ""
-        property string icon_qrc: ""
-        property string label: ""
-        property alias actionItem: _actionLoader.sourceComponent
+        property string stepLabel: ""
+        property alias detailItem: _detailLoader.sourceComponent
 
-        // Ensure entire width is taken up.
-        width: ListView.view ? ListView.view.width : 0
-        spacing: 1
+        implicitWidth: _cells.implicitWidth
+        implicitHeight: _cells.implicitHeight + 2 * Metrics.gapS
+        // Reserve the scrollbar's gutter on the right so the row stays visually
+        // disconnected from the track instead of butting up against it.
+        width: ListView.view ? ListView.view.width - root.stepListScrollGutter : implicitWidth
+        height: implicitHeight
 
-        // Define drag&drop behavior.
+        Drag.active: _dragArea.drag.active
         Drag.dragType: Drag.Automatic
-        Drag.active: _icon.dragActive
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
-        Drag.mimeData: {
-            "text/plain": index.toString()
-        }
-        Drag.onDragFinished: function (action) {
-            // If the drop action ought to be ignored, reset the UI by calling
-            // the InputConfiguration.qml reload function.
-            if (action === Qt.IgnoreAction) {
-                reload();
+        Drag.mimeData: ({"text/plain": index.toString()})
+        Drag.onDragFinished: (dropAction) => {
+            if (dropAction === Qt.IgnoreAction) {
+                signal.reloadCurrentInputItem()
             }
         }
 
-        // Widget content assembly.
+        Rectangle {
+            id: _background
+
+            anchors.fill: parent
+            radius: Metrics.radius
+            color: Theme.bg
+        }
+
         RowLayout {
-            id: _actionContent
-            spacing: 4
+            id: _cells
 
-            Icon {
-                id: _icon
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            implicitHeight: Metrics.rowAction
+            spacing: Metrics.gapM
 
-                Layout.alignment: Qt.AlignVCenter
-                Layout.rightMargin: 10
+            Item {
+                Layout.preferredWidth: Metrics.ctrlH
+                Layout.preferredHeight: Metrics.ctrlH
 
-                iconName: icon
-                iconSource: icon_qrc
-                label: _draggableAction.label
-                target: _draggableAction
+                AppIcon {
+                    anchors.centerIn: parent
+                    name: "grip"
+                    role: "fgMuted"
+                }
+
+                MouseArea {
+                    id: _dragArea
+
+                    anchors.fill: parent
+                    cursorShape: Qt.OpenHandCursor
+                    drag.target: _stepRow
+                    drag.axis: Drag.YAxis
+
+                    onPressed: {
+                        _stepRow.grabToImage((result) => {
+                            _stepRow.Drag.imageSource = result.url
+                        })
+                    }
+                }
             }
 
-            // Holds action specific UI elements.
-            Loader {
-                id: _actionLoader
+            Text {
+                Layout.preferredWidth: root.stepTypeColumnWidth
+                text: _stepRow.stepLabel
+                color: Theme.fg
+                font.family: FontType.sans
+                font.pixelSize: Metrics.textBody
+            }
 
-                Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+            Loader {
+                id: _detailLoader
+
                 Layout.fillWidth: true
             }
 
-            LayoutHorizontalSpacer {}
+            ToolButton {
+                icon.name: "delete"
 
-            DeleteButton {
-                Layout.rightMargin: 10
+                onClicked: { root.action.removeAction(index) }
             }
         }
 
-        ActionDrop {
-            Layout.bottomMargin: -4
-            Layout.topMargin: -4
+        ActionDragDropArea {
+            id: _dropBand
 
-            targetIndex: index
+            // While this row is itself being dragged, it physically follows the
+            // cursor (drag.target above) -- its own band would otherwise trigger
+            // on top of whatever row it happens to be passing over, showing a
+            // second, unaligned insertion line alongside the real target row's.
+            enabled: !_dragArea.drag.active
+            target: _background
+            gap: ListView.view ? ListView.view.spacing : 0
+            validationCallback: () => true
+            dropCallback: (drop) => {
+                const sourceIndex = parseInt(drop.text)
+                if (_dropBand.inTopBand) {
+                    if (index === 0) {
+                        root.action.dropCallback(0, sourceIndex, "prepend")
+                    } else {
+                        root.action.dropCallback(index - 1, sourceIndex, "append")
+                    }
+                } else {
+                    root.action.dropCallback(index, sourceIndex, "append")
+                }
+            }
         }
     }
-
 }

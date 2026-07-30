@@ -3,55 +3,54 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import QtQuick.Window
 
-import Gremlin.Profile
 import Gremlin.ActionPlugins
-import "../../qml"
+import Gremlin.Profile
+import Kobold.Controls
+import Kobold.Foundation
 
-Item {
-    property LoadProfileModel action
 
-    implicitHeight: _content.height
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
+
+    required property LoadProfileModel action
 
     RowLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
+        spacing: Metrics.gapM
 
         Label {
-            Layout.preferredWidth: 150
-
             text: "Profile filename"
         }
 
-        JGTextField {
+        TextField {
             id: _profileFilename
 
             Layout.fillWidth: true
 
-            placeholderText: null !== action ? null : "Enter a profile filename"
-            text: action.profile_filename
+            placeholderText: "Enter a profile filename"
+            text: root.action.profile_filename
             selectByMouse: true
 
-            onTextChanged: () => { action.profile_filename = text }
+            onTextChanged: { root.action.profile_filename = text }
         }
 
         Button {
-            text: "Select File"
-            onClicked: () => { _fileDialog.open() }
-        }
-   }
+            text: "Select file"
 
-   FileDialog {
+            onClicked: { _fileDialog.open() }
+        }
+    }
+
+    FileDialog {
         id: _fileDialog
+
         nameFilters: ["Profile files (*.xml)"]
-        title: "Select a File"
-        onAccepted: () =>{
+        title: "Select a file"
+
+        onAccepted: {
             _profileFilename.text = selectedFile.toString().substring("file:///".length)
         }
     }

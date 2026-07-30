@@ -7,10 +7,11 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
-import Gremlin.Base
 import Gremlin.Profile
 import Gremlin.Script
 import Gremlin.Style
+
+import Kobold.Controls
 
 
 JGListView {
@@ -66,12 +67,12 @@ JGListView {
                     isValid: modelData.isValid
                 }
 
-                FloatSpinBox {
+                DoubleSpinBox {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignRight
 
-                    minValue: modelData.minValue
-                    maxValue: modelData.maxValue
+                    from: modelData.minValue
+                    to: modelData.maxValue
                     value: modelData.value
 
                     onValueModified: (newValue) => {
@@ -124,7 +125,7 @@ JGListView {
                     isValid: modelData.isValid
                 }
 
-                InputListener {
+                InputCaptureButton {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignRight
 
@@ -178,7 +179,7 @@ JGListView {
                     isValid: modelData.isValid
                 }
 
-                TooltipComboBox {
+                ComboBox {
                     id: _mode
 
                     Layout.fillWidth: true
@@ -211,7 +212,7 @@ JGListView {
                     isValid: modelData.isValid
                 }
 
-                TooltipComboBox {
+                ComboBox {
                     id: _selection
 
                     Layout.fillWidth: true
@@ -282,7 +283,7 @@ JGListView {
                     isValid: modelData.isValid
                 }
 
-                InputListener {
+                InputCaptureButton {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignRight
 

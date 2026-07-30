@@ -97,8 +97,8 @@ Window {
                 text: name
             }
 
-            IconButton {
-                text: bsi.icons.edit
+            ToolButton {
+                icon.name: "edit"
 
                 Layout.leftMargin: 10
 
@@ -138,8 +138,8 @@ Window {
                 }
             }
 
-            IconButton {
-                text: bsi.icons.trash
+            ToolButton {
+                icon.name: "delete"
 
                 Layout.rightMargin: 10
 

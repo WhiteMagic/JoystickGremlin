@@ -79,8 +79,8 @@ Item {
                 "text/plain": model.index.toString()
             }
 
-            IconButton {
-                text: bsi.icons.drag_handle
+            ToolButton {
+                icon.name: "grip"
 
                 // Drag handle interaction for drag&drop suppport.
                 MouseArea {

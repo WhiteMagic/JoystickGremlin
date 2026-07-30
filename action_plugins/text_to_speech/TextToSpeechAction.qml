@@ -3,113 +3,91 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property TextToSpeechModel action
+    required property TextToSpeechModel action
 
-    implicitHeight: _content.height
+    spacing: Metrics.gapS
 
-    ColumnLayout {
-        id: _content
+    TextField {
+        Layout.fillWidth: true
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+        placeholderText: "Enter text to speak"
+        text: root.action.text
+        selectByMouse: true
 
-        JGTextField {
-            Layout.fillWidth: true
+        onTextChanged: { root.action.text = text }
+    }
 
-            wrapMode: TextArea.Wrap
-            placeholderText: "Enter text to speak"
-            text: _root.action !== null ? _root.action.text : ""
-            selectByMouse: true
+    RowLayout {
+        spacing: Metrics.gapM
 
-            onTextChanged: () => {
-                if (_root.action !== null && _root.action.text !== text) {
-                    _root.action.text = text
-                }
-            }
+        ComboBox {
+            readonly property var _labels: ["Interrupt", "Queue front", "Queue back"]
+            readonly property var _values: ["interrupt", "queue-front", "queue-back"]
+
+            model: _labels
+            currentIndex: _values.indexOf(root.action.queueMode)
+
+            onActivated: (index) => { root.action.queueMode = _values[index] }
         }
 
-        RowLayout {
-            ComboBox {
-                Layout.preferredWidth: 150
+        Spacer {}
 
-                readonly property var _labels: ["Interrupt", "Queue Front", "Queue Back"]
-                readonly property var _values: ["interrupt", "queue-front", "queue-back"]
+        Label {
+            text: "Volume"
+        }
 
-                model: _labels
+        DoubleSpinBox {
+            from: 0.0
+            to: 1.0
+            stepSize: 0.05
+            decimals: 2
+            value: root.action.playbackVolume
 
-                currentIndex: _root.action !== null
-                    ? _values.indexOf(_root.action.queueMode)
-                    : _values.indexOf("queue-back")
+            onValueModified: { root.action.playbackVolume = value }
+        }
 
-                onActivated: (index) => {
-                    if (_root.action !== null) {
-                        _root.action.queueMode = _values[index]
-                    }
-                }
-            }
+        Spacer {}
 
-            LayoutHorizontalSpacer {}
+        Label {
+            text: "Rate"
+        }
 
-            Label {
-                Layout.rightMargin: 5
+        DoubleSpinBox {
+            from: -1.0
+            to: 1.0
+            stepSize: 0.1
+            decimals: 2
+            value: root.action.playbackRate
 
-                text: "Volume"
-            }
+            onValueModified: { root.action.playbackRate = value }
+        }
 
-            FloatSpinBox {
-                value: _root.action !== null ? _root.action.playbackVolume : 1.0
-                minValue: 0.0
-                maxValue: 1.0
-                stepSize: 0.05
+        Spacer {}
 
-                onValueModified: (val) => { _root.action.playbackVolume = val }
-            }
+        Label {
+            text: "Pitch"
+        }
 
-            LayoutHorizontalSpacer {}
+        DoubleSpinBox {
+            from: -1.0
+            to: 1.0
+            stepSize: 0.1
+            decimals: 2
+            value: root.action.playbackPitch
 
-            Label {
-                Layout.rightMargin: 5
-
-                text: "Rate"
-            }
-
-            FloatSpinBox {
-                value: _root.action !== null ? _root.action.playbackRate : 0.0
-                minValue: -1.0
-                maxValue: 1.0
-                stepSize: 0.1
-
-                onValueModified: (val) => { _root.action.playbackRate = val }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Label {
-                Layout.rightMargin: 5
-
-                text: "Pitch"
-            }
-
-            FloatSpinBox {
-                value: _root.action !== null ? _root.action.playbackPitch : 0.0
-                minValue: -1.0
-                maxValue: 1.0
-                stepSize: 0.1
-
-                onValueModified: (val) => { _root.action.playbackPitch = val }
-            }
+            onValueModified: { root.action.playbackPitch = value }
         }
     }
 }

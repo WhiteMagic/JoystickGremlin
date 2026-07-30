@@ -1,40 +1,40 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Profile
-import "../../qml"
+import Kobold.Foundation
+import Kobold.Controls
 
-Item {
-    id: _root
+// The invisible container holding every top-level action of a binding's sequence -- no
+// header, chevron, name field, guide or indent of its own (SPEC §8: "RootAction is
+// invisible"; the BindingHeader above this already carries the sequence-level description,
+// Add action and remove). Depth 0 has no indent, so children sit flush left with no
+// TreeIndent wrapper around the list itself.
+ColumnLayout {
+    id: root
 
-    property RootModel action
+    required property RootModel action
 
-    implicitHeight: _content.height
+    spacing: 0
 
-    // Show all child nodes
-    ColumnLayout {
-        id: _content
+    property var _children: root.action.getActions("children")
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    Repeater {
+        model: root._children
 
-        ListView {
-            model: _root.action.getActions("children")
+        delegate: ActionNode {
+            required property var modelData
+            required property int index
 
-            delegate: ActionNode {
-                Layout.fillWidth: true
+            Layout.fillWidth: true
 
-                action: modelData
-                parentAction: _root.action
-                containerName: "children"
-            }
+            action: modelData
+            previousSibling: index > 0 ? root._children[index - 1] : null
         }
     }
 }

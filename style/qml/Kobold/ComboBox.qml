@@ -88,8 +88,13 @@ T.ComboBox {
 
         contentItem: Text {
             leftPadding: Metrics.gapM
+            // Not `Array.isArray(control.model)` -- a JS array literal assigned to the
+            // (QVariant-typed) model property reads back as a QVariantList, which fails
+            // that check even though `modelData` is populated correctly either way.
+            // `model[control.textRole]` is only needed for genuine QAbstractItemModel
+            // models (LogicalDeviceSelectorModel, ...), where there is no `modelData`.
             text: control.textRole
-                ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole])
+                ? (modelData !== undefined ? modelData[control.textRole] : model[control.textRole])
                 : modelData
             color: Theme.fg
             font: control.font

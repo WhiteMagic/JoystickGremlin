@@ -9,10 +9,10 @@ import Kobold.Foundation
 import Kobold.Internal
 
 // Recursive replacement for legacy qml/ActionNode.qml, built from the Phase 6 Kobold.Internal
-// pieces (ActionRow, TreeIndent, RowDropBand). Lives in Kobold.Controls rather than
-// Kobold.Internal because plugins with their own nested action containers (Chain, Condition,
-// Tempo, ...) instantiate this directly for their own children, exactly as they instantiated
-// the legacy ActionNode -- it is shared with actions, not app-only chrome.
+// pieces (ActionRow, TreeIndent) and this module's own RowDropBand. Lives in Kobold.Controls
+// rather than Kobold.Internal because plugins with their own nested action containers (Chain,
+// Condition, Tempo, ...) instantiate this directly for their own children, exactly as they
+// instantiated the legacy ActionNode -- it is shared with actions, not app-only chrome.
 Item {
     id: root
 
@@ -113,7 +113,9 @@ Item {
                 // object's creation. setSource()'s initial-properties argument does
                 // that; a plain post-creation assignment in onLoaded does not, and
                 // throws "Required property ... was not initialized".
-                Component.onCompleted: setSource(root.action.qmlPath, { "action": root.action })
+                Component.onCompleted: {
+                    setSource(root.action.qmlPath, { "action": root.action })
+                }
             }
         }
     }

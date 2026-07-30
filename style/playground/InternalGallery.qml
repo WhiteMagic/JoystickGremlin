@@ -227,11 +227,11 @@ ScrollView {
                 Rectangle {
                     Layout.preferredWidth: 300
                     Layout.preferredHeight: Metrics.insertionLine
-                    color: Theme.line
+                    color: Theme.accent
                 }
                 Caption {
-                    text: "2px insertion line in Theme.line (never accent), shown at the "
-                        + "row-edge band the pointer is over while dragging -- RowDropBand"
+                    text: "2px insertion line in Theme.accent, shown at the row-edge band "
+                        + "the pointer is over while dragging -- RowDropBand"
                 }
             }
         }
