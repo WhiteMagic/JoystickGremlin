@@ -16,6 +16,9 @@ Item {
 
     property DeviceListModel deviceListModel
 
+    readonly property alias canScrollBackward: _deviceList.canScrollBackward
+    readonly property alias canScrollForward: _deviceList.canScrollForward
+
     function nextTab() {
         _deviceList.itemAt(_deviceList.currentIndex + 1)?.clicked()
     }

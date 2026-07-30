@@ -40,5 +40,7 @@
         <file alias="arrow-nw.svg">style/assets/icons/arrow-nw.svg</file>
         <file alias="arrow-c.svg">style/assets/icons/arrow-c.svg</file>
         <file alias="assign.svg">style/assets/icons/assign.svg</file>
+        <file alias="tab_left.svg">style/assets/icons/tab_left.svg</file>
+        <file alias="tab_right.svg">style/assets/icons/tab_right.svg</file>
     </qresource>
 </RCC>

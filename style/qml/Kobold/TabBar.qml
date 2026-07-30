@@ -21,7 +21,8 @@ T.TabBar {
         snapMode: ListView.SnapToItem
     }
 
+    // Ties the shell frame together with the left-pane well (SPEC bgAlt).
     background: Rectangle {
-        color: Theme.bg
+        color: Theme.bgAlt
     }
 }

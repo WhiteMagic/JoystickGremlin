@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Templates as T
 import Kobold.Foundation
 
-T.MenuBar {
+T.ToolBar {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
@@ -13,18 +13,9 @@ T.MenuBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    delegate: MenuBarItem { }
-
-    contentItem: Row {
-        spacing: 0
-        Repeater {
-            model: control.contentModel
-        }
-    }
-
     // Ties the shell frame together with the left-pane well (SPEC bgAlt).
     background: Rectangle {
-        implicitHeight: Metrics.menuBar
+        implicitHeight: Metrics.toolbar
         color: Theme.bgAlt
     }
 }

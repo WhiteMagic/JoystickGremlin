@@ -47,6 +47,7 @@ Rectangle {
 
         anchors.fill: parent
         anchors.leftMargin: Metrics.gapM
+        anchors.topMargin: Metrics.gapM
 
         scrollbarAlwaysVisible: true
         spacing: Metrics.gapS

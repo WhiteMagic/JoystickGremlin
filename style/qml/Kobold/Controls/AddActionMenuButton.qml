@@ -20,6 +20,18 @@ ToolButton {
 
     property string variant: "ghost"
     property var model: []
+    // Menus opened from an already-bgAlt pane (e.g. a left-panel "add row" button) need the
+    // popup raised to bg, or it blends into the page -- see Menu.qml's fillColor.
+    property color menuColor: Theme.bgAlt
+    // Bordered variant's own fill -- separate from menuColor since a caller may want the
+    // button itself raised to bg without changing the popup, or vice versa.
+    property color fillColor: Theme.bgAlt
+    // See the popup's width binding below -- off by default (content-sized popup).
+    property bool menuMatchesWidth: false
+    // Off by default (popup drops below). A trigger anchored at the bottom of its
+    // container (e.g. a list footer) wants the popup above instead, so the button stays
+    // the lowest thing on screen.
+    property bool menuOpensUpward: false
 
     signal actionRequested(string name)
 
@@ -74,7 +86,7 @@ ToolButton {
     // Bordered: an ordinary button fill + border, always.
     background: Rectangle {
         radius: control.bordered ? Metrics.radius : 0
-        color: control.bordered ? Theme.bgAlt : "transparent"
+        color: control.bordered ? control.fillColor : "transparent"
         border.width: Metrics.hairline
         border.color: control.bordered ? Theme.line
             : (control.ghostActive ? Theme.line : "transparent")
@@ -86,8 +98,13 @@ ToolButton {
         id: _menu
 
         x: 0
-        y: control.height
-        width: control.width
+        y: control.menuOpensUpward ? -_menu.height : control.height
+        // Content-sized by default -- a stretched (e.g. fillWidth) button must not blow the
+        // popup up to match; the popup only ever needs to fit its own items. A prominent,
+        // full-width trigger (menuMatchesWidth) wants the opposite: the choices should span
+        // the same footprint as the button, reaching the dropdown chevron on the right.
+        width: control.menuMatchesWidth ? control.width : control.implicitWidth
+        fillColor: control.menuColor
 
         Repeater {
             model: control.model

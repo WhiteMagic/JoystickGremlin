@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
 import QtQuick.Window
 
@@ -55,6 +54,7 @@ Rectangle {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.leftMargin: Metrics.gapM
+            Layout.topMargin: Metrics.gapM
 
             scrollbarAlwaysVisible: true
             spacing: Metrics.gapS
@@ -112,29 +112,31 @@ Rectangle {
             }
         }
 
-        // Controls to add new logical device input instances.
+        // Control to add new logical device input instances.
         RowLayout {
-            Layout.minimumWidth: 100
-            Layout.preferredHeight: 50
+            Layout.fillWidth: true
+            Layout.leftMargin: Metrics.gapM
+            Layout.rightMargin: Metrics.gapM
+            Layout.bottomMargin: Metrics.gapM
 
-            ComboBox {
-                id: _input_type
-
+            AddActionMenuButton {
                 Layout.fillWidth: true
-                Layout.leftMargin: 5
 
+                variant: "bordered"
+                implicitHeight: Metrics.rowAction
+                text: "Add input"
                 model: ["Axis", "Button", "Hat"]
-            }
+                // This pane is already bgAlt (_root.color above) -- raise both the button
+                // fill and the popup to bg so neither blends into the page behind it.
+                fillColor: Theme.bg
+                menuColor: Theme.bg
+                menuMatchesWidth: true
+                // This control sits at the bottom of the input list -- pop the choices up
+                // so the button stays the lowest thing on screen.
+                menuOpensUpward: true
 
-            Button {
-                Layout.preferredHeight: _input_type.height
-                Layout.rightMargin: 5
-
-                text: bsi.icons.add
-                font.family: "bootstrap-icons"
-
-                onClicked: () => {
-                    _inputList.model.createInput(_input_type.currentValue)
+                onActionRequested: (name) => {
+                    _inputList.model.createInput(name)
                 }
             }
         }

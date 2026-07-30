@@ -29,6 +29,7 @@ Rectangle {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.leftMargin: Metrics.gapM
+            Layout.topMargin: Metrics.gapM
 
             scrollbarAlwaysVisible: true
             spacing: Metrics.gapS

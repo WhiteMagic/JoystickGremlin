@@ -14,7 +14,13 @@ T.TabBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    property bool scrollbarAlwaysVisible: true
+    // Scroll-affordance state for external arrow buttons -- true only while
+    // there is more content to reveal in that direction. Read through
+    // contentItem (a TabBar/Flickable property) rather than an id, so this
+    // stays a same-scope self-reference instead of reaching into the nested
+    // ListView.
+    property bool canScrollBackward: !contentItem.atXBeginning
+    property bool canScrollForward: !contentItem.atXEnd
 
     contentItem: ListView {
         model: control.contentModel
@@ -26,10 +32,6 @@ T.TabBar {
         flickableDirection: Flickable.AutoFlickIfNeeded
         snapMode: ListView.SnapToItem
         clip: true
-
-        ScrollBar.horizontal: ScrollBar {
-            policy: control.scrollbarAlwaysVisible ? ScrollBar.AlwaysOn : ScrollBar.AsNeeded
-        }
 
         highlightMoveDuration: 100
         highlightRangeMode: ListView.ApplyRange
@@ -70,6 +72,6 @@ T.TabBar {
     background: Rectangle {
         implicitWidth: Metrics.ctrlH * 8
         implicitHeight: Metrics.tabStrip
-        color: Theme.bg
+        color: Theme.bgAlt
     }
 }
