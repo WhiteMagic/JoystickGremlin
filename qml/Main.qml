@@ -533,92 +533,123 @@ ApplicationWindow {
         id: _columnLayout
 
         anchors.fill: parent
+        spacing: 0
 
         property InputConfiguration inputConfigurationWidget
 
-        RowLayout {
+        Item {
             Layout.fillWidth: true
             // Nested Layouts default fillHeight to true, which would let
             // this row compete with the SplitView below for vertical
             // space and get vertically centered in the leftover gap.
             Layout.fillHeight: false
+            implicitHeight: _tabStripRow.implicitHeight
 
-            // Horizontal list of "tabs" listing all detected devices.
-            DeviceList {
-                id: _deviceList
-
-                Layout.minimumHeight: 50
-                Layout.maximumHeight: 50
-                Layout.fillWidth: true
-
-                deviceListModel: _deviceListModel
+            // Backs the whole strip in bgAlt so the scroll-affordance
+            // buttons (transparent at rest) blend with DeviceTabBar's own
+            // bgAlt fill instead of showing the window's bg through.
+            Rectangle {
+                anchors.fill: parent
+                color: Theme.bgAlt
             }
 
-            ColumnLayout {
-                ToolButton {
-                    icon.name: "arrow-e"
+            RowLayout {
+                id: _tabStripRow
 
-                    onClicked: () => { _deviceList.nextTab() }
-                }
+                anchors.fill: parent
+                spacing: 0
+
+                // Only active while there are more devices to scroll to in that
+                // direction -- these are a scroll affordance, not a selector.
                 ToolButton {
-                    icon.name: "arrow-w"
+                    icon.name: "tab_left"
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: Metrics.ctrlH
+
+                    enabled: _deviceList.canScrollBackward
 
                     onClicked: () => { _deviceList.previousTab() }
                 }
-            }
 
-            // Groups the device tabs from Scripts/Settings (SPEC \u00A710); grouping
-            // alone carries the meaning -- no greying, no icons on either side.
-            Rectangle {
-                Layout.preferredWidth: Metrics.hairline
-                Layout.fillHeight: true
-                Layout.topMargin: Metrics.gapS
-                Layout.bottomMargin: Metrics.gapS
-                Layout.leftMargin: Metrics.gapM
-                Layout.rightMargin: Metrics.gapM
+                // Horizontal list of "tabs" listing all detected devices.
+                DeviceList {
+                    id: _deviceList
 
-                color: Theme.line
-            }
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
 
-            DeviceTabBar {
-                scrollbarAlwaysVisible: false
-
-                Component.onCompleted: () => { _scriptButton.checked = false }
-
-                TabButton {
-                    id: _scriptButton
-
-                    text: "Scripts"
-                    width: _metricScripts.width + 50
-                    checked: false
-
-                    onClicked: () => { uiState.setCurrentTab("scripts") }
-
-                    TextMetrics {
-                        id: _metricScripts
-
-                        font: _scriptButton.font
-                        text: _scriptButton.text
-                    }
+                    deviceListModel: _deviceListModel
                 }
 
-                TabButton {
-                    id: _profileSettingsButton
+                ToolButton {
+                    icon.name: "tab_right"
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: Metrics.ctrlH
 
-                    text: "Settings"
-                    width: _metricProfileSettings.width + 50
-                    checked: false
+                    enabled: _deviceList.canScrollForward
 
-                    onClicked: () => { uiState.setCurrentTab("settings") }
+                    onClicked: () => { _deviceList.nextTab() }
+                }
 
-                    TextMetrics {
-                        id: _metricProfileSettings
+                // Groups the device tabs from Scripts/Settings (SPEC \u00A710); grouping
+                // alone carries the meaning -- no greying, no icons on either side.
+                Rectangle {
+                    Layout.preferredWidth: Metrics.hairline
+                    Layout.fillHeight: true
+                    Layout.topMargin: Metrics.gapS
+                    Layout.bottomMargin: Metrics.gapS
+                    Layout.leftMargin: Metrics.gapM
+                    Layout.rightMargin: Metrics.gapM
 
-                        font: _profileSettingsButton.font
-                        text: _profileSettingsButton.text
+                    color: Theme.line
+                }
+
+                DeviceTabBar {
+                    Component.onCompleted: () => { _scriptButton.checked = false }
+
+                    TabButton {
+                        id: _scriptButton
+
+                        text: "Scripts"
+                        width: _metricScripts.width + 50
+                        checked: false
+
+                        onClicked: () => { uiState.setCurrentTab("scripts") }
+
+                        TextMetrics {
+                            id: _metricScripts
+
+                            font: _scriptButton.font
+                            text: _scriptButton.text
+                        }
+                    }
+
+                    TabButton {
+                        id: _profileSettingsButton
+
+                        text: "Settings"
+                        width: _metricProfileSettings.width + 50
+                        checked: false
+
+                        onClicked: () => { uiState.setCurrentTab("settings") }
+
+                        TextMetrics {
+                            id: _metricProfileSettings
+
+                            font: _profileSettingsButton.font
+                            text: _profileSettingsButton.text
+                        }
                     }
                 }
             }
+        }
+
+        // Separates the device/Scripts/Settings tab row from the panels below.
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: Metrics.hairline
+
+            color: Theme.line
         }
 
         // Main UI which contains the active device's inputs on the left and

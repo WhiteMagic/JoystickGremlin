@@ -8,6 +8,11 @@ import Kobold.Foundation
 T.Menu {
     id: control
 
+    // Default matches ComboBox's popup and the spec ("popup fill = bgAlt"). Overridable
+    // per-instance for menus opened from an already-bgAlt pane, where bgAlt-on-bgAlt makes
+    // the popup blend into the page behind it.
+    property color fillColor: Theme.bgAlt
+
     margins: 0
     padding: 0
     // ListView doesn't aggregate implicit size from its delegates, and Popup
@@ -24,9 +29,9 @@ T.Menu {
         currentIndex: control.currentIndex
     }
 
-    // No shadow, no elevation (R2): opaque bgAlt fill + 1px line border, same as ComboBox's popup.
+    // No shadow, no elevation (R2): opaque fill + 1px line border, same as ComboBox's popup.
     background: Rectangle {
-        color: Theme.bgAlt
+        color: control.fillColor
         border.width: Metrics.hairline
         border.color: Theme.line
     }
