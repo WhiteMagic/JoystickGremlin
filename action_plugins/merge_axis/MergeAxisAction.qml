@@ -1,216 +1,159 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
 import QtQuick.Window
 
-import Gremlin.Profile
-import Gremlin.UI
 import Gremlin.ActionPlugins
-import "../../qml"
-import Gremlin.Compact as Compact
+import Gremlin.Profile
+import Kobold.Foundation
+import Kobold.Controls
 
 Item {
     id: _root
 
-    property MergeAxisModel action
+    required property MergeAxisModel action
 
     property LabelValueSelectionModel actionModel: action.mergeActionList
     property LabelValueSelectionModel operationModel: action.operationList
+    property var _childActions: action.getActions("children")
 
     implicitHeight: _content.height
 
     Connections {
-        target: action
-
+        target: _root.action
         function onModelChanged() {
-            actionModel.currentValue = _root.action.mergeAction
-            operationModel.currentValue = _root.action.operation
+            _root.actionModel.currentValue = _root.action.mergeAction
+            _root.operationModel.currentValue = _root.action.operation
+            _root._childActions = _root.action.getActions("children")
         }
     }
 
-    // Dialog to change the label of the current action
     Dialog {
         id: _dialog
-
         anchors.centerIn: Overlay.overlay
-
         standardButtons: Dialog.Ok | Dialog.Cancel
         modal: true
         focus: true
-
         title: "Rename action"
 
-        Row {
-            anchors.fill: parent
-
-            JGTextField {
-                id: _action_label
-
-                width: 400
-                focus: true
-
-                text: action.label
-                placeholderText: "Action label"
-
-                onAccepted: () => { _dialog.accept() }
-            }
+        TextField {
+            id: _actionLabel
+            focus: true
+            text: _root.action.label
+            placeholderText: "Action label"
+            onAccepted: () => { _dialog.accept() }
         }
 
-        onAccepted: () => { action.label = _action_label.text }
+        onAccepted: () => { _root.action.label = _actionLabel.text }
     }
 
     ColumnLayout {
         id: _content
-
         anchors.left: parent.left
         anchors.right: parent.right
 
-
-        // +-------------------------------------------------------------------
-        // | Merge axis instance selection and management
-        // +-------------------------------------------------------------------
         RowLayout {
-            Label {
-                text: "Merge axis instance"
-            }
-            LabelValueComboBox {
-                id: _action_selection
+            Label { text: "Merge axis instance" }
 
+            ComboBox {
+                id: _actionSelection
+                Layout.fillWidth: true
                 model: _root.actionModel
+                textRole: "label"
+                valueRole: "value"
 
                 Component.onCompleted: () => {
-                    _root.actionModel.currentValue = _root.action.mergeAction
+                    currentIndex = _root.actionModel.currentSelectionIndex
                 }
-
-                onSelectionChanged: () => {
-                    _root.action.mergeAction = _root.actionModel.currentValue
+                Connections {
+                    target: _root.actionModel
+                    function onSelectionChanged() {
+                        _actionSelection.currentIndex = _root.actionModel.currentSelectionIndex
+                    }
+                }
+                onActivated: () => {
+                    _root.actionModel.currentValue = currentValue
+                    _root.action.mergeAction = currentValue
                 }
             }
 
-            Row {
-                IconButton {
-                    text: bsi.icons.add_new
-                    font.pixelSize: 24
-
-                    onClicked: () => { _root.action.newMergeAxis() }
-                }
-
-                IconButton {
-                    text: bsi.icons.rename
-                    font.pixelSize: 24
-
-                    onClicked: () => { _dialog.open() }
-                }
+            Button {
+                text: "New instance"
+                onClicked: () => { _root.action.newMergeAxis() }
+            }
+            ToolButton {
+                icon.name: "edit"
+                onClicked: () => { _dialog.open() }
             }
         }
 
-        LayoutHorizontalSpacer {}
-
         RowLayout {
-            Label {
-                text: "Merge operation"
-            }
-            LabelValueComboBox {
-                id: _operation_selection
+            Label { text: "Merge operation" }
 
+            ComboBox {
+                id: _operationSelection
+                Layout.fillWidth: true
                 model: _root.operationModel
+                textRole: "label"
+                valueRole: "value"
 
                 Component.onCompleted: () => {
-                    _root.operationModel.currentValue = _root.action.operation
+                    currentIndex = _root.operationModel.currentSelectionIndex
                 }
-
-                onSelectionChanged: () => {
-                    _root.action.operation = _root.operationModel.currentValue
+                Connections {
+                    target: _root.operationModel
+                    function onSelectionChanged() {
+                        _operationSelection.currentIndex = _root.operationModel.currentSelectionIndex
+                    }
+                }
+                onActivated: () => {
+                    _root.operationModel.currentValue = currentValue
+                    _root.action.operation = currentValue
                 }
             }
         }
 
-        // +-------------------------------------------------------------------
-        // | Axis assignments
-        // +-------------------------------------------------------------------
         RowLayout {
-            // First axis
-            Label {
-                text: "First axis"
-                font.family: "Segoe UI"
-                font.weight: 600
-            }
-            Label {
-                text: _root.action.firstAxis.label
-            }
-            Compact.RecordButton {
+            spacing: Metrics.gapL
+
+            Label { text: "First axis" }
+            InputAssignButton {
+                valueLabel: _root.action.firstAxis.label
+                isAssigned: _root.action.firstAxis.isValid
                 onClicked: () => { _root.action.firstAxis = uiState.currentInput }
             }
 
-            LayoutHorizontalSpacer {
-                Layout.fillWidth: false
-                Layout.preferredWidth: 50
-            }
-
-            // Second axis selection
-            Label {
-                text: "Second axis"
-                font.family: "Segoe UI"
-                font.weight: 600
-            }
-            Label {
-                text: _root.action.secondAxis.label
-            }
-            Compact.RecordButton {
-                onClicked: () => {
-                    _root.action.secondAxis = uiState.currentInput
-                }
+            Label { text: "Second axis" }
+            InputAssignButton {
+                valueLabel: _root.action.secondAxis.label
+                isAssigned: _root.action.secondAxis.isValid
+                onClicked: () => { _root.action.secondAxis = uiState.currentInput }
             }
         }
 
-        // +-------------------------------------------------------------------
-        // | Child action selection
-        // +-------------------------------------------------------------------
-        RowLayout {
-            Label {
-                text: "Actions"
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-            }
-
-            ActionSelector {
-                actionNode: _root.action
-                callback:  (x) => { _root.action.appendAction(x, "children") }
-            }
-        }
-
-        Rectangle {
-            id: _childActionDivider
+        SlotHeader {
             Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
+            label: "Actions"
+            actionNames: _root.action.compatibleActions
+            onActionRequested: (name) => { _root.action.appendAction(name, "children") }
         }
 
-        // Display the actions operating on the merged axis output
         Repeater {
-            model: _root.action.getActions("children")
+            model: _root._childActions
 
             delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: "children"
+                required property var modelData
+                required property int index
 
                 Layout.fillWidth: true
+                action: modelData
+                previousSibling: index > 0 ? _root._childActions[index - 1] : null
             }
-        }
-    }
-
-    // Drop action for insertion into empty/first slot of the short actions
-    ActionDragDropArea {
-        target: _childActionDivider
-        dropCallback: (drop) => {
-            modelData.dropAction(drop.text, modelData.sequenceIndex, "children");
         }
     }
 }

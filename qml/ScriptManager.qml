@@ -8,6 +8,7 @@ import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
 import Gremlin.Script
+import Kobold.Controls
 
 import "helpers.js" as Helpers
 
@@ -133,7 +134,7 @@ Item {
             }
         }
 
-        LayoutHorizontalSpacer {}
+        Spacer {}
 
         JGText {
             id: _name
@@ -160,8 +161,8 @@ Item {
             }
         }
 
-        IconButton {
-            text: bsi.icons.edit
+        ToolButton {
+            icon.name: "edit"
 
             onClicked: {
                 _renameScriptDialog.text = name
@@ -172,17 +173,17 @@ Item {
             }
         }
 
-        IconButton {
-            text: bsi.icons.configure
+        ToolButton {
+            icon.name: "options"
 
             onClicked: {
                 _config.model = variables
             }
         }
 
-        IconButton {
+        ToolButton {
             Layout.rightMargin: 20
-            text: bsi.icons.trash
+            icon.name: "delete"
 
             onClicked: () => scriptListModel.removeScript(path, name)
         }

@@ -18,7 +18,7 @@ QtObject {
     readonly property int rowInput:      dp(48)
     readonly property int rowAction:     dp(28)
     readonly property int ctrlH:         dp(24)
-    readonly property int indent:        dp(16)
+    readonly property int indent:        dp(24)
     readonly property int icon:          dp(16)
     readonly property int markSize:      dp(16) // CheckBox box / RadioButton ring diameter
     readonly property int gapS:          dp(4)

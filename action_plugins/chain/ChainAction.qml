@@ -1,113 +1,99 @@
-﻿// -*- coding: utf-8; -*-
+// -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
-import Gremlin.Base
 import Gremlin.Profile
-import Gremlin.Style
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
-Item {
-    property ChainModel action
 
-    implicitHeight: _content.height
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    ColumnLayout {
-        id: _content
+    required property ChainModel action
 
-        anchors.left: parent.left
-        anchors.right: parent.right
+    spacing: Metrics.gapM
 
-        RowLayout {
-            Label {
-                id: _label
+    RowLayout {
+        spacing: Metrics.gapM
 
-                text: "Timeout (sec)"
-            }
-
-            FloatSpinBox {
-                minValue: 0
-                maxValue: 3600
-                value: _root.action.timeout
-                stepSize: 5
-
-                onValueModified: (newValue) => {
-                    _root.action.timeout = newValue
-                }
-            }
-
-            LayoutHorizontalSpacer {}
-
-            Button {
-                text: "Add Chain Sequence"
-
-                onPressed: function() {
-                    _root.action.addSequence()
-                }
-            }
+        Text {
+            text: "Timeout (sec)"
+            color: Theme.fg
+            font.family: FontType.sans
+            font.pixelSize: Metrics.textBody
         }
 
-        Repeater {
-            model: _root.action.chainCount
+        DoubleSpinBox {
+            from: 0
+            to: 3600
+            stepSize: 5
+            decimals: 1
+            value: root.action.timeout
 
-            delegate: ChainSet {}
+            onValueModified: { root.action.timeout = value }
+        }
+
+        Item { Layout.fillWidth: true }
+
+        Button {
+            text: "Add chain sequence"
+
+            onClicked: { root.action.addSequence() }
         }
     }
 
-    component ChainSet : ColumnLayout {
-        Layout.fillWidth: true
+    Repeater {
+        model: root.action.chainCount
 
-        RowLayout {
+        delegate: ColumnLayout {
+            id: _sequence
+
+            required property int index
+
             Layout.fillWidth: true
+            spacing: Metrics.gapS
 
-            Label {
-                text: "Sequence " + index
-            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Metrics.gapM
 
-            LayoutHorizontalSpacer {}
+                SlotHeader {
+                    Layout.fillWidth: true
 
-            ActionSelector {
-                actionNode: _root.action
-                callback: function(x) {
-                    _root.action.appendAction(x, index.toString());
+                    label: "Sequence " + _sequence.index
+                    actionNames: root.action.compatibleActions
+
+                    onActionRequested: (name) => {
+                        root.action.appendAction(name, _sequence.index.toString())
+                    }
+                }
+
+                ToolButton {
+                    icon.name: "delete"
+
+                    onClicked: { root.action.removeSequence(_sequence.index) }
                 }
             }
 
-            IconButton {
-                text: bsi.icons.remove
+            Repeater {
+                model: root.action.getActions(_sequence.index.toString())
 
-                onClicked: function() {
-                    _root.action.removeSequence(index)
+                delegate: ActionNode {
+                    required property var modelData
+                    required property int index
+
+                    Layout.fillWidth: true
+
+                    action: modelData
+                    previousSibling: index > 0 ?
+                        root.action.getActions(_sequence.index.toString())[index - 1] : null
                 }
-            }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            height: 2
-            color: Style.lowColor
-        }
-
-        ListView {
-            id: _chainSequence
-
-            model: _root.action.getActions(index.toString())
-
-            Layout.fillWidth: true
-            implicitHeight: contentHeight
-
-            delegate: ActionNode {
-                action: modelData
-                parentAction: _root.action
-                containerName: index.toString()
-
-                width: _chainSequence.width
             }
         }
     }

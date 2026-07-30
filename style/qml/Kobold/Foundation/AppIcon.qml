@@ -22,5 +22,5 @@ Image {
     width: Metrics.icon
     height: Metrics.icon
     cache: true
-    source: "image://icon/" + name + "?c=" + _c.toString().slice(-6) + "&px=" + Metrics.icon
+    source: name === "" ? "" : "image://icon/" + name + "?c=" + _c.toString().slice(-6) + "&px=" + Metrics.icon
 }

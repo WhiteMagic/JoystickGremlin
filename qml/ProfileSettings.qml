@@ -7,7 +7,6 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
-import Gremlin.Base
 import Gremlin.Profile
 import Gremlin.Style
 import "helpers.js" as Helpers
@@ -82,13 +81,13 @@ Item {
                 }
 
                 RowLayout {
-                    FloatSpinBox {
+                    DoubleSpinBox {
                         Layout.alignment: Qt.AlignTop
                         Layout.preferredWidth: userEntryColumnWidth
                         Layout.rightMargin: userEntryColumnPadding
 
-                        minValue: 0.0
-                        maxValue: 10.0
+                        from: 0.0
+                        to: 10.0
                         stepSize: 0.1
                         decimals: 3
 
@@ -235,9 +234,9 @@ Item {
                     Layout.preferredWidth: 100
                 }
 
-                FloatSpinBox {
-                    minValue: -1.0
-                    maxValue: 1.0
+                DoubleSpinBox {
+                    from: -1.0
+                    to: 1.0
                     stepSize: 0.05
 
                     // internalWidth: 130

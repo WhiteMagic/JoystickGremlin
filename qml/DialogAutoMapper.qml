@@ -11,6 +11,7 @@ import Gremlin.Device
 import Gremlin.Profile
 import Gremlin.Tools
 import Gremlin.Style
+import Kobold.Controls
 
 Window {
     minimumWidth: 900
@@ -54,7 +55,7 @@ Window {
                         text: "Physical Devices"
                     }
 
-                    LayoutHorizontalSpacer {
+                    Spacer {
                         Layout.preferredHeight: 1
                         color: Style.accent
                     }
@@ -89,7 +90,7 @@ Window {
                         text: "vJoy Devices"
                     }
 
-                    LayoutHorizontalSpacer {
+                    Spacer {
                         Layout.preferredHeight: 1
                         color: Style.accent
                     }
@@ -129,7 +130,7 @@ Window {
                 textRole: "name"
             }
 
-            LayoutHorizontalSpacer {}
+            Spacer {}
 
             Switch {
                 id: _overwriteNonEmpty
@@ -178,21 +179,17 @@ Window {
                 text: "Select devices, options and then click the button."
             }
 
-            IconButton {
-                text: bsi.icons.help
-                font.pixelSize: 24
+            ToolButton {
+                icon.name: "help"
 
-                ToolTip {
-                    text: "- Select mode to create bindings in.
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: "- Select mode to create bindings in.
 - Select source physical devices and target vJoy devices.
 - Click \"Create 1:1 mappings\" button.
 
 Overwrite non-empty: Replaces existing mappings in the profile.
 Repeat vJoy: Cycles through vJoy inputs, if needed to map all physical inputs."
-
-                    visible: parent.hovered
-                    delay: 500
-                }
             }
         }
     }

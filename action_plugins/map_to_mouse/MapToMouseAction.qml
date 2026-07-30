@@ -4,312 +4,250 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
-
-import QtQuick.Controls.Universal
 
 import Gremlin.ActionPlugins
-import Gremlin.Base as Base
-import Gremlin.Compact as Compact
 import Gremlin.Profile
-import "../../qml"
+import Kobold.Controls
+import Kobold.Foundation
 
 
-Item {
-    id: _root
+// Body only -- no chevron, header, name field, guide or indent, those are the core's.
+ColumnLayout {
+    id: root
 
-    property MapToMouseModel action
-    property bool useCompact: false
+    required property MapToMouseModel action
 
     property int limitLow: 0
     property int limitHigh: 100000
 
-    implicitHeight: _content.height
+    spacing: Metrics.gapM
 
-    Component { id: _baseSpinBox;         Base.SpinBox         {} }
-    Component { id: _compactSpinBox;      Compact.SpinBox      {} }
-    Component { id: _baseFloatSpinBox;    Base.FloatSpinBox    {} }
-    Component { id: _compactFloatSpinBox; Compact.FloatSpinBox {} }
+    RowLayout {
+        spacing: Metrics.gapM
 
+        Label {
+            text: "Mode"
+        }
+
+        RadioButton {
+            id: _modeButton
+
+            text: "Button"
+            visible: root.action.actionBehavior === "button"
+            checked: root.action.mode === "Button"
+
+            onToggled: { root.action.mode = "Button" }
+        }
+        RadioButton {
+            id: _modeMotion
+
+            text: "Motion"
+            checked: root.action.mode === "Motion"
+
+            onToggled: { root.action.mode = "Motion" }
+        }
+    }
+
+    // Button configuration.
+    RowLayout {
+        visible: _modeButton.checked
+        spacing: Metrics.gapM
+
+        Label {
+            text: "Mouse button"
+        }
+
+        InputCaptureButton {
+            Layout.fillWidth: true
+
+            eventTypes: ["mouse"]
+            multipleInputs: false
+            text: root.action.button
+
+            callback: (inputs) => { root.action.updateInputs(inputs) }
+        }
+    }
+
+    // Motion configuration for button-like inputs.
     ColumnLayout {
-        id: _content
-
-        anchors.left: parent.left
-        anchors.right: parent.right
+        visible: _modeMotion.checked && root.action.actionBehavior === "button"
+        spacing: Metrics.gapS
 
         RowLayout {
-            Label {
-                id: _label
-
-                Layout.preferredWidth: 50
-
-                text: "<B>Mode</B>"
-            }
-
-            // Radio buttons to select the desired mapping mode.
-            RadioButton {
-                id: _mode_button
-
-                text: "Button"
-                visible: inputBinding.behavior === "button"
-
-                checked: _root.action.mode === "Button"
-                onClicked: () => { _root.action.mode = "Button" }
-            }
-
-            RadioButton {
-                id: _mode_motion
-
-                Layout.fillWidth: true
-
-                text: "Motion"
-
-                checked: _root.action.mode === "Motion"
-                onClicked: () => { _root.action.mode = "Motion" }
-            }
-        }
-
-        // Button configuration.
-        RowLayout {
-            visible: _mode_button.checked
+            spacing: Metrics.gapM
 
             Label {
-                text: "Mouse Button"
-            }
-
-            InputListener {
-                callback: (inputs) => { _root.action.updateInputs(inputs) }
-                multipleInputs: false
-                eventTypes: ["mouse"]
-
-                text: _root.action.button
-            }
-
-        }
-
-        // Motion configuration for button-like inputs.
-        GridLayout {
-            visible: _mode_motion.checked && inputBinding.behavior === "button"
-
-            columns: 5
-
-            Label {
-                Layout.fillWidth: true
-
                 text: "Minimum speed"
             }
 
-            Loader {
-                id: _min_speed_button
+            SpinBox {
+                id: _minSpeedButton
 
-                Layout.fillWidth: true
+                from: root.limitLow
+                to: _maxSpeedButton.value
+                value: root.action.minSpeed
 
-                sourceComponent: _root.useCompact ? _compactSpinBox : _baseSpinBox
-
-                onLoaded: {
-                    item.from  = _root.limitLow
-                    item.to    = Qt.binding(() => _max_speed_button.item ? _max_speed_button.item.value : _root.limitHigh)
-                    item.value = Qt.binding(() => _root.action.minSpeed)
-                    item.onValueModified.connect(() => { _root.action.minSpeed = item.value })
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.horizontalStretchFactor: 1
+                onValueModified: { root.action.minSpeed = value }
             }
 
             Label {
-                Layout.fillWidth: true
-
                 text: "Maximum speed"
             }
 
-            Loader {
-                id: _max_speed_button
+            SpinBox {
+                id: _maxSpeedButton
 
-                Layout.fillWidth: true
+                from: _minSpeedButton.value
+                to: root.limitHigh
+                value: root.action.maxSpeed
 
-                sourceComponent: _root.useCompact ? _compactSpinBox : _baseSpinBox
-
-                onLoaded: {
-                    item.from  = Qt.binding(() => _min_speed_button.item ? _min_speed_button.item.value : _root.limitLow)
-                    item.to    = _root.limitHigh
-                    item.value = Qt.binding(() => _root.action.maxSpeed)
-                    item.onValueModified.connect(() => { _root.action.maxSpeed = item.value })
-                }
+                onValueModified: { root.action.maxSpeed = value }
             }
+        }
+
+        RowLayout {
+            spacing: Metrics.gapM
 
             Label {
                 text: "Time to maximum speed"
             }
 
-            Loader {
-                sourceComponent: _root.useCompact ? _compactFloatSpinBox : _baseFloatSpinBox
+            DoubleSpinBox {
+                from: 0
+                to: 60
+                stepSize: 1.0
+                decimals: 1
+                value: root.action.timeToMaxSpeed
 
-                onLoaded: {
-                    item.minValue = 0
-                    item.maxValue = 60
-                    item.stepSize = 1.0
-                    item.decimals = 1
-                    item.value    = Qt.binding(() => _root.action.timeToMaxSpeed)
-                    item.onValueModified.connect((newValue) => { _root.action.timeToMaxSpeed = newValue })
-                }
+                onValueModified: { root.action.timeToMaxSpeed = value }
             }
-
-            Rectangle {}
 
             Label {
                 text: "Direction"
             }
 
-            Loader {
-                sourceComponent: _root.useCompact ? _compactSpinBox : _baseSpinBox
+            SpinBox {
+                from: 0
+                to: 360
+                stepSize: 15
+                value: root.action.direction
 
-                onLoaded: {
-                    item.from     = 0
-                    item.to       = 360
-                    item.stepSize = 15
-                    item.value    = Qt.binding(() => _root.action.direction)
-                    item.onValueModified.connect(() => { _root.action.direction = item.value })
-                }
+                onValueModified: { root.action.direction = value }
             }
         }
+    }
 
-        // Motion configuration for axis inputs.
-        ColumnLayout {
-            visible: _mode_motion.checked && inputBinding.behavior === "axis"
+    // Motion configuration for axis inputs.
+    ColumnLayout {
+        visible: _modeMotion.checked && root.action.actionBehavior === "axis"
+        spacing: Metrics.gapS
 
-            RowLayout {
-                Label {
-                    text: "Control motion of"
-                }
-
-                RadioButton {
-                    text: "X Axis"
-
-                    checked: _root.action.direction === 90
-                    onClicked: () => { _root.action.direction = 90 }
-                }
-
-                RadioButton {
-                    text: "Y Axis"
-
-                    checked: _root.action.direction === 0
-                    onClicked: () => { _root.action.direction = 0 }
-                }
-            }
-
-            RowLayout {
-
-                Label {
-                    Layout.rightMargin: 10
-
-                    text: "Minimum speed"
-                }
-
-                Loader {
-                    id: _min_speed_axis
-
-                    Layout.preferredWidth: 150
-
-                    sourceComponent: _root.useCompact ? _compactSpinBox : _baseSpinBox
-
-                    onLoaded: {
-                        item.from  = _root.limitLow
-                        item.to    = Qt.binding(() => _max_speed_axis.item ? _max_speed_axis.item.value : _root.limitHigh)
-                        item.value = Qt.binding(() => _root.action.minSpeed)
-                        item.onValueModified.connect(() => { _root.action.minSpeed = item.value })
-                    }
-                }
-
-                Label {
-                    Layout.leftMargin: 50
-                    Layout.rightMargin: 10
-
-                    text: "Maximum speed"
-                }
-
-                Loader {
-                    id: _max_speed_axis
-
-                    Layout.preferredWidth: 150
-
-                    sourceComponent: _root.useCompact ? _compactSpinBox : _baseSpinBox
-
-                    onLoaded: {
-                        item.from  = Qt.binding(() => _min_speed_axis.item ? _min_speed_axis.item.value : _root.limitLow)
-                        item.to    = _root.limitHigh
-                        item.value = Qt.binding(() => _root.action.maxSpeed)
-                        item.onValueModified.connect(() => { _root.action.maxSpeed = item.value })
-                    }
-                }
-            }
-        }
-
-        // Motion configuration for hat inputs.
-        GridLayout {
-            visible: _mode_motion.checked && inputBinding.behavior === "hat"
-
-            columns: 4
+        RowLayout {
+            spacing: Metrics.gapM
 
             Label {
-                Layout.fillWidth: true
+                text: "Control motion of"
+            }
 
+            RadioButton {
+                text: "X axis"
+                checked: root.action.direction === 90
+
+                onToggled: { root.action.direction = 90 }
+            }
+            RadioButton {
+                text: "Y axis"
+                checked: root.action.direction === 0
+
+                onToggled: { root.action.direction = 0 }
+            }
+        }
+
+        RowLayout {
+            spacing: Metrics.gapM
+
+            Label {
                 text: "Minimum speed"
             }
 
-            Loader {
-                id: _min_speed_hat
+            SpinBox {
+                id: _minSpeedAxis
 
-                Layout.fillWidth: true
+                from: root.limitLow
+                to: _maxSpeedAxis.value
+                value: root.action.minSpeed
 
-                sourceComponent: _root.useCompact ? _compactSpinBox : _baseSpinBox
-
-                onLoaded: {
-                    item.from  = _root.limitLow
-                    item.to    = Qt.binding(() => _max_speed_hat.item ? _max_speed_hat.item.value : _root.limitHigh)
-                    item.value = Qt.binding(() => _root.action.minSpeed)
-                    item.onValueModified.connect(() => { _root.action.minSpeed = item.value })
-                }
+                onValueModified: { root.action.minSpeed = value }
             }
 
             Label {
-                Layout.fillWidth: true
-
                 text: "Maximum speed"
             }
 
-            Loader {
-                id: _max_speed_hat
+            SpinBox {
+                id: _maxSpeedAxis
 
-                Layout.fillWidth: true
+                from: _minSpeedAxis.value
+                to: root.limitHigh
+                value: root.action.maxSpeed
 
-                sourceComponent: _root.useCompact ? _compactSpinBox : _baseSpinBox
-
-                onLoaded: {
-                    item.from  = Qt.binding(() => _min_speed_hat.item ? _min_speed_hat.item.value : _root.limitLow)
-                    item.to    = _root.limitHigh
-                    item.value = Qt.binding(() => _root.action.maxSpeed)
-                    item.onValueModified.connect(() => { _root.action.maxSpeed = item.value })
-                }
+                onValueModified: { root.action.maxSpeed = value }
             }
+        }
+    }
+
+    // Motion configuration for hat inputs.
+    ColumnLayout {
+        visible: _modeMotion.checked && root.action.actionBehavior === "hat"
+        spacing: Metrics.gapS
+
+        RowLayout {
+            spacing: Metrics.gapM
+
+            Label {
+                text: "Minimum speed"
+            }
+
+            SpinBox {
+                id: _minSpeedHat
+
+                from: root.limitLow
+                to: _maxSpeedHat.value
+                value: root.action.minSpeed
+
+                onValueModified: { root.action.minSpeed = value }
+            }
+
+            Label {
+                text: "Maximum speed"
+            }
+
+            SpinBox {
+                id: _maxSpeedHat
+
+                from: _minSpeedHat.value
+                to: root.limitHigh
+                value: root.action.maxSpeed
+
+                onValueModified: { root.action.maxSpeed = value }
+            }
+        }
+
+        RowLayout {
+            spacing: Metrics.gapM
 
             Label {
                 text: "Time to maximum speed"
             }
 
-            Loader {
-                sourceComponent: _root.useCompact ? _compactFloatSpinBox : _baseFloatSpinBox
+            DoubleSpinBox {
+                from: 0
+                to: 30
+                stepSize: 1.0
+                decimals: 1
+                value: root.action.timeToMaxSpeed
 
-                onLoaded: {
-                    item.minValue = 0
-                    item.maxValue = 30
-                    item.stepSize = 1.0
-                    item.decimals = 1
-                    item.value    = Qt.binding(() => _root.action.timeToMaxSpeed)
-                    item.onValueModified.connect((newValue) => { _root.action.timeToMaxSpeed = newValue })
-                }
+                onValueModified: { root.action.timeToMaxSpeed = value }
             }
         }
     }

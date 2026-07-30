@@ -46,15 +46,19 @@ Item {
         anchors.fill: parent
 
         // Show all actions associated with this input. SPEC §8: sequences are independent
-        // trees, separated by 8px of space -- never a rule between them (each sequence
-        // provides its own 8px padding, see qml/InputItemBinding.qml).
+        // trees, separated by space -- never a rule between them (InputItemBinding.qml
+        // carries no padding of its own; this gapS is the entire gap on both sides of the
+        // ghost row, see the delegate below).
         JGListView {
             id: _listView
 
             Layout.fillHeight: true
             Layout.fillWidth: true
+            // Layouts drop invisible children entirely, so the empty-state Item below
+            // takes over the slot instead of leaving a blank list.
+            visible: count > 0
             scrollbarAlwaysVisible: true
-            spacing: Metrics.gapM
+            spacing: Metrics.gapS
             // Delegates here are whole action-sequence trees, not short uniform rows --
             // step-scroll can't reach content past the first index (see JGListView.qml).
             stepScroll: false
@@ -64,45 +68,140 @@ Item {
             delegate: _entryDelegate
         }
 
-        // ListView delegate definition rendering individual bindings
-        // via ActionTree instances
+        // ListView delegate definition rendering individual bindings via ActionTree
+        // instances, each followed by a ghost "New Action Sequence" trigger -- repeating
+        // it after every sequence breaks the list up visually and keeps it reachable
+        // wherever the user is scrolled, rather than only at the very bottom.
         Component {
             id: _entryDelegate
 
             Item {
                 id: _delegate
 
-                height: _binding.height
-                width: _binding.width
+                height: _sequenceColumn.height
+                width: view.width
 
                 required property int index
                 required property var modelData
                 property ListView view: ListView.view
 
-                InputItemBinding {
-                    id: _binding
+                ColumnLayout {
+                    id: _sequenceColumn
 
-                    // Have to set the width here as Layout fields don't exist
-                    // and we have to fill the view itself which will resize
-                    // based on the layout
-                    implicitWidth: view.width
+                    width: parent.width
+                    // InputItemBinding.qml carries no padding of its own -- this gapS is
+                    // the entire gap above the ghost row.
+                    spacing: Metrics.gapS
 
-                    inputBinding: modelData
-                    inputItemModel: _root.inputItemModel
+                    InputItemBinding {
+                        id: _binding
+
+                        Layout.fillWidth: true
+
+                        inputBinding: modelData
+                        inputItemModel: _root.inputItemModel
+                    }
+
+                    // Ghost trigger: a permanent `line` hairline through the middle reads as
+                    // a divider between sequences, not just a plain button -- an `fg` edge
+                    // on hover adds feedback on top of that, never accent, never a fill.
+                    ToolButton {
+                        id: _ghostRow
+
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Metrics.gapM
+                        Layout.rightMargin: Metrics.gapM * 2
+                        implicitHeight: Metrics.rowAction
+
+                        text: "+ New Action Sequence"
+
+                        background: Item {
+                            // Hidden on hover -- alongside the hover border below, the
+                            // center line reads as clutter rather than a second cue.
+                            Rectangle {
+                                visible: !(_ghostRow.hovered || _ghostRow.down)
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width
+                                height: Metrics.hairline
+                                color: Theme.line
+                            }
+
+                            // Breaks the hairline under the label instead of striking
+                            // through it -- matches the window's own bg (Main.qml), not
+                            // the panel, since this row has no fill of its own.
+                            Rectangle {
+                                visible: !(_ghostRow.hovered || _ghostRow.down)
+                                anchors.centerIn: parent
+                                width: _label.implicitWidth + Metrics.gapM * 2
+                                height: parent.height
+                                color: Theme.bg
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 0
+                                color: "transparent"
+                                border.width: Metrics.hairline
+                                border.color: (_ghostRow.hovered || _ghostRow.down) ?
+                                    Theme.line : "transparent"
+                            }
+                        }
+
+                        contentItem: Text {
+                            id: _label
+
+                            text: _ghostRow.text
+                            color: (_ghostRow.hovered || _ghostRow.down) ?
+                                Theme.fg : Theme.fgMuted
+                            font.family: FontType.sans
+                            font.pixelSize: Metrics.textDetail
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        onClicked: {
+                            _root.inputItemModel.newActionSequence()
+                        }
+                    }
                 }
             }
         }
 
-        // Button to add a new action configuration to the currently active input. SPEC §8:
-        // "New action sequence" is an ordinary push button -- not filled.
-        Button {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: Metrics.gapM
+        // Nothing mapped to this input yet -- a large, still-unfilled invite (SPEC §8:
+        // an ordinary push button, not filled), vertically centered in the space the
+        // list would otherwise fill.
+        Item {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            visible: _listView.count === 0
 
-            text: "New Action Sequence"
+            ColumnLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Metrics.gapM
+                anchors.rightMargin: Metrics.gapM
+                spacing: Metrics.gapS
 
-            onClicked: {
-                _root.inputItemModel.newActionSequence()
+                Button {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Metrics.rowInput
+
+                    text: "+ New Action Sequence"
+
+                    onClicked: {
+                        _root.inputItemModel.newActionSequence()
+                    }
+                }
+
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+
+                    text: "Nothing mapped to this input yet"
+                    color: Theme.fgMuted
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                }
             }
         }
     }

@@ -10,6 +10,7 @@ import QtQuick.Window
 import Gremlin.Device
 import Gremlin.Style
 import Kobold.Foundation
+import Kobold.Controls
 
 // Visualizes the inputs and information about their associated actions
 // contained in a Device instance.

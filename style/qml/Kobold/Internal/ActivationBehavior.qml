@@ -22,6 +22,10 @@ Item {
 
     property InputItemBindingModel inputBinding
 
+    // Layouts only skip spacing around a row that's actually invisible -- an active-less
+    // Item still costs a full spacing gap on each side even at 0 height, so this must track
+    // the same condition as the two Loaders below, not just leave them empty.
+    visible: _axisLoader.active || _hatLoader.active
     implicitHeight: Math.max(_axisLoader.height, _hatLoader.height)
     implicitWidth: Math.max(_axisLoader.width, _hatLoader.width)
 
