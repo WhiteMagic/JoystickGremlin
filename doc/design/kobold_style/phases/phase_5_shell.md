@@ -40,9 +40,8 @@ no colour/tone shift. Just the three readouts.
 
 Placement follows the §4.6 split: generic, QQC2-adjacent controls (`MenuBar`, `SplitView`,
 `ToolButton`) are **style templates** in `style/qml/Kobold/`; the app-composition pieces (device tab
-strip, split container wiring, footer) are custom components destined for `Kobold.Internal` — though
-some currently live in legacy top-level `qml/` (`Main.qml`, `DeviceTabBar.qml`, `DeviceList.qml`)
-pending migration.
+strip, split container wiring, footer) are shell furniture in `Kobold.Views`
+(`style/qml/Kobold/Views/{Main,DeviceTabBar,DeviceList}.qml`) — top-level `qml/` no longer exists.
 
 ### Root window
 

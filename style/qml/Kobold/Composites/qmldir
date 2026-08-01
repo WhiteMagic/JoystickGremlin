@@ -1,0 +1,7 @@
+module Kobold.Composites
+import Kobold.Controls
+ActionNode          ActionNode.qml
+ActionRow           ActionRow.qml
+SlotHeader          SlotHeader.qml
+ActionStepTable     ActionStepTable.qml
+ActivationBehavior  ActivationBehavior.qml

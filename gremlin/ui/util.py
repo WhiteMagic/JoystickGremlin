@@ -12,7 +12,6 @@ from pathlib import Path
 
 from PySide6 import (
     QtCore,
-    QtGui,
 )
 
 import dill
@@ -25,7 +24,6 @@ from gremlin import (
     shared_state,
     windows_event_hook,
 )
-from gremlin.common import SingletonMetaclass
 from gremlin.config import Configuration
 from gremlin.keyboard import key_from_code
 from gremlin.macro import (
@@ -457,42 +455,6 @@ class ProcessListModel(QtCore.QAbstractListModel):
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
             return self._processes[index.row()]
         return ""
-
-
-class ColorInformation(metaclass=SingletonMetaclass):
-    """Contains the information about the primary colors of the UI theme.
-
-    Information is provided via a QML object (ColorInformation.qml) that holds the
-    color information of the Universal theme as properties.
-    """
-
-    def __init__(self) -> None:
-        self._accent_color = QtGui.QColor("blue")
-        self._background_color = QtGui.QColor("white")
-        self._foreground_color = QtGui.QColor("black")
-        self._is_dark_theme = False
-
-    def update_colors(self, color_information: QtCore.QObject) -> None:
-        self._accent_color = color_information.property("accent")
-        self._background_color = color_information.property("background")
-        self._foreground_color = color_information.property("foreground")
-        self._is_dark_theme = color_information.property("isDarkTheme")
-
-    @property
-    def accent(self) -> QtGui.QColor:
-        return self._accent_color
-
-    @property
-    def background(self) -> QtGui.QColor:
-        return self._background_color
-
-    @property
-    def foreground(self) -> QtGui.QColor:
-        return self._foreground_color
-
-    @property
-    def is_dark_theme(self) -> bool:
-        return self._is_dark_theme
 
 
 def to_local_path(path_or_url: str) -> Path:

@@ -22,8 +22,8 @@ from gremlin.ui.option import (
 
 
 class DummyWidget(BaseMetaConfigOptionWidget):
-    def _qml_path(self) -> str:
-        return "dummy.qml"
+    def _qml_type(self) -> str:
+        return "DummyOption"
 
 
 @pytest.fixture

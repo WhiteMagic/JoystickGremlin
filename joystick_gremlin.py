@@ -59,14 +59,12 @@ import gremlin.plugin_manager
 import gremlin.signal
 import gremlin.tts
 import gremlin.types
-import gremlin.ui.action_image_generator
 import gremlin.ui.backend
 import gremlin.ui.icon_provider
 import gremlin.ui.option
 import gremlin.ui.system_tray
 import gremlin.ui.theme_manager
 import gremlin.ui.tools
-import gremlin.ui.util
 
 # ruff: enable[E402]
 
@@ -426,14 +424,10 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         # If an error was detected during device initialization, the error
         # will be displayed before Gremlin quits.
         if device_initialization_error is not None:
-            self.engine.load(
-                QtCore.QUrl.fromLocalFile(
-                    gremlin.util.resource_path("qml/MainFailure.qml")
-                )
-            )
             self.engine.rootContext().setContextProperty(
                 "errorString", device_initialization_error
             )
+            self.engine.loadFromModule("Kobold.Views", "MainFailure")
 
             self.aboutToQuit.connect(shutdown_cleanup)
             return
@@ -448,37 +442,14 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         update_action_priorities()
 
         # Initialize main UI.
-        self.engine.load(
-            QtCore.QUrl.fromLocalFile(gremlin.util.resource_path("qml/Main.qml"))
-        )
+        self.engine.loadFromModule("Kobold.Views", "Main")
         if not self.engine.rootObjects():
             sys.exit(-1)
 
         self.process_cmd_args(cmd_args)
         self.backend.check_for_updates()
 
-        # Retrieve color information from QML for Python usage.
         self.main_window = self.engine.rootObjects()[0]
-        self.color_information_object = self.main_window.findChild(
-            QtCore.QObject, "colorInformation"
-        )
-        if self.color_information_object is None:
-            raise gremlin.error.GremlinError(
-                "Failed to find color information object in QML."
-            )
-        gremlin.ui.util.ColorInformation().update_colors(self.color_information_object)
-        # Coalesce the colour change signals into a single update call that
-        # triggers only once the current event queue is empty.
-        self._theme_refresh_timer = QtCore.QTimer()
-        self._theme_refresh_timer.setSingleShot(True)
-        self._theme_refresh_timer.setInterval(0)
-        self._theme_refresh_timer.timeout.connect(self._on_theme_colors_changed)
-        for changed in (
-            self.color_information_object.foregroundChanged,
-            self.color_information_object.backgroundChanged,
-            self.color_information_object.accentChanged,
-        ):
-            changed.connect(self._theme_refresh_timer.start)
 
         self.tray_icon = gremlin.ui.system_tray.SystemTrayIcon(self.main_window)
 
@@ -486,11 +457,6 @@ class JoystickGremlinApp(QtWidgets.QApplication):
         self.syslog.info("Gremlin UI launching")
         self.aboutToQuit.connect(self.tray_icon.release_resources)
         self.aboutToQuit.connect(shutdown_cleanup)
-
-    def _on_theme_colors_changed(self) -> None:
-        """Refreshes the cached theme colours and asks QML to redraw."""
-        gremlin.ui.util.ColorInformation().update_colors(self.color_information_object)
-        self.backend.ui_state.bumpThemeRevision()
 
     def process_cmd_args(self, args: argparse.Namespace) -> None:
         # Load the profile specified by the user on the command line, otherwise
@@ -542,23 +508,10 @@ class JoystickGremlinApp(QtWidgets.QApplication):
 
         # Create application and UI engine.
         self.engine = QtQml.QQmlApplicationEngine(parent=self)
-        self.engine.addImportPath(gremlin.util.resource_path("theme"))
         self.engine.addImportPath(gremlin.util.resource_path("style/qml"))
-
-        QtQml.qmlRegisterSingletonType(
-            QtCore.QUrl.fromLocalFile(gremlin.util.resource_path("qml/Style.qml")),
-            "Gremlin.Style",
-            1,
-            0,
-            "Style",
-        )
 
         QtCore.QDir.addSearchPath(
             "core_plugins", gremlin.util.resource_path("action_plugins/")
-        )
-        QtCore.QDir.addSearchPath(
-            "qml",
-            gremlin.util.resource_path("qml/"),
         )
 
         self.cfg = Configuration()
@@ -569,10 +522,6 @@ class JoystickGremlinApp(QtWidgets.QApplication):
             QtCore.QDir.addSearchPath("user_plugins", str(user_plugins_path))
 
         # Register image providers.
-        self.engine.addImageProvider(
-            "action_summary",
-            gremlin.ui.action_image_generator.ActionSummaryImageProvider(),
-        )
         self.engine.addImageProvider("icon", gremlin.ui.icon_provider.IconProvider())
         self.engine.addImageProvider(
             "action-icon", gremlin.ui.icon_provider.ActionIconProvider()
