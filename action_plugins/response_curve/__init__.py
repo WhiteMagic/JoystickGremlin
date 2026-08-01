@@ -9,6 +9,7 @@ from typing import (
     TYPE_CHECKING,
     List,
     Optional,
+    cast,
     override,
 )
 from xml.etree import ElementTree
@@ -184,23 +185,30 @@ class ControlPoint(QtCore.QObject):
         handle_left: Optional[QtCore.QPointF] = None,
         handle_right: Optional[QtCore.QPointF] = None,
         parent: Optional[QtCore.QPointF] = None,
+        symmetric_handles: bool = False,
     ) -> None:
         super().__init__(parent)
         self._center = center
         self._handle_left = handle_left
         self._handle_right = handle_right
+        self._symmetric_handles = symmetric_handles
 
     @QtCore.Property(QtCore.QPointF, notify=changed)
     def center(self) -> QtCore.QPointF:
         return self._center
 
+    # The end points of a curve only possess a single handle. QML has no
+    # equivalent of a missing point, so the absent one reads as the origin
+    # and hasLeft/hasRight say whether it exists at all.
     @QtCore.Property(QtCore.QPointF, notify=changed)
     def handleLeft(self) -> QtCore.QPointF:
-        return self._handle_left
+        return self._handle_left if self._handle_left is not None else QtCore.QPointF()
 
     @QtCore.Property(QtCore.QPointF, notify=changed)
     def handleRight(self) -> QtCore.QPointF:
-        return self._handle_right
+        return (
+            self._handle_right if self._handle_right is not None else QtCore.QPointF()
+        )
 
     @QtCore.Property(bool, notify=changed)
     def hasHandles(self) -> bool:
@@ -213,6 +221,10 @@ class ControlPoint(QtCore.QObject):
     @QtCore.Property(bool, notify=changed)
     def hasRight(self) -> bool:
         return self._handle_right is not None
+
+    @QtCore.Property(bool, notify=changed)
+    def symmetricHandles(self) -> bool:
+        return self._symmetric_handles
 
 
 class ResponseCurveModel(ActionModel):
@@ -313,6 +325,7 @@ class ResponseCurveModel(ActionModel):
                 self._move_control_handle(
                     points[len(points) - idx - 1].handle_right, -dx, -dy
                 )
+            self._mirror_handles(idx, "left")
         elif handle == "right" and control.handle_right:
             dx = x - control.handle_right.x
             dy = y - control.handle_right.y
@@ -321,8 +334,11 @@ class ResponseCurveModel(ActionModel):
                 self._move_control_handle(
                     points[len(points) - idx - 1].handle_left, -dx, -dy
                 )
+            self._mirror_handles(idx, "right")
         self._data.curve.fit()
         self.curveChanged.emit()
+        if handle in ["left", "right"]:
+            self.selectedPointChanged.emit()
 
     @QtCore.Slot(float, float)
     def updateSelectedPoint(self, x: float, y: float) -> None:
@@ -330,6 +346,25 @@ class ResponseCurveModel(ActionModel):
             self.setControlPoint(x, y, self._selected_point, False)
         elif isinstance(self._data.curve, spline.CubicBezierSpline):
             self.setControlHandle(x, y, self._selected_point, "center", False)
+
+    @QtCore.Slot(float, result=list)
+    def curveInfoAt(self, x: float) -> list[float]:
+        """Returns the curve's output and slope at the given input position.
+
+        Args:
+            x: input position, in the [-1, 1] axis range
+
+        Returns:
+            Curve output at x followed by the curve's slope at x
+        """
+        x = util.clamp(x, -1.0, 1.0)
+        delta = 0.001
+        low = max(-1.0, x - delta)
+        high = min(1.0, x + delta)
+        slope = 0.0
+        if high > low:
+            slope = (self._data.curve(high) - self._data.curve(low)) / (high - low)
+        return [self._data.curve(x), slope]
 
     @QtCore.Slot(int)
     def setWidgetSize(self, size: int) -> None:
@@ -349,6 +384,7 @@ class ResponseCurveModel(ActionModel):
         self.changed.emit()
         self.curveChanged.emit()
         self.controlPointChanged.emit()
+        self.selectedPointChanged.emit()
 
     def _move_control_center(
         self, control: spline.CubicBezierSpline.ControlPoint, dx: float, dy: float
@@ -384,6 +420,104 @@ class ResponseCurveModel(ActionModel):
         handle.x += dx
         handle.y += dy
 
+    def _bezier_curve(self) -> spline.CubicBezierSpline | None:
+        """Returns the curve if it is a Bezier spline and None otherwise.
+
+        Returns:
+            The Bezier spline being edited, None for any other curve type
+        """
+        if isinstance(self._data.curve, spline.CubicBezierSpline):
+            return self._data.curve
+        return None
+
+    def _mirror_handles(self, idx: int, side: str) -> None:
+        """Re-establishes handle symmetry after a handle has been moved.
+
+        Args:
+            idx: index of the control point whose handle was moved
+            side: handle that was moved, "left" or "right"
+        """
+        curve = self._bezier_curve()
+        if curve is None:
+            return
+
+        curve.enforce_handle_symmetry(idx, side)
+        if curve.is_symmetric:
+            curve.enforce_handle_symmetry(
+                len(curve.control_points()) - idx - 1,
+                "right" if side == "left" else "left",
+            )
+
+    def _handle_geometry(self, side: str) -> tuple[float, float]:
+        """Returns slope and length of the selected point's handle.
+
+        Args:
+            side: "left" or "right" handle of the selected control point
+
+        Returns:
+            Slope and length of the handle, (0, 0) if there is no such handle
+        """
+        curve = self._bezier_curve()
+        if curve is None:
+            return (0.0, 0.0)
+        return curve.handle_geometry(self._selected_point, side)
+
+    def _set_handle_component(self, side: str, index: int, value: float) -> None:
+        """Sets the slope or the length of the selected point's handle.
+
+        Args:
+            side: "left" or "right" handle of the selected control point
+            index: 0 to set the slope, 1 to set the length
+            value: new value for the given component
+        """
+        curve = self._bezier_curve()
+        if curve is None:
+            return
+
+        geometry = list(self._handle_geometry(side))
+        if geometry[index] == value:
+            return
+        geometry[index] = value
+
+        idx = self._selected_point
+        curve.set_handle_geometry(idx, side, geometry[0], geometry[1])
+        # In symmetry mode the mirrored point's opposing handle has the very
+        # same slope and length.
+        if curve.is_symmetric:
+            curve.set_handle_geometry(
+                len(curve.control_points()) - idx - 1,
+                "right" if side == "left" else "left",
+                geometry[0],
+                geometry[1],
+            )
+        self.curveChanged.emit()
+        # The markers are not being dragged here, so they have to be rebuilt
+        # for the handles to follow the values that were entered.
+        self.controlPointChanged.emit()
+        self.selectedPointChanged.emit()
+
+    def _has_handle(self, side: str) -> bool:
+        curve = self._bezier_curve()
+        if curve is None:
+            return False
+        return curve.handle(self._selected_point, side) is not None
+
+    def _get_selected_symmetric_handles(self) -> bool:
+        curve = self._bezier_curve()
+        if curve is None:
+            return False
+        return curve.control_points()[self._selected_point].symmetric_handles
+
+    def _set_selected_symmetric_handles(self, is_symmetric: bool) -> None:
+        curve = self._bezier_curve()
+        if curve is None or self._get_selected_symmetric_handles() == is_symmetric:
+            return
+
+        curve.set_symmetric_handles(self._selected_point, is_symmetric)
+        self.curveChanged.emit()
+        self.controlPointChanged.emit()
+        self.selectedPointChanged.emit()
+
     def _get_line_points(self) -> List[QtCore.QPointF]:
         points = []
         scaling_factor = self.widget_size / 2.0
@@ -413,7 +547,9 @@ class ResponseCurveModel(ActionModel):
                 right = None
                 if p.handle_right is not None:
                     right = QtCore.QPointF(p.handle_right.x, p.handle_right.y)
-                points.append(ControlPoint(center, left, right, self))
+                points.append(
+                    ControlPoint(center, left, right, self, p.symmetric_handles)
+                )
             return points
         else:
             raise GremlinError(
@@ -451,6 +587,7 @@ class ResponseCurveModel(ActionModel):
             self._set_selected_point(0)
             self.curveChanged.emit()
             self.controlPointChanged.emit()
+            self.selectedPointChanged.emit()
 
     def _get_selected_point(self) -> int:
         return self._selected_point
@@ -478,6 +615,67 @@ class ResponseCurveModel(ActionModel):
         int,
         fget=_get_selected_point,
         fset=_set_selected_point,
+        notify=selectedPointChanged,
+    )
+
+    hasControlHandles = QtCore.Property(
+        bool,
+        fget=lambda cls: ResponseCurveModel._bezier_curve(cls) is not None,
+        notify=curveChanged,
+    )
+
+    selectedHasLeftHandle = QtCore.Property(
+        bool,
+        fget=lambda cls: ResponseCurveModel._has_handle(cls, "left"),
+        notify=selectedPointChanged,
+    )
+
+    selectedHasRightHandle = QtCore.Property(
+        bool,
+        fget=lambda cls: ResponseCurveModel._has_handle(cls, "right"),
+        notify=selectedPointChanged,
+    )
+
+    selectedSymmetricHandles = QtCore.Property(
+        bool,
+        fget=_get_selected_symmetric_handles,
+        fset=_set_selected_symmetric_handles,
+        notify=selectedPointChanged,
+    )
+
+    selectedLeftSlope = QtCore.Property(
+        float,
+        fget=lambda cls: ResponseCurveModel._handle_geometry(cls, "left")[0],
+        fset=lambda cls, value: ResponseCurveModel._set_handle_component(
+            cls, "left", 0, value
+        ),
+        notify=selectedPointChanged,
+    )
+
+    selectedLeftLength = QtCore.Property(
+        float,
+        fget=lambda cls: ResponseCurveModel._handle_geometry(cls, "left")[1],
+        fset=lambda cls, value: ResponseCurveModel._set_handle_component(
+            cls, "left", 1, value
+        ),
+        notify=selectedPointChanged,
+    )
+
+    selectedRightSlope = QtCore.Property(
+        float,
+        fget=lambda cls: ResponseCurveModel._handle_geometry(cls, "right")[0],
+        fset=lambda cls, value: ResponseCurveModel._set_handle_component(
+            cls, "right", 0, value
+        ),
+        notify=selectedPointChanged,
+    )
+
+    selectedRightLength = QtCore.Property(
+        float,
+        fget=lambda cls: ResponseCurveModel._handle_geometry(cls, "right")[1],
+        fset=lambda cls, value: ResponseCurveModel._set_handle_component(
+            cls, "right", 1, value
+        ),
         notify=selectedPointChanged,
     )
 
@@ -533,6 +731,15 @@ class ResponseCurveData(AbstractActionData):
             util.read_property(node, "curve-type", PropertyType.String)
         ]([[p.x, p.y] for p in points])
 
+        # Handle symmetry is optional, profiles written without it leave every
+        # control point with freely movable handles.
+        if isinstance(self.curve, spline.CubicBezierSpline):
+            for cp, is_symmetric in zip(
+                self.curve.control_points(),
+                util.read_properties(cp_node, "symmetric-handles", PropertyType.Bool),
+            ):
+                cp.symmetric_handles = is_symmetric
+
     @override
     def _to_xml(self) -> ElementTree.Element:
         lookup = {
@@ -567,20 +774,33 @@ class ResponseCurveData(AbstractActionData):
         )
 
         points = []
+        handle_symmetry = []
         match type(self.curve):
             case spline.PiecewiseLinear | spline.CubicSpline:
                 points = self.curve.control_points()
             case spline.CubicBezierSpline:
-                for cp in self.curve.control_points():
+                control_points = cast(
+                    spline.CubicBezierSpline, self.curve
+                ).control_points()
+                for cp in control_points:
                     if cp.handle_left:
                         points.append(cp.handle_left)
                     points.append(cp.center)
                     if cp.handle_right:
                         points.append(cp.handle_right)
+                # Only recorded when in use, so curves that don't rely on it
+                # serialize exactly as they did before the option existed.
+                if any(cp.symmetric_handles for cp in control_points):
+                    handle_symmetry = [
+                        ("symmetric-handles", cp.symmetric_handles, PropertyType.Bool)
+                        for cp in control_points
+                    ]
 
         node.append(
             util.create_node_from_data(
-                "control-points", [("point", cp, PropertyType.Point2D) for cp in points]
+                "control-points",
+                [("point", cp, PropertyType.Point2D) for cp in points]
+                + handle_symmetry,
             )
         )
         node.append(

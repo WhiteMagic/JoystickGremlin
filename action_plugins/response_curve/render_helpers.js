@@ -41,3 +41,27 @@ function u2x(u, offset, size) {
 function v2y(v, offset, size) {
     return (-2 * ((v + offset - 2) / size)) + 1
 }
+
+// The curve is always stored on a [-1, 1] range in both axes, which the
+// numerical displays can present as a 0 to 100 range instead. Since both axes
+// are scaled by the same factor, slopes are identical in either presentation
+// and only positions and lengths need converting.
+//
+// The offset is applied after the scaling in one direction and before it in
+// the other so that converting a value and converting it back returns the
+// exact same number, leaving values untouched when the scale is switched.
+function to_percent(value) {
+    return value * 50 + 50
+}
+
+function from_percent(value) {
+    return (value - 50) / 50
+}
+
+function length_to_percent(value) {
+    return value * 50
+}
+
+function length_from_percent(value) {
+    return value / 50
+}

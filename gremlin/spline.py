@@ -13,6 +13,11 @@ from gremlin.types import Point2D
 # Typing alias
 type CoordinateList = list[tuple[float, float]]
 
+# Slope reported for a handle that is (near) vertical. Such a handle is a
+# degenerate configuration for a response curve, but it has to map onto a
+# finite number for the UI to be able to display it.
+MAX_HANDLE_SLOPE = 1000.0
+
 
 class AbstractCurve(abc.ABC):
     """Base class for all curves, providing a common interface."""
@@ -352,10 +357,15 @@ class CubicBezierSpline(AbstractCurve):
             center: Point2D | None = None,
             handle_left: Point2D | None = None,
             handle_right: Point2D | None = None,
+            symmetric_handles: bool = False,
         ) -> None:
             self.center = center
             self.handle_left = handle_left
             self.handle_right = handle_right
+            # When set, the two handles are kept as mirror images of each
+            # other, which makes the curve leave the control point with the
+            # same slope on both sides.
+            self.symmetric_handles = symmetric_handles
 
     def __init__(self, points: CoordinateList | None = None) -> None:
         """Creates a new CubicBezierSpline object.
@@ -369,6 +379,116 @@ class CubicBezierSpline(AbstractCurve):
 
     def control_points(self) -> list[ControlPoint]:
         return self._control_points
+
+    def handle(self, index: int, side: str) -> Point2D | None:
+        """Returns the requested handle of a control point.
+
+        Args:
+            index: index of the control point owning the handle
+            side: "left" or "right" handle of the control point
+
+        Returns:
+            The requested handle or None if it does not exist
+        """
+        cp = self._control_points[index]
+        return cp.handle_left if side == "left" else cp.handle_right
+
+    def handle_geometry(self, index: int, side: str) -> tuple[float, float]:
+        """Returns slope and length of a control point's handle.
+
+        The slope is the gradient of the curve as it leaves the control point
+        in the direction of the handle, the length determines how far the
+        curve follows that slope before bending towards its neighbor.
+
+        Args:
+            index: index of the control point owning the handle
+            side: "left" or "right" handle of the control point
+
+        Returns:
+            Slope and length of the handle, (0, 0) if it does not exist
+        """
+        cp = self._control_points[index]
+        handle = self.handle(index, side)
+        if handle is None:
+            return (0.0, 0.0)
+
+        dx = handle.x - cp.center.x
+        dy = handle.y - cp.center.y
+        length = math.hypot(dx, dy)
+        if abs(dx) < 1e-9:
+            slope = math.copysign(MAX_HANDLE_SLOPE, dy) if dy != 0 else 0.0
+        else:
+            slope = util.clamp(dy / dx, -MAX_HANDLE_SLOPE, MAX_HANDLE_SLOPE)
+        return (slope, length)
+
+    def set_handle_geometry(
+        self, index: int, side: str, slope: float, length: float
+    ) -> None:
+        """Positions a control point's handle via slope and length.
+
+        The left handle always extends towards smaller x values and the right
+        one towards larger ones, so a positive slope describes a rising curve
+        on both sides.
+
+        Args:
+            index: index of the control point owning the handle
+            side: "left" or "right" handle of the control point
+            slope: gradient with which the curve leaves the control point
+            length: distance of the handle from the control point
+        """
+        cp = self._control_points[index]
+        handle = self.handle(index, side)
+        if handle is None:
+            return
+
+        slope = util.clamp(slope, -MAX_HANDLE_SLOPE, MAX_HANDLE_SLOPE)
+        length = max(0.0, length)
+        dx = (-1.0 if side == "left" else 1.0) * length / math.sqrt(1 + slope**2)
+        handle.x = cp.center.x + dx
+        handle.y = cp.center.y + slope * dx
+        self.enforce_handle_symmetry(index, side)
+        self.fit()
+
+    def set_symmetric_handles(
+        self, index: int, is_symmetric: bool, side: str = "right"
+    ) -> None:
+        """Enables or disables handle symmetry for a single control point.
+
+        Args:
+            index: index of the control point to modify
+            is_symmetric: whether the handles are to mirror each other
+            side: handle to use as the reference when enabling symmetry
+        """
+        cp = self._control_points[index]
+        cp.symmetric_handles = is_symmetric
+        if self._is_symmetric:
+            self._control_points[
+                len(self._control_points) - index - 1
+            ].symmetric_handles = is_symmetric
+        if is_symmetric:
+            self.enforce_handle_symmetry(index, side)
+        self.fit()
+
+    def enforce_handle_symmetry(self, index: int, side: str) -> None:
+        """Mirrors a handle onto the opposite one of the same control point.
+
+        Does nothing unless the control point has handle symmetry enabled and
+        possesses both handles.
+
+        Args:
+            index: index of the control point to update
+            side: handle to use as the reference for the mirroring
+        """
+        cp = self._control_points[index]
+        if not cp.symmetric_handles:
+            return
+
+        source = self.handle(index, side)
+        target = self.handle(index, "right" if side == "left" else "left")
+        if source is None or target is None:
+            return
+        target.x = 2 * cp.center.x - source.x
+        target.y = 2 * cp.center.y - source.y
 
     def add_control_point(self, x: float, y: float) -> None:
         x = util.clamp_analog_axis(x)
@@ -409,6 +529,7 @@ class CubicBezierSpline(AbstractCurve):
 
             # cp1 is the reference point for the state to mirror.
             cp2.center = Point2D(-cp1.center.x, -cp1.center.y)
+            cp2.symmetric_handles = cp1.symmetric_handles
 
             # Update handles
             if cp1.handle_left is not None:

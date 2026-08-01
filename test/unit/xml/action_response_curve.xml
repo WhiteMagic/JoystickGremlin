@@ -1,0 +1,149 @@
+<profile version="14">
+    <settings>
+        <startup-mode>Default</startup-mode>
+        <macro-default-delay>0.05</macro-default-delay>
+    </settings>
+    <inputs>
+        <input>
+            <device-id>1ddcef70-0108-11f0-8004-444553540000</device-id>
+            <input-type>axis</input-type>
+            <input-id>1</input-id>
+            <mode>Default</mode>
+            <action-configuration>
+                <root-action>3e9b6f80-6d0e-4a35-9b3c-1d7d4a15f2c1</root-action>
+                <behavior>axis</behavior>
+            </action-configuration>
+        </input>
+    </inputs>
+
+    <library>
+        <action id="0f4b1c7e-58a1-4d0b-9b2e-6c1a4f5d3e21" type="response-curve">
+            <deadzone>
+                <property type="float">
+                    <name>low</name>
+                    <value>-0.9</value>
+                </property>
+                <property type="float">
+                    <name>center-low</name>
+                    <value>-0.05</value>
+                </property>
+                <property type="float">
+                    <name>center-high</name>
+                    <value>0.05</value>
+                </property>
+                <property type="float">
+                    <name>high</name>
+                    <value>0.95</value>
+                </property>
+            </deadzone>
+            <control-points>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>-1.0,-1.0</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>-0.9,-0.9</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>-0.2,-0.45</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>0.0,-0.3</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>0.25,-0.1</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>0.9,0.9</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>1.0,1.0</value>
+                </property>
+            </control-points>
+            <property type="string">
+                <name>curve-type</name>
+                <value>CubicBezierSpline</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Response Curve</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="7c2d5a19-3f84-42a7-8e6b-90d1c3b7e5f4" type="response-curve">
+            <deadzone>
+                <property type="float">
+                    <name>low</name>
+                    <value>-1.0</value>
+                </property>
+                <property type="float">
+                    <name>center-low</name>
+                    <value>0.0</value>
+                </property>
+                <property type="float">
+                    <name>center-high</name>
+                    <value>0.0</value>
+                </property>
+                <property type="float">
+                    <name>high</name>
+                    <value>1.0</value>
+                </property>
+            </deadzone>
+            <control-points>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>-1.0,-1.0</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>-0.5,-0.1</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>0.5,0.4</value>
+                </property>
+                <property type="point2d">
+                    <name>point</name>
+                    <value>1.0,1.0</value>
+                </property>
+            </control-points>
+            <property type="string">
+                <name>curve-type</name>
+                <value>PiecewiseLinear</value>
+            </property>
+            <property type="string">
+                <name>action-label</name>
+                <value>Response Curve</value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+
+        <action id="3e9b6f80-6d0e-4a35-9b3c-1d7d4a15f2c1" type="root">
+            <actions>
+                <action-id>0f4b1c7e-58a1-4d0b-9b2e-6c1a4f5d3e21</action-id>
+                <action-id>7c2d5a19-3f84-42a7-8e6b-90d1c3b7e5f4</action-id>
+            </actions>
+            <property type="string">
+                <name>action-label</name>
+                <value></value>
+            </property>
+            <property type="activation-mode">
+                <name>activation-mode</name>
+                <value>disallowed</value>
+            </property>
+        </action>
+    </library>
+</profile>

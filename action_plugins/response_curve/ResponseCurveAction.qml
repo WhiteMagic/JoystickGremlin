@@ -29,11 +29,50 @@ Item {
     property alias widgetSize : _vis.size
     readonly property int handleOffset: 5
 
+    // Present the numerical values on a 0 to 100 range rather than the
+    // [-1, 1] range the curve is stored in. Purely a display option, the
+    // curve data is unaffected.
+    property bool percentScale: false
+
+    // Amount a single click of a numerical input moves its value by. Slopes
+    // read the same in either scale, so their step is a fixed one.
+    readonly property real coordinateStep: percentScale ? 0.1 : 0.05
+    readonly property real slopeStep: 0.01
+
     implicitHeight: _content.height
 
     focus: true
     Keys.onDeletePressed: () => {
         action.removeControlPoint(action.selectedPoint)
+    }
+
+    // The numerical inputs latch their range and precision when they are
+    // created, so changing the display scale rebuilds them.
+    onPercentScaleChanged: () => {
+        _pointPanel.active = false
+        _pointPanel.active = true
+        _deadzonePanel.active = false
+        _deadzonePanel.active = true
+    }
+
+    function toDisplay(value) {
+        return percentScale ? RH.to_percent(value) : value
+    }
+
+    function fromDisplay(value) {
+        return percentScale ? RH.from_percent(value) : value
+    }
+
+    function lengthToDisplay(value) {
+        return percentScale ? RH.length_to_percent(value) : value
+    }
+
+    function lengthFromDisplay(value) {
+        return percentScale ? RH.length_from_percent(value) : value
+    }
+
+    function formatDisplay(value) {
+        return toDisplay(value).toFixed(percentScale ? 2 : 3)
     }
 
     function map2u(x) {
@@ -147,6 +186,25 @@ Item {
 
                 onToggled: () => { _root.action.isSymmetric = checked }
             }
+
+            CheckBox {
+                text: "0 - 100 scale"
+
+                checked: _root.percentScale
+
+                onToggled: () => { _root.percentScale = checked }
+
+                ToolTip {
+                    text: "Shows the numerical values on a 0 to 100 range " +
+                        "instead of -1 to 1, which is how pedal travel is " +
+                        "usually expressed. Slopes are the same in either " +
+                        "scale and the curve itself is not modified."
+
+                    width: Style.tooltipMaxWidth
+                    visible: parent.hovered
+                    delay: Style.tooltipDelayMs
+                }
+            }
         }
 
         // Response curve widget
@@ -205,11 +263,96 @@ Item {
                     MouseArea {
                         anchors.fill: parent
 
+                        hoverEnabled: true
+
                         onDoubleClicked: (evt) => {
                             action.addControlPoint(
                                 2 * (evt.x / width) - 1,
                                 -2 * (evt.y / height) + 1
                             )
+                        }
+                        onPositionChanged: (evt) => { _probe.sample(evt.x) }
+                        onExited: () => { _probe.active = false }
+                    }
+                }
+
+                // Read-out of the curve's value and slope under the cursor.
+                Item {
+                    id: _probe
+
+                    property bool active: false
+                    property real curveX: 0.0
+                    property real curveY: 0.0
+                    property real slope: 0.0
+
+                    // Position of the curve point in widget coordinates.
+                    readonly property real markerU: (curveX + 1) / 2 * _vis.size
+                    readonly property real markerV: _vis.size - (curveY + 1) / 2 * _vis.size
+
+                    function sample(mouseX) {
+                        curveX = RH.clamp(2 * (mouseX / _vis.size) - 1, -1.0, 1.0)
+                        let info = action.curveInfoAt(curveX)
+                        curveY = info[0]
+                        slope = info[1]
+                        active = true
+                    }
+
+                    x: _curve.x
+                    y: _curve.y
+                    width: _vis.size
+                    height: _vis.size
+
+                    visible: active
+
+                    // Vertical guide at the sampled input value.
+                    Rectangle {
+                        x: _probe.markerU
+                        width: 1
+                        height: _vis.size
+                        color: Style.accent
+                        opacity: 0.5
+                    }
+
+                    // Horizontal guide at the resulting output value.
+                    Rectangle {
+                        y: _probe.markerV
+                        width: _vis.size
+                        height: 1
+                        color: Style.accent
+                        opacity: 0.5
+                    }
+
+                    Rectangle {
+                        x: _probe.markerU - 3
+                        y: _probe.markerV - 3
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: Style.accent
+                    }
+
+                    // Numerical read-out, kept inside the widget so it stays
+                    // legible near the edges of the curve.
+                    Rectangle {
+                        x: RH.clamp(_probe.markerU + 10, 0, _vis.size - width)
+                        y: RH.clamp(_probe.markerV - height - 10, 0, _vis.size - height)
+
+                        width: _probeText.width + 10
+                        height: _probeText.height + 6
+
+                        color: Style.background
+                        border.color: Style.medColor
+                        border.width: 1
+                        opacity: 0.9
+
+                        Label {
+                            id: _probeText
+
+                            anchors.centerIn: parent
+
+                            text: "x " + _root.formatDisplay(_probe.curveX) +
+                                "   y " + _root.formatDisplay(_probe.curveY) +
+                                "   slope " + _probe.slope.toFixed(2)
                         }
                     }
                 }
@@ -239,6 +382,31 @@ Item {
                 }
             }
 
+            Loader {
+                id: _pointPanel
+
+                Layout.alignment: Qt.AlignTop
+
+                sourceComponent: _pointPanelComponent
+            }
+        }
+
+        Label {
+            text: "Deadzone"
+        }
+
+        Loader {
+            id: _deadzonePanel
+
+            sourceComponent: _deadzonePanelComponent
+        }
+    }
+
+    // Numerical editing of the selected control point.
+    Component {
+        id: _pointPanelComponent
+
+        ColumnLayout {
             GridLayout {
                 columns: 2
 
@@ -251,14 +419,18 @@ Item {
                 FloatSpinBox {
                     id: _coordX
 
-                    minValue: -1.0
-                    maxValue: 1.0
-                    stepSize: 0.05
-                    decimals: Style.decimalsPrecise
-                    value: _root.action.selectedPointCoord.x
+                    minValue: _root.toDisplay(-1.0)
+                    maxValue: _root.toDisplay(1.0)
+                    stepSize: _root.coordinateStep
+                    decimals: _root.percentScale ?
+                        Style.decimalsStandard : Style.decimalsPrecise
+                    value: _root.toDisplay(_root.action.selectedPointCoord.x)
 
                     onValueModified: (newValue) => {
-                        _root.action.updateSelectedPoint(newValue, _coordY.value)
+                        _root.action.updateSelectedPoint(
+                            _root.fromDisplay(newValue),
+                            _root.fromDisplay(_coordY.value)
+                        )
                     }
                 }
 
@@ -269,61 +441,216 @@ Item {
                 FloatSpinBox {
                     id: _coordY
 
-                    minValue: -1.0
-                    maxValue: 1.0
-                    stepSize: 0.05
-                    decimals: Style.decimalsPrecise
-                    value: _root.action.selectedPointCoord.y
+                    minValue: _root.toDisplay(-1.0)
+                    maxValue: _root.toDisplay(1.0)
+                    stepSize: _root.coordinateStep
+                    decimals: _root.percentScale ?
+                        Style.decimalsStandard : Style.decimalsPrecise
+                    value: _root.toDisplay(_root.action.selectedPointCoord.y)
 
                     onValueModified: (newValue) => {
-                        _root.action.updateSelectedPoint(_coordX.value, newValue)
-                    }
-                }
-
-                Connections {
-                    target: _root.action
-
-                    function onSelectedPointChanged() {
-                        _coordX.value = _root.action.selectedPointCoord.x
-                        _coordY.value = _root.action.selectedPointCoord.y
+                        _root.action.updateSelectedPoint(
+                            _root.fromDisplay(_coordX.value),
+                            _root.fromDisplay(newValue)
+                        )
                     }
                 }
             }
-        }
 
-        Label {
-            text: "Deadzone"
+            // Numerical editing of the selected point's control handles,
+            // which only the Bezier spline possesses. Slopes are scale
+            // independent, only the handle lengths are converted.
+            ColumnLayout {
+                visible: _root.action.hasControlHandles
+
+                CheckBox {
+                    text: "Mirror handles"
+
+                    checked: _root.action.selectedSymmetricHandles
+                    enabled: _root.action.selectedHasLeftHandle &&
+                        _root.action.selectedHasRightHandle
+
+                    onToggled: () => {
+                        _root.action.selectedSymmetricHandles = checked
+                    }
+
+                    ToolTip {
+                        text: "Keeps both handles of the selected point " +
+                            "mirrored, so the curve leaves it with the " +
+                            "same slope on either side."
+
+                        width: Style.tooltipMaxWidth
+                        visible: parent.hovered
+                        delay: Style.tooltipDelayMs
+                    }
+                }
+
+                GridLayout {
+                    columns: 2
+
+                    Label {
+                        Layout.columnSpan: 2
+
+                        text: "Left handle"
+                        visible: _root.action.selectedHasLeftHandle
+                    }
+
+                    Label {
+                        Layout.preferredWidth: 45
+
+                        text: "Slope"
+                        visible: _root.action.selectedHasLeftHandle
+                    }
+
+                    FloatSpinBox {
+                        id: _leftSlope
+
+                        minValue: -10.0
+                        maxValue: 10.0
+                        stepSize: _root.slopeStep
+                        decimals: Style.decimalsPrecise
+                        visible: _root.action.selectedHasLeftHandle
+                        value: _root.action.selectedLeftSlope
+
+                        onValueModified: (newValue) => {
+                            _root.action.selectedLeftSlope = newValue
+                        }
+                    }
+
+                    Label {
+                        text: "Length"
+                        visible: _root.action.selectedHasLeftHandle
+                    }
+
+                    FloatSpinBox {
+                        id: _leftLength
+
+                        minValue: 0.0
+                        maxValue: _root.lengthToDisplay(2.0)
+                        stepSize: _root.coordinateStep
+                        decimals: _root.percentScale ?
+                            Style.decimalsStandard : Style.decimalsPrecise
+                        visible: _root.action.selectedHasLeftHandle
+                        value: _root.lengthToDisplay(
+                            _root.action.selectedLeftLength)
+
+                        onValueModified: (newValue) => {
+                            _root.action.selectedLeftLength =
+                                _root.lengthFromDisplay(newValue)
+                        }
+                    }
+
+                    Label {
+                        Layout.columnSpan: 2
+
+                        text: "Right handle"
+                        visible: _root.action.selectedHasRightHandle
+                    }
+
+                    Label {
+                        text: "Slope"
+                        visible: _root.action.selectedHasRightHandle
+                    }
+
+                    FloatSpinBox {
+                        id: _rightSlope
+
+                        minValue: -10.0
+                        maxValue: 10.0
+                        stepSize: _root.slopeStep
+                        decimals: Style.decimalsPrecise
+                        visible: _root.action.selectedHasRightHandle
+                        value: _root.action.selectedRightSlope
+
+                        onValueModified: (newValue) => {
+                            _root.action.selectedRightSlope = newValue
+                        }
+                    }
+
+                    Label {
+                        text: "Length"
+                        visible: _root.action.selectedHasRightHandle
+                    }
+
+                    FloatSpinBox {
+                        id: _rightLength
+
+                        minValue: 0.0
+                        maxValue: _root.lengthToDisplay(2.0)
+                        stepSize: _root.coordinateStep
+                        decimals: _root.percentScale ?
+                            Style.decimalsStandard : Style.decimalsPrecise
+                        visible: _root.action.selectedHasRightHandle
+                        value: _root.lengthToDisplay(
+                            _root.action.selectedRightLength)
+
+                        onValueModified: (newValue) => {
+                            _root.action.selectedRightLength =
+                                _root.lengthFromDisplay(newValue)
+                        }
+                    }
+                }
+            }
+
+            Connections {
+                target: _root.action
+
+                function onSelectedPointChanged() {
+                    _coordX.value =
+                        _root.toDisplay(_root.action.selectedPointCoord.x)
+                    _coordY.value =
+                        _root.toDisplay(_root.action.selectedPointCoord.y)
+                    _leftSlope.value = _root.action.selectedLeftSlope
+                    _leftLength.value =
+                        _root.lengthToDisplay(_root.action.selectedLeftLength)
+                    _rightSlope.value = _root.action.selectedRightSlope
+                    _rightLength.value =
+                        _root.lengthToDisplay(_root.action.selectedRightLength)
+                }
+            }
         }
+    }
+
+    Component {
+        id: _deadzonePanelComponent
 
         RowLayout {
             // Lower half axis.
             NumericalRangeSlider {
                 id: _lowerDeadzone
 
-                from: -1.0
-                to: 0.0
-                firstValue: deadzone.low
-                secondValue: deadzone.centerLow
-                stepSize: 0.05
-                decimals: 3
+                from: _root.toDisplay(-1.0)
+                to: _root.toDisplay(0.0)
+                firstValue: _root.toDisplay(_root.deadzone.low)
+                secondValue: _root.toDisplay(_root.deadzone.centerLow)
+                stepSize: _root.coordinateStep
+                decimals: _root.percentScale ? Style.decimalsStandard : 3
 
-                onFirstValueChanged: () => { deadzone.low = firstValue }
-                onSecondValueChanged: () => { deadzone.centerLow = secondValue }
+                onFirstValueChanged: () => {
+                    _root.deadzone.low = _root.fromDisplay(firstValue)
+                }
+                onSecondValueChanged: () => {
+                    _root.deadzone.centerLow = _root.fromDisplay(secondValue)
+                }
             }
 
             // Upper half axis.
             NumericalRangeSlider {
                 id: _upperDeadzone
 
-                from: 0.0
-                to: 1.0
-                firstValue: deadzone.centerHigh
-                secondValue: deadzone.high
-                stepSize: 0.05
-                decimals: 3
+                from: _root.toDisplay(0.0)
+                to: _root.toDisplay(1.0)
+                firstValue: _root.toDisplay(_root.deadzone.centerHigh)
+                secondValue: _root.toDisplay(_root.deadzone.high)
+                stepSize: _root.coordinateStep
+                decimals: _root.percentScale ? Style.decimalsStandard : 3
 
-                onFirstValueChanged: () => { deadzone.centerHigh = firstValue }
-                onSecondValueChanged: () => { deadzone.high = secondValue }
+                onFirstValueChanged: () => {
+                    _root.deadzone.centerHigh = _root.fromDisplay(firstValue)
+                }
+                onSecondValueChanged: () => {
+                    _root.deadzone.high = _root.fromDisplay(secondValue)
+                }
             }
         }
     }

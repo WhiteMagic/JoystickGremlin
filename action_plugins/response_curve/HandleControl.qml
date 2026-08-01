@@ -51,6 +51,14 @@ Rectangle {
             }
         }
 
+        // With mirrored handles the opposing handle of this same point is the
+        // point reflection of the one being dragged.
+        if (modelData.symmetricHandles) {
+            let opposite = side === "left" ? _handleRight : _handleLeft
+            opposite.x = -new_u
+            opposite.y = -new_v
+        }
+
         // Move the actual marker then update data model.
         handle.x = new_u
         handle.y = new_v
