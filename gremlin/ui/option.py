@@ -193,7 +193,7 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
                     case "value":
                         value = self._option.qml_widget(
                             self._section_name, self._group_name, name
-                        )().qml_path
+                        )().qml_type
                     case "data_type":
                         value = "meta_option"
         return value
@@ -246,13 +246,13 @@ class ConfigEntryModel(QtCore.QAbstractListModel):
 
 class BaseMetaConfigOptionWidget:
     @property
-    def qml_path(self) -> str:
-        return self._qml_path()
+    def qml_type(self) -> str:
+        return self._qml_type()
 
-    def _qml_path(self) -> str:
+    def _qml_type(self) -> str:
         raise MissingImplementationError(
             "BaseMetaConfigOptionWidget: Subclasses must implement the "
-            + "qml_path method."
+            + "qml_type method."
         )
 
 
@@ -320,10 +320,8 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
         self._config.set(*self._cfg_key, data)
         self.layoutChanged.emit()
 
-    def _qml_path(self) -> str:
-        return (
-            "file:///" + QtCore.QFile("qml:OptionActionSequenceOrdering.qml").fileName()
-        )
+    def _qml_type(self) -> str:
+        return "OptionActionSequenceOrdering"
 
 
 @ta.QmlElement
@@ -401,8 +399,8 @@ class ProfileAutoLoadingModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWid
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    def _qml_path(self) -> str:
-        return "file:///" + QtCore.QFile("qml:OptionProfileAutoLoading.qml").fileName()
+    def _qml_type(self) -> str:
+        return "OptionProfileAutoLoading"
 
 
 @ta.QmlElement
@@ -435,8 +433,8 @@ class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    def _qml_path(self) -> str:
-        return "file:///" + QtCore.QFile("qml:OptionTTSVoiceSelection.qml").fileName()
+    def _qml_type(self) -> str:
+        return "OptionTTSVoiceSelection"
 
     def _get_current_index(self) -> int:
         try:

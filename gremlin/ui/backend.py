@@ -58,7 +58,6 @@ class UIState(QtCore.QObject):
     inputChanged = QtCore.Signal()
     modeChanged = QtCore.Signal()
     tabChanged = QtCore.Signal()
-    themeRevisionChanged = QtCore.Signal()
     selectIndex = QtCore.Signal(int)
 
     def __init__(self, parent: ta.OQO = None) -> None:
@@ -68,7 +67,6 @@ class UIState(QtCore.QObject):
         self._current_input = {}
         self._current_mode = "Default"
         self._current_tab = "physical"
-        self._theme_revision = 0
 
         event_handler.EventListener().device_change_event.connect(self._device_change)
         signal.profileChanged.connect(self._device_change)
@@ -120,11 +118,6 @@ class UIState(QtCore.QObject):
             self._current_tab = tab
             self.tabChanged.emit()
 
-    @QtCore.Slot()
-    def bumpThemeRevision(self) -> None:
-        self._theme_revision += 1
-        self.themeRevisionChanged.emit()
-
     @QtCore.Property(str, notify=deviceChanged)
     def currentDevice(self) -> str:
         return str(self._current_device).upper()
@@ -144,15 +137,6 @@ class UIState(QtCore.QObject):
     @QtCore.Property(str, notify=tabChanged)
     def currentTab(self) -> str:
         return self._current_tab
-
-    @QtCore.Property(int, notify=themeRevisionChanged)
-    def themeRevision(self) -> int:
-        """Counter bumped whenever the theme colours change.
-
-        Image sources that bake in a theme colour append it so a theme change
-        alters the URL and the image is re-requested in the new colour.
-        """
-        return self._theme_revision
 
     def __str__(self) -> str:
         cur_input = self._current_input.get(
@@ -469,15 +453,6 @@ class Backend(QtCore.QObject):
             is_expanded: True if the action is expanded, False otherwise
         """
         self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
-
-    @QtCore.Property(bool, notify=propertyChanged)
-    def useDarkMode(self) -> bool:
-        """Returns whether or not dark mode is enabled.
-
-        Returns:
-            True if dark mode is enabled, False otherwise
-        """
-        return self.config.value("global", "general", "dark-mode")
 
     @QtCore.Property(type=list, notify=recentProfilesChanged)
     def recentProfiles(self) -> list[str]:

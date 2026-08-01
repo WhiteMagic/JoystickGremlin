@@ -3,10 +3,9 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 import QtQuick.Shapes
 
-import Gremlin.Style
+import Kobold.Foundation
 import "render_helpers.js" as RH
 
 Rectangle {

@@ -8,7 +8,6 @@ import QtQuick.Shapes
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
-import Gremlin.Style
 import Kobold.Foundation
 import Kobold.Controls
 
@@ -170,12 +169,12 @@ Item {
                     height: _vis.size
                     x: _vis.border
                     y: _vis.border
-                    source: Style.isDarkMode ? "grid_dark.svg" : "grid.svg"
+                    source: Theme.appearance === "dark" ? "grid_dark.svg" : "grid.svg"
 
                     Rectangle {
                         anchors.fill: parent
                         color: "transparent"
-                        border.color: Style.foreground
+                        border.color: Theme.line
                         border.width: 1
                     }
                 }

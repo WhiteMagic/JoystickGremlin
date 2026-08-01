@@ -38,6 +38,20 @@ _DEFAULT_THEME = "light"
 _VALID_UI_SCALES = ("100", "150", "200")
 _SCHEMA_FILE_NAME = "scheme.schema.json"
 
+# Fixed, non-themed palette for multi-series charts (e.g. per-axis traces in
+# AxesStateSeries) -- categorical trace colors, not part of the validated
+# light/dark scheme schema.
+_CHART_SERIES_COLORS = (
+    "#1f77b4",
+    "#d62728",
+    "#2ca02c",
+    "#ff7f0e",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+    "#9467bd",
+)
+
 
 def _read_qfile(path: str) -> str:
     """Reads a text file's full content via QFile.
@@ -227,9 +241,18 @@ class ThemeManager(QtCore.QObject):
     def themeNames(self) -> list[str]:
         return sorted(self._themes.keys())
 
+    @QtCore.Property(list, constant=True)
+    def chartSeriesColors(self) -> list[str]:
+        return list(_CHART_SERIES_COLORS)
+
     @QtCore.Property(int, notify=changed)
     def uiScale(self) -> int:
         return self._ui_scale
+
+    @QtCore.Property(str, notify=changed)
+    def appearance(self) -> str:
+        theme = self._themes.get(self._active_theme, {})
+        return theme.get("meta", {}).get("appearance", "light")
 
     @QtCore.Property(QtGui.QColor, notify=changed)
     def bg(self) -> QtGui.QColor:

@@ -8,7 +8,7 @@ import QtQuick.Layouts
 
 import Gremlin.ActionPlugins
 import Kobold.Foundation
-import Kobold.Controls
+import Kobold.Composites
 
 // The invisible container holding every top-level action of a binding's sequence -- no
 // header, chevron, name field, guide or indent of its own (SPEC §8: "RootAction is
