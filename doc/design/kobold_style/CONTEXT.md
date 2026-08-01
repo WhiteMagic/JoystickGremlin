@@ -31,8 +31,9 @@ Referenced elsewhere as `SPEC §n` and `guide §n`.
 |---|---|---|---|
 | *(the style)* `Kobold` | `style/qml/Kobold/*.qml` | QQC2 control templates | implicitly, via `QQuickStyle.setStyle` |
 | `Kobold.Foundation` | `style/qml/Kobold/Foundation/` | tokens, singletons, `AppIcon` | everything |
-| `Kobold.Controls` | `style/qml/Kobold/Controls/` | public kit helpers + re-exports | **plugins** |
-| `Kobold.Internal` | `style/qml/Kobold/Internal/` | app components + shell | app only, never plugins |
+| `Kobold.Controls` | `style/qml/Kobold/Controls/` | leaves + re-exports | everything above, **plugins** |
+| `Kobold.Composites` | `style/qml/Kobold/Composites/` | assemblies of `Kobold` types, no app state | app views, **plugins** (container plugins) |
+| `Kobold.Views` | `style/qml/Kobold/Views/` | app components + shell | app only, never plugins |
 
 `Kobold` (the style) and `Kobold.Foundation` (a module) are distinct things that share a directory root — exactly as `QtQuick` and `QtQuick.Controls` do. The control templates sit directly in `style/qml/Kobold/`; the submodules are directories beneath it.
 
@@ -64,8 +65,10 @@ resolved:
   hand-controlled exception, `accentMark`.
 - **Component naming:** the left-pane delegate is `InputButton` (there is no `InputRow`); chips fill
   with `bgAlt`. Generic QQC2-adjacent controls (`MenuBar`, `SplitView`, `ToolButton`) are style
-  templates in `style/qml/Kobold/`; custom single-purpose components live in `Kobold.Internal`;
-  top-level `qml/` holds legacy app-composition pending migration.
+  templates in `style/qml/Kobold/`; custom components split into `Kobold.Controls` (leaves) and
+  `Kobold.Composites` (assemblies of `Kobold` types), with app-only shell furniture in
+  `Kobold.Views` — see §3. Top-level `qml/` no longer exists; it was fully deleted or migrated into
+  these tiers.
 
 ## 7. Working principles
 

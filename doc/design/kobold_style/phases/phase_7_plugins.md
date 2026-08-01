@@ -32,8 +32,11 @@ It mounts into the body slot the core positions at the correct indent.
   `ComboBox`). They're auto-styled by the Kobold style; the plugin never themes them.
 - **`import Kobold.Controls`** → the tokens (`Theme`, `Metrics`, `FontType`, `AppIcon`) and the
   within-action helpers (`LabeledRow`, `InlineRow`, field wrappers).
-- **Never `import Kobold.Internal.*`.** "Plugins import only `Kobold.Controls`" means *never reach
-  into internals* — it does **not** forbid the standard `QtQuick.Controls` primitives.
+- **`import Kobold.Composites`** → for a container plugin with its own nested action list (Chain,
+  Condition, Tempo, …), to instantiate `ActionNode` directly for its children.
+- **Never `import Kobold.Views.*`.** "Plugins never import `Kobold.Views`" means *never reach into
+  app-only shell furniture* — it does **not** forbid the standard `QtQuick.Controls` primitives or
+  `Kobold.Composites`.
 
 **`Kobold.Controls` is a curated allowlist, not a wrapper layer.** Most entries are re-exports; the
 point is a stable public namespace plugins depend on, decoupled from where internal files live. **Kit
@@ -96,8 +99,9 @@ canonical input-identifier formatter (`withDevice` true in configs, false in the
 
 - [ ] `Kobold.Controls` exists, re-exports the singletons + `AppIcon` + the within-action helpers,
       and no kit type name collides with `QtQuick.Controls`.
-- [ ] A migrated config view imports only `QtQuick.Controls` + `Kobold.Controls` (never
-      `Kobold.Internal`), is body-only, and binds to its Python model without two-way binding loops.
+- [ ] A migrated config view imports only `QtQuick.Controls` + `Kobold.Controls` (+ `Kobold.Composites`
+      for container plugins; never `Kobold.Views`), is body-only, and binds to its Python model without
+      two-way binding loops.
 - [ ] Config views reskin from the style; residual changes are layout reflow, not rebuilds.
 - [ ] Labels are sentence case, no colons; alignment is within-action; inline-sentence configs stay
       sentences.

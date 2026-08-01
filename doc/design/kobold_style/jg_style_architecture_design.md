@@ -83,9 +83,15 @@ These are mechanically checkable (§7). Treat a violation as a build defect.
    at any time.
 6. **All scheme file IO goes through `QFile`/`QDir`.** Never Python `open()`/`glob` for schemes —
    `QFile` resolves both `:/…` (qrc) and real filesystem paths; `open()` does not.
-7. **Plugins import only `Kobold.Controls`.** Internal components are off-limits to plugins. Component
-   names must **not** collide with `QtQuick.Controls` type names (no `Button`, `CheckBox`,
-   `ComboBox` in `Kobold.Controls`) as these are provided by the base style being created.
+7. **Plugins import `Kobold.Foundation`, `Kobold.Controls` and `Kobold.Composites` — never
+   `Kobold.Views`.** `Kobold.Views` is app-only shell furniture; plugins never import it. Allowed
+   framework imports beyond that: `QtQuick`, `QtQuick.Controls`, `QtQuick.Layouts`, `QtQuick.Shapes`,
+   `QtQuick.Window`, `QtQuick.Dialogs`, `Qt.labs.qmlmodels` (plugins may open their own dialogs).
+   Allowed `Gremlin.*` imports: `Gremlin.ActionPlugins`, `Gremlin.Profile`. Context properties
+   (`backend`, `uiState`, `signal`, `themeManager`) are a sanctioned global API available at every
+   tier, plugins included. Component names must **not** collide with `QtQuick.Controls` type names
+   (no `Button`, `CheckBox`, `ComboBox` in `Kobold.Controls`) as these are provided by the base
+   style being created.
 8. **The core owns the action-tree grammar; a plugin supplies only its config *body*.**
 9. **Verify version-specific Qt APIs against docs; flag unknowns; never invent.**
 
@@ -340,10 +346,16 @@ Bootstrap Icons 1.13.1 (MIT), 16×16 viewBox, filled, single colour. **~50 curat
   `ToolTip`, `Label`/Text conventions. (The action-selector menu-button and toggle buttons per
   SPEC §7 may be app components, not restyled primitives — decide during Phase 2.)
 - **Placement rule:** generic, QQC2-adjacent controls (including `MenuBar`, `SplitView`, `ToolButton`)
-  live here as style templates in `style/qml/Kobold/`; custom single-purpose components (`InputButton`,
-  `Chip`, …) live in `Kobold.Internal` (§4.6).
+  live here as style templates in `style/qml/Kobold/`; custom single-purpose components split further
+  by the `Controls`/`Composites`/`Views` rule in §4.6 — a leaf like `Chip` sits in `Controls`, an
+  assembly like `ActionRow`/`SlotHeader` sits in `Composites`, and app-only shell furniture like
+  `InputButton`/`BindingHeader` sits in `Views` (§4.6).
 
 ### 4.6 Modules & boundary
+
+Four tiers, in dependency order (each `qmldir` re-exports the tier below it, so a plugin body only
+ever writes `import Kobold.Controls` and gets `Foundation` along for free; a container plugin writes
+`import Kobold.Composites` and gets `Controls` + `Foundation`):
 
 - **`Kobold.Foundation`** — the QML singletons `Theme`, `Metrics`, `FontType`, `AppIcon`. Shared by
   everything. (`ThemeManager` is the Python source of truth behind `Theme`, exposed as the
@@ -351,18 +363,35 @@ Bootstrap Icons 1.13.1 (MIT), 16×16 viewBox, filled, single colour. **~50 curat
 - **The Kobold style** — control templates (consumed implicitly via `import QtQuick.Controls`).
   Generic, QQC2-adjacent controls that are not stock QQC2 types (`MenuBar`, `SplitView`, `ToolButton`)
   also live here.
-- **`Kobold.Internal.*`** — custom single-purpose app components (`ActionRow`, `SlotHeader`,
-  `InputButton`, `Chip`, `BindingHeader`, `SchemePicker`, multi-input source row). Churn freely.
-  **Plugins never import these.**
-- **`Kobold.Controls`** — the *public plugin surface*: re-exports Foundation singletons + `AppIcon`
-  + A curated set of within-action config building blocks (labelled row, inline-sentence helper,
-  field wrappers). Encapsulation/allow list, not versioning. Type names must not collide with
-  `QtQuick.Controls`.
+- **`Kobold.Controls`** — leaves: components that instantiate nothing else from the `Kobold`
+  namespace (`Chip`, `TreeIndent`, `ActivationToggle`, `ScrollList`, `Divider`, `Spacer`, …), plus
+  the re-exported `Foundation` singletons and `AppIcon`. The *public plugin surface*, alongside
+  `Composites`.
+- **`Kobold.Composites`** — assemblies of `Kobold` types with no app state (`ActionNode`,
+  `ActionRow`, `SlotHeader`, `ActionStepTable`, `ActivationBehavior`). Also plugin-importable: a
+  plugin with its own nested action containers (Chain, Condition, Tempo, …) instantiates `ActionNode`
+  directly for its children.
+- **`Kobold.Views`** — app-only shell furniture (`Main`, `InputButton`, `BindingHeader`,
+  `DeviceInputList`, the option/config dialogs, …): instantiated once by the application or once per
+  device/input and positioned by the shell, never a reusable element a plugin could drop into its own
+  body. Churns freely. **Plugins never import this tier.**
 
-### 4.7 Suggested repo layout (`CONFIRM-3` — adjust to real paths)
+**`Controls` vs `Composites` — the split rule:** does the file instantiate another type from the
+`Kobold` namespace? No → `Controls`. Yes → `Composites`. Mechanically checkable, so misfiling is a
+lint-detectable drift rather than a taste judgment (D4 in the reorganisation decisions).
+
+**`Views` is on a different axis** — contract, not structure. Structurally its members are
+composites; they're separated because plugins must never import them. Enforcement lives on the
+*importing* side: `action_plugins/**/*.qml` must not import `Kobold.Views`.
+
+Type names in every tier must not collide with `QtQuick.Controls`.
+
+### 4.7 Repo layout
 
 One `Kobold/` directory holds both the style and the submodules: the control templates sit in it
 directly, the submodules are subdirectories beneath it (exactly as `QtQuick` / `QtQuick.Controls`).
+`qml/` no longer exists — everything that used to live there was either deleted or moved into a
+`Kobold` tier below (see the reorganisation decisions doc for the full disposition).
 
 ```
 gremlin/ui/
@@ -383,38 +412,45 @@ style/
 │       │   ├── Metrics.qml         (pragma Singleton)
 │       │   ├── FontType.qml        (pragma Singleton)
 │       │   └── AppIcon.qml
-│       ├── Controls/               ← import Kobold.Controls  (PUBLIC plugin kit)
-│       │   ├── qmldir
-│       │   ├── LabeledRow.qml
-│       │   ├── InlineRow.qml
-│       │   └── …field wrappers…    (re-exports Foundation singletons + AppIcon)
-│       └── Internal/               ← import Kobold.Internal  (app-only; plugins MUST NOT import)
-│           ├── qmldir
-│           ├── ActionRow.qml
-│           ├── SlotHeader.qml
+│       ├── Controls/               ← import Kobold.Controls  (leaves; PUBLIC plugin kit)
+│       │   ├── qmldir              (imports Kobold.Foundation)
+│       │   ├── Chip.qml  TreeIndent.qml  ActivationToggle.qml  ScrollList.qml
+│       │   ├── Divider.qml  Spacer.qml  NumericRangeSlider.qml  HatDirectionToggle.qml
+│       │   └── …leaves…            (re-exports Foundation singletons + AppIcon)
+│       ├── Composites/             ← import Kobold.Composites  (assemblies; PUBLIC plugin kit)
+│       │   ├── qmldir              (imports Kobold.Controls)
+│       │   ├── ActionNode.qml
+│       │   ├── ActionRow.qml
+│       │   ├── SlotHeader.qml
+│       │   ├── ActionStepTable.qml
+│       │   └── ActivationBehavior.qml
+│       └── Views/                  ← import Kobold.Views  (app-only; plugins MUST NOT import)
+│           ├── qmldir              (imports Kobold.Composites; flat, no subdirectories)
+│           ├── Main.qml
 │           ├── InputButton.qml
-│           ├── Chip.qml
+│           ├── BindingHeader.qml
 │           ├── DeviceInputList.qml
-│           └── BindingHeader.qml
-├── playground/                     ← gallery app (Phase 3); its own main.qml
+│           ├── DeviceTabBar.qml  DeviceList.qml
+│           ├── Dialog*.qml  Option*.qml  Config*.qml
+│           └── helpers.js          (declared as a JS resource in this qmldir)
+├── playground/                     ← gallery app (Phase 7 of this guide); its own main.qml
 ├── assets/
 │   ├── icons/*.svg                 ← Bootstrap glyphs (bundled in qrc)
 │   └── fonts/*.otf                 ← IBM Plex 400/600 (bundled in qrc)
 ├── themes/                         ← light.json, dark.json, scheme.schema.json (shipped → qrc)
 
-qml/                                ← legacy app-composition (Main.qml, DeviceTabBar.qml,
-                                       DeviceList.qml, …); migrating into the Kobold tiers above
 test/unit/                          ← test_style_lint.py, test_metrics.py, test_theme_manager.py
 ```
 
 **Module → import → contents (the map at a glance):**
 
-| Import name                | Disk (under import root) | Holds                                   | Consumed by                                              |
-| -------------------------- | ------------------------ | --------------------------------------- | -------------------------------------------------------- |
-| `Kobold.Foundation`        | `Kobold/Foundation/`     | `Theme`/`Metrics`/`FontType`/`AppIcon`  | everything                                               |
-| `Kobold.Controls`          | `Kobold/Controls/`       | public kit helpers + re-exports         | **plugins**                                              |
-| `Kobold.Internal`          | `Kobold/Internal/`       | custom single-purpose app components    | app only (never plugins)                                 |
-| *(the style)* `Kobold`     | `Kobold/` (files direct) | QQC2 control templates + generic controls | implicit via `QtQuick.Controls` + `QQuickStyle.setStyle` |
+| Import name                | Disk (under import root) | Holds                                      | Consumed by                                               |
+| -------------------------- | ------------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| `Kobold.Foundation`        | `Kobold/Foundation/`      | `Theme`/`Metrics`/`FontType`/`AppIcon`      | everything                                                  |
+| `Kobold.Controls`          | `Kobold/Controls/`        | leaves — no `Kobold`-type children          | everything above, **plugins**                               |
+| `Kobold.Composites`        | `Kobold/Composites/`      | assemblies of `Kobold` types, no app state  | app views, **plugins** (container plugins)                  |
+| `Kobold.Views`             | `Kobold/Views/`           | app-only shell furniture                    | app only (never plugins)                                    |
+| *(the style)* `Kobold`     | `Kobold/` (files direct)  | QQC2 control templates + generic controls   | implicit via `QtQuick.Controls` + `QQuickStyle.setStyle`    |
 
 **Example `qmldir`** (`Kobold/Foundation/qmldir`) — the QML singletons need explicit entries. `ThemeManager` is *not* here: it is a Python `QObject` reached through the `themeManager` context property (§4.1), and `Theme.qml` is the QML-side facade over it:
 
@@ -575,10 +611,10 @@ engine.load("qrc:/qml/main.qml")
     used as tint
   - `pointSize` / `pt` font sizes → must be `pixelSize` from `Metrics`
   - `font.pixelSize` literals not sourced from `Metrics` → must be `{12,14}` only, via `Metrics`
-  - **Scope:** the gate scans `style/qml/`. `action_plugins/*/*.qml` are in scope and come under the
-    gate as Phase 7 migrates them (expect a wall of violations before then — treat it as the
-    migration to-do list, not an instant hard gate). Legacy top-level `qml/` is **excluded** until
-    its files migrate into the Kobold tiers.
+  - **Scope:** the gate scans `style/qml/`, which now includes the `Views` tier (the former
+    top-level `qml/`, which no longer exists — everything in it was deleted or moved). `action_plugins/*/*.qml`
+    are in scope and come under the gate as Phase 7 migrates them (expect a wall of violations before
+    then — treat it as the migration to-do list, not an instant hard gate).
 - **Metrics-resolution unit test** (`test/unit/test_metrics.py`, separate from the lint script):
   resolve every `Metrics` token at scale ∈ {1.0, 1.5, 2.0}; assert each is an integer **or** a
   declared exception (`hairline`, `insertionLine`, `accentMark`, `indentGuide`, 1px border). Catches
@@ -604,10 +640,14 @@ Manual spec checks worth running periodically: cover-the-labels (§12.4), count 
   `scalePercentage: themeManager.uiScale`. See `gremlin/config.py` and `gremlin/ui/theme_manager.py`.
 - **`CONFIRM-2`:** exact 6.11 packaging/registration for the custom style from qrc — verify against
   *Creating a Custom Style* before finalising Phase 2.
-- **`CONFIRM-3`:** real repo directory paths and module import names.
+- **`CONFIRM-3` (resolved):** real repo directory paths and module import names — see §4.7. The
+  `Kobold` module split into five tiers (`Foundation`/`Controls`/`Composites`/`Views` + the style
+  itself) rather than the three originally sketched; full rationale in the QML reorganisation
+  decisions doc (`doc/design/kobold_cleanup/qml_reorganisation_decisions.md`).
 - **`CONFIRM-4`:** the curated list of ~50 Bootstrap icon glyphs and their names. The user will fill in once the stub stands.
 - **`CONFIRM-5`:** current plugin discovery/registration mechanism (how a plugin's QML view + Python
-  logic are found and mounted), to finalise Phase 7. See `gremlin/plugin_manager.py` and existing code such as `qml/ActionNode.qml`.
+  logic are found and mounted), to finalise Phase 7. See `gremlin/plugin_manager.py` and existing code
+  such as `style/qml/Kobold/Composites/ActionNode.qml`.
 
 **Out of scope:** the `AxesStateSeries` 8-colour data-series palette; hot reload; screenshot tests
 (for now); OS light/dark following.
@@ -619,7 +659,7 @@ Manual spec checks worth running periodically: cover-the-labels (§12.4), count 
 - **Scheme** — a colour theme: one JSON file, 11 tokens + meta. Bundled (qrc) or user (`%USERPROFILE%`).
 - **Token** — a named colour (`Theme.*`) or dimension (`Metrics.*`). The only legal source of a
   colour or a dimension.
-- **Foundation / the Kobold style / Internal / Controls** — the four module tiers (§4.6).
+- **Foundation / the Kobold style / Controls / Composites / Views** — the five module tiers (§4.6).
 - **Action / slot / RootAction / library / sequence** — domain model (§5).
 - **Config body** — the plugin-supplied UI under an action header; the plugin's only responsibility.
 - **Tree scaffolding** — the core-drawn chevron/icon/header/slot-headers/guides/indent.

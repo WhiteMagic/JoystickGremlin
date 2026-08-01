@@ -8,7 +8,7 @@ import Qt.labs.qmlmodels
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
-import Kobold.Controls
+import Kobold.Composites
 import Kobold.Foundation
 
 

@@ -85,25 +85,10 @@ Window {
             }
         }
 
-        // -- Public / Internal tab switch --------------------------------
-        TabBar {
-            id: _galleryTabs
-
-            Layout.fillWidth: true
-            currentIndex: 0
-
-            TabButton { text: "Public" }
-            TabButton { text: "Internal" }
-        }
-
         // -- Gallery body -----------------------------------------------------
-        StackLayout {
+        Gallery {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: _galleryTabs.currentIndex
-
-            PublicGallery {}
-            InternalGallery {}
         }
     }
 }

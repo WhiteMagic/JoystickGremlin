@@ -3,9 +3,8 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 
-import Gremlin.Style
+import Kobold.Foundation
 import "render_helpers.js" as RH
 
 Rectangle {
@@ -19,7 +18,7 @@ Rectangle {
     height: offset * 2
     radius: offset
 
-    color: action.selectedPoint === index ? Style.accent : Style.medColor
+    color: action.selectedPoint === index ? Theme.accent : Theme.line
 
     x: map2u(modelData.center.x)
     y: map2v(modelData.center.y)

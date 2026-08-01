@@ -11,7 +11,7 @@ import QtQuick.Window
 import Gremlin.ActionPlugins
 import Gremlin.Profile
 import Kobold.Foundation
-import Kobold.Controls
+import Kobold.Composites
 
 Item {
     id: _root

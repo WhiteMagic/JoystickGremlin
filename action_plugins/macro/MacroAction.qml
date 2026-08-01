@@ -202,7 +202,7 @@ ColumnLayout {
         color: Theme.bgAlt
         radius: Metrics.radius * 2
 
-        InputListView {
+        ScrollList {
             id: _stepList
 
             anchors.fill: parent

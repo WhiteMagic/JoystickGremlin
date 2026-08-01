@@ -59,7 +59,8 @@ path — fix that before anything else. **`CONFIRM-2`:** verify the exact 6.11 p
 > **Naming note — the style and the namespace root are both called `Kobold`.** These are two
 > different things that must not resolve to the same directory. The **style** is the module/dir
 > `Kobold` holding the control templates (`Button.qml`, …); the **token/component modules** are its
-> submodules `Kobold.Foundation`, `Kobold.Controls`, `Kobold.Internal` (nested directories beneath).
+> submodules `Kobold.Foundation`, `Kobold.Controls`, `Kobold.Composites`, `Kobold.Views` (nested
+> directories beneath).
 > `Kobold` and `Kobold.Foundation` are distinct QML modules and coexist fine (exactly as `QtQuick`
 > and `QtQuick.Controls` do), but `QQuickStyle.setStyle("Kobold")` must find the *style* dir, not the
 > namespace root — so ensure the style dir contains the control files (and a `module Kobold` qmldir)
