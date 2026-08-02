@@ -1,0 +1,13 @@
+[General]
+AdditionalQmlImportPaths=${workspaceFolder}/gremlin/ui;${workspaceFolder}/qml;${workspaceFolder}/theme;${workspaceFolder}/style/qml
+DisableDefaultImports=false
+OverwriteImportTypes=
+ResourcePath=
+
+[Warnings]
+UnqualifiedAccess=error
+CompilerWarnings=warning
+AttachedPropertyReuse=warning
+Quick.AttachedPropertyReuse=warning
+Quick.ControlsAttachedPropertyReuse=warning
+UnusedImports=warning
