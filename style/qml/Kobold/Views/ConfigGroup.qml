@@ -23,7 +23,7 @@ ColumnLayout {
 
     Label {
         Layout.fillWidth: true
-        Layout.preferredHeight: Metrics.dp(50)
+        Layout.preferredHeight: Metrics.rowInput
 
         text: Helpers.capitalize(groupName)
 
@@ -56,7 +56,7 @@ ColumnLayout {
                 title: name
                 explanation: description
 
-                Switch {
+                CheckBox {
                     Layout.alignment: Qt.AlignRight
 
                     checked: model.value

@@ -173,7 +173,7 @@ Window {
 
                 Layout.leftMargin: _foldButton.width
 
-                Switch {
+                CheckBox {
                     text: "Axes - Temporal"
 
                     onClicked: () => {
@@ -188,7 +188,7 @@ Window {
                         }
                     }
                 }
-                Switch {
+                CheckBox {
                     text: "Axes - Current"
 
                     onClicked: () => {
@@ -203,7 +203,7 @@ Window {
                         }
                     }
                 }
-                Switch {
+                CheckBox {
                     text: "Buttons & Hats"
 
                     onClicked: () => {

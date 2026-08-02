@@ -13,11 +13,8 @@ import Kobold.Foundation
 Window {
     id: _root
 
-    minimumWidth: Metrics.dp(900)
-    minimumHeight: Metrics.dp(500)
-
-    // Local to this file -- the parent-mode selector's width, not a shared design concept.
-    readonly property int parentSelectorWidth: Metrics.dp(200)
+    minimumWidth: Metrics.dp(600)
+    minimumHeight: Metrics.dp(400)
 
     color: Theme.bg
 
@@ -30,7 +27,6 @@ Window {
         id: _textInput
 
         visible: false
-        width: Metrics.dp(500)
 
         property var callback: null
 
@@ -122,7 +118,7 @@ Window {
             ComboBox {
                 id: _parentMode
 
-                Layout.preferredWidth: _root.parentSelectorWidth
+                Layout.preferredWidth: Metrics.labelColumn
                 Layout.leftMargin: Metrics.gapM
                 Layout.rightMargin: Metrics.gapM
 

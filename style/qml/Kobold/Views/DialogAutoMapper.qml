@@ -53,10 +53,7 @@ Window {
                         text: "Physical Devices"
                     }
 
-                    Spacer {
-                        Layout.preferredHeight: 1
-                        color: Theme.line
-                    }
+                    Spacer {}
                 }
 
                 ScrollList {
@@ -88,10 +85,7 @@ Window {
                         text: "vJoy Devices"
                     }
 
-                    Spacer {
-                        Layout.preferredHeight: 1
-                        color: Theme.line
-                    }
+                    Spacer {}
                 }
 
                 ScrollList {
@@ -130,7 +124,7 @@ Window {
 
             Spacer {}
 
-            Switch {
+            CheckBox {
                 id: _overwriteNonEmpty
 
                 text: "Overwrite non-empty physical inputs"
@@ -138,7 +132,7 @@ Window {
                 onToggled: () => { overwriteNonEmpty = checked }
             }
 
-            Switch {
+            CheckBox {
                 id: _repeatDevices
 
                 text: "Repeat vJoy devices"

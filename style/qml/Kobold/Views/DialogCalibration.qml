@@ -55,6 +55,7 @@ Window {
 
         RowLayout {
             Layout.bottomMargin: Metrics.gapL
+            Layout.topMargin: Metrics.gapL
 
             Label {
                 Layout.preferredWidth: Metrics.dp(150)
@@ -136,7 +137,7 @@ Window {
                 text: "With center"
                 horizontalAlignment: Text.AlignRight
             }
-            Switch {
+            CheckBox {
                 Layout.preferredWidth: _calibrationDialog.valueFieldWidth
 
                 text: checked ? "Yes" : "No"
@@ -237,7 +238,7 @@ Window {
                     ToolButton {
                         Layout.fillWidth: true
 
-                        icon.name: "delete"
+                        icon.name: "reset"
 
                         onClicked: () => _axisView.model.reset(index)
                     }

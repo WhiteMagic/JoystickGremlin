@@ -36,7 +36,7 @@ Item {
             id: _bottomDropArea
 
             Layout.fillWidth: true
-            height: Metrics.dp(20)
+            height: Metrics.controlHeight
 
             onDropped: (drop) => {
                 _data.move(drop.text, _data.rowCount())
