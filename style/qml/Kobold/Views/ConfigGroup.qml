@@ -23,7 +23,7 @@ ColumnLayout {
 
     Label {
         Layout.fillWidth: true
-        Layout.preferredHeight: Metrics.dp(50)
+        Layout.preferredHeight: Metrics.rowInput
 
         text: Helpers.capitalize(groupName)
 

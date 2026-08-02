@@ -359,7 +359,7 @@ ApplicationWindow {
             ComboBox {
                 id: _modeSelector
 
-                Layout.preferredWidth: Metrics.dp(200)
+                Layout.preferredWidth: Metrics.labelColumn
                 Layout.rightMargin: Metrics.gapM
 
                 model: ModeListModel {}

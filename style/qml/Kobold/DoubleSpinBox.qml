@@ -45,7 +45,7 @@ T.DoubleSpinBox {
 
     down.indicator: Rectangle {
         x: 0
-        implicitWidth: Metrics.dp(18)
+        implicitWidth: Metrics.icon
         implicitHeight: control.height
         color: control.down.pressed ? Theme.bgSelected : control.down.hovered ? Theme.bgHover : Theme.bgAlt
         border.width: Metrics.hairline
@@ -61,7 +61,7 @@ T.DoubleSpinBox {
 
     up.indicator: Rectangle {
         x: control.width - width
-        implicitWidth: Metrics.dp(18)
+        implicitWidth: Metrics.icon
         implicitHeight: control.height
         color: control.up.pressed ? Theme.bgSelected : control.up.hovered ? Theme.bgHover : Theme.bgAlt
         border.width: Metrics.hairline

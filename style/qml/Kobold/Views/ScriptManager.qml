@@ -85,8 +85,7 @@ Item {
             }
 
             Button {
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                Layout.preferredHeight: Metrics.dp(30)
+                Layout.alignment: Qt.AlignHCenter
                 Layout.bottomMargin: Metrics.gapM
 
                 text: "Add Script"
