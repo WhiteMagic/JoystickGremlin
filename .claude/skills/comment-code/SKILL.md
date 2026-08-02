@@ -13,6 +13,8 @@ description: >-
 In the following comment refers to both code comments and docstrings, while
 docstring only refers to user facing documentation.
 
+Use American English spelling and grammar, not British English.
+
 ## The mental model
 
 The comments in this codebase were written by the person who wrote the code, not

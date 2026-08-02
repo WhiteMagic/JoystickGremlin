@@ -38,10 +38,15 @@ Themes are **colour-only JSON data**, user-authorable. Dimensions, type and icon
 |---|---|---|---|
 | *(the style)* | `style/qml/Kobold/*.qml` | QQC2 control templates + generic controls | implicitly, via `QQuickStyle.setStyle("Kobold")` |
 | `Kobold.Foundation` | `style/qml/Kobold/Foundation/` | `Theme`, `Metrics`, `FontType`, `AppIcon` | everything |
-| `Kobold.Controls` | `style/qml/Kobold/Controls/` | public kit: re-exports + `LabeledRow`, `InlineRow` | app and plugins |
-| `Kobold.Internal` | `style/qml/Kobold/Internal/` | custom single-purpose app components | app only, never plugins |
+| `Kobold.Controls` | `style/qml/Kobold/Controls/` | leaves — no `Kobold`-type children (`Chip`, `TreeIndent`, `ActivationToggle`, `ScrollList`, …) + re-exports | everything above, plugins |
+| `Kobold.Composites` | `style/qml/Kobold/Composites/` | assemblies of `Kobold` types, no app state (`ActionNode`, `ActionRow`, `SlotHeader`, …) | app views, plugins (container plugins) |
+| `Kobold.Views` | `style/qml/Kobold/Views/` | app-only shell furniture (`Main`, `InputButton`, `BindingHeader`, dialogs, …) | app only, never plugins |
 
-The style and `Kobold.Foundation` are distinct things sharing a directory root — exactly as `QtQuick` and `QtQuick.Controls` do. Control templates sit *directly* in `style/qml/Kobold/`; the submodules are directories beneath it. **Placement rule:** generic, QQC2-adjacent controls (`MenuBar`, `SplitView`, `ToolButton`) go in the style dir; custom single-purpose components (`InputButton`, `Chip`, …) go in `Kobold.Internal`. Top-level `qml/` holds legacy app-composition (`Main`, `DeviceTabBar`, `DeviceList`) still being migrated into these tiers. Other paths: `style/themes/` (schemes), `style/assets/{icons,fonts}/`, `style/playground/` (gallery).
+The style and `Kobold.Foundation` are distinct things sharing a directory root — exactly as `QtQuick` and `QtQuick.Controls` do. Control templates sit *directly* in `style/qml/Kobold/`; the submodules are directories beneath it. Each tier's `qmldir` imports the one below it (`Controls` imports `Foundation`, `Composites` imports `Controls`, `Views` imports `Composites`), so a simple plugin body writes `import Kobold.Controls` and a container plugin writes `import Kobold.Composites` and gets everything below for free.
+
+**Placement rule:** generic, QQC2-adjacent controls (`MenuBar`, `SplitView`, `ToolButton`) go in the style dir; custom components split by **`Controls` vs `Composites`** — does the file instantiate another `Kobold`-namespace type? No → `Controls`. Yes → `Composites`. **`Views`** is on a different axis — contract, not structure: its members are structurally composites, separated only because plugins must never import them (`action_plugins/**/*.qml` must not import `Kobold.Views`). Top-level `qml/` no longer exists — everything in it was deleted or migrated into these tiers. Other paths: `style/themes/` (schemes), `style/assets/{icons,fonts}/`, `style/playground/` (gallery).
+
+**Plugin import contract:** plugins import `Kobold.Foundation`, `Kobold.Controls` and `Kobold.Composites` — never `Kobold.Views`. Also allowed: `QtQuick`/`QtQuick.Controls`/`QtQuick.Layouts`/`QtQuick.Shapes`/`QtQuick.Window`/`QtQuick.Dialogs`/`Qt.labs.qmlmodels`, `Gremlin.ActionPlugins`, `Gremlin.Profile`, and the sanctioned context properties (`backend`, `uiState`, `signal`, `themeManager`) at every tier.
 
 ## Python side
 
@@ -63,7 +68,7 @@ Pure zoom at **100/150/200%** via multiplied integer tokens — never a scene-gr
 
 ## Verification
 
-- `scripts/lint_style.py` — **static checks only** (raw hex, raw px, shadows, gradients, `pointSize`), scanning `style/qml/`. `action_plugins/*/*.qml` come under the gate as Phase 7 migrates them; legacy top-level `qml/` is excluded until migrated. The **Metrics-resolution test** (every token integer-or-declared-exception at all three scales) and the **scheme-schema test** are separate pytest files (`test/unit/test_metrics.py`, `test/unit/test_theme_manager.py`), not part of the lint script. Run all of them before claiming UI work is done. **Do not widen the px allowlist to make a check pass** — fix the code, or say explicitly that a new entry is warranted and ask.
+- `scripts/lint_style.py` — **static checks only** (raw hex, raw px, shadows, gradients, `pointSize`), scanning `style/qml/` (which includes `Views`, the former top-level `qml/` — that directory no longer exists). `action_plugins/*/*.qml` come under the gate as Phase 7 migrates them. The **Metrics-resolution test** (every token integer-or-declared-exception at all three scales) and the **scheme-schema test** are separate pytest files (`test/unit/test_metrics.py`, `test/unit/test_theme_manager.py`), not part of the lint script. Run all of them before claiming UI work is done. **Do not widen the px allowlist to make a check pass** — fix the code, or say explicitly that a new entry is warranted and ask.
 - `scripts/gallery.py` renders`style/playground/` — the permanent gallery. New components get a section there; visual
   sign-off is both themes x three zooms.
 - Screenshot/pixel-diff tests are **deliberately deferred**; do not add baseline images.

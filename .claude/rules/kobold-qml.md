@@ -9,17 +9,21 @@ paths:
 
 `bg` `bgAlt` `bgHover` `bgSelected` `line` `fg` `fgMuted` `fgDisabled` `accent` `error` `warning`
 
-`bg` base surface and rows, `bgAlt` recessed relative to `bg` in both themes — control fills, popup fill, the left-pane well, `line` every 1px: borders, separators, indent guides, slot rules, the drag insertion line · `fg` primary text · `fgMuted` descriptions, slot labels, units, `+n` · `fgDisabled` disabled and empty states · `accent` selection and focus only.
+`bg` base surface and rows, `bgAlt` recessed relative to `bg` in both themes — control fills, popup fill, the left-pane well, `line` every 1px: borders, separators, indent guides, slot rules · `fg` primary text · `fgMuted` descriptions, slot labels, units, `+n` · `fgDisabled` disabled and empty states · `accent` selection and focus only.
 
 Read `Theme.*` for colour, never the `themeManager` context property directly — the sole exception is `Metrics`, which reads `themeManager.uiScale` (a dimension, not a colour). `ThemeManager` is a plain `QObject` exposed as the `themeManager` context property, not a QML singleton; `Theme.qml` is the facade over it. There is no `accentFg` — nothing ever sits on accent. No `Theme.color("accent")`-style accessor: a function indexing a dict is not reactive.
 
-**Accent's complete inventory:** 2px tab underline · 2px selected-row bar · focus outline (2px, `anchors.margins: -2`) · checkbox/radio *mark* · engaged-toggle icon shade. Expect 2-4 on screen. Any accent **fill** is an R4 violation.
+**Accent's complete inventory:** 2px tab underline · 2px selected-row bar · focus outline (2px, `anchors.margins: -2`) · checkbox/radio *mark* · engaged-toggle icon shade · 2px drag insertion line. Expect 2-4 on screen (5 while dragging). Any accent **fill** is an R4 violation.
+
+**Exception:** `BetterProgressBar`'s elapsed-region fill (`Controls/BetterProgressBar.qml`) is accent, filled. It reads a live value (e.g. an axis position), not a decorative or selection state, so it doesn't fit the "never a fill" wording above — but it's still the only filled use of accent in the app. Do not use this as precedent for a new filled control; it exists once, deliberately.
 
 ## Dimensions — named `Metrics` tokens
 
-Gaps are **4 / 8 / 12 only**. Control height is **24px, one height app-wide**. Icon 16 · checkbox/radio mark box 16 (`markSize`) · indent step 16 · radius 2 on interactive controls, 0 on layout containers · input row 48 (+4 gap = 52 pitch) · action row 28 · slot header 24 · menu bar 26 · toolbar 34 · tab strip 36 · footer 24 · window 1400x900 · left pane min 400 · right pane min 900.
+Gaps are **4 / 8 / 12 only**. Control height is **24px, one height app-wide** (`controlHeight`). Icon 16 · checkbox/radio mark box 16 (shares `icon`) · indent step 16 · radius 2 on interactive controls, 0 on layout containers · input row 48 (+4 gap = 52 pitch) · action row 28 · slot header 24 · menu bar and footer 26 (`menuFooterHeight`, one token for both chrome strips) · toolbar 34 · tab strip 36 · window 1400x900 · left pane min 400 · right pane min 900.
 
-**Never call `Metrics.dp(48)` in a delegate** — read the named token. Policy functions run once per scale change, not per frame. Exceptions are hand-controlled and named: `hairline`, `insertionLine`, `accentMark`, `indentGuide`.
+**Never call `Metrics.dp(48)` in a delegate** — read a named token, or a `readonly property` computed once on the file's root and referenced from the delegate. Policy functions run once per scale change, not per frame. Exceptions are hand-controlled and named: `hairline`, `accentMark`. A 2px line is `2 * Metrics.hairline`, not its own token.
+
+**Dialog/one-off sizing**: a dialog's own `width`/`height`/`minimumWidth`/`minimumHeight`, or any other value that belongs to exactly one file, is `Metrics.dp(N)` inline — never a new named `Metrics.qml` token. Named tokens are for concepts genuinely shared across files; growing the token list to dodge the raw-px lint on a one-off value is the mistake this rule exists to prevent. If a one-off value is reused several times *within* one file (especially inside a delegate, where it must be pre-computed), give it a `readonly property` on that file's root instead — still local, still not in `Metrics.qml`.
 
 ## Type and icons
 
@@ -46,7 +50,7 @@ Popups (`ComboBox` popup, `Menu`, `ToolTip`): opaque `bgAlt` + 1px `line`. **No 
 
 *"current style does not support customization of this control"* means the style directory is not registered or not on the import path — not a QML bug.
 
-## Action tree — `Internal/*.qml`
+## Action tree — `Composites/{ActionRow,SlotHeader}.qml`
 
 **Action row (28)**: `[chevron 16][type icon 16][name][TriggerMode?][error?][remove]`. The type icon **is** the drag handle. The name is **plain text, not a bordered field**: 14px with a 1px *transparent* border that takes `line` + `bgAlt` on hover — the border always exists so nothing moves. **This is the single sanctioned R1 exception in the app.** The row has **no hover state of its own**; a full-width band drowns that border. `TriggerMode` only when `actionBehavior === "button" && canChangeActivation`.
 
@@ -56,11 +60,11 @@ Popups (`ComboBox` popup, `Menu`, `ToolTip`): opaque `bgAlt` + 1px `line`. **No 
 
 **Sequences** are independent trees: 8px space + 8px padding, **no rule between them**. `New action sequence` is an unfilled push button. The binding header's `Add action` **is** bordered — deliberately unlike the slot-header one. `Treat as` is radios (axes and hats only).
 
-**Drag:** grab the type icon; drop targets are **row-edge bands** (upper/lower half, ~12px), not gap-dwellers; feedback is a **2px insertion line in `line`, not accent**; no parting animation.
+**Drag:** grab the type icon; drop targets are **row-edge bands** (upper/lower half, ~12px), not gap-dwellers; feedback is a **2px insertion line in `accent`, always exactly 2px, never a filled band**; no parting animation.
 
 **Macro steps are NOT child actions** — render them as a table, or the UI is lying.
 
-## Left panel — `Internal/*.qml`
+## Left panel — `Views/InputButton.qml`
 
 Pane is `bgAlt`; rows are `bg` cards, 1px `line`, 2px radius, 8px side margin, **48px with a 4px gap**, no shadow. `ListView` with `reuseItems: true` and shallow delegates — ~100 rows.
 
@@ -74,7 +78,7 @@ Three things that never duplicate: **identifier** (left, `fg` 14px) · **descrip
 
 ## Shell
 
-Root is `ApplicationWindow`. Device tabs **and** `Scripts`/`Settings` are **one exclusive selection set of one control type**, separated by a 1px `line` vertical rule. Active tab = 2px `accent` underline + SemiBold + `bgSelected`, **never a fill**. Inactive tabs are **not greyed** (not-current is not unavailable) and have **no icons**.
+Root is `ApplicationWindow`. Device tabs **and** `Scripts`/`Settings` are **one exclusive selection set of one control type**, separated by a 1px `line` vertical rule. Active tab = 2px `accent` underline + `bgSelected`, **never a fill**. Inactive tabs are **not greyed** (not-current is not unavailable) and have **no icons**. A 1px `line` rule runs the full width beneath the tab row, separating it from the split view below. The device-tab strip has no horizontal scrollbar; it scrolls via wheel/drag, plus full-height prev/next `ToolButton`s bookending just the device list, enabled only while scrolling that direction is possible.
 
 `Configuring mode` **keeps its label and toolbar position** — users misread it as switching the live mode, so the label is load-bearing.
 
@@ -82,7 +86,7 @@ Footer is plain adjacency: `State · Editing · Running`. Editing differing from
 
 ## Action Plugin views — `action_plugin/*/*.qml`
 
-**Body only** — a `ColumnLayout` of rows. No chevron, header, name field, guide or indent; those are the core's. Import `QtQuick.Controls` (styled primitives) and `Kobold.Controls` (tokens + `LabeledRow`/`InlineRow`). **Never `Kobold.Internal.*`** — that is what "plugins import only `Kobold.Controls`" means; it does not forbid the stock primitives. Kit names must not collide
+**Body only** — a `ColumnLayout` of rows. No chevron, header, name field, guide or indent; those are the core's. Import `QtQuick.Controls` (styled primitives), `Kobold.Controls` (tokens + `LabeledRow`/`InlineRow`) and, for a container plugin with its own nested action list (Chain, Condition, Tempo, …), `Kobold.Composites` to instantiate `ActionNode` directly for its children. **Never `Kobold.Views.*`** — that is what "plugins never import `Kobold.Views`" means; it does not forbid the stock primitives or `Composites`. Kit names must not collide
 with `QtQuick.Controls`.
 
 **Never two-way bind** — `checked: action.invert` + `onToggled: action.invert = checked`.
