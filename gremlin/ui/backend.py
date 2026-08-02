@@ -41,6 +41,7 @@ from gremlin.ui.device import InputIdentifier
 from gremlin.ui.profile import InputItemModel
 from gremlin.ui.script import ScriptListModel
 from gremlin.ui.util import to_local_path
+from gremlin.ui.window_geometry import WindowGeometry
 
 QML_IMPORT_NAME = "Gremlin.UI"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -461,6 +462,31 @@ class Backend(QtCore.QObject):
             is_expanded: True if the action is expanded, False otherwise
         """
         self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
+
+    @QtCore.Slot(str, int, int, int, int, result=WindowGeometry)
+    def windowGeometry(
+        self,
+        name: str,
+        defaultWidth: int,
+        defaultHeight: int,
+        minWidth: int,
+        minHeight: int,
+    ) -> WindowGeometry:
+        """Returns the persisted (or defaulted) geometry for a window.
+
+        Args:
+            name: config entry name, e.g. "main-window-geometry"
+            defaultWidth: width to fall back to if nothing was persisted
+            defaultHeight: height to fall back to if nothing was persisted
+            minWidth: minimum width the window accepts, used for validation
+            minHeight: minimum height the window accepts, used for validation
+
+        Returns:
+            A WindowGeometry object exposing x/y/width/height and a save() slot.
+        """
+        return WindowGeometry(
+            self.config, name, defaultWidth, defaultHeight, minWidth, minHeight, self
+        )
 
     @QtCore.Property(type=list, notify=recentProfilesChanged)
     def recentProfiles(self) -> list[str]:

@@ -283,6 +283,26 @@ def register_config_options() -> None:
         True,
     )
     cfg.register(
+        "global",
+        "general",
+        "main-window-geometry",
+        PropertyType.List,
+        [],
+        "Persisted position and size of the main window.",
+        {},
+        False,
+    )
+    cfg.register(
+        "global",
+        "general",
+        "input-viewer-geometry",
+        PropertyType.List,
+        [],
+        "Persisted position and size of the Input Viewer window.",
+        {},
+        False,
+    )
+    cfg.register(
         "profile",
         "automation",
         "enable-auto-loading",

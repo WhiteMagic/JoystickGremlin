@@ -4,7 +4,7 @@
 .pragma library
 .import QtQml as QQ
 
-function createComponent(componentSpec, parent)
+function createComponent(componentSpec, parent, initialProperties = {"x": 100, "y": 300})
 {
     let component = Qt.createComponent(componentSpec);
     if(component.status == QQ.Component.Error) {
@@ -12,7 +12,7 @@ function createComponent(componentSpec, parent)
     }
     else if((component.status == QQ.Component.Ready))
     {
-        let window = component.createObject(parent, {"x": 100, "y": 300});
+        let window = component.createObject(parent, initialProperties);
         window.show();
     }
 }
