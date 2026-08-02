@@ -212,6 +212,12 @@ The manner in which the axes values are combined is governed by the *Merge opera
 
     <dt>Sum</dt>
     <dd>Computes the sum of the two values.</dd>
+
+    <dt>Prefer Extreme</dt>
+    <dd>Computes the largest absolute value of the two values.</dd>
+
+    <dt>Prefer Center</dt>
+    <dd>Computes the smallest absolute value of the two values</dd>
 </dl>
 
 
