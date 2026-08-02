@@ -9,17 +9,30 @@ import QtQuick.Window
 import Gremlin.Device
 import Kobold.Foundation
 
+import "helpers.js" as Helpers
+
 Window {
     id: _inputViewer
 
-    width: Metrics.windowWidth
-    height: Metrics.dp(800)
     minimumWidth: Metrics.dp(900)
     minimumHeight: Metrics.dp(500)
 
     // Local to this file -- the device-list sidebar's width range, not a shared design concept.
     readonly property int deviceListMinWidth: Metrics.dp(250)
     readonly property int deviceListMaxWidth: Metrics.dp(400)
+
+    property var _geom: backend.windowGeometry(
+        "input-viewer-geometry", Metrics.windowWidth, Metrics.dp(800),
+        minimumWidth, minimumHeight
+    )
+    // True until Component.onCompleted -- suppresses the save that would
+    // otherwise fire from the initial x/y/width/height binding evaluation.
+    property bool _restoringGeometry: true
+
+    x: _geom.x
+    y: _geom.y
+    width: _geom.width
+    height: _geom.height
 
     color: Theme.bg
 
@@ -39,7 +52,20 @@ Window {
 
     Component.onCompleted: () => {
         backend.pauseInputHighlighting()
+        _restoringGeometry = false
     }
+
+    Timer {
+        id: _geometrySaveTimer
+        interval: 500
+        repeat: false
+        onTriggered: _geom.save(_inputViewer.x, _inputViewer.y, _inputViewer.width, _inputViewer.height)
+    }
+
+    onXChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
+    onYChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
+    onWidthChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
+    onHeightChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
 
     DeviceListModel {
         id: _deviceData
