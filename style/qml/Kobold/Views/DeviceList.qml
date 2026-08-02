@@ -9,6 +9,8 @@ import QtQuick.Window
 import Gremlin.Device
 import Gremlin.Profile
 
+import Kobold.Foundation
+
 // Render buttons for all input devices and the logical device as well as the
 // scripts and profile settings tabs.
 Item {
@@ -41,7 +43,7 @@ Item {
                 id: _button
 
                 text: name
-                width: _metric.width + 50
+                width: Metrics.paddedTabButtonWidth(_metric.width)
                 checked: uiState.currentTab === "physical" &&
                     uiState.currentDevice === model.guid
 
@@ -64,7 +66,7 @@ Item {
             id: _keyboardButton
 
             text: "Keyboard"
-            width: _metricKeyboard.width + 50
+            width: Metrics.paddedTabButtonWidth(_metricKeyboard.width)
             checked: uiState.currentTab === "keyboard"
 
             onClicked: () => {
@@ -84,7 +86,7 @@ Item {
             id: _logicalButton
 
             text: "Logical Device"
-            width: _metricIO.width + 50
+            width: Metrics.paddedTabButtonWidth(_metricIO.width)
             checked: uiState.currentTab === "logical"
 
             onClicked: () => {

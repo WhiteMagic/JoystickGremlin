@@ -11,8 +11,8 @@ import Kobold.Foundation
 T.DoubleSpinBox {
     id: control
 
-    implicitHeight: Metrics.ctrlH
-    implicitWidth: Metrics.ctrlH * 4
+    implicitHeight: Metrics.controlHeight
+    implicitWidth: Metrics.controlHeight * 4
 
     // Every historical caller of the old FloatSpinBox needed typed entry, not just
     // +/- stepping -- unlike the plain integer SpinBox.qml, editable is on by default.

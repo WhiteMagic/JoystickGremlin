@@ -27,7 +27,7 @@ T.MenuBarItem {
 
     // Hover/open = bgHover only (mockup's `.menubar span:hover`); never accent-filled (R4).
     background: Rectangle {
-        implicitHeight: Metrics.menuBar
+        implicitHeight: Metrics.menuFooterHeight
         color: control.down || control.highlighted ? Theme.bgHover : "transparent"
     }
 }

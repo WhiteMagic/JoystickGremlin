@@ -176,6 +176,8 @@ class ThemeManager(QtCore.QObject):
         Args:
             theme_name: Name of the theme to apply.
         """
+        if theme_name not in self._themes:
+            raise error.GremlinError(f"Unknown theme '{theme_name}'")
         colors = self._themes[theme_name]["colors"]
         self._active_colors = {token: QtGui.QColor(colors[token]) for token in _TOKENS}
         self._active_theme = theme_name

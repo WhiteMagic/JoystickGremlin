@@ -18,7 +18,7 @@ T.Menu {
     // ListView doesn't aggregate implicit size from its delegates, and Popup
     // doesn't propagate contentItem's implicit size on its own -- without both,
     // the popup opens (visible: true) but renders at zero size, invisibly.
-    implicitWidth: Metrics.ctrlH * 8
+    implicitWidth: Metrics.controlHeight * 8
     implicitHeight: contentItem.implicitHeight
 
     contentItem: ListView {

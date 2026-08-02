@@ -233,7 +233,7 @@ ScrollList {
                         text: parent.currentText
                         // Set an upper width of the tooltip to force word wrap
                         // on long selection names.
-                        width: contentWidth > 500 ? 500 : contentWidth + 20
+                        width: Metrics.tooltipWidth(contentWidth)
                         visible: _hoverHandler.hovered
                         delay: 500
                     }
@@ -368,7 +368,7 @@ ScrollList {
                 id: _tooltip
                 // Set an upper width of the tooltip to force word wrap on
                 // long description texts.
-                width: contentWidth > 500 ? 500 : contentWidth + 20
+                width: Metrics.tooltipWidth(contentWidth)
                 visible: _hoverHandler.hovered
                 delay: 500
             }

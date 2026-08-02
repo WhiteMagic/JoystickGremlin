@@ -19,13 +19,13 @@ RowLayout {
     spacing: 0
 
     Rectangle {
-        Layout.preferredWidth: Metrics.indentGuide
+        Layout.preferredWidth: Metrics.hairline
         Layout.fillHeight: true
         color: root.hasChildren ? Theme.line : "transparent"
     }
 
     Item {
-        Layout.preferredWidth: Metrics.indent - Metrics.indentGuide
+        Layout.preferredWidth: Metrics.indent - Metrics.hairline
     }
 
     ColumnLayout {

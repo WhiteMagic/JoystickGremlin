@@ -125,14 +125,18 @@ Item {
 
             Label { text: "First axis" }
             InputAssignButton {
-                valueLabel: _root.action.axis1.label
+                valueLabel: _root.action.axis1.isValid
+                    ? _root.action.axis1.label
+                    : "Not assigned -- open the second axis and add this dual axis deadzone instance there to assign it."
                 isAssigned: _root.action.axis1.isValid
                 onClicked: () => { _root.action.axis1 = uiState.currentInput }
             }
 
             Label { text: "Second axis" }
             InputAssignButton {
-                valueLabel: _root.action.axis2.label
+                valueLabel: _root.action.axis2.isValid
+                    ? _root.action.axis2.label
+                    : "Not assigned -- open the first axis and add this dual axis deadzone instance there to assign it."
                 isAssigned: _root.action.axis2.isValid
                 onClicked: () => { _root.action.axis2 = uiState.currentInput }
             }

@@ -8,8 +8,8 @@ import Kobold.Foundation
 T.TextField {
     id: control
 
-    implicitHeight: Metrics.ctrlH
-    implicitWidth: Math.max(Metrics.ctrlH * 6, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Metrics.controlHeight
+    implicitWidth: Math.max(Metrics.controlHeight * 6, contentWidth + leftPadding + rightPadding)
     leftPadding: Metrics.gapM
     rightPadding: Metrics.gapM
 

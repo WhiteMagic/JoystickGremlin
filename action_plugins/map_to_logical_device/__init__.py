@@ -198,7 +198,7 @@ class MapToLogicalDeviceModel(ActionModel):
 
     def _get_logical_input_identifier(self) -> InputIdentifier:
         return InputIdentifier(
-            LogicalDevice().device_guid,
+            LogicalDevice.device_guid,
             self._data.logical_input_type,
             self._data.logical_input_id,
             parent=self,
@@ -206,7 +206,7 @@ class MapToLogicalDeviceModel(ActionModel):
 
     def _set_logical_input_identifier(self, identifier: InputIdentifier) -> None:
         new_identifier = InputIdentifier(
-            LogicalDevice().device_guid,
+            LogicalDevice.device_guid,
             self._data.logical_input_type,
             self._data.logical_input_id,
             parent=self,

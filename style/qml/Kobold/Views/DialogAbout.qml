@@ -9,8 +9,8 @@ import QtQuick.Window
 import Kobold.Foundation
 
 Window {
-    minimumWidth: 500
-    minimumHeight: 300
+    minimumWidth: Metrics.dp(500)
+    minimumHeight: Metrics.dp(300)
 
     color: Theme.bg
 

@@ -8,8 +8,8 @@ import Kobold.Foundation
 T.Button {
     id: control
 
-    implicitHeight: Metrics.ctrlH
-    implicitWidth: Math.max(Metrics.ctrlH * 2, contentItem.implicitWidth + Metrics.gapM * 2)
+    implicitHeight: Metrics.controlHeight
+    implicitWidth: Math.max(Metrics.controlHeight * 2, contentItem.implicitWidth + Metrics.gapM * 2)
     padding: Metrics.gapM
 
     font.family: FontType.sans

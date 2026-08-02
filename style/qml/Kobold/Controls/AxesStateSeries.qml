@@ -67,14 +67,14 @@ Item {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
 
-                height: 2
+                height: 2 * Metrics.hairline
                 color: Theme.line
             }
         }
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 300
+            Layout.preferredHeight: Metrics.dp(300)
 
             z: -1
             clip: true
