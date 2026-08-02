@@ -30,7 +30,7 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
-        implicitWidth: Math.max(implicitContentWidth + leftPadding + rightPadding, 200)
+        implicitWidth: implicitContentWidth + leftPadding + rightPadding
 
         model: _model
         textRole: "label"

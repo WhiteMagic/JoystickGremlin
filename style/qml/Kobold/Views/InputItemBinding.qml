@@ -28,6 +28,12 @@ Item {
 
     implicitHeight: _content.height
 
+    // Reruns the Loader's one-shot setSource whenever inputBinding itself changes (not
+    // just on first creation) -- otherwise a delegate recycled for a different row
+    // (ListView reuseItems) keeps showing the previous row's action tree, since `visible`
+    // alone doesn't reliably toggle across the swap (e.g. both rows have children).
+    onInputBindingChanged: _actionTree._loadRootAction()
+
     Connections {
         target: signal
 
@@ -92,11 +98,18 @@ Item {
 
             // setSource()'s initial-properties argument, not source: + onLoaded --
             // RootAction.qml's root declares `required property RootModel action`,
-            // which only counts as initialized if supplied at creation time.
-            Component.onCompleted: setSource(
-                _root.inputBinding.rootAction.qmlPath,
-                { "action": _root.inputBinding.rootAction }
-            )
+            // which only counts as initialized if supplied at creation time. Called both
+            // on creation and from _root.onInputBindingChanged above.
+            function _loadRootAction() {
+                if (_root.inputBinding && _root.inputBinding.rootAction) {
+                    setSource(
+                        _root.inputBinding.rootAction.qmlPath,
+                        { "action": _root.inputBinding.rootAction }
+                    )
+                }
+            }
+
+            Component.onCompleted: _loadRootAction()
         }
     }
 }

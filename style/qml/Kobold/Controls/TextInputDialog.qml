@@ -11,8 +11,8 @@ import Kobold.Foundation
 Window {
     id: _root
 
-    minimumWidth: 200
-    minimumHeight: 60
+    minimumWidth: Metrics.dp(200)
+    minimumHeight: Metrics.dp(60)
 
     color: Theme.bg
 
@@ -31,7 +31,7 @@ Window {
             id: _input
 
             Layout.fillWidth: true
-            Layout.leftMargin: 5
+            Layout.leftMargin: Metrics.gapS
 
             text: _root.text
 
@@ -53,7 +53,7 @@ Window {
         Button {
             id: _button
 
-            Layout.rightMargin: 10
+            Layout.rightMargin: Metrics.gapM
 
             text: "Ok"
 

@@ -8,8 +8,8 @@ import Kobold.Foundation
 T.SpinBox {
     id: control
 
-    implicitHeight: Metrics.ctrlH
-    implicitWidth: Metrics.ctrlH * 4
+    implicitHeight: Metrics.controlHeight
+    implicitWidth: Metrics.controlHeight * 4
 
     // Inset the content item between the two indicators -- padding on the
     // TextInput itself only insets its glyphs, not its hit region, which

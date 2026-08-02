@@ -95,8 +95,8 @@ Item {
                     }
 
                     Item {
-                        Layout.preferredWidth: Metrics.ctrlH
-                        Layout.preferredHeight: Metrics.ctrlH
+                        Layout.preferredWidth: Metrics.controlHeight
+                        Layout.preferredHeight: Metrics.controlHeight
 
                         MouseArea {
                             anchors.fill: parent

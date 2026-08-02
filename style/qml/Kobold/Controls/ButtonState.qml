@@ -15,6 +15,10 @@ Item {
     property string deviceGuid
     property string title
 
+    // Local to this file -- single consumer, not a shared design concept.
+    readonly property int buttonSize:   Metrics.dp(40)
+    readonly property int buttonRadius: Metrics.even(10)
+
     implicitHeight: _content.implicitHeight
 
     function computeButtonHeight() {
@@ -59,7 +63,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
 
-                height: 2
+                height: 2 * Metrics.hairline
                 color: Theme.line
             }
         }
@@ -70,8 +74,8 @@ Item {
                 id: _button_grid
 
                 Layout.fillWidth: true
-                Layout.minimumWidth: 400
-                Layout.preferredWidth: 600
+                Layout.minimumWidth: Metrics.dp(400)
+                Layout.preferredWidth: Metrics.dp(600)
                 Layout.minimumHeight: computeButtonHeight(_root.width)
                 Layout.alignment: Qt.AlignTop
 
@@ -79,8 +83,8 @@ Item {
                 boundsBehavior: Flickable.StopAtBounds
                 interactive: false
 
-                cellWidth: 50
-                cellHeight: 50
+                cellWidth: Metrics.dp(50)
+                cellHeight: Metrics.dp(50)
 
                 model: _button_state
                 delegate: Component {
@@ -89,9 +93,9 @@ Item {
                         required property int identifier
                         required property bool value
 
-                        width: Metrics.viewerButtonSize
-                        height: Metrics.viewerButtonSize
-                        radius: Metrics.viewerButtonRadius
+                        width: _root.buttonSize
+                        height: _root.buttonSize
+                        radius: _root.buttonRadius
 
                         hoverEnabled: false
 
@@ -107,16 +111,16 @@ Item {
                 id: _hat_grid
 
                 Layout.fillWidth: true
-                Layout.minimumWidth: 200
-                Layout.preferredWidth: 200
+                Layout.minimumWidth: Metrics.dp(200)
+                Layout.preferredWidth: Metrics.dp(200)
                 Layout.minimumHeight: computeHatHeight(cellHeight)
                 Layout.alignment: Qt.AlignTop
 
                 boundsMovement: Flickable.StopAtBounds
                 boundsBehavior: Flickable.StopAtBounds
 
-                cellWidth: 100
-                cellHeight: 100
+                cellWidth: Metrics.dp(100)
+                cellHeight: Metrics.dp(100)
 
                 model: _hat_state
                 delegate: Component {
@@ -124,8 +128,8 @@ Item {
                         required property int identifier
                         required property point value
 
-                        height: _hat_grid.cellHeight - 20
-                        width: _hat_grid.cellWidth - 20
+                        height: _hat_grid.cellHeight - Metrics.gapL
+                        width: _hat_grid.cellWidth - Metrics.gapL
 
                         text: identifier
                         currentValue: value

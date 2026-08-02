@@ -13,9 +13,13 @@ Window {
     id: _inputViewer
 
     width: Metrics.windowWidth
-    height: Metrics.dialogHeightL
-    minimumWidth: 900
-    minimumHeight: 500
+    height: Metrics.dp(800)
+    minimumWidth: Metrics.dp(900)
+    minimumHeight: Metrics.dp(500)
+
+    // Local to this file -- the device-list sidebar's width range, not a shared design concept.
+    readonly property int deviceListMinWidth: Metrics.dp(250)
+    readonly property int deviceListMaxWidth: Metrics.dp(400)
 
     color: Theme.bg
 
@@ -66,9 +70,9 @@ Window {
 
         ScrollView {
             Layout.alignment: Qt.AlignTop
-            Layout.rightMargin: 10
-            Layout.minimumWidth: 250
-            Layout.maximumWidth: 400
+            Layout.rightMargin: Metrics.gapM
+            Layout.minimumWidth: _inputViewer.deviceListMinWidth
+            Layout.maximumWidth: _inputViewer.deviceListMaxWidth
             Layout.fillHeight: true
 
             ColumnLayout {

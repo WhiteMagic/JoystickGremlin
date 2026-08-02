@@ -8,7 +8,7 @@ import Kobold.Foundation
 T.MenuItem {
     id: control
 
-    implicitHeight: Metrics.ctrlH
+    implicitHeight: Metrics.controlHeight
     implicitWidth: leftPadding + contentItem.implicitWidth + rightPadding
     // Menu's contentItem is a ListView -- it never stretches its delegates on its own, so
     // without this every item falls back to its own label width and the hover/selection
@@ -32,8 +32,8 @@ T.MenuItem {
     // Checkable menu items: accent tick, never a filled box (R4) -- same rule as CheckBox.
     indicator: Item {
         visible: control.checkable
-        implicitWidth: Metrics.markSize
-        implicitHeight: Metrics.markSize
+        implicitWidth: Metrics.icon
+        implicitHeight: Metrics.icon
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 

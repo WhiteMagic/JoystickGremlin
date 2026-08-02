@@ -29,7 +29,7 @@ ColumnLayout {
 
     required property MacroModel action
 
-    readonly property int stepTypeColumnWidth: Metrics.ctrlH * 5
+    readonly property int stepTypeColumnWidth: Metrics.controlHeight * 5
     // Reserves the scrollbar's own width plus a visible gap so step rows stop
     // short of it instead of butting up against the track.
     readonly property int stepListScrollGutter: Metrics.gapM * 2
@@ -579,8 +579,8 @@ ColumnLayout {
             spacing: Metrics.gapM
 
             Item {
-                Layout.preferredWidth: Metrics.ctrlH
-                Layout.preferredHeight: Metrics.ctrlH
+                Layout.preferredWidth: Metrics.controlHeight
+                Layout.preferredHeight: Metrics.controlHeight
 
                 AppIcon {
                     anchors.centerIn: parent

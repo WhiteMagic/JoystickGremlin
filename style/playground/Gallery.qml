@@ -40,8 +40,8 @@ ScrollView {
                     spacing: Metrics.gapS
 
                     Rectangle {
-                        Layout.preferredWidth: Metrics.ctrlH * 2
-                        Layout.preferredHeight: Metrics.ctrlH
+                        Layout.preferredWidth: Metrics.controlHeight * 2
+                        Layout.preferredHeight: Metrics.controlHeight
                         color: Theme[modelData]
                         border.width: Metrics.hairline
                         border.color: Theme.line
@@ -359,7 +359,7 @@ ScrollView {
                 spacing: Metrics.gapS
 
                 MenuBar {
-                    Layout.preferredWidth: Metrics.ctrlH * 8
+                    Layout.preferredWidth: Metrics.controlHeight * 8
 
                     Menu {
                         title: "File"
@@ -388,7 +388,7 @@ ScrollView {
                 spacing: Metrics.gapS
 
                 ToolBar {
-                    Layout.preferredWidth: Metrics.ctrlH * 8
+                    Layout.preferredWidth: Metrics.controlHeight * 8
 
                     RowLayout {
                         anchors.fill: parent
@@ -411,11 +411,11 @@ ScrollView {
                 spacing: Metrics.gapS
 
                 SplitView {
-                    Layout.preferredWidth: Metrics.ctrlH * 10
-                    Layout.preferredHeight: Metrics.ctrlH * 4
+                    Layout.preferredWidth: Metrics.controlHeight * 10
+                    Layout.preferredHeight: Metrics.controlHeight * 4
 
                     Rectangle {
-                        SplitView.preferredWidth: Metrics.ctrlH * 4
+                        SplitView.preferredWidth: Metrics.controlHeight * 4
                         color: Theme.bgAlt
                         Text { anchors.centerIn: parent; text: "Left"; color: Theme.fg }
                     }
@@ -434,8 +434,8 @@ ScrollView {
 
             ListView {
                 id: _demoList
-                Layout.preferredWidth: Metrics.ctrlH * 8
-                Layout.preferredHeight: Metrics.ctrlH * 5
+                Layout.preferredWidth: Metrics.controlHeight * 8
+                Layout.preferredHeight: Metrics.controlHeight * 5
                 clip: true
                 model: 30
                 delegate: Text {
@@ -443,7 +443,7 @@ ScrollView {
                     color: Theme.fg
                     font.family: FontType.sans
                     font.pixelSize: Metrics.textBody
-                    height: Metrics.ctrlH
+                    height: Metrics.controlHeight
                 }
                 ScrollBar.vertical: ScrollBar { }
 
@@ -583,7 +583,7 @@ ScrollView {
 
             ColumnLayout {
                 spacing: Metrics.gapM
-                Layout.preferredWidth: Metrics.ctrlH * 8
+                Layout.preferredWidth: Metrics.controlHeight * 8
 
                 Label { text: "Row above" }
                 Divider { Layout.fillWidth: true }
@@ -614,8 +614,8 @@ ScrollView {
 
             ScrollList {
                 id: _scrollListDemo
-                Layout.preferredWidth: Metrics.ctrlH * 8
-                Layout.preferredHeight: Metrics.ctrlH * 5
+                Layout.preferredWidth: Metrics.controlHeight * 8
+                Layout.preferredHeight: Metrics.controlHeight * 5
                 scrollbarAlwaysVisible: true
                 model: 30
                 delegate: Text {
@@ -623,7 +623,7 @@ ScrollView {
                     color: Theme.fg
                     font.family: FontType.sans
                     font.pixelSize: Metrics.textBody
-                    height: Metrics.ctrlH
+                    height: Metrics.controlHeight
                 }
             }
             Caption { text: "pixel wheel scrolling (wheelStep) -- shared by the left pane and plugin bodies (e.g. macro)" }
@@ -656,14 +656,14 @@ ScrollView {
 
             ColumnLayout {
                 spacing: Metrics.gapS
-                Layout.preferredWidth: Metrics.ctrlH * 8
+                Layout.preferredWidth: Metrics.controlHeight * 8
 
                 BetterProgressBar { Layout.fillWidth: true; value: 0.3 }
                 Caption { text: "30%" }
             }
             ColumnLayout {
                 spacing: Metrics.gapS
-                Layout.preferredWidth: Metrics.ctrlH * 8
+                Layout.preferredWidth: Metrics.controlHeight * 8
 
                 BetterProgressBar { Layout.fillWidth: true; value: 0.75 }
                 Caption { text: "75%" }
@@ -779,7 +779,7 @@ ScrollView {
 
                 Rectangle {
                     Layout.preferredWidth: 300
-                    Layout.preferredHeight: Metrics.insertionLine
+                    Layout.preferredHeight: 2 * Metrics.hairline
                     color: Theme.accent
                 }
                 Caption {

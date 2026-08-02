@@ -18,7 +18,7 @@ Button {
 
     text: name
 
-    height: Metrics.rowCompact
+    height: Metrics.rowInput
     width: _sectionSelector.width
 
     background: Row {

@@ -13,8 +13,8 @@ import Kobold.Controls
 import Kobold.Foundation
 
 Window {
-    minimumWidth: 900
-    minimumHeight: 400
+    minimumWidth: Metrics.dp(900)
+    minimumHeight: Metrics.dp(400)
 
     color: Theme.bg
 
@@ -46,7 +46,7 @@ Window {
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.rightMargin: 10
+                Layout.rightMargin: Metrics.gapM
 
                 RowLayout {
                     Label {
@@ -67,7 +67,7 @@ Window {
                     scrollbarAlwaysVisible: true
 
                     delegate: CheckBox {
-                        width: ListView.view.width - 10
+                        width: ListView.view.width - Metrics.gapM
 
                         text: model.name
                         checked: false
@@ -102,7 +102,7 @@ Window {
                     scrollbarAlwaysVisible: true
 
                     delegate: CheckBox {
-                        width: ListView.view.width - 10
+                        width: ListView.view.width - Metrics.gapM
 
                         text: model.name
                         checked: false
@@ -148,7 +148,7 @@ Window {
         }
 
         RowLayout {
-            Layout.topMargin: 10
+            Layout.topMargin: Metrics.gapM
 
             Button {
                 text: "Create 1:1 mappings"
@@ -171,8 +171,8 @@ Window {
                 id: _statusMessage
 
                 Layout.fillWidth: true
-                Layout.leftMargin: 10
-                Layout.rightMargin: 10
+                Layout.leftMargin: Metrics.gapM
+                Layout.rightMargin: Metrics.gapM
 
                 text: "Select devices, options and then click the button."
             }

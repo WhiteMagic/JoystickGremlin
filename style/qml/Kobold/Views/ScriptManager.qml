@@ -19,6 +19,12 @@ Item {
 
     property ScriptListModel scriptListModel : backend.scriptListModel
 
+    // Local to this file -- the two SplitView panes' width floors, not a shared design concept.
+    readonly property int scriptListMinWidth: Metrics.dp(400)
+    readonly property int configMinWidth:     Metrics.dp(500)
+    readonly property int pathWidthReserve:   Metrics.dp(400)
+    readonly property int nameLabelWidth:     Metrics.dp(200)
+
     // Dialog to select a script to add
     FileDialog {
         id: _selectScript
@@ -41,7 +47,7 @@ Item {
         id: _renameScriptDialog
 
         visible: false
-        width: Metrics.dialogWidthXS
+        width: Metrics.dp(300)
 
         property var callback: null
 
@@ -54,19 +60,19 @@ Item {
 
     SplitView {
         anchors.fill: parent
-        anchors.leftMargin: 10
+        anchors.leftMargin: Metrics.gapM
 
         ColumnLayout {
             SplitView.fillHeight: true
             SplitView.fillWidth: true
-            SplitView.minimumWidth: 400
+            SplitView.minimumWidth: _root.scriptListMinWidth
 
             ScrollList {
                 id: _view
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                Layout.rightMargin: 5
+                Layout.rightMargin: Metrics.gapS
 
                 spacing: Metrics.gapM
                 scrollbarAlwaysVisible: true
@@ -80,8 +86,8 @@ Item {
 
             Button {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                Layout.preferredHeight: 30
-                Layout.bottomMargin: 10
+                Layout.preferredHeight: Metrics.dp(30)
+                Layout.bottomMargin: Metrics.gapM
 
                 text: "Add Script"
 
@@ -93,7 +99,7 @@ Item {
             id: _config
 
             SplitView.fillHeight: true
-            SplitView.minimumWidth: 500
+            SplitView.minimumWidth: _root.configMinWidth
         }
     }
 
@@ -105,7 +111,7 @@ Item {
         required property var variables
 
         AppIcon {
-            Layout.leftMargin: 10
+            Layout.leftMargin: Metrics.gapM
             name: "duplicate"
         }
 
@@ -113,7 +119,7 @@ Item {
             id: _path
 
             Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: _view.width - 400
+            Layout.preferredWidth: _view.width - _root.pathWidthReserve
 
             text: _item.path
             leftPadding: Metrics.gapL
@@ -123,7 +129,7 @@ Item {
                 text: _path.text
                 // Set an upper width of the tooltip to force word wrap on
                 // long texts.
-                width: contentWidth > 500 ? 500 : contentWidth + 20
+                width: Metrics.tooltipWidth(contentWidth)
                 visible: _hoverPath.hovered
                 delay: 500
             }
@@ -139,18 +145,18 @@ Item {
         Label {
             id: _name
 
-            Layout.preferredWidth: 200
+            Layout.preferredWidth: _root.nameLabelWidth
             Layout.alignment: Qt.AlignVCenter
 
             text: _item.name
-            rightPadding: Metrics.labelTrailingReserve
+            rightPadding: Metrics.gapL
             elide: Text.ElideMiddle
 
             ToolTip {
                 text: _name.text
                 // Set an upper width of the tooltip to force word wrap on
                 // long texts.
-                width: contentWidth > 500 ? 500 : contentWidth + 20
+                width: Metrics.tooltipWidth(contentWidth)
                 visible: _hoverName.hovered
                 delay: 500
             }
@@ -182,7 +188,7 @@ Item {
         }
 
         ToolButton {
-            Layout.rightMargin: 20
+            Layout.rightMargin: Metrics.gapL
             icon.name: "delete"
 
             onClicked: () => scriptListModel.removeScript(path, name)

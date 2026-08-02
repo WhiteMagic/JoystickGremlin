@@ -178,6 +178,8 @@ class Backend(QtCore.QObject):
 
         self.joystick_change_monitor = device_helpers.JoystickInputSignificant()
 
+        self._current_input_item_model: InputItemModel | None = None
+
         # Hookup various mode change related callbacks
         mm = mode_manager.ModeManager()
         mm.mode_changed.connect(self._emit_change)
@@ -418,7 +420,12 @@ class Backend(QtCore.QObject):
                 self.ui_state.currentMode,
                 True,
             )
-            return InputItemModel(item, enumeration_index, self)
+            if self._current_input_item_model is not None:
+                self._current_input_item_model.dispose()
+                self._current_input_item_model.deleteLater()
+            model = InputItemModel(item, enumeration_index, self)
+            self._current_input_item_model = model
+            return model
         except error.ProfileError:
             pass
 

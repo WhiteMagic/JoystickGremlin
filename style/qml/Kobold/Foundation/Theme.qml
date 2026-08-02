@@ -6,6 +6,9 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+    readonly property string appearance: themeManager.appearance
+    readonly property bool isDarkTheme: themeManager.appearance === "dark"
+
     readonly property color bg:         themeManager.bg
     readonly property color bgAlt:      themeManager.bgAlt
     readonly property color bgHover:    themeManager.bgHover
