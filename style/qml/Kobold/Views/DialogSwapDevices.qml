@@ -1,9 +1,12 @@
 // -*- coding: utf-8; -*-
 // SPDX-License-Identifier: GPL-3.0-only
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Templates as T
 import QtQuick.Window
 
 import Gremlin.Device
@@ -15,10 +18,7 @@ Window {
     id: _root
 
     width: Metrics.dp(800)
-    height: _content.implicitHeight + Metrics.gapL
-
-    // Local to this file -- the label column's width, not a shared design concept.
-    readonly property int labelWidth: Metrics.dp(200)
+    height: _content.implicitHeight + 3 * Metrics.gapL
 
     color: Theme.bg
 
@@ -47,7 +47,7 @@ Window {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: _root.labelWidth
+                Layout.preferredWidth: Metrics.labelColumn
 
                 text: "From profile device"
                 font.bold: true
@@ -67,7 +67,7 @@ Window {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: _root.labelWidth
+                Layout.preferredWidth: Metrics.labelColumn
 
                 text: "To connected device"
                 font.bold: true
@@ -84,12 +84,45 @@ Window {
                 valueRole: "guid"
 
                 displayText: currentText + " : " + currentValue
-                delegate: ItemDelegate {
-                    text: model.name + " : " + model.guid
+                delegate: T.ItemDelegate {
+                    id: _delegate
+
+                    required property int index
+                    required property string name
+                    required property string guid
 
                     width: ListView.view.width
-                    font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
-                    highlighted: control.highlightedIndex === index
+                    height: Metrics.controlHeight
+                    highlighted: _physicalDeviceSelection.highlightedIndex === index
+
+                    contentItem: RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Metrics.gapM
+                        anchors.rightMargin: Metrics.gapM
+                        spacing: Metrics.gapM
+
+                        Text {
+                            Layout.fillWidth: true
+
+                            text: _delegate.name
+                            color: Theme.fg
+                            font: _physicalDeviceSelection.font
+                            elide: Text.ElideRight
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Text {
+                            text: _delegate.guid
+                            color: Theme.fgMuted
+                            font.family: FontType.mono
+                            font.pixelSize: Metrics.textDetail
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    background: Rectangle {
+                        color: _delegate.highlighted ? Theme.bgSelected : _delegate.hovered ? Theme.bgHover : "transparent"
+                    }
                 }
             }
         }

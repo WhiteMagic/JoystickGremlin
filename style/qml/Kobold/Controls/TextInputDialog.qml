@@ -11,8 +11,8 @@ import Kobold.Foundation
 Window {
     id: _root
 
-    minimumWidth: Metrics.dp(200)
-    minimumHeight: Metrics.dp(60)
+    height: Metrics.tabStrip
+    width: Metrics.labelColumn * 1.5
 
     color: Theme.bg
 
@@ -24,14 +24,23 @@ Window {
 
     title: "Text Input Field"
 
+    TextMetrics {
+        id: _textMetrics
+
+        font: _input.font
+        text: _root.text
+    }
+
     RowLayout {
+        id: _content
+
         anchors.fill: parent
 
         TextField {
             id: _input
 
-            Layout.fillWidth: true
             Layout.leftMargin: Metrics.gapS
+            Layout.fillWidth: true
 
             text: _root.text
 

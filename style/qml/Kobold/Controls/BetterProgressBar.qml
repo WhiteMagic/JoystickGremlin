@@ -19,7 +19,7 @@ ProgressBar {
     value: 0
     padding: 2
 
-    property int barSize: 20
+    property int barSize: Metrics.icon
     property int orientation: BetterProgressBar.Orientation.Horizontal
 
     // Private indicator property
