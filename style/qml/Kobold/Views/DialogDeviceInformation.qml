@@ -8,6 +8,7 @@ import QtQuick.Window
 
 import Gremlin.Device
 import Kobold.Foundation
+import Kobold.Controls
 
 Window {
     id: _root
@@ -15,14 +16,13 @@ Window {
     minimumWidth: Metrics.dp(1000)
     minimumHeight: Metrics.dp(300)
 
-    // Local to this file -- table column widths, not a shared design concept.
-    readonly property int columnAxes:      Metrics.dp(50)
-    readonly property int columnButtons:   Metrics.dp(75)
-    readonly property int columnHats:      Metrics.dp(50)
-    readonly property int columnVid:       Metrics.dp(100)
-    readonly property int columnPid:       Metrics.dp(100)
+    readonly property int columnAxes:       Metrics.dp(50)
+    readonly property int columnButtons:    Metrics.dp(75)
+    readonly property int columnHats:       Metrics.dp(50)
+    readonly property int columnVid:        Metrics.dp(100)
+    readonly property int columnPid:        Metrics.dp(100)
     readonly property int columnJoystickId: Metrics.dp(100)
-    readonly property int columnGuid:      Metrics.dp(320)
+    readonly property int columnGuid:       Metrics.dp(320)
 
     color: Theme.bg
 
@@ -32,7 +32,8 @@ Window {
         anchors.fill: parent
 
         RowLayout {
-            Layout.preferredHeight: Metrics.dp(50)
+            Layout.preferredHeight: Metrics.rowAction
+            Layout.rightMargin: _list.scrollBar.width + Metrics.gapM
 
             HeaderText {
                 text: "Name"
@@ -41,26 +42,38 @@ Window {
             HeaderText {
                 text: "Axes"
                 Layout.preferredWidth: _root.columnAxes
+                horizontalAlignment: Text.AlignRight
+                rightPadding: Metrics.gapL
             }
             HeaderText {
                 text: "Buttons"
                 Layout.preferredWidth: _root.columnButtons
+                horizontalAlignment: Text.AlignRight
+                rightPadding: Metrics.gapL
             }
             HeaderText {
                 text: "Hats"
                 Layout.preferredWidth: _root.columnHats
+                horizontalAlignment: Text.AlignRight
+                rightPadding: Metrics.gapL
             }
             HeaderText {
                 text: "VID"
                 Layout.preferredWidth: _root.columnVid
+                horizontalAlignment: Text.AlignRight
+                rightPadding: Metrics.gapL
             }
             HeaderText {
                 text: "PID"
                 Layout.preferredWidth: _root.columnPid
+                horizontalAlignment: Text.AlignRight
+                rightPadding: Metrics.gapL
             }
             HeaderText {
                 text: "Joystick ID"
                 Layout.preferredWidth: _root.columnJoystickId
+                horizontalAlignment: Text.AlignRight
+                rightPadding: Metrics.gapL
             }
             HeaderText {
                 text: "Device GUID"
@@ -68,83 +81,64 @@ Window {
             }
         }
 
-        ScrollView {
-            id: _view
+        ScrollList {
+            id: _list
 
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ColumnLayout {
-                spacing: 0
+            reuseItems: true
+            model: DeviceListModel {}
 
-                Repeater {
-                    model: DeviceListModel {}
+            delegate: Rectangle {
+                id: _outer
 
-                    delegate: Rectangle {
-                        id: _outer
+                width: _list.width - _list.scrollBar.width
+                height: Metrics.rowAction
 
-                        height: Metrics.rowAction
-                        width: _view.width
+                color: index % 2 === 0 ? Theme.bgAlt : Theme.bg
 
-                        color: index % 2 === 0 ? Theme.bgAlt : Theme.bg
+                RowLayout {
+                    width: parent.width
 
-                        RowLayout {
-                            width: parent.width
+                    TextEntry {
+                        text: name
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Metrics.gapM
+                        horizontalAlignment: Text.AlignLeft
+                    }
+                    TextEntry {
+                        text: axes
+                        Layout.preferredWidth: _root.columnAxes
+                    }
+                    TextEntry {
+                        text: buttons
+                        Layout.preferredWidth: _root.columnButtons
+                    }
+                    TextEntry {
+                        text: hats
+                        Layout.preferredWidth: _root.columnHats
+                    }
+                    TextEntry {
+                        text: vid
+                        Layout.preferredWidth: _root.columnVid
+                    }
+                    TextEntry {
+                        text: pid
+                        Layout.preferredWidth: _root.columnPid
+                    }
+                    TextEntry {
+                        text: joy_id
+                        Layout.preferredWidth: _root.columnJoystickId
+                    }
+                    TextField {
+                        Layout.preferredWidth: _root.columnGuid
+                        Layout.rightMargin: Metrics.gapM
 
-                            TextEntry {
-                                text: name
-                                Layout.fillWidth: true
-                                Layout.leftMargin: Metrics.gapM
-                                horizontalAlignment: Text.AlignLeft
+                        text: guid
 
-                                ToolTip {
-                                    text: parent.text
-                                    width: Metrics.tooltipWidth(contentWidth)
-                                    visible: _hoverHandler.hovered
-                                    delay: 500
-                                }
-
-                                HoverHandler {
-                                    id: _hoverHandler
-                                    acceptedDevices: PointerDevice.Mouse |
-                                        PointerDevice.TouchPad
-                                }
-
-                            }
-                            TextEntry {
-                                text: axes
-                                Layout.preferredWidth: _root.columnAxes
-                            }
-                            TextEntry {
-                                text: buttons
-                                Layout.preferredWidth: _root.columnButtons
-                            }
-                            TextEntry {
-                                text: hats
-                                Layout.preferredWidth: _root.columnHats
-                            }
-                            TextEntry {
-                                text: vid
-                                Layout.preferredWidth: _root.columnVid
-                            }
-                            TextEntry {
-                                text: pid
-                                Layout.preferredWidth: _root.columnPid
-                            }
-                            TextEntry {
-                                text: joy_id
-                                Layout.preferredWidth: _root.columnJoystickId
-                            }
-                            TextField {
-                                Layout.preferredWidth: _root.columnGuid
-                                Layout.rightMargin: Metrics.gapM
-
-                                text: guid
-
-                                horizontalAlignment: Text.AlignHCenter
-                                readOnly: true
-                            }
-                        }
+                        horizontalAlignment: Text.AlignHCenter
+                        readOnly: true
                     }
                 }
             }

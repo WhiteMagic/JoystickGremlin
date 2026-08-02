@@ -56,7 +56,7 @@ ColumnLayout {
                 title: name
                 explanation: description
 
-                Switch {
+                CheckBox {
                     Layout.alignment: Qt.AlignRight
 
                     checked: model.value

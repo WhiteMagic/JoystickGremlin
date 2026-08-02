@@ -197,6 +197,7 @@ class InputIdentifier(QtCore.QObject):
 class DeviceListModel(QtCore.QAbstractListModel):
     """Model containing basic information about all connected devices."""
 
+    deviceTypeChanged = QtCore.Signal()
     selectedIndexChanged = QtCore.Signal()
 
     roles = {
@@ -284,7 +285,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
             self._devices = device_initialization.joystick_devices()
         self.endResetModel()
 
-    def _change_device_type(self, types: str) -> None:
+    def _set_device_type(self, types: str) -> None:
         """Sets which device types are going to be used.
 
         Valid options are:
@@ -299,6 +300,9 @@ class DeviceListModel(QtCore.QAbstractListModel):
         self._device_types = types
         self._reload_devices()
 
+    def _get_device_type(self) -> str:
+        return self._device_types
+
     def _get_selected_index(self) -> int:
         return self._selected_index
 
@@ -307,7 +311,12 @@ class DeviceListModel(QtCore.QAbstractListModel):
             self._selected_index = index
             self.selectedIndexChanged.emit()
 
-    deviceType = QtCore.Property(str, fset=_change_device_type)
+    deviceType = QtCore.Property(
+        str,
+        fget=_get_device_type,
+        fset=_set_device_type,
+        notify=deviceTypeChanged,
+    )
     selectedIndex = QtCore.Property(
         int,
         fget=_get_selected_index,
@@ -1573,6 +1582,11 @@ class AxisCalibration(QtCore.QAbstractListModel):
             self._state[index]["withCenter"],
         )
 
+    def _get_guid(self) -> str:
+        if self._device is None:
+            return ""
+        return str(self._device.device_guid)
+
     def _set_guid(self, guid: str) -> None:
         if self._device is not None and guid == str(self._device.device_guid):
             return
@@ -1679,7 +1693,12 @@ class AxisCalibration(QtCore.QAbstractListModel):
             # Signal that the model has changed for a UI update
             self.emit_update(index)
 
-    guid = QtCore.Property(str, fset=_set_guid, notify=deviceChanged)
+    guid = QtCore.Property(
+        str,
+        fget=_get_guid,
+        fset=_set_guid,
+        notify=deviceChanged
+    )
 
 
 Configuration().register(

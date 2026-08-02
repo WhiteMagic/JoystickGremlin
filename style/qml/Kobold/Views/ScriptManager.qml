@@ -23,7 +23,6 @@ Item {
     readonly property int scriptListMinWidth: Metrics.dp(400)
     readonly property int configMinWidth:     Metrics.dp(500)
     readonly property int pathWidthReserve:   Metrics.dp(400)
-    readonly property int nameLabelWidth:     Metrics.dp(200)
 
     // Dialog to select a script to add
     FileDialog {
@@ -47,7 +46,6 @@ Item {
         id: _renameScriptDialog
 
         visible: false
-        width: Metrics.dp(300)
 
         property var callback: null
 
@@ -144,7 +142,7 @@ Item {
         Label {
             id: _name
 
-            Layout.preferredWidth: _root.nameLabelWidth
+            Layout.preferredWidth: Metrics.labelColumn
             Layout.alignment: Qt.AlignVCenter
 
             text: _item.name

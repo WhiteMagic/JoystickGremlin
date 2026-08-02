@@ -26,7 +26,6 @@ Rectangle {
         id: _textInput
 
         visible: false
-        width: Metrics.dp(300)
 
         property var callback: null
 
