@@ -174,7 +174,7 @@ Item {
 
                 Spacer {}
 
-                Switch {
+                CheckBox {
                     id: _isEnabled
 
                     text: checked ? "On" : "Off"
