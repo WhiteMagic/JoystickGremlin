@@ -404,7 +404,7 @@ class VJoyCondition(AbstractCondition):
     def _set_vjoy_input_type(self, input_type: str) -> None:
         input_type_tmp = InputType.to_enum(input_type)
         if input_type_tmp != self._states[0].input_type:
-            self._create_comparator(self._sates[0].input_type)
+            self._create_comparator(input_type_tmp)
             self._update_states(
                 [
                     self.State(
