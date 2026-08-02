@@ -23,12 +23,39 @@ ApplicationWindow {
     title: backend.windowTitle
     minimumWidth: Metrics.dp(1300)
     minimumHeight: Metrics.dp(700)
-    width: Metrics.windowWidth
-    height: Metrics.windowHeight
     visible: true
     id: _root
 
     color: Theme.bg
+
+    property var _geom: backend.windowGeometry(
+        "main-window-geometry", Metrics.windowWidth, Metrics.windowHeight,
+        minimumWidth, minimumHeight
+    )
+    // True until Component.onCompleted -- suppresses the save that would
+    // otherwise fire from the initial x/y/width/height binding evaluation.
+    property bool _restoringGeometry: true
+
+    x: _geom.x
+    y: _geom.y
+    width: _geom.width
+    height: _geom.height
+
+    Component.onCompleted: () => { _restoringGeometry = false }
+
+    Timer {
+        id: _geometrySaveTimer
+        interval: 500
+        repeat: false
+        // restart(), not start() -- a drag-resize fires many changes in a
+        // row and each one must push the save deadline out, not be ignored.
+        onTriggered: _geom.save(_root.x, _root.y, _root.width, _root.height)
+    }
+
+    onXChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
+    onYChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
+    onWidthChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
+    onHeightChanged: if (!_restoringGeometry) _geometrySaveTimer.restart()
 
     ErrorDialog {
         id: _errorDialog
@@ -187,7 +214,7 @@ ApplicationWindow {
             MenuItem {
                 text: qsTr("Input Viewer")
                 onTriggered: () => {
-                    Helpers.createComponent("DialogInputViewer.qml", _root)
+                    Helpers.createComponent("DialogInputViewer.qml", _root, {})
                 }
             }
             MenuItem {
@@ -297,7 +324,7 @@ ApplicationWindow {
                 ToolTip.text: qsTr("Open input viewer")
 
                 onClicked: () => {
-                    Helpers.createComponent("DialogInputViewer.qml", _root)
+                    Helpers.createComponent("DialogInputViewer.qml", _root, {})
                 }
             }
 
