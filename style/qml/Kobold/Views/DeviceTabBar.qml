@@ -70,7 +70,7 @@ T.TabBar {
     }
 
     background: Rectangle {
-        implicitWidth: Metrics.ctrlH * 8
+        implicitWidth: Metrics.controlHeight * 8
         implicitHeight: Metrics.tabStrip
         color: Theme.bgAlt
     }

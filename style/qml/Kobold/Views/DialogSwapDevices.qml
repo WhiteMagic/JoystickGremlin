@@ -12,8 +12,13 @@ import Gremlin.Tools
 import Kobold.Foundation
 
 Window {
-    width: Metrics.dialogWidthL
-    height: _content.implicitHeight + 30
+    id: _root
+
+    width: Metrics.dp(800)
+    height: _content.implicitHeight + Metrics.gapL
+
+    // Local to this file -- the label column's width, not a shared design concept.
+    readonly property int labelWidth: Metrics.dp(200)
 
     color: Theme.bg
 
@@ -42,7 +47,7 @@ Window {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: 200
+                Layout.preferredWidth: _root.labelWidth
 
                 text: "From profile device"
                 font.bold: true
@@ -62,7 +67,7 @@ Window {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: 200
+                Layout.preferredWidth: _root.labelWidth
 
                 text: "To connected device"
                 font.bold: true
@@ -90,7 +95,7 @@ Window {
         }
 
         RowLayout {
-            Layout.topMargin: 10
+            Layout.topMargin: Metrics.gapM
 
             Button {
                 text: "Swap Bindings"
@@ -106,7 +111,7 @@ Window {
                 id: _statusMessage
 
                 Layout.fillWidth: true
-                Layout.leftMargin: 10
+                Layout.leftMargin: Metrics.gapM
 
                 text: "Select devices, then click the button."
             }

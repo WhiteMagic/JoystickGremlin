@@ -36,7 +36,7 @@ Item {
             id: _bottomDropArea
 
             Layout.fillWidth: true
-            height: Metrics.dropTargetHeight
+            height: Metrics.dp(20)
 
             onDropped: (drop) => {
                 _data.move(drop.text, _data.rowCount())
@@ -75,9 +75,9 @@ Item {
             Drag.source: _item
             Drag.hotSpot.x: width / 2
             Drag.hotSpot.y: height / 2
-            Drag.mimeData: {
+            Drag.mimeData: ({
                 "text/plain": model.index.toString()
-            }
+            })
 
             ToolButton {
                 icon.name: "grip"

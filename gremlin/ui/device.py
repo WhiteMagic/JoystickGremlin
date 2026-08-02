@@ -299,16 +299,21 @@ class DeviceListModel(QtCore.QAbstractListModel):
         self._device_types = types
         self._reload_devices()
 
-    @QtCore.Property(int, notify=selectedIndexChanged)
-    def selectedIndex(self) -> int:
+    def _get_selected_index(self) -> int:
         return self._selected_index
 
-    @selectedIndex.setter
-    def selectedIndex(self, index: int) -> None:
+    def _set_selected_index(self, index: int) -> None:
         if 0 <= index < len(self._devices) and index != self._selected_index:
             self._selected_index = index
+            self.selectedIndexChanged.emit()
 
     deviceType = QtCore.Property(str, fset=_change_device_type)
+    selectedIndex = QtCore.Property(
+        int,
+        fget=_get_selected_index,
+        fset=_set_selected_index,
+        notify=selectedIndexChanged
+    )
 
 
 @ta.QmlElement
@@ -741,7 +746,7 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
         if index != self._current_index:
             input = self._logical.inputs_of_type(self._valid_types)[index]
             self._current_identifier = InputIdentifier(
-                LogicalDevice().device_guid, input.type, input.id, parent=self
+                LogicalDevice.device_guid, input.type, input.id, parent=self
             )
             self._current_index = index
             self.selectionChanged.emit()
@@ -1583,7 +1588,6 @@ class AxisCalibration(QtCore.QAbstractListModel):
         self._active_calibrations = []
         self._initialize_state()
         self.deviceChanged.emit()
-        self.modelReset.emit()
         self.endResetModel()
 
     def _initialize_state(self) -> None:

@@ -10,8 +10,19 @@ import Gremlin.Device
 import Kobold.Foundation
 
 Window {
-    minimumWidth: 1000
-    minimumHeight: 300
+    id: _root
+
+    minimumWidth: Metrics.dp(1000)
+    minimumHeight: Metrics.dp(300)
+
+    // Local to this file -- table column widths, not a shared design concept.
+    readonly property int columnAxes:      Metrics.dp(50)
+    readonly property int columnButtons:   Metrics.dp(75)
+    readonly property int columnHats:      Metrics.dp(50)
+    readonly property int columnVid:       Metrics.dp(100)
+    readonly property int columnPid:       Metrics.dp(100)
+    readonly property int columnJoystickId: Metrics.dp(100)
+    readonly property int columnGuid:      Metrics.dp(320)
 
     color: Theme.bg
 
@@ -21,7 +32,7 @@ Window {
         anchors.fill: parent
 
         RowLayout {
-            Layout.preferredHeight: 50
+            Layout.preferredHeight: Metrics.dp(50)
 
             HeaderText {
                 text: "Name"
@@ -29,31 +40,31 @@ Window {
             }
             HeaderText {
                 text: "Axes"
-                Layout.preferredWidth: 50
+                Layout.preferredWidth: _root.columnAxes
             }
             HeaderText {
                 text: "Buttons"
-                Layout.preferredWidth: 75
+                Layout.preferredWidth: _root.columnButtons
             }
             HeaderText {
                 text: "Hats"
-                Layout.preferredWidth: 50
+                Layout.preferredWidth: _root.columnHats
             }
             HeaderText {
                 text: "VID"
-                Layout.preferredWidth: 100
+                Layout.preferredWidth: _root.columnVid
             }
             HeaderText {
                 text: "PID"
-                Layout.preferredWidth: 100
+                Layout.preferredWidth: _root.columnPid
             }
             HeaderText {
                 text: "Joystick ID"
-                Layout.preferredWidth: 100
+                Layout.preferredWidth: _root.columnJoystickId
             }
             HeaderText {
                 text: "Device GUID"
-                Layout.preferredWidth: 320
+                Layout.preferredWidth: _root.columnGuid
             }
         }
 
@@ -72,7 +83,7 @@ Window {
                     delegate: Rectangle {
                         id: _outer
 
-                        height: Metrics.rowCompact
+                        height: Metrics.rowAction
                         width: _view.width
 
                         color: index % 2 === 0 ? Theme.bgAlt : Theme.bg
@@ -83,12 +94,12 @@ Window {
                             TextEntry {
                                 text: name
                                 Layout.fillWidth: true
-                                Layout.leftMargin: 10
+                                Layout.leftMargin: Metrics.gapM
                                 horizontalAlignment: Text.AlignLeft
 
                                 ToolTip {
                                     text: parent.text
-                                    width: contentWidth > 500 ? 500 : contentWidth + 20
+                                    width: Metrics.tooltipWidth(contentWidth)
                                     visible: _hoverHandler.hovered
                                     delay: 500
                                 }
@@ -102,31 +113,31 @@ Window {
                             }
                             TextEntry {
                                 text: axes
-                                Layout.preferredWidth: 50
+                                Layout.preferredWidth: _root.columnAxes
                             }
                             TextEntry {
                                 text: buttons
-                                Layout.preferredWidth: 75
+                                Layout.preferredWidth: _root.columnButtons
                             }
                             TextEntry {
                                 text: hats
-                                Layout.preferredWidth: 50
+                                Layout.preferredWidth: _root.columnHats
                             }
                             TextEntry {
                                 text: vid
-                                Layout.preferredWidth: 100
+                                Layout.preferredWidth: _root.columnVid
                             }
                             TextEntry {
                                 text: pid
-                                Layout.preferredWidth: 100
+                                Layout.preferredWidth: _root.columnPid
                             }
                             TextEntry {
                                 text: joy_id
-                                Layout.preferredWidth: 100
+                                Layout.preferredWidth: _root.columnJoystickId
                             }
                             TextField {
-                                Layout.preferredWidth: 320
-                                Layout.rightMargin: 10
+                                Layout.preferredWidth: _root.columnGuid
+                                Layout.rightMargin: Metrics.gapM
 
                                 text: guid
 
@@ -141,7 +152,7 @@ Window {
     }
 
     component TextEntry : Label {
-        Layout.preferredHeight: 40
+        Layout.preferredHeight: Metrics.rowAction
 
         elide: Text.ElideRight
 
@@ -151,7 +162,7 @@ Window {
     }
 
     component HeaderText : Label {
-        Layout.preferredHeight: 40
+        Layout.preferredHeight: Metrics.rowAction
 
         font.weight: FontType.semiBold
 

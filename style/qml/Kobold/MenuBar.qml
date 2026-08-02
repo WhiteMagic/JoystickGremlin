@@ -24,7 +24,7 @@ T.MenuBar {
 
     // Ties the shell frame together with the left-pane well (SPEC bgAlt).
     background: Rectangle {
-        implicitHeight: Metrics.menuBar
+        implicitHeight: Metrics.menuFooterHeight
         color: Theme.bgAlt
     }
 }

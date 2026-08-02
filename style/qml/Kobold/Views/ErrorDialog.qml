@@ -17,8 +17,8 @@ Popup {
     signal accepted()
     signal rejected()
 
-    width: Metrics.dialogWidthL
-    height: Metrics.dialogHeightM
+    width: Metrics.dp(800)
+    height: Metrics.dp(500)
     anchors.centerIn: parent
 
     popupType: Popup.Item

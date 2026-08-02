@@ -23,7 +23,7 @@ Item {
     property var callback
 
     implicitWidth: _row.implicitWidth
-    implicitHeight: Metrics.ctrlH
+    implicitHeight: Metrics.controlHeight
 
     InputListenerModel {
         id: _listener
@@ -96,7 +96,7 @@ Item {
 
             ToolTip {
                 text: _label.text
-                width: contentWidth > 500 ? 500 : contentWidth + 20
+                width: Metrics.tooltipWidth(contentWidth)
                 visible: _hoverHandler.hovered
                 delay: 500
             }

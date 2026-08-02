@@ -21,8 +21,8 @@ ApplicationWindow {
 
     // Basic application setup.
     title: backend.windowTitle
-    minimumWidth: 1300
-    minimumHeight: 700
+    minimumWidth: Metrics.dp(1300)
+    minimumHeight: Metrics.dp(700)
     width: Metrics.windowWidth
     height: Metrics.windowHeight
     visible: true
@@ -324,7 +324,7 @@ ApplicationWindow {
             Spacer {}
 
             Label {
-                Layout.rightMargin: 10
+                Layout.rightMargin: Metrics.gapM
 
                 text: "Configuring mode"
             }
@@ -332,8 +332,8 @@ ApplicationWindow {
             ComboBox {
                 id: _modeSelector
 
-                Layout.preferredWidth: 200
-                Layout.rightMargin: 10
+                Layout.preferredWidth: Metrics.dp(200)
+                Layout.rightMargin: Metrics.gapM
 
                 model: ModeListModel {}
                 textRole: "name"
@@ -371,7 +371,7 @@ ApplicationWindow {
     footer: Rectangle {
         id: _footer
 
-        implicitHeight: Metrics.footer
+        implicitHeight: Metrics.menuFooterHeight
         color: Theme.bg
 
         Rectangle {
@@ -546,7 +546,7 @@ ApplicationWindow {
                 ToolButton {
                     icon.name: "tab_left"
                     Layout.fillHeight: true
-                    Layout.preferredWidth: Metrics.ctrlH
+                    Layout.preferredWidth: Metrics.controlHeight
 
                     enabled: _deviceList.canScrollBackward
 
@@ -566,7 +566,7 @@ ApplicationWindow {
                 ToolButton {
                     icon.name: "tab_right"
                     Layout.fillHeight: true
-                    Layout.preferredWidth: Metrics.ctrlH
+                    Layout.preferredWidth: Metrics.controlHeight
 
                     enabled: _deviceList.canScrollForward
 
@@ -593,7 +593,7 @@ ApplicationWindow {
                         id: _scriptButton
 
                         text: "Scripts"
-                        width: _metricScripts.width + 50
+                        width: Metrics.paddedTabButtonWidth(_metricScripts.width)
                         checked: false
 
                         onClicked: () => { uiState.setCurrentTab("scripts") }
@@ -610,7 +610,7 @@ ApplicationWindow {
                         id: _profileSettingsButton
 
                         text: "Settings"
-                        width: _metricProfileSettings.width + 50
+                        width: Metrics.paddedTabButtonWidth(_metricProfileSettings.width)
                         checked: false
 
                         onClicked: () => { uiState.setCurrentTab("settings") }

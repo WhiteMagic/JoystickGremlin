@@ -13,9 +13,15 @@ import Kobold.Foundation
 Window {
     id: _calibrationDialog
 
-    minimumWidth: 850
-    maximumWidth: 850
-    minimumHeight: 600
+    minimumWidth: Metrics.dp(850)
+    maximumWidth: Metrics.dp(850)
+    minimumHeight: Metrics.dp(600)
+
+    // Local to this file -- CalibrationItem delegate layout, not a shared design concept.
+    readonly property int rawLabelWidth:     Metrics.dp(75)
+    readonly property int valueFieldWidth:   Metrics.dp(100)
+    readonly property int progressBarHeight: Metrics.dp(30)
+    readonly property int buttonColumnWidth: Metrics.dp(150)
 
     color: Theme.bg
 
@@ -45,13 +51,13 @@ Window {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.leftMargin: 10
+        anchors.leftMargin: Metrics.gapM
 
         RowLayout {
-            Layout.bottomMargin: 15
+            Layout.bottomMargin: Metrics.gapL
 
             Label {
-                Layout.preferredWidth: 150
+                Layout.preferredWidth: Metrics.dp(150)
                 text: "Device to calibrate"
             }
 
@@ -101,7 +107,7 @@ Window {
 
         // Display axis name and current raw value and axis type
         RowLayout {
-            Layout.rightMargin: 20
+            Layout.rightMargin: Metrics.gapL
 
             Label {
                 Layout.fillWidth: true
@@ -111,27 +117,27 @@ Window {
             }
 
             Label {
-                Layout.preferredWidth: 75
-                Layout.rightMargin: 5
+                Layout.preferredWidth: _calibrationDialog.rawLabelWidth
+                Layout.rightMargin: Metrics.gapS
 
                 text: "Raw"
                 horizontalAlignment: Text.AlignRight
             }
 
             TextField {
-                Layout.preferredWidth: 100
+                Layout.preferredWidth: _calibrationDialog.valueFieldWidth
 
                 text: rawValue
             }
 
             Label {
-                Layout.preferredWidth: 100
+                Layout.preferredWidth: _calibrationDialog.valueFieldWidth
 
                 text: "With center"
                 horizontalAlignment: Text.AlignRight
             }
             Switch {
-                Layout.preferredWidth: 100
+                Layout.preferredWidth: _calibrationDialog.valueFieldWidth
 
                 text: checked ? "Yes" : "No"
                 checked: model.withCenter
@@ -144,7 +150,7 @@ Window {
 
         RowLayout {
 
-            Layout.rightMargin: 20
+            Layout.rightMargin: Metrics.gapL
 
             // Show live axis sliders and calibration values
             ColumnLayout {
@@ -153,7 +159,7 @@ Window {
                 BetterProgressBar {
                     id: _progressRaw
 
-                    Layout.preferredHeight: 30
+                    Layout.preferredHeight: _calibrationDialog.progressBarHeight
                     Layout.fillWidth: true
 
                     value: rawValue
@@ -163,7 +169,7 @@ Window {
                 BetterProgressBar {
                     id: _progressCalibrated
 
-                    Layout.preferredHeight: 30
+                    Layout.preferredHeight: _calibrationDialog.progressBarHeight
                     Layout.fillWidth: true
 
                     value: calibratedValue
@@ -224,7 +230,7 @@ Window {
 
             // Buttons to control calibration
             ColumnLayout {
-                Layout.preferredWidth: 150
+                Layout.preferredWidth: _calibrationDialog.buttonColumnWidth
                 Layout.alignment: Qt.AlignBottom
 
                 RowLayout {
@@ -243,8 +249,13 @@ Window {
                         onClicked: () => _axisView.model.save(index)
 
                         Rectangle {
+                            visible: unsavedChanges
                             anchors.fill: parent
-                            color: unsavedChanges ? Theme.warning : "transparent"
+                            anchors.margins: -2
+                            radius: Metrics.radius
+                            color: "transparent"
+                            border.width: 2
+                            border.color: Theme.warning
                         }
                     }
                 }
@@ -252,7 +263,7 @@ Window {
                 Button {
                     id: _btnCenterCalibration
 
-                    Layout.preferredWidth: 150
+                    Layout.preferredWidth: _calibrationDialog.buttonColumnWidth
                     text: "Calibrate center"
                     visible: model.withCenter
 
@@ -268,7 +279,7 @@ Window {
                 Button {
                     id: _btnExtremaCalibration
 
-                    Layout.preferredWidth: 150
+                    Layout.preferredWidth: _calibrationDialog.buttonColumnWidth
                     text: "Calibrate extrema"
 
                     checkable: true
@@ -283,7 +294,7 @@ Window {
         // Spacer at the bottom to leave some empty space below the ListView
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 10
+            Layout.preferredHeight: Metrics.gapM
         }
     }
 

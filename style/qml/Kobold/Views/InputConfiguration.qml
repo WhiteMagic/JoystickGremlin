@@ -65,6 +65,7 @@ Item {
             // Content to visualize
             model: _root.inputItemModel
             delegate: _entryDelegate
+            reuseItems: true
         }
 
         // ListView delegate definition rendering individual bindings via ActionTree
@@ -80,8 +81,6 @@ Item {
                 height: _sequenceColumn.height
                 width: view.width
 
-                required property int index
-                required property var modelData
                 property ListView view: ListView.view
 
                 ColumnLayout {

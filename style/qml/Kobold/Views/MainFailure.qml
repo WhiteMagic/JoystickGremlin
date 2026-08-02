@@ -11,8 +11,8 @@ import Kobold.Foundation
 
 ApplicationWindow {
     id: mainWindow
-    width: Metrics.dialogWidthM
-    height: Metrics.dialogHeightS
+    width: Metrics.dp(600)
+    height: Metrics.dp(300)
     visible: true
     title: qsTr("Joystick Gremlin")
 

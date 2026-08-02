@@ -18,7 +18,7 @@ Item {
 
     signal clicked()
 
-    implicitHeight: Metrics.ctrlH
+    implicitHeight: Metrics.controlHeight
     implicitWidth: _row.implicitWidth
 
     RowLayout {

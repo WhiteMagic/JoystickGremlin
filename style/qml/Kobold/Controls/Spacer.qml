@@ -6,7 +6,7 @@ import QtQuick.Layouts
 
 // Expanding filler for a RowLayout or ColumnLayout, picking the fill
 // direction from the immediate parent so callers don't have to.
-Rectangle {
+Item {
     Layout.fillWidth: parent instanceof RowLayout
     Layout.fillHeight: parent instanceof ColumnLayout
 }

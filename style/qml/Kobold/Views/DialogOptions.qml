@@ -12,8 +12,13 @@ import Kobold.Foundation
 import "helpers.js" as Helpers
 
 Window {
-    minimumWidth: 1200
-    minimumHeight: 600
+    id: _optionsDialog
+
+    minimumWidth: Metrics.dp(1200)
+    minimumHeight: Metrics.dp(600)
+
+    // Local to this file -- the section-selector column's width, not a shared design concept.
+    readonly property int sectionSelectorWidth: Metrics.dp(200)
 
     color: Theme.bg
 
@@ -36,7 +41,7 @@ Window {
         ScrollList {
             id: _sectionSelector
 
-            Layout.preferredWidth: 200
+            Layout.preferredWidth: _optionsDialog.sectionSelectorWidth
             Layout.fillHeight: true
 
             model: _sectionModel

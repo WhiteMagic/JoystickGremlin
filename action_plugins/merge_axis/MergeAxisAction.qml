@@ -123,14 +123,18 @@ Item {
 
             Label { text: "First axis" }
             InputAssignButton {
-                valueLabel: _root.action.firstAxis.label
+                valueLabel: _root.action.firstAxis.isValid
+                    ? _root.action.firstAxis.label
+                    : "Not assigned -- open the second axis and add this merge instance there to assign it."
                 isAssigned: _root.action.firstAxis.isValid
                 onClicked: () => { _root.action.firstAxis = uiState.currentInput }
             }
 
             Label { text: "Second axis" }
             InputAssignButton {
-                valueLabel: _root.action.secondAxis.label
+                valueLabel: _root.action.secondAxis.isValid
+                    ? _root.action.secondAxis.label
+                    : "Not assigned -- open the first axis and add this merge instance there to assign it."
                 isAssigned: _root.action.secondAxis.isValid
                 onClicked: () => { _root.action.secondAxis = uiState.currentInput }
             }

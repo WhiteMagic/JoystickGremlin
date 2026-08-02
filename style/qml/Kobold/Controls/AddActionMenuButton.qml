@@ -40,7 +40,7 @@ ToolButton {
     readonly property string fgRole: bordered || ghostActive ? "fg" : "fgMuted"
 
     text: "Add action"
-    implicitHeight: Metrics.ctrlH
+    implicitHeight: Metrics.controlHeight
     // Wide enough for its own label AND the widest menu entry -- the popup is pinned to
     // this same width (below), so it must never be narrower than what it needs to show
     // without eliding.

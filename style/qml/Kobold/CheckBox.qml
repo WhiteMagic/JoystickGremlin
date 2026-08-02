@@ -8,7 +8,7 @@ import Kobold.Foundation
 T.CheckBox {
     id: control
 
-    implicitHeight: Metrics.ctrlH
+    implicitHeight: Metrics.controlHeight
     implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
     spacing: Metrics.gapM
 
@@ -17,8 +17,8 @@ T.CheckBox {
 
     // R4/SPEC §7: checked = accent border + accent tick, never a filled box.
     indicator: Rectangle {
-        implicitWidth: Metrics.markSize
-        implicitHeight: Metrics.markSize
+        implicitWidth: Metrics.icon
+        implicitHeight: Metrics.icon
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
         radius: Metrics.radius

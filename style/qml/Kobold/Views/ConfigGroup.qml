@@ -19,11 +19,11 @@ ColumnLayout {
 
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.rightMargin: 20
+    anchors.rightMargin: Metrics.gapL
 
     Label {
         Layout.fillWidth: true
-        Layout.preferredHeight: 50
+        Layout.preferredHeight: Metrics.dp(50)
 
         text: Helpers.capitalize(groupName)
 
@@ -38,7 +38,7 @@ ColumnLayout {
     }
 
     Spacer {
-        Layout.preferredHeight: 5
+        Layout.preferredHeight: Metrics.gapS
     }
 
     // Delegate rendering individual configuration option styles.
@@ -193,7 +193,7 @@ ColumnLayout {
                     ToolTip {
                         text: parent.text
 
-                        width: contentWidth > 500 ? 500 : contentWidth + 20
+                        width: Metrics.tooltipWidth(contentWidth)
 
                         visible: parent.hovered
                         delay: 500

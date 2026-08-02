@@ -31,10 +31,10 @@ Pane {
 
         ColumnLayout {
             Layout.alignment: Qt.AlignTop
-            Layout.preferredWidth: 400
-            Layout.minimumWidth: 400
-            Layout.maximumWidth: 400
-            Layout.rightMargin: 10
+            Layout.preferredWidth: Metrics.dp(400)
+            Layout.minimumWidth: Metrics.dp(400)
+            Layout.maximumWidth: Metrics.dp(400)
+            Layout.rightMargin: Metrics.gapM
 
             Label {
                 Layout.fillWidth: true
@@ -57,7 +57,7 @@ Pane {
 
         Item {
             Layout.alignment: Qt.AlignTop
-            Layout.topMargin: 5
+            Layout.topMargin: Metrics.gapS
             Layout.fillWidth: true
             Layout.preferredHeight: _optionElementContainer.implicitHeight
 

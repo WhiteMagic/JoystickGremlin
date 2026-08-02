@@ -13,8 +13,11 @@ import Kobold.Foundation
 Window {
     id: _root
 
-    minimumWidth: 900
-    minimumHeight: 500
+    minimumWidth: Metrics.dp(900)
+    minimumHeight: Metrics.dp(500)
+
+    // Local to this file -- the parent-mode selector's width, not a shared design concept.
+    readonly property int parentSelectorWidth: Metrics.dp(200)
 
     color: Theme.bg
 
@@ -27,7 +30,7 @@ Window {
         id: _textInput
 
         visible: false
-        width: Metrics.dialogWidthS
+        width: Metrics.dp(500)
 
         property var callback: null
 
@@ -41,8 +44,8 @@ Window {
         id: _content
 
         anchors.fill: parent
-        anchors.topMargin: 10
-        anchors.bottomMargin: 10
+        anchors.topMargin: Metrics.gapM
+        anchors.bottomMargin: Metrics.gapM
 
         ScrollList  {
             Layout.fillWidth: true
@@ -89,7 +92,7 @@ Window {
 
             Label {
                 Layout.fillWidth: true
-                Layout.leftMargin: 10
+                Layout.leftMargin: Metrics.gapM
 
                 padding: Metrics.gapS
 
@@ -99,7 +102,7 @@ Window {
             ToolButton {
                 icon.name: "edit"
 
-                Layout.leftMargin: 10
+                Layout.leftMargin: Metrics.gapM
 
                 onClicked: () => {
                     let validNames = modeHierarchy.modeStringList()
@@ -119,9 +122,9 @@ Window {
             ComboBox {
                 id: _parentMode
 
-                Layout.preferredWidth: 200
-                Layout.leftMargin: 10
-                Layout.rightMargin: 10
+                Layout.preferredWidth: _root.parentSelectorWidth
+                Layout.leftMargin: Metrics.gapM
+                Layout.rightMargin: Metrics.gapM
 
                 model: modeHierarchy.validParents(name)
 
@@ -140,7 +143,7 @@ Window {
             ToolButton {
                 icon.name: "delete"
 
-                Layout.rightMargin: 10
+                Layout.rightMargin: Metrics.gapM
 
                 onClicked: () => { modeHierarchy.deleteMode(name) }
             }

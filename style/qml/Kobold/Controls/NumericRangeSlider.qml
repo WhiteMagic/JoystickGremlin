@@ -41,7 +41,7 @@ RowLayout {
     TextField {
         id: _firstInput
 
-        Layout.preferredWidth: Metrics.ctrlH * 3
+        Layout.preferredWidth: Metrics.controlHeight * 3
         horizontalAlignment: TextInput.AlignHCenter
         font.family: FontType.mono
         font.pixelSize: Metrics.textBody
@@ -68,7 +68,7 @@ RowLayout {
         id: _slider
 
         Layout.fillWidth: true
-        Layout.preferredWidth: Metrics.ctrlH * 6
+        Layout.preferredWidth: Metrics.controlHeight * 6
 
         from: root.from
         to: root.to
@@ -102,7 +102,7 @@ RowLayout {
     TextField {
         id: _secondInput
 
-        Layout.preferredWidth: Metrics.ctrlH * 3
+        Layout.preferredWidth: Metrics.controlHeight * 3
         horizontalAlignment: TextInput.AlignHCenter
         font.family: FontType.mono
         font.pixelSize: Metrics.textBody

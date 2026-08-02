@@ -68,7 +68,7 @@ DropArea {
             : (root.inTopBand
                 ? -root.gap / 2 - _insertionLine.height / 2
                 : root.height + root.gap / 2 - _insertionLine.height / 2)
-        height: Metrics.insertionLine
+        height: Metrics.hairline
         color: Theme.accent
     }
 }

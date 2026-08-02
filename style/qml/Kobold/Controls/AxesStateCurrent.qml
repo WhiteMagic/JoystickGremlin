@@ -15,6 +15,11 @@ Item {
     property string deviceGuid
     property string title
 
+    // Local to this file -- single consumer, not a shared design concept.
+    readonly property int axisColumnWidth: Metrics.dp(60)
+    readonly property int axisBarHeight:   Metrics.dp(100)
+    readonly property int axisBarSize:     Metrics.dp(20)
+
     implicitHeight: _content.implicitHeight
 
     function format_percentage(value)
@@ -45,7 +50,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
 
-                height: 2
+                height: 2 * Metrics.hairline
                 color: Theme.line
             }
         }
@@ -54,7 +59,7 @@ Item {
             id: _list
 
             Layout.fillWidth: true
-            Layout.preferredHeight: 150
+            Layout.preferredHeight: Metrics.dp(150)
 
             orientation: Qt.Horizontal
             spacing: Metrics.gapM
@@ -71,7 +76,7 @@ Item {
                     required property double value
 
                     height: ListView.view.height
-                    width: Metrics.viewerAxisColumnWidth
+                    width: _root.axisColumnWidth
 
                     Label {
                         Layout.alignment: Qt.AlignHCenter
@@ -83,8 +88,8 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
 
                         orientation: BetterProgressBar.Orientation.Vertical
-                        barSize: 20
-                        height: Metrics.viewerAxisBarHeight
+                        barSize: _root.axisBarSize
+                        height: _root.axisBarHeight
 
                         from: -1
                         to: 1

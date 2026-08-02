@@ -308,6 +308,15 @@ class InputItemBindingModel(QtCore.QObject):
         self._container_index_lookup = {}
         self._create_action_models()
 
+    def dispose(self) -> None:
+        """Disconnects from global signals and disposes all action models."""
+        try:
+            signal.inputItemChanged.disconnect(self._check_user_feedback)
+        except RuntimeError:
+            pass
+        for model in self._action_models.values():
+            model.dispose()
+
     def _create_action_models(self) -> None:
         # Disconnect stale models so they stop reacting to behaviorChanged
         for model in self._action_models.values():
@@ -692,10 +701,19 @@ class InputItemModel(QtCore.QAbstractListModel):
 
         self._input_item = input_item
         self._enumeration_index = enumeration_index
+        self._binding_cache: dict[
+            gremlin.profile.InputItemBinding, InputItemBindingModel
+        ] = {}
 
     @property
     def enumeration_index(self) -> int:
         return self._enumeration_index
+
+    def dispose(self) -> None:
+        """Disposes all cached binding models before this model is discarded."""
+        for model in self._binding_cache.values():
+            model.dispose()
+        self._binding_cache.clear()
 
     @QtCore.Slot()
     def newActionSequence(self) -> None:
@@ -711,6 +729,9 @@ class InputItemModel(QtCore.QAbstractListModel):
             self.beginRemoveRows(QtCore.QModelIndex(), index, index)
             self._input_item.remove_item_binding(binding.input_item_binding)
             self.endRemoveRows()
+            cached = self._binding_cache.pop(binding.input_item_binding, None)
+            if cached is not None:
+                cached.dispose()
             signal.inputItemChanged.emit(self._enumeration_index)
         except ValueError:
             pass
@@ -749,9 +770,10 @@ class InputItemModel(QtCore.QAbstractListModel):
     def data(
         self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
     ) -> InputItemBindingModel:
-        return InputItemBindingModel(
-            self._input_item.action_sequences[index.row()], parent=self
-        )
+        binding = self._input_item.action_sequences[index.row()]
+        if binding not in self._binding_cache:
+            self._binding_cache[binding] = InputItemBindingModel(binding, parent=self)
+        return self._binding_cache[binding]
 
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return InputItemModel.roles

@@ -11,6 +11,7 @@ from PySide6 import QtCore
 
 import gremlin.ui.type_aliases as ta
 from gremlin import (
+    common,
     event_handler,
     keyboard,
     user_script,
@@ -320,20 +321,21 @@ class VirtualInputVariableModel(AbstractVariableModel):
     changed = QtCore.Signal()
 
     def __init__(
-        self, variable: user_script.PhysicalInputVariable, parent: ta.OQO = None
+        self, variable: user_script.VirtualInputVariable, parent: ta.OQO = None
     ) -> None:
         super().__init__(variable, parent)
 
     @QtCore.Property(str, notify=changed)
     def label(self) -> str:
-        return "Bla 123"
+        return f"vJoy {self._variable.vjoy_id} " + \
+            f"{common.input_to_ui_string(self._variable.input_type, self._variable.input_id)}"
 
     @QtCore.Property(list, constant=True)
     def validTypes(self) -> list[str]:
         return [InputType.to_string(v) for v in self._variable.valid_types]
 
     def _get_input_type(self) -> str:
-        return InputType.to_string(self._variable._input_type)
+        return InputType.to_string(self._variable.input_type)
 
     def _set_input_type(self, value: str) -> None:
         input_type = InputType.to_enum(value)

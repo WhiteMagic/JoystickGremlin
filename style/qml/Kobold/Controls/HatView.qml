@@ -12,8 +12,8 @@ import Kobold.Foundation
 Item {
     id: _root
 
-    height: Metrics.hatViewSize
-    width: Metrics.hatViewSize
+    height: Metrics.dp(200)
+    width: Metrics.dp(200)
 
     property point currentValue
     property string text
@@ -51,9 +51,9 @@ Item {
         delegate: Rectangle {
             required property int index
 
-            width: Metrics.hatViewDotSize
-            height: Metrics.hatViewDotSize
-            radius: 2
+            width: Metrics.even(15)
+            height: Metrics.even(15)
+            radius: Metrics.radius
             color: _root.currentIndex === index ? Theme.accent : Theme.line
 
             transform: [

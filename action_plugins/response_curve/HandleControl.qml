@@ -22,7 +22,7 @@ Rectangle {
     height: offset * 2
     radius: offset
 
-    color: action.selectedPoint === index ? Style.accent : Style.medColor
+    color: action.selectedPoint === index ? Theme.accent : Theme.line
 
     function updateHandle(handle, evt, side) {
         // Compute new data values.
@@ -102,8 +102,8 @@ Rectangle {
             width: offset * 2
             height: offset * 2
 
-            color: Style.background
-            border.color: action.selectedPoint === index ? Style.accent : Style.medColor
+            color: Theme.bg
+            border.color: action.selectedPoint === index ? Theme.accent : Theme.line
             border.width: 2
 
             MouseArea {
@@ -133,8 +133,8 @@ Rectangle {
             width: offset * 2
             height: offset * 2
 
-            color: Style.background
-            border.color: action.selectedPoint === index ? Style.accent : Style.medColor
+            color: Theme.bg
+            border.color: action.selectedPoint === index ? Theme.accent : Theme.line
             border.width: 2
 
             MouseArea {

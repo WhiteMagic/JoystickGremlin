@@ -11,8 +11,8 @@ import Kobold.Foundation
 T.RangeSlider {
     id: control
 
-    implicitWidth: Metrics.ctrlH * 6
-    implicitHeight: Metrics.ctrlH
+    implicitWidth: Metrics.controlHeight * 6
+    implicitHeight: Metrics.controlHeight
 
     background: Rectangle {
         x: control.leftPadding
@@ -36,8 +36,8 @@ T.RangeSlider {
     first.handle: Rectangle {
         x: control.leftPadding + control.first.visualPosition * (control.availableWidth - width)
         y: control.topPadding + (control.availableHeight - height) / 2
-        width: Metrics.markSize
-        height: Metrics.markSize
+        width: Metrics.icon
+        height: Metrics.icon
         radius: width / 2
         color: Theme.bg
         border.width: Metrics.hairline
@@ -47,8 +47,8 @@ T.RangeSlider {
     second.handle: Rectangle {
         x: control.leftPadding + control.second.visualPosition * (control.availableWidth - width)
         y: control.topPadding + (control.availableHeight - height) / 2
-        width: Metrics.markSize
-        height: Metrics.markSize
+        width: Metrics.icon
+        height: Metrics.icon
         radius: width / 2
         color: Theme.bg
         border.width: Metrics.hairline

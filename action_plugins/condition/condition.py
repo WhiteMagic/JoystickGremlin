@@ -761,7 +761,7 @@ class LogicalDeviceCondition(AbstractCondition):
 
     def _get_logical_input_identifier(self) -> InputIdentifier:
         return InputIdentifier(
-            LogicalDevice().device_guid,
+            LogicalDevice.device_guid,
             self._states[0].input_type,
             self._states[0].input_id,
             parent=self,

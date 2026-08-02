@@ -8,8 +8,8 @@ import Kobold.Foundation
 T.ComboBox {
     id: control
 
-    implicitHeight: Metrics.ctrlH
-    implicitWidth: Math.max(Metrics.ctrlH * 5, leftPadding + contentItem.implicitWidth + rightPadding)
+    implicitHeight: Metrics.controlHeight
+    implicitWidth: Math.max(Metrics.controlHeight * 5, leftPadding + contentItem.implicitWidth + rightPadding)
     leftPadding: Metrics.gapM
     rightPadding: Metrics.gapM + indicator.width + Metrics.gapS
 
@@ -43,7 +43,7 @@ T.ComboBox {
     popup: T.Popup {
         y: control.height
         width: control.width
-        implicitHeight: Math.min(contentItem.contentHeight, Metrics.ctrlH * 8)
+        implicitHeight: Math.min(contentItem.contentHeight, Metrics.controlHeight * 8)
         padding: 0
 
         contentItem: ListView {
@@ -83,7 +83,7 @@ T.ComboBox {
 
     delegate: T.ItemDelegate {
         width: ListView.view.width
-        height: Metrics.ctrlH
+        height: Metrics.controlHeight
         highlighted: control.highlightedIndex === index
 
         contentItem: Text {

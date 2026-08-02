@@ -129,7 +129,7 @@ Item {
                                 text: `vJoy ${vid} is`
                                 Layout.preferredWidth: 75
                             }
-                            Switch {
+                            CheckBox {
                                 text: checked ? "Input" : "Output"
 
                                 checked: isInput

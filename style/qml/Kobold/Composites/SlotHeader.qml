@@ -16,7 +16,7 @@ Item {
 
     signal actionRequested(string name)
 
-    implicitHeight: Metrics.ctrlH
+    implicitHeight: Metrics.controlHeight
 
     RowLayout {
         anchors.left: parent.left

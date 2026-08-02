@@ -98,8 +98,8 @@ Item {
             id: _nameField
 
             Layout.fillWidth: true
-            Layout.minimumWidth: Metrics.ctrlH * 4
-            implicitHeight: Metrics.ctrlH
+            Layout.minimumWidth: Metrics.controlHeight * 4
+            implicitHeight: Metrics.controlHeight
 
             readonly property bool hovered: _nameHover.hovered
 
