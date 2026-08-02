@@ -17,9 +17,6 @@ Window {
     minimumWidth: Metrics.dp(1200)
     minimumHeight: Metrics.dp(600)
 
-    // Local to this file -- the section-selector column's width, not a shared design concept.
-    readonly property int sectionSelectorWidth: Metrics.dp(200)
-
     color: Theme.bg
 
     title: "Options"
@@ -41,7 +38,7 @@ Window {
         ScrollList {
             id: _sectionSelector
 
-            Layout.preferredWidth: _optionsDialog.sectionSelectorWidth
+            Layout.preferredWidth: Metrics.labelColumn
             Layout.fillHeight: true
 
             model: _sectionModel

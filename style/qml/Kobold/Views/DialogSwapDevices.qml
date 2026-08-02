@@ -17,9 +17,6 @@ Window {
     width: Metrics.dp(800)
     height: _content.implicitHeight + Metrics.gapL
 
-    // Local to this file -- the label column's width, not a shared design concept.
-    readonly property int labelWidth: Metrics.dp(200)
-
     color: Theme.bg
 
     title: "Swap Devices"
@@ -47,7 +44,7 @@ Window {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: _root.labelWidth
+                Layout.preferredWidth: Metrics.labelColumn
 
                 text: "From profile device"
                 font.bold: true
@@ -67,7 +64,7 @@ Window {
 
         RowLayout {
             Label {
-                Layout.preferredWidth: _root.labelWidth
+                Layout.preferredWidth: Metrics.labelColumn
 
                 text: "To connected device"
                 font.bold: true
