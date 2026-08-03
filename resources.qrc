@@ -43,5 +43,6 @@
         <file alias="tab_left.svg">style/assets/icons/tab_left.svg</file>
         <file alias="tab_right.svg">style/assets/icons/tab_right.svg</file>
         <file alias="reset.svg">style/assets/icons/reset.svg</file>
+        <file alias="plus.svg">style/assets/icons/plus.svg</file>
     </qresource>
 </RCC>
