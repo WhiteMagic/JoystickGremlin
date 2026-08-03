@@ -111,7 +111,7 @@ Item {
                         Layout.rightMargin: Metrics.gapM * 2
                         implicitHeight: Metrics.rowAction
 
-                        text: "+ New Action Sequence"
+                        text: "New Action Sequence"
 
                         background: Item {
                             // Hidden on hover -- alongside the hover border below, the
@@ -130,7 +130,7 @@ Item {
                             Rectangle {
                                 visible: !(_ghostRow.hovered || _ghostRow.down)
                                 anchors.centerIn: parent
-                                width: _label.implicitWidth + Metrics.gapM * 2
+                                width: _ghostContent.implicitWidth + Metrics.gapM * 2
                                 height: parent.height
                                 color: Theme.bg
                             }
@@ -145,16 +145,32 @@ Item {
                             }
                         }
 
-                        contentItem: Text {
-                            id: _label
+                        contentItem: Item {
+                            implicitWidth: _ghostContent.implicitWidth
+                            implicitHeight: Metrics.controlHeight
 
-                            text: _ghostRow.text
-                            color: (_ghostRow.hovered || _ghostRow.down) ?
-                                Theme.fg : Theme.fgMuted
-                            font.family: FontType.sans
-                            font.pixelSize: Metrics.textDetail
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            Row {
+                                id: _ghostContent
+
+                                anchors.centerIn: parent
+                                spacing: Metrics.gapS
+
+                                AppIcon {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    name: "plus"
+                                    role: (_ghostRow.hovered || _ghostRow.down) ?
+                                        "fg" : "fgMuted"
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: _ghostRow.text
+                                    color: (_ghostRow.hovered || _ghostRow.down) ?
+                                        Theme.fg : Theme.fgMuted
+                                    font.family: FontType.sans
+                                    font.pixelSize: Metrics.textDetail
+                                }
+                            }
                         }
 
                         onClicked: {
@@ -182,10 +198,37 @@ Item {
                 spacing: Metrics.gapS
 
                 Button {
+                    id: _emptyStateButton
+
                     Layout.fillWidth: true
                     Layout.preferredHeight: Metrics.rowInput
 
-                    text: "+ New Action Sequence"
+                    text: "New Action Sequence"
+
+                    contentItem: Item {
+                        implicitWidth: _emptyStateContent.implicitWidth
+                        implicitHeight: Metrics.controlHeight
+
+                        Row {
+                            id: _emptyStateContent
+
+                            anchors.centerIn: parent
+                            spacing: Metrics.gapS
+
+                            AppIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                name: "plus"
+                                role: _emptyStateButton.enabled ? "fg" : "fgDisabled"
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: _emptyStateButton.text
+                                color: _emptyStateButton.enabled ? Theme.fg : Theme.fgDisabled
+                                font: _emptyStateButton.font
+                            }
+                        }
+                    }
 
                     onClicked: {
                         _root.inputItemModel.newActionSequence()
