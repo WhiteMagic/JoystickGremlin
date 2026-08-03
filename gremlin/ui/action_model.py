@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import inspect
 import logging
+import uuid
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -78,6 +79,11 @@ class ActionModel(QtCore.QObject):
 
     actionChanged = QtCore.Signal()
     actionLabelChanged = QtCore.Signal()
+
+    # Session-only expand/collapse state, keyed by (action uuid, sequence index).
+    # Lives on the class, not the instance, because _create_action_models() disposes
+    # and rebuilds every ActionModel on any tree mutation elsewhere in the sequence.
+    _expansion_state: dict[tuple[uuid.UUID, int], bool] = {}
 
     def __init__(
         self,
@@ -332,6 +338,17 @@ class ActionModel(QtCore.QObject):
         if state[0] != value:
             self._tuple_to_activation((value, state[1]))
 
+    def _get_expanded(self) -> bool:
+        return ActionModel._expansion_state.get(
+            (self._data.id, self._sequence_index.index), True
+        )
+
+    def _set_expanded(self, value: bool) -> None:
+        key = (self._data.id, self._sequence_index.index)
+        if ActionModel._expansion_state.get(key, True) != value:
+            ActionModel._expansion_state[key] = value
+            self.actionChanged.emit()
+
     def _get_activate_on_release(self) -> bool:
         return self._activation_to_tuple()[1]
 
@@ -406,6 +423,10 @@ class ActionModel(QtCore.QObject):
         fget=_get_activate_on_release,
         fset=_set_activate_on_release,
         notify=actionChanged,
+    )
+
+    expanded = QtCore.Property(
+        bool, fget=_get_expanded, fset=_set_expanded, notify=actionChanged
     )
 
 

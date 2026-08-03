@@ -64,7 +64,7 @@ Item {
 
             Layout.fillWidth: true
 
-            expanded: backend.isActionExpanded(root.action.id, root.action.sequenceIndex)
+            expanded: root.action.expanded
             iconPath: root.action.iconPath
             name: root.action.actionLabel
             showTriggerMode: root.action.actionBehavior === "button" &&
@@ -75,16 +75,7 @@ Item {
             errorHint: root.action.userFeedback.map((hint) => hint.message).join("\n")
             dragTarget: root
 
-            // `backend.isActionExpanded(...)` above has no NOTIFY signal, so it only ever
-            // seeds `expanded`'s initial value -- it does not make the property reactive.
-            // The toggle itself has to be an explicit write here, not a re-read of that
-            // same (unchanging) expression.
-            onToggleExpandedRequested: {
-                _header.expanded = !_header.expanded
-                backend.setIsActionExpanded(
-                    root.action.id, root.action.sequenceIndex, _header.expanded
-                )
-            }
+            onToggleExpandedRequested: root.action.expanded = !root.action.expanded
             onNameEdited: (text) => { root.action.actionLabel = text }
             onActivateOnPressEdited: (value) => { root.action.activateOnPress = value }
             onActivateOnReleaseEdited: (value) => { root.action.activateOnRelease = value }
