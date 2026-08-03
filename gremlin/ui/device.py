@@ -677,7 +677,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
-    guid = QtCore.Property(str, fget=_get_guid)
+    guid = QtCore.Property(str, fget=_get_guid, constant=True)
 
 
 @ta.QmlElement
@@ -724,6 +724,9 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
     def roleNames(self) -> dict[int, QtCore.QByteArray]:
         return self.roles
 
+    def _get_valid_types(self) -> list[str]:
+        return [InputType.to_string(entry) for entry in self._valid_types]
+
     def _set_valid_types(self, valid_types: list[str]) -> None:
         type_list = sorted(
             [InputType.to_enum(entry) for entry in valid_types], key=lambda x: x.value
@@ -765,7 +768,12 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
         self.beginResetModel()
         self.endResetModel()
 
-    validTypes = QtCore.Property(list, fset=_set_valid_types, notify=inputsChanged)
+    validTypes = QtCore.Property(
+        list,
+        fget=_get_valid_types,
+        fset=_set_valid_types,
+        notify=inputsChanged
+    )
 
     currentIdentifier = QtCore.Property(
         InputIdentifier,
