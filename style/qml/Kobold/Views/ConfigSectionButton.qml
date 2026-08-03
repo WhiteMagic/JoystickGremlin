@@ -28,7 +28,7 @@ Button {
             anchors.bottom: parent.bottom
 
             color: _sectionSelector.currentIndex == index ?
-                Theme.accent : Theme.bg
+                Theme.accent : Theme.bgAlt
         }
         Rectangle {
             x: Metrics.accentMark
@@ -37,7 +37,7 @@ Button {
             anchors.bottom: parent.bottom
 
             color: _sectionSelector.currentIndex == index ?
-                Theme.bgSelected : Theme.bg
+                Theme.bgSelected : Theme.bgAlt
         }
     }
 
