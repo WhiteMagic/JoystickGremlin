@@ -69,9 +69,13 @@ Rectangle {
          }
 
         InputCaptureButton {
-            Layout.margins: Metrics.gapL
-            Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
+            Layout.fillWidth: true
+            Layout.leftMargin: Metrics.gapM
+            Layout.rightMargin: Metrics.gapM
+            Layout.bottomMargin: Metrics.gapL
 
+            variant: "bordered"
+            fillColor: Theme.bg
             text: "Add Key"
             callback: (inputs) => { _inputList.model.addKey(inputs) }
             multipleInputs: false
