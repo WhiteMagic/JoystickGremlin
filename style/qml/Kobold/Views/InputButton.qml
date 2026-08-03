@@ -166,7 +166,7 @@ Button {
             text: name
             color: Theme.fg
             font.family: FontType.sans
-            font.weight: FontType.semiBold
+            font.weight: FontType.regular
             font.pixelSize: Metrics.textBody
 
             width: Math.min(implicitWidth, parent.width - 30)
