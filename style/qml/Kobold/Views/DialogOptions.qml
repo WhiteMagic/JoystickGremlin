@@ -35,16 +35,22 @@ Window {
         anchors.fill: parent
 
         // Shows the list of all option sections.
-        ScrollList {
-            id: _sectionSelector
-
+        Rectangle {
             Layout.preferredWidth: Metrics.labelColumn
             Layout.fillHeight: true
 
-            model: _sectionModel
-            delegate: ConfigSectionButton {}
+            color: Theme.bgAlt
 
-            Component.onCompleted: () => { currentItem.clicked() }
+            ScrollList {
+                id: _sectionSelector
+
+                anchors.fill: parent
+
+                model: _sectionModel
+                delegate: ConfigSectionButton {}
+
+                Component.onCompleted: () => { currentItem.clicked() }
+            }
         }
 
         // Shows the contents of the currently selected section.

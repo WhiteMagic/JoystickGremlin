@@ -6,59 +6,48 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Gremlin.Config
+import Kobold.Controls
 import Kobold.Foundation
 import "helpers.js" as Helpers
 
-Pane {
+ColumnLayout {
     id: root
 
     property string title: "No title"
     property string explanation: "No description"
     default property alias optionElement: _optionElementContainer.data
 
-    padding: Metrics.gapL
-
-    background: Rectangle {
-        color: Theme.bgAlt
-        border.color: Theme.line
-        border.width: Metrics.hairline
-        radius: Metrics.radius
-    }
+    spacing: Metrics.gapS
+    Layout.bottomMargin: Metrics.gapL
+    Layout.leftMargin: Metrics.gapL
+    Layout.rightMargin: Metrics.gapL
 
     RowLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
+        id: _headerRow
 
-        ColumnLayout {
-            Layout.alignment: Qt.AlignTop
-            Layout.preferredWidth: Metrics.dp(400)
-            Layout.minimumWidth: Metrics.dp(400)
-            Layout.maximumWidth: Metrics.dp(400)
-            Layout.rightMargin: Metrics.gapM
+        Layout.fillWidth: true
+        spacing: Metrics.gapL
 
-            Label {
-                Layout.fillWidth: true
+        Label {
+            text: root.title
 
-                text: root.title
+            color: Theme.fg
+            font.family: FontType.sans
+            font.weight: FontType.regular
+            font.pixelSize: Metrics.textBody
 
-                font.weight: 600
-                wrapMode: Text.WordWrap
-            }
-
-            Label {
-                Layout.fillWidth: true
-
-                text: root.explanation
-
-                // horizontalAlignment: Text.AlignJustify
-                wrapMode: Text.WordWrap
-            }
+            Layout.alignment: Qt.AlignVCenter
         }
 
+        // Absorbs whatever width the (capped) control area below doesn't
+        // use, so that area still ends up flush against the row's right
+        // edge instead of leaving dead space after it.
+        Spacer {}
+
         Item {
-            Layout.alignment: Qt.AlignTop
-            Layout.topMargin: Metrics.gapS
+            Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
+            Layout.maximumWidth: _headerRow.width / 2
             Layout.preferredHeight: _optionElementContainer.implicitHeight
 
             ColumnLayout {
@@ -70,4 +59,16 @@ Pane {
         }
     }
 
+    Label {
+        Layout.fillWidth: true
+
+        text: root.explanation
+
+        color: Theme.fgMuted
+        font.family: FontType.sans
+        font.weight: FontType.regular
+        font.pixelSize: Metrics.textDetail
+
+        wrapMode: Text.WordWrap
+    }
 }
