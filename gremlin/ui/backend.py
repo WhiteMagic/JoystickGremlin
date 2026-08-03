@@ -171,7 +171,6 @@ class Backend(QtCore.QObject):
         self.profile = profile.Profile()
         shared_state.current_profile = self.profile
         self._last_error = ""
-        self._action_state = {}
         self.runner = code_runner.CodeRunner()
         self.ui_state = UIState(self)
         self.process_monitor = process_monitor.ProcessMonitor()
@@ -437,30 +436,6 @@ class Backend(QtCore.QObject):
     @QtCore.Slot()
     def resumeInputHighlighting(self) -> None:
         shared_state.set_suspend_input_highlighting(False)
-
-    @QtCore.Slot(str, int, result=bool)
-    def isActionExpanded(self, uuid_str: str, index: int) -> bool:
-        """Returns whether or not a specific action is expanded in the UI.
-
-        Args:
-            uuid: uuid of the action
-            index: index of the particular action
-
-        Returns:
-            True if the action is expanded, False otherwise
-        """
-        return self._action_state.get((uuid.UUID(uuid_str), index), True)
-
-    @QtCore.Slot(str, int, bool)
-    def setIsActionExpanded(self, uuid_str: str, index: int, is_expanded: bool) -> None:
-        """Sets a specific action's expanded state.
-
-        Args:
-            uuid: uuid of the action
-            index: index of the particular action
-            is_expanded: True if the action is expanded, False otherwise
-        """
-        self._action_state[(uuid.UUID(uuid_str), index)] = bool(is_expanded)
 
     @QtCore.Slot(str, int, int, int, int, result=WindowGeometry)
     def windowGeometry(
