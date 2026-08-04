@@ -16,6 +16,13 @@ RowLayout {
     property bool hasChildren: false
     default property alias content: _content.data
 
+    // ActionRow's name field is Metrics.controlHeight centered in the taller
+    // Metrics.rowAction row, so its visible border sits this far inside the row's own
+    // bottom edge -- subtracted from the content's top margin below so the *visible*
+    // gap (box border to box border) matches Metrics.gapM, not the row-to-row gap plus
+    // this inset on top of it.
+    readonly property int _headerBoxInset: (Metrics.rowAction - Metrics.controlHeight) / 2
+
     spacing: 0
 
     Rectangle {
@@ -32,6 +39,11 @@ RowLayout {
         id: _content
 
         Layout.fillWidth: true
-        spacing: 0
+        // The guide itself stays flush against the header above (fillHeight on the
+        // guide Rectangle) -- only the content is inset, so the header-to-first-row
+        // gap matches the row-to-row gap used inside the content (Metrics.gapM),
+        // without floating the guide's own top away from the header's icon.
+        Layout.topMargin: Metrics.gapM - root._headerBoxInset
+        spacing: Metrics.gapM
     }
 }
