@@ -6,7 +6,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
@@ -19,10 +18,15 @@ Item {
     required property DualAxisDeadzoneModel action
 
     property LabelValueSelectionModel deadzoneModel: action.deadzoneActionList
-    property var _firstActions: action.getActions("first")
-    property var _secondActions: action.getActions("second")
+    property var _firstActions: []
+    property var _secondActions: []
 
     implicitHeight: _content.height
+
+    Component.onCompleted: () => {
+        _root._firstActions = _root.action.getActions("first")
+        _root._secondActions = _root.action.getActions("second")
+    }
 
     Connections {
         target: _root.action
@@ -33,29 +37,23 @@ Item {
         }
     }
 
-    Dialog {
-        id: _dialog
-        anchors.centerIn: Overlay.overlay
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        modal: true
-        focus: true
+    TextInputDialog {
+        id: _renameDialog
+
+        visible: false
         title: "Rename action"
 
-        TextField {
-            id: _actionLabel
-            focus: true
-            text: _root.action.label
-            placeholderText: "Action label"
-            onAccepted: () => { _dialog.accept() }
+        onAccepted: (value) => {
+            _root.action.label = value
+            visible = false
         }
-
-        onAccepted: () => { _root.action.label = _actionLabel.text }
     }
 
     ColumnLayout {
         id: _content
         anchors.left: parent.left
         anchors.right: parent.right
+        spacing: Metrics.gapM
 
         RowLayout {
             Label { text: "Deadzone instance" }
@@ -88,7 +86,10 @@ Item {
             }
             ToolButton {
                 icon.name: "edit"
-                onClicked: () => { _dialog.open() }
+                onClicked: () => {
+                    _renameDialog.text = _root.action.label
+                    _renameDialog.visible = true
+                }
             }
         }
 
