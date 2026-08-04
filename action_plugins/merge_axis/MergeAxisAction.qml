@@ -6,7 +6,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 
 import Gremlin.ActionPlugins
 import Gremlin.Profile
@@ -20,9 +19,13 @@ Item {
 
     property LabelValueSelectionModel actionModel: action.mergeActionList
     property LabelValueSelectionModel operationModel: action.operationList
-    property var _childActions: action.getActions("children")
+    property var _childActions: []
 
     implicitHeight: _content.height
+
+    Component.onCompleted: () => {
+        _root._childActions = _root.action.getActions("children")
+    }
 
     Connections {
         target: _root.action
@@ -33,29 +36,23 @@ Item {
         }
     }
 
-    Dialog {
-        id: _dialog
-        anchors.centerIn: Overlay.overlay
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        modal: true
-        focus: true
+    TextInputDialog {
+        id: _renameDialog
+
+        visible: false
         title: "Rename action"
 
-        TextField {
-            id: _actionLabel
-            focus: true
-            text: _root.action.label
-            placeholderText: "Action label"
-            onAccepted: () => { _dialog.accept() }
+        onAccepted: (value) => {
+            _root.action.label = value
+            visible = false
         }
-
-        onAccepted: () => { _root.action.label = _actionLabel.text }
     }
 
     ColumnLayout {
         id: _content
         anchors.left: parent.left
         anchors.right: parent.right
+        spacing: Metrics.gapM
 
         RowLayout {
             Label { text: "Merge axis instance" }
@@ -88,7 +85,10 @@ Item {
             }
             ToolButton {
                 icon.name: "edit"
-                onClicked: () => { _dialog.open() }
+                onClicked: () => {
+                    _renameDialog.text = _root.action.label
+                    _renameDialog.visible = true
+                }
             }
         }
 

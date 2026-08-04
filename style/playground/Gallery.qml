@@ -639,12 +639,13 @@ ScrollView {
                 Button {
                     id: _textInputDialogButton
                     text: "Open dialog"
-                    onClicked: _textInputDialogDemo.open()
+                    onClicked: _textInputDialogDemo.visible = true
                 }
                 Caption { text: "live -- open, type, accept/cancel" }
 
                 TextInputDialog {
                     id: _textInputDialogDemo
+                    visible: false
                     text: "Rename me"
                 }
             }
