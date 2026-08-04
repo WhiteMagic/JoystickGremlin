@@ -49,6 +49,17 @@ Window {
                 _errorIcon.visible = !isValid
                 _button.enabled = isValid
             }
+
+            Keys.onReturnPressed: () => {
+                if (_button.enabled) {
+                    _root.accepted(_input.text)
+                }
+            }
+            Keys.onEnterPressed: () => {
+                if (_button.enabled) {
+                    _root.accepted(_input.text)
+                }
+            }
         }
 
         AppIcon {
