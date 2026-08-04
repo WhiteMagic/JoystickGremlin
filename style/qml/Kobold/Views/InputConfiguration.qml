@@ -65,7 +65,15 @@ Item {
             // Content to visualize
             model: _root.inputItemModel
             delegate: _entryDelegate
-            reuseItems: true
+            // Not reuseItems: true -- that's for the ~100 shallow, uniform rows of the
+            // left-pane input list (kobold-qml.md). Here each row is a handful of deep,
+            // recursively Loader-built action trees of wildly different shape; recycling
+            // one into another meant a full synchronous subtree rebuild mid-scroll (see
+            // InputItemBinding.qml's onInputBindingChanged), and the delegate's height
+            // binding lagged that rebuild by a frame -- with a mouse wheel's coalesced
+            // multi-notch events landing several recycles at once, that read as the list
+            // bouncing.
+            reuseItems: false
         }
 
         // ListView delegate definition rendering individual bindings via ActionTree

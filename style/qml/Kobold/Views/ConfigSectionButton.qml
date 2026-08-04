@@ -21,23 +21,20 @@ Button {
     height: Metrics.rowInput
     width: _sectionSelector.width
 
-    background: Row {
+    background: Rectangle {
+        color: _sectionSelector.currentIndex == index ? Theme.bgSelected : Theme.bg
+        border.width: Metrics.hairline
+        border.color: Theme.line
+        radius: Metrics.radius
+
+        // Two-channel selection, matching InputButton: fill + accent left bar.
         Rectangle {
+            visible: _sectionSelector.currentIndex == index
             width: Metrics.accentMark
+            color: Theme.accent
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-
-            color: _sectionSelector.currentIndex == index ?
-                Theme.accent : Theme.bgAlt
-        }
-        Rectangle {
-            x: Metrics.accentMark
-            width: parent.width - Metrics.accentMark
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-
-            color: _sectionSelector.currentIndex == index ?
-                Theme.bgSelected : Theme.bgAlt
+            anchors.left: parent.left
         }
     }
 

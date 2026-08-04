@@ -313,12 +313,25 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
 
     @QtCore.Slot(int, int)
     def move(self, source_index: int, target_index: int) -> None:
-        self.layoutAboutToBeChanged.emit()
         data = self._config.value(*self._cfg_key)
+        item_count = len(data)
+        if not (0 <= source_index < item_count) or source_index == target_index:
+            return
+
+        target = data[target_index] if target_index < item_count else None
+
+        self.beginRemoveRows(QtCore.QModelIndex(), source_index, source_index)
         item = data.pop(source_index)
-        data.insert(target_index, item)
+        self.endRemoveRows()
+
+        insertion_index = item_count
+        if target is not None:
+            insertion_index = data.index(target)
+        self.beginInsertRows(QtCore.QModelIndex(), insertion_index, insertion_index)
+        data.insert(insertion_index, item)
+        self.endInsertRows()
+
         self._config.set(*self._cfg_key, data)
-        self.layoutChanged.emit()
 
     def _qml_type(self) -> str:
         return "OptionActionSequenceOrdering"

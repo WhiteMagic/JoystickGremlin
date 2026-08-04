@@ -196,7 +196,7 @@ Item {
                 Layout.fillWidth: true
 
                 readOnly: true
-                onTextChanged: () => { model.profile = text }
+                onTextChanged: () => { if (model.profile !== text) { model.profile = text } }
             }
 
             // Executable path field with button to enable editing to support
@@ -208,7 +208,7 @@ Item {
                     Layout.fillWidth: true
 
                     readOnly: true
-                    onTextChanged: () => { model.executable = text }
+                    onTextChanged: () => { if (model.executable !== text) { model.executable = text } }
                 }
                 ToolButton {
                     icon.name: "edit"
