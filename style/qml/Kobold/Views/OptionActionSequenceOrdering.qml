@@ -36,7 +36,7 @@ Item {
             id: _bottomDropArea
 
             Layout.fillWidth: true
-            height: Metrics.controlHeight
+            Layout.preferredHeight: Metrics.controlHeight
 
             onDropped: (drop) => {
                 _data.move(drop.text, _data.rowCount())
@@ -63,7 +63,9 @@ Item {
         RowLayout {
             id: _item
 
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: parent.height
 
             property int index: model.index
             property bool isDragging: false
@@ -100,6 +102,7 @@ Item {
 
                     onReleased: () => {
                         _item.isDragging = false
+                        _item.y = 0
                     }
                 }
             }

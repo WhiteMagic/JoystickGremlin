@@ -29,9 +29,14 @@ ListView {
     // Pixel wheel scroll, tunable via wheelStep -- replaces index-jump scrolling, which
     // only worked for short, uniform-height rows and hard-errors on a delegate taller
     // than the viewport (positionViewAtIndex has nothing to move to).
+    //
+    // angleDelta is scaled, not just signed: precision touchpads emit many small,
+    // fractional-of-120 events per second instead of one +-120 "notch" per click, and
+    // applying a full wheelStep to every one of those regardless of magnitude made fast
+    // scrolling massively overshoot and slam into the clamped bounds -- read as bouncing.
     WheelHandler {
         onWheel: (event) => {
-            const delta = event.angleDelta.y > 0 ? -_list.wheelStep : _list.wheelStep
+            const delta = -(event.angleDelta.y / 120) * _list.wheelStep
             _list.contentY = Math.max(
                 0,
                 Math.min(_list.contentY + delta, Math.max(0, _list.contentHeight - _list.height))
