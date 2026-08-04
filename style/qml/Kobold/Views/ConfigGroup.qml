@@ -17,13 +17,13 @@ ColumnLayout {
     required property string groupName
     required property ConfigEntryModel entryModel
 
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.rightMargin: Metrics.gapL
+    Layout.fillWidth: true
+    Layout.rightMargin: Metrics.gapL
 
     Label {
         Layout.fillWidth: true
         Layout.preferredHeight: Metrics.rowInput
+        Layout.leftMargin: Metrics.gapL
 
         text: Helpers.capitalize(groupName)
 
@@ -129,7 +129,10 @@ ColumnLayout {
                         text: model.value
 
                         readOnly: true
-                        onTextChanged: () => { model.value = text }
+                        // Text is set programmatically by the dialogs below, so this can't use
+                        // onTextEdited; guard against re-writing the value the binding just
+                        // supplied, or the reentrant dataChanged causes a binding loop.
+                        onTextChanged: () => { if (model.value !== text) { model.value = text } }
                     }
                     Button {
                         text: "Select"
@@ -236,8 +239,6 @@ ColumnLayout {
                 Loader {
                     Layout.alignment: Qt.AlignRight
                     Layout.fillWidth: true
-
-                    asynchronous: true
 
                     Component.onCompleted: () => {
                         let component = Qt.createComponent("Kobold.Views", model.value)
