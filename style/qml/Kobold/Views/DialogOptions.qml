@@ -45,9 +45,17 @@ Window {
                 id: _sectionSelector
 
                 anchors.fill: parent
+                anchors.topMargin: Metrics.gapM
+
+                spacing: Metrics.gapS
 
                 model: _sectionModel
                 delegate: ConfigSectionButton {}
+
+                footer: Item {
+                    width: ListView.view.width
+                    height: Metrics.gapM
+                }
 
                 Component.onCompleted: () => { currentItem.clicked() }
             }

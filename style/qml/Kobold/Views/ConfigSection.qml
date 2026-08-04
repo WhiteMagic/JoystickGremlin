@@ -9,11 +9,13 @@ import Gremlin.Config
 import Kobold.Controls
 import "helpers.js" as Helpers
 
-ScrollList {
+ScrollColumn {
     property ConfigGroupModel groupModel
 
     scrollbarAlwaysVisible: true
 
-    model: groupModel
-    delegate: ConfigGroup {}
+    Repeater {
+        model: groupModel
+        delegate: ConfigGroup {}
+    }
 }

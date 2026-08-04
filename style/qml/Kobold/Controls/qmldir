@@ -1,4 +1,5 @@
 module Kobold.Controls
+import Kobold.Foundation
 NumericRangeSlider  NumericRangeSlider.qml
 HatDirectionToggle  HatDirectionToggle.qml
 VJoySelector        VJoySelector.qml
@@ -9,6 +10,7 @@ Spacer              Spacer.qml
 Divider             Divider.qml
 ButtonStateSelector ButtonStateSelector.qml
 ScrollList          ScrollList.qml
+ScrollColumn        ScrollColumn.qml
 InputCaptureButton  InputCaptureButton.qml
 LogicalDeviceSelector LogicalDeviceSelector.qml
 RowDropBand         RowDropBand.qml
