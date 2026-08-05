@@ -29,6 +29,7 @@ OptionActionSequenceOrdering OptionActionSequenceOrdering.qml
 OptionEntryCard       OptionEntryCard.qml
 OptionProfileAutoLoading OptionProfileAutoLoading.qml
 OptionTTSVoiceSelection OptionTTSVoiceSelection.qml
+OptionThemeSelection  OptionThemeSelection.qml
 ConfigGroup           ConfigGroup.qml
 ConfigSection         ConfigSection.qml
 ConfigSectionButton   ConfigSectionButton.qml

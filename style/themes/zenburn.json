@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "name": "Zenburn",
+    "appearance": "dark"
+  },
+  "colors": {
+    "bg": "#3f3f3f",
+    "bgAlt": "#2b2b2b",
+    "bgHover": "#4f4f4f",
+    "bgSelected": "#5f5f5f",
+    "line": "#6f6f6f",
+    "fg": "#dcdccc",
+    "fgMuted": "#a8a894",
+    "fgDisabled": "#767669",
+    "accent": "#8cd0d3",
+    "error": "#cc9393",
+    "warning": "#dfaf8f"
+  }
+}
