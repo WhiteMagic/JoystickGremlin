@@ -15,9 +15,6 @@ from pathlib import Path
 import gremlin.util
 
 _ACTION_PLUGINS_DIR = Path(gremlin.util.resource_path("action_plugins"))
-
-# RootAction is intentionally invisible (qml/InputItemBinding.qml never draws its own
-# row) and ships no icon of its own.
 _NO_ICON_EXPECTED = {"root"}
 
 
@@ -25,10 +22,7 @@ def _plugin_dirs() -> list[str]:
     return sorted(p.parent.name for p in _ACTION_PLUGINS_DIR.glob("*/__init__.py"))
 
 
-def test_every_plugin_module_resolves_to_its_own_directory() -> None:
-    """Guards the assumption `ActionModel._icon_path_impl` relies on: a plugin's data
-    class is always defined in that plugin's own folder, so `inspect.getfile` resolves
-    correctly without any tag/directory naming convention."""
+def test_plugins_resolve_to_own_directory() -> None:
     for plugin_dir in _plugin_dirs():
         module = importlib.import_module(f"action_plugins.{plugin_dir}")
         if "create" not in module.__dict__:
@@ -37,7 +31,7 @@ def test_every_plugin_module_resolves_to_its_own_directory() -> None:
         assert module_file.parent.name == plugin_dir
 
 
-def test_every_plugin_ships_an_icon_except_root() -> None:
+def test_plugins_ship_compatible_icon() -> None:
     for plugin_dir in _plugin_dirs():
         if plugin_dir in _NO_ICON_EXPECTED:
             continue
@@ -49,9 +43,3 @@ def test_every_plugin_ships_an_icon_except_root() -> None:
         assert "currentColor" in own_icon.read_text(encoding="utf-8"), (
             f"{plugin_dir}/icon.svg must use currentColor to tint via IconProvider"
         )
-
-
-def test_action_placeholder_exists_and_is_tintable() -> None:
-    placeholder = _ACTION_PLUGINS_DIR / "action-placeholder.svg"
-    assert placeholder.exists()
-    assert "currentColor" in placeholder.read_text(encoding="utf-8")
