@@ -69,6 +69,7 @@ Item {
             id: _header
 
             Layout.fillWidth: true
+            Layout.topMargin: -Metrics.actionRowInset
 
             inputBinding: _root.inputBinding
             inputItemModel: _root.inputItemModel
