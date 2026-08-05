@@ -74,6 +74,81 @@ def _read_qfile(path: str) -> str:
         handle.close()
 
 
+def _load_theme_file(path: str, schema: dict) -> tuple[str, dict] | None:
+    """Loads and schema-validates a single scheme file.
+
+    Args:
+        path: Path to the theme file to load and validate.
+        schema: JSON schema to validate the theme file against.
+
+    Returns:
+        Tuple of theme name and data if valid, None if rejected.
+    """
+    theme_name = QtCore.QFileInfo(path).completeBaseName()
+    try:
+        data = json.loads(_read_qfile(path))
+        jsonschema.validate(instance=data, schema=schema)
+    except (error.GremlinError, ValueError, jsonschema.ValidationError) as e:
+        logging.getLogger("system").warning(
+            f"Rejected Kobold color theme '{path}': {e}"
+        )
+        return None
+    return theme_name, data
+
+
+def _discover_themes(root_paths: list[str]) -> dict[str, dict]:
+    """Loads and validates every theme JSON file across the given roots.
+
+    Args:
+        root_paths: Directories to search for theme files.
+
+    Returns:
+        Mapping of theme name to theme data for every valid theme found.
+    """
+    schema = json.loads(_read_qfile(f"{root_paths[0]}/{_SCHEMA_FILE_NAME}"))
+    themes: dict[str, dict] = {}
+    for root in root_paths:
+        directory = QtCore.QDir(root)
+        for file_name in directory.entryList(["*.json"], QtCore.QDir.Filter.Files):
+            if file_name == _SCHEMA_FILE_NAME:
+                continue
+            result = _load_theme_file(directory.filePath(file_name), schema)
+            if result is not None:
+                theme_name, data = result
+                themes[theme_name] = data
+    return themes
+
+
+def discover_theme_names(root_paths: list[str] | None = None) -> list[str]:
+    """Returns the names of every valid, discovered color theme.
+
+    Args:
+        root_paths: Directories to search for theme files.
+
+    Returns:
+        Sorted list of valid theme names.
+    """
+    return sorted(_discover_themes(root_paths or [":/themes"]).keys())
+
+
+def set_active_theme(theme_name: str, valid_names: list[str]) -> None:
+    """Persists the given theme as active and notifies listeners.
+
+    The single implementation of "activate a theme" — both ThemeManager.set_theme
+    and ThemeSelectionModel go through this rather than each writing Configuration
+    and emitting configChanged themselves.
+
+    Args:
+        theme_name: Name of the theme to activate.
+        valid_names: Known-good theme names to validate against.
+    """
+    if theme_name not in valid_names:
+        logging.getLogger("system").warning(f"Unknown theme '{theme_name}'")
+        return
+    Configuration().set("global", "general", "theme", theme_name)
+    signal.configChanged.emit()
+
+
 def load_fonts() -> None:
     """Registers the bundled IBM Plex faces with QFontDatabase.
 
@@ -108,45 +183,15 @@ class ThemeManager(QtCore.QObject):
         """
         super().__init__(parent)
         self._root_paths = root_paths if root_paths is not None else [":/themes"]
-        self._themes: dict[str, dict] = {}
+        self._themes = _discover_themes(self._root_paths)
         self._active_colors: dict[str, QtGui.QColor] = {}
         self._active_theme = ""
         self._ui_scale = 100
 
-        self._json_schema = json.loads(
-            _read_qfile(f"{self._root_paths[0]}/{_SCHEMA_FILE_NAME}")
-        )
-        self._discover()
         self._ui_scale = self._get_ui_scale()
         self._apply(self._get_current_theme())
 
         signal.configChanged.connect(self._config_changed_cb)
-
-    def _discover(self) -> None:
-        """Loads and validates every theme JSON file across the roots list."""
-        for root in self._root_paths:
-            directory = QtCore.QDir(root)
-            for file_name in directory.entryList(["*.json"], QtCore.QDir.Filter.Files):
-                if file_name == _SCHEMA_FILE_NAME:
-                    continue
-                self._load_theme_file(directory.filePath(file_name))
-
-    def _load_theme_file(self, path: str) -> None:
-        """Loads and schema-validates a single scheme file, rejecting it on failure.
-
-        Args:
-            path: Path to the theme file to load and validate.
-        """
-        theme_name = QtCore.QFileInfo(path).completeBaseName()
-        try:
-            data = json.loads(_read_qfile(path))
-            jsonschema.validate(instance=data, schema=self._json_schema)
-        except (error.GremlinError, ValueError, jsonschema.ValidationError) as e:
-            logging.getLogger("system").warning(
-                f"Rejected Kobold color theme '{path}': {e}"
-            )
-            return
-        self._themes[theme_name] = data
 
     def _get_current_theme(self) -> str:
         """Returns the name of the currently active theme.
@@ -220,11 +265,7 @@ class ThemeManager(QtCore.QObject):
         Args:
             theme_name: Name of the theme to apply.
         """
-        if theme_name not in self._themes:
-            logging.getLogger("system").warning(f"Unknown theme '{theme_name}'")
-            return
-        Configuration().set("global", "general", "theme", theme_name)
-        signal.configChanged.emit()
+        set_active_theme(theme_name, list(self._themes.keys()))
 
     @QtCore.Slot(str)
     def set_ui_scale(self, scale: str) -> None:
