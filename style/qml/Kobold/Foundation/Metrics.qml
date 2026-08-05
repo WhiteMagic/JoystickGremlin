@@ -45,6 +45,7 @@ QtObject {
     readonly property int rightPaneMin:  dp(900)
     readonly property int inputRowPitch: dp(52) // rowInput (48) + gapS (4)
     readonly property int tabPadding: dp(48)
+    readonly property int actionRowInset: (rowAction - controlHeight) / 2
 
     // Formulas -- precompute the fixed operands once, expose a function so the
     // formula itself isn't duplicated at every call site (some of which are delegates).

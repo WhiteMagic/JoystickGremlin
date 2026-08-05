@@ -95,8 +95,6 @@ Item {
                     id: _sequenceColumn
 
                     width: parent.width
-                    // InputItemBinding.qml carries no padding of its own -- this gapS is
-                    // the entire gap above the ghost row.
                     spacing: Metrics.gapS
 
                     InputItemBinding {
