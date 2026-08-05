@@ -14,6 +14,7 @@ from typing import (
 from PySide6 import QtCore
 
 import gremlin.config
+import gremlin.ui.theme_manager
 import gremlin.ui.type_aliases as ta
 from gremlin.common import SingletonMetaclass
 from gremlin.error import (
@@ -470,6 +471,58 @@ class TTSVoiceSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
     )
 
 
+@ta.QmlElement
+class ThemeSelectionModel(QtCore.QAbstractListModel, BaseMetaConfigOptionWidget):
+    roles = {
+        QtCore.Qt.ItemDataRole.UserRole + 1: QtCore.QByteArray(b"name"),
+    }
+
+    currentIndexChanged = QtCore.Signal()
+
+    def __init__(self, parent: ta.OQO = None) -> None:
+        QtCore.QAbstractListModel.__init__(self, parent)
+        BaseMetaConfigOptionWidget.__init__(self)
+
+        self._themes = gremlin.ui.theme_manager.discover_theme_names()
+        self._config = gremlin.config.Configuration()
+        self._cfg_key = ["global", "general", "theme"]
+
+    def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
+        return len(self._themes)
+
+    def data(
+        self, index: ta.ModelIndex, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ) -> str | None:
+        if role == QtCore.Qt.ItemDataRole.UserRole + 1:
+            return self._themes[index.row()]
+        return None
+
+    def roleNames(self) -> dict[int, QtCore.QByteArray]:
+        return self.roles
+
+    def _qml_type(self) -> str:
+        return "OptionThemeSelection"
+
+    def _get_current_index(self) -> int:
+        try:
+            return self._themes.index(self._config.value(*self._cfg_key))
+        except ValueError:
+            return 0
+
+    def _set_current_index(self, index: int) -> None:
+        if not (0 <= index < len(self._themes)):
+            return
+        gremlin.ui.theme_manager.set_active_theme(self._themes[index], self._themes)
+        self.currentIndexChanged.emit()
+
+    currentIndex = QtCore.Property(
+        int,
+        fget=_get_current_index,
+        fset=_set_current_index,
+        notify=currentIndexChanged,
+    )
+
+
 class MetaConfigOption(metaclass=SingletonMetaclass):
     def __init__(self) -> None:
         self._options = {}
@@ -635,4 +688,12 @@ MetaConfigOption().register(
     "voice-selection",
     "Voices available for use with Text to Speech actions.",
     TTSVoiceSelectionModel,
+)
+
+MetaConfigOption().register(
+    "global",
+    "general",
+    "theme-selection",
+    "Color theme used for the UI.",
+    ThemeSelectionModel,
 )

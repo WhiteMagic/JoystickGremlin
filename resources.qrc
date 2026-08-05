@@ -9,6 +9,7 @@
         <file alias="light.json">style/themes/light.json</file>
         <file alias="dark.json">style/themes/dark.json</file>
         <file alias="scheme.schema.json">style/themes/scheme.schema.json</file>
+        <file alias="zenburn.json">style/themes/zenburn.json</file>
     </qresource>
     <qresource prefix="fonts">
         <file alias="IBMPlexSans-Regular.otf">style/assets/fonts/IBMPlexSans-Regular.otf</file>
