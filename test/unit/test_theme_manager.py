@@ -59,6 +59,10 @@ def test_shipped_schemes_resolve_expected_colors() -> None:
         assert getattr(manager, token) == QtGui.QColor(hex_value)
 
 
+def test_discover_theme_names_returns_shipped_schemes() -> None:
+    assert theme_manager.discover_theme_names() == ["dark", "light"]
+
+
 def test_malformed_scheme_rejected(tmp_path: pathlib.Path) -> None:
     valid = {"meta": {"appearance": "light"}, "colors": _LIGHT_COLORS}
     (tmp_path / "valid.json").write_text(json.dumps(valid))

@@ -232,7 +232,7 @@ def register_config_options() -> None:
         "light",
         "Currently used color theme for the UI.",
         {},
-        True,
+        False,
     )
     cfg.register(
         "global",
