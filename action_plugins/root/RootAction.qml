@@ -22,19 +22,10 @@ ColumnLayout {
 
     spacing: 0
 
-    property var _children: root.action.getActions("children")
+    ActionList {
+        Layout.fillWidth: true
 
-    Repeater {
-        model: root._children
-
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root._children[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "children"
     }
 }

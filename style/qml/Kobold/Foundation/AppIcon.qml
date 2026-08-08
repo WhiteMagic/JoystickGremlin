@@ -9,6 +9,7 @@ Image {
 
     property string name
     property string role: "fg" // fg | fgMuted | fgDisabled | accent | error | warning
+    property int size: Metrics.icon
 
     readonly property color _c:
           role === "fgMuted"    ? Theme.fgMuted
@@ -18,9 +19,9 @@ Image {
         : role === "warning"    ? Theme.warning
         :                         Theme.fg
 
-    sourceSize: Qt.size(Metrics.icon, Metrics.icon)
-    width: Metrics.icon
-    height: Metrics.icon
+    sourceSize: Qt.size(size, size)
+    width: size
+    height: size
     cache: true
-    source: name === "" ? "" : "image://icon/" + name + "?c=" + _c.toString().slice(-6) + "&px=" + Metrics.icon
+    source: name === "" ? "" : "image://icon/" + name + "?c=" + _c.toString().slice(-6) + "&px=" + size
 }

@@ -60,6 +60,7 @@ Button {
     }
 
     Component.onCompleted: () => { _updateShownChipCount() }
+    onActionSequenceDisplayModeChanged: _updateShownChipCount()
 
     Timer {
         id: _delayedUpdate
@@ -84,7 +85,7 @@ Button {
     // overflow chip unless every remaining label already fits. Never
     // pre-truncate by a fixed count -- measure, then drop.
     function _computeShownChipCount(labels, availableWidth) {
-        if (labels.length === 0) {
+        if (!labels || labels.length === 0) {
             return 0
         }
 
@@ -107,7 +108,7 @@ Button {
     }
 
     function _updateShownChipCount() {
-        if (actionSequenceDisplayMode !== "Chips") {
+        if (actionSequenceDisplayMode !== "Chips" || !actionLabels) {
             return
         }
         _shownChipCount = _computeShownChipCount(actionLabels, _chipArea.width)
@@ -204,6 +205,7 @@ Button {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
+            anchors.bottomMargin: Metrics.gapS
             height: Metrics.textDetail + Metrics.gapS
 
             // This Item's own width (not _control's) is what the fit
@@ -232,8 +234,8 @@ Button {
                 Chip {
                     overflow: true
                     visible: actionSequenceDisplayMode === "Chips"
-                        && _control._shownChipCount < actionLabels.length
-                    text: "+" + (actionLabels.length - _control._shownChipCount)
+                        && _control._shownChipCount < (actionLabels ? actionLabels.length : 0)
+                    text: "+" + ((actionLabels ? actionLabels.length : 0) - _control._shownChipCount)
                 }
             }
 

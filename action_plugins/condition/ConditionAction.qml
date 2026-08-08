@@ -18,18 +18,7 @@ ColumnLayout {
 
     required property ConditionModel action
 
-    property var _trueActions: root.action.getActions("true")
-    property var _falseActions: root.action.getActions("false")
-
     spacing: Metrics.gapM
-
-    Connections {
-        target: root.action
-        function onActionsChanged() {
-            root._trueActions = root.action.getActions("true")
-            root._falseActions = root.action.getActions("false")
-        }
-    }
 
     // +-------------------------------------------------------------------
     // | Logical condition setup
@@ -92,18 +81,11 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "true") }
     }
 
-    Repeater {
-        model: root._trueActions
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root._trueActions[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "true"
     }
 
     // +-------------------------------------------------------------------
@@ -118,18 +100,11 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "false") }
     }
 
-    Repeater {
-        model: root._falseActions
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root._falseActions[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "false"
     }
 
     component DeleteConditionButton: ToolButton {

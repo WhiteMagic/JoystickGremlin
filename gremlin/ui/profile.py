@@ -720,6 +720,7 @@ class InputItemModel(QtCore.QAbstractListModel):
         self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
         self._input_item.add_item_binding()
         self.endInsertRows()
+        self.bindingsChanged.emit()
         signal.inputItemChanged.emit(self._enumeration_index)
 
     @QtCore.Slot(InputItemBindingModel)
@@ -732,37 +733,49 @@ class InputItemModel(QtCore.QAbstractListModel):
             cached = self._binding_cache.pop(binding.input_item_binding, None)
             if cached is not None:
                 cached.dispose()
+            self.bindingsChanged.emit()
             signal.inputItemChanged.emit(self._enumeration_index)
         except ValueError:
             pass
 
-    @QtCore.Slot(str, str, str)
-    def dropAction(self, source: str, target: str, method: str) -> None:
-        """Handles dropping an action tree element
+    @QtCore.Property(list, notify=bindingsChanged)
+    def bindings(self) -> list[InputItemBindingModel]:
+        return [self.data(self.index(row, 0)) for row in range(self.rowCount())]
+
+    @QtCore.Slot(str, str, bool)
+    def dropAction(self, source: str, target: str, prepend: bool) -> None:
+        """Handles dropping a sequence block to reorder it relative to its siblings.
 
         Args:
-            source: identifier of the tree being dropped
-            target: identifier of the location on which the source is dropped
-            method: type of drop action to perform
+            source: identifier (root action id) of the sequence being dropped
+            target: identifier of the sequence to insert after; unused when prepend
+                is True
+            prepend: True to move source to the very start of the list instead of
+                after target
         """
-        # Force a UI refresh without performing any model changes if both
-        # source and target item are identical, i.e. an invalid drag&drop
-        if source == target:
-            self.bindingsChanged.emit()
+        # Force a UI refresh without performing any model changes if source and target
+        # are identical, i.e. an invalid drag&drop.
+        if not prepend and source == target:
+            signal.reloadCurrentInputItem.emit()
             return
 
         source_id = uuid.UUID(source)
-        target_id = uuid.UUID(target)
         source_entry = None
         for idx, entry in enumerate(self._input_item.action_sequences):
             if entry.root_action.id == source_id:
                 source_entry = self._input_item.action_sequences.pop(idx)
-        if source_entry is not None:
-            for idx, entry in enumerate(self._input_item.action_sequences):
-                if entry.root_action.id == target_id:
-                    self._input_item.action_sequences.insert(idx + 1, source_entry)
 
-        self.bindingsChanged.emit()
+        if source_entry is not None:
+            if prepend:
+                self._input_item.action_sequences.insert(0, source_entry)
+            else:
+                target_id = uuid.UUID(target)
+                for idx, entry in enumerate(self._input_item.action_sequences):
+                    if entry.root_action.id == target_id:
+                        self._input_item.action_sequences.insert(idx + 1, source_entry)
+
+        signal.reloadCurrentInputItem.emit()
+        signal.inputItemChanged.emit(self._enumeration_index)
 
     def rowCount(self, parent: ta.ModelIndex = QtCore.QModelIndex()) -> int:
         return len(self._input_item.action_sequences)

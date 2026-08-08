@@ -1,5 +1,6 @@
 module Kobold.Composites
 import Kobold.Controls
+ActionList          ActionList.qml
 ActionNode          ActionNode.qml
 ActionRow           ActionRow.qml
 SlotHeader          SlotHeader.qml

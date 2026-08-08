@@ -18,22 +18,13 @@ Item {
     required property DualAxisDeadzoneModel action
 
     property LabelValueSelectionModel deadzoneModel: action.deadzoneActionList
-    property var _firstActions: []
-    property var _secondActions: []
 
     implicitHeight: _content.height
-
-    Component.onCompleted: () => {
-        _root._firstActions = _root.action.getActions("first")
-        _root._secondActions = _root.action.getActions("second")
-    }
 
     Connections {
         target: _root.action
         function onModelChanged() {
             _root.deadzoneModel.currentValue = _root.action.deadzone
-            _root._firstActions = _root.action.getActions("first")
-            _root._secondActions = _root.action.getActions("second")
         }
     }
 
@@ -150,17 +141,11 @@ Item {
             onActionRequested: (name) => { _root.action.appendAction(name, "first") }
         }
 
-        Repeater {
-            model: _root._firstActions
+        ActionList {
+            Layout.fillWidth: true
 
-            delegate: ActionNode {
-                required property var modelData
-                required property int index
-
-                Layout.fillWidth: true
-                action: modelData
-                previousSibling: index > 0 ? _root._firstActions[index - 1] : null
-            }
+            containerOwner: _root.action
+            containerName: "first"
         }
 
         SlotHeader {
@@ -170,17 +155,11 @@ Item {
             onActionRequested: (name) => { _root.action.appendAction(name, "second") }
         }
 
-        Repeater {
-            model: _root._secondActions
+        ActionList {
+            Layout.fillWidth: true
 
-            delegate: ActionNode {
-                required property var modelData
-                required property int index
-
-                Layout.fillWidth: true
-                action: modelData
-                previousSibling: index > 0 ? _root._secondActions[index - 1] : null
-            }
+            containerOwner: _root.action
+            containerName: "second"
         }
     }
 }

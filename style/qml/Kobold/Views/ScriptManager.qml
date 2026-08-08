@@ -19,9 +19,8 @@ Item {
 
     property ScriptListModel scriptListModel : backend.scriptListModel
 
-    // Local to this file -- the two SplitView panes' width floors, not a shared design concept.
     readonly property int scriptListMinWidth: Metrics.dp(400)
-    readonly property int configMinWidth:     Metrics.dp(500)
+    readonly property int configMinWidth:     Metrics.dp(600)
     readonly property int pathWidthReserve:   Metrics.dp(400)
 
     // Dialog to select a script to add
@@ -58,7 +57,6 @@ Item {
 
     SplitView {
         anchors.fill: parent
-        anchors.leftMargin: Metrics.gapM
 
         ColumnLayout {
             SplitView.fillHeight: true
@@ -70,7 +68,7 @@ Item {
 
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                Layout.rightMargin: Metrics.gapS
+                Layout.margins: Metrics.gapM
 
                 spacing: Metrics.gapM
                 scrollbarAlwaysVisible: true
@@ -109,7 +107,7 @@ Item {
 
         AppIcon {
             Layout.leftMargin: Metrics.gapM
-            name: "duplicate"
+            name: "user-script"
         }
 
         Label {

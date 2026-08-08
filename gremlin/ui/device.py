@@ -59,15 +59,9 @@ def _generate_action_sequence_descriptor(item: InputItem) -> str:
 def _collect_action_icons(action: AbstractActionData, icons: list[str]) -> None:
     icons.append(action.icon)
     if action.tag == "map-to-vjoy":
-        type_lookup = {
-            InputType.JoystickAxis: "A",
-            InputType.JoystickButton: "B",
-            InputType.JoystickHat: "H",
-            InputType.Invalid: "I",
-        }
         icons[-1] += (
             f",{action.vjoy_device_id},"
-            f"{type_lookup[action.vjoy_input_type]},"
+            f"{InputType.to_letter(action.vjoy_input_type)},"
             f"{action.vjoy_input_id}"
         )
     for selector in action._valid_selectors():
@@ -102,7 +96,7 @@ def _action_labels_from_item(item: InputItem) -> list[str]:
     labels = []
     for seq in item.action_sequences:
         assert seq.root_action is not None
-        labels.extend(child.action_label for child in seq.root_action.get_actions()[0])
+        labels.extend(child.chip_label for child in seq.root_action.get_actions()[0])
     return labels
 
 
@@ -321,7 +315,7 @@ class DeviceListModel(QtCore.QAbstractListModel):
         int,
         fget=_get_selected_index,
         fset=_set_selected_index,
-        notify=selectedIndexChanged
+        notify=selectedIndexChanged,
     )
 
 
@@ -350,9 +344,13 @@ class Device(QtCore.QAbstractListModel):
         self._device: dill.DeviceSummary | None = None
         self._device_mapping: dict[str, str] | None = None
         self._mode: str = "Default"
+        self._action_sequence_display_mode = Configuration().value(
+            "global", "general", "action-sequence-information"
+        )
 
         signal.profileChanged.connect(self._profile_changed_cb)
         signal.inputItemChanged.connect(self.refreshInput)
+        signal.configChanged.connect(self._config_changed_cb)
 
     @QtCore.Slot(int)
     def refreshInput(self, index: int) -> None:
@@ -366,6 +364,16 @@ class Device(QtCore.QAbstractListModel):
     @QtCore.Slot(str)
     def setMode(self, mode: str) -> None:
         self._mode = mode
+        self._refresh_all_rows()
+
+    def _config_changed_cb(self) -> None:
+        mode = Configuration().value("global", "general", "action-sequence-information")
+        if mode == self._action_sequence_display_mode:
+            return
+        self._action_sequence_display_mode = mode
+        self._refresh_all_rows()
+
+    def _refresh_all_rows(self) -> None:
         self.dataChanged.emit(
             self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
         )
@@ -507,10 +515,14 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
 
         self._logical = LogicalDevice()
         self._mode: str = "Default"
+        self._action_sequence_display_mode = Configuration().value(
+            "global", "general", "action-sequence-information"
+        )
 
         signal.profileChanged.connect(self._profile_changed_cb)
         signal.inputItemChanged.connect(self.refreshInput)
         signal.logicalDeviceModified.connect(self._full_refresh)
+        signal.configChanged.connect(self._config_changed_cb)
 
     @QtCore.Slot(str)
     def createInput(self, type_str: str) -> None:
@@ -548,9 +560,7 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
     @QtCore.Slot(str)
     def setMode(self, mode: str) -> None:
         self._mode = mode
-        self.dataChanged.emit(
-            self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
-        )
+        self._refresh_all_rows()
 
     @QtCore.Slot(int)
     def refreshInput(self, index: int) -> None:
@@ -564,6 +574,18 @@ class LogicalDeviceManagementModel(QtCore.QAbstractListModel):
     def _full_refresh(self) -> None:
         self.beginResetModel()
         self.endResetModel()
+
+    def _config_changed_cb(self) -> None:
+        mode = Configuration().value("global", "general", "action-sequence-information")
+        if mode == self._action_sequence_display_mode:
+            return
+        self._action_sequence_display_mode = mode
+        self._refresh_all_rows()
+
+    def _refresh_all_rows(self) -> None:
+        self.dataChanged.emit(
+            self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
+        )
 
     def _get_guid(self) -> str:
         return str(self._logical.device_guid)
@@ -769,10 +791,7 @@ class LogicalDeviceSelectorModel(QtCore.QAbstractListModel):
         self.endResetModel()
 
     validTypes = QtCore.Property(
-        list,
-        fget=_get_valid_types,
-        fset=_set_valid_types,
-        notify=inputsChanged
+        list, fget=_get_valid_types, fset=_set_valid_types, notify=inputsChanged
     )
 
     currentIdentifier = QtCore.Property(
@@ -808,13 +827,26 @@ class KeyboardManagerModel(QtCore.QAbstractListModel):
         super().__init__(parent)
 
         self._profile = shared_state.current_profile
+        self._action_sequence_display_mode = Configuration().value(
+            "global", "general", "action-sequence-information"
+        )
         signal.profileChanged.connect(self._profile_changed_cb)
         signal.inputItemChanged.connect(self.refreshInput)
+        signal.configChanged.connect(self._config_changed_cb)
 
     def _profile_changed_cb(self) -> None:
         self._profile = shared_state.current_profile
         self.beginResetModel()
         self.endResetModel()
+
+    def _config_changed_cb(self) -> None:
+        mode = Configuration().value("global", "general", "action-sequence-information")
+        if mode == self._action_sequence_display_mode:
+            return
+        self._action_sequence_display_mode = mode
+        self.dataChanged.emit(
+            self.createIndex(0, 0), self.createIndex(self.rowCount() - 1, 0)
+        )
 
     def _event_to_key(self, event: event_handler.Event) -> keyboard.Key:
         return keyboard.key_from_code(*event.identifier)
@@ -1701,12 +1733,7 @@ class AxisCalibration(QtCore.QAbstractListModel):
             # Signal that the model has changed for a UI update
             self.emit_update(index)
 
-    guid = QtCore.Property(
-        str,
-        fget=_get_guid,
-        fset=_set_guid,
-        notify=deviceChanged
-    )
+    guid = QtCore.Property(str, fget=_get_guid, fset=_set_guid, notify=deviceChanged)
 
 
 Configuration().register(
