@@ -8,12 +8,15 @@ import Kobold.Foundation
 T.ToolButton {
     id: control
 
-    implicitHeight: Metrics.controlHeight
-    // Icon-only buttons are a square, one control height on a side -- not padded out to
+    property int controlSize: Metrics.controlHeight
+    property int iconSize: Metrics.icon
+
+    implicitHeight: control.controlSize
+    // Icon-only buttons are a square, one control size on a side -- not padded out to
     // whatever the text formula below would give them (icon 16 + gapM*2 = 32, wider than
-    // the 24px height). Text buttons keep the padded, content-driven width.
-    implicitWidth: control.icon.name !== "" ? Metrics.controlHeight
-        : Math.max(Metrics.controlHeight, contentItem.implicitWidth + Metrics.gapM * 2)
+    // the 24px default height). Text buttons keep the padded, content-driven width.
+    implicitWidth: control.icon.name !== "" ? control.controlSize
+        : Math.max(control.controlSize, contentItem.implicitWidth + Metrics.gapM * 2)
     padding: Metrics.gapM
 
     font.family: FontType.sans
@@ -24,11 +27,11 @@ T.ToolButton {
     property string iconRole: control.enabled ? "fg" : "fgDisabled"
 
     contentItem: Item {
-        // Metrics.icon, not _icon.implicitWidth -- Image.implicitWidth follows
+        // control.iconSize, not _icon.implicitWidth -- Image.implicitWidth follows
         // the loaded source's natural size (0 if it failed to load), not the
         // deliberate fixed size AppIcon renders at.
-        implicitWidth: _icon.visible ? Metrics.icon : _label.implicitWidth
-        implicitHeight: Metrics.controlHeight
+        implicitWidth: _icon.visible ? control.iconSize : _label.implicitWidth
+        implicitHeight: control.controlSize
 
         AppIcon {
             id: _icon
@@ -36,6 +39,7 @@ T.ToolButton {
             visible: control.icon.name !== ""
             name: control.icon.name
             role: control.iconRole
+            size: control.iconSize
         }
 
         Text {

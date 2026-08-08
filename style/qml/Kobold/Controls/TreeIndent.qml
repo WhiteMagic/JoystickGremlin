@@ -10,6 +10,9 @@ import Kobold.Foundation
 // group child actions -- no children, no visible line -- but the 1px is still reserved so a
 // config-only body aligns pixel-for-pixel with a guided sibling and the even grid holds.
 // Test: cover the labels and you must still see where each slot starts.
+//
+// The guide sits at Metrics.indent / 2, not flush left -- that's where ActionRow's chevron
+// (controlHeight-wide, icon centered) points, and the guide is that chevron's plumb line.
 RowLayout {
     id: root
 
@@ -18,14 +21,16 @@ RowLayout {
 
     spacing: 0
 
-    Rectangle {
-        Layout.preferredWidth: Metrics.hairline
-        Layout.fillHeight: true
-        color: root.hasChildren ? Theme.line : "transparent"
-    }
-
     Item {
-        Layout.preferredWidth: Metrics.indent - Metrics.hairline
+        Layout.preferredWidth: Metrics.indent
+        Layout.fillHeight: true
+
+        Rectangle {
+            width: Metrics.hairline
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: root.hasChildren ? Theme.line : "transparent"
+        }
     }
 
     ColumnLayout {

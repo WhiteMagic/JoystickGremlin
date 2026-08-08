@@ -17,9 +17,6 @@ ColumnLayout {
 
     required property AxisDeltaModel action
 
-    property var _positiveActions: root.action.getActions("positive")
-    property var _negativeActions: root.action.getActions("negative")
-
     spacing: Metrics.gapM
 
     RowLayout {
@@ -52,18 +49,11 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "positive") }
     }
 
-    Repeater {
-        model: root._positiveActions
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root._positiveActions[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "positive"
     }
 
     // +-------------------------------------------------------------------
@@ -78,17 +68,10 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "negative") }
     }
 
-    Repeater {
-        model: root._negativeActions
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root._negativeActions[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "negative"
     }
 }

@@ -19,20 +19,14 @@ Item {
 
     property LabelValueSelectionModel actionModel: action.mergeActionList
     property LabelValueSelectionModel operationModel: action.operationList
-    property var _childActions: []
 
     implicitHeight: _content.height
-
-    Component.onCompleted: () => {
-        _root._childActions = _root.action.getActions("children")
-    }
 
     Connections {
         target: _root.action
         function onModelChanged() {
             _root.actionModel.currentValue = _root.action.mergeAction
             _root.operationModel.currentValue = _root.action.operation
-            _root._childActions = _root.action.getActions("children")
         }
     }
 
@@ -147,17 +141,11 @@ Item {
             onActionRequested: (name) => { _root.action.appendAction(name, "children") }
         }
 
-        Repeater {
-            model: _root._childActions
+        ActionList {
+            Layout.fillWidth: true
 
-            delegate: ActionNode {
-                required property var modelData
-                required property int index
-
-                Layout.fillWidth: true
-                action: modelData
-                previousSibling: index > 0 ? _root._childActions[index - 1] : null
-            }
+            containerOwner: _root.action
+            containerName: "children"
         }
     }
 }

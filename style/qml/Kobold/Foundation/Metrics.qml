@@ -12,11 +12,13 @@ QtObject {
     // Policies -- pick one per token.
     function dp(x) { return Math.round(x * scale) }
     function even(x) { let v = Math.round(x * scale); return v % 2 ? v + 1 : v }
+    function odd(x) { let v = Math.round(x * scale); return v % 2 ? v : v + 1 }
     function pick(m) { return m[scalePercentage] }
 
     // Core dimension tokens (SPEC §4).
-    readonly property int rowInput:      dp(48)
+    readonly property int rowInput:      dp(52)
     readonly property int rowAction:     dp(28)
+    readonly property int actionSpacing: odd(5)
     readonly property int controlHeight: dp(24)
     readonly property int indent:        dp(24)
     readonly property int icon:          dp(16) // also: CheckBox box / RadioButton ring diameter

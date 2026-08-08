@@ -49,17 +49,10 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "children") }
     }
 
-    Repeater {
-        model: root.action.getActions("children")
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root.action.getActions("children")[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "children"
     }
 }

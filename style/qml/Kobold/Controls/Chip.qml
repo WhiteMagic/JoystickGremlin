@@ -13,7 +13,7 @@ Rectangle {
     property bool overflow: false
 
     implicitWidth: _label.implicitWidth + Metrics.gapM
-    implicitHeight: Metrics.textDetail + Metrics.gapS
+    implicitHeight: Metrics.textDetail + Metrics.gapM
 
     color: Theme.bgAlt
     border.width: Metrics.hairline

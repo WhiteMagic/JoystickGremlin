@@ -160,7 +160,8 @@ Item {
                 }
 
                 RowLayout {
-                    ScrollList {
+                    ListView {
+                        Layout.alignment: Qt.AlignTop
                         Layout.preferredWidth: userEntryColumnWidth
                         Layout.rightMargin: userEntryColumnPadding
                         implicitHeight: contentHeight

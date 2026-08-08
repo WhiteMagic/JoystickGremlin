@@ -211,6 +211,11 @@ class AbstractActionData(ABC):
         self._action_label = value
 
     @property
+    def chip_label(self) -> str:
+        """Returns the content for the action's chip."""
+        return self.name
+
+    @property
     def activation_mode(self) -> ActionActivationMode:
         return self._activation_mode
 

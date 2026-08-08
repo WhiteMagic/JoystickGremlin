@@ -265,14 +265,20 @@ class ActionModel(QtCore.QObject):
                 f"Failed to create action of type {action_name}"
             )
 
-    @QtCore.Slot(int, int, str)
-    def dropAction(self, source: int, target: int, method: str) -> None:
+    @QtCore.Slot(int, int, str, str)
+    def dropAction(self, source: int, target: int, method: str, container: str) -> None:
         """Handles dropping an action on a UI item.
 
+        When method is "append" the source action is inserted after the target action.
+        When method is "container" the source action is prepended into the target
+        action's named container.
+
         Args:
-            source: sequence id of the acion being dropped
+            source: sequence id of the action being dropped
             target: sequence id of the action on which the source is dropped
-            method: type of drop action to perform
+            method: "append" to insert source after target, or "container" to
+                prepend source into target's named container
+            container: name of the container to prepend into
         """
         # Force a UI refresh without performing any model changes if both
         # source and target item are identical, i.e. an invalid drag&drop
@@ -282,8 +288,13 @@ class ActionModel(QtCore.QObject):
 
         if method == "append":
             self._append_drop_action(source, target)
+        elif method == "container":
+            self._append_drop_action(source, target, container)
         else:
-            self._append_drop_action(source, target, method)
+            logging.getLogger("system").error(
+                f"dropAction received unknown method '{method}'"
+            )
+            return
 
         signal.reloadCurrentInputItem.emit()
         signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)

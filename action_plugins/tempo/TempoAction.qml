@@ -72,18 +72,11 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "short") }
     }
 
-    Repeater {
-        model: root.action.getActions("short")
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root.action.getActions("short")[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "short"
     }
 
     // Long-press sequence.
@@ -96,17 +89,10 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "long") }
     }
 
-    Repeater {
-        model: root.action.getActions("long")
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root.action.getActions("long")[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "long"
     }
 }
