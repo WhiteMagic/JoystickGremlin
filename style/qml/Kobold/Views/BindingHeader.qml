@@ -14,6 +14,9 @@ import Gremlin.Profile
 // qml/InputItemBindingConfigurationHeader.qml. The axis/hat virtual-button UI is not part of
 // this row's grammar (SPEC §8 doesn't mention it) -- it stays a sibling Loader in
 // qml/InputItemBinding.qml, unchanged.
+// The grip is a real drag handle for whole-sequence reordering (InputConfiguration.qml owns
+// the drop zones); the ghost image is this row alone, never the tree below it -- a sequence's
+// action tree can be very tall and the drag visual must stay compact.
 Item {
     id: root
 
@@ -21,6 +24,21 @@ Item {
     property InputItemModel inputItemModel
 
     implicitHeight: Metrics.rowAction
+
+    Drag.active: _dragArea.drag.active
+    Drag.dragType: Drag.Automatic
+    Drag.supportedActions: Qt.MoveAction
+    Drag.proposedAction: Qt.MoveAction
+    Drag.mimeData: ({
+        "text/plain": root.inputBinding && root.inputBinding.rootAction ?
+            root.inputBinding.rootAction.id : "",
+        "type": "sequence"
+    })
+    Drag.onDragFinished: function(dropAction) {
+        if (dropAction === Qt.IgnoreAction) {
+            signal.reloadCurrentInputItem()
+        }
+    }
 
     function _maxSeverity(hints) {
         let highest = 0
@@ -49,6 +67,14 @@ Item {
 
                 anchors.fill: parent
                 cursorShape: Qt.OpenHandCursor
+                drag.target: root
+                drag.axis: Drag.YAxis
+
+                onPressed: {
+                    root.grabToImage(function(result) {
+                        root.Drag.imageSource = result.url
+                    })
+                }
             }
         }
 

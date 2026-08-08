@@ -9,30 +9,15 @@ import Kobold.Foundation
 import Kobold.Controls
 
 // Recursive replacement for legacy qml/ActionNode.qml, built from the Phase 6 ActionRow/TreeIndent
-// pieces and this module's own RowDropBand. Lives in Kobold.Composites, plugin-importable, because
-// plugins with their own nested action containers (Chain, Condition, Tempo, ...) instantiate this
-// directly for their own children, exactly as they instantiated the legacy ActionNode -- it is
-// shared with actions, not app-only chrome.
+// pieces. Lives in Kobold.Composites, plugin-importable, because plugins with their own nested
+// action containers (Chain, Condition, Tempo, ...) instantiate this directly for their own
+// children, exactly as they instantiated the legacy ActionNode -- it is shared with actions, not
+// app-only chrome. Purely a draggable row + recursive body -- it owns no drop zones of its own;
+// ActionList (its only caller) owns every boundary band for the list this node sits in.
 Item {
     id: root
 
     required property ActionModel action
-    // Optional: the action immediately before this one in the same container, used to resolve
-    // a top-band drop ("insert before me") into the `dropAction(source, target, "append")`
-    // primitive, which only knows how to append after a target. Left null for a first item --
-    // a top-band drop there degrades to appending after this row instead of a true prepend,
-    // matching legacy ActionNode's own drop support, which had no "insert at the very start"
-    // path either.
-    property ActionModel previousSibling: null
-    // Accepted for backward compatibility only: the ~10 still-legacy container plugins
-    // (Chain, Condition, ...) haven't been migrated off their existing
-    // `ActionNode { action: modelData; parentAction: ...; containerName: ... }` delegate
-    // declarations, and QML errors ("cannot assign to non-existent property") on any
-    // property a delegate binds that the component doesn't declare. Unused here --
-    // removeAction/dropAction are called on `action` itself, not the parent, since
-    // `_binding_model` is shared across every ActionModel in the same tree.
-    property ActionModel parentAction: null
-    property string containerName: ""
 
     implicitWidth: _column.implicitWidth
     implicitHeight: _column.implicitHeight
@@ -108,23 +93,6 @@ Item {
                     setSource(root.action.qmlPath, { "action": root.action })
                 }
             }
-        }
-    }
-
-    // Row-edge-band drop feedback for reordering among this action's siblings (SPEC §8).
-    RowDropBand {
-        id: _dropBand
-
-        target: _header
-
-        validationCallback: function(drop) {
-            return drop.getDataAsString("type") === "action" &&
-                drop.getDataAsString("root") === root.action.rootActionId
-        }
-        dropCallback: function(drop) {
-            const targetAction = (_dropBand.inTopBand && root.previousSibling) ?
-                root.previousSibling : root.action
-            root.action.dropAction(drop.text, targetAction.sequenceIndex, "append")
         }
     }
 }

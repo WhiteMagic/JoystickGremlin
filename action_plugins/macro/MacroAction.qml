@@ -626,27 +626,39 @@ ColumnLayout {
         }
 
         ActionDragDropArea {
-            id: _dropBand
+            id: _dropBandTop
 
             // While this row is itself being dragged, it physically follows the
             // cursor (drag.target above) -- its own band would otherwise trigger
             // on top of whatever row it happens to be passing over, showing a
             // second, unaligned insertion line alongside the real target row's.
+            // Applies equally to _dropBandBottom below.
             enabled: !_dragArea.drag.active
             target: _background
+            edge: "top"
             gap: ListView.view ? ListView.view.spacing : 0
             validationCallback: () => true
             dropCallback: (drop) => {
                 const sourceIndex = parseInt(drop.text)
-                if (_dropBand.inTopBand) {
-                    if (index === 0) {
-                        root.action.dropCallback(0, sourceIndex, "prepend")
-                    } else {
-                        root.action.dropCallback(index - 1, sourceIndex, "append")
-                    }
+                if (index === 0) {
+                    root.action.dropCallback(0, sourceIndex, "prepend")
                 } else {
-                    root.action.dropCallback(index, sourceIndex, "append")
+                    root.action.dropCallback(index - 1, sourceIndex, "append")
                 }
+            }
+        }
+
+        ActionDragDropArea {
+            id: _dropBandBottom
+
+            enabled: !_dragArea.drag.active
+            target: _background
+            edge: "bottom"
+            gap: ListView.view ? ListView.view.spacing : 0
+            validationCallback: () => true
+            dropCallback: (drop) => {
+                const sourceIndex = parseInt(drop.text)
+                root.action.dropCallback(index, sourceIndex, "append")
             }
         }
     }

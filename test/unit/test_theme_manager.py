@@ -60,7 +60,7 @@ def test_shipped_schemes_resolve_expected_colors() -> None:
 
 
 def test_discover_theme_names_returns_shipped_schemes() -> None:
-    assert theme_manager.discover_theme_names() == ["dark", "light"]
+    assert theme_manager.discover_theme_names() == ["dark", "light", "zenburn"]
 
 
 def test_malformed_scheme_rejected(tmp_path: pathlib.Path) -> None:

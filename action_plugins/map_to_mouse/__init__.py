@@ -28,6 +28,7 @@ from gremlin.base_classes import (
 )
 from gremlin.error import GremlinError
 from gremlin.profile import Library
+from gremlin.signal import signal
 from gremlin.types import (
     ActionProperty,
     HatDirection,
@@ -203,6 +204,7 @@ class MapToMouseModel(ActionModel):
         if mode != self._data.mode:
             self._data.mode = mode
             self.changed.emit()
+            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
     def _get_direction(self) -> int:
         return self._data.direction
@@ -252,6 +254,7 @@ class MapToMouseModel(ActionModel):
         """
         self._data.button = data[0].identifier
         self.changed.emit()
+        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
     mode = QtCore.Property(str, fget=_get_mode, fset=_set_mode, notify=changed)
 
@@ -303,6 +306,13 @@ class MapToMouseData(AbstractActionData):
         self.min_speed = 50
         self.max_speed = 250
         self.time_to_max_speed = 1.0
+
+    @property
+    @override
+    def chip_label(self) -> str:
+        if self.mode == MapToMouseMode.Button:
+            return f"Mouse {MouseButton.to_abbreviation(self.button)}"
+        return "Mouse Motion"
 
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:

@@ -317,6 +317,14 @@ class MapToVjoyData(AbstractActionData):
         self.axis_scaling = self.DEFAULT_SCALING
         self.button_inverted = False
 
+    @property
+    @override
+    def chip_label(self) -> str:
+        return (
+            f"vJoy {self.vjoy_device_id} "
+            f"{InputType.to_letter(self.vjoy_input_type)}{self.vjoy_input_id}"
+        )
+
     @classmethod
     @override
     def can_create(cls) -> bool:

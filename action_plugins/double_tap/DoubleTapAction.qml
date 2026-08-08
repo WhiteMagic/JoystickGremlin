@@ -72,18 +72,11 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "single") }
     }
 
-    Repeater {
-        model: root.action.getActions("single")
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root.action.getActions("single")[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "single"
     }
 
     // Double-tap sequence.
@@ -96,17 +89,10 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "double") }
     }
 
-    Repeater {
-        model: root.action.getActions("double")
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root.action.getActions("double")[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "double"
     }
 }

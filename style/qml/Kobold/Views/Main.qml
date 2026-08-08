@@ -43,6 +43,11 @@ ApplicationWindow {
     Universal.theme: Style.theme
     color: Style.background
 
+    // Bigger icon/control size for the merged menu bar / toolbar strip (Metrics.toolbar, 34px) --
+    // every other ToolButton in the app keeps the shared default.
+    readonly property int _headerControlSize: Metrics.dp(28)
+    readonly property int _headerIconSize: Metrics.dp(18)
+
     property var _geom: backend.windowGeometry(
         "main-window-geometry", Metrics.windowWidth, Metrics.windowHeight,
         minimumWidth, minimumHeight
@@ -149,144 +154,159 @@ ApplicationWindow {
         }
     }
 
-    // Menu bar with all its entries.
-    menuBar: MenuBar {
-        Menu {
-            title: qsTr("File")
-
-            // File menu.
-            MenuItem {
-                text: qsTr("New Profile")
-                onTriggered: () => { backend.newProfile() }
-            }
-            MenuItem {
-                text: qsTr("Load Profile")
-                onTriggered: () => { _loadProfileFileDialog.open() }
-            }
-            Menu {
-                title: qsTr("Recent")
-
-                width: {
-                    let result = 0
-                    let padding = 0
-                    for (let i = 0; i < count; ++i) {
-                        let item = itemAt(i)
-                        result = Math.max(item.contentItem.implicitWidth, result)
-                        padding = Math.max(item.padding, padding)
-                    }
-                    return result + padding * 2
-                }
-
-                Repeater {
-                    model: backend.recentProfiles
-                    delegate: MenuItem {
-                        text: modelData
-                        onTriggered: () => { backend.loadProfile(modelData) }
-                    }
-                }
-            }
-            MenuItem {
-                text: qsTr("Save Profile")
-                onTriggered: () => {
-                    var fpath = backend.profilePath()
-                    if(fpath === "") {
-                        _saveProfileFileDialog.open();
-                    } else {
-                        backend.saveProfile(fpath)
-                    }
-                }
-            }
-            MenuItem {
-                text: qsTr("Save Profile As")
-                onTriggered: () => { _saveProfileFileDialog.open() }
-            }
-            MenuItem {
-                text: qsTr("Exit")
-                onTriggered: () => { _root.quitGremlin() }
-            }
-        }
-
-        // Tools menu.
-        Menu {
-            title: qsTr("Tools")
-
-            MenuItem {
-                text: qsTr("Manage Modes")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogManageModes.qml", _root)
-                }
-            }
-            // MenuItem {
-            //     text: qsTr("Input Repeater")
-            //     //onTriggered: Helpers.createComponent(".qml")
-            // }
-            MenuItem {
-                text: qsTr("Input Viewer")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogInputViewer.qml", _root, {})
-                }
-            }
-            MenuItem {
-                text: qsTr("Calibration")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogCalibration.qml", _root)
-                }
-            }
-            MenuItem {
-                text: qsTr("Device Information")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogDeviceInformation.qml", _root)
-                }
-            }
-            MenuSeparator {}
-            MenuItem {
-                text: qsTr("Auto Mapper")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogAutoMapper.qml", _root)
-                }
-            }
-            MenuItem {
-                text: qsTr("Swap Devices")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogSwapDevices.qml", _root)
-                }
-            }
-            MenuSeparator {}
-            MenuItem {
-                text: qsTr("Options")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogOptions.qml", _root)
-                }
-            }
-            // MenuItem {
-            //     text: qsTr("Log Display")
-            //     onTriggered: () => {
-            //         Helpers.createComponent("DialogLogDisplay.qml")
-            //     }
-            // }
-        }
-
-        // Help menu.
-        Menu {
-            title: qsTr("Help")
-
-            MenuItem {
-                text: qsTr("About")
-                onTriggered: () => {
-                    Helpers.createComponent("DialogAbout.qml", _root)
-                }
-            }
-        }
-    }
-
+    // Single merged menu bar / toolbar / mode selector strip.
     header: ToolBar {
         id: _toolbar
 
         RowLayout {
             anchors.fill: parent
 
+            MenuBar {
+                id: _menuBar
+
+                Layout.fillHeight: true
+
+                Menu {
+                    title: qsTr("File")
+
+                    // File menu.
+                    MenuItem {
+                        text: qsTr("New Profile")
+                        onTriggered: () => { backend.newProfile() }
+                    }
+                    MenuItem {
+                        text: qsTr("Load Profile")
+                        onTriggered: () => { _loadProfileFileDialog.open() }
+                    }
+                    Menu {
+                        title: qsTr("Recent")
+
+                        width: {
+                            let result = 0
+                            let padding = 0
+                            for (let i = 0; i < count; ++i) {
+                                let item = itemAt(i)
+                                result = Math.max(item.contentItem.implicitWidth, result)
+                                padding = Math.max(item.padding, padding)
+                            }
+                            return result + padding * 2
+                        }
+
+                        Repeater {
+                            model: backend.recentProfiles
+                            delegate: MenuItem {
+                                text: modelData
+                                onTriggered: () => { backend.loadProfile(modelData) }
+                            }
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Save Profile")
+                        onTriggered: () => {
+                            var fpath = backend.profilePath()
+                            if(fpath === "") {
+                                _saveProfileFileDialog.open();
+                            } else {
+                                backend.saveProfile(fpath)
+                            }
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Save Profile As")
+                        onTriggered: () => { _saveProfileFileDialog.open() }
+                    }
+                    MenuItem {
+                        text: qsTr("Exit")
+                        onTriggered: () => {
+                            if (backend.profileContainsUnsavedChanges) {
+                                _saveBeforeQuitDialog.open()
+                            } else {
+                                Qt.quit()
+                            }
+                        }
+                    }
+                }
+
+                // Tools menu.
+                Menu {
+                    title: qsTr("Tools")
+
+                    MenuItem {
+                        text: qsTr("Manage Modes")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogManageModes.qml", _root)
+                        }
+                    }
+                    // MenuItem {
+                    //     text: qsTr("Input Repeater")
+                    //     //onTriggered: Helpers.createComponent(".qml")
+                    // }
+                    MenuItem {
+                        text: qsTr("Input Viewer")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogInputViewer.qml", _root, {})
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Calibration")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogCalibration.qml", _root)
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Device Information")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogDeviceInformation.qml", _root)
+                        }
+                    }
+                    MenuSeparator {}
+                    MenuItem {
+                        text: qsTr("Auto Mapper")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogAutoMapper.qml", _root)
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr("Swap Devices")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogSwapDevices.qml", _root)
+                        }
+                    }
+                    MenuSeparator {}
+                    MenuItem {
+                        text: qsTr("Options")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogOptions.qml", _root)
+                        }
+                    }
+                    // MenuItem {
+                    //     text: qsTr("Log Display")
+                    //     onTriggered: () => {
+                    //         Helpers.createComponent("DialogLogDisplay.qml")
+                    //     }
+                    // }
+                }
+
+                // Help menu.
+                Menu {
+                    title: qsTr("Help")
+
+                    MenuItem {
+                        text: qsTr("About")
+                        onTriggered: () => {
+                            Helpers.createComponent("DialogAbout.qml", _root)
+                        }
+                    }
+                }
+            }
+
+            Item {
+                Layout.preferredWidth: Metrics.gapL * 2
+            }
             ToolButton {
                 icon.name: "new_profile"
+                controlSize: _root._headerControlSize
+                iconSize: _root._headerIconSize
                 ToolTip.visible: hovered
                 ToolTip.delay: 500
                 ToolTip.text: qsTr("Create new profile")
@@ -295,6 +315,8 @@ ApplicationWindow {
             }
             ToolButton {
                 icon.name: "save_profile"
+                controlSize: _root._headerControlSize
+                iconSize: _root._headerIconSize
                 ToolTip.visible: hovered
                 ToolTip.delay: 500
                 ToolTip.text: qsTr("Save current profile")
@@ -310,6 +332,8 @@ ApplicationWindow {
             }
             ToolButton {
                 icon.name: "load_profile"
+                controlSize: _root._headerControlSize
+                iconSize: _root._headerIconSize
                 ToolTip.visible: hovered
                 ToolTip.delay: 500
                 ToolTip.text: qsTr("Load profile")
@@ -317,17 +341,9 @@ ApplicationWindow {
                 onClicked: () => { _loadProfileFileDialog.open() }
             }
             ToolButton {
-                icon.name: "activate"
-                iconRole: backend.gremlinActive ? "accent" : "fg"
-                ToolTip.visible: hovered
-                ToolTip.delay: 500
-                ToolTip.text: qsTr("Toggle Gremlin")
-
-                onClicked: () => { backend.toggleActiveState() }
-            }
-
-            ToolButton {
                 icon.name: "input_viewer"
+                controlSize: _root._headerControlSize
+                iconSize: _root._headerIconSize
                 ToolTip.visible: hovered
                 ToolTip.delay: 500
                 ToolTip.text: qsTr("Open input viewer")
@@ -336,9 +352,10 @@ ApplicationWindow {
                     Helpers.createComponent("DialogInputViewer.qml", _root, {})
                 }
             }
-
             ToolButton {
                 icon.name: "options"
+                controlSize: _root._headerControlSize
+                iconSize: _root._headerIconSize
                 ToolTip.visible: hovered
                 ToolTip.delay: 500
                 ToolTip.text: qsTr("Open options")
@@ -346,6 +363,20 @@ ApplicationWindow {
                 onClicked: () => {
                     Helpers.createComponent("DialogOptions.qml", _root)
                 }
+            }
+            Item {
+                Layout.preferredWidth: Metrics.gapM
+            }
+            ToolButton {
+                icon.name: "activate"
+                iconRole: backend.gremlinActive ? "accent" : "fg"
+                controlSize: _root._headerControlSize
+                iconSize: _root._headerIconSize
+                ToolTip.visible: hovered
+                ToolTip.delay: 500
+                ToolTip.text: qsTr("Toggle Gremlin")
+
+                onClicked: () => { backend.toggleActiveState() }
             }
 
             Spacer {}
@@ -442,13 +473,13 @@ ApplicationWindow {
                 spacing: Metrics.gapS
 
                 Text {
-                    text: qsTr("Editing:")
+                    text: qsTr("Executing:")
                     color: Theme.fgMuted
                     font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
                 Text {
-                    text: uiState.currentMode
+                    text: backend.currentMode
                     color: Theme.fg
                     font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
@@ -461,13 +492,13 @@ ApplicationWindow {
                 Layout.fillWidth: true
 
                 Text {
-                    text: qsTr("Executing mode:")
+                    text: qsTr("Editing:")
                     color: Theme.fgMuted
                     font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
                 Text {
-                    text: backend.currentMode
+                    text: uiState.currentMode
                     color: Theme.fg
                     font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
@@ -545,6 +576,10 @@ ApplicationWindow {
         spacing: 0
 
         property InputConfiguration inputConfigurationWidget
+
+        Divider {
+            Layout.fillWidth: true
+        }
 
         Item {
             Layout.fillWidth: true

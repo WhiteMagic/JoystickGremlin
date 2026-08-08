@@ -8,7 +8,7 @@ import Kobold.Foundation
 T.MenuItem {
     id: control
 
-    implicitHeight: Metrics.controlHeight
+    implicitHeight: Metrics.rowAction
     implicitWidth: leftPadding + contentItem.implicitWidth + rightPadding
     // Menu's contentItem is a ListView -- it never stretches its delegates on its own, so
     // without this every item falls back to its own label width and the hover/selection

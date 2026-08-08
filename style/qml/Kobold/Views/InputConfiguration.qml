@@ -74,6 +74,34 @@ Item {
             // multi-notch events landing several recycles at once, that read as the list
             // bouncing.
             reuseItems: false
+
+            // The boundary before the first sequence -- reordering whole sequences reuses
+            // the same boundary-owned RowDropBand mechanism as the action tree (SPEC §8);
+            // this is the one zone with no preceding entry to attach to, so it lives on the
+            // ListView's own header instead of inside a delegate.
+            header: Item {
+                id: _leadingWrapper
+
+                width: _listView.width
+                height: Metrics.gapL
+
+                Item {
+                    id: _leadingAnchor
+                    anchors.fill: parent
+                }
+
+                RowDropBand {
+                    target: _leadingAnchor
+                    edge: "top"
+
+                    validationCallback: function(drop) {
+                        return drop.getDataAsString("type") === "sequence"
+                    }
+                    dropCallback: function(drop) {
+                        _root.inputItemModel.dropAction(drop.text, "", true)
+                    }
+                }
+            }
         }
 
         // ListView delegate definition rendering individual bindings via ActionTree
@@ -182,6 +210,23 @@ Item {
                         onClicked: {
                             _root.inputItemModel.newActionSequence()
                         }
+                    }
+                }
+
+                // The boundary after this sequence -- doubles as "before the next sequence"
+                // for every entry but the last (the first entry's "before me" zone is the
+                // ListView's leading header band instead). Lives on this sequence's own
+                // ghost row rather than a gap, so the drop feedback centers on the row that
+                // means the same thing ("insert a sequence here").
+                RowDropBand {
+                    target: _ghostRow
+                    coverTarget: true
+
+                    validationCallback: function(drop) {
+                        return drop.getDataAsString("type") === "sequence"
+                    }
+                    dropCallback: function(drop) {
+                        _root.inputItemModel.dropAction(drop.text, modelData.rootAction.id, false)
                     }
                 }
             }
