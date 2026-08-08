@@ -17,9 +17,6 @@ ColumnLayout {
 
     required property SplitAxisModel action
 
-    property var _lowerActions: root.action.getActions("lower")
-    property var _upperActions: root.action.getActions("upper")
-
     spacing: Metrics.gapM
 
     RowLayout {
@@ -52,18 +49,11 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "lower") }
     }
 
-    Repeater {
-        model: root._lowerActions
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root._lowerActions[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "lower"
     }
 
     // +-------------------------------------------------------------------
@@ -78,17 +68,10 @@ ColumnLayout {
         onActionRequested: (name) => { root.action.appendAction(name, "upper") }
     }
 
-    Repeater {
-        model: root._upperActions
+    ActionList {
+        Layout.fillWidth: true
 
-        delegate: ActionNode {
-            required property var modelData
-            required property int index
-
-            Layout.fillWidth: true
-
-            action: modelData
-            previousSibling: index > 0 ? root._upperActions[index - 1] : null
-        }
+        containerOwner: root.action
+        containerName: "upper"
     }
 }

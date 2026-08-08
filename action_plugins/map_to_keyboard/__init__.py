@@ -27,6 +27,7 @@ from gremlin.base_classes import (
 )
 from gremlin.error import GremlinError
 from gremlin.profile import Library
+from gremlin.signal import signal
 from gremlin.types import (
     ActionProperty,
     InputType,
@@ -121,6 +122,7 @@ class MapToKeyboardModel(ActionModel):
         self._data.keys = modifier_keys + normal_keys
         self.changed.emit()
         super().actionChanged.emit()
+        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
 
 
 class MapToKeyboardData(AbstractActionData):
@@ -144,6 +146,13 @@ class MapToKeyboardData(AbstractActionData):
         super().__init__(behavior_type)
 
         self.keys = []
+
+    @property
+    @override
+    def chip_label(self) -> str:
+        if not self.keys:
+            return "Keyboard"
+        return "Keyboard " + " + ".join(key.name for key in self.keys)
 
     @override
     def _from_xml(self, node: ElementTree.Element, library: Library) -> None:

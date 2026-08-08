@@ -54,6 +54,13 @@ class InputType(enum.Enum):
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
+    @staticmethod
+    def to_letter(value: InputType) -> str:
+        try:
+            return _InputType_to_letter_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
 
 _InputType_to_string_lookup = {
     InputType.JoystickAxis: "axis",
@@ -63,6 +70,16 @@ _InputType_to_string_lookup = {
     InputType.Mouse: "mouse",
     InputType.VirtualButton: "virtual-button",
     InputType.Invalid: "invalid",
+}
+
+_InputType_to_letter_lookup = {
+    InputType.JoystickAxis: "A",
+    InputType.JoystickButton: "B",
+    InputType.JoystickHat: "H",
+    InputType.Keyboard: "K",
+    InputType.Mouse: "M",
+    InputType.VirtualButton: "V",
+    InputType.Invalid: "I",
 }
 
 _InputType_to_enum_lookup = {
@@ -197,6 +214,13 @@ class MouseButton(enum.Enum):
         except KeyError:
             raise gremlin.error.GremlinError("Invalid type in lookup")
 
+    @staticmethod
+    def to_abbreviation(value: MouseButton) -> str:
+        try:
+            return _MouseButton_to_abbreviation_lookup[value]
+        except KeyError:
+            raise gremlin.error.GremlinError("Invalid type in lookup")
+
 
 _MouseButton_to_string_lookup = {
     MouseButton.Left: "Left",
@@ -206,6 +230,15 @@ _MouseButton_to_string_lookup = {
     MouseButton.Back: "Back",
     MouseButton.WheelUp: "Wheel Up",
     MouseButton.WheelDown: "Wheel Down",
+}
+_MouseButton_to_abbreviation_lookup = {
+    MouseButton.Left: "LMB",
+    MouseButton.Right: "RMB",
+    MouseButton.Middle: "MMB",
+    MouseButton.Forward: "MB4",
+    MouseButton.Back: "MB5",
+    MouseButton.WheelUp: "Up",
+    MouseButton.WheelDown: "Down",
 }
 _MouseButton_to_enum_lookup = {
     "Left": MouseButton.Left,
@@ -663,7 +696,7 @@ class Point2D:
         self.y = y
 
     @classmethod
-    def from_string(self, val: str) -> Point2D:
+    def from_string(cls, val: str) -> Point2D:
         """Creates a new Point2D instance from the given string.
 
         Args:

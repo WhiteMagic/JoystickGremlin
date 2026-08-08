@@ -65,19 +65,11 @@ ColumnLayout {
                 }
             }
 
-            Repeater {
-                model: root.action.getActions(_direction.directionName)
+            ActionList {
+                Layout.fillWidth: true
 
-                delegate: ActionNode {
-                    required property var modelData
-                    required property int index
-
-                    Layout.fillWidth: true
-
-                    action: modelData
-                    previousSibling: index > 0 ?
-                        root.action.getActions(_direction.directionName)[index - 1] : null
-                }
+                containerOwner: root.action
+                containerName: _direction.directionName
             }
         }
     }
