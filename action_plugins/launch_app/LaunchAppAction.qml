@@ -1,0 +1,77 @@
+// -*- coding: utf-8; -*-
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Window
+import QtQuick.Dialogs
+
+import QtQuick.Controls.Universal
+
+import Gremlin.Profile
+import Gremlin.ActionPlugins
+import "../../qml"
+
+
+Item {
+    property LaunchAppModel action
+
+    implicitHeight: _content.height
+
+    RowLayout {
+        id: _content
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        Label {
+            id: _label
+
+            Layout.preferredWidth: 150
+
+            text: "Application to launch"
+        }
+
+        TextField {
+            id: _applicationPath
+
+            Layout.fillWidth: true
+
+            placeholderText: null != action ? null : "Enter an application to launch"
+            text: action.application_path
+            selectByMouse: true
+
+            onEditingFinished: {
+                action.application_path = text
+            }
+        }
+
+        Button {
+            text: "Select application"
+            onClicked: _fileDialog.open()
+        }
+   }
+
+   FileDialog {
+        id: _fileDialog
+        nameFilters: ["Application (*.bat, *.exe)", "All applications (*.*)"]
+        title: "Select an application"
+        onAccepted: {
+            action.application_path = selectedFile.toString().substring("file:///".length)
+        }
+    }
+}
