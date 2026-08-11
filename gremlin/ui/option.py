@@ -325,7 +325,7 @@ class ActionSequenceOrdering(QtCore.QAbstractListModel, BaseMetaConfigOptionWidg
         item = data.pop(source_index)
         self.endRemoveRows()
 
-        insertion_index = item_count
+        insertion_index = len(data)
         if target is not None:
             insertion_index = data.index(target)
         self.beginInsertRows(QtCore.QModelIndex(), insertion_index, insertion_index)

@@ -297,25 +297,37 @@ The above is not a generic setup that can be directly used as it relies on and m
 
 ### Action Drag & Drop
 
-The most common items that will require drag & drop support are actions and action trees. In order to have a uniform appearance and reduce code duplication three QML widgets have been created which support the creation of a drop area. The drag component is not created inside an action but at a higher level and thus does not need to be considered for actions.
+The most common items that will require drag & drop support are actions and action trees. In order to have a uniform appearance and reduce code duplication the `RowDropBand` widget provides the drop half of the interaction. It is part of the `Kobold.Controls` module and is available to plugins. The drag component is not created inside an action but at a higher level and thus does not need to be considered for actions.
 
-- `DropMarker` shows a rectangular area when a drag event of the correct type enters its area
-- `DragDropArea` handles the logic of defining a `DropArea` and ensuring only valid drag events are reacted to
-- `ActionDragDropArea` is a specialization of the `DragDropArea` widget for use specifically with action items
+A single `RowDropBand` instance owns exactly one boundary rather than a whole row. It is placed as a floating sibling of the item given as its `target` and covers a narrow band along one edge of that item, with `edge` deciding which one. As a result a list of N sibling items needs N+1 bands to expose every insertion point, one above the first item and one below each of them. The feedback shown while a valid drag hovers a band is always a 2px insertion line in the accent color; there is no filled drop zone and no parting animation.
 
-The `DragDropArea` and `ActionDragDropArea` widgets have the following properties that can be specified in order to customize the widgets.
+The widget has the following properties that can be specified in order to customize it.
 
-- `target` the widget to which the drop area is being attached to and placed around
-- `dropCallback` function to execute when a valid drop action occurs, the callback has one parameter `drop` which contains information about the item being dropped, as mime data
-- `validationCallback` is called whenever a drag enters the `DropArea` to decide whether or not the drag event is compatible with the current area. This callback is already specified and configured for the `ActionDragDropArea` widget
+- `target` the item the band attaches to and positions itself against
+- `edge` which side of `target` the band and its insertion line sit on, either `"top"` or `"bottom"`, the latter being the default
+- `gap` the spacing between the rows of the enclosing list, for example a `ListView`'s `spacing`. When non-zero the insertion line is centered on that gap so that it reads as sitting between two rows rather than on one of them. The default of `0` keeps the line flush with the row edge
+- `coverTarget` when set to `true` the band covers the entirety of `target` instead of one of its edges and `edge` is ignored. This is meant for the case where the drop target *is* a row rather than the seam between two rows, such as a placeholder standing in for an empty container. The row is filled and the insertion line is centered within it
+- `validationCallback` is called whenever a drag enters the band to decide whether or not the drag event is compatible with it. The callback has one parameter, the `DragEvent`, and returns a boolean. Leaving it unset accepts every drag
+- `dropCallback` function to execute when a valid drop occurs, the callback has one parameter `drop` which contains information about the item being dropped, as mime data. It is not invoked when `validationCallback` rejected the drag
+- `valid` indicates whether the drag currently over the band passed validation. The mime data is only reachable from the event passed to the enter and drop handlers, which is why validity has to be tracked as state instead of being recomputed on demand
 
-In addition to these custom properties the usual properties of a `DropArea` are available as well. To adjust the placement of the widget specifying the `y` property may be required, especially if an item is changing position dynamically.
+In addition to these custom properties the usual properties of a `DropArea` are available as well.
 
-```
-ActionDragDropArea {
-    target: _placementIdentifier
+A drop target for actions generally has to verify three things: that the drag carries an action at all, that it originates from the same action sequence, and that the model on the receiving end is willing to accept it. The mime type has to be checked first, as the content of `drop.text` is only meaningful once the type is known.
+
+```qml
+RowDropBand {
+    target: _node
+    edge: "bottom"
+
+    validationCallback: function(drop) {
+        return drop.getDataAsString("type") === "action" &&
+            drop.getDataAsString("root") === root.containerOwner.rootActionId &&
+            _entry.modelData.canAcceptDrop(parseInt(drop.text))
+    }
     dropCallback: function(drop) {
-    	// Action specific code to execute
+        root.containerOwner.dropAction(
+            drop.text, _entry.modelData.sequenceIndex, "append", "")
     }
 }
 ```

@@ -4,5 +4,4 @@ ActionList          ActionList.qml
 ActionNode          ActionNode.qml
 ActionRow           ActionRow.qml
 SlotHeader          SlotHeader.qml
-ActionStepTable     ActionStepTable.qml
 ActivationBehavior  ActivationBehavior.qml
