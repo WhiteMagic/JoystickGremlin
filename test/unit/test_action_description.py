@@ -27,7 +27,10 @@ from gremlin.profile import (
     Profile,
 )
 from gremlin.ui.action_model import SequenceIndex
-from gremlin.ui.profile import InputItemBindingModel
+from gremlin.ui.profile import (
+    InputItemBindingModel,
+    InputItemModel,
+)
 
 _ACTION_DESCRIPTION_SIMPLE = "action_description_simple.xml"
 
@@ -69,6 +72,9 @@ def test_model_setter_getter() -> None:
     iib = InputItemBinding(ii)
     iib.root_action = RootData()
     iibm = InputItemBindingModel(iib)
+    # A real parent keeps _check_user_feedback resolvable when the global signal fires.
+    owner = InputItemModel(ii, 0)
+    iibm.setParent(owner)
     a = DescriptionData()
     m = DescriptionModel(
         a, iibm, SequenceIndex(None, None, 0), SequenceIndex(None, None, 1), None
@@ -104,6 +110,9 @@ def test_model_to_xml() -> None:
     iib = InputItemBinding(ii)
     iib.root_action = RootData()
     iibm = InputItemBindingModel(iib)
+    # A real parent keeps _check_user_feedback resolvable when the global signal fires.
+    owner = InputItemModel(ii, 0)
+    iibm.setParent(owner)
     a = DescriptionData()
     m = DescriptionModel(
         a, iibm, SequenceIndex(None, None, 0), SequenceIndex(None, None, 1), None

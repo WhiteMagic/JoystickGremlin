@@ -34,6 +34,21 @@ Item {
     // alone doesn't reliably toggle across the swap (e.g. both rows have children).
     onInputBindingChanged: _actionTree._loadRootAction()
 
+    // An edit to the action tree rebuilds every ActionModel behind this sequence, so the
+    // subtree has to be reloaded against the new models: `rootAction` reaches RootAction.qml
+    // as a setSource initial property, not a binding, and ActionList's `_actions` is a
+    // one-shot slot call -- neither notices on its own. Without this the binding model would
+    // have to be thrown away and rebuilt wholesale to make an edit visible, which is what
+    // used to happen (signal.reloadCurrentInputItem -> backend.getInputItem), destroying the
+    // object graph from inside a slot belonging to it.
+    Connections {
+        target: _root.inputBinding
+
+        function onRootActionChanged() {
+            _actionTree._loadRootAction()
+        }
+    }
+
     Connections {
         target: signal
 

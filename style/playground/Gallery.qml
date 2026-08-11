@@ -790,27 +790,6 @@ ScrollView {
             }
         }
 
-        // -- ActionStepTable: macro steps render as a table, not nested actions ---------
-        Section {
-            title: "ActionStepTable -- macro steps render as a table"
-
-            ColumnLayout {
-                Layout.preferredWidth: 420
-                spacing: Metrics.gapS
-
-                ActionStepTable {
-                    Layout.fillWidth: true
-                    columns: ["Type", "Input", "Duration"]
-                    rows: [
-                        ["Key press", "F8", "—"],
-                        ["Pause", "—", "250 ms"],
-                        ["Key release", "F8", "—"]
-                    ]
-                }
-                Caption { text: "flat rows, 1px line separators -- never indented ActionRows" }
-            }
-        }
-
         // -- Plugin type icons: every shipped action_plugins/*/icon.svg -----------------
         Section {
             title: "Plugin type icons -- all shipped action_plugins/*/icon.svg"

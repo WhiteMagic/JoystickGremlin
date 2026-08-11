@@ -23,9 +23,14 @@ Item {
     property InputItemBindingModel inputBinding
     property InputItemModel inputItemModel
 
+    // Gates Drag.active so the OS drag never starts before grabToImage()'s
+    // async callback has set Drag.imageSource -- otherwise a fast flick can
+    // cross the drag threshold before the ghost image exists.
+    property bool _imageReady: false
+
     implicitHeight: Metrics.rowAction
 
-    Drag.active: _dragArea.drag.active
+    Drag.active: _dragArea.drag.active && root._imageReady
     Drag.dragType: Drag.Automatic
     Drag.supportedActions: Qt.MoveAction
     Drag.proposedAction: Qt.MoveAction
@@ -71,8 +76,10 @@ Item {
                 drag.axis: Drag.YAxis
 
                 onPressed: {
+                    root._imageReady = false
                     root.grabToImage(function(result) {
                         root.Drag.imageSource = result.url
+                        root._imageReady = true
                     })
                 }
             }

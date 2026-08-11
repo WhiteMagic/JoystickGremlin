@@ -68,9 +68,12 @@ Item {
             height: parent.height
 
             property int index: model.index
-            property bool isDragging: false
+            // Gates Drag.active so the OS drag never starts before grabToImage()'s
+            // async callback has set Drag.imageSource -- otherwise a fast flick can
+            // cross the drag threshold before the ghost image exists.
+            property bool _imageReady: false
 
-            Drag.active: isDragging
+            Drag.active: _dragArea.drag.active && _item._imageReady
             Drag.dragType: Drag.Automatic
             Drag.supportedActions: Qt.MoveAction
             Drag.proposedAction: Qt.MoveAction
@@ -94,14 +97,14 @@ Item {
 
                     // Create an image of the object being dragged for visualization
                     onPressed: () => {
-                        _item.isDragging = true
+                        _item._imageReady = false
                         _item.grabToImage((result) => {
                             _item.Drag.imageSource = result.url
+                            _item._imageReady = true
                         })
                     }
 
                     onReleased: () => {
-                        _item.isDragging = false
                         _item.y = 0
                     }
                 }
