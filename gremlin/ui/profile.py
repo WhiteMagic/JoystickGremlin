@@ -426,6 +426,49 @@ class InputItemBindingModel(QtCore.QObject):
             raise GremlinError(f"No action with provided index: {index}")
         return self._action_models[self._index_lookup[index]]._data
 
+    def _is_descendant_of(
+        self, candidate: SequenceIndex, ancestor: SequenceIndex
+    ) -> bool:
+        """Returns whether candidate is the ancestor itself or in its subtree.
+
+        Args:
+            candidate: sequence index of the action to look for
+            ancestor: sequence index of the action whose subtree is searched
+
+        Returns:
+            True if candidate is ancestor or one of its descendants, False
+            otherwise
+        """
+        pending = [ancestor.index]
+        while pending:
+            current = pending.pop()
+            if current == candidate.index:
+                return True
+            for (parent_index, _container), models in self._child_lookup.items():
+                if parent_index == current:
+                    pending.extend(model.sequence_index.index for model in models)
+        return False
+
+    def can_move_action(self, source_idx: int, target_idx: int) -> bool:
+        """Returns whether the source action may be moved onto the target action.
+
+        Args:
+            source_idx: sequence index of the action to move
+            target_idx: sequence index of the action to move onto
+
+        Returns:
+            False if the target is the source itself or inside the source's own
+            subtree, or if either index is unknown, True otherwise
+        """
+        try:
+            source_model = self.get_action_model_by_sidx(source_idx)
+            target_model = self.get_action_model_by_sidx(target_idx)
+        except GremlinError:
+            return False
+        return not self._is_descendant_of(
+            target_model.sequence_index, source_model.sequence_index
+        )
+
     def move_action(
         self, source_idx: int, target_idx: int, container: str | None = None
     ) -> None:
@@ -442,6 +485,15 @@ class InputItemBindingModel(QtCore.QObject):
         """
         s_model = self.get_action_model_by_sidx(source_idx)
         t_model = self.get_action_model_by_sidx(target_idx)
+
+        # Relinking an action below itself detaches its entire subtree from the
+        # root and leaves a self-referential cycle behind in the library.
+        if not self.can_move_action(source_idx, target_idx):
+            logging.getLogger("system").warning(
+                f"Rejecting move of action {source_idx} onto {target_idx} as the "
+                "target is inside the source's own subtree"
+            )
+            return
 
         s_parent_identifier = (
             s_model.sequence_index.parent_index,
@@ -584,8 +636,8 @@ class InputItemBindingModel(QtCore.QObject):
         ]
 
     def _check_user_feedback(self, index: int) -> None:
-        # Only perform updates for matchin items.
-        if self.parent().enumeration_index != index:
+        # Only perform updates for matching items; an owner-less model matches nothing.
+        if getattr(self.parent(), "enumeration_index", None) != index:
             return
 
         # Rate limit updates on user feedback.
@@ -759,20 +811,49 @@ class InputItemModel(QtCore.QAbstractListModel):
             signal.reloadCurrentInputItem.emit()
             return
 
-        source_id = uuid.UUID(source)
-        source_entry = None
-        for idx, entry in enumerate(self._input_item.action_sequences):
-            if entry.root_action.id == source_id:
-                source_entry = self._input_item.action_sequences.pop(idx)
+        sequences = self._input_item.action_sequences
+        try:
+            source_id = uuid.UUID(source)
+            target_id = None if prepend else uuid.UUID(target)
+        except ValueError:
+            logging.getLogger("system").error(
+                f"Received malformed drag&drop identifiers: '{source}', '{target}'"
+            )
+            signal.reloadCurrentInputItem.emit()
+            return
 
-        if source_entry is not None:
-            if prepend:
-                self._input_item.action_sequences.insert(0, source_entry)
-            else:
-                target_id = uuid.UUID(target)
-                for idx, entry in enumerate(self._input_item.action_sequences):
-                    if entry.root_action.id == target_id:
-                        self._input_item.action_sequences.insert(idx + 1, source_entry)
+        source_index = next(
+            (
+                index
+                for index, entry in enumerate(sequences)
+                if entry.root_action.id == source_id
+            ),
+            None,
+        )
+        if source_index is None:
+            signal.reloadCurrentInputItem.emit()
+            return
+
+        if target_id is None:
+            insertion_index = 0
+        else:
+            target_index = next(
+                (
+                    index
+                    for index, entry in enumerate(sequences)
+                    if entry.root_action.id == target_id
+                ),
+                None,
+            )
+            if target_index is None:
+                signal.reloadCurrentInputItem.emit()
+                return
+            # Removing the source shifts a target that sits behind it down by one.
+            insertion_index = (
+                target_index + 1 if target_index < source_index else target_index
+            )
+
+        sequences.insert(insertion_index, sequences.pop(source_index))
 
         signal.reloadCurrentInputItem.emit()
         signal.inputItemChanged.emit(self._enumeration_index)

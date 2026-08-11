@@ -53,6 +53,10 @@ Item {
                 required property var modelData
                 required property int index
 
+                // The row the boundary above this one drops after -- undefined mid-rebuild,
+                // which its validationCallback must return false for rather than throw on.
+                readonly property var _previousAction: root._actions[index - 1]
+
                 Layout.fillWidth: true
                 implicitWidth: _node.implicitWidth
                 implicitHeight: _node.implicitHeight + _spacer.implicitHeight
@@ -76,25 +80,38 @@ Item {
 
                 // The boundary directly above this row -- disabled for the first entry,
                 // whose "before me" zone is the leading band below instead (enabling both
-                // here too would duplicate that zone).
+                // here too would duplicate that zone). Targets _node (the row itself), not
+                // _spacer -- edge: "top" is a band on the row's own upper edge, matching the
+                // upper/lower-half-of-the-row convention; _spacer sits below this row, which
+                // would put the hit area a full row too low relative to the drop index below.
                 RowDropBand {
-                    target: _spacer
+                    target: _node
                     edge: "top"
-                    // coverTarget: true
                     enabled: _entry.index > 0
 
                     validationCallback: function(drop) {
+                        if (!_entry._previousAction) {
+                            return false
+                        }
+                        // canAcceptDrop last -- only past the type check is `text` a sequence index.
                         return drop.getDataAsString("type") === "action" &&
-                            drop.getDataAsString("root") === root.containerOwner.rootActionId
+                            drop.getDataAsString("root") === root.containerOwner.rootActionId &&
+                            _entry._previousAction.canAcceptDrop(parseInt(drop.text))
                     }
                     dropCallback: function(drop) {
                         root.containerOwner.dropAction(
-                            drop.text, root._actions[_entry.index - 1].sequenceIndex, "append", "")
+                            drop.text, _entry._previousAction.sequenceIndex, "append", "")
                     }
                 }
 
                 // The boundary after this row -- only meaningful for the last entry (every
                 // other row's trailing boundary is the next row's own leading band above).
+                // target: _node, not _node.headerItem -- the hit-area and the insertion line
+                // both need to mark the bottom of this row's whole rendered body (including
+                // any expanded nested content), not just its header, or the drop feedback and
+                // the row you're actually hovering stop matching each other. A container
+                // action's own nested ActionList can end up with its trailing band at this
+                // same screen position; that collision is a separate, unresolved problem.
                 RowDropBand {
                     target: _node
                     edge: "bottom"
@@ -102,7 +119,8 @@ Item {
 
                     validationCallback: function(drop) {
                         return drop.getDataAsString("type") === "action" &&
-                            drop.getDataAsString("root") === root.containerOwner.rootActionId
+                            drop.getDataAsString("root") === root.containerOwner.rootActionId &&
+                            _entry.modelData.canAcceptDrop(parseInt(drop.text))
                     }
                     dropCallback: function(drop) {
                         root.containerOwner.dropAction(
@@ -119,7 +137,8 @@ Item {
 
         validationCallback: function(drop) {
             return drop.getDataAsString("type") === "action" &&
-                drop.getDataAsString("root") === root.containerOwner.rootActionId
+                drop.getDataAsString("root") === root.containerOwner.rootActionId &&
+                root.containerOwner.canAcceptDrop(parseInt(drop.text))
         }
         dropCallback: function(drop) {
             root.containerOwner.dropAction(

@@ -19,10 +19,15 @@ Item {
 
     required property ActionModel action
 
+    // Gates Drag.active so the OS drag never starts before grabToImage()'s
+    // async callback has set Drag.imageSource -- otherwise a fast flick can
+    // cross the drag threshold before the ghost image exists.
+    property bool _imageReady: false
+
     implicitWidth: _column.implicitWidth
     implicitHeight: _column.implicitHeight
 
-    Drag.active: _header.dragActive
+    Drag.active: _header.dragActive && root._imageReady
     Drag.dragType: Drag.Automatic
     Drag.supportedActions: Qt.MoveAction
     Drag.proposedAction: Qt.MoveAction
@@ -66,8 +71,10 @@ Item {
             onActivateOnReleaseEdited: (value) => { root.action.activateOnRelease = value }
             onRemoveRequested: root.action.removeAction(root.action.sequenceIndex)
             onDragRequested: {
-                root.grabToImage(function(result) {
+                root._imageReady = false
+                _header.grabToImage(function(result) {
                     root.Drag.imageSource = result.url
+                    root._imageReady = true
                 })
             }
         }

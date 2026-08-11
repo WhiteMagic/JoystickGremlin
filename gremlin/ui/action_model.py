@@ -265,6 +265,18 @@ class ActionModel(QtCore.QObject):
                 f"Failed to create action of type {action_name}"
             )
 
+    @QtCore.Slot(int, result=bool)
+    def canAcceptDrop(self, source: int) -> bool:
+        """Returns whether the given action may be dropped onto this action.
+
+        Args:
+            source: sequence index of the action being dragged
+
+        Returns:
+            True if the move is legal, False otherwise
+        """
+        return self._binding_model.can_move_action(source, self._sequence_index.index)
+
     @QtCore.Slot(int, int, str, str)
     def dropAction(self, source: int, target: int, method: str, container: str) -> None:
         """Handles dropping an action on a UI item.
@@ -283,7 +295,7 @@ class ActionModel(QtCore.QObject):
         # Force a UI refresh without performing any model changes if both
         # source and target item are identical, i.e. an invalid drag&drop
         if source == target:
-            self._binding_model.sync_data()
+            signal.reloadCurrentInputItem.emit()
             return
 
         if method == "append":

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import enum
+import logging
 import uuid
 from typing import (
     TYPE_CHECKING,
@@ -660,16 +661,23 @@ class ActionListModel(QtCore.QAbstractListModel):
         del self._wrappers[index]
         self.endRemoveRows()
 
-    def move_from_to(self, source_index: int, destination_index: int) -> None:
+    def move_from_to(self, source_index: int, destination_index: int) -> bool:
         """Move an item from a source to a destination index.
 
         Args:
             source_index: The index of the item to move.
             destination_index: The index to move the item to.
+
+        Returns:
+            True if the item was moved, False if the move was rejected.
         """
         if not (0 <= source_index < len(self._actions)):
-            return
+            return False
+        # Inserting past the last row is legal, so the upper bound is inclusive.
+        if not (0 <= destination_index <= len(self._actions)):
+            return False
 
+        # beginMoveRows refuses destinations inside [source_index, source_index + 1].
         if not self.beginMoveRows(
             QtCore.QModelIndex(),
             source_index,
@@ -677,7 +685,7 @@ class ActionListModel(QtCore.QAbstractListModel):
             QtCore.QModelIndex(),
             destination_index,
         ):
-            return
+            return False
 
         action = self._actions.pop(source_index)
         wrapper = self._wrappers.pop(source_index)
@@ -689,6 +697,7 @@ class ActionListModel(QtCore.QAbstractListModel):
         self._actions.insert(insert_pos, action)
         self._wrappers.insert(insert_pos, wrapper)
         self.endMoveRows()
+        return True
 
     def _create_action_model(self, action: macro.AbstractAction) -> AbstractActionModel:
         """Returns the action model corresponding to the given action.
@@ -769,14 +778,34 @@ class MacroModel(ActionModel):
 
     @QtCore.Slot(int, int, str)
     def dropCallback(self, target_index: int, source_index: int, mode: str) -> None:
+        row_count = self._action_list_model.rowCount()
+        if not (0 <= source_index < row_count):
+            logging.getLogger("system").warning(
+                f"Macro: Ignoring drop with out of range source index {source_index}"
+            )
+            return
+
         match mode:
             case "append":
-                self._action_list_model.move_from_to(source_index, target_index + 1)
+                # Only append consumes target_index, prepend gets a QML placeholder.
+                if not (0 <= target_index < row_count):
+                    logging.getLogger("system").warning(
+                        "Macro: Ignoring drop with out of range target index "
+                        f"{target_index}"
+                    )
+                    return
+                moved = self._action_list_model.move_from_to(
+                    source_index, target_index + 1
+                )
             case "prepend":
-                self._action_list_model.move_from_to(source_index, 0)
+                moved = self._action_list_model.move_from_to(source_index, 0)
             case _:
-                raise GremlinError(f"Macro: Invalid insertion mode '{mode}'")
-        self.changed.emit()
+                logging.getLogger("system").warning(
+                    f"Macro: Ignoring drop with invalid insertion mode '{mode}'"
+                )
+                return
+        if moved:
+            self.changed.emit()
 
     @QtCore.Slot()
     def startRecording(self) -> None:
