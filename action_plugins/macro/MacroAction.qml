@@ -15,15 +15,11 @@ import Kobold.Foundation
 // Body only -- no chevron, header, name field, guide or indent, those are the core's.
 //
 // The step list is explicitly NOT an action container (SPEC §8: "Macro steps are NOT
-// child actions -- render them as a table, or the UI is lying."). Kobold.Controls'
-// ActionStepTable is the purpose-built table shell for this, but its `rows` contract is
-// `list<list<string>>` -- plain display strings only. Macro steps need live, per-step
-// interactive controls (InputCaptureButton, ButtonStateSelector, spin boxes, selectors),
-// which cannot be expressed as strings, so ActionStepTable could not be used as-is here.
-// See the accompanying report for the flagged mismatch. What follows instead is a
-// hand-built row (`MacroStepRow`) that reuses ActionStepTable's own structure verbatim --
-// header row + hairline rule, flat 0-spacing rows, row-edge-band drop targets via the
-// public `ActionDragDropArea` -- with real widgets standing in for its `Text` cells.
+// child actions -- render them as a table, or the UI is lying."). It is a hand-built
+// table: header row + hairline rule, flat 0-spacing `MacroStepRow`s, row-edge-band drop
+// targets via the public `RowDropBand`. Each cell holds a live control
+// (InputCaptureButton, ButtonStateSelector, spin boxes, selectors) rather than display
+// text, so the rows are built here instead of driven from a string model.
 ColumnLayout {
     id: root
 
@@ -532,16 +528,18 @@ ColumnLayout {
     }
 
     // A single flat step row: drag handle, step-type label, step-specific detail
-    // content, delete button -- the same four-slot shell as ActionStepTable's own
-    // row, minus the string-only cell restriction (see the note atop this file).
-    // Deliberately an Item, not a layout, so `ActionDragDropArea` below can overlay
-    // it exactly as it overlays ActionStepTable's and ActionNode's own rows --
-    // both use plain-Item roots for the same reason.
+    // content, delete button. Deliberately an Item, not a layout, so the
+    // `RowDropBand`s below can overlay it -- `ActionNode`'s rows use a plain-Item
+    // root for the same reason.
     component MacroStepRow: Item {
         id: _stepRow
 
         property string stepLabel: ""
         property alias detailItem: _detailLoader.sourceComponent
+        // Gates Drag.active so the OS drag never starts before grabToImage()'s
+        // async callback has set Drag.imageSource -- otherwise a fast flick can
+        // cross the drag threshold before the ghost image exists.
+        property bool _imageReady: false
 
         implicitWidth: _cells.implicitWidth
         implicitHeight: _cells.implicitHeight + 2 * Metrics.gapS
@@ -550,11 +548,13 @@ ColumnLayout {
         width: ListView.view ? ListView.view.width - root.stepListScrollGutter : implicitWidth
         height: implicitHeight
 
-        Drag.active: _dragArea.drag.active
+        Drag.active: _dragArea.drag.active && _stepRow._imageReady
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.MoveAction
         Drag.proposedAction: Qt.MoveAction
-        Drag.mimeData: ({"text/plain": index.toString()})
+        // Typed like the action/sequence drags: without a type key the bands below have
+        // nothing to reject a foreign drag by, and its payload reaches parseInt regardless.
+        Drag.mimeData: ({"text/plain": index.toString(), "type": "macro-step"})
         Drag.onDragFinished: (dropAction) => {
             if (dropAction === Qt.IgnoreAction) {
                 signal.reloadCurrentInputItem()
@@ -597,8 +597,10 @@ ColumnLayout {
                     drag.axis: Drag.YAxis
 
                     onPressed: {
+                        _stepRow._imageReady = false
                         _stepRow.grabToImage((result) => {
                             _stepRow.Drag.imageSource = result.url
+                            _stepRow._imageReady = true
                         })
                     }
                 }
@@ -625,7 +627,7 @@ ColumnLayout {
             }
         }
 
-        ActionDragDropArea {
+        RowDropBand {
             id: _dropBandTop
 
             // While this row is itself being dragged, it physically follows the
@@ -636,8 +638,10 @@ ColumnLayout {
             enabled: !_dragArea.drag.active
             target: _background
             edge: "top"
-            gap: ListView.view ? ListView.view.spacing : 0
-            validationCallback: () => true
+            gap: Metrics.gapS
+            // Steps are rows of this list, not actions -- an action or sequence drag would
+            // otherwise parseInt its way into reordering an arbitrary step.
+            validationCallback: (drop) => drop.getDataAsString("type") === "macro-step"
             dropCallback: (drop) => {
                 const sourceIndex = parseInt(drop.text)
                 if (index === 0) {
@@ -648,14 +652,14 @@ ColumnLayout {
             }
         }
 
-        ActionDragDropArea {
+        RowDropBand {
             id: _dropBandBottom
 
             enabled: !_dragArea.drag.active
             target: _background
             edge: "bottom"
-            gap: ListView.view ? ListView.view.spacing : 0
-            validationCallback: () => true
+            gap: Metrics.gapS
+            validationCallback: (drop) => drop.getDataAsString("type") === "macro-step"
             dropCallback: (drop) => {
                 const sourceIndex = parseInt(drop.text)
                 root.action.dropCallback(index, sourceIndex, "append")

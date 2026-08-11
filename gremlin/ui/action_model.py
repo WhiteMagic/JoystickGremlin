@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import inspect
 import logging
-import uuid
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -80,11 +79,6 @@ class ActionModel(QtCore.QObject):
     actionChanged = QtCore.Signal()
     actionLabelChanged = QtCore.Signal()
 
-    # Session-only expand/collapse state, keyed by (action uuid, sequence index).
-    # Lives on the class, not the instance, because _create_action_models() disposes
-    # and rebuilds every ActionModel on any tree mutation elsewhere in the sequence.
-    _expansion_state: dict[tuple[uuid.UUID, int], bool] = {}
-
     def __init__(
         self,
         data: AbstractActionData,
@@ -103,11 +97,17 @@ class ActionModel(QtCore.QObject):
         self._behavior_changed_connection = self._binding_model.behaviorChanged.connect(
             lambda: self.actionChanged.emit()
         )
+        self._expansion_changed_connection = (
+            self._binding_model.expansionChanged.connect(self._handle_expansion_changed)
+        )
 
     def dispose(self) -> None:
         """Disconnects from the binding model before being discarded."""
         self._binding_model.behaviorChanged.disconnect(
             self._behavior_changed_connection
+        )
+        self._binding_model.expansionChanged.disconnect(
+            self._expansion_changed_connection
         )
 
     def _qml_path_impl(self) -> str:
@@ -256,48 +256,50 @@ class ActionModel(QtCore.QObject):
             action_name, InputType.to_enum(self._action_behavior())
         )
         if action:
+            # Read before sync_data replaces every ActionModel behind this binding.
+            enumeration_index = self._binding_model.parent().enumeration_index
             self._data.insert_action(action, selector)
+            # sync_data's rootActionChanged reloads the subtree; see dropAction for why
+            # reloadCurrentInputItem must not be emitted from here.
             self._binding_model.sync_data()
-            signal.reloadCurrentInputItem.emit()
-            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+            signal.inputItemChanged.emit(enumeration_index)
         else:
             logging.getLogger("system").error(
                 f"Failed to create action of type {action_name}"
             )
 
-    @QtCore.Slot(int, int, str, str)
-    def dropAction(self, source: int, target: int, method: str, container: str) -> None:
-        """Handles dropping an action on a UI item.
+    @QtCore.Slot(int, str, int)
+    def dropAction(self, source: int, container: str, position: int) -> None:
+        """Moves the dragged action into one of this action's containers.
 
-        When method is "append" the source action is inserted after the target action.
-        When method is "container" the source action is prepended into the target
-        action's named container.
+        Called on the action owning the target container, not on the action being
+        dragged. The position is the boundary the drag settled on: 0 inserts above
+        the container's current first entry, len(container) appends.
 
         Args:
-            source: sequence id of the action being dropped
-            target: sequence id of the action on which the source is dropped
-            method: "append" to insert source after target, or "container" to
-                prepend source into target's named container
-            container: name of the container to prepend into
+            source: sequence index of the action being dragged
+            container: name of this action's container to move it into
+            position: boundary index within that container
         """
-        # Force a UI refresh without performing any model changes if both
-        # source and target item are identical, i.e. an invalid drag&drop
-        if source == target:
-            self._binding_model.sync_data()
-            return
-
-        if method == "append":
-            self._append_drop_action(source, target)
-        elif method == "container":
-            self._append_drop_action(source, target, container)
-        else:
-            logging.getLogger("system").error(
-                f"dropAction received unknown method '{method}'"
+        # Read before the move: everything below runs after move_action has replaced
+        # every ActionModel behind this binding, self included.
+        enumeration_index = self._binding_model.parent().enumeration_index
+        try:
+            self._binding_model.move_action(
+                source, self._sequence_index.index, container, position
             )
+        except GremlinError:
+            logging.getLogger("system").exception(
+                f"Failed to move action {source} into container '{container}'"
+            )
+            signal.reloadUi.emit()
             return
 
-        signal.reloadCurrentInputItem.emit()
-        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+        # No reloadCurrentInputItem here: move_action's rootActionChanged already
+        # reloads this sequence's subtree (InputItemBinding.qml). Emitting it would
+        # swap the whole InputItemModel out and rebuild every sequence from inside
+        # this slot -- a slot on an ActionModel that the swap destroys.
+        signal.inputItemChanged.emit(enumeration_index)
 
     @QtCore.Slot(int)
     def removeAction(self, index: int) -> None:
@@ -306,9 +308,12 @@ class ActionModel(QtCore.QObject):
         Args:
             index: sequence index corresponding to the action to remove
         """
+        # Read before remove_action replaces every ActionModel behind this binding.
+        enumeration_index = self._binding_model.parent().enumeration_index
+        # remove_action's rootActionChanged reloads the subtree; see dropAction for why
+        # reloadCurrentInputItem must not be emitted from here.
         self._binding_model.remove_action(index)
-        signal.reloadCurrentInputItem.emit()
-        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+        signal.inputItemChanged.emit(enumeration_index)
 
     @property
     def action_data(self) -> AbstractActionData:
@@ -350,14 +355,17 @@ class ActionModel(QtCore.QObject):
             self._tuple_to_activation((value, state[1]))
 
     def _get_expanded(self) -> bool:
-        return ActionModel._expansion_state.get(
-            (self._data.id, self._sequence_index.index), True
-        )
+        return self._data.expanded
 
     def _set_expanded(self, value: bool) -> None:
-        key = (self._data.id, self._sequence_index.index)
-        if ActionModel._expansion_state.get(key, True) != value:
-            ActionModel._expansion_state[key] = value
+        # Notification goes out over the binding model rather than directly, so this
+        # model and any other placement of the same action update by one identical path.
+        if self._data.expanded != value:
+            self._data.expanded = value
+            self._binding_model.expansionChanged.emit(self._data)
+
+    def _handle_expansion_changed(self, data: AbstractActionData) -> None:
+        if data is self._data:
             self.actionChanged.emit()
 
     def _get_activate_on_release(self) -> bool:
@@ -399,24 +407,6 @@ class ActionModel(QtCore.QObject):
                 self._data.activation_mode = ActionActivationMode.Release
             case (True, True):
                 self._data.activation_mode = ActionActivationMode.Both
-
-    def _append_drop_action(
-        self, source_sidx: int, target_sidx: int, container: str | None = None
-    ) -> None:
-        """Positions the source node after the target node.
-
-        Args:
-            source_sidx: sequence index of the source action
-            target_sidx: sequence index of the target action
-            container: name of the container to insert the action into
-        """
-        try:
-            if container is None:
-                self._binding_model.move_action(source_sidx, target_sidx)
-            else:
-                self._binding_model.move_action(source_sidx, target_sidx, container)
-        except GremlinError:
-            signal.reloadUi.emit()
 
     actionLabel = QtCore.Property(
         str, fget=_get_action_label, fset=_set_action_label, notify=actionChanged
