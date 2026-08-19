@@ -13,8 +13,7 @@ for root, _, files in os.walk("action_plugins"):
 
 datas = [
     ("gfx", "gfx"),
-    ("qml", "qml"),
-    ("theme", "theme"),
+    ("style", "style"),
     ("device_db.json", "."),
     ("version.json", ".")
 ]
