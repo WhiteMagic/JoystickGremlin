@@ -21,10 +21,8 @@ from gremlin.ui.backend import Backend
 # Private message the tray icon uses to report activity to the helper window.
 _WM_TRAY = win32con.WM_USER + 20
 
-"""Shell_NotifyIcon values pywin32 does not expose.
-
-https://learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-notifyicondataw
-"""
+# Shell_NotifyIcon values pywin32 does not expose.
+# https://learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-notifyicondataw
 _NOTIFYICON_VERSION_4 = 4
 _NIF_SHOWTIP = 0x00000080
 _NIN_SELECT = win32con.WM_USER + 0
@@ -173,9 +171,8 @@ class SystemTrayIcon(QtCore.QObject):
 
     def _add_icon(self) -> None:
         """Adds the icon to the tray using notify protocol v4."""
-        # v4 has to be requested after the icon exists. It packs the event into
-        # lparam's low word and adds keyboard selection events. NIF_SHOWTIP
-        # forces the standard tooltip even where policy suppresses tips.
+        # Use notify protocol v4, requestable only once the icon exists, and
+        # force standard tooltip behavior even if OS policies override it.
         win32gui.Shell_NotifyIcon(
             win32gui.NIM_ADD,
             (
