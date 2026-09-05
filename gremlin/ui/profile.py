@@ -520,6 +520,9 @@ class InputItemBindingModel(QtCore.QObject):
             source_position = self.get_action_container_index(source_index)
             # The two boundaries either side of the action are where it already is.
             if source_position in (position, position - 1):
+                # Notify without rebuilding: the tree is unchanged and the models QML
+                # holds must survive, but the view still has to resettle after the drop.
+                self.rootActionChanged.emit()
                 return
             # Removing the source first shifts every later boundary down by one.
             if source_position < position:

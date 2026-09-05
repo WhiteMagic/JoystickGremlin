@@ -256,26 +256,17 @@ class ActionModel(QtCore.QObject):
             action_name, InputType.to_enum(self._action_behavior())
         )
         if action:
+            # Read before sync_data replaces every ActionModel behind this binding.
+            enumeration_index = self._binding_model.parent().enumeration_index
             self._data.insert_action(action, selector)
+            # sync_data's rootActionChanged reloads the subtree; see dropAction for why
+            # reloadCurrentInputItem must not be emitted from here.
             self._binding_model.sync_data()
-            signal.reloadCurrentInputItem.emit()
-            signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+            signal.inputItemChanged.emit(enumeration_index)
         else:
             logging.getLogger("system").error(
                 f"Failed to create action of type {action_name}"
             )
-
-    @QtCore.Slot(int, result=bool)
-    def canAcceptDrop(self, source: int) -> bool:
-        """Returns whether the given action may be dropped onto this action.
-
-        Args:
-            source: sequence index of the action being dragged
-
-        Returns:
-            True if the move is legal, False otherwise
-        """
-        return self._binding_model.can_move_action(source, self._sequence_index.index)
 
     @QtCore.Slot(int, str, int)
     def dropAction(self, source: int, container: str, position: int) -> None:
@@ -290,6 +281,9 @@ class ActionModel(QtCore.QObject):
             container: name of this action's container to move it into
             position: boundary index within that container
         """
+        # Read before the move: everything below runs after move_action has replaced
+        # every ActionModel behind this binding, self included.
+        enumeration_index = self._binding_model.parent().enumeration_index
         try:
             self._binding_model.move_action(
                 source, self._sequence_index.index, container, position
@@ -301,9 +295,11 @@ class ActionModel(QtCore.QObject):
             signal.reloadUi.emit()
             return
 
-        # Fires even for a no-op boundary -- the floating row has to come home.
-        signal.reloadCurrentInputItem.emit()
-        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+        # No reloadCurrentInputItem here: move_action's rootActionChanged already
+        # reloads this sequence's subtree (InputItemBinding.qml). Emitting it would
+        # swap the whole InputItemModel out and rebuild every sequence from inside
+        # this slot -- a slot on an ActionModel that the swap destroys.
+        signal.inputItemChanged.emit(enumeration_index)
 
     @QtCore.Slot(int)
     def removeAction(self, index: int) -> None:
@@ -312,9 +308,12 @@ class ActionModel(QtCore.QObject):
         Args:
             index: sequence index corresponding to the action to remove
         """
+        # Read before remove_action replaces every ActionModel behind this binding.
+        enumeration_index = self._binding_model.parent().enumeration_index
+        # remove_action's rootActionChanged reloads the subtree; see dropAction for why
+        # reloadCurrentInputItem must not be emitted from here.
         self._binding_model.remove_action(index)
-        signal.reloadCurrentInputItem.emit()
-        signal.inputItemChanged.emit(self._binding_model.parent().enumeration_index)
+        signal.inputItemChanged.emit(enumeration_index)
 
     @property
     def action_data(self) -> AbstractActionData:

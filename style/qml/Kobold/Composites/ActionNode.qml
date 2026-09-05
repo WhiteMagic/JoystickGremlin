@@ -9,79 +9,39 @@ import Gremlin.Profile
 import Kobold.Foundation
 import Kobold.Controls
 
-// Recursive replacement for legacy qml/ActionNode.qml, built from the Phase 6 ActionRow/TreeIndent
-// pieces. Lives in Kobold.Composites, plugin-importable, because plugins with their own nested
-// action containers (Chain, Condition, Tempo, ...) instantiate this directly for their own
-// children, exactly as they instantiated the legacy ActionNode -- it is shared with actions, not
-// app-only chrome. Purely a draggable row + recursive body -- it owns no drop zones of its own;
-// ActionList (its only caller) owns every boundary band for the list this node sits in.
 Item {
     id: root
 
     required property ActionModel action
 
-    // Set by ActionList when instantiating this node: the owning Repeater entry.
-    // Reported to the global DragSession singleton (Kobold.Composites) on drag start/end
-    // so every row's DropArea -- in this list or a sibling/ancestor container's -- can
-    // identify "is this the row being dragged", without needing a reference threaded down
-    // to it. Identity only; the drop's source index comes from root.action directly.
+    // Reference to this item in the containing ActionList.
     property Item dragEntry: null
 
-    // Auto-collapse while dragging so a node with expanded children doesn't drag at
-    // full height. Collapse and restore both hang off Drag.active, never off the
-    // handle's press/release: a press that never clears the drag threshold starts no
-    // drag and so gets no matching release event, and collapsing there would fold the
-    // row on a plain click with nothing to undo it. Restored unconditionally -- a
-    // same-position drop is a no-op the restore still has to cover.
-    property bool _wasExpanded: true
-    property bool _collapsedForDrag: false
+    // Stores the action's expanded state before a drag event.
+    property var _expandedStateToRestore: null
 
-    // Whether the release took a drop. Nothing Qt reports at the end of a Drag.Internal
-    // drag distinguishes one, so this is the only thing that tells a real drop from a
-    // cancel. Set on the handle's release, read one step later when drag.active clears.
-    property bool _dropCommitted: false
+    // Temporary width modifiers of the dragged action such that it visually fits into
+    // the drop indicators.
+    property real _dragLeftInset: 0
+    property real _dragRightInset: 0
 
-    // The floating node keeps the width and scene x it had in the list, so its own border
-    // lands on the drop indicator's on both sides. Inset the painted row instead of
-    // resizing root: ParentChange owns root's geometry while dragging and the restored
-    // anchors own it after, so neither would keep a width set here -- and Drag.hotSpot,
-    // read off root.width, stays where it is. gapS matches the padding the gap box already
-    // leaves above and below the header (ActionList's _gapOpenHeight).
-    readonly property real _dragInset: root.Drag.active ? Metrics.gapS : 0
+    implicitWidth: _content.implicitWidth
+    implicitHeight: _content.implicitHeight
 
-    implicitWidth: _column.implicitWidth
-    implicitHeight: _column.implicitHeight
+    // Ensure the action is drawn above everything else during a drag.
+    z: Drag.active ? 1 : 0
 
-    // Paint above everything while floating (Overlay.overlay already draws above the
-    // whole window, but z still matters for stacking against other overlay content).
-    z: root.Drag.active ? 1 : 0
-
-    // Escapes every ColumnLayout between here and the window, not just this row's own
-    // ActionList -- a gap opening ANYWHERE in the tree can reflow an ancestor ColumnLayout
-    // this node's position ultimately derives from, arbitrarily many levels up (containers
-    // nest arbitrarily deep). Reparenting only to this node's own immediate ActionList's
-    // root would escape that list's own internal reflow but not reflow further up the
-    // chain, since a gap in an outer/sibling list can still push this node's whole
-    // ancestor subtree around. Overlay.overlay is the only thing immune to all of it.
-    // Ported from debug/attempt2.qml's `content`/`window.contentItem` reparenting -- no
-    // x/y given to ParentChange, so it preserves root's current scene position across the
-    // reparent instead of snapping to (0, 0) for a frame.
-    //
-    // All three anchors must clear, not just left/right: ActionList anchors this node's
-    // `top` to its row spacer, and the drag is Drag.YAxis -- leaving `top` bound pins `y`,
-    // the node can't translate, and the drag hotSpot stays parked over its home row's
-    // DropArea (the one case ActionList's onEntered deliberately ignores), so no other row
-    // ever sees an enter event.
+    // During a drag the action is collapsed to just the header and than moved by the
+    // user. For the opening and closing of drop indicators to work the action item is
+    // reparented to an overlay that is on top of the entire UI.
     states: State {
+        // Needs root to be used, otherwise drag won't react correctly and the action
+        // is not rendered correctly above everything else.
         name: "dragging"
         when: root.Drag.active
 
         ParentChange {
             target: root
-            // Qualified on root: an unqualified `Overlay.overlay` here attaches to the
-            // ParentChange, which is neither an Item nor a Popup, so it resolves to null
-            // and the reparent silently does nothing -- leaving the node in the layout to
-            // be shoved around by every gap that opens above it.
             parent: root.Overlay.overlay
         }
         AnchorChanges {
@@ -92,57 +52,69 @@ Item {
         }
     }
 
+    // Setup the drag event handling.
+    // - Drag.internal is required to be able to drag an actual QML item.
+    // - Drag.active is driven by the mouse handler inside the ActionRow.
+    // - Drag.source is this item instanced inside the parent ActionList.
     Drag.active: _header.dragActive
     Drag.dragType: Drag.Internal
     Drag.source: root.dragEntry
     Drag.keys: ["action"]
-    // Leading edge of the node leads the drag: bottom edge moving down, top
-    // edge moving up. root.height is just the header while dragging, since
-    // Drag.onActiveChanged below collapses the node on the same transition that
-    // reparents it.
-    //
-    // Reaches Metrics.actionSpacing past that edge, out into the row-to-row gap, rather
-    // than sitting exactly on it. Drag.hotSpot is only a sample point, not clamped to the
-    // dragged item's own bounds, so this is legal -- and necessary: each row's DropArea is
-    // capped to header height (see ActionList.qml), so without the reach, the leading edge
-    // would have to travel the full visual gap before the neighboring row's drop zone even
-    // starts noticing it, making the trigger feel late/unresponsive.
-    Drag.hotSpot.x: root.width / 2
+    // The position which triggers with a drop area is positioned in the center
+    // of the ActionRow to provide the same behavior when dragging up or down.
+    Drag.hotSpot.x: width / 2
     Drag.hotSpot.y: _header.height / 2
-    // Both ends of the drag hang off this one handler. Drag.onDragFinished is not an
-    // option for either: Qt emits it only for an explicit Drag.drop(), never for a
-    // Drag.Internal drag that ends the way this one does, by MouseArea clearing
-    // drag.active on release.
+
+    // Handle drag state change as for Drag.Internal there is no automation for it.
     Drag.onActiveChanged: {
-        if (root.Drag.active) {
-            root._wasExpanded = root.action.expanded
-            root.action.expanded = false
-            root._collapsedForDrag = true
-            DragSession.begin(root.dragEntry)
-        } else {
-            if (root._collapsedForDrag) {
-                root.action.expanded = root._wasExpanded
-                root._collapsedForDrag = false
+        // The action is collapsed during the drag and resized to fit the currently
+        // active drop indicator. The DragSession handler is also initialized here.
+        if (Drag.active) {
+            _expandedStateToRestore = action.expanded
+            action.expanded = false
+            _dragLeftInset = Metrics.gapS
+            _dragRightInset = Metrics.gapS
+            DragSession.begin(dragEntry)
+        }
+        // Upon terminating state is resolved here, including restoring the action's
+        // expanded state and geometry.
+        else {
+            _dragLeftInset = 0
+            _dragRightInset = 0
+            if (_expandedStateToRestore !== null) {
+                action.expanded = _expandedStateToRestore
+                _expandedStateToRestore = null
             }
+            Qt.callLater(() => { height = Qt.binding(() => implicitHeight) })
             DragSession.end()
-            // A committed drop rebuilds the whole tree itself; reloading here as well
-            // would race that rebuild. Deferred like the drop is, since the rebuild
-            // destroys this very item and the mouse event is still being delivered to it.
-            if (!root._dropCommitted) {
-                Qt.callLater(() => signal.reloadCurrentInputItem())
-            }
-            root._dropCommitted = false
         }
     }
 
-    // Only surface in the app that floats: while dragging this node paints over the list
-    // rather than in it, and ActionRow has no fill of its own, so without this the header's
-    // text and icons render straight onto whatever they pass over. 1px border + opaque
-    // fill, never a shadow. Declared before _column so it stacks beneath the row.
+    // Compute the widths used to make the header firs visually in the DragIndicator.
+    function _updateHeaderInset() {
+        if (!Drag.active || !DragSession.activeList) {
+            return
+        }
+        _dragLeftInset = DragSession.activeList.mapToItem(root, 0, 0).x + Metrics.gapS
+        _dragRightInset = Metrics.gapS
+    }
+
+    Connections {
+        target: DragSession
+
+        function onActiveListChanged() {
+            root._updateHeaderInset()
+        }
+    }
+
+    // Background used to ensure the header is visible over the background during a
+    // drag event.
     Rectangle {
+        id: _headerDragBackground
+
         anchors.fill: parent
-        anchors.leftMargin: root._dragInset
-        anchors.rightMargin: root._dragInset
+        anchors.leftMargin: root._dragLeftInset
+        anchors.rightMargin: root._dragRightInset
         visible: root.Drag.active
 
         color: Theme.bg
@@ -151,16 +123,17 @@ Item {
         radius: Metrics.radius
     }
 
+    // Layout visualizing the actual action and its contents.
     ColumnLayout {
-        id: _column
+        id: _content
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: root._dragInset
-        anchors.rightMargin: root._dragInset
+        anchors.leftMargin: root._dragLeftInset
+        anchors.rightMargin: root._dragRightInset
         spacing: 0
 
-        // Header of an action indicating it's type and providing drag handle.
+        // Header of the action, containing basic information and controls.
         ActionRow {
             id: _header
 
@@ -174,19 +147,23 @@ Item {
             activateOnPress: root.action.activateOnPress
             activateOnRelease: root.action.activateOnRelease
             hasError: !root.action.isValid
-            errorHint: root.action.userFeedback.map((hint) => hint.message).join("\n")
+            errorHint: root.action.userFeedback
+                .map((hint) => { return hint.message }).join("\n")
             dragTarget: root
 
-            onToggleExpandedRequested: root.action.expanded = !root.action.expanded
+            onToggleExpandedRequested: { root.action.expanded = !root.action.expanded }
             onNameEdited: (text) => { root.action.actionLabel = text }
             onActivateOnPressEdited: (value) => { root.action.activateOnPress = value }
-            onActivateOnReleaseEdited: (value) => { root.action.activateOnRelease = value }
-            onRemoveRequested: root.action.removeAction(root.action.sequenceIndex)
+            onActivateOnReleaseEdited: (value) => {
+                root.action.activateOnRelease = value
+            }
+            onRemoveRequested: { root.action.removeAction(root.action.sequenceIndex) }
             onDropRequested: {
-                root._dropCommitted = DragSession.commit(root.action.sequenceIndex)
+                DragSession.drop(root.action.sequenceIndex)
             }
         }
 
+        // Vertical line to the left of an action indicating its hierarchical depth.
         TreeIndent {
             Layout.fillWidth: true
 
@@ -198,12 +175,6 @@ Item {
 
                 Layout.fillWidth: true
 
-                // Not `source:` + assign-in-onLoaded -- the loaded body's own root
-                // declares `required property ActionModel action`, and a required
-                // property only counts as initialized if it's supplied as part of the
-                // object's creation. setSource()'s initial-properties argument does
-                // that; a plain post-creation assignment in onLoaded does not, and
-                // throws "Required property ... was not initialized".
                 Component.onCompleted: {
                     setSource(root.action.qmlPath, { "action": root.action })
                 }

@@ -254,20 +254,30 @@ def test_drop_action_noop_boundary_keeps_action_models() -> None:
     action_ids_before = [model.action_data.id for model in children_before]
     dropped_model = iibm.get_action_model_by_sidx(1)
 
+    # The view refreshes off rootActionChanged, never reloadCurrentInputItem -- that
+    # would swap the whole InputItemModel out from inside a slot belonging to it.
+    refresh_count = 0
     reload_count = 0
+
+    def _count_refresh() -> None:
+        nonlocal refresh_count
+        refresh_count += 1
 
     def _count_reload() -> None:
         nonlocal reload_count
         reload_count += 1
 
+    iibm.rootActionChanged.connect(_count_refresh)
     signal.reloadCurrentInputItem.connect(_count_reload)
     try:
         # Boundary 0 is the leading edge of the action already sitting there.
         root_model.dropAction(1, "children", 0)
     finally:
+        iibm.rootActionChanged.disconnect(_count_refresh)
         signal.reloadCurrentInputItem.disconnect(_count_reload)
 
-    assert reload_count == 1
+    assert refresh_count == 1
+    assert reload_count == 0
 
     # The models QML already holds must survive; rebuilding them strands the view.
     assert iibm.get_action_model_by_sidx(0) is root_model
@@ -285,19 +295,27 @@ def test_drop_action_moves_into_target_container() -> None:
     binding_model, _owner, actions = _make_wide_binding_model()
     tempo_model = binding_model.get_action_model_by_sidx(5)
 
+    refresh_count = 0
     reload_count = 0
+
+    def _count_refresh() -> None:
+        nonlocal refresh_count
+        refresh_count += 1
 
     def _count_reload() -> None:
         nonlocal reload_count
         reload_count += 1
 
+    binding_model.rootActionChanged.connect(_count_refresh)
     signal.reloadCurrentInputItem.connect(_count_reload)
     try:
         tempo_model.dropAction(2, "short", 1)
     finally:
+        binding_model.rootActionChanged.disconnect(_count_refresh)
         signal.reloadCurrentInputItem.disconnect(_count_reload)
 
-    assert reload_count == 1
+    assert refresh_count == 1
+    assert reload_count == 0
     assert _container_contents(binding_model.root_action, "children") == [
         actions["a"],
         actions["c"],
@@ -462,29 +480,6 @@ def test_can_move_action_is_side_effect_free() -> None:
     ]
     assert _container_contents(actions["outer"], "short") == [actions["inner"]]
     assert _container_contents(actions["inner"], "long") == [actions["leaf"]]
-
-
-def test_can_accept_drop_rejects_own_ancestor() -> None:
-    binding_model, _owner, _actions = _make_nested_binding_model()
-    inner_model = binding_model.get_action_model_by_sidx(3)
-
-    # The inner tempo cannot swallow the outer tempo it lives inside.
-    assert inner_model.canAcceptDrop(1) is False
-
-
-def test_can_accept_drop_allows_legal_source() -> None:
-    binding_model, _owner, _actions = _make_nested_binding_model()
-    sibling_model = binding_model.get_action_model_by_sidx(2)
-
-    assert sibling_model.canAcceptDrop(1) is True
-
-
-def test_can_accept_drop_is_registered_as_a_slot() -> None:
-    binding_model, _owner, _actions = _make_nested_binding_model()
-    inner_model = binding_model.get_action_model_by_sidx(3)
-
-    assert hasattr(ActionModel, "canAcceptDrop")
-    assert type(inner_model).staticMetaObject.indexOfSlot("canAcceptDrop(int)") >= 0
 
 
 def test_wide_binding_model_sequence_indices() -> None:

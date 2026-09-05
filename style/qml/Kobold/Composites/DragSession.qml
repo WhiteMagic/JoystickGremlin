@@ -7,118 +7,114 @@ import QtQuick
 
 import Kobold.Foundation
 
-// Global drag-session state for the action tree: at most one ActionNode is ever being
-// dragged at a time across the whole app, no matter how many ActionLists exist (one per
-// container, arbitrarily nested), so this state belongs to the drag itself, not to any one
-// row's delegate. A singleton is what makes it reachable from any ActionList's DropArea --
-// including a sibling or ancestor container list the drag moves into -- without threading a
-// reference down through every nested container.
+// Holds information about the active drag event.
+//
+// There is only ever one active drag event. However, the drag may hit multiple drop
+// areas at the same time due to the nesting of actions. This is resolved by picking
+// the drop area that's the closest to the mouse cursor with hysterisis prevention.
+//
+// As Qt does not emit a drop event for Drag.Internal drag mode, the drop event is
+// internally cached here to dispatch to the model once the drag ends successfully.
 QtObject {
     id: root
 
-    // The ActionList row (Repeater entry) currently being dragged, or null. Serves as the
-    // "am I dragging myself" identity for every other row's DropArea. Identity only -- the
-    // dragged node hands its own sequence index to commit() rather than having this reached
-    // through for it.
+    // Action item being dragged.
     property Item draggedEntry: null
 
-    // The winning boundary for the current drag position: the ActionList that owns it and
-    // the boundary's index within that list. Global, so exactly one gap is ever open --
-    // a nested list's claim and an ancestor's cannot coexist.
+    // Indicates if a drag is active.
+    readonly property bool active: draggedEntry !== null
+
+    // Holds the ActionList that holds the currently active drop area.
     property ActionList activeList: null
     property int activeIndex: -1
 
-    property var _pending: []
+    // Holds the drop areas from which the activeList and activeIndex are derived.
+    property var _dropAreaCandidates: []
 
-    // The drop taken at mouse-release, or null. Snapshotted rather than read back later
-    // because cancelling an internal drag sends a DragLeave first, which withdraws the
-    // claim before Drag.active's own handlers ever run.
-    property var _committed: null
+    // Holds the data needed to perform a drop action once the drag event ends.
+    property var _dropData: null
 
+    // Start a drag session.
     function begin(entry) {
-        root.draggedEntry = entry
+        draggedEntry = entry
     }
 
-    // Called from the drag handle's release, while the claim is still live. Returns whether
-    // a drop was taken, so the dragged node knows not to reload on top of the rebuild.
-    function commit(sourceSequenceIndex) {
-        // A proposal delivered in this same pass is still queued behind Qt.callLater; flush
-        // it so the claim reflects where the cursor actually ended.
-        root._resolve()
-        if (!root.draggedEntry || !root.activeList || root.activeIndex < 0) {
+    function drop(sourceSequenceIndex) {
+        // Ensure the selection of the active drop area is up to date, then record the
+        // drop data.
+        _updateActiveDropArea()
+        if (!draggedEntry || !activeList || activeIndex < 0) {
             return false
         }
-        root._committed = {
-            owner: root.activeList.containerOwner,
-            container: root.activeList.containerName,
-            position: root.activeIndex,
+        _dropData = {
+            owner: activeList.containerOwner,
+            container: activeList.containerName,
+            position: activeIndex,
             source: sourceSequenceIndex
         }
-        return true
     }
 
     function end() {
-        const committed = root._committed
-        root.draggedEntry = null
-        root._pending = []
-        root.activeList = null
-        root.activeIndex = -1
-        root._committed = null
+        // Execute the model's drop action once the drag event completes successfully.
+        if (_dropData) {
+            const dropDataCopy = _dropData
+            Qt.callLater(() => {
+                dropDataCopy.owner.dropAction(
+                    dropDataCopy.source, dropDataCopy.container, dropDataCopy.position)
+            })
+        }
 
-        // dropAction rebuilds every ActionModel and tears down the dragged node's own QML
-        // items. Running that inside the mouse-release handler that triggered it destroys
-        // the object graph mid-event.
-        if (committed) {
-            Qt.callLater(() => committed.owner.dropAction(
-                committed.source, committed.container, committed.position))
+        // Reset the drag session state.
+        draggedEntry = null
+        _dropAreaCandidates = []
+        activeList = null
+        activeIndex = -1
+        _dropData = null
+    }
+
+    // Multiple drop areas may fire drag events at the same time. They are recorded to
+    // pick the best one once all drag events are processed.
+    function addDropAreaCandidate(distance, list, index) {
+        _dropAreaCandidates.push({distance, list, index})
+        Qt.callLater(_updateActiveDropArea)
+    }
+
+    // Removes a drop area candidate by unsetting it in case it was the active one. This
+    // works as the next update will invalidate the candidate list.
+    function removeDropAreaCandidate(list, index) {
+        if (activeList === list && activeIndex === index) {
+            activeList = null
+            activeIndex = -1
         }
     }
 
-    // Drop zones overlap by design and Qt delivers a drag event to every one of them in no
-    // defined order, so a running best would depend on who ran first. Qt.callLater collapses
-    // the whole delivery pass into one _resolve that sees every candidate.
-    function propose(distance, list, index) {
-        root._pending.push({distance, list, index})
-        Qt.callLater(root._resolve)
-    }
-
-    function withdraw(list, index) {
-        if (root.activeList === list && root.activeIndex === index) {
-            root.activeList = null
-            root.activeIndex = -1
-        }
-    }
-
-    // How much closer a challenger has to be before it takes the claim. Two adjacent zones
-    // both cover the midpoint between their boundaries and propose equal distances there, so
-    // without a margin the winner comes down to delivery order and a sub-pixel wobble flips
-    // the gap back and forth.
-    //
-    // Most of the damping comes from the open gap's own geometry, not from here (see
-    // ActionList's _gapOpenHeight) -- this only has to out-measure that sub-pixel wobble.
-    readonly property real _switchMargin: Metrics.gapS
-
-    function _resolve() {
-        let best = null
-        let incumbent = null
-        for (const proposal of root._pending) {
-            if (!best || proposal.distance < best.distance) {
-                best = proposal
+    // Determine the best drop area based on the distance of the mouse cursor to
+    // available candidates.
+    function _updateActiveDropArea() {
+        // Find the entries corresponding to the current slot and the best slot based
+        // on distance.
+        let bestChoice = null
+        let currentChoice = null
+        for (const entry of _dropAreaCandidates) {
+            if (!bestChoice || entry.distance < bestChoice.distance) {
+                bestChoice = entry
             }
-            if (proposal.list === root.activeList && proposal.index === root.activeIndex) {
-                incumbent = proposal
+            if (entry.list === activeList && entry.index === activeIndex) {
+                currentChoice = entry
             }
         }
-        root._pending = []
-        if (!best) {
+        _dropAreaCandidates = []
+        if (!bestChoice) {
             return
         }
-        // An incumbent that stopped proposing has had its zone left entirely, so the best
-        // challenger takes over with no margin to clear.
-        if (incumbent && best.distance > incumbent.distance - root._switchMargin) {
+
+        // Handle hysterisis by only switching to a new drop area once the current
+        // selection is worse by an amount of switchMargin.
+        const switchMargin = Metrics.gapS
+        if (currentChoice && bestChoice.distance > currentChoice.distance - switchMargin) {
             return
         }
-        root.activeList = best.list
-        root.activeIndex = best.index
+        activeList = bestChoice.list
+        activeIndex = bestChoice.index
     }
 }

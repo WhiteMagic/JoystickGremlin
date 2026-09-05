@@ -90,9 +90,9 @@ Item {
                 cursorShape: Qt.OpenHandCursor
                 drag.target: root.dragTarget
                 drag.axis: Drag.YAxis
-                // MouseArea emits `released` before it clears drag.active, and clearing
-                // that cancels the internal drag -- which sends a DragLeave that withdraws
-                // the drop claim. This is the last moment the claim still exists.
+                // Last moment the drop claim exists: MouseArea emits `released` before it
+                // clears drag.active, and that clear cancels the internal drag, sending a
+                // DragLeave that withdraws the claim.
                 onReleased: {
                     if (_dragArea.drag.active) {
                         root.dropRequested()

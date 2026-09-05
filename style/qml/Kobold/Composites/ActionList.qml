@@ -5,81 +5,183 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 
 import Gremlin.Profile
 import Kobold.Foundation
 import Kobold.Controls
 
-// One ActionNode per action in a container, plus the drop machinery for reordering them.
-// Boundary `i` means "insert above action i"; boundary `_actions.length` is the trailing
-// default target, which also serves as the sole target for an empty container.
+// Renders individual actions and provide support for drag & drop.
 Item {
     id: root
 
     required property ActionModel containerOwner
     required property string containerName
 
-    readonly property var _actions: root.containerOwner.getActions(root.containerName)
+    readonly property var _actions: containerOwner.getActions(containerName)
 
-    // The boundary this list currently owns, or -1. Derived from the global claim, so a
-    // nested list's gap can never coexist with an ancestor's.
-    readonly property int _activeGapIndex: DragSession.activeList === root
+    // Index of the shown drop indicator, or -1 if this list is not active.
+    readonly property int _activeDropIndex: DragSession.activeList === root
         ? DragSession.activeIndex
         : -1
 
-    // A tail reserves its rung only while a drag is live, anywhere in the tree.
-    readonly property bool _dragActive: DragSession.draggedEntry !== null
-
-    // Holds the dragged header plus gapS of padding either side, so the box genuinely
-    // contains a row rather than tracing where its pixels would go. 36/54/72 -- integer
-    // at every scale. Also the drag's hysteresis: see DragSession._switchMargin.
-    readonly property real _gapOpenHeight: 2 * Metrics.rowAction
+    // Drop indicator opening and closing animation durations in milliseconds.
     readonly property int _openDuration: 120
     readonly property int _closeDuration: 60
 
-    // Repeater index of the dragged row, or -1 when the drag started in another list.
-    readonly property int _draggedIndex: {
-        for (let index = 0; index < _repeater.count; ++index) {
-            if (_repeater.itemAt(index) === DragSession.draggedEntry) {
-                return index
+    implicitWidth: _content.implicitWidth
+    implicitHeight: _content.implicitHeight
+
+    // Main container that holds the actual content of the list.
+    ColumnLayout {
+        id: _content
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        spacing: 0
+
+        Repeater {
+            id: _repeater
+
+            model: root._actions
+
+            delegate: Item {
+                id: _entry
+
+                required property var modelData
+                required property int index
+
+                Layout.fillWidth: true
+                implicitWidth: _node.implicitWidth
+                // Compute the height needed for this item. During a drag, the item
+                // being dragged is hidden from the list view.
+                implicitHeight: (DragSession.draggedEntry === _entry
+                    ? 0
+                    : _node.implicitHeight) + _dropIndicator.implicitHeight
+
+                DropArea {
+                    id: _dropArea
+
+                    // Desired overhand of the drop area over the action header.
+                    readonly property real _overhang: Metrics.rowAction / 2
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    // Position the area such that it is centered on the action's header
+                    // and covers _overhand space above and below it.
+                    y: Metrics.actionSpacing - _overhang
+                    height: Metrics.rowAction + 2 * _overhang
+                    keys: ["action"]
+
+                    onEntered: (drag) => { _propose(drag) }
+                    onPositionChanged: (drag) => { _propose(drag) }
+                    onExited: () => { DragSession.removeDropAreaCandidate(root, _entry.index) }
+
+                    // Sends this drop area to the DragSession to decide which
+                    // indicator is selected.
+                    function _propose(drag) {
+                        DragSession.addDropAreaCandidate(
+                            Math.abs(drag.y + y),
+                            root,
+                            _entry.index
+                        )
+                    }
+                }
+
+                // Visualizes the action's drop area.
+                DropIndicator {
+                    id: _dropIndicator
+
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+
+                    topSpacing: Metrics.actionSpacing
+                    isOpen: root._activeDropIndex === _entry.index
+                }
+
+                // Visualize the action itself including the possible child
+                // actions within.
+                ActionNode {
+                    id: _node
+
+                    anchors.top: _dropIndicator.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+
+                    action: _entry.modelData
+                    dragEntry: _entry
+                }
             }
         }
-        return -1
+
+        // Drop target at the bottom of a list, allowing insertion into an empty
+        // list or at the end of one. This only becomes visible during an active
+        // drag event.
+        Item {
+            id: _defaultTarget
+
+            Layout.fillWidth: true
+            Layout.preferredHeight: _defaultIndicator.implicitHeight
+
+            DropIndicator {
+                id: _defaultIndicator
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                topSpacing: 0
+                closedHeight: DragSession.active ? Metrics.rowAction : 0
+                isOpen: root._activeDropIndex === root._actions.length
+            }
+
+            DropArea {
+                id: _defaultDropArea
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                // Position the drop area such that it's centered on the visual
+                // indicator and then overhangs symmetrically on top and bottom.
+                anchors.verticalCenter: parent.top
+                anchors.verticalCenterOffset: _defaultIndicator.closedHeight / 2
+                height: Metrics.rowAction * 2
+                keys: ["action"]
+
+                onEntered: (drag) => { _propose(drag) }
+                onPositionChanged: (drag) => { _propose(drag) }
+                onExited: () => { DragSession.removeDropAreaCandidate(root, root._actions.length) }
+
+                function _propose(drag) {
+                    DragSession.addDropAreaCandidate(
+                        Math.abs(drag.y - height / 2),
+                        root, root._actions.length)
+                }
+            }
+        }
     }
 
-    implicitWidth: _column.implicitWidth
-    implicitHeight: _column.implicitHeight
-
-    // The drop target: a box that opens at the claimed boundary. Height is the only
-    // animated property -- the box is simply clipped to whatever height exists, so it
-    // unfolds without a second animator to keep in sync.
-    component GapIndicator: Item {
+    // Visualizes the area an action can be dropped into. Animates open and closed
+    // based on if this "slot" is the one under consideration.
+    component DropIndicator: Item {
         id: indicator
 
-        property bool open: false
-        // Dead space above the box -- the row-to-row spacing this indicator subsumes.
-        property real leadingSpace: 0
-        // The box region's height while unclaimed. Non-zero for an empty container, whose
-        // reserved row becomes the box instead of sitting blank above one, and for a tail
-        // holding a drag rung open.
+        // Indicates if the gap is open or closed.
+        property bool isOpen: false
+        // Empty space separating the box from the row above it, acting as a top margin.
+        property real topSpacing: 0
+        // Vertical space reserved for the indicator when closed.
         property real closedHeight: 0
-        property real openHeight: root._gapOpenHeight
-        // This indicator is holding a drag rung open, so mark the boundary. Off at rest,
-        // so an empty container's reserved row stays blank when nothing is being dragged.
-        property bool reserved: false
-
+        // Vertical space reserved for the indicator when fully open.
+        property real openHeight: Metrics.rowAction + 2 * Metrics.gapS
+        // Value of the animated height that the visual drop target has.
         property real _boxHeight: 0
 
-        implicitHeight: indicator.leadingSpace
-            + Math.max(indicator.closedHeight, indicator._boxHeight)
+        implicitHeight: topSpacing + Math.max(closedHeight, _boxHeight)
 
-        // Opening and closing run at different speeds, and a Behavior cannot see which
-        // way the value moved -- gating one on `enabled` races the binding it animates.
-        // So the direction lives in the transition instead.
+        // Animation of the visible indicator to open and close as it is triggered.
         states: State {
             name: "open"
-            when: indicator.open
+            when: indicator.isOpen
 
             PropertyChanges {
                 indicator._boxHeight: indicator.openHeight
@@ -108,22 +210,50 @@ Item {
             }
         ]
 
-        // An unclaimed rung says only that a boundary is here: one hairline across the
-        // rung's own width, which is all the depth it has to convey. Sits on the rung's
-        // centre -- exactly where the boundary is measured from -- and yields entirely to
-        // the box the moment this rung is claimed.
-        Rectangle {
-            id: _rungMark
+        // Visual indicator for a possible, but not active, drop slot with that has
+        // no associated action header.
+        Item {
+            id: _emptyDropIndicator
 
             anchors.left: parent.left
             anchors.right: parent.right
-            y: indicator.leadingSpace + (indicator.closedHeight - _rungMark.height) / 2
-            height: Metrics.hairline
-            visible: indicator.reserved && indicator._boxHeight <= 0
+            y: indicator.topSpacing + (indicator.closedHeight - height) / 2
+            height: Metrics.gapM
+            // The closedHeight of such a slot is non zero, while for an action linked
+            // slot it is 0.
+            visible: indicator.closedHeight > 0 && DragSession.active
+                && indicator._boxHeight <= 0
 
-            color: Theme.line
+            // Sequence of three boxes which draw the following visual: |---------|
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: Metrics.hairline
+
+                color: Theme.line
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: Metrics.hairline
+
+                color: Theme.line
+            }
+
+            Rectangle {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: Metrics.hairline
+
+                color: Theme.line
+            }
         }
 
+        // Visual indicator for a drop slot.
         Rectangle {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
@@ -135,184 +265,6 @@ Item {
             border.color: Theme.accent
             border.width: Metrics.hairline
             radius: Metrics.radius
-        }
-    }
-
-    ColumnLayout {
-        id: _column
-
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: 0
-
-        Repeater {
-            id: _repeater
-
-            model: root._actions
-
-            delegate: Item {
-                id: _entry
-
-                required property var modelData
-                required property int index
-
-                // The dragged row's own two boundaries are no-op drops.
-                readonly property bool _isNoOp: root._draggedIndex >= 0
-                    && (_entry.index === root._draggedIndex
-                        || _entry.index === root._draggedIndex + 1)
-
-                Layout.fillWidth: true
-                implicitWidth: _node.implicitWidth
-                // _node reparents to the Overlay while this row is dragged -- hold its slot
-                // open at one header so the boundaries either side of it stay put.
-                implicitHeight: (DragSession.draggedEntry === _entry
-                    ? Metrics.rowAction
-                    : _node.implicitHeight) + _gap.implicitHeight
-
-                // Owns boundary `index`, sitting at this row's own top and centred on it.
-                // Read live, never snapshotted: the gap grows inside _gap, so a claimed
-                // boundary does not move while everything below it shifts down by the gap.
-                // That asymmetry is most of the hysteresis -- switching forward happens half
-                // a gap later than switching back; DragSession._switchMargin only has to
-                // break the exact tie on top of it.
-                DropArea {
-                    id: _zone
-
-                    // Symmetric about the header. Expressed as a constant offset from the
-                    // row's top rather than anchored to _gap.bottom: the indicator is what
-                    // grows when this row holds the claim, and a zone that moved with it
-                    // would drag itself out from under a stationary cursor.
-                    readonly property real _headerCenterOffset: Metrics.actionSpacing
-                        + Metrics.rowAction / 2
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    y: _zone._headerCenterOffset - _zone.height / 2
-                    height: Metrics.rowAction * 2
-                    keys: ["action"]
-
-                    onEntered: (drag) => _zone._propose(drag)
-                    onPositionChanged: (drag) => _zone._propose(drag)
-                    onExited: () => DragSession.withdraw(root, _entry.index)
-
-                    // Boundary `index` is the row's own top, which sits at -y in zone
-                    // coordinates whatever the zone's placement.
-                    function _propose(drag) {
-                        if (_entry._isNoOp) {
-                            return
-                        }
-                        DragSession.propose(Math.abs(drag.y + _zone.y), root, _entry.index)
-                    }
-                }
-
-                // Renders boundary `index`.
-                GapIndicator {
-                    id: _gap
-
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-
-                    leadingSpace: Metrics.actionSpacing
-                    open: root._activeGapIndex === _entry.index
-                }
-
-                // The slot this row vacated while it floats over the Overlay. Outlined
-                // rather than filled, and deliberately unlike the accent-bordered target:
-                // its own two boundaries are no-op drops, so it must not read as one.
-                Rectangle {
-                    anchors.top: _gap.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: Metrics.rowAction
-                    visible: DragSession.draggedEntry === _entry
-
-                    color: "transparent"
-                    border.color: Theme.line
-                    border.width: Metrics.hairline
-                    radius: Metrics.radius
-                }
-
-                ActionNode {
-                    id: _node
-
-                    anchors.top: _gap.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-
-                    action: _entry.modelData
-                    dragEntry: _entry
-                }
-            }
-        }
-
-        // Renders the trailing boundary, and is the only target when the container is empty.
-        Item {
-            id: _defaultTarget
-
-            readonly property int _boundaryIndex: root._actions.length
-            readonly property bool _isNoOp: root._draggedIndex >= 0
-                && _defaultTarget._boundaryIndex === root._draggedIndex + 1
-
-            // While dragging, a tail reserves a whole row instead of the hairline it holds
-            // at rest. Every enclosing list's tail is laid out below this one -- a nested
-            // list sits inside its parent's TreeIndent, which precedes the parent's own
-            // tail -- so the reservations stack into a staircase, one aimable rung per
-            // nesting level, each already stepped left by its container's indent. Without
-            // it the deepest N boundaries share ~N pixels and none of them can be aimed at.
-            // A no-op tail reserves nothing: it is a rung you could never land on.
-            readonly property bool _reservesRung: root._dragActive && !_defaultTarget._isNoOp
-
-            // Where this boundary sits for distance purposes: the middle of the reserved
-            // rung, so the claim flips at the edge two rungs share rather than through the
-            // middle of one. Deliberately read off closedHeight and not the live box -- the
-            // claimed rung grows past it, and a boundary that moved with its own box would
-            // walk out from under a stationary cursor.
-            readonly property real _measureOffset: _defaultGap.leadingSpace
-                + _defaultGap.closedHeight / 2
-
-            Layout.fillWidth: true
-            Layout.preferredHeight: _defaultGap.implicitHeight
-
-            // An empty container's reserved row IS the box -- the box grows inside it and
-            // then past it, so there is one hole rather than a blank band above a target.
-            GapIndicator {
-                id: _defaultGap
-
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                leadingSpace: root._actions.length === 0 ? 0 : Metrics.hairline
-                closedHeight: root._actions.length === 0 || _defaultTarget._reservesRung
-                    ? Metrics.rowAction
-                    : 0
-                reserved: _defaultTarget._reservesRung
-                open: root._activeGapIndex === _defaultTarget._boundaryIndex
-            }
-
-            DropArea {
-                id: _defaultZone
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-                y: _defaultTarget._measureOffset - _defaultZone.height / 2
-                height: Metrics.rowAction * 2
-                keys: ["action"]
-
-                onEntered: (drag) => _defaultZone._propose(drag)
-                onPositionChanged: (drag) => _defaultZone._propose(drag)
-                onExited: () => DragSession.withdraw(root, _defaultTarget._boundaryIndex)
-
-                function _propose(drag) {
-                    if (_defaultTarget._isNoOp) {
-                        return
-                    }
-                    DragSession.propose(
-                        Math.abs(drag.y + _defaultZone.y - _defaultTarget._measureOffset),
-                        root, _defaultTarget._boundaryIndex)
-                }
-            }
         }
     }
 }
