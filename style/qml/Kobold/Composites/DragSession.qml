@@ -16,28 +16,62 @@ import Kobold.Foundation
 QtObject {
     id: root
 
-    // The ActionList row (Repeater entry) currently being dragged, or null. Doubles as the
-    // "am I dragging myself" identity for every other row's DropArea, and as the source for
-    // the canAcceptDrop(sourceSequenceIndex) validity check (draggedEntry.modelData).
+    // The ActionList row (Repeater entry) currently being dragged, or null. Serves as the
+    // "am I dragging myself" identity for every other row's DropArea. Identity only -- the
+    // dragged node hands its own sequence index to commit() rather than having this reached
+    // through for it.
     property Item draggedEntry: null
 
     // The winning boundary for the current drag position: the ActionList that owns it and
     // the boundary's index within that list. Global, so exactly one gap is ever open --
     // a nested list's claim and an ancestor's cannot coexist.
-    property Item activeList: null
+    property ActionList activeList: null
     property int activeIndex: -1
 
     property var _pending: []
+
+    // The drop taken at mouse-release, or null. Snapshotted rather than read back later
+    // because cancelling an internal drag sends a DragLeave first, which withdraws the
+    // claim before Drag.active's own handlers ever run.
+    property var _committed: null
 
     function begin(entry) {
         root.draggedEntry = entry
     }
 
+    // Called from the drag handle's release, while the claim is still live. Returns whether
+    // a drop was taken, so the dragged node knows not to reload on top of the rebuild.
+    function commit(sourceSequenceIndex) {
+        // A proposal delivered in this same pass is still queued behind Qt.callLater; flush
+        // it so the claim reflects where the cursor actually ended.
+        root._resolve()
+        if (!root.draggedEntry || !root.activeList || root.activeIndex < 0) {
+            return false
+        }
+        root._committed = {
+            owner: root.activeList.containerOwner,
+            container: root.activeList.containerName,
+            position: root.activeIndex,
+            source: sourceSequenceIndex
+        }
+        return true
+    }
+
     function end() {
+        const committed = root._committed
         root.draggedEntry = null
         root._pending = []
         root.activeList = null
         root.activeIndex = -1
+        root._committed = null
+
+        // dropAction rebuilds every ActionModel and tears down the dragged node's own QML
+        // items. Running that inside the mouse-release handler that triggered it destroys
+        // the object graph mid-event.
+        if (committed) {
+            Qt.callLater(() => committed.owner.dropAction(
+                committed.source, committed.container, committed.position))
+        }
     }
 
     // Drop zones overlap by design and Qt delivers a drag event to every one of them in no

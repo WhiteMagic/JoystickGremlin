@@ -286,6 +286,10 @@ class InputItemBindingModel(QtCore.QObject):
     rootActionChanged = QtCore.Signal()
     inputTypeChanged = QtCore.Signal()
     userFeedbackChanged = QtCore.Signal()
+    # Carries the AbstractActionData whose expansion state changed. The same action can
+    # sit at several places in one tree, and every model holding that instance has to
+    # update in the same event, so the change is broadcast rather than emitted locally.
+    expansionChanged = QtCore.Signal(object)
 
     def __init__(
         self,
@@ -470,66 +474,66 @@ class InputItemBindingModel(QtCore.QObject):
         )
 
     def move_action(
-        self, source_idx: int, target_idx: int, container: str | None = None
+        self, source_idx: int, parent_idx: int, container: str, position: int
     ) -> None:
-        """Moves the source action to the spot after the target action.
+        """Moves the source action to a boundary within the target container.
 
-        If a container name is given then the source action will be appended to
-        the container with the given name of the target action.
+        The position is a boundary index into the container as it stands before
+        the move: position 0 places the action above the container's current
+        first entry, position len(container) appends it.
 
         Args:
             source_idx: sequence index of the action to move
-            target_idx: sequence index of the action after which to place the
-                moved action
-            container: name of the container to insert the action into
+            parent_idx: sequence index of the action owning the target container
+            container: name of the container to move the action into
+            position: boundary index within the target container
         """
-        s_model = self.get_action_model_by_sidx(source_idx)
-        t_model = self.get_action_model_by_sidx(target_idx)
+        source_model = self.get_action_model_by_sidx(source_idx)
+        parent_model = self.get_action_model_by_sidx(parent_idx)
 
         # Relinking an action below itself detaches its entire subtree from the
         # root and leaves a self-referential cycle behind in the library.
-        if not self.can_move_action(source_idx, target_idx):
+        if not self.can_move_action(source_idx, parent_idx):
             logging.getLogger("system").warning(
-                f"Rejecting move of action {source_idx} onto {target_idx} as the "
+                f"Rejecting move of action {source_idx} into {parent_idx} as the "
                 "target is inside the source's own subtree"
             )
             return
 
-        s_parent_identifier = (
-            s_model.sequence_index.parent_index,
-            s_model.sequence_index.container_name,
+        # Both checks have to clear before anything is removed: insert_action raises on
+        # an unknown selector, and validates the boundary against the post-removal
+        # length, by which point a rejected move has already dropped the source action.
+        parent_data = parent_model.action_data
+        container_size = len(parent_data.get_actions(container)[0])
+        if not 0 <= position <= container_size:
+            raise GremlinError(
+                f"Boundary index '{position}' is outside container "
+                + f"'{container}' of action {parent_idx}"
+            )
+
+        source_index = source_model.sequence_index
+        insert_at = position
+        if (
+            source_index.parent_index == parent_idx
+            and source_index.container_name == container
+        ):
+            source_position = self.get_action_container_index(source_index)
+            # The two boundaries either side of the action are where it already is.
+            if source_position in (position, position - 1):
+                return
+            # Removing the source first shifts every later boundary down by one.
+            if source_position < position:
+                insert_at -= 1
+
+        # Safe in either order now: the boundary carries its own position rather
+        # than being re-derived from the stale pre-removal container snapshot.
+        self.remove_action(source_index, False)
+        parent_data.insert_action(
+            source_model.action_data,
+            container,
+            DataInsertionMode.Prepend,
+            insert_at,
         )
-        t_parent_identifier = (
-            t_model.sequence_index.parent_index,
-            t_model.sequence_index.container_name,
-        )
-
-        if container is not None:
-            self.remove_action(s_model.sequence_index, False)
-            self.append_action(s_model.action_data, t_model.sequence_index, container)
-        else:
-            # If source and target are in the same container special care has to
-            # be taken to ensure removal and insertion happen in a valid order
-            move_performed = False
-            if s_parent_identifier == t_parent_identifier:
-                # Determine container indices of the source and target actions
-                s_lid = self.get_action_container_index(s_model.sequence_index)
-                t_lid = self.get_action_container_index(t_model.sequence_index)
-
-                # Perform the action that affects a change in the rear part
-                # of the container
-                if s_lid < t_lid:
-                    move_performed = True
-                    self.append_action(s_model.action_data, t_model.sequence_index)
-                    self.remove_action(s_model.sequence_index, False)
-
-            # This is the default case if the source and target actions are part
-            # of different parent actions or containers. Also, if the source
-            # action is after the target action, performing the removal first
-            # is safe.
-            if not move_performed:
-                self.remove_action(s_model.sequence_index, False)
-                self.append_action(s_model.action_data, t_model.sequence_index)
 
         self._create_action_models()
         self.rootActionChanged.emit()

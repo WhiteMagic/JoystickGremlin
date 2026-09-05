@@ -23,16 +23,23 @@ Item {
     // Set by ActionList when instantiating this node: the owning Repeater entry.
     // Reported to the global DragSession singleton (Kobold.Composites) on drag start/end
     // so every row's DropArea -- in this list or a sibling/ancestor container's -- can
-    // identify "is this the row being dragged" and look up its ActionModel for
-    // canAcceptDrop, without needing a reference threaded down to it.
+    // identify "is this the row being dragged", without needing a reference threaded down
+    // to it. Identity only; the drop's source index comes from root.action directly.
     property Item dragEntry: null
 
     // Auto-collapse while dragging so a node with expanded children doesn't drag at
-    // full height. Restored unconditionally on Drag.onDragFinished -- a same-position
-    // drop doesn't change sequenceIndex, so a restore gated on drop success would
-    // leave it stuck collapsed.
+    // full height. Collapse and restore both hang off Drag.active, never off the
+    // handle's press/release: a press that never clears the drag threshold starts no
+    // drag and so gets no matching release event, and collapsing there would fold the
+    // row on a plain click with nothing to undo it. Restored unconditionally -- a
+    // same-position drop is a no-op the restore still has to cover.
     property bool _wasExpanded: true
     property bool _collapsedForDrag: false
+
+    // Whether the release took a drop. Nothing Qt reports at the end of a Drag.Internal
+    // drag distinguishes one, so this is the only thing that tells a real drop from a
+    // cancel. Set on the handle's release, read one step later when drag.active clears.
+    property bool _dropCommitted: false
 
     // The floating node keeps the width and scene x it had in the list, so its own border
     // lands on the drop indicator's on both sides. Inset the painted row instead of
@@ -91,7 +98,8 @@ Item {
     Drag.keys: ["action"]
     // Leading edge of the node leads the drag: bottom edge moving down, top
     // edge moving up. root.height is just the header while dragging, since
-    // onDragRequested below collapses the node first.
+    // Drag.onActiveChanged below collapses the node on the same transition that
+    // reparents it.
     //
     // Reaches Metrics.actionSpacing past that edge, out into the row-to-row gap, rather
     // than sitting exactly on it. Drag.hotSpot is only a sample point, not clamped to the
@@ -101,20 +109,29 @@ Item {
     // starts noticing it, making the trigger feel late/unresponsive.
     Drag.hotSpot.x: root.width / 2
     Drag.hotSpot.y: _header.height / 2
+    // Both ends of the drag hang off this one handler. Drag.onDragFinished is not an
+    // option for either: Qt emits it only for an explicit Drag.drop(), never for a
+    // Drag.Internal drag that ends the way this one does, by MouseArea clearing
+    // drag.active on release.
     Drag.onActiveChanged: {
         if (root.Drag.active) {
+            root._wasExpanded = root.action.expanded
+            root.action.expanded = false
+            root._collapsedForDrag = true
             DragSession.begin(root.dragEntry)
         } else {
+            if (root._collapsedForDrag) {
+                root.action.expanded = root._wasExpanded
+                root._collapsedForDrag = false
+            }
             DragSession.end()
-        }
-    }
-    Drag.onDragFinished: function(dropAction) {
-        if (root._collapsedForDrag) {
-            root.action.expanded = root._wasExpanded
-            root._collapsedForDrag = false
-        }
-        if (dropAction === Qt.IgnoreAction) {
-            signal.reloadCurrentInputItem()
+            // A committed drop rebuilds the whole tree itself; reloading here as well
+            // would race that rebuild. Deferred like the drop is, since the rebuild
+            // destroys this very item and the mouse event is still being delivered to it.
+            if (!root._dropCommitted) {
+                Qt.callLater(() => signal.reloadCurrentInputItem())
+            }
+            root._dropCommitted = false
         }
     }
 
@@ -165,10 +182,8 @@ Item {
             onActivateOnPressEdited: (value) => { root.action.activateOnPress = value }
             onActivateOnReleaseEdited: (value) => { root.action.activateOnRelease = value }
             onRemoveRequested: root.action.removeAction(root.action.sequenceIndex)
-            onDragRequested: {
-                root._wasExpanded = root.action.expanded
-                root.action.expanded = false
-                root._collapsedForDrag = true
+            onDropRequested: {
+                root._dropCommitted = DragSession.commit(root.action.sequenceIndex)
             }
         }
 

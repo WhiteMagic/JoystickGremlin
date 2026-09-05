@@ -39,7 +39,7 @@ Item {
     signal activateOnPressEdited(bool value)
     signal activateOnReleaseEdited(bool value)
     signal removeRequested()
-    signal dragRequested()
+    signal dropRequested()
 
     implicitHeight: Metrics.rowAction
     implicitWidth: _row.implicitWidth
@@ -90,7 +90,14 @@ Item {
                 cursorShape: Qt.OpenHandCursor
                 drag.target: root.dragTarget
                 drag.axis: Drag.YAxis
-                onPressed: root.dragRequested()
+                // MouseArea emits `released` before it clears drag.active, and clearing
+                // that cancels the internal drag -- which sends a DragLeave that withdraws
+                // the drop claim. This is the last moment the claim still exists.
+                onReleased: {
+                    if (_dragArea.drag.active) {
+                        root.dropRequested()
+                    }
+                }
             }
         }
 

@@ -5,6 +5,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 
 import Gremlin.Profile
 import Kobold.Foundation
@@ -27,10 +28,13 @@ Item {
         ? DragSession.activeIndex
         : -1
 
+    // A tail reserves its rung only while a drag is live, anywhere in the tree.
+    readonly property bool _dragActive: DragSession.draggedEntry !== null
+
     // Holds the dragged header plus gapS of padding either side, so the box genuinely
     // contains a row rather than tracing where its pixels would go. 36/54/72 -- integer
     // at every scale. Also the drag's hysteresis: see DragSession._switchMargin.
-    readonly property real _gapOpenHeight: Metrics.rowAction + 2 * Metrics.gapS
+    readonly property real _gapOpenHeight: 2 * Metrics.rowAction
     readonly property int _openDuration: 120
     readonly property int _closeDuration: 60
 
@@ -56,10 +60,14 @@ Item {
         property bool open: false
         // Dead space above the box -- the row-to-row spacing this indicator subsumes.
         property real leadingSpace: 0
-        // The box region's height while unclaimed. Non-zero only for an empty container,
-        // whose reserved row becomes the box instead of sitting blank above one.
+        // The box region's height while unclaimed. Non-zero for an empty container, whose
+        // reserved row becomes the box instead of sitting blank above one, and for a tail
+        // holding a drag rung open.
         property real closedHeight: 0
         property real openHeight: root._gapOpenHeight
+        // This indicator is holding a drag rung open, so mark the boundary. Off at rest,
+        // so an empty container's reserved row stays blank when nothing is being dragged.
+        property bool reserved: false
 
         property real _boxHeight: 0
 
@@ -99,6 +107,22 @@ Item {
                 }
             }
         ]
+
+        // An unclaimed rung says only that a boundary is here: one hairline across the
+        // rung's own width, which is all the depth it has to convey. Sits on the rung's
+        // centre -- exactly where the boundary is measured from -- and yields entirely to
+        // the box the moment this rung is claimed.
+        Rectangle {
+            id: _rungMark
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            y: indicator.leadingSpace + (indicator.closedHeight - _rungMark.height) / 2
+            height: Metrics.hairline
+            visible: indicator.reserved && indicator._boxHeight <= 0
+
+            color: Theme.line
+        }
 
         Rectangle {
             anchors.bottom: parent.bottom
@@ -230,6 +254,23 @@ Item {
             readonly property bool _isNoOp: root._draggedIndex >= 0
                 && _defaultTarget._boundaryIndex === root._draggedIndex + 1
 
+            // While dragging, a tail reserves a whole row instead of the hairline it holds
+            // at rest. Every enclosing list's tail is laid out below this one -- a nested
+            // list sits inside its parent's TreeIndent, which precedes the parent's own
+            // tail -- so the reservations stack into a staircase, one aimable rung per
+            // nesting level, each already stepped left by its container's indent. Without
+            // it the deepest N boundaries share ~N pixels and none of them can be aimed at.
+            // A no-op tail reserves nothing: it is a rung you could never land on.
+            readonly property bool _reservesRung: root._dragActive && !_defaultTarget._isNoOp
+
+            // Where this boundary sits for distance purposes: the middle of the reserved
+            // rung, so the claim flips at the edge two rungs share rather than through the
+            // middle of one. Deliberately read off closedHeight and not the live box -- the
+            // claimed rung grows past it, and a boundary that moved with its own box would
+            // walk out from under a stationary cursor.
+            readonly property real _measureOffset: _defaultGap.leadingSpace
+                + _defaultGap.closedHeight / 2
+
             Layout.fillWidth: true
             Layout.preferredHeight: _defaultGap.implicitHeight
 
@@ -243,7 +284,10 @@ Item {
                 anchors.right: parent.right
 
                 leadingSpace: root._actions.length === 0 ? 0 : Metrics.hairline
-                closedHeight: root._actions.length === 0 ? Metrics.rowAction : 0
+                closedHeight: root._actions.length === 0 || _defaultTarget._reservesRung
+                    ? Metrics.rowAction
+                    : 0
+                reserved: _defaultTarget._reservesRung
                 open: root._activeGapIndex === _defaultTarget._boundaryIndex
             }
 
@@ -252,7 +296,7 @@ Item {
 
                 anchors.left: parent.left
                 anchors.right: parent.right
-                y: -_defaultZone.height / 2
+                y: _defaultTarget._measureOffset - _defaultZone.height / 2
                 height: Metrics.rowAction * 2
                 keys: ["action"]
 
@@ -264,8 +308,9 @@ Item {
                     if (_defaultTarget._isNoOp) {
                         return
                     }
-                    DragSession.propose(Math.abs(drag.y + _defaultZone.y),
-                                        root, _defaultTarget._boundaryIndex)
+                    DragSession.propose(
+                        Math.abs(drag.y + _defaultZone.y - _defaultTarget._measureOffset),
+                        root, _defaultTarget._boundaryIndex)
                 }
             }
         }
