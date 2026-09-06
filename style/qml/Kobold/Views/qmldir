@@ -25,6 +25,9 @@ DialogInputViewer     DialogInputViewer.qml
 DialogManageModes     DialogManageModes.qml
 DialogOptions         DialogOptions.qml
 DialogSwapDevices     DialogSwapDevices.qml
+AxesStateCurrent      AxesStateCurrent.qml
+AxesStateSeries       AxesStateSeries.qml
+ButtonState           ButtonState.qml
 OptionActionSequenceOrdering OptionActionSequenceOrdering.qml
 OptionEntryCard       OptionEntryCard.qml
 OptionProfileAutoLoading OptionProfileAutoLoading.qml

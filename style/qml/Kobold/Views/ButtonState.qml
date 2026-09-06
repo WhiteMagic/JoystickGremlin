@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Kobold.Controls
 import Kobold.Foundation
 
 Item {
@@ -88,7 +89,11 @@ Item {
 
                 model: _button_state
                 delegate: Component {
-                    RoundButton {
+                    // A readout, not a control -- nothing here is clickable, so it is a
+                    // plain rectangle rather than a Button the user cannot press.
+                    Rectangle {
+                        id: _button
+
                         required property int index
                         required property int identifier
                         required property bool value
@@ -97,11 +102,17 @@ Item {
                         height: _root.buttonSize
                         radius: _root.buttonRadius
 
-                        hoverEnabled: false
+                        color: Theme.bgAlt
+                        border.width: Metrics.hairline
+                        border.color: value ? Theme.accent : Theme.line
 
-                        text: identifier
-                        checked: value
-                        font.pixelSize: Metrics.textDetail
+                        Label {
+                            anchors.centerIn: parent
+
+                            text: _button.identifier
+                            font.pixelSize: Metrics.textDetail
+                            color: _button.value ? Theme.accent : Theme.fg
+                        }
                     }
                 }
             }

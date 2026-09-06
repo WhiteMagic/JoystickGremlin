@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 
 import Gremlin.Device
+import Kobold.Controls
 import Kobold.Foundation
 
 Item {

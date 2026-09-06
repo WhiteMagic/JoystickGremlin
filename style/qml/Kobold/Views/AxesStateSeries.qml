@@ -84,6 +84,15 @@ Item {
                 id: _chart
 
                 backgroundColor: Theme.bg
+                plotAreaColor: Theme.bg
+
+                // QtCharts defaults to its own light theme -- every label, grid line and
+                // axis below has to be re-tokenised or the chart is unreadable on a dark scheme.
+                legend {
+                    labelColor: Theme.fg
+                    font.family: FontType.sans
+                    font.pixelSize: Metrics.textDetail
+                }
 
                 margins {
                     top: 0
@@ -92,7 +101,6 @@ Item {
                     right: 0
                 }
 
-                y: Metrics.viewerChartYOffset
                 width: parent.width
                 height: parent.height
 
@@ -103,6 +111,14 @@ Item {
 
                     min: -1
                     max: 1
+
+                    color: Theme.line
+                    gridLineColor: Theme.line
+                    minorGridLineColor: Theme.line
+                    shadesVisible: false
+                    labelsColor: Theme.fgMuted
+                    labelsFont.family: FontType.mono
+                    labelsFont.pixelSize: Metrics.textDetail
                 }
 
                 ValueAxis {
@@ -110,6 +126,14 @@ Item {
 
                     min: -_axis_series.windowSize
                     max: 0
+
+                    color: Theme.line
+                    gridLineColor: Theme.line
+                    minorGridLineColor: Theme.line
+                    shadesVisible: false
+                    labelsColor: Theme.fgMuted
+                    labelsFont.family: FontType.mono
+                    labelsFont.pixelSize: Metrics.textDetail
                 }
             }
         }
