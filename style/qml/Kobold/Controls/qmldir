@@ -19,7 +19,4 @@ ActivationToggle    ActivationToggle.qml
 BetterProgressBar   BetterProgressBar.qml
 TextInputDialog     TextInputDialog.qml
 InputBehavior       InputBehavior.qml
-AxesStateCurrent    AxesStateCurrent.qml
-AxesStateSeries     AxesStateSeries.qml
-ButtonState         ButtonState.qml
 HatView             HatView.qml

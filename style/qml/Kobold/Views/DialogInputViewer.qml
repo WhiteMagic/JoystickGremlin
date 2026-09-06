@@ -73,20 +73,21 @@ Window {
         deviceType: "all"
     }
 
-    function create_widget(qml_path, guid, name) {
-        let component = Qt.createComponent(Qt.resolvedUrl(qml_path))
-        if (component.status == Component.Ready) {
-            var widget = component.createObject(
-                _stateDisplay,
-                {
-                    deviceGuid: guid,
-                    title: name,
-                    "Layout.fillWidth": true
-                }
-            );
+    function create_widget(type_name, guid, name) {
+        let component = Qt.createComponent("Kobold.Views", type_name)
+        if (component.status == Component.Error) {
+            console.log(component.errorString())
+            return null
         }
 
-        return widget
+        return component.createObject(
+            _stateDisplay,
+            {
+                deviceGuid: guid,
+                title: name,
+                "Layout.fillWidth": true
+            }
+        )
     }
 
     RowLayout {
@@ -179,12 +180,16 @@ Window {
                     onClicked: () => {
                         if(checked) {
                             widget_axis_temp = create_widget(
-                                "AxesStateSeries.qml",
+                                "AxesStateSeries",
                                 guid,
                                 name
                             )
-                        } else {
+                            // Creation failed -- don't leave the box claiming a
+                            // visualization that isn't there.
+                            checked = !!widget_axis_temp
+                        } else if(widget_axis_temp) {
                             widget_axis_temp.destroy()
+                            widget_axis_temp = null
                         }
                     }
                 }
@@ -194,12 +199,14 @@ Window {
                     onClicked: () => {
                         if(checked) {
                             widget_axis_cur = create_widget(
-                                "AxesStateCurrent.qml",
+                                "AxesStateCurrent",
                                 guid,
                                 name
                             )
-                        } else {
+                            checked = !!widget_axis_cur
+                        } else if(widget_axis_cur) {
                             widget_axis_cur.destroy()
+                            widget_axis_cur = null
                         }
                     }
                 }
@@ -209,12 +216,14 @@ Window {
                     onClicked: () => {
                         if(checked) {
                             widget_btn_hat = create_widget(
-                                "ButtonState.qml",
+                                "ButtonState",
                                 guid,
                                 name
                             )
-                        } else {
+                            checked = !!widget_btn_hat
+                        } else if(widget_btn_hat) {
                             widget_btn_hat.destroy()
+                            widget_btn_hat = null
                         }
                     }
                 }
