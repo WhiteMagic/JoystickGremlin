@@ -32,6 +32,16 @@ ApplicationWindow {
         Style.isDarkMode = backend.useDarkMode
     }
 
+    // The single quit path, used by the File menu and the tray icon alike.
+    // Quitting never goes via close(), which the tray turns into a hide.
+    function quitGremlin() {
+        if (backend.profileContainsUnsavedChanges) {
+            _saveBeforeQuitDialog.open()
+        } else {
+            Qt.quit()
+        }
+    }
+
     Universal.theme: Style.theme
     color: Style.background
 
@@ -165,13 +175,7 @@ ApplicationWindow {
             }
             MenuItem {
                 text: qsTr("Exit")
-                onTriggered: () => {
-                    if (backend.profileContainsUnsavedChanges) {
-                        _saveBeforeQuitDialog.open()
-                    } else {
-                        Qt.quit()
-                    }
-                }
+                onTriggered: () => { _root.quitGremlin() }
             }
         }
 
@@ -423,6 +427,10 @@ ApplicationWindow {
 
         function onProfileChanged() {
             // Not used at the moment.
+        }
+
+        function onQuitRequested() {
+            _root.quitGremlin()
         }
     }
     Connections {

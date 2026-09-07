@@ -175,6 +175,7 @@ class Backend(QtCore.QObject):
     activityChanged = QtCore.Signal()
     propertyChanged = QtCore.Signal()
     uiChanged = QtCore.Signal()
+    quitRequested = QtCore.Signal()
 
     def __init__(
         self, engine: QtQml.QQmlApplicationEngine, parent: ta.OQO = None
