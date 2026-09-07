@@ -82,14 +82,14 @@ def test_malformed_scheme_rejected(tmp_path: pathlib.Path) -> None:
 
 
 def test_scheme_schema_validates() -> None:
-    schema = json.loads((_THEMES_DIR / "scheme.schema.json").read_text())
+    schema = json.loads((_THEMES_DIR / "kobold-colors.schema.json").read_text())
     for name in ("light.json", "dark.json"):
         data = json.loads((_THEMES_DIR / name).read_text())
         jsonschema.validate(instance=data, schema=schema)
 
 
 def test_scheme_schema_rejects_planted_bad_schemes() -> None:
-    schema = json.loads((_THEMES_DIR / "scheme.schema.json").read_text())
+    schema = json.loads((_THEMES_DIR / "kobold-colors.schema.json").read_text())
     valid = {"meta": {"appearance": "light"}, "colors": _LIGHT_COLORS}
 
     missing_key = {"meta": valid["meta"], "colors": dict(_LIGHT_COLORS)}
