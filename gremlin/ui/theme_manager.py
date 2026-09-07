@@ -36,7 +36,7 @@ _TOKENS = (
 )
 _DEFAULT_THEME = "light"
 _VALID_UI_SCALES = ("100", "150", "200")
-_SCHEMA_FILE_NAME = "scheme.schema.json"
+_SCHEMA_FILE_NAME = "kobold-colors.schema.json"
 
 # Fixed, non-themed palette for multi-series charts (e.g. per-axis traces in
 # AxesStateSeries) -- categorical trace colors, not part of the validated

@@ -8,7 +8,7 @@
     <qresource prefix="themes">
         <file alias="light.json">style/themes/light.json</file>
         <file alias="dark.json">style/themes/dark.json</file>
-        <file alias="scheme.schema.json">style/themes/scheme.schema.json</file>
+        <file alias="kobold-colors.schema.json">style/themes/kobold-colors.schema.json</file>
         <file alias="zenburn.json">style/themes/zenburn.json</file>
     </qresource>
     <qresource prefix="fonts">
