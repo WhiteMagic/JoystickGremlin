@@ -473,7 +473,7 @@ class JoystickGremlinApp(QtWidgets.QApplication):
 
         # Run UI.
         self.syslog.info("Gremlin UI launching")
-        self.aboutToQuit.connect(self.tray_icon.remove)
+        self.aboutToQuit.connect(self.tray_icon.release_resources)
         self.aboutToQuit.connect(shutdown_cleanup)
 
     def _on_theme_colors_changed(self) -> None:

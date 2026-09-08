@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import contextlib
+import ctypes
+import logging
 
 import win32api
 import win32con
@@ -25,8 +27,6 @@ _WM_TRAY = win32con.WM_USER + 20
 # https://learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-notifyicondataw
 _NOTIFYICON_VERSION_4 = 4
 _NIF_SHOWTIP = 0x00000080
-_NIN_SELECT = win32con.WM_USER + 0
-_NIN_KEYSELECT = win32con.WM_USER + 1
 
 # Tray menu command identifiers.
 _ID_SHOW = 1023
@@ -34,29 +34,29 @@ _ID_TOGGLE = 1024
 _ID_QUIT = 1025
 
 
-def _low_word(value: int) -> int:
-    """Returns the low 16 bits of a message parameter.
+def _extract_screen_coordinates(wparam: int) -> tuple[int, int]:
+    """Returns the screen position packed into a message parameter.
 
     Args:
-        value: parameter to extract the low word from
+        wparam: parameter to extract the position from
 
     Returns:
-        The parameter's low word
+        The x and y coordinates contained in the parameter
     """
-    return value & 0xFFFF
+    # Coordinates are signed, monitors left of or above the primary one yield
+    # negative values.
+    return (ctypes.c_short(wparam).value, ctypes.c_short(wparam >> 16).value)
 
 
 class SystemTrayIcon(QtCore.QObject):
-    """Tray icon for Gremlin, implemented via Shell_NotifyIcon.
+    """Tray icon for Gremlin, implemented using Win32 functionality.
 
-    Optionally hides the main window into the tray on minimize and on close,
-    restoring it when the icon is activated. The menu allows toggling the
-    window's visibility, activating and deactivating the profile, and quitting,
-    while the icon reflects whether a profile is currently active.
+    Supports hiding the Gremlin UI to the system tray on minimize and close. The context
+    menu exposes basic UI functionality. The icon reflects Gremlin's activation state.
     """
 
     def __init__(self, window: QtGui.QWindow) -> None:
-        """Creates the tray icon and starts watching the window.
+        """Creates the tray icon and starts monitoring the window.
 
         Args:
             window: the main application window to hide and restore
@@ -66,22 +66,102 @@ class SystemTrayIcon(QtCore.QObject):
         self._window = window
         self._backend = Backend()
         self._icon_present = False
-        self._quitting = False
+        self._last_window_mode = QtGui.QWindow.Visibility.Windowed
+        self._taskbar_created = 0
+        self._instance = 0
+        self._class_atom = None
+        self._hwnd = 0
+        self._idle_icon = 0
+        self._active_icon = 0
 
+        # Failure to acquire the resources needed for the system tray should not crash
+        # Gremlin, but only disable the system tray icon.
+        try:
+            self._create_resources()
+        except win32gui.error as e:
+            logging.getLogger("system").warning(
+                f"Failed to create the system tray icon: {e.strerror}"
+            )
+            return
+
+        self._window.visibilityChanged.connect(self._window_mode_changed_cb)
+        self._backend.activityChanged.connect(self._gremlin_status_change_cb)
+        # QML's closing signal carries a QQuickCloseEvent, a type PySide cannot
+        # convert, so closing is intercepted via the window's events instead.
+        self._window.installEventFilter(self)
+
+        # Ensure the window's visibility information is correctly capture, as the window
+        # is not guaranteed to be visible on launch.
+        self._window_mode_changed_cb(self._window.visibility())
+
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Hides the window into the tray instead of closing it.
+
+        Args:
+            watched: object the event is delivered to
+            event: event being delivered
+
+        Returns:
+            True if the event was handled and is not to be delivered
+        """
+        # Quitting goes through Qt.quit, so a close is always the user
+        # dismissing the window, which without an icon could not be undone.
+        if (
+            event.type() == QtCore.QEvent.Type.Close
+            and self._icon_present
+            and Configuration().value("global", "general", "close-to-tray")
+        ):
+            event.ignore()
+            self._window.hide()
+            return True
+        return super().eventFilter(watched, event)
+
+    def release_resources(self) -> None:
+        """Destroys the tray icon and its helper window."""
+        # Each resource is released independently and the system may already have
+        # reclaimed a handle, which must not stop the remaining cleanup.
+        if self._hwnd:
+            with contextlib.suppress(win32gui.error):
+                win32gui.DestroyWindow(self._hwnd)
+            self._hwnd = 0
+        if self._class_atom is not None:
+            with contextlib.suppress(win32gui.error):
+                win32gui.UnregisterClass(self._class_atom, self._instance)
+            self._class_atom = None
+        for icon in (self._idle_icon, self._active_icon):
+            if icon:
+                with contextlib.suppress(win32gui.error):
+                    win32gui.DestroyIcon(icon)
+        self._idle_icon = 0
+        self._active_icon = 0
+
+    def restore_window(self) -> None:
+        """Shows and focuses the main window in its previous state."""
+        self._window.setVisibility(self._last_window_mode)
+        self._window.raise_()
+        self._window.requestActivate()
+
+    def _create_resources(self) -> None:
+        """Creates the resources needed by the system tray icon.
+
+        Failures in this call will cause a win32gui.error to be raised, that the called
+        has to handle.
+        """
         self._idle_icon = self._create_icon("gfx/icon.ico")
         self._active_icon = self._create_icon("gfx/icon_active.ico")
 
-        # The icon's messages need a window to be delivered to. A plain window
-        # rather than a message-only one, as those don't receive the
-        # "TaskbarCreated" broadcast. Qt's event loop pumps its messages.
+        # The system tray messages need a window to be delivered to. A plain window
+        # is used instead of a message-only one, as that would not receive the
+        # "TaskbarCreated" broadcast. The event loop is driven by Qt's event loop.
         self._taskbar_created = win32gui.RegisterWindowMessage("TaskbarCreated")
+        self._instance = win32api.GetModuleHandle(None)
         wc = win32gui.WNDCLASS()
-        wc.hInstance = win32api.GetModuleHandle(None)
-        wc.lpszClassName = "JoystickGremlinTray"
+        wc.hInstance = self._instance
+        wc.lpszClassName = "JoystickGremlinSystemTray"
         wc.lpfnWndProc = {
-            _WM_TRAY: self._tray_event_cb,
-            win32con.WM_COMMAND: self._command_cb,
-            win32con.WM_DESTROY: self._destroy_cb,
+            _WM_TRAY: self._system_tray_event_cb,
+            win32con.WM_COMMAND: self._handle_context_menu_cb,
+            win32con.WM_DESTROY: self._destroy_system_tray_cb,
             self._taskbar_created: self._taskbar_created_cb,
         }
         self._class_atom = win32gui.RegisterClass(wc)
@@ -102,45 +182,6 @@ class SystemTrayIcon(QtCore.QObject):
             None,
         )
         self._add_icon()
-
-        self._window.visibilityChanged.connect(self._visibility_changed_cb)
-        self._backend.activityChanged.connect(self._activity_changed_cb)
-        # QML's closing signal carries a QQuickCloseEvent, a type PySide cannot
-        # convert, so closing is intercepted via the window's events instead.
-        self._window.installEventFilter(self)
-
-    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
-        """Hides the window into the tray instead of closing it.
-
-        Args:
-            watched: object the event is delivered to
-            event: event being delivered
-
-        Returns:
-            True if the event was handled and is not to be delivered
-        """
-        # Quitting from the tray menu closes the window deliberately and has to
-        # remain a close.
-        if (
-            event.type() == QtCore.QEvent.Type.Close
-            and not self._quitting
-            and Configuration().value("global", "general", "close-to-tray")
-        ):
-            event.ignore()
-            self._window.hide()
-            return True
-        return super().eventFilter(watched, event)
-
-    def remove(self) -> None:
-        """Destroys the tray icon and its helper window."""
-        # The WM_DESTROY handler removes the icon.
-        win32gui.DestroyWindow(self._hwnd)
-
-    def restore(self) -> None:
-        """Shows and focuses the main window."""
-        self._window.showNormal()
-        self._window.raise_()
-        self._window.requestActivate()
 
     def _create_icon(self, relative_path: str) -> int:
         """Loads an icon at the size used by the tray.
@@ -171,74 +212,88 @@ class SystemTrayIcon(QtCore.QObject):
 
     def _add_icon(self) -> None:
         """Adds the icon to the tray using notify protocol v4."""
-        # Use notify protocol v4, requestable only once the icon exists, and
-        # force standard tooltip behavior even if OS policies override it.
-        win32gui.Shell_NotifyIcon(
-            win32gui.NIM_ADD,
-            (
-                self._hwnd,
-                0,
-                win32gui.NIF_ICON
-                | win32gui.NIF_MESSAGE
-                | win32gui.NIF_TIP
-                | _NIF_SHOWTIP,
-                _WM_TRAY,
-                self._current_icon(),
-                "Joystick Gremlin",
-            ),
-        )
-        win32gui.Shell_NotifyIcon(
-            win32gui.NIM_SETVERSION,
-            (self._hwnd, 0, 0, 0, 0, "", "", _NOTIFYICON_VERSION_4),
-        )
-        self._icon_present = True
+        # Icon creation can fail if the shell is still being built. In that case the
+        # TaskbarCreated broadcast offers a second chance to create the icon.
+        try:
+            win32gui.Shell_NotifyIcon(
+                win32gui.NIM_ADD,
+                (
+                    self._hwnd,
+                    0,
+                    win32gui.NIF_ICON
+                    | win32gui.NIF_MESSAGE
+                    | win32gui.NIF_TIP
+                    | _NIF_SHOWTIP,
+                    _WM_TRAY,
+                    self._current_icon(),
+                    "Joystick Gremlin",
+                ),
+            )
+            win32gui.Shell_NotifyIcon(
+                win32gui.NIM_SETVERSION,
+                (self._hwnd, 0, 0, 0, 0, "", "", _NOTIFYICON_VERSION_4),
+            )
+            self._icon_present = True
+        except win32gui.error:
+            self._icon_present = False
+            logging.getLogger("system").warning(
+                "Failed to add the system tray icon", exc_info=True
+            )
 
-    def _activity_changed_cb(self) -> None:
+    def _gremlin_status_change_cb(self) -> None:
         """Updates the icon to match Gremlin's activation state."""
-        win32gui.Shell_NotifyIcon(
-            win32gui.NIM_MODIFY,
-            (self._hwnd, 0, win32gui.NIF_ICON, _WM_TRAY, self._current_icon()),
-        )
+        with contextlib.suppress(win32gui.error):
+            win32gui.Shell_NotifyIcon(
+                win32gui.NIM_MODIFY,
+                (self._hwnd, 0, win32gui.NIF_ICON, _WM_TRAY, self._current_icon()),
+            )
 
-    def _visibility_changed_cb(self, visibility: QtGui.QWindow.Visibility) -> None:
+    def _window_mode_changed_cb(self, mode: QtGui.QWindow.Visibility) -> None:
         """Hides the window into the tray when it is minimized.
 
         Args:
-            visibility: the window's new visibility state
+            mode: the window's new visibility mode
         """
-        if visibility == QtGui.QWindow.Visibility.Minimized and Configuration().value(
-            "global", "general", "minimize-to-tray"
+        # Store the mode to the restore the UI to when it's not minimized.
+        if mode in (
+            QtGui.QWindow.Visibility.Windowed,
+            QtGui.QWindow.Visibility.Maximized,
+            QtGui.QWindow.Visibility.FullScreen,
+        ):
+            self._last_window_mode = mode
+
+        # If the icon failed to load, i.e. we have no system tray, we minimize to the
+        # taskbar unconditionally, to keep the Gremlin UI accessible.
+        if (
+            mode == QtGui.QWindow.Visibility.Minimized
+            and self._icon_present
+            and Configuration().value("global", "general", "minimize-to-tray")
         ):
             self._window.hide()
 
-    def _tray_event_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
-        """Handles tray icon interactions.
+    def _system_tray_event_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
+        """Handles mouse interactions with the system tray icon.
 
-        Restores on a left click, double click, or keyboard selection of the
-        icon. Right click or menu key display the context menu.
+        Restores the window on a left click of the icon, a right click shows the
+        context menu. Only mouse interaction is supported.
 
         Args:
             hwnd: handle of the window receiving the message
             msg: message identifier
-            wparam: cursor position, packed
+            wparam: anchor position, packed
             lparam: notification event and icon id, packed
 
         Returns:
             0, the message has been handled
         """
-        event = _low_word(lparam)
-        if event in (
-            win32con.WM_LBUTTONUP,
-            win32con.WM_LBUTTONDBLCLK,
-            _NIN_SELECT,
-            _NIN_KEYSELECT,
-        ):
-            self.restore()
-        elif event in (win32con.WM_RBUTTONUP, win32con.WM_CONTEXTMENU):
-            self._show_menu()
+        match win32api.LOWORD(lparam):
+            case win32con.WM_LBUTTONUP:
+                self.restore_window()
+            case win32con.WM_RBUTTONUP:
+                self._show_menu(*_extract_screen_coordinates(wparam))
         return 0
 
-    def _command_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
+    def _handle_context_menu_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
         """Dispatches a tray menu selection.
 
         Args:
@@ -250,7 +305,7 @@ class SystemTrayIcon(QtCore.QObject):
         Returns:
             0, the message has been handled
         """
-        command = _low_word(wparam)
+        command = win32api.LOWORD(wparam)
         if command == _ID_SHOW:
             self._toggle_visibility()
         elif command == _ID_TOGGLE:
@@ -261,10 +316,7 @@ class SystemTrayIcon(QtCore.QObject):
 
     def _toggle_visibility(self) -> None:
         """Hides the window when it is visible and restores it when hidden."""
-        if self._window.isVisible():
-            self._window.hide()
-        else:
-            self.restore()
+        self._window.hide() if self._window.isVisible() else self.restore_window()
 
     def _taskbar_created_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
         """Re-adds the icon after Explorer restarts.
@@ -278,15 +330,12 @@ class SystemTrayIcon(QtCore.QObject):
         Returns:
             0, the message has been handled
         """
-        # Explorer restarting discards every tray icon, however the broadcast is
-        # not guaranteed to follow one, and adding twice leaves a dead icon
-        # behind. Remove any icon we still believe in first.
         if self._icon_present:
             self._delete_icon()
         self._add_icon()
         return 0
 
-    def _destroy_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
+    def _destroy_system_tray_cb(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
         """Removes the icon as the helper window is destroyed.
 
         Args:
@@ -303,49 +352,58 @@ class SystemTrayIcon(QtCore.QObject):
 
     def _delete_icon(self) -> None:
         """Removes the icon from the tray, if it is currently present."""
-        # Deleting an icon the shell no longer knows about raises, which is
-        # harmless as the desired state has been reached either way.
+        # Deleting an icon the shell no longer knows about raises, but the desired
+        # state has been reached either way.
         with contextlib.suppress(win32gui.error):
             win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, (self._hwnd, 0))
         self._icon_present = False
 
-    def _show_menu(self) -> None:
-        """Builds and shows the tray context menu at the cursor."""
-        menu = win32gui.CreatePopupMenu()
-        show_hide = (
-            "Hide Joystick Gremlin"
-            if self._window.isVisible()
-            else "Show Joystick Gremlin"
-        )
-        win32gui.AppendMenu(menu, win32con.MF_STRING, _ID_SHOW, show_hide)
-        win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
-        label = "Deactivate" if self._backend.gremlinActive else "Activate"
-        win32gui.AppendMenu(menu, win32con.MF_STRING, _ID_TOGGLE, label)
-        win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
-        win32gui.AppendMenu(menu, win32con.MF_STRING, _ID_QUIT, "Quit Joystick Gremlin")
+    def _show_menu(self, x: int, y: int) -> None:
+        """Builds and shows the system tray context menu at the given position.
 
-        # A tray menu needs its owner in the foreground to be dismissed by
-        # clicking elsewhere, and a message posted afterwards for the next click
-        # on the icon to register.
-        # https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackpopupmenu
-        x, y = win32gui.GetCursorPos()
-        win32gui.SetForegroundWindow(self._hwnd)
-        win32gui.TrackPopupMenu(
-            menu,
-            win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON,
-            x,
-            y,
-            0,
-            self._hwnd,
-            None,
-        )
-        win32gui.PostMessage(self._hwnd, win32con.WM_NULL, 0, 0)
-        win32gui.DestroyMenu(menu)
+        Args:
+            x: horizontal screen coordinate to anchor the menu at
+            y: vertical screen coordinate to anchor the menu at
+        """
+        menu = win32gui.CreatePopupMenu()
+        try:
+            show_hide = (
+                "Hide Joystick Gremlin"
+                if self._window.isVisible()
+                else "Show Joystick Gremlin"
+            )
+            win32gui.AppendMenu(menu, win32con.MF_STRING, _ID_SHOW, show_hide)
+            win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
+            label = "Deactivate" if self._backend.gremlinActive else "Activate"
+            win32gui.AppendMenu(menu, win32con.MF_STRING, _ID_TOGGLE, label)
+            win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
+            win32gui.AppendMenu(
+                menu, win32con.MF_STRING, _ID_QUIT, "Quit Joystick Gremlin"
+            )
+
+            # A tray menu needs its owner in the foreground to be dismissed by clicking
+            # elsewhere, and a message posted afterwards for the next click on the icon
+            # to register. A denied foreground change only costs the dismissal.
+            # https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackpopupmenu
+            with contextlib.suppress(win32gui.error):
+                win32gui.SetForegroundWindow(self._hwnd)
+            win32gui.TrackPopupMenu(
+                menu,
+                win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON,
+                x,
+                y,
+                0,
+                self._hwnd,
+                None,
+            )
+            win32gui.PostMessage(self._hwnd, win32con.WM_NULL, 0, 0)
+        finally:
+            win32gui.DestroyMenu(menu)
 
     def _quit_gremlin(self) -> None:
-        """Quits Gremlin via the window's close path."""
-        # Showing the window first so the unsaved changes prompt is visible.
-        self._quitting = True
-        self.restore()
-        self._window.close()
-        self._quitting = False
+        """Asks the UI to quit Gremlin.
+
+        Restores the window first, so that the user sees the quit dialog.
+        """
+        self.restore_window()
+        self._backend.quitRequested.emit()
