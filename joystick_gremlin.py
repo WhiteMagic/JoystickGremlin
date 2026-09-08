@@ -227,6 +227,12 @@ def register_config_options() -> None:
         PropertyType.Bool,
         False,
         "Minimize the Gremlin window to the system tray instead of the taskbar.",
+        {},
+        True,
+    )
+    cfg.register(
+        "global",
+        "general",
         "theme",
         PropertyType.String,
         "light",
@@ -243,6 +249,11 @@ def register_config_options() -> None:
         "Closing the Gremlin window hides it in the system tray rather than "
         "terminating Gremlin. Quit via the tray icon's menu.",
         {},
+        True,
+    )
+    cfg.register(
+        "global",
+        "general",
         "ui-scale",
         PropertyType.Selection,
         "100",

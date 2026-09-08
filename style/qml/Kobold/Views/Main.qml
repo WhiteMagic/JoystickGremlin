@@ -27,7 +27,7 @@ ApplicationWindow {
     id: _root
 
     Component.onCompleted: () => {
-        Style.isDarkMode = backend.useDarkMode
+        _restoringGeometry = false
     }
 
     // The single quit path, used by the File menu and the tray icon alike.
@@ -39,9 +39,6 @@ ApplicationWindow {
             Qt.quit()
         }
     }
-
-    Universal.theme: Style.theme
-    color: Style.background
 
     // Bigger icon/control size for the merged menu bar / toolbar strip (Metrics.toolbar, 34px) --
     // every other ToolButton in the app keeps the shared default.
@@ -60,8 +57,6 @@ ApplicationWindow {
     y: _geom.y
     width: _geom.width
     height: _geom.height
-
-    Component.onCompleted: () => { _restoringGeometry = false }
 
     Timer {
         id: _geometrySaveTimer
