@@ -15,9 +15,9 @@ The options window shows the various options that Gremlin allows to be configure
 The options are grouped into three sections which contain the following aspects:
 <dl>
     <dt>Global</dt>
-    <dd>Contains general settings affecting Gremlin's overall behaviour.</dd>
+    <dd>Contains general settings affecting Gremlin's overall behavior.</dd>
     <dt>Action</dt>
-    <dd>Contains all settings relating to the behaviour of specific actions.</dd>
+    <dd>Contains all settings relating to the behavior of specific actions.</dd>
     <dt>Profile</dt>
     <dd>Contains all settings revolving around profile auto loading.</dd>
 </dl>

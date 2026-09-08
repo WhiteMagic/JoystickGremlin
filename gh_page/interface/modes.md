@@ -6,7 +6,7 @@ nav_order: 4
 
 # Modes
 
-Gremlin has a concept of modes which can be seen as layers which can define their action sequences for inputs. The [Concepts]({{ site.baseurl }}/introduction/concepts) page gives and explanation of how modes interact with the other aspects of Gremlin.
+Gremlin has a concept of modes which can be seen as layers which can define their action sequences for inputs. The [Concepts]({{ site.baseurl }}/introduction/concepts) page gives an explanation of how modes interact with the other aspects of Gremlin.
 
 ## Mode Management
 
@@ -22,7 +22,7 @@ The configuration shown above can also be represented as a tree.
 ![Modes as tree]({{ site.baseurl }}/assets/images/modes_tree.png)<br>
 *Representation of the modes shown in the above image as a relationship tree.*
 
-The *Default* mode is the parent of the *Combat* and *Navigation* modes, while the *Comunication* mode stands on its own. Changing between modes is achieved using the [Change Mode]({{ site.baseurl }}/interface/actions#change-mode) action.
+The *Default* mode is the parent of the *Combat* and *Navigation* modes, while the *Communication* mode stands on its own. Changing between modes is achieved using the [Change Mode]({{ site.baseurl }}/interface/actions#change-mode) action.
 
 ## Inheritance
 

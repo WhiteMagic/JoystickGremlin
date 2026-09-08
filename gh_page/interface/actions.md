@@ -24,7 +24,7 @@ Actions are what allow Gremlin to perform all its functions. They can be arbitra
 ![Chain action]({{ site.baseurl }}/assets/images/actions/chain.png)
 {: .text-center }
 
-This action holds several independent groups of actions. Each time the action is activated the next group's actions are executed. When the last group in the chain is reached the first group is executed again. Additionally, a timeout can be set, after which the chain is resets to the first entry.
+This action holds several independent groups of actions. Each time the action is activated the next group's actions are executed. When the last group in the chain is reached the first group is executed again. Additionally, a timeout can be set, after which the chain is reset to the first entry.
 
 
 ## Change Mode
@@ -42,7 +42,7 @@ Allows controlling which mode Gremlin is in at any point in time. In the simples
     <dd>Changes to the previously active mode, effectively swapping the top two elements of the stack. Repeatedly calling this only swaps between the last two active modes.</dd>
 
     <dt>Unwind</dt>
-    <dd>Swaps to the previous mode on the stack, in contrast to the <em>Previous</em> operation this discards the last active mode, effectively unwindinw the mode stack.</dd>
+    <dd>Swaps to the previous mode on the stack, in contrast to the <em>Previous</em> operation this discards the last active mode, effectively unwinding the mode stack.</dd>
 
     <dt>Cycle</dt>
     <dd>Each activation of the action switches to the next mode in the list. Once a cycle is detected it is resolved based on the resolution mode selected in the options screen.</dd>
@@ -87,7 +87,7 @@ The action executes two different sets of actions depending on whether the butto
 ![Dual-Axis Deadzone action]({{ site.baseurl }}/assets/images/actions/dual_axis_deadzone.png)
 {: .text-center }
 
-Specifies a deadzone designed to work with coupled axis, such as typically found on the X and Y axis of joysticks. This applies a circular deadzone around the resting point of the axes and a square deadzone around the maximum deflection of the axes. The action is configure by:
+Specifies a deadzone designed to work with coupled axis, such as typically found on the X and Y axis of joysticks. This applies a circular deadzone around the resting point of the axes and a square deadzone around the maximum deflection of the axes. The action is configured by:
 
 - Adding the action to both axes.
 - Selecting the same deadzone instance from the dropdown in both actions (the instance can be named).
@@ -120,7 +120,7 @@ Loads and activates the specified profile.
 ![Macro action]({{ site.baseurl }}/assets/images/actions/macro.png)
 {: .text-center }
 
-The macro dialogue allows the creation of macros capable of emitting keyoard, mouse, joystick, logical device, and vJoy events with timing information between individual events.
+The macro dialog allows the creation of macros capable of emitting keyboard, mouse, joystick, logical device, and vJoy events with timing information between individual events.
 
 The individual entries of a macro can be reordered via drag&drop while their configuration is done with the data entry fields associated with them. The macro also provides two additional configuration options, *Repeat Mode* and *Exclusive*.  The *Exclusive* option ensures that no other macro is running when this macro is executing. The repeat mode allows configuring how, if at all, a macro is executed more than once. The following choices exist:
 <dl>
@@ -164,7 +164,7 @@ The map to keyboard action allows an arbitrary keyboard key sequence to be linke
 ![Map to Logical Device action]({{ site.baseurl }}/assets/images/actions/map_to_logical_device.png)
 {: .text-center }
 
-Maps an input to a logical device input. Buttons can control the activation behavior via the differnt switches, while an axis can decide if the change is applied as an absolute value or a relative change.
+Maps an input to a logical device input. Buttons can control the activation behavior via the different switches, while an axis can decide if the change is applied as an absolute value or a relative change.
 
 
 ## Map to Mouse
@@ -181,7 +181,7 @@ Allows controlling mouse events using axis, buttons, and hats. Buttons can trigg
 ![Map to vJoy action]({{ site.baseurl }}/assets/images/actions/map_to_vjoy_axis.png)
 {: .text-center }
 
-Maps an input to a logical device input. Buttons can control the activation behavior via the differnt switches, while an axis can decide if the change is applied as an absolute value or a relative change. The relative axis option also allows specifying a scaling factor to increase or decrease the amount applied.
+Maps an input to a logical device input. Buttons can control the activation behavior via the different switches, while an axis can decide if the change is applied as an absolute value or a relative change. The relative axis option also allows specifying a scaling factor to increase or decrease the amount applied.
 
 
 ## Merge Axis
@@ -252,11 +252,11 @@ This action allows you to select an existing action and to then add that action 
 ![Response Curve action]({{ site.baseurl }}/assets/images/actions/response_curve.png)
 {: .text-center }
 
-The response curve dialogue allows the customisation of the response produced by the joystick using the curve editor. The shape of the curve is controlled using a set of control points.
+The response curve dialog allows the customization of the response produced by the joystick using the curve editor. The shape of the curve is controlled using a set of control points.
 
 A new control point is added by a double left click in an empty area of the curve editor. Removing an existing control point is achieved by selecting the desired point and pressing the <kbd>Del</kbd> key on the keyboard. A single left click on a control point will mark the point as active. An active point can be dragged in the window to modify its position. Alternatively, the text fields to the right of the curve editor allow for precise numerical control of the position.
 
-Finally, the dead zones for the axis can be defined using the sliders and input fields at the bottom of the dialogue. The fields and sliders control the full deflection dead zone (1st and 4th field from the left) as well as the centre deflection dead zones (2nd and 3rd field).
+Finally, the dead zones for the axis can be defined using the sliders and input fields at the bottom of the dialog. The fields and sliders control the full deflection dead zone (1st and 4th field from the left) as well as the center deflection dead zones (2nd and 3rd field).
 
 Currently there are three types of response curve types available which are selected from the drop down menu at the top of the widget:
 <dl>
@@ -283,14 +283,14 @@ In order for response curves to work properly the game has to be configured to u
 ![Smart Toggle action]({{ site.baseurl }}/assets/images/actions/smart_toggle.png)
 {: .text-center }
 
-The smart toggle container allows for a single group of actions that have on and off states, i.e. *Map to vJoy*, *Map to Keyboard*, and *Map to Logical Device*, to have two different behaviours. If the input is held down the action will perform as a typical *Map to X* action would, i.e. staying active as long as the input is pressed. However, when a short button press is detected, specified by the *Toggle delay*, then the first press toggles the down state, i.e. holding the action down, and the second short press releases the action again.
+The smart toggle container allows for a single group of actions that have on and off states, i.e. *Map to vJoy*, *Map to Keyboard*, and *Map to Logical Device*, to have two different behaviors. If the input is held down the action will perform as a typical *Map to X* action would, i.e. staying active as long as the input is pressed. However, when a short button press is detected, specified by the *Toggle delay*, then the first press toggles the down state, i.e. holding the action down, and the second short press releases the action again.
 
 ## Split Axis
 
 ![Split Axis action]({{ site.baseurl }}/assets/images/actions/split_axis.png)
 {: .text-center }
 
-This action allows splitting a single axis into two parts. The value at which the axis is split can be adjusted by the user. Afterwards the two halves can haver be further processed with other actions.
+This action allows splitting a single axis into two parts. The value at which the axis is split can be adjusted by the user. Afterwards the two halves can then be further processed with other actions.
 
 
 ## Tempo
@@ -298,4 +298,4 @@ This action allows splitting a single axis into two parts. The value at which th
 ![Tempo action]({{ site.baseurl }}/assets/images/actions/tempo.png)
 {: .text-center }
 
-This container holds two groups of actions that get executed under different conditions. The first one is run when the input is pressed for a duration shorter then the specified delay. The second group is run when the input is pressed for longer then the specified delay.  Whether the first group is executed with the input being pressed or only when it is released can be controlled by the activation setting.
+This container holds two groups of actions that get executed under different conditions. The first one is run when the input is pressed for a duration shorter than the specified delay. The second group is run when the input is pressed for longer than the specified delay.  Whether the first group is executed with the input being pressed or only when it is released can be controlled by the activation setting.

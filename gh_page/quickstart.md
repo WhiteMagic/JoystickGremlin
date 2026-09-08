@@ -7,7 +7,7 @@ nav_order: 2
 
 ## Installation & Setup
 
-On most sytems installing Joystick Gremlin only requires the installation of [vJoy](https://github.com/jshafer817/vJoy/releases/tag/v2.1.9.1){:target="_blank"} and [Joystick Gremlin]({{ site.baseurl }}/download) itself. Once vJoy is installed it is advisable to configure the vJoy device(s), using <kbd>vJoyConf</kbd>, to contain the desired number of axes, buttons, and hats.
+On most systems installing Joystick Gremlin only requires the installation of [vJoy](https://github.com/jshafer817/vJoy/releases/tag/v2.1.9.1){:target="_blank"} and [Joystick Gremlin]({{ site.baseurl }}/download) itself. Once vJoy is installed it is advisable to configure the vJoy device(s), using <kbd>vJoyConf</kbd>, to contain the desired number of axes, buttons, and hats.
 
 {: .text-center }
 ![VJoy configuration dialog]({{ site.baseurl }}/assets/images/vjoy_configuration.png)<br>
@@ -37,7 +37,7 @@ This is also reflected by the design of the UI which is divided into two halves.
 ![Main Window]({{ site.baseurl }}/assets/images/joystick_gremlin_main_window.png)<br>
 *Joystick Gremlin UI*
 
-The next few sections describe in simple terms some of the functionality provided by Gremlin that is the most useful for a basic setup. A more complete description is provided in [Interface]({{ site.baseurl }}/interface). It is also worht getting familiar with the [Concepts]({{ site.baseurl }}/introduction/concepts) used in Gremlin and the terms, as they are used throughout this documentation.
+The next few sections describe in simple terms some of the functionality provided by Gremlin that is the most useful for a basic setup. A more complete description is provided in [Interface]({{ site.baseurl }}/interface). It is also worth getting familiar with the [Concepts]({{ site.baseurl }}/introduction/concepts) used in Gremlin and the terms, as they are used throughout this documentation.
 
 ## Basic Mappings
 
@@ -56,7 +56,7 @@ Sometimes it's not enough to simply press and hold a button, for example when a 
 Besides simply executing the macro once upon activation it is also possible to have a macro repeat in a variety of ways:
 
 - Repeat a fixed number of times.
-- Repeat until the actoin is activated again.
+- Repeat until the action is activated again.
 - Repeat as long as the physical input is pressed.
 
 ### Links

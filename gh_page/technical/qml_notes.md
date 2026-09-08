@@ -52,7 +52,7 @@ class DemoModel(QtCore.QObject):
     )
 ```
 
-The above skeleton exposes the `variable` member to QML and will notify the QML side when the value of `variable` is changed. However, if the QML content representing the value of `variable` changes this is not sent back to the Python side. Apparently this two way communication is not support by QML and given this was the case back in 2010 it does not seem likely to ever be added. In order to support such a two way synchronization the QML side needs to actively updated the Python side.
+The above skeleton exposes the `variable` member to QML and will notify the QML side when the value of `variable` is changed. However, if the QML content representing the value of `variable` changes this is not sent back to the Python side. Apparently this two way communication is not supported by QML and given this was the case back in 2010 it does not seem likely to ever be added. In order to support such a two way synchronization the QML side needs to actively update the Python side.
 
 ```qml
 Item {
@@ -68,7 +68,7 @@ Item {
 }
 ```
 
-The above QML snippet populates the textfield with the value of the `variable` from the above model class. Any changes to the value of `variable` via Python code will notify the QML side and update the visual representation accordingly. To send changes back to the Python model instance the `onTextChanged` signal needs to added. To prevent a binding loop the `_set_variable` method needs to ensure the provided value is different from the currently stored one, as otherwise a event loop would be possible.
+The above QML snippet populates the textfield with the value of the `variable` from the above model class. Any changes to the value of `variable` via Python code will notify the QML side and update the visual representation accordingly. To send changes back to the Python model instance the `onTextChanged` signal needs to be added. To prevent a binding loop the `_set_variable` method needs to ensure the provided value is different from the currently stored one, as otherwise an event loop would be possible.
 
 ## Property pass-through and aliasing
 
@@ -105,11 +105,11 @@ class Backend(QtCore):
         return random.randint(min_val, max_val)
 ```
 
-This allows the method to be called from within any QML file which has access to the an instance of the `Backend` class.
+This allows the method to be called from within any QML file which has access to an instance of the `Backend` class.
 
 ## Model Classes with Custom Attribute Names
 
-Accessing data from a Python model via custom names is the more convenient then having to deal with possibly changing indices. This is readily supported by QML by specifying additional model roles in the Python model being visualized via QML.
+Accessing data from a Python model via custom names is the more convenient than having to deal with possibly changing indices. This is readily supported by QML by specifying additional model roles in the Python model being visualized via QML.
 
 ```python
 from typing import Any, Dict
@@ -148,7 +148,7 @@ The above example specifies a simple class which holds colors. To permit QML to 
 
 ## ListView
 
-Frequently models will contain a list of identical items that need to be visualized. As these items might be taking up more space then the `ListView` component has in the UI it is capable of scrolling. To turn the `ListView` into a container that has a scroll bar and behaves properly, i.e. like a desktop application and not a phone app the following setup is recommended.
+Frequently models will contain a list of identical items that need to be visualized. As these items might be taking up more space than the `ListView` component has in the UI it is capable of scrolling. To turn the `ListView` into a container that has a scroll bar and behaves properly, i.e. like a desktop application and not a phone app the following setup is recommended.
 
 ```qml
 ListView {
@@ -372,11 +372,11 @@ Item {
 }
 ```
 
-The above setup exploits the fact that when the plugin's UI code is dynamically created the height of the plugin is retrieved from this UI element while the width is dictated by the parent element in which this UI element is embedded. This UI element is resized during creation to with within the parent's width.
+The above setup exploits the fact that when the plugin's UI code is dynamically created the height of the plugin is retrieved from this UI element while the width is dictated by the parent element in which this UI element is embedded. This UI element is resized during creation to fit within the parent's width.
 
 ## Resource file generation
 
-The `pyside6-rcc` programs converts the contents of a QRC file into a python module which can be loaded and used later on. When a venv is used the program resides within the scripts folder. Invoking the program takes the following form.
+The `pyside6-rcc` program converts the contents of a QRC file into a python module which can be loaded and used later on. When a venv is used the program resides within the scripts folder. Invoking the program takes the following form.
 
 ```bash
 .\venv\Scripts\pyside6-rcc.exe .\resources.qrc -o .\resources.py
@@ -384,7 +384,7 @@ The `pyside6-rcc` programs converts the contents of a QRC file into a python mod
 
 ## Signal Inheritance
 
-Dealing with signals in an inheritance hierarchy is somewhat annoying, as defining a property in a derived class using a signal defined in a parent doesn't work. As such, signals and properties have to be defined in the same class. To make matters worse the definition of the property binds the setter and getter function of the class in which the property is defined, making it impossible to redirect to a derived classes implementation. A solution around this is to have the actual setter/getter implementation be relegated to an implementation method which can be overridden in a derived class.
+Dealing with signals in an inheritance hierarchy is somewhat annoying, as defining a property in a derived class using a signal defined in a parent doesn't work. As such, signals and properties have to be defined in the same class. To make matters worse the definition of the property binds the setter and getter function of the class in which the property is defined, making it impossible to redirect to a derived class's implementation. A solution around this is to have the actual setter/getter implementation be relegated to an implementation method which can be overridden in a derived class.
 
 ```python
 from PySide6 import QtCore
@@ -430,7 +430,7 @@ class Derived(Base):
         return self.value.capitalize()
 ```
 
-This scheme allows redefining the behvaiour by reimplementing the implementation method where desired.
+This scheme allows redefining the behavior by reimplementing the implementation method where desired.
 
 ## Component vs. Item
 
@@ -451,7 +451,7 @@ import sys, pprint
 pprint.pprint(sorted(sys.modules.keys()))
 ```
 
-Entries from this or other imports that should be analyzed need to put in the `hidden_imports` variable inside the `joystick_gremlin.spec` file.
+Entries from this or other imports that should be analyzed need to be put in the `hidden_imports` variable inside the `joystick_gremlin.spec` file.
 
 # User Action Plugins
 

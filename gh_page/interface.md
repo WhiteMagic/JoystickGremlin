@@ -13,7 +13,7 @@ The following is a short overview of the different components that make up the m
 ![Main Window]({{ site.baseurl }}/assets/images/joystick_gremlin_main_window.png)<br>
 *Joystick Gremlin UI*
 
-1. Overview of all the inputs available for a given physical device. The small icons on the far right of each input indicate the type of actions associated with the input. The icons and their meaning are summarised in the table below.
+1. Overview of all the inputs available for a given physical device. The small icons on the far right of each input indicate the type of actions associated with the input. The icons and their meaning are summarized in the table below.
 1. The right hand portion of the UI shows the list of containers and actions associated with the currently selected input. This panel allows configuring the actions to execute when the physical input is used.
 1. This drop down lists all available actions for this type of input. Pressing the "Add" button will embed the selected action in a basic container.
 1. This drop down contains the available containers for the currently selected input. Pressing the "Add" button inserts an empty container of the desired type.
@@ -22,5 +22,5 @@ The following is a short overview of the different components that make up the m
 1. Each tab represents an individual device that is currently connected to the computer. The "Settings" tab allows configuring properties for the entire profile.
 1. Tool bar which holds the most commonly used actions, from left to right:
     - Open an existing profile.
-    - Activate Joystick Gremlin, when active the button is pressed and a green icon is shown. This also changes the status bar display. Pressing the button while Joystick Gremlin is running will disabled it again.
-1. The status bar shows whether or not the program is currently running a profile. If the program is running the currently active mode is shown as well if code execution is paused. If the input repeater is active it's status is also shown in the far right.
+    - Activate Joystick Gremlin, when active the button is pressed and a green icon is shown. This also changes the status bar display. Pressing the button while Joystick Gremlin is running will disable it again.
+1. The status bar shows whether or not the program is currently running a profile. If the program is running the currently active mode is shown as well if code execution is paused. If the input repeater is active its status is also shown in the far right.

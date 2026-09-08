@@ -29,7 +29,7 @@ The calibration dialog allows calibrating the physical devices used by Gremlin. 
 {: .text-center }
 ![Auto Mapper]({{ site.baseurl }}/assets/images/ui/auto_mapper.png)
 
-The auto mapper tool allows to create simply 1 to 1 mappings that add *Map to vJoy* actions between the selected physical input and the selected vJoy output. Select the physical devices and vJoy devices to use before clicking the "Create 1:1 mappings" button. The two options have enable the following behaviours.
+The auto mapper tool allows to create simple 1 to 1 mappings that add *Map to vJoy* actions between the selected physical input and the selected vJoy output. Select the physical devices and vJoy devices to use before clicking the "Create 1:1 mappings" button. The two options enable the following behaviors.
 
 <dl>
     <dt>Overwrite non-empty physical inputs</dt>

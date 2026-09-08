@@ -40,4 +40,4 @@ Marking all vJoy devices as inputs is possible. However, then Gremlin can not be
 
 ## vJoy Initial Values
 
-By default Gremlin initializes all vJoy axes of vJoy devies it controls to 0. In some scenarios this is not the desired default value, in which case the desired default value can be configured here.
+By default Gremlin initializes all vJoy axes of vJoy devices it controls to 0. In some scenarios this is not the desired default value, in which case the desired default value can be configured here.
