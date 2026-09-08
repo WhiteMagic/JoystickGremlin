@@ -6,7 +6,7 @@ nav_order: 2
 
 # Virtual Buttons
 
-Each input has a natural behaviour or type of states it can be in. However, certain actions require a binary state reflecting the behaviour of a button, i.e. *pressed* and *released*. In order for axis and hat inputs to support this they require to specify the condition under which they should be considered *pressed* and *released*, effectively turning them into a virtual button. This is often needed, for example when using individual hat directions as buttons when a game doesn't support mapping individual hat directions. A common use with axis is to enable afterburners when the throttle reaches 100% thrust.
+Each input has a natural behavior or type of states it can be in. However, certain actions require a binary state reflecting the behavior of a button, i.e. *pressed* and *released*. In order for axis and hat inputs to support this they require to specify the condition under which they should be considered *pressed* and *released*, effectively turning them into a virtual button. This is often needed, for example when using individual hat directions as buttons when a game doesn't support mapping individual hat directions. A common use with axis is to enable afterburners when the throttle reaches 100% thrust.
 
 Every axis and hat action sequence has a toggle at the top that allows treating the input for that action sequence as a button. Using this allows specifying the condition under which the virtual button is considered *pressed* as well as adding button-specific actions to the action set.
 

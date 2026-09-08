@@ -6,7 +6,7 @@ nav_order: 1
 
 # Joystick Gremlin
 
-Joystick Gremlin is a program that allows the configuration of joystick like devices, similar to what CH Control Manager and Thrustmaster's T.A.R.G.E.T. do for their respectively supported joysticks. However, Joystick Gremlin works with any device be it from different manufacturers or custom devices that appear as a joystick to Windows. Joystick Gremlin uses the virtual joysticks provided by vJoy to map physical to virtual inputs and apply various other transformations such as response curves to analogue axes. In addition to customizing joysticks, Joystick Gremlin also provides powerful macro functionalities, a flexible mode system, scripting using Python, and many other features.
+Joystick Gremlin is a program that allows the configuration of joystick like devices, similar to what CH Control Manager and Thrustmaster's T.A.R.G.E.T. do for their respectively supported joysticks. However, Joystick Gremlin works with any device be it from different manufacturers or custom devices that appear as a joystick to Windows. Joystick Gremlin uses the virtual joysticks provided by vJoy to map physical to virtual inputs and apply various other transformations such as response curves to analog axes. In addition to customizing joysticks, Joystick Gremlin also provides powerful macro functionalities, a flexible mode system, scripting using Python, and many other features.
 
 The main features are:
 

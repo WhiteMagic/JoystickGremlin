@@ -30,7 +30,7 @@ An action sequence is a collection of one or more actions that are processed seq
 
 ## Mode
 
-A mode is a collection of action sequences associated with inputs. Each mode can inherit from one other mode, its parent. If a mode and its parent both define action sequences for the same input only the action sequences of the mode and not those of its parent are used. If the mode defines no action sequences for an input but the parent does the parent's action sequences are used. This allows having a common set of base action sequences with more specialised modes add to or override.
+A mode is a collection of action sequences associated with inputs. Each mode can inherit from one other mode, its parent. If a mode and its parent both define action sequences for the same input only the action sequences of the mode and not those of its parent are used. If the mode defines no action sequences for an input but the parent does the parent's action sequences are used. This allows having a common set of base action sequences with more specialized modes add to or override.
 
 
 ## Library
