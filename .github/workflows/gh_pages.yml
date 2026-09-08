@@ -1,9 +1,12 @@
 name: Deploy GitHub Page
 
 on:
-  # Runs on pushes targeting the default branch and can be triggered manually.
+  # Runs on pushes touching the site sources, and can be triggered manually.
   push:
-    branches: [$default-branch]
+    branches: [develop]
+    paths:
+      - 'gh_page/**'
+      - '.github/workflows/gh_pages.yml'
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages.
@@ -36,7 +39,7 @@ jobs:
 
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Build with Jekyll
         working-directory: ./gh_page
@@ -45,7 +48,7 @@ jobs:
           JEKYLL_ENV: production
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
             path: ./gh_page/_site
 
@@ -59,4 +62,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
