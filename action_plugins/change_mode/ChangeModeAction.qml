@@ -11,7 +11,6 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -41,11 +40,8 @@ ColumnLayout {
             visible: _changeType.currentValue === "Switch"
             spacing: Metrics.gapM
 
-            Text {
+            Label {
                 text: "Switch to mode"
-                color: Theme.fg
-                font.family: FontType.sans
-                font.pixelSize: Metrics.textBody
             }
 
             ComboBox {
@@ -82,11 +78,8 @@ ColumnLayout {
         RowLayout {
             visible: _changeType.currentValue === "Previous"
 
-            Text {
+            Label {
                 text: "Change to the previously active mode"
-                color: Theme.fg
-                font.family: FontType.sans
-                font.pixelSize: Metrics.textBody
             }
         }
 
@@ -94,11 +87,8 @@ ColumnLayout {
         RowLayout {
             visible: _changeType.currentValue === "Unwind"
 
-            Text {
+            Label {
                 text: "Unwind one mode in the stack"
-                color: Theme.fg
-                font.family: FontType.sans
-                font.pixelSize: Metrics.textBody
             }
         }
 
@@ -107,13 +97,10 @@ ColumnLayout {
             visible: _changeType.currentValue === "Cycle"
             spacing: Metrics.gapM
 
-            Text {
+            Label {
                 Layout.alignment: Qt.AlignTop
 
                 text: "Cycle through these modes"
-                color: Theme.fg
-                font.family: FontType.sans
-                font.pixelSize: Metrics.textBody
             }
 
             ColumnLayout {
@@ -166,11 +153,8 @@ ColumnLayout {
             visible: _changeType.currentValue === "Temporary"
             spacing: Metrics.gapM
 
-            Text {
+            Label {
                 text: "Temporarily switch to mode"
-                color: Theme.fg
-                font.family: FontType.sans
-                font.pixelSize: Metrics.textBody
             }
 
             ComboBox {

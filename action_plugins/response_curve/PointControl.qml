@@ -7,6 +7,7 @@ import QtQuick.Controls
 import Kobold.Foundation
 import "render_helpers.js" as RH
 
+
 Rectangle {
     id: _control
 

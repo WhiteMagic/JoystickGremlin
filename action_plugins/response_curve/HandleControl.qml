@@ -8,6 +8,7 @@ import QtQuick.Shapes
 import Kobold.Foundation
 import "render_helpers.js" as RH
 
+
 Rectangle {
     id: _control
 
@@ -66,7 +67,7 @@ Rectangle {
 
         // Left control handle line.
         ShapePath {
-            strokeColor: modelData.hasLeft ? "#808080" : "transparent"
+            strokeColor: modelData.hasLeft ? Theme.line : "transparent"
 
             startX: offset
             startY: offset
@@ -79,7 +80,7 @@ Rectangle {
 
         // Right control handle line.
         ShapePath {
-            strokeColor: modelData.hasRight ? "#808080" : "transparent"
+            strokeColor: modelData.hasRight ? Theme.line : "transparent"
 
             startX: offset
             startY: offset

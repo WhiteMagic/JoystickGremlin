@@ -11,7 +11,6 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -29,7 +28,8 @@ ColumnLayout {
 
             eventTypes: ["key"]
             multipleInputs: true
-            text: root.action.keyCombination.length > 0 ? root.action.keyCombination : "Record keys"
+            text: root.action.keyCombination.length > 0
+                    ? root.action.keyCombination : "Record keys"
 
             callback: (inputs) => { root.action.updateInputs(inputs) }
         }

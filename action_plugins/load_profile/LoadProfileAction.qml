@@ -12,7 +12,6 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 

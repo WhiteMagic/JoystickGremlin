@@ -11,7 +11,6 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -52,7 +51,7 @@ ColumnLayout {
             from: 0.0
             to: 1.0
             stepSize: 0.05
-            decimals: 2
+            decimals: Metrics.defaultDecimalPlaces
             value: root.action.playbackVolume
 
             onValueModified: { root.action.playbackVolume = value }
@@ -68,7 +67,7 @@ ColumnLayout {
             from: -1.0
             to: 1.0
             stepSize: 0.1
-            decimals: 2
+            decimals: Metrics.defaultDecimalPlaces
             value: root.action.playbackRate
 
             onValueModified: { root.action.playbackRate = value }
@@ -84,7 +83,7 @@ ColumnLayout {
             from: -1.0
             to: 1.0
             stepSize: 0.1
-            decimals: 2
+            decimals: Metrics.defaultDecimalPlaces
             value: root.action.playbackPitch
 
             onValueModified: { root.action.playbackPitch = value }

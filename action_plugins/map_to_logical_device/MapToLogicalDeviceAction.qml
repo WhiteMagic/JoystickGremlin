@@ -11,7 +11,6 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
@@ -62,7 +61,7 @@ ColumnLayout {
                 from: 0
                 to: 100
                 stepSize: 0.05
-                decimals: 2
+                decimals: Metrics.defaultDecimalPlaces
                 value: root.action.axisScaling
 
                 onValueModified: { root.action.axisScaling = value }

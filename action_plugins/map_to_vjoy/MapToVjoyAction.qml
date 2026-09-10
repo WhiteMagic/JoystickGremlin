@@ -11,15 +11,11 @@ import Kobold.Controls
 import Kobold.Foundation
 
 
-// Body only -- no chevron, header, name field, guide or indent, those are the core's.
 ColumnLayout {
     id: root
 
     required property MapToVjoyModel action
 
-    // One row: the vJoy device/input picker plus whichever behavior-specific controls
-    // apply, side by side -- vertical space is precious, and none of this is wide
-    // enough to need its own line.
     RowLayout {
         spacing: Metrics.gapM
 
@@ -61,12 +57,9 @@ ColumnLayout {
                 onToggled: { root.action.axisMode = "relative" }
             }
 
-            Text {
+            Label {
                 text: "Scaling"
                 visible: _relativeMode.checked
-                color: Theme.fg
-                font.family: FontType.sans
-                font.pixelSize: Metrics.textBody
             }
 
             DoubleSpinBox {
@@ -74,7 +67,7 @@ ColumnLayout {
                 from: 0
                 to: 100
                 stepSize: 0.1
-                decimals: 2
+                decimals: Metrics.defaultDecimalPlaces
                 value: root.action.axisScaling
 
                 onValueModified: { root.action.axisScaling = value }

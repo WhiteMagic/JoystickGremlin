@@ -24,6 +24,7 @@ ApplicationWindow {
     minimumWidth: Metrics.dp(1300)
     minimumHeight: Metrics.dp(700)
     visible: true
+    color: Theme.bg
     id: _root
 
     Component.onCompleted: () => {
@@ -444,21 +445,18 @@ ApplicationWindow {
             Row {
                 spacing: Metrics.gapS
 
-                Text {
+                Label {
                     text: qsTr("Status:")
                     color: Theme.fgMuted
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
-                Text {
+                Label {
                     text: Helpers.selectText(
                             backend.gremlinActive, qsTr("Active"), qsTr("Not Running")
                         ) +
                         Helpers.selectText(
                             backend.gremlinActive & backend.gremlinPaused, qsTr(" (Paused)"), ""
                         )
-                    color: Theme.fg
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                     font.weight: FontType.semiBold
                 }
@@ -467,16 +465,13 @@ ApplicationWindow {
             Row {
                 spacing: Metrics.gapS
 
-                Text {
+                Label {
                     text: qsTr("Executing:")
                     color: Theme.fgMuted
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
-                Text {
+                Label {
                     text: backend.currentMode
-                    color: Theme.fg
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                     font.weight: FontType.semiBold
                 }
@@ -486,16 +481,13 @@ ApplicationWindow {
                 spacing: Metrics.gapS
                 Layout.fillWidth: true
 
-                Text {
+                Label {
                     text: qsTr("Editing:")
                     color: Theme.fgMuted
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                 }
-                Text {
+                Label {
                     text: uiState.currentMode
-                    color: Theme.fg
-                    font.family: FontType.sans
                     font.pixelSize: Metrics.textDetail
                     font.weight: FontType.semiBold
                 }

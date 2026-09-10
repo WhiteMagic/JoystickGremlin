@@ -12,8 +12,9 @@ import Gremlin.Profile
 import Kobold.Foundation
 import Kobold.Composites
 
+
 Item {
-    id: _root
+    id: root
 
     required property MergeAxisModel action
 
@@ -23,10 +24,10 @@ Item {
     implicitHeight: _content.height
 
     Connections {
-        target: _root.action
+        target: root.action
         function onModelChanged() {
-            _root.actionModel.currentValue = _root.action.mergeAction
-            _root.operationModel.currentValue = _root.action.operation
+            root.actionModel.currentValue = root.action.mergeAction
+            root.operationModel.currentValue = root.action.operation
         }
     }
 
@@ -37,7 +38,7 @@ Item {
         title: "Rename action"
 
         onAccepted: (value) => {
-            _root.action.label = value
+            root.action.label = value
             visible = false
         }
     }
@@ -49,65 +50,69 @@ Item {
         spacing: Metrics.gapM
 
         RowLayout {
-            Label { text: "Merge axis instance" }
+            Label {
+                text: "Merge axis instance"
+            }
 
             ComboBox {
                 id: _actionSelection
                 Layout.fillWidth: true
-                model: _root.actionModel
+                model: root.actionModel
                 textRole: "label"
                 valueRole: "value"
 
                 Component.onCompleted: () => {
-                    currentIndex = _root.actionModel.currentSelectionIndex
+                    currentIndex = root.actionModel.currentSelectionIndex
                 }
                 Connections {
-                    target: _root.actionModel
+                    target: root.actionModel
                     function onSelectionChanged() {
-                        _actionSelection.currentIndex = _root.actionModel.currentSelectionIndex
+                        _actionSelection.currentIndex = root.actionModel.currentSelectionIndex
                     }
                 }
                 onActivated: () => {
-                    _root.actionModel.currentValue = currentValue
-                    _root.action.mergeAction = currentValue
+                    root.actionModel.currentValue = currentValue
+                    root.action.mergeAction = currentValue
                 }
             }
 
             Button {
                 text: "New instance"
-                onClicked: () => { _root.action.newMergeAxis() }
+                onClicked: () => { root.action.newMergeAxis() }
             }
             ToolButton {
                 icon.name: "edit"
                 onClicked: () => {
-                    _renameDialog.text = _root.action.label
+                    _renameDialog.text = root.action.label
                     _renameDialog.visible = true
                 }
             }
         }
 
         RowLayout {
-            Label { text: "Merge operation" }
+            Label {
+                text: "Merge operation"
+            }
 
             ComboBox {
                 id: _operationSelection
                 Layout.fillWidth: true
-                model: _root.operationModel
+                model: root.operationModel
                 textRole: "label"
                 valueRole: "value"
 
                 Component.onCompleted: () => {
-                    currentIndex = _root.operationModel.currentSelectionIndex
+                    currentIndex = root.operationModel.currentSelectionIndex
                 }
                 Connections {
-                    target: _root.operationModel
+                    target: root.operationModel
                     function onSelectionChanged() {
-                        _operationSelection.currentIndex = _root.operationModel.currentSelectionIndex
+                        _operationSelection.currentIndex = root.operationModel.currentSelectionIndex
                     }
                 }
                 onActivated: () => {
-                    _root.operationModel.currentValue = currentValue
-                    _root.action.operation = currentValue
+                    root.operationModel.currentValue = currentValue
+                    root.action.operation = currentValue
                 }
             }
         }
@@ -115,36 +120,42 @@ Item {
         RowLayout {
             spacing: Metrics.gapL
 
-            Label { text: "First axis" }
-            InputAssignButton {
-                valueLabel: _root.action.firstAxis.isValid
-                    ? _root.action.firstAxis.label
-                    : "Not assigned -- open the second axis and add this merge instance there to assign it."
-                isAssigned: _root.action.firstAxis.isValid
-                onClicked: () => { _root.action.firstAxis = uiState.currentInput }
+            Label {
+                text: "First axis"
             }
 
-            Label { text: "Second axis" }
             InputAssignButton {
-                valueLabel: _root.action.secondAxis.isValid
-                    ? _root.action.secondAxis.label
+                valueLabel: root.action.firstAxis.isValid
+                    ? root.action.firstAxis.label
+                    : "Not assigned -- open the second axis and add this merge instance there to assign it."
+                isAssigned: root.action.firstAxis.isValid
+                onClicked: () => { root.action.firstAxis = uiState.currentInput }
+            }
+
+            Label {
+                text: "Second axis"
+            }
+
+            InputAssignButton {
+                valueLabel: root.action.secondAxis.isValid
+                    ? root.action.secondAxis.label
                     : "Not assigned -- open the first axis and add this merge instance there to assign it."
-                isAssigned: _root.action.secondAxis.isValid
-                onClicked: () => { _root.action.secondAxis = uiState.currentInput }
+                isAssigned: root.action.secondAxis.isValid
+                onClicked: () => { root.action.secondAxis = uiState.currentInput }
             }
         }
 
         SlotHeader {
             Layout.fillWidth: true
             label: "Actions"
-            actionNames: _root.action.compatibleActions
-            onActionRequested: (name) => { _root.action.appendAction(name, "children") }
+            actionNames: root.action.compatibleActions
+            onActionRequested: (name) => { root.action.appendAction(name, "children") }
         }
 
         ActionList {
             Layout.fillWidth: true
 
-            containerOwner: _root.action
+            containerOwner: root.action
             containerName: "children"
         }
     }
